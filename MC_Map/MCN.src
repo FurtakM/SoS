@@ -1,0 +1,97 @@
+// MC_Nature
+Export Function MCN_AddApes(area, n, agr);
+var i, ape;
+begin
+
+     uc_side := 0;
+     uc_nation := 0;
+
+     for i = 1 to n do
+         begin
+         hc_importance := 0;
+         hc_gallery := '';
+         hc_agressivity = Rand(agr-20, agr+20);
+         hc_skills := [Rand(0,2), 0, 0, 0];
+         hc_basic_skills := [0, 0, 0, 0];
+         hc_name := '';
+         hc_class := class_apeman;
+         ape := CreateHuman;
+         PlaceUnitArea(ape, area, false);
+         end;
+End;
+
+
+Export Function MCN_Tame(side, unit);
+var ape;
+begin
+if MCF_Ape(side) >= MREG_Tame[side] then
+   begin
+   if GetTag(unit) = 17 then
+      begin
+      SetTag(unit, 0);
+
+      if MCF_Lab(side) and not MCL_GetTechList(side) then
+         ComEnterUnit(unit, MCF_Lab(side)[1]);
+      if not MCF_Lab(side) and MCF_Get(side, [f_btype, b_warehouse]) then
+         ComMoveXY(unit, GetX(MCF_Get(side, [f_btype, b_warehouse])[1]), GetY(MCF_Get(side, [f_btype, b_warehouse])[1]));
+      end;
+   end
+    else
+     if GetClass(unit) <> 4 then
+        exit
+         else
+          if GetTag(unit) = 0 then
+             SetTag(unit, 17)
+              else
+               begin
+               if IsInUnit(unit) then
+                  ComExitBuilding(unit);
+
+               Wait(1);
+               ape := NearestUnitToUnit(FilterAllUnits([[f_side, 0], [f_class, class_apeman]]), unit);
+
+               if not ape then
+                  exit
+                   else
+                    ComHold(ape);
+
+               if not HasTask(unit) then
+                  ComTameXY(unit, GetX(ape), GetY(ape))
+                   else
+                    exit;
+              end;
+
+End;
+
+Export Function MCN_TrainApe(side);
+var i, tmp, apes;
+begin
+tmp := MREG_ApeOptions[side];
+apes := MCF_ApeSpec(side, 'normal');
+
+// TODO: ma³py w fabryce
+// ape options
+   if apes then
+      begin
+      // train ape-eng
+      if GetTech(tech_apepsych, side) = state_researched and tmp[2] = 1 and MCF_ApeSpec(side, 'engineer') < 3 and MCF_Get(side, [f_btype, b_warehouse]) then
+         begin
+         for i in apes do
+             begin
+             //if not HasTask(i) then
+                ComEnterUnit(i, MCF_Get(side, [f_btype, b_warehouse])[1]);
+             end;
+         end
+          else
+           // train ape-sold-kamikaze
+           if GetTech(tech_apeagres, side) = state_researched and tmp[1] = 1 and MCF_Get(side, [f_btype, b_barracks]) then
+              begin
+              for i in apes do
+                  begin
+                  //if not HasTask(i) then
+                     ComEnterUnit(i, MCF_Get(side, [f_btype, b_barracks])[1]);
+                  end;
+              end;
+      end;
+
+End;
