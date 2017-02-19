@@ -1,0 +1,145 @@
+On SailEvent(event) do
+begin
+if isEditor then
+   MC_Show(event);
+End;
+
+On BuildingStarted(b, unit) do
+var side, i;
+begin
+side := GetSide(b);
+
+// only for depot
+if MCF_Get(side, [f_type, unit_building]) = 1 then
+   for i in MCF_Get(side, [f_type, unit_human]) diff MCF_Class(side, 2, []) do
+       if not HasTask(i) then
+          ComMoveXY(i, GetX(b), GetY(b));    
+End;
+
+On BuildingComplete(b) do
+begin
+
+// normal building
+   MREG_ToBuild := MC_RegistryDelete(MREG_ToBuild, GetSide(b), GetBType(b), [GetX(b), GetY(b), GetDir(b)]);
+
+// lab
+if GetBType(b) = b_lab then
+   MREG_LabList := MC_RegistryUpdate(MREG_LabList, GetSide(b), b, []);
+// depot
+if GetBType(b) = b_depot then
+   begin
+   MREG_ToUpdate := MC_RegistryUpdate(MREG_ToUpdate, GetSide(b), b_depot, []);
+   SetResourceType(GetBase(b), 1, MREG_ResourcesBonus[1]);
+   SetResourceType(GetBase(b), 2, MREG_ResourcesBonus[2]);
+   SetResourceType(GetBase(b), 3, MREG_ResourcesBonus[3]);
+   end;
+// workshop
+if GetBType(b) = b_workshop then
+   MREG_ToUpdate := MC_RegistryUpdate(MREG_ToUpdate, GetSide(b), b_workshop, []);
+// barracks
+if GetBType(b) = b_armoury then
+   MREG_ToUpdate := MC_RegistryUpdate(MREG_ToUpdate, GetSide(b), b_armoury, []);
+End;
+
+On ResearchComplete(tech, lab) do
+var i;
+begin
+for i = 1 to MREG_ToRes do
+    if MREG_ToRes[i][1] = GetSide(lab) and MREG_ToRes[i][2] = tech then
+       begin
+       MREG_ToRes := MC_RegistryDelete(MREG_ToRes, GetSide(lab), tech, []);
+       break;
+       end;
+
+if tech in [tech_apepsych, tech_apeagres, tech_apebrain, tech_apeneural] then
+   begin
+   i := MCF_Tag(GetSide(lab), 16, [f_class, 4]);
+
+   if i then
+      SetTag(i[1], 0);
+
+   i := MCF_Tag(GetSide(lab), 171, []);
+   
+   if i then
+      begin
+      SetTag(i[1], 0);
+      ComExitBuilding(i[1]);
+      end;
+   end;
+End;
+
+On VehicleConstructed(veh, b) do
+var i, side;
+begin
+side := GetSide(veh);
+
+if not GetWeapon(veh) in [us_crane, us_cargo_bay, us_bulldozer, ru_cargo_bay, ru_bulldozer, ru_crane, ar_cargo_bay] then
+   MREG_VCombat := Replace2(MREG_VCombat, side, MREG_VCombat[side]+1, veh);
+
+if GetWeapon(veh) = ar_control_tower then
+   SetTag(GetDriver(veh), 9);
+
+MCV_Parking(GetSide(veh), veh);
+End;
+
+On ApemanTamed(ape, unit) do
+begin
+if (not GetTech(tech_apeagres, GetSide(unit)) = state_researched or not GetTech(tech_apepsych, GetSide(unit)) = state_researched) and MCF_Tag(GetSide(unit), 171, []) = 0 then
+   begin
+   SetTag(ape, 171);
+   end;
+
+if MCF_Get(GetSide(unit), [f_btype, b_warehouse]) then
+   ComMoveXY(ape, GetX(MCF_Get(GetSide(unit), [f_btype, b_warehouse])[1]), GetY(MCF_Get(GetSide(unit), [f_btype, b_warehouse])[1]));
+End;
+
+On EnterBuilding(b, un) do
+begin
+if un in MCF_Ape(GetSide(un)) then
+   begin
+   if GetBType(b) in [b_depot, b_warehouse] then
+      begin
+      Wait(0$0.3);
+      SetClass(un, class_apeman_engineer);
+      ComExitBuilding(un);
+      end;
+
+   if GetBType(b) in [b_armoury, b_barracks] then
+      begin
+      Wait(0$0.3);
+
+      if GetTag(un) = 0 then
+         SetClass(un, class_apeman_soldier)
+          else
+           if GetTech(tech_apeneural, GetSide(un)) then
+              SetClass(un, class_apeman_kamikaze);
+
+      ComExitBuilding(un);
+      end;
+   end;
+End;
+
+On UnitDestroyed(un) do
+begin
+
+if un in MCF_Get(GetSide(un), [f_type, unit_human]) then
+   begin
+   if MCF_HasClass(un) then
+      case MCF_HasClass(un) of
+      1: MCF_RemoveFromClass(GetSide(un), 'ToArm', un);
+      2: MCF_RemoveFromClass(GetSide(un), 'ToDep', un);
+      3: MCF_RemoveFromClass(GetSide(un), 'ToFac', un);
+      4: MCF_RemoveFromClass(GetSide(un), 'ToLab', un);
+      end;
+   end;
+
+End;
+
+
+On UnitGoesToRed(un) do
+begin
+if GetControl(un) = control_remote then
+   ComUnlink(un);
+End;
+
+

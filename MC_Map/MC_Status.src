@@ -1,0 +1,87 @@
+{
+  MC_STATUS LIST:
+  ''        -> all units
+  'chgclass -> all units
+  'healing' -> [sci]
+  'build'   -> [eng]
+  'vrepair' -> [mech]
+  'brepair' -> [eng, mech]
+  'defend'  -> [sold, mech, sci]
+  'attack'  -> [sold, mech]
+  'collect' -> [eng, mech]
+  'research'-> [sci]
+  'produce' -> [mech]
+  'remote'  -> [mech]
+}     // NOT USING ANYMORE
+
+{
+Export Function MC_SetStatus(side, unit, status);
+var old_status;
+begin
+old_status := MC_GetStatus(side, unit);
+MREG_Status := MC_RegistryDelete(MREG_Status, side, unit, old_status);
+MREG_Status := MC_RegistryUpdate(MREG_Status, side, unit, status);
+End;
+
+Export Function MC_GetStatus(side, unit);
+var i;
+begin
+for i = 1 to MREG_Status do
+    begin
+    if MREG_Status[i][1] = side and MREG_Status[i][2] = unit then
+       begin
+       result := MREG_Status[i][3];
+       break;
+       end;
+    end;
+End;
+
+Export Function MC_FilterStatus(side, status);
+var i;
+begin
+result := 0;
+
+for i = 1 to MREG_Status do
+    if MREG_Status[i][1] = side and MREG_Status[i][3] = status then
+       result := result + 1;
+End;
+
+Export Function MC_FilterNonStatus(tmp);
+var i;
+begin
+if tmp and MREG_Status then
+   begin
+   result := [];
+
+   for i = 1 to tmp do
+       if MC_GetStatus(GetSide(tmp[i]), tmp[i]) = '' then
+          result := result ^ tmp[i];
+   end
+    else
+     result := false;
+End;
+
+Export Function MC_ClearStatus(side, status);
+var i;
+begin
+for i = 1 to MREG_Status do
+    if MREG_Status[i][1] = side and MREG_Status[i][3] = status then
+       MREG_Status := MC_RegistryUpdate(MREG_Status, side, MREG_Status[i][2], '');
+End;
+
+Export Function MC_Scan(side);  
+var i;
+begin
+
+for i in MCF_Get(side, [f_type, unit_human]) do // todo [naukowcy, mechanicy]
+    begin
+    if not MC_GetStatus(side, i) = '' and
+       not MC_GetStatus(side, i) = 'research' and
+       not MC_GetStatus(side, i) = 'produce' and
+       not MC_GetStatus(side, i) = 'remote' and
+       not HasTask(i) then
+       MC_SetStatus(side, i, '');
+    end;
+
+End;
+}
