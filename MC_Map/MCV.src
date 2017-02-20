@@ -147,7 +147,7 @@ if nation = 1 {US} then
              if not IsControledBy(vehs[i]) then
                 begin
                 tmp := MCV_RemoteDriver(oper);
-                MC_Show(tmp);
+                // MC_Show(tmp);
 
                 if not tmp then
                    exit
@@ -208,6 +208,32 @@ if not drivers then
 
      result := linked;
      end;
+End;
+
+Export Function MCV_ToRepair(unit);
+begin
+if not unit then
+   exit
+    else
+     begin
+     SetTag(unit, 6);
+     MCV_Parking(GetSide(unit), unit);
+     end;
+End;
+
+Export Function MCV_CheckStatus(side);
+var i;
+begin
+if MCF_Tag(side, 6, []) then
+   begin
+     for i = MCF_Tag(side, 6, []) to 1 do
+         if GetLives(MCF_Tag(side, 6, [])[i]) = 1000 then
+            SetTag(MCF_Tag(side, 6, [])[i], 0);
+   end;
+
+for i in MCF_Vehicle(side, []) diff MCF_Tag(side, 7, []) do
+    if GetLives(i) < 650 and not GetTag(i) = 6 then
+       MCV_ToRepair(i);
 End;
 
 

@@ -53,7 +53,7 @@ begin
 
      // monitor
         if isEditor then
-           MC_Show(MREG_Deposit);
+           MC_Show(MCF_Tag(1, 6, [f_distxy, 23, 27, 10]));
 
        // global instructions
           // crates spawn
@@ -78,6 +78,10 @@ begin
 
               // check buildings
                  MREG_ToRepair = Replace(MREG_ToRepair, side, MCB_FilterHLevel(side));
+
+              // check vehicles
+                 if MCF_Get(side, [f_type, unit_vehicle]) then
+                    MCV_CheckStatus(side);
 
               // change_class
                  if MREG_ForSide(side, MREG_ToChangeClass) then
@@ -201,7 +205,7 @@ End;
 
 // Direct Commands MC
 Every 0$03 trigger mc_game_live do  // todo
-var i, j, un, side, b, v, c, e, f, all, eng, mech, sci, ct, tmp, at_war{pom};
+var i, j, un, side, b, v, c, e, f, k, x, y, all, eng, mech, sci, ct, tmp, at_war{pom};
 begin
 enable;
 
@@ -369,6 +373,8 @@ enable;
                                 SetTag(mech[c], 9);
                                 ComExitBuilding(mech[c]);
                                 end;
+
+                         MCH_TrainMechanic(i, f);
                          end;
 
                    if MCF_Tag(i, 9, []) then
@@ -379,6 +385,32 @@ enable;
                                  else
                                   SetTag(c, 0);
                    end;
+
+                // repair veh
+                if MCF_Class(i, 3, []) and MREG_Parking[i] then
+                   begin
+                   x := AreaToList(MREG_Parking[i], 0)[1][1];
+                   y := AreaToList(MREG_Parking[i], 0)[2][1];
+
+                   if MCF_Tag(side, 6, [f_distxy, x, y, 10]) then
+                      begin
+
+                      if MCF_Class(i, 3, []) then
+                         for k in MCF_Class(i, 3, []) do
+                             if GetTag(k) = 0 then
+                                SetTag(k, 8);
+
+                      if MCF_Tag(i, 8, []) then
+                         for j in MCF_Tag(i, 8, []) do
+                             if IsInUnit(j) then
+                                ComExitBuilding(j)
+                                 else
+                                  ComRepairVehicle(j, MCF_Tag(side, 6, [f_distxy, x, y, 10])[1]);
+                      end;
+                   end;
+
+                if MCF_Tag(i, 8, []) and not MCF_Tag(side, 6, [f_distxy, x, y, 10]) then
+                   MCF_SetTag(i, MCF_Tag(i, 8, []), 0);
                  
                 // dep
                 if MCF_Get(i, [f_btype, b_warehouse]) then
