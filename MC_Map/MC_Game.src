@@ -17,7 +17,7 @@ MCT_MarkPlace(10, 7, 'aqua');
 MCN_AddApes(Area43, 5, 10);
 
 MCS_SetResourcesBonus(20, 16000, 30);
-MCL_SetTechList(1, [tech_tech1, tech_tech2, 20, tech_oilpow, tech_oileng, tech_solpow, tech_soleng, tech_apelang, tech_tech3, tech_apepsych, tech_weap1, tech_weap2, tech_gatling, tech_gun, tech_weap3, tech_rocket, tech_advMet, tech_sib1, tech_comp1, tech_ai, tech_advai, tech_comp2, tech_opto1, tech_opto2, tech_radar, tech_remcont]);
+MCL_SetTechList(1, [tech_tech1, tech_tech2, 20, tech_oilpow, tech_oileng, tech_solpow, tech_soleng, tech_apelang, tech_tech3, tech_apepsych, tech_weap1, tech_weap2, tech_gatling, tech_gun, tech_weap3, tech_comp1, tech_ai, tech_advai, tech_opto1, tech_opto2, tech_radar, tech_remcont, tech_rocket]);
 
 MCS_ApeLimit(1, 3);
 MCS_ApeOptions(1, [0,1,0,0]);
@@ -53,7 +53,7 @@ begin
 
      // monitor
         if isEditor then
-           MC_Show(MCF_Tag(1, 6, [f_distxy, 23, 27, 10]));
+           MC_Show(MCF_ScanTeren(1, 40));
 
        // global instructions
           // crates spawn
@@ -386,31 +386,42 @@ enable;
                                   SetTag(c, 0);
                    end;
 
-                // repair veh
-                if MCF_Class(i, 3, []) and MREG_Parking[i] then
+                // repair veh                              
+                if MCF_Class(i, 3, []) and MREG_Parking[i] and MCF_Tag(i, 6, []) then
                    begin
                    x := AreaToList(MREG_Parking[i], 0)[1][1];
                    y := AreaToList(MREG_Parking[i], 0)[2][1];
 
-                   if MCF_Tag(side, 6, [f_distxy, x, y, 10]) then
+                   if MCF_Tag(i, 6, []) then
                       begin
 
-                      if MCF_Class(i, 3, []) then
-                         for k in MCF_Class(i, 3, []) do
-                             if GetTag(k) = 0 then
-                                SetTag(k, 8);
+                      for k in MCF_Tag(i, 6, []) do
+                          if GetLives(k) = 1000 then
+                             SetTag(k, 0);
 
-                      if MCF_Tag(i, 8, []) then
+                      if MCF_Tag(i, 0, [f_class, 3]) then
+                         begin
+                         for k in MCF_Tag(i, 0, [f_class, 3]) do
+                             if GetTag(k) = 0 then
+                                begin
+                                SetTag(k, 8); 
+                                end;
+                         end;
+
+                      if MCF_Tag(i, 6, [f_distxy, x, y, 10]) and MCF_Tag(i, 8, []) then
                          for j in MCF_Tag(i, 8, []) do
+                             begin
                              if IsInUnit(j) then
                                 ComExitBuilding(j)
                                  else
-                                  ComRepairVehicle(j, MCF_Tag(side, 6, [f_distxy, x, y, 10])[1]);
+                                  ComRepairVehicle(j, MCF_Tag(i, 6, [f_distxy, x, y, 10])[1]);
+                             end;
                       end;
-                   end;
-
-                if MCF_Tag(i, 8, []) and not MCF_Tag(side, 6, [f_distxy, x, y, 10]) then
-                   MCF_SetTag(i, MCF_Tag(i, 8, []), 0);
+                   end
+                    else
+                        if MCF_Tag(i, 8, []) then
+                           for k in MCF_Tag(i, 8, []) do
+                               SetTag(k, 0);
                  
                 // dep
                 if MCF_Get(i, [f_btype, b_warehouse]) then
