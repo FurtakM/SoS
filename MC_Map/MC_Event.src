@@ -2,6 +2,29 @@ On SailEvent(event) do
 begin
 if isEditor then
    MC_Show(event);
+
+if event = 101 and dialog_north then // atak z polnocy > Sylwek
+   begin
+   dialog_north := false;
+   SayRadio(Brown, ['DS1', 'DS2', 'DS3', 'DS6'][Rand(1,4)]);
+   Wait(4$00);
+   dialog_north := true;
+   end;
+
+if event = 102 and dialog_south then // atak z poludnia > Jakes
+   begin
+   dialog_south := false;
+   SayRadio(Houten, ['DJ1', 'DJ4', 'DJ6'][Rand(1,3)]);
+   Wait(4$00);
+   dialog_south := true;
+   end;
+
+if event = 104 and dialog_popov then
+   begin
+   dialog_popov := false;
+   SayRadio(Popov, 'DR4');
+   end;
+
 End;
 
 On BuildingStarted(b, unit) do
@@ -72,7 +95,7 @@ if tech in [tech_apepsych, tech_apeagres, tech_apebrain, tech_apeneural] then
 End;
 
 On VehicleConstructed(veh, b) do
-var i, side;
+var i, side, tmp, c1, c2, c3, c4;
 if MREG_SidesList[GetSide(b)] then
 begin
 side := GetSide(veh);
@@ -83,10 +106,45 @@ if not GetWeapon(veh) in [us_crane, us_cargo_bay, us_bulldozer, ru_cargo_bay, ru
 if GetWeapon(veh) = ar_control_tower then
    SetTag(GetDriver(veh), 9);
 
+if GetWeapon(veh) in [us_bulldozer, ru_bulldozer] then
+   begin
+   MREG_Bulldozer := Replace2(MREG_Bulldozer, GetSide(veh), 2, veh);
+   exit;
+   end;
+
+if GetChassis(veh) in MREG_DefSquad[side][1] and GetEngine(veh) in MREG_DefSquad[side][1] and
+   GetControl(veh) in MREG_DefSquad[side][1] and GetWeapon(veh) in MREG_DefSquad[side][1] then
+   begin
+   MREG_DefVeh := Replace2(MREG_DefVeh, side, MREG_DefVeh[side]+1, veh);
+   exit;
+   end;
+
+
+   c1 := GetChassis(veh);
+   c2 := GetEngine(veh);
+   c3 := GetControl(veh);
+   c4 := GetWeapon(veh);
+
+   if (c1 = MREG_ToAttack[side][1] and c2 = MREG_ToAttack[side][2] and c3 = MREG_ToAttack[side][3] and c4 = MREG_ToAttack[side][4]) then
+      begin
+      tmp := MREG_ToAttack[side];
+
+      for i = 1 to 4 do
+          tmp := Delete(tmp, 1);
+
+      MREG_ToAttack := Replace(MREG_ToAttack, side, tmp);
+      MREG_Attackers := Replace2(MREG_Attackers, side, MREG_Attackers[side]+1, veh);
+
+      if tmp = 0 then
+         MREG_ToAttack := Replace(MREG_ToAttack, side, 0);
+      exit;
+      end;
+
 MCV_Parking(GetSide(veh), veh);
 End;
 
 On ApemanTamed(ape, unit) do
+if MREG_SidesList[GetSide(unit)] then
 begin
 if (not GetTech(tech_apeagres, GetSide(unit)) = state_researched or not GetTech(tech_apepsych, GetSide(unit)) = state_researched) and MCF_Tag(GetSide(unit), 171, []) = 0 then
    begin
@@ -119,12 +177,39 @@ if un in MCF_Ape(GetSide(un)) then
            if GetTech(tech_apeneural, GetSide(un)) then
               SetClass(un, class_apeman_kamikaze);
 
-      ComExitBuilding(un);
+      //ComExitBuilding(un);
       end;
+   end;
+
+if GetBType(b) = b_bunker then
+   begin
+   MREG_ToBunker := Replace2(MREG_ToBunker, GetSide(b), MREG_ToBunker[GetSide(b)]+1, b);
+   MREG_ToBunker := Replace2(MREG_ToBunker, GetSide(b), MREG_ToBunker[GetSide(b)]+1, un);
    end;
 End;
 
 On UnitDestroyed(un) do
+begin
+
+if GetSide(un) = 1 and not alfa_north_triggered then
+   begin
+   alfa_north_triggered := true;
+   SayRadio(Brown, 'DS4');
+   Wait(1$25);
+   PrepareAlfaAttack(north_arr, [5, 6, 7][Difficulty]);
+   end;
+
+if GetSide(un) = 4 and not alfa_south_triggered then
+   begin
+   alfa_south_triggered := true;
+   SayRadio(Houten, 'DJ3');
+   Wait(0$45);
+   PrepareAlfaAttack(north_arr, [5, 6, 7][Difficulty]);
+   end;
+
+if GetBType(un) = b_warehouse and GetSide(un) in [1, 4] then
+   RaiseSailEvent(104);
+
 if MREG_SidesList[GetSide(un)] then
 begin
 
@@ -139,8 +224,34 @@ if un in MCF_Get(GetSide(un), [f_type, unit_human]) then
       end;
    end;
 
+
+if un in MREG_DefVeh[GetSide(un)] then
+   begin
+   MREG_DefVeh := Remove(MREG_DefVeh, un, false);
+   MCS_AddVehicle(GetSide(un), [GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un)]);
+   end;
+
+if un in MREG_Attackers[GetSide(un)] then
+   MREG_Attackers := Remove(MREG_Attackers, un, false);
+end;
+
 End;
 
+On LeaveBuilding(b, un) do
+if MREG_SidesList[GetSide(un)] then
+begin
+if un in MREG_ToBunker[GetSide(un)] and GetBType(b) in [b_bunker, b_breastwork] then
+   begin
+   MREG_ToBunker := Remove(MREG_ToBunker, b, false);
+   MREG_ToBunker := Remove(MREG_ToBunker, un, false);
+
+   if MREG_ToBunker[GetSide(un)] = '' then
+      MREG_ToBunker := Replace2(MREG_ToBunker, GetSide(un), 1, 0);
+   end;
+
+if GetBType(b) in b_control_tower then
+   SetTag(un, 0);
+End;
 
 On UnitGoesToRed(un) do
 if MREG_SidesList[GetSide(un)] then
@@ -148,5 +259,32 @@ begin
 if GetControl(un) = control_remote then
    ComUnlink(un);
 End;
+
+
+
+On EvacuateVehicle(driver, vehicle, v, c) do
+if MREG_SidesList[GetSide(driver)] then
+begin
+if GetWeapon(vehicle) in ar_control_tower then
+   SetTag(driver, 0);
+
+{
+if driver in MCF_Tag(GetSide(driver), 36, []) then
+   begin
+   SetTag(driver, 0);
+   if MCF_Get(GetSide(driver), [f_btype, b_factory]) then
+      ComEnterUnit(driver, MCF_Get(GetSide(driver), [f_btype, b_factory])[1]);
+   end;
+}
+End;
+
+On WeaponPlaced(building, factory) Do
+var weapon, x, y;
+begin
+weapon := GetBWeapon(building);
+x := GetX(building);
+y := GetY(building);
+MREG_TurretWeapon := MC_RegistryDelete(MREG_TurretWeapon, GetSide(building), weapon, [x, y]);
+end;
 
 

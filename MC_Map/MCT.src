@@ -1,3 +1,13 @@
+Export Function MCT_CutTreeArea(side, area);
+begin
+MREG_Bulldozer := Replace2(MREG_Bulldozer, side, 1, area);
+
+if GetNation(MCF_All(side, [])[1]) = nation_american then
+   MCS_AddVehicle(side, [us_heavy_tracked, engine_combustion, control_manual, us_bulldozer])
+    else
+     MCS_AddVehicle(side, [ru_heavy_tracked, engine_combustion, control_manual, ru_bulldozer]);
+End;
+
 Export Function MCT_CreateDepositXYT(x, y, t);
 begin
 CreateDepositXY(x, y, t);
@@ -133,7 +143,7 @@ mode := Rand(0, 1);
   y2 := ShiftY(y, dir, 4);
 
   i := i + 1;
-  MC_Show([x,y,dir] ^ [x2,y2]);
+  //MC_Show([x,y,dir] ^ [x2,y2]);
 
   if MCT_Enemy(GetSide(unit), x2, y2, 14) = false and GetHexInfo(x2, y2) = 0 and HexInfo(x2, y2) = 0 then
      break;
@@ -224,88 +234,7 @@ if not mode then
                end;
      end;
 End;
-{ old
-Export Function MCT_CollectCrates(side);
-var i, j, c, d, mode, areas, collectors, is_cargo, debug_time;
-begin
-mode := MREG_Collect[side][1];
-areas:= MREG_Collect[side][2];
-collectors := [];
-is_cargo := false;
-d := 0;
 
-if isEditor then
-   TimerStart();
-  
-if MCF_Cargo(side) then
-   begin
-   collectors := MCF_Cargo(side);
-   is_cargo := true;
-   end
-    else
-     begin
-     if MCF_ApeSpec(side, 'engineer') then
-        collectors := MCF_ApeSpec(side, 'engineer');
-     if MCF_Class(side, 2, []) then
-        collectors := collectors ^ MCF_Class(side, 2, [f_not, [f_hastask]]);
-     end;
-
-   MCT_UpdateCratesList();
-
-if not mode then
-   exit
-    else
-     begin
-     if collectors then
-        for i in areas do
-            if GetListOfCratesInArea(i) then
-               begin
-               
-               for c = 1 to MREG_Crates do
-                   if Compare3(MREG_Crates[c][1], GetListOfCratesInArea(i)) and
-                      Compare3(MREG_Crates[c][2], GetListOfCratesInArea(i)) and
-                      MREG_Crates[c][3] then
-                      begin
-                      d := c;
-                      break;
-                      end;
-              
-               if d = 0 then
-                  exit
-               else
-               if is_cargo then
-                  begin
-                  if not HasTask(collectors[1]) and GetTag(collectors[1]) = 0 then
-                     begin
-                     ComCollect(collectors[1], MREG_Crates[d][1], MREG_Crates[d][2]);
-                     MREG_Crates := Delete(MREG_Crates, d);
-                     end;
-                  end
-                   else
-                    begin
-                      for j = 1 to collectors do
-                          if not HasTask(collectors[j]) then
-                             begin
-                             MCT_Collect(collectors[j], MREG_Crates[d][1], MREG_Crates[d][2]);
-                             MREG_Crates := Replace2(MREG_Crates, d, 3, MREG_Crates[d][3]-1);
-
-                             if MREG_Crates[d][3] = 0 then
-                                begin
-                                MREG_Crates := Delete(MREG_Crates, d);
-                                break;
-                                end;
-                             end;
-                    end;
-
-               if isEditor then
-                  begin
-                  debug_time := TimerEnd();
-                  // MC_Show(debug_time);
-                  end;
-               end;
-     end;
-End;
-}
 
 // MCT_Crates(area, amount, percent, interval, limit);
 // area - obszar (area)
@@ -325,7 +254,7 @@ begin
           if tick mod interval = 0 and Prob(percent) then
              begin
              // area crates limit
-             if GetListOfCratesInArea(area) < limit then
+             if GetListOfCratesInArea(area) < limit or limit = 0 then
                 begin
                 Randomize;
                 cr := Rand(1, amount);
@@ -374,4 +303,26 @@ if Carry(unit) or not dep then
         end
          else
           exit;
+End;
+
+Export Function MCT_EnemyNearBase(side);
+var i, p, tmp, area;
+begin
+result := 0;
+p := 1;
+
+
+for i = 1 to (MREG_DefPoints[side][1])/2 do
+    begin
+    tmp := FilterAllUnits([[f_enemy, side], [f_distxy, MREG_DefPoints[side][1][p], MREG_DefPoints[side][1][p+1], 20]]);
+
+    if tmp then
+       result := result + tmp;
+
+    p := p + 2;
+    end;
+
+
+    if FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]) then
+       result := result + FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]);
 End;

@@ -189,7 +189,7 @@ p := 1;
 for i = 1 to list/3 do
     begin
     MCT_CreateDepositXYT(list[p], list[p+1], list[p+2]);
-    SetResourceVisibility(list[p], list[p+1], true);
+    SetResourceVisibility(list[p], list[p+1], side);
     p := p + 3;
     end;
 End;
@@ -206,4 +206,34 @@ if nat = nation_arabian then
           list := [ru_heavy_tracked, engine_siberite, control_manual, ru_siberium_rocket];
 
 MCS_AddVehicle(side, list);
+End;
+
+Export Function MCS_SetDefence(side, area, dont_leave_area, points, squad);
+var i;
+begin
+MREG_DefPoints := Replace2(MREG_DefPoints, side, 1, points);
+MREG_DefArea := Replace2(MREG_DefArea, side, 1, area);
+MREG_DefDontLeave := Replace2(MREG_DefDontLeave, side, 1, dont_leave_area);
+MREG_DefSquad := Replace2(MREG_DefSquad, side, 1, squad);
+
+while squad do
+      begin
+      MCS_AddVehicle(side, [squad[1], squad[2], squad[3], squad[4]]);
+      for i = 1 to 4 do
+          squad := Delete(squad, 1);
+      end;
+End;
+
+Export Function MCS_PrepareAttack(side, squad);
+var i;
+begin
+for i = 1 to squad do
+    MREG_ToAttack := Replace2(MREG_ToAttack, side, MREG_ToAttack[side]+1, squad[i]);
+
+while squad do
+      begin
+      MCS_AddVehicle(side, [squad[1], squad[2], squad[3], squad[4]]);
+      for i = 1 to 4 do
+          squad := Delete(squad, 1);
+      end;
 End;

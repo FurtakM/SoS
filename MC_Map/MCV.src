@@ -13,10 +13,25 @@ if GetResourceType(pom, mat_cans) >= cost[1] and
      result := false;
 End;
 
+// MCV_InQueue(side, component)
+Export Function MCV_InQueue(side, component);
+var tmp, i;
+begin
+result := false;
+tmp := MREG_ToConstruct[side];
+
+if tmp then
+for i = 1 to tmp do
+    if component = tmp[i] then
+       begin
+       result := true;
+       break;
+       end;
+End;
 
 // MCV_Produce(side, factory, [components_list]);
 Export Function MCV_Produce(side, fac, list);
-var i;
+var i, tab;
 begin
 if fac then
    begin
@@ -24,9 +39,12 @@ if fac then
       begin
       ComConstruct(fac, list[1], list[2], list[3], list[4]);
 
-      for i = 1 to 4 do
-          MREG_ToConstruct := Remove(MREG_ToConstruct, list[i], true);
+      tab := MREG_ToConstruct[side];
 
+      for i = 4 downto 1 do
+          tab := Remove(tab, list[i], true);
+
+      MREG_ToConstruct := Replace(MREG_ToConstruct, side, tab);
       result := true;
       end
        else
@@ -66,7 +84,7 @@ begin
 if MCF_Get(side, [f_btype, b_factory]) then
    if BuildingStatus(MCF_Get(side, [f_btype, b_factory])[1]) = bs_idle then
       begin
-      if MREG_ForSide(side, MREG_TurretWeapon) then
+
          for i = 1 to MREG_TurretWeapon do
              if MREG_TurretWeapon[i][1] = side then
                 begin
@@ -75,8 +93,7 @@ if MCF_Get(side, [f_btype, b_factory]) then
                 y := MREG_TurretWeapon[i][3][2];
                 turret := HexInfo(x, y);
 
-                AddComPlaceWeapon(turret, weapon);
-                MREG_TurretWeapon := MC_RegistryDelete(MREG_TurretWeapon, side, weapon, [x, y]);
+                ComPlaceWeapon(turret, weapon);
                 break;
                 end;
       end;

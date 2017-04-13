@@ -7,8 +7,7 @@ Export MREG_Game,
        MREG_ApeOptions,
        MREG_SidesList,
        MREG_LabList,
-       MREG_Cargo,
-       MREG_Crane,
+       MREG_Cargo,  
        MREG_Bulldozer,
        MREG_TurretWeapon,
        MREG_VehicleWeapon,     
@@ -29,6 +28,15 @@ Export MREG_Game,
        MREG_VCombat,
        MREG_Collect,
        MREG_Deposit,
+       MREG_DefPoints,
+       MREG_DefArea,
+       MREG_DefDontLeave,
+       MREG_DefSquad,
+       MREG_DefVeh,
+       MREG_ToBunker,
+       MREG_ToAttack,
+       MREG_DefMobActive,
+       MREG_Attackers,
        MREG_ResourcesBonus;
 
 Export Function MC_Registry();
@@ -40,8 +48,7 @@ MREG_Tame:= [];
 MREG_ApeOptions:= [];
 MREG_SidesList:= [];
 MREG_LabList:= [];
-MREG_Cargo:= [];
-MREG_Crane:= [];
+MREG_Cargo:= [];  
 MREG_Bulldozer:= [];
 MREG_TurretWeapon:= [];
 MREG_VehicleWeapon:= [];
@@ -60,6 +67,14 @@ MREG_ToArm:= [];
 MREG_ToDep:= [];
 MREG_Parking:= [];
 MREG_VCombat:= [];
+MREG_DefPoints:= [];
+MREG_DefArea:= [];
+MREG_DefDontLeave:= [];
+MREG_DefVeh:= [];
+MREG_ToBunker:= [];
+MREG_ToAttack:= [];
+MREG_Attackers:= [];
+MREG_DefMobActive:= [];
 MREG_ResourcesBonus:= [300, 100, 25]; // default value
 End;
 
@@ -67,7 +82,7 @@ Export Function MC_RegistryUpdate(mreg_list, side, unit, mreg);
 begin
 if [side, unit, mreg] in mreg_list then
    result := mreg_list
-    else    
+    else
       mreg_list := mreg_list ^ [[side, unit, mreg]];
 
 result := mreg_list;
@@ -87,7 +102,7 @@ var i, j;
 begin
 for j = 1 to 8 do
     begin
-    if MCF_Get(j, [f_alive]) {and not your_side = j} then
+    if MCF_Get(j, [f_alive]) and not your_side = j then
        MREG_SidesList := MREG_SidesList ^ 1
         else
          MREG_SidesList := MREG_SidesList ^ 0;
@@ -95,14 +110,6 @@ for j = 1 to 8 do
     if MCF_Vehicle(j, [[f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) then
        for i in MCF_Vehicle(j, [f_or, [[f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) do
            MREG_Cargo := MC_RegistryUpdate(MREG_Cargo, j, i, GetWeapon(i));
-
-    if MCF_Vehicle(j, [[f_or, [f_weapon, us_crane], {[f_weapon, ar_crane],} [f_weapon, ru_crane]]]) then
-       for i in MCF_Vehicle(j, [f_or, [[f_weapon, us_crane], {[f_weapon, ar_crane],} [f_weapon, ru_crane]]]) do
-           MREG_Crane := MC_RegistryUpdate(MREG_Crane, j, i, GetWeapon(i));
-
-    if MCF_Vehicle(j, [[f_or, [f_weapon, us_bulldozer], [f_weapon, ru_bulldozer]]]) then
-       for i in MCF_Vehicle(j, [[f_or, [f_weapon, us_bulldozer], [f_weapon, ru_bulldozer]]]) do
-           MREG_Bulldozer := MC_RegistryUpdate(MREG_Bulldozer, j, i, GetWeapon(i));
 
     if MCF_Class(j, 4, []) then
        MREG_ToLab := MREG_ToLab ^ [MCF_Class(j, 4, [])]
@@ -133,7 +140,16 @@ for j = 1 to 8 do
        MREG_ApeOptions := MREG_ApeOptions ^ [[0, 0, 0, 0]];
        MREG_Collect := MREG_Collect ^ [[0, []]];
        MREG_Deposit := MREG_Deposit ^ [[0]];
-           
+       MREG_Bulldozer := MREG_Bulldozer ^ [0];
+       MREG_DefPoints := MREG_DefPoints ^ [0];
+       MREG_DefArea := MREG_DefArea ^ [0];
+       MREG_DefDontLeave := MREG_DefDontLeave ^ [0];
+       MREG_DefSquad := MREG_DefSquad ^ [0];
+       MREG_DefVeh := MREG_DefVeh ^ [0];
+       MREG_ToBunker := MREG_ToBunker ^ [0];
+       MREG_ToAttack := MREG_ToAttack ^ [0];
+       MREG_Attackers := MREG_Attackers ^ [0];
+       MREG_DefMobActive := MREG_DefMobActive ^ 0;
     end;
 
 End;
