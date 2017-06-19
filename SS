@@ -1,0 +1,160 @@
+Tabela przechowująca uprawnienia użytkowników:
+select * from dba_sys_privs; 
+
+ROLLUP, CUBE - podsumowanie wyników (na koncu, na poczatku)
+Przykład:
+SELECT ROUND(AVG(salary), 2), department_name FROM departments d JOIN employees e USING(department_id) GROUP BY ROLLUP(department_name);
+
+GROUPING(kolumna) - zwraca 1 w przypadku wiersza sumującego wszystkie rekordy, w przeciwnym razie zwraca 0
+Przykład:
+select max(salary), job_id, grouping(job_id) from employees group by rollup (job_id);
+
+CASE - wykonuje podane instrukcje w przypadku danych warunków
+Przykład:
+select case grouping(job_id)
+when 1 then 'razem'
+else job_id
+end job_id
+from EMPLOYEES
+group by rollup(job_id);
+
+GROUPING SETS(kol1, kol2, ...) - grupowanie
+Przykład:
+select department_id,job_id,sum(salary)
+from employees 
+group by grouping sets(department_id,job_id);
+
+UNION ALL(kol1, kol2, ...) - grupowanie
+select null, department_id,sum(salary)
+from employees 
+group by DEPARTMENT_ID
+union all 
+select job_id,null,sum(salary)
+from EMPLOYEES
+group by job_id;
+
+INSERT ALL - dodaje wszystkie dane z podanego zakresu do tabeli
+Przykład:
+insert all 
+into PRACODDZIALY values(employee_id,department_id,salary)
+into pracstanowiska  values (employee_id,job_id,salary)
+into PRACDATA values (employee_id,hire_date,salary)
+select employee_id, department_id, job_id,hire_date,salary
+from employees;
+
+INSERT FIRST - dodaje dane w podane tabele jeżeli spełniony jest warunek
+Przykład:
+insert first when region_id=1 then
+into pracownicy_europa
+values (first_name, last_name,salary,department_name)
+when region_id=2 then
+into PRACOWNICY_AMERYKA 
+values (first_name, last_name,salary,department_name)
+when region_id=3 then
+into PRACOWNICY_AZJA
+values(first_name, last_name,salary,department_name)
+when region_id=4 then
+into PRACOWNICY_AFRYKA
+values (first_name, last_name,salary,department_name)
+select first_name, last_name,salary,department_name,region_id
+from HR.EMPLOYEES e join HR.DEPARTMENTS o on e.DEPARTMENT_ID=o.DEPARTMENT_ID
+join HR.LOCATIONS l on l.location_id=o.location_id
+join HR.COUNTRIES using(country_id);
+
+
+PORZĄDEK HIERARCHICZNY
+Przykład:
+select * from employees
+start with employees.employee_id=100
+connect by prior employee_id = manager_id;
+
+
+ZAWARTOŚĆ SŁOWNIKA
+select * from SYS.DICTIONARY;
+
+DANE SŁOWNIKA USER_OBJECTS
+select * from dict where table_name='USER_OBJECTS';
+
+STRUKTURA USER_OBJECTS
+desc USER_OBJECTS;
+
+TWORZENIE INDEKSU
+CREATE INDEX NAZWA_INDEKSU ON NAZWA_TABELI (KOL1, KOL2, ...);
+Przykład:
+create index ksiazkiindex on ksiazki(styl);
+
+RANKING
+Przykład:
+SELECT Round(AVG(Salary), 2), DEPARTMENT_NAME, RANK() OVER (ORDER BY AVG(SALARY) DESC) RANK
+FROM DEPARTMENTS d JOIN EMPLOYEES e USING (DEPARTMENT_ID) GROUP BY DEPARTMENT_NAME;
+
+SKUMULOWANIE 
+Przykład:
+SELECT first_name, last_name, hire_date, salary, SUM(salary) OVER (order by hire_date) FROM EMPLOYEES;
+
+POBRANIE NUMERU SCN
+select dbms_flashback.get_system_change_number from dual;
+
+POKAZANIE TABELI POD PODANYM SCN
+select * from pracownicy as of scn 65734213;
+
+ZAWARTOŚĆ KOSZA
+SELECT * FROM RECYCLEBIN;
+
+USUWANIE TABELI Z KOSZA
+PURGE TABLE prachistoria
+
+PRZYWRÓCENIE TABELI
+flashback table pracownicy to before drop;
+
+SYNONIM
+create or replace synonym DZIAL for HR.DEPARTMENTS;
+
+Zapytanie Hierarchiczne
+SELECT level, lpad(' ', 2*(level-1)) || ' ' || employee_id || ' '|| first_name || ' ' || last_name as Pracownik FROM EMPLOYEES
+CONNECT BY PRIOR manager_id = employee_id START WITH employee_id = 102;
+
+Przywrócenie zawartości tabeli z sprzed 5 minut
+flashback table pracownicy to timestamp(systimestamp - 5/1440);
+
+Role użytkownika
+select * from user_role_privs;
+
+Uprawnienia przyznane użytkownikowi
+select * from user_sys_privs;
+
+Tabele użytkownika
+user_tables
+
+* użytkownika
+user_*
+
+ODGM (Object Database Managment Group) składa się:
+- opisu modelu obiektowego
+- ODL - język definicji
+- OQL - obiektowy język zapytań
+- OML - rozszerzenie obiektowych jezykow programowania
+
+OLTP - system przetwarzania transkacyjnego. (dla małych danych)
+OLAP - system przetwarzania analitycznego. (dla dużych danych)
+
+Definicja Hurtownii Danych
+HD to problemowo zorientowany, zintegrowany i trwały zbiór danych opisany
+wymiarem czasu. (W. H. INMON)
+
+ETL - zasila hurtowanię danych. Odpowiada za operacje w hurtownii.
+Warstwy ETL
+- Ekstrakcja (odczyt)
+- Transformacja (przetwarzanie)
+- Załadowanie (załadowanie danych do hurtowni))
+
+Modele danych wielowymiarowych
+ROLAP (relacyjny)
+MOLAP (wielowymiarowy)
+HOLAP (hybrydowy)
+
+Schematy logiczne
+- gwiazdy
+- płatka śniegu
+- konstelacji faktów
+- schemat znormalizowany
