@@ -1,0 +1,70 @@
+On UnitDestroyed(un) do
+var shooter, cl, s, n;
+begin
+// get type of unit
+{
+if GetSide(un) = bot_side then
+   begin
+   shooter := UnitShoot(un);
+
+   if un in FilterAllUnits([f_type, unit_human]) then
+      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 30);
+
+   if un in FilterAllUnits([f_type, unit_vehicle]) then
+      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 10);
+
+   if un in FilterAllUnits([f_type, unit_building]) then
+      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 100);
+   end; }
+
+if un in attackers then
+   attackers := attackers diff un;
+
+if GetSide(un) <> bot_side and GetSide(un) > 0 and un in FilterAllUnits([f_type, unit_human]) then
+   begin
+   if respawning_time_min > 0$00 then
+      begin
+      s := GetSide(un);
+      n := GetNation(un);
+      cl := GetClass(un);
+
+      wait(respawning_time_min);
+
+      wait(respawning_time_max - (0$10 * tick mod 10 + 1));
+
+      uc_side := s;
+      uc_nation := n;
+      PrepareHuman(false, cl, skill_level-2);
+      PlaceUnitArea(CreateHuman, [cr1, cr3, cr2, cr3][(cl mod 4) + 1], true);
+      end;
+   end;
+End;
+
+On UnitGoesToRed(un) do
+begin
+if GetControl(un) = control_remote then
+   ComUnlink(un);
+End;
+
+On VehicleConstructed(veh, b) do
+begin
+if GetSide(veh) = bot_side then
+   attackers := Insert(attackers, attackers+1, veh);
+End;
+
+On LeaveBuilding(b, un) do
+var i, arm, tmp;
+begin
+if GetSide(b) = bot_side and GetBType(b) = b_bunker then
+   begin
+   arm := FilterAllUnits([[f_side, bot_side], [f_btype, b_barracks]]);
+   tmp := NearestUnitToUnit(arm, un);
+
+   if tmp then
+      begin
+      ComEnterUnit(un, tmp);
+      AddComChangeProfession(un, class_mortar);
+      end;
+   end;
+End;
+

@@ -1,0 +1,451 @@
+Export south_force, north_force, east_force;
+Export Function InitBot;
+var i, ct, hex, side, un, veh, weapons, skill;
+begin
+side := Bot_Side;
+skill := [4, 6, 8][Difficulty];
+weapons := [ar_gun, ar_rocket_launcher, ar_gatling_gun, ar_flame_thrower];
+veh_counter := [4, 5, 6][Difficulty];
+ct := [];
+patrols := [];
+attackers := [];
+
+south_force := Defcon([3, 3, 4][Difficulty], 118, 130, false);
+north_force := Defcon([4, 5, 6][Difficulty], 21, 16, false);
+east_force  := Defcon([4, 5, 5][Difficulty], 111, 21, true);
+
+to_produce := [ [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+                [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
+                [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+                [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
+                [ar_half_tracked, engine_combustion, control_remote, ar_gun] ];
+
+SetResourceType(GetBase(ar_base_east), mat_cans, 90000);
+SetResourceType(GetBase(ar_base_east), mat_oil, 9000);
+SetResourceType(GetBase(ar_base_east), mat_siberit, 3000);
+
+SetResourceType(GetBase(ar_base_east), mat_cans, 10000);
+SetResourceType(GetBase(ar_base_east), mat_oil, 1000);
+SetResourceType(GetBase(ar_base_east), mat_siberit, 1000);
+
+SetResourceType(GetBase(ar_base_sout), mat_cans, [2000, 1500, 1000][Difficulty]);
+SetResourceType(GetBase(ar_base_sout), mat_oil, 1000);
+SetResourceType(GetBase(ar_base_sout), mat_siberit, 100);
+
+
+
+if Difficulty > 1 then
+   SetTech(5, side, state_researched);
+
+SetTech(tech_weap1, side, state_researched);
+SetTech(tech_weap2, side, state_researched);
+SetTech(tech_weap3, side, state_researched);
+SetTech(tech_opto1, side, state_researched);
+SetTech(tech_opto2, side, state_researched);
+SetTech(tech_opto3, side, state_researched);
+
+for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
+    SetBLevel(i, [6, 8, 10][Difficulty]);
+
+
+// mines
+PlaceMines(mine_west_zone, [5, 7, 9][Difficulty]);
+PlaceMines(mine_east_zone, [20, 25, 30][Difficulty]);
+PlaceMines(mine_center_zone, [6, 8, 9][Difficulty]);
+PlaceMines(mine_pass_zone, [4, 6, 9][Difficulty]);
+PlaceMines(mine_road_zone, [2, 5, 8][Difficulty]);
+PlaceMines(mine_southpass_zone, [2, 4, 6][Difficulty]);
+
+
+for i = 1 to [8, 11, 14][Difficulty] do
+    begin
+    hex := RandHexXYR(134, 73, 10, false);
+
+    if HexInfo(hex[1], hex[2]) = 0 and not MineAtPos(hex[1], hex[2]) then
+       begin
+       mines_list := Insert(mines_list, mines_list+1, hex[1]);
+       mines_list := Insert(mines_list, mines_list+1, hex[2]);
+       PlaceMine(hex[1], hex[2], bot_side, 0);
+       end;
+    end;
+
+// weapons on turrets
+for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
+    PlaceWeaponTurret(i, weapons[Rand(1, weapons)]);
+
+uc_side := side;
+uc_nation := 2;
+
+for i = 1 to 1+Difficulty do
+    begin
+    vc_chassis := ar_half_tracked;
+    vc_engine := engine_combustion;
+    vc_control := control_manual;
+    vc_weapon := ar_control_tower;
+    veh := CreateVehicle;
+    PlaceUnitArea(veh, ct_area, false);
+
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+
+for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
+    begin
+    PrepareHuman(false, 1, skill);
+    PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+for i = 1 to 4 do
+    begin
+    PrepareHuman(false, 2, skill);
+    PlaceHumanInUnit(CreateHuman, ar_base_east);
+    end;
+
+for i = 1 to 6 do
+    begin
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, ar_fac_east);
+    end;
+
+for i = 1 to 4 do
+    begin
+    PrepareHuman(false, 4, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([f_btype, b_lab_full])[(i mod 2)+1]);
+    end;
+
+    PrepareHuman(false, class_sniper, skill);
+    un := CreateHuman;
+    SetDir(un, 3);
+    PlaceHumanInUnit(un, bun1);
+
+for i = 1 to 4 do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_engineer, 1);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 116, 128, 8, false);
+    end;
+
+for i = 1 to 3 do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_engineer, 1);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 23, 19, 8, false);
+    end;
+
+
+for i = 1 to 3*Difficulty do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_kamikaze, 3);
+    hc_attr := [11, 13];
+
+    un := CreateHuman;
+    PlaceUnitArea(un, ap1, false);
+    ComHold(un);
+    end;
+
+End;
+
+Export Function Defcon(n, x, y, type);
+var i, un, veh, list;
+begin
+list := [];
+
+uc_side := bot_side;
+uc_nation := nation_arabian;
+
+vc_chassis := ar_half_tracked;
+vc_engine := engine_siberite;
+
+if type then
+   vc_control := control_manual
+else
+   vc_control := control_apeman;
+
+for i = 1 to n do
+    begin
+    vc_weapon := [ar_rocket_launcher, ar_flame_thrower, ar_gun][Rand(1,3)];
+    veh := CreateVehicle;
+    PlaceUnitXYR(veh, x, y, 13, false);
+
+    if type then
+       begin
+       PrepareHuman(false, 3, [4, 6, 8][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+
+    list := Insert(list, 1, veh);
+    end;
+
+result := list;
+End;
+
+// pass protect
+Every 0$03 trigger FilterUnitsInArea(pass_guard, [f_enemy, bot_side]) do
+var i;
+begin
+if not north_force then
+   exit;
+
+for i = 1 to north_force do
+    begin
+    ComMoveXY(north_force[i], 38, 57);
+    end;
+
+PlaceSeeing(54, 69, bot_side, 10);
+End;
+
+// bridge protect
+Every 0$03 trigger FilterUnitsInArea(bridge_protect, [f_enemy, bot_side]) do
+var i;
+begin
+if not south_force then
+   exit;
+
+for i = 1 to south_force do
+    begin
+    ComMoveXY(south_force[i], 157, 140);
+    end;
+End;
+
+// produce
+Every 12$00 trigger ar_fac_east and FilterAllUnits([[f_enemy, bot_side], [f_btype, b_warehouse]]) do
+var i, tmp, p;
+begin
+enable;
+
+tmp := queue_codes[rng];
+p := 1;
+
+for i = 1 to veh_counter do
+    begin
+    AddComConstruct(ar_fac_east,
+                    to_produce[tmp mod 10][1],
+                    to_produce[tmp mod 10][2],
+                    to_produce[tmp mod 10][3],
+                    to_produce[tmp mod 10][4]
+                    );
+
+    tmp := tmp / 10;
+    p := p + 1;
+
+    if p > 5 then
+       begin
+       p := 1;
+       tmp := queue_codes[rng];
+       end;
+    end;
+
+rng := rng + 1;
+
+if rng > queue_codes then
+   rng := 1;
+End;
+
+Every 0$01 trigger FilterAllUnits([f_class, 17]) do
+var i, un;
+begin
+enable;
+
+for i in FilterAllUnits([f_class, 17]) do
+    begin
+    un := NearestUnitToUnit(FilterAllUnits([f_enemy, bot_side]), i);
+
+    if GetDistUnits(i, un) < 15 then
+       ComAttackUnit(i, un);
+    end;
+
+End;
+
+Every 0$01 trigger attackers marked 17 do
+var i;
+begin
+enable;
+
+if target = 0 then
+   target := FilterAllUnits([f_enemy, bot_side]);
+
+for i in attackers do
+    ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, target]), i));
+End;
+
+
+Every 0$01 trigger not attackers marked 17 do
+begin
+enable;
+Disable(17);
+End;
+
+
+Every 3$00 trigger veh_counter <= attackers do
+var max, i;
+begin
+enable;
+Enable(17);
+
+max := 1;
+
+for i = 1 to 8 do
+    if i <> bot_side then
+       begin
+       if max < FilterAllUnits([f_side, i]) then
+          begin
+          max := FilterAllUnits([f_side, i]);
+          target := i;
+          end;
+       end;
+End;
+
+Every 0$01 trigger game_start and tick >= 20$00 do
+begin
+veh_counter := veh_counter + 1;
+End;
+
+Every 0$01 trigger game_start and tick >= 40$00 do
+begin
+veh_counter := veh_counter + 2;
+End;
+
+Every 0$01 trigger game_start and tick >= 60$00 do
+begin
+veh_counter := veh_counter + 3;
+End;
+
+
+// ct control
+Every 0$01 trigger FilterAllUnits([[f_side, bot_side], [f_control, control_remote]]) do
+var i, j, cts, vehs, best, best_mechanic, p;
+begin
+enable;
+
+vehs := FilterAllUnits([[f_side, bot_side], [f_control, control_remote], [f_not, [f_linked]]]);
+cts := FilterAllUnits([[f_side, bot_side], [f_weapon, ar_control_tower]]);
+best := 10;
+best_mechanic := -1;
+
+if vehs then
+   begin
+   for j in cts do
+       begin
+       p := UnitsLinked(GetDriver(j));
+
+       if p < best then
+          begin
+          best := p;
+          best_mechanic := GetDriver(j);
+          end;
+       end;
+
+   ComLinkTo(vehs[1], best_mechanic);
+   end;
+
+
+End;
+
+
+// repair and heal
+Every 0$01 do
+var i, j, h, sci, eng, b, p;
+begin
+enable;
+
+b := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+h := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_or, [f_class, 1], [f_class, 2], [f_class, 3]], [f_not, [f_lives, 750]]]);
+
+sci := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_class, 4]]);
+eng := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_class, 2]]);
+
+if not h and not b then
+   begin
+   if sci then
+   if UnitFilter(sci, [f_not, [f_inside]]) and FilterUnitsInArea(main_base, [[f_side, bot_side], [f_btype, b_lab_full]]) then
+      for j in UnitFilter(sci, [f_not, [f_inside]]) do
+          ComEnterUnit(j, FilterUnitsInArea(main_base, [[f_side, bot_side], [f_btype, b_lab_full]])[1]);
+
+   if eng then
+   if UnitFilter(eng, [f_not, [f_inside]]) and FilterUnitsInArea(main_base, [[f_side, bot_side], [f_btype, b_warehouse]]) then
+      for j in UnitFilter(eng, [f_not, [f_inside]]) do
+          ComEnterUnit(j, FilterUnitsInArea(main_base, [[f_side, bot_side], [f_btype, b_warehouse]])[1]);
+   end;
+
+p := 1;
+
+if b and eng then
+   for j in eng do
+       begin
+       if IsInUnit(j) then
+          ComExitBuilding(j)
+           else
+            if not HasTask(j) and GetLives(j) > 750 then
+               begin
+               if b > p then
+                  begin
+                  ComRepairBuilding(j, b[p]);
+                  p := p + 1;
+                  end
+                   else
+                    ComRepairBuilding(j, b[1]);
+               end;
+       end;
+
+if h and sci then
+   for i in h do
+       if GetDistUnitXY(i, 108, 42) > 10 then
+          ComMoveXY(i, 108, 42)
+           else
+            begin
+            for j in sci do
+                begin
+                if GetTag(j) > 0 then
+                   continue;
+
+                if IsInUnit(j) then
+                   ComExitBuilding(j)
+                    else
+                     if not HasTask(j) then
+                        ComHeal(j, h);
+                end;
+            end;
+End;
+
+// Triggered Mines
+Every 0$01 trigger mines_list do
+var i, p;
+begin
+enable;
+
+p := 1;
+
+for i = 1 to mines_list/2 do
+    begin
+    if HexInfo(mines_list[p], mines_list[p+1]) > 0 then
+       if GetSide(HexInfo(mines_list[p], mines_list[p+1])) <> bot_side then
+          begin
+          LaunchMineAtPos(mines_list[p], mines_list[p+1], bot_side);
+          mines_list := Delete(mines_list, p);
+          mines_list := Delete(mines_list, p);
+          p := p - 2;
+          end;
+
+    p := p + 2;
+    end;
+End;
+
+
+Every 0$03 do
+var i, p, skr, filter, dep;
+begin
+Enable;
+
+filter := FilterAllUnits([[f_ok], [f_side, bot_side], [f_class, class_apeman_engineer]]);
+dep    := FilterAllUnits([[f_side, bot_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+skr    := GetListOfCratesInArea(collect_crates);
+
+if filter and skr then
+   for i = 1 to filter do
+       ComCollect(filter[i], skr[1], skr[2]);
+End;
+
+
