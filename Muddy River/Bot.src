@@ -1,4 +1,4 @@
-Export south_force, north_force, east_force;
+Export south_force, north_force, east_force, river_guard;
 Export Function InitBot;
 var i, ct, hex, side, un, veh, weapons, skill;
 begin
@@ -9,6 +9,7 @@ veh_counter := [4, 5, 6][Difficulty];
 ct := [];
 patrols := [];
 attackers := [];
+river_guard := [];
 
 south_force := Defcon([3, 3, 4][Difficulty], 118, 130, false);
 north_force := Defcon([4, 5, 6][Difficulty], 21, 16, false);
@@ -43,6 +44,13 @@ SetTech(tech_weap3, side, state_researched);
 SetTech(tech_opto1, side, state_researched);
 SetTech(tech_opto2, side, state_researched);
 SetTech(tech_opto3, side, state_researched);
+SetTech(tech_bio1, side, state_researched);
+
+if Difficulty > 1 then
+   SetTech(tech_bio2, side, state_researched);
+
+if Difficulty > 2 then
+   SetTech(tech_bio3, side, state_researched);
 
 for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
     SetBLevel(i, [6, 8, 10][Difficulty]);
@@ -146,6 +154,18 @@ for i = 1 to 3*Difficulty do
     ComHold(un);
     end;
 
+// river guard
+for i = 1 to Difficulty do
+    begin
+    uc_nation := nation_arabian;
+    vc_chassis := ar_hovercraft;
+    vc_engine := engine_solar;
+    vc_control := control_remote;
+    vc_weapon := ar_double_machine_gun;
+    veh := CreateVehicle;
+    river_guard := Insert(river_guard, 1, veh);
+    PlaceUnitArea(veh, river_spawn, false);
+    end;
 End;
 
 Export Function Defcon(n, x, y, type);
@@ -311,6 +331,14 @@ End;
 Every 0$01 trigger game_start and tick >= 60$00 do
 begin
 veh_counter := veh_counter + 3;
+End;
+
+
+Every 0$03 trigger FilterUnitsInArea(bridge2_protect, [f_enemy, bot_side]) do
+var i;
+begin
+for i = 1 to river_guard do
+    ComMoveToArea(river_guard[i], bridge2_protect);
 End;
 
 
