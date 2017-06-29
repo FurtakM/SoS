@@ -1,22 +1,11 @@
 On UnitDestroyed(un) do
 var shooter, cl, s, n;
 begin
-// get type of unit
-{
-if GetSide(un) = bot_side then
+if un in FilterAllUnits([f_weapon, 91]) then
    begin
-   shooter := UnitShoot(un);
-
-   if un in FilterAllUnits([f_type, unit_human]) then
-      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 30);
-
-   if un in FilterAllUnits([f_type, unit_vehicle]) then
-      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 10);
-
-   if un in FilterAllUnits([f_type, unit_building]) then
-      SetMultiScore(GetSide(shooter), GetMultiScore(GetSide(shooter)) + 100);
-   end; }
-
+   ArtContamination(GetX(un), GetY(un), 10);
+   end;
+   
 if un in attackers then
    attackers := attackers diff un;
 
@@ -41,14 +30,24 @@ if GetSide(un) <> bot_side and GetSide(un) > 0 and un in FilterAllUnits([f_type,
 End;
 
 On UnitGoesToRed(un) do
+var tmp, i;
 begin
-if GetSide(un) = bot_side and un in FilterAllUnits([[f_control, control_remote], [f_type, unit_vehicle]]) then
+if un in FilterAllUnits([[f_side, bot_side], [f_btype, b_lab_full]]) and GetLives(ar_lab_main) > 500 then
    begin
-   Wait(0$0.3);
-   MineExplosion(GetX(un), GetY(un), 1);
-   MineExplosion(GetX(un), GetY(un), 1);
-   MineExplosion(GetX(un), GetY(un), 1);
+   Wait(0$02);
+
+   for i in FilterAllUnits([[[f_side, bot_side], [f_class, 4], [f_not, [f_inside]]]]) do
+       ComEnterUnit(i, ar_lab_main);
    end;
+
+if GetSide(un) = bot_side and un in FilterAllUnits([[f_control, control_remote], [f_type, unit_vehicle]]) then
+   if GetSide(NearestUnitToUnit(all_units diff un, un)) <> bot_side then
+      begin
+      Wait(0$1.3);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      end;
 
 if GetControl(un) = control_remote then
    ComUnlink(un);

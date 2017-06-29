@@ -25,12 +25,13 @@ End;
 Export Game_Type, Side_Positions, Side_Teams, Side_Nations, Teams;
 Export Team_Game, Side_Start, Bot_Side, Game_Start;
 Export number_of_people, skill_level, crates_spawn, respawning_time_min, respawning_time_max, amount_of_apeman;
-Export definitions, mines_list, apeman_areas, patrols, attackers, to_produce, veh_counter, queue_codes, rng, target, handicap, rforce;
+Export definitions, mines_list, apeman_areas, patrols, attackers, to_produce, veh_counter, queue_codes, rng, target, handicap, rforce, rforce2, att_counter;
 Export Function Init();
 var i, j;
 begin
 definitions := [];
 rforce := [];
+rforce2 := [];
 
  if Multiplayer then
     begin
@@ -103,7 +104,7 @@ rforce := [];
 
   number_of_people     := [5, 9, 12, 15][definitions[1]];
   skill_level          := [2, 4, 6, 8][definitions[2]];
-  crates_spawn         := [1$20, 1$05, 0$51, 0$47][definitions[3]];
+  crates_spawn         := [1$10, 0$55, 0$41, 0$31][definitions[3]];
   respawning_time_min  := [0$0][1];
   respawning_time_max  := [0$0][1];
   amount_of_apeman     := [0, 3, 5, 7][definitions[4]];
@@ -112,8 +113,8 @@ rforce := [];
 
 
   // queue codes
-     queue_codes := [11353, 12244, 44444, 12345, 43413, 14152];
-     rng := Rand(1, 6);
+     queue_codes := [77474, 11353, 12644, 44646, 12345, 43477, 14652, 23441];
+     rng := Rand(1, 8);
 
   // bot settings
   if bot_side <> 2 then
@@ -143,7 +144,21 @@ Every 0$03 trigger GetSide(ar_base_sout) <> bot_side or IsDead(ar_base_sout) do
 var i;
 begin
 for i = 1 to rforce do
+    begin
     PlaceUnitXYR(rforce[i][1], rforce[i][2], rforce[i][3], 6, false);
+
+    if GetWeapon(rforce[i][1]) = us_cargo_bay then
+       SetCargo(rforce[i][1], mat_cans, 100);
+    end;
+End;
+
+Every 0$03 trigger (GetSide(ar_base_sout) <> bot_side or IsDead(ar_base_sout)) and tick > 42000 do
+var i;
+begin
+for i = 1 to rforce2 do
+    begin
+    PlaceUnitXYR(rforce2[i][1], rforce2[i][2], rforce2[i][3], 6, false);
+    end;
 End;
 
 
@@ -211,7 +226,7 @@ cr_queue := [rand(1,3), rand(2,4), rand(3,5), rand(3,5), rand(2,5), rand(1,5)];
 
      cr := cr + 1;
 
-     if cr > 150 then
+     if cr > 110 then
         cr := 43;
      end;
 End;

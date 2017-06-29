@@ -1,15 +1,19 @@
-Export south_force, north_force, east_force, river_guard;
+Export south_force, north_force, east_force, river_guard, apek, ar_collectors, sup_attack;
 Export Function InitBot;
-var i, ct, hex, side, un, veh, weapons, skill;
+var i, j, ct, hex, side, un, veh, weapons, skill;
 begin
 side := Bot_Side;
 skill := [4, 6, 8][Difficulty];
 weapons := [ar_gun, ar_rocket_launcher, ar_gatling_gun, ar_flame_thrower];
-veh_counter := [4, 5, 6][Difficulty];
+veh_counter := [6, 7, 8][Difficulty];
 ct := [];
 patrols := [];
 attackers := [];
 river_guard := [];
+apek := [];
+ar_collectors := [];
+sup_attack := [];
+att_counter := 0;
 
 south_force := Defcon([3, 3, 4][Difficulty], 118, 130, false);
 north_force := Defcon([4, 5, 6][Difficulty], 21, 16, false);
@@ -19,15 +23,17 @@ to_produce := [ [ar_half_tracked, engine_combustion, control_remote, ar_gun],
                 [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
                 [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                 [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
-                [ar_half_tracked, engine_combustion, control_remote, ar_gun] ];
+                [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+                [ar_half_tracked, engine_combustion, control_remote, 91],
+                [ar_hovercraft, engine_combustion, control_remote, ar_light_gun] ];
 
 SetResourceType(GetBase(ar_base_east), mat_cans, 90000);
 SetResourceType(GetBase(ar_base_east), mat_oil, 9000);
 SetResourceType(GetBase(ar_base_east), mat_siberit, 3000);
 
-SetResourceType(GetBase(ar_base_east), mat_cans, 10000);
-SetResourceType(GetBase(ar_base_east), mat_oil, 1000);
-SetResourceType(GetBase(ar_base_east), mat_siberit, 1000);
+SetResourceType(GetBase(ar_base_nort), mat_cans, 90000);
+SetResourceType(GetBase(ar_base_nort), mat_oil, 9000);
+SetResourceType(GetBase(ar_base_nort), mat_siberit, 1000);
 
 SetResourceType(GetBase(ar_base_sout), mat_cans, [2000, 1500, 1000][Difficulty]);
 SetResourceType(GetBase(ar_base_sout), mat_oil, 1000);
@@ -77,6 +83,24 @@ for i = 1 to [8, 11, 14][Difficulty] do
        end;
     end;
 
+for i = 1 to 12 do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_kamikaze, 2);
+    un := CreateHuman;
+    apek := Insert(apek, 1, un);
+    end;
+
+uc_nation := 2;
+
+// towers
+if Difficulty > 1 then
+   begin
+   bc_type := b_bunker;
+   bc_level := 5;
+   CreateAndPlaceBuildingXYD(99, 131, 1);
+   end;
+
 // weapons on turrets
 for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
     PlaceWeaponTurret(i, weapons[Rand(1, weapons)]);
@@ -84,7 +108,7 @@ for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
 uc_side := side;
 uc_nation := 2;
 
-for i = 1 to 1+Difficulty do
+for i = 1 to 4 do
     begin
     vc_chassis := ar_half_tracked;
     vc_engine := engine_combustion;
@@ -117,8 +141,15 @@ for i = 1 to 6 do
 
 for i = 1 to 4 do
     begin
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, ar_fac_north);
+    end;
+
+for i = 1 to 6 do
+    begin
     PrepareHuman(false, 4, skill);
     PlaceHumanInUnit(CreateHuman, FilterAllUnits([f_btype, b_lab_full])[(i mod 2)+1]);
+    SetSpecResearch(FilterAllUnits([f_btype, b_lab_full])[(i mod 2)+1], 2000, false);
     end;
 
     PrepareHuman(false, class_sniper, skill);
@@ -142,6 +173,22 @@ for i = 1 to 3 do
     PlaceUnitXYR(un, 23, 19, 8, false);
     end;
 
+for i = 1 to 3 do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_engineer, 1);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 154, 89, 8, false);
+    end;
+
+for i = 1 to 3 do
+    begin
+    uc_nation := 0;
+    PrepareHuman(false, class_apeman_engineer, 1);
+    un := CreateHuman;
+    ar_collectors := ar_collectors ^ un;
+    PlaceUnitXYR(un, 112, 17, 8, false);
+    end;
 
 for i = 1 to 3*Difficulty do
     begin
@@ -166,6 +213,42 @@ for i = 1 to Difficulty do
     river_guard := Insert(river_guard, 1, veh);
     PlaceUnitArea(veh, river_spawn, false);
     end;
+
+// sup attack
+for i = 1 to Difficulty do
+    begin
+    uc_nation := nation_arabian;
+
+    for j = 1 to 5 do
+        begin
+        PrepareHuman(false, class_mortar, skill);
+        un := CreateHuman;
+        sup_attack := Insert(sup_attack, sup_attack+1, [un, 54, 102]);
+        end;
+
+    for j = 1 to 3 do
+        begin
+        uc_nation := 0;
+
+        vc_chassis := 15;
+        vc_control := control_rider;
+        un := CreateVehicle;
+        sup_attack := Insert(sup_attack, sup_attack+1, [un, 188, 145]);
+
+        uc_nation := nation_arabian;
+        PrepareHuman(false, class_desert_warior, skill);
+        un := CreateHuman;
+        sup_attack := Insert(sup_attack, sup_attack+1, [un, -1]);
+        end;
+
+    for j = 1 to 3 do
+        begin
+        PrepareHuman(false, class_mortar, skill);
+        un := CreateHuman;
+        sup_attack := Insert(sup_attack, sup_attack+1, [un, 188, 145]);
+        end;
+    end;
+
 End;
 
 Export Function Defcon(n, x, y, type);
@@ -231,8 +314,8 @@ for i = 1 to south_force do
 End;
 
 // produce
-Every 12$00 trigger ar_fac_east and FilterAllUnits([[f_enemy, bot_side], [f_btype, b_warehouse]]) do
-var i, tmp, p;
+Every 11$00 trigger ar_fac_east and FilterAllUnits([[f_enemy, bot_side], [f_btype, b_warehouse]]) do
+var i, tmp, p, fac;
 begin
 enable;
 
@@ -241,7 +324,13 @@ p := 1;
 
 for i = 1 to veh_counter do
     begin
-    AddComConstruct(ar_fac_east,
+    fac := [ar_fac_east, ar_fac_north][i mod 2 + 1];
+
+    if fac = ar_fac_north and (GetSide(ar_fac_north) <> bot_side or IsDead(ar_fac_north) or
+                               GetResourceType(GetBase(ar_base_nort), mat_cans) < 100) then
+    fac := ar_fac_east;
+
+    AddComConstruct(fac,
                     to_produce[tmp mod 10][1],
                     to_produce[tmp mod 10][2],
                     to_produce[tmp mod 10][3],
@@ -300,7 +389,7 @@ End;
 
 
 Every 3$00 trigger veh_counter <= attackers do
-var max, i;
+var max, i, j, x;
 begin
 enable;
 Enable(17);
@@ -316,6 +405,27 @@ for i = 1 to 8 do
           target := i;
           end;
        end;
+
+att_counter := att_counter + 1;
+
+if att_counter mod [4, 3, 3][Difficulty] = 0 and sup_attack then
+   begin
+   x := 1;
+
+   for j = 1 to 14 do
+       begin
+       if GetClass(sup_attack[1][1]) = class_desert_warior then
+          begin
+          PlaceHumanInUnit(sup_attack[1][1], FilterAllUnits([f_control, control_rider])[x]);
+          x := x + 1;
+          end
+           else
+            PlaceUnitXYR(sup_attack[1][1], sup_attack[1][2], sup_attack[1][3], 8, false);
+
+       attackers := attackers ^ sup_attack[1][1];
+       sup_attack := Delete(sup_attack, 1);
+       end;
+   end;
 End;
 
 Every 0$01 trigger game_start and tick >= 20$00 do
@@ -382,8 +492,8 @@ enable;
 b := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
 h := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_or, [f_class, 1], [f_class, 2], [f_class, 3]], [f_not, [f_lives, 750]]]);
 
-sci := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_class, 4]]);
-eng := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_class, 2]]);
+sci := FilterUnitsInArea(main_base, [[f_side, bot_side], [f_class, 4]]) ^ UnitsInside(ar_lab_main);
+eng := FilterAllUnits([[f_side, bot_side], [f_class, 2]]);
 
 if not h and not b then
    begin
@@ -461,15 +571,43 @@ for i = 1 to mines_list/2 do
     end;
 End;
 
+Every 13$00 trigger FilterAllUnits([[f_enemy, bot_side], [f_type, unit_building]]) and apek do
+var i;
+begin
+enable;
+
+for i = 1 to 3 do
+    begin
+    PlaceUnitArea(apek[i], ape_kami, false);
+    ComAttackUnit(apek[i], NearestUnitToUnit(FilterAllUnits([f_enemy, bot_side]), apek[i]));
+    apek := Delete(apek, 1);
+    end;
+End;
+
+Every 0$02 trigger GetSide(ar_base_nort) <> bot_side do
+begin
+MineExplosion(GetX(ar_base_nort), GetY(ar_base_nort), 1);
+MineExplosion(GetX(ar_base_nort), GetY(ar_base_nort), 1);
+MineExplosion(GetX(ar_base_nort), GetY(ar_base_nort), 1);
+MineExplosion(GetX(ar_base_nort), GetY(ar_base_nort), 1);
+MineExplosion(GetX(ar_base_nort), GetY(ar_base_nort), 1);
+End;
 
 Every 0$03 do
 var i, p, skr, filter, dep;
 begin
 Enable;
 
-filter := FilterAllUnits([[f_ok], [f_side, bot_side], [f_class, class_apeman_engineer]]);
+if not ar_collectors then
+   filter := FilterAllUnits([[f_ok], [f_side, bot_side], [f_class, class_apeman_engineer]])
+    else
+     filter := ar_collectors;
+
 dep    := FilterAllUnits([[f_side, bot_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 skr    := GetListOfCratesInArea(collect_crates);
+
+if not filter then
+   exit;
 
 if filter and skr then
    for i = 1 to filter do
