@@ -1,0 +1,173 @@
+Export Function GetDriver(veh);
+var i, filter;
+begin
+if not GetControl(veh) = control_manual then
+   result := false
+    else
+     if veh in FilterAllUnits([f_empty]) then
+        result := false
+         else
+          begin
+          filter := FilterAllUnits([[f_side, GetSide(veh)], [f_driving]]);
+
+          if not filter then
+             result := false
+              else
+               for i = 1 to filter do
+                   if IsDriver(filter[i]) = veh then
+                      begin
+                      result := filter[i];
+                      break;
+                      end;
+         end;
+End;
+
+Export Function IsDriver(unit);
+begin
+if unit in FilterAllUnits([f_driving]) then
+   result := IsInUnit(unit)
+    else
+     result := false;
+End;
+
+
+// arr - tablica
+// pos - tablica pozycji
+// value - nowa wartoœæ do wstawienia
+Export Function ReplaceIn(arr, pos, value);
+var i, tmp, s_arr;
+begin
+if pos < 1 then
+   exit;
+
+if pos = 1 then
+   result := Replace(arr, pos[1], value)
+    else
+     begin
+     tmp := arr;
+     s_arr := [tmp];
+
+     for i = 1 to pos-1 do
+         begin
+         tmp := tmp[pos[i]];
+         s_arr := s_arr ^ [tmp];
+         end;
+
+     tmp := Replace(tmp, pos[pos], value);
+     s_arr := Replace(s_arr, s_arr, tmp);
+
+     for i = s_arr downto 2 do
+         begin
+         tmp := Replace(s_arr[i-1], pos[i-1], s_arr[i]);
+         s_arr := Replace(s_arr, i-1, tmp);
+         end;
+
+     result := s_arr[1];
+     end;
+
+End;
+
+//Destination Reachable Function by Serpent
+Export unreachableList;
+On DestinationUnreachable(unit) Do
+begin
+if not unit in unreachableList then
+   unreachableList := Insert(unreachableList, unreachableList+1, unit);
+end;
+
+Export Function DestinationReachable(unit, x, y);
+begin
+if unit in unreachableList then
+  unreachableList := unreachableList diff unit;
+
+   ComAttackUnit(unit, HexInfo(x, y));
+
+   Wait(1);
+
+if unit in unreachableList then
+   result := false
+    else
+     result := true;
+End;
+
+Export Function ComBombAttack(unit, side);
+var i, enemy, t, x, y, change_target_counter, last_target;
+begin
+enemy := FilterAllUnits([f_side, side]);
+change_target_counter := 0;
+last_target := 0;
+
+if not enemy then
+   exit;
+
+while (IsLive(unit) and change_target_counter < 4) do
+   begin
+   if UnitFilter(enemy, [f_occupied]) then
+      begin
+      t := NearestUnitToUnit(UnitFilter(enemy, [f_occupied]), unit);
+
+      if (last_target <> t) then
+         change_target_counter := change_target_counter + 1;
+
+      last_target := t;
+
+      x := GetX(t);
+      y := GetY(t);
+
+      if DestinationReachable(unit, x, y) then
+         ComAttackUnit(unit, t);
+      end
+       else
+        ComAttackUnit(unit, NearestUnitToUnit(enemy, unit));
+
+   Wait(0$0.3);
+   end;
+End;
+
+Export Function ComBrutalAttack(unit, side);
+var i, enemy, t, x, y, target;
+begin
+enemy := FilterAllUnits([f_side, side]);
+target := 0;
+
+if not enemy then
+   exit;
+
+if UnitFilter(enemy, [[f_type, unit_human], [f_not, [f_inside]]]) then
+   begin
+   t := NearestUnitToUnit(UnitFilter(enemy, [[f_type, unit_human], [f_not, [f_inside]]]), unit);
+
+   x := GetX(t);
+   y := GetY(t);
+
+   if DestinationReachable(unit, x, y) then
+      target := t
+       else
+        if UnitFilter(enemy, [f_occupied]) then
+           begin
+           t := NearestUnitToUnit(UnitFilter(enemy, [f_occupied]), unit);
+
+           x := GetX(t);
+           y := GetY(t);
+
+           if DestinationReachable(unit, x, y) then
+              target := t;
+           end;
+   end;
+
+   if not target then
+      target := NearestUnitToUnit(enemy, unit);
+
+   while (IsLive(unit) and target) do
+        begin
+        if (GetDistUnits(target, unit) < 4 and GetLives(unit) < 600) or GetLives(unit) < 200 then
+           begin
+           for i = 1 to 4 do
+               MineExplosion(GetX(unit), GetY(unit), 1);
+           end
+            else
+             ComMoveXY(unit, GetX(target), GetY(target));
+
+        Wait(0$0.3);
+        end;
+End;
