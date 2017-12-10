@@ -27,6 +27,13 @@ begin
                     ComEnterUnit(un, (FilterAllUnits([[f_side, 4], [f_btype, b_breastwork]]) diff us_spec_b)[p]);
                  end;
 
+         if IsPlaced(us_spec_b) then
+            begin
+            un := FilterAllUnits([[f_side, 4], [f_class, 3]])[1];
+            SetClass(un, 1);
+            ComEnterUnit(un, us_spec_b);
+            end;
+
       // pojazdy
          vc_chassis := us_medium_wheeled;
          vc_engine := engine_solar;
@@ -36,7 +43,7 @@ begin
 
          SetDir(un, 4);
          PlaceUnitXY(un, 12, 17, false);
-
+         
          vc_chassis := us_light_wheeled;
          vc_engine := engine_combustion;
          vc_control := control_manual;
@@ -60,19 +67,23 @@ begin
          hc_attr := [10, 12];
 
          sikorski := CreateHuman;
-         //PlaceUnitArea(sikorski, sikorski_area, false);
 
-         vc_chassis := us_light_wheeled;
-         vc_engine := engine_combustion;
-         vc_control := control_manual;
-         vc_weapon := us_machine_gun;
-         vc_fuel_battery := 21;
+         if global_diff > 1 then
+            PlaceUnitArea(sikorski, sikorski_area, false)
+             else
+              begin
+              vc_chassis := us_light_wheeled;
+              vc_engine := engine_combustion;
+              vc_control := control_manual;
+              vc_weapon := us_machine_gun;
+              vc_fuel_battery := 21;
 
-         un := CreateVehicle;
-         SetDir(un, 0);
+              sikorski_veh := CreateVehicle;
+              SetDir(sikorski_veh, 0);
 
-         PlaceUnitArea(un, sikorski_area, false);
-         PlaceHumanInUnit(sikorski, un);
+              PlaceUnitArea(sikorski_veh, sikorski_area, false);
+              PlaceHumanInUnit(sikorski, sikorski_veh);
+              end;
 
          hc_importance := 0;
 
@@ -96,5 +107,3 @@ Every 0$01 trigger GetDistUnits(sikorski, omikron) <= 45 do
 ComBuild(FilterAllUnits([[f_side, 4], [f_class, 2]]), b_workshop, 16, 5, 3);
 
 
-Every 0$01 trigger See(3, sikorski) do
-Say(sikorski, 'DRus');
