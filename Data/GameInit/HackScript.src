@@ -1,0 +1,55 @@
+Starting
+begin
+ResetFog;
+VehicleXCombatFunction;
+end;
+
+Export old_side, vx_limit, vx_capture, vx_list;
+Function VehicleXCombatFunction;
+begin
+
+vx_list = [];
+vx_limit = 3;
+vx_capture = 0;
+end;
+
+
+
+Every 0$01 do
+var i, enemy_veh;
+begin
+enable;
+
+enemy_veh = FilterAllUnits([[f_side, 2], [f_control, control_computer]]);
+
+for i in enemy_veh do
+begin
+
+If GetDistUnits(vehx, i) <= 12 and vx_capture < 3 then
+begin
+old_side = GetSide(i);
+vx_capture = vx_capture + 1;
+SetSide(i, GetSide(vehx));
+SetUnitDisplayNumber(vehx, vx_capture);
+vx_list = vx_list ^ i;
+end;
+
+end;
+end;
+
+On UnitDestroyed(un) do
+begin
+
+If un = vehx then
+begin
+SetSide(vx_list, old_side);
+end;
+
+If un in vx_list then
+begin
+vx_list = Delete(vx_list, un);
+vx_capture = vx_capture - 1;
+SetUnitDisplayNumber(vehx, vx_capture);
+end;
+
+end;
