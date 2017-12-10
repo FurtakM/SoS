@@ -1,0 +1,694 @@
+// Budynki
+On BuildingStarted(b, builder) do
+var your_depot, enemy_depot;
+begin
+SetWorkingProgress(b, 100);
+Wait(2);
+SetLives(b, 1000);
+
+if GetBType(b) = b_depot then  // zablokowanie sk³adu
+   begin
+   SetRestrict(b_depot, GetSide(b), state_disabled);
+
+   if GetSide(b) = 1 then
+      begin
+      your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+      //SetArtifactUse(your_side, art_use_sibexplosion, art_gray, b);
+      end;
+   if GetSide(b) = 2 then
+      enemy_depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+   end;
+
+  
+   Case GetBType(b) of
+   b_armoury: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - armoury_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= armoury_cost then
+                    begin
+                    your_source := your_source - armoury_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_workshop: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - work_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= work_cost then
+                    begin
+                    your_source := your_source - work_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_lab:      begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - lab_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= lab_cost then
+                    begin
+                    your_source := your_source - lab_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_breastwork: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - bunker_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= bunker_cost then
+                    begin
+                    your_source := your_source - bunker_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_bunker: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - lab_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= lab_cost then
+                    begin
+                    your_source := your_source - lab_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_solar_power: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - solar_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= solar_cost then
+                    begin
+                    your_source := your_source - solar_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_oil_power: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - oil_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= oil_cost then
+                    begin
+                    your_source := your_source - oil_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_siberite_power: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - sib_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= sib_cost then
+                    begin
+                    your_source := your_source - sib_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   End;  
+
+End;
+
+
+On UpgradeComplete(b) do
+var your_depot, enemy_depot;
+begin
+
+   your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+   enemy_depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+
+if GetBType(b) = b_warehouse then
+   begin
+   UnlockBuildings(GetSide(b));
+   end;
+
+   Case GetBType(b) of
+   b_warehouse: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - depot_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= depot_cost then
+                    begin
+                    your_source := your_source - depot_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_barracks: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - barracks_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= barracks_cost then
+                    begin
+                    your_source := your_source - barracks_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_factory: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - fac_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= fac_cost then
+                    begin
+                    your_source := your_source - fac_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   b_lab_weapon: begin
+              if GetSide(b) = 2 then
+                 begin
+                 enemy_source := enemy_source - labw_cost;
+                 SetResourceType(enemy_depot, mat_cans, enemy_source);
+                 end
+                  else if GetSide(b) = 1 then
+                 begin
+                 if your_source >= labw_cost then
+                    begin
+                    your_source := your_source - labw_cost;
+                    SetResourceType(your_depot, mat_cans, your_source);
+                    end;
+                 end;
+              end;
+   End;
+
+End;
+{
+On BuildingComplete(b) do
+var i, un;
+begin
+
+if GetBType(b) = b_bunker or
+   GetBType(b) = b_breastwork then
+   begin
+   uc_side := GetSide(b);
+   uc_nation := 1;
+   hc_class := 1;
+   hc_skills := [1,0,0,0];
+   un := CreateHuman;
+   PlaceHumanInUnit(un, b);
+   end;
+   
+End;}
+
+On LeaveBuilding(b, un) do
+begin
+if GetSide(un) = your_side then
+   SetSide(un, 6)
+    else
+      SetSide(un, 3);
+End;
+
+// System dochodu
+On UnitDestroyed(un) do
+var i, depot;
+begin
+
+     RemoveUnit(un); // usun z pamieci??
+
+     if GetClass(un) = class_apeman then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 5;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 5;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetClass(un) = class_apeman_soldier then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 10;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 10;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetClass(un) = class_soldier then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 20;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 20;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetClass(un) = class_sniper then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 40;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 40;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetChassis(un) = us_light_wheeled then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 35;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 35;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetChassis(un) = us_medium_wheeled then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 75;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 75;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+     if GetChassis(un) = us_heavy_tracked then
+        begin
+        if GetSide(un) = 3 then
+           begin
+           your_source := your_source + 135;
+           depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, your_source);
+           end;
+        if GetSide(un) = 6 then
+           begin
+           enemy_source := enemy_source + 135;
+           depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]])[1];
+           SetResourceType(GetBase(depot), mat_cans, enemy_source);
+           end;
+        end;
+
+
+End;
+
+// Leczenie (LAB)
+Every 0$03 trigger FilterAllUnits([[f_side, your_side], [f_btype, b_lab]]) > 0 do
+var filter, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, your_side], [f_type, unit_human]]);
+
+for i = 1 to filter do
+    if GetLives(filter[i]) < 900 then
+       SetLives(filter[i], GetLives(filter[i])+60);
+
+End;
+
+Every 0$03 trigger FilterAllUnits([[f_side, 2], [f_btype, b_lab]]) > 0 do
+var filter, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 2], [f_type, unit_human]]);
+
+for i = 1 to filter do
+    if GetLives(filter[i]) < 980 then
+       SetLives(filter[i], GetLives(filter[i])+20);
+
+End;
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, your_side]]) > 0 do
+var filter, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, your_side], [f_type, unit_building]]);
+
+for i = 1 to filter do
+    if GetLives(filter[i]) < 999 then
+       SetLives(filter[i], GetLives(filter[i])+1);
+End;
+
+Every 0$01 trigger FilterAllUnits([[f_side, 2]]) > 0 do
+var filter, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 2], [f_type, unit_building]]);
+
+for i = 1 to filter do
+    if GetLives(filter[i]) < 999 then
+       SetLives(filter[i], GetLives(filter[i])+1);
+End;
+
+
+// Sprawdzanie statusu budynkow
+Every 10 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]]) > 0 do
+var war;
+begin
+enable;
+
+       if FilterAllUnits([[f_side, your_side], [f_btype, b_warehouse]]) > 0 then
+          war := true
+           else
+            war := false;
+
+       // magazyn
+       if your_source >= depot_cost then
+          SetRestrict(b_warehouse, your_side, state_enabled)
+           else
+             SetRestrict(b_warehouse, your_side, state_disabled);
+       // zbrojownia
+       if your_source >= armoury_cost then
+          SetRestrict(b_armoury, your_side, state_enabled)
+           else
+             SetRestrict(b_armoury, your_side, state_disabled);
+       // koszary
+       if your_source >= barracks_cost and war then
+          SetRestrict(b_barracks, your_side, state_enabled)
+           else
+             SetRestrict(b_barracks, your_side, state_disabled);
+       // lab
+       if your_source >= lab_cost then
+          SetRestrict(b_lab, your_side, state_enabled)
+           else
+             SetRestrict(b_lab, your_side, state_disabled);
+       // lab weapon
+       if your_source >= labw_cost and war then
+          SetRestrict(b_lab_weapon, your_side, state_enabled)
+           else
+             SetRestrict(b_lab_weapon, your_side, state_disabled);
+       // lab opto
+       if your_source >= labo_cost and war then
+          SetRestrict(b_lab_opto, your_side, state_enabled)
+           else
+             SetRestrict(b_lab_opto, your_side, state_disabled);
+       // lab komp
+       if your_source >= labc_cost and war then
+          SetRestrict(b_lab_computer, your_side, state_enabled)
+           else
+             SetRestrict(b_lab_computer, your_side, state_disabled);
+       // lab sib
+       if your_source >= labs_cost and war then
+          SetRestrict(b_lab_siberium, your_side, state_enabled)
+           else
+             SetRestrict(b_lab_siberium, your_side, state_disabled);
+       // warsztat
+       if your_source >= work_cost then
+          SetRestrict(b_workshop, your_side, state_enabled)
+           else
+             SetRestrict(b_workshop, your_side, state_disabled);
+       // fabrika
+       if your_source >= fac_cost and war then
+          SetRestrict(b_factory, your_side, state_enabled)
+           else
+             SetRestrict(b_factory, your_side, state_disabled);
+       // extensions
+       if your_source >= faclaser_cost and war then
+          SetRestrict(b_ext_laser, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_laser, your_side, state_disabled);
+       if your_source >= facgun_cost and war then
+          SetRestrict(b_ext_gun, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_gun, your_side, state_disabled);
+       if your_source >= facrocket_cost and war then
+          SetRestrict(b_ext_rocket, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_rocket, your_side, state_disabled);
+       if your_source >= facradar_cost and war then
+          SetRestrict(b_ext_radar, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_radar, your_side, state_disabled);
+       if your_source >= factrack_cost and war then
+          SetRestrict(b_ext_track, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_track, your_side, state_disabled);
+       if your_source >= facnon_cost and war then
+          SetRestrict(b_ext_noncombat, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_noncombat, your_side, state_disabled);
+       if your_source >= faccomp_cost and war then
+          SetRestrict(b_ext_computer, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_computer, your_side, state_disabled);
+       if your_source >= facsib_cost and war then
+          SetRestrict(b_ext_siberium, your_side, state_enabled)
+           else
+             SetRestrict(b_ext_siberium, your_side, state_disabled);
+       // ct
+       if your_source >= ct_cost and war then
+          SetRestrict(b_control_tower, your_side, state_enabled)
+           else
+             SetRestrict(b_control_tower, your_side, state_disabled);
+       // bunker
+       if your_source >= bunker_cost then
+          SetRestrict(b_breastwork, your_side, state_enabled)
+           else
+             SetRestrict(b_breastwork, your_side, state_disabled);
+       // bunker
+       if your_source >= mtower_cost then
+          SetRestrict(b_bunker, your_side, state_enabled)
+           else
+             SetRestrict(b_bunker, your_side, state_disabled);
+       // bunker
+       if your_source >= atower_cost then
+          SetRestrict(b_turret, your_side, state_enabled)
+           else
+             SetRestrict(b_turret, your_side, state_disabled);
+
+
+End;
+
+{
+On ActiveUnitChanged(unit) do
+var your_depot;
+begin
+your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+
+if unit in your_depot then
+display_strings := 'Cennik:'
+ else
+  display_strings := '';
+End;}
+
+// sib buy
+Every 0$01 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+var your_depot;
+begin
+your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+SetArtifactUse(your_side, art_use_sibexplosion, art_instant, your_depot);
+End;
+
+
+On ArtifactUsed(p1, p2, p3, p4) do
+var your_depot;
+begin
+if p1 = your_side then
+begin
+your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+if GetResourceType(GetBase(your_depot), mat_cans) > 100 then
+   begin
+   // display_strings := 'Zakupiono 10 syberytu!';
+   your_source := your_source - 100;
+   SetResourceType(GetBase(your_depot), 1, your_source);
+   SetResourceType(GetBase(your_depot), 3, GetResourceType(GetBase(your_depot), mat_siberit)+10);
+   end;
+end;
+End;
+
+
+// badania
+On ResearchStarted(tech, lab) do
+var your_depot, enemy_depot;
+begin
+
+   your_depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+   enemy_depot := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+
+if GetSide(lab) = your_side then
+   begin
+   if GetResourceType(GetBase(your_depot), 3) >= 10 then
+      begin
+      SetResourceType(GetBase(your_depot), 3, GetResourceType(GetBase(your_depot), 3)-10);
+      SetTechProgress(tech, your_side, 100);
+      end;
+   end
+     else
+   begin
+   if GetResourceType(GetBase(enemy_depot), 3) >= 10 then
+      begin
+      SetResourceType(GetBase(enemy_depot), 3, GetResourceType(enemy_depot, 3)-10);
+      SetTechProgress(tech, 2, 100);
+      end;
+
+      end;
+
+End;
+
+
+// bunk
+Every 0$35 trigger FilterAllUnits([[[f_empty], [f_lives, 250], [f_side, your_side], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]]) > 0 do
+var filter, un;
+begin
+enable;
+
+filter := FilterAllUnits([[[f_empty], [f_lives, 250], [f_side, your_side], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]]);
+
+uc_side := 1;
+uc_nation := 1;
+
+hc_class := 1;
+
+un := CreateHuman;
+PlaceHumanInUnit(un, filter[1]);
+End;
+
+// fab
+Every 0$01 trigger FilterAllUnits([[f_or, [f_btype, b_workshop], [f_btype, b_factory]]]) > 0 do
+var fac, i;
+begin
+enable;
+
+fac := FilterAllUnits([[f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+
+for i = 1 to fac do
+    if BuildingStatus(fac[i]) <> bs_idle then
+       SetWorkingProgress(fac[i], 100);
+End;
+
+// dzwig
+Every 0$01 trigger FilterAllUnits([f_weapon, us_crane]) > 0 do
+var crane, i;
+begin
+enable;
+
+crane := FilterAllUnits([f_weapon, us_crane]);
+
+for i = 1 to crane do
+    if GetLives(crane[i]) < 999 then
+       SetLives(crane[i], GetLives(crane[i])+1);
+End;
+
+
+Every 0$35 trigger FilterAllUnits([[f_empty], [f_side, 2], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) > 0 do
+var filter, un;
+begin
+enable;
+
+filter := FilterAllUnits([[f_empty], [f_side, 2], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]);
+
+uc_side := 2;
+uc_nation := 1;
+
+hc_class := 1;
+
+un := CreateHuman;
+PlaceHumanInUnit(un, filter[1]);
+End;
+
+// Ma³pi bug
+Every 0$03 trigger FilterAllUnits([[f_or, [f_class, class_apeman_soldier], [f_class, class_apeman]]]) > 0 do
+var filter, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_or, [f_class, class_apeman_soldier], [f_class, class_apeman]]]);
+
+for i = 1 to filter do
+    if not HasTask(filter[i]) and GetLives(filter[i]) < 3 then
+       RemoveUnit(filter[i]);
+End;
+
+
+// Win
+Every 0$01 trigger FilterAllUnits([f_side, 2]) = 0 do
+begin
+Win;
+End;
+
+Every 0$01 trigger FilterAllUnits([f_side, your_side]) = 0 do
+begin
+Lost;
+End;

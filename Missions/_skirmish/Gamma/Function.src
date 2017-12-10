@@ -1,0 +1,168 @@
+// Modu³ funkcji globalnych
+Export Function DestroyTrash;
+var i;
+begin
+for i in FilterAllUnits([[f_side, 0], [f_not, [f_lives, 5]]]) do
+    KillUnit(i);
+end;
+
+Export Function ShowPath;  // todo
+begin
+
+End;
+
+Export Function RandMusic(n1, n2);
+var proc;
+begin
+proc := Rand(0, 100);
+if proc > 50 then
+music_nat := n1
+else
+music_nat := n2;
+End;        
+
+Export dif;
+Export Function SetDifficulty(val);
+begin
+
+Case val of
+1: dif := 1;
+2: dif := 2;
+3: dif := 3;
+end;
+
+if dif < 3 then
+   RemoveEnvironmentArea(evnt);
+End;
+
+
+Export Function PrepareAnimals(num1,num2,num3, area);
+var l,                     apeman, tiger, bird;
+begin
+
+
+          uc_nation = nation_nature;
+          uc_side = 0;
+
+          hc_importance := 0;
+
+          l = 0;
+
+          // Ma³py
+          repeat
+          begin
+          uc_direction = Rand(0,5);           
+          hc_agressivity = Rand(-5, 5);
+          hc_gallery = '';
+          hc_class = class_apeman;
+          hc_attr = [Rand(11,13),Rand(10,11)];
+          hc_sex = sex_male;
+          hc_skills = [Rand(0,2),0,0,0];
+
+          apeman = CreateHuman;
+          PlaceUnitArea(apeman, area, false);
+
+          l = l + 1;
+          end until l = num1;
+
+          l = 0;
+
+          // Tygrysy
+          repeat
+          begin
+          hc_agressivity = Rand(0, 25);
+          hc_class = class_tiger;
+          hc_sex = sex_male;
+          hc_gallery = 'sandnature';
+          hc_face_number = 3;
+
+          tiger = CreateHuman;
+          PlaceUnitArea(tiger, area, false);
+
+          l = l + 1;
+          end until l = num2;
+
+          l = 0;
+
+          // Ptaki
+          repeat
+          begin
+          hc_class = class_phororhacos;
+          hc_gallery = 'sandnature';
+          hc_face_number = 1;
+
+          bird = CreateHuman;
+          PlaceUnitAnywhere(bird, false);
+
+          l = l + 1;
+          end until l = num3;
+
+
+end;
+
+
+
+
+Export Function CreateHumanWithClass(clas, lvl);
+var skill_com, skill_eng, skill_mech, skill_sci, bonus;
+begin
+
+     InitHc;
+     hc_class := clas;
+
+     // randomize lvl
+        skill_com  := (lvl + Rand(-1, 1));
+        skill_eng  := (lvl + Rand(-1, 1));
+        skill_mech := (lvl + Rand(-1, 1));
+        skill_sci  := (lvl + Rand(-1, 1));
+
+     // add bonus level for class
+        If clas = 1 or clas = 9 or clas = class_sniper or clas = class_mortar then
+        bonus := [2,0,0,0];
+        If clas = 2 then
+        bonus := [0,2,0,0];
+        If clas = 3 then
+        bonus := [0,0,2,0];
+        If clas = 4 then
+        bonus := [0,0,0,2];
+        If clas > 4 and clas <> 9 and clas <> class_sniper and clas <> class_mortar then
+        bonus := [0,0,0,0];
+
+     // set main skills
+        hc_basic_skills := [Rand(0,2), Rand(0,2), Rand(0,2), Rand(0,2)];
+        hc_skills := [skill_com + bonus[1], skill_eng + bonus[2], skill_mech + bonus[3], skill_sci + bonus[4] ];
+
+     // other hc_
+        if clas = 3 then
+           hc_sex := sex_male
+            else
+           hc_sex     := Rand(sex_male, sex_female); // random
+        hc_gallery := ''; // random gall
+        hc_attr    := [Rand(8,12), Rand(8,12)];
+        hc_name    := '';
+        { place for rest hc_'s }
+
+     // final result
+        result := CreateHuman;
+
+End;
+
+
+
+Export Function CreateVehicleWithDriver(chassis, engine, weapon, area, dir, lvl);
+var veh;
+begin
+
+     vc_chassis := chassis;
+     vc_engine  := engine;
+     vc_weapon  := weapon;
+     vc_control := control_manual;
+
+     veh := CreateVehicle;
+     SetDir(veh, dir);
+     PlaceUnitArea(veh, area, false);
+     PlaceHumanInUnit(CreateHumanWithClass(3, lvl), veh);
+
+End;
+
+

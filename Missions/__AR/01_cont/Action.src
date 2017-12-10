@@ -1,0 +1,475 @@
+Export Function Action;
+begin
+
+     InGameOn;
+
+              CenterNowOnUnits(Louis);
+
+              Wait(0$2.8);
+
+              Say(Louis, 'DLd-1');
+
+              ComMoveXY(Louis, 144, 116);
+              AddComHold(Louis);
+              AddComWait(Louis, 0$0.3);
+
+              Wait(0$02);
+
+              Say(Louis, 'DLd-2');
+
+              // rusian
+              ComMoveXY(eng1, 116, 96);
+              AddComTurnXY(eng1, 119, 100);
+
+              ComMoveXY(eng2, 116, 98);
+              AddComTurnXY(eng2, 119, 99);
+              //
+
+              AddComMoveXY(Louis, 138, 113);
+              AddComWait(Louis, 0$0.3);
+
+              Say(Louis, 'DLd-3');
+
+              ComMoveXY(Louis, 126, 105);
+              AddComCrawl(Louis);
+
+              Wait(0$03);
+
+              PlaceSeeing(117, 98, 2, 6);
+
+              CenterOnXY(126, 105);
+
+              Wait(0$0.5);
+
+              Say(eng1, 'Ded-1');
+              Say(eng2, 'Ded-2');
+              Say(eng1, 'Ded-3');
+
+              PlaceUnitXY(ape, 126, 93, false);
+              ComMoveXY(ape, GetX(Louis), GetY(Louis));
+
+              Say(eng2, 'Ded-4');
+
+              Wait(0$0.5);
+
+              Say(eng1, 'Ded-4a');
+
+              Repeat
+              ComMoveXY(ape, GetX(Louis), GetY(Louis));
+               Wait(1);
+              Until GetDistUnits(Louis, ape) < 3;
+
+              Say(Louis, 'Dld-4');
+
+              Wait(0$01);
+
+              Say(Louis, 'Dld-5');
+
+              Wait(0$0.3);
+
+              Say(eng2, 'Ded-5');
+              Say(eng1, 'Ded-6');
+
+              ComMoveXY([eng1, eng2], 94, 91);
+
+              Wait(0$1.3);
+
+              Say(Louis, 'Dld-6');
+
+
+     InGameOff;
+
+
+              ChangeMissionObjectives('Run');
+
+
+                SaveForQuickRestart;
+
+
+              ComWalk(Louis);
+
+              ComMoveXY(ape, 141, 118);
+
+              Wait(0$10);
+
+              rus_sol := FilterAllUnits([[f_side, ru], [f_class, 1], [f_outside]]);
+
+              ComMoveXY(rus_sol, 115, 96);
+              AddComAttackUnit(rus_sol, ape);
+              AddComMoveXY(rus_sol, 138, 144);
+
+              Wait(0$05);
+
+              RemoveSeeing(117, 98, 2);
+
+              Repeat
+               Wait(1);
+              Until GetLives(ape) < 251;
+
+              if GetDistUnitXY(rus_sol[1], 133, 100) < 10 then
+                 Say(rus_sol[1], 'DS-ape');
+
+              Wait(0$30);
+
+              ComMoveXY(rus_sol, 139, 94);
+
+              Wait(0$45);
+
+              ComMoveXY(rus_sol, 95, 100);
+End;
+
+
+
+
+
+// Louis spot tank
+Every 0$01 trigger See(2, rus_tank[1]) do
+begin
+
+     DialogueOn;
+
+                CenterNowOnUnits(rus_tank[1]);
+
+                Say(Louis, 'Dld-7');
+
+                DWait(0$0.3);
+
+     DialogueOff;
+
+
+     Wait(0$01);
+
+     ComMoveXY(rus_tank[1], 33, 1);
+
+     tank_go := true; // tanks can spawn now
+
+End;
+
+
+// radio
+Export p;
+Every 0$01 trigger IsInArea(Louis, radio_area) do
+begin
+
+     p = 0;
+
+     InGameOn;
+
+              Say(Louis, 'Dld-1r');
+
+              ComHold(Louis);
+
+              Say(Louis, 'Dld-2r');
+
+              Wait(0$0.3);
+
+              SayRadio(Abdul, 'Dad-1r');
+              Say(Louis, 'Dld-3r');
+              SayRadio(Abdul, 'Dad-2r');
+
+     InGameOff;
+
+     ChangeMissionObjectives('Wait');
+
+     Connect = true;
+
+        Repeat
+         begin
+         Wait(0$01);
+        // for test // display_strings = ['', p];
+
+                    If IsInArea(Louis, radio_area) then
+                    p = p + 1;
+                    end
+
+        Until p = 34;
+
+        InGameOn;
+
+          SayRadio(Abdul, 'Dad-3r');
+
+        InGameOff;
+
+    ChangeMissionObjectives('Go');
+
+       SpawnArabian;
+
+end;
+
+
+
+Every 0$01 trigger p = 11 do
+begin
+SayRadio(am_sold[1], 'Dam-help');
+end;
+
+
+// esp1
+Every 0$01 trigger IsInArea(Louis, esp1) do
+begin
+
+     Say(Louis, 'Dl-esp1');
+
+End;
+
+// esp2
+Every 0$01 trigger IsInArea(Louis, esp2) do
+begin
+
+     Say(Louis, 'Dl-esp2');
+
+End;
+
+
+// louis spoted patrol
+Every 0$01 trigger See(6, Louis) do
+begin
+
+     DialogueOn;
+
+     CenterNowOnUnits(Louis);
+
+     Say(Louis, 'Dl-pat');
+
+     DialogueOff;
+
+End;
+
+
+// louis spot arabs
+Every 0$02 trigger GetDistUnits(Louis, Abdul) < 6 do
+begin
+
+     InGameOn;
+
+              SetSide(FilterAllUnits([f_side, 5]), 2);
+
+
+               ComTurnUnit(Louis, Abdul);
+               ComTurnUnit(Abdul, Louis);
+
+              Wait(0$0.2);
+
+              Say(Abdul, 'Dla-1');
+              Say(Louis, 'Dlal-1');
+              Say(Abdul, 'Dla-2');
+              Say(Louis, 'Dlal-2');
+              Say(Abdul, 'Dla-3');
+              Say(Louis, 'Dlal-3');
+              Say(Abdul, 'Dla-4');
+              Say(Louis, 'Dlal-4');
+              Say(Louis, 'Dlal-5');
+              Say(Abdul, 'Dla-5');
+              Say(Louis, 'Dlal-6');
+              Say(Abdul, 'Dla-6');
+              Say(Abdul, 'Dla-7');
+              Say(Abdul, 'Dla-8');
+
+     InGameOff;
+
+               ChangeMissionObjectives('Quit');
+
+               SetAreaMapShow(escape, 1);
+
+
+               Wait(Rand(0$06, 0$09));
+
+               
+               InGameOn;
+
+               ComHold(FilterAllUnits([f_side, 2]));
+
+               // mark call
+               // check difficulty
+               If Difficulty = 1 then
+               begin
+                    PlaceUnitArea(Mmark, mark1, true);
+                    ComHold(Mmark);
+                    Wait(0$0.3);
+                    SayRadio(Mmark, 'MarkSpawn1');
+               end;
+
+
+               If Difficulty = 2 then
+               begin
+                    PlaceUnitArea(Mmark, mark2, true);
+                    ComHold(Mmark);
+                    Wait(0$0.3);
+                    SayRadio(Mmark, 'MarkSpawn2');
+               end;
+
+
+               If Difficulty = 3 then
+               begin
+                    PlaceUnitArea(Mmark, mark3, true);
+                    ComHold(Mmark);
+                    Wait(0$0.3);
+                    SayRadio(Mmark, 'MarkSpawn3');
+               end;
+
+                Say(Louis, 'MarkSpawnLouis1');
+                                
+                Wait(0$0.3);
+
+                ComTurnUnit(Louis, Abdul);
+                ComTurnUnit(Abdul, Louis);
+
+                Say(Louis, 'MarkSpawnLouis2');
+                Say(Abdul, 'MarkSpawnAbdul1');
+                Say(Olaf, 'MarkSpawnOlaf1');
+                Say(Karla, 'MarkSpawnKarla1');
+
+                InGameOff;
+
+                ChangeMissionObjectives('Find');
+
+End;
+
+
+
+Every 0$01 trigger See(2, Mmark) or GetDistUnits(Louis, Mmark) < 6 do
+begin
+
+     SetSide(Mmark, 2);
+
+     Say(Mmark, 'Dmt-1');
+
+     ChangeMissionObjectives('OutFind');
+
+End;
+
+
+
+Every 0$01 trigger IsInArea(Louis, zone) and FilterAllUnits([f_side, 2]) > 1 do
+begin
+
+     SayRadio(rus_sol[3], 'ruat');
+     Say(Abdul, 'ruat1');
+     
+     SpawnAttack;
+     us_attacked := true;
+
+     Wait(0$01);
+
+     SayEffect('DHura');
+
+End;
+
+
+// russian event
+Export Function dialogs(un, num);
+begin
+
+     Case num of
+     1:; // nothing
+     2:ForceSay(un, 'D-Ru-Di1');
+     3:ForceSay(un, 'D-Ru-Di2');
+     4:ForceSay(un, 'D-Ru-Di3');
+     5:ForceSay(un, 'D-Ru-Di4');
+     end;
+
+End;
+
+// louis spotted by usa
+Every 0$01 trigger See(1, Louis) and not us_attacked do
+begin
+Say(FilterAllUnits([[f_side, 1], [f_type, unit_human]])[1], 'D-Am-S1');
+
+Wait(0$01);
+
+Say(Louis, 'D-Better');
+
+Wait(0$12);
+
+SetAttitude(2,1,att_enemy, true);
+End;
+
+
+
+
+Every 0$01 trigger GetDistUnitArea(Louis, escape) < 10 do
+begin
+
+     PlaceSeeing(48, 93, 2, 7);
+     Say(Louis, 'at1');
+
+End;
+
+Export RewardList;
+Every 0$01 trigger IsInArea(Louis, escape) do
+var i;
+begin
+
+     RewardList := [];
+
+     If FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 5 then
+     begin
+     AddMedal('savepep', 1);
+     end else
+     begin
+     AddMedal('savepep', -1);
+     end;
+
+     AddMedal('map', 1);
+
+     If GetSide(mmark) = 2 and IsOk(mmark) then
+     begin
+     AddMedal('marklive', 1);
+     end else
+     begin
+     AddMedal('marklive', -1);
+     end;
+
+     GiveMedals('Main');
+
+
+     For i in FilterAllUnits([f_side, 2]) do
+     begin
+
+          If IsLive(i) then
+          RewardList = RewardList ^ i;
+
+     end;
+
+     RewardPeople(RewardList);
+
+     SaveCharacters(Louis, 'Louis');
+     SaveCharacters(Abdul, 'Abdul');
+
+     If IsLive(Dwein) then
+      begin
+      SaveCharacters(Dwein, 'Dwein_01');
+      end;
+
+     If IsLive(Karla) then
+      begin
+      SaveCharacters(Karla, 'Karla_01');
+      end;
+
+     If IsLive(Olaf) then
+      begin
+      SaveCharacters(Olaf, 'Olaf_01');
+      end;
+
+     If IsLive(Gunther) then
+      begin
+      SaveCharacters(Gunther, 'Gunther_01');
+      end;
+
+     If IsLive(Joachim) then
+      begin
+      SaveCharacters(Joachim, 'Joachim_01');
+      end;
+
+     If IsLive(Mmark) and GetSide(Mmark) = 2 then
+      begin
+      SaveCharacters(Mmark, 'Mmark_01');
+      end;
+
+     SetNextMission(1);
+
+End;
+
+
+
+

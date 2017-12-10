@@ -1,0 +1,166 @@
+// Checkpointy
+Export claps, c0, c1l, c2l, c3l, c4l, c5l;
+Export Function race_info(time);
+var chkpts, points, p, c1, c2, c3, c4, c5, i, a1, a2, a3, a4, a5;
+begin
+
+     // time - czas odswiezenia
+
+     chkpts := [start_end, chp1, chp2, chp3, chp4, chp5, chp6,
+                chp7, chp8, chp9, chp10, chp11, chp12,
+                chp13, chp14]; // checkpointy
+
+     points := 1;
+     claps := 0;
+
+     SetAreaMapShow(chkpts[points], 1);
+
+     p  := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1];
+
+     c1 := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]])[1];
+     c2 := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]])[1];
+     c3 := FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]])[1];
+     c4 := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]])[1];
+     c5 := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle]])[1];
+
+     c0  := 1;
+     c1l := 1;
+     c2l := 1;
+     c3l := 1;
+     c4l := 1;
+     c5l := 1;
+
+     a1 := 1;
+     a2 := 1;
+     a3 := 1;
+     a4 := 1;
+     a5 := 1;
+
+     ComMoveToArea([c1, c2, c3, c4, c5], chkpts[1]);
+
+     While(true) do
+     begin
+     Wait(time);
+
+        if IsInArea(p, chkpts[points]) then
+           begin
+           points := points + 1;
+           c0 := c0 + 1;
+           SetAreaMapShow(chkpts[points], 1);
+           SetAreaMapShow(chkpts[points-1], 0);
+           end;
+
+        if IsInArea(c1, chkpts[a1]) then
+           begin
+           c1l := c1l + 1;
+           a1  := a1 + 1;
+
+           if a1 > 15 then
+              a1 := 1;
+                      
+           ComMoveToArea(c1, chkpts[a1]);
+
+           if a1 > 11 and a1 < 13 and GetFuel(c1) < Rand(50, 60) then
+              begin
+              ComMoveXY(c1, 149, 54);
+              AddComMoveToArea(c1, chkpts[a1]);
+              end;
+
+           end;
+
+        if IsInArea(c2, chkpts[a2]) then
+           begin
+           c2l := c2l + 1;
+           a2  := a2 + 1;
+
+           if a2 > 15 then
+              a2 := 1;
+
+           ComMoveToArea(c2, chkpts[a2]);
+
+           if a2 > 11 and a2 < 13 and GetFuel(c2) < Rand(50, 60) then
+              begin
+              ComMoveXY(c2, 149, 54);
+              AddComMoveToArea(c2, chkpts[a2]);
+              end;
+
+           end;
+
+        if IsInArea(c3, chkpts[a3]) then
+           begin
+           c3l := c3l + 1;
+           a3  := a3 + 1;
+
+           if a3 > 15 then
+              a3 := 1;
+
+           ComMoveToArea(c3, chkpts[a3]);
+
+           if a3 > 11 and a3 < 13 and GetFuel(c3) < Rand(50, 60) then
+              begin
+              ComMoveXY(c3, 149, 54);
+              AddComMoveToArea(c3, chkpts[a3]);
+              end;
+
+           end;
+
+        if IsInArea(c4, chkpts[a4]) then
+           begin
+           c4l := c4l + 1;
+           a4  := a4 + 1;
+
+           if a4 > 15 then
+              a4 := 1;
+
+           ComMoveToArea(c4, chkpts[a4]);
+
+           if a4 > 11 and a4 < 13 and GetFuel(c4) < Rand(50, 60) then
+              begin
+              ComMoveXY(c4, 149, 54);
+              AddComMoveToArea(c4, chkpts[a4]);
+              end;
+
+           end;
+
+        if IsInArea(c5, chkpts[a5]) then
+           begin
+           c5l := c5l + 1;
+           a5  := a5 + 1;
+
+           if a5 > 15 then
+              a5 := 1;
+
+           ComMoveToArea(c5, chkpts[a5]);
+
+           if a5 > 11 and a5 < 13 and GetFuel(c5) < Rand(50, 60) then
+              begin
+              ComMoveXY(c5, 149, 54);
+              AddComMoveToArea(c5, chkpts[a5]);
+              end;
+
+           end;
+
+
+    if points > 15 then
+       begin
+       points := 1;
+       claps := claps + 1;
+       end;
+
+     end;
+
+
+End;
+
+
+// Paliwo
+Every 0$0.5 do
+var i;
+begin
+enable;
+
+     for i = 1 to all_units do
+         if IsInArea(all_units[i], fuel_area) then
+            SetFuel(all_units[i], 100);
+
+End;

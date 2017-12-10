@@ -1,0 +1,468 @@
+Export in_base, on_hill, bazooka_num, bazooka_dialog, go_to_end;
+Export sib_pow, gali_arive, comp_destroyed, comp_attack, comp_ct, gladkov_attack;
+Export Function Action;
+begin
+
+     in_base   := false;
+     on_hill   := false;
+     go_to_end := false;
+     sib_pow   := false;
+     gali_arive:= false;
+     comp_destroyed := false;
+     comp_attack := false;
+     gladkov_attack := false;
+     comp_ct := 0;
+     bazooka_num := [5, 4, 4][Difficulty];
+     bazooka_dialog := false;
+
+     
+      Wait(0$02);
+     InGameOff;
+
+     ChangeMissionObjectives('TWest');
+
+     SaveForQuickRestart;
+     //FogOff(2);
+
+     if Gali or Mike then
+        gali_arive := true;
+
+End;
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, 2], [f_class, 9]]) = 2 do
+bazooka_dialog = true;
+
+// Hill
+Every 0$01 trigger IsInArea(Louis, Hill) and in_base = false do
+begin
+
+       InGameOn;
+
+       ComMoveXY(Louis, 191, 150);
+       AddComTurnXY(Louis, 0, 0);
+       AddComWait(Louis, 0$01);
+
+       Say(Louis, 'DL-Hill');
+
+       ProduceNewCombatCar(ru_fac2);
+
+       FogOff(2);
+
+       PlaceSeeing(125, 93, 2, 5);
+       PlaceSeeing(95, 135, 2, 5);
+       RemoveSeeing(125, 93, 2);
+       RemoveSeeing(95, 135, 2);
+
+       CenterOnXY(123, 99);
+       Wait(0$03);
+       CenterOnXY(112, 140);
+       Wait(0$03);
+       CenterNowOnUnits(Louis);
+
+       FogOff(0);
+
+       InGameOff;
+
+End;
+
+
+
+Every 0$01 trigger See(5, Louis) and IsInArea(Louis, ar_spot) do
+begin
+
+     in_base := true;
+
+     InGameOn;
+     SetSide(FilterAllUnits([f_side, 5]), 2);
+
+     CenterOnXY(80, 84);
+
+     ComMoveXY(Louis, 76, 79);
+     ComExitBuilding(Rolf);
+     AddComMoveXY(Rolf, 78, 81);
+     AddComTurnUnit(Rolf, Louis);
+     AddComTurnUnit(Louis, Rolf);
+
+     Say(Rolf, 'DR-1');
+     Say(Louis, 'DL-1');
+     Say(Rolf, 'DR-2');
+     Say(Louis, 'DL-2');
+     Say(Rolf, 'DR-3');
+     Say(Rolf, 'DR-4');
+     Say(Louis, 'DL-3');
+     Say(Rolf, 'DR-5');
+     Say(Louis, 'DL-4');
+     Say(Rolf, 'DR-6');
+     Say(Louis, 'DL-5');
+
+     Wait(0$0.2);
+
+     if comp_destroyed then
+        begin
+        Say(Rolf, 'DR-6a');
+        Say(Louis, 'DL-6b');
+        end;
+
+     if Jenna then
+        begin
+        ComExitBuilding(Jenna);
+        Wait(0$0.1);
+        ComMoveXY(Jenna, GetX(Louis)-1, GetY(Louis));
+                                
+        repeat
+         Wait(0$01);
+          until GetDistUnits(Jenna, Louis) < 6;
+
+        ComTurnUnit(Jenna, Louis);
+        ComTurnUnit(Louis, Jenna);
+
+        Say(Jenna, 'DJ-1');
+        Say(Louis, 'DL-6');
+        Say(Jenna, 'DJ-2');
+        Say(Louis, 'DL-7');
+        Say(Jenna, 'DJ-3');
+        Say(Louis, 'DL-8');
+        end;
+
+     InGameOff;
+
+     ChangeMissionObjectives('TSib');
+
+     if Difficulty < 3 then
+        PlaceSeeing(36, 33, 2, 10);
+
+     PlaceSeeing(26, 33, 2, 10);
+     RemoveSeeing(26, 33, 2);
+
+End;
+
+// GALI
+Every 1$02 trigger tick > (35*60*10) and Rand(1, 100) > 75 do
+var veh, vehs, i;
+begin
+
+     uc_side := 2;
+     uc_nation := 2;
+
+     vehs := [];
+
+     vc_chassis := ar_half_tracked;
+     vc_engine  := engine_combustion;
+     vc_control := control_manual;
+     vc_weapon  := ar_cargo_bay;
+
+     for i = 1 to 2 do
+         begin
+         veh := CreateVehicle;
+         vehs = vehs ^ veh;
+         SetDir(veh, Rand(2,3));
+         PlaceUnitArea(veh, ar_park, false);
+         PlaceHumanInUnit(CreateHumanWithClass(3, 4), veh);
+         SetCargo(veh, mat_oil, Rand(20, 60));
+         SetFuel(veh, Rand(78, 88));
+         end;
+
+     vc_weapon  := ar_flame_thrower;
+
+     veh := CreateVehicle;
+     vehs = vehs ^ veh;
+     SetDir(veh, Rand(2,3));
+     PlaceUnitArea(veh, ar_park, false);
+
+
+     if Mike then
+        PlaceHumanInUnit(Mike, veh);
+
+     if Gali then
+        PlaceUnitArea(Gali, ar_north_spawn, false);
+
+     if Nicolas then
+        PlaceUnitArea(Nicolas, ar_north_spawn, false);
+
+     if Rick then
+        PlaceUnitArea(Rick, ar_north_spawn, false);
+
+        PlaceUnitArea(CreateHumanWithClass(1, 5), ar_north_spawn, false);
+
+        SetSide(FilterAllUnits([f_side, 5]), 2);
+
+     if Gali then
+        SayRadio(Gali, 'DGa-G1')
+         else
+          SayRadio(Mike, 'DGa-G1');
+
+        Say(Rolf, 'DR-G1');
+
+     if Gali then
+        SayRadio(Gali, 'DGa-G2')
+         else
+          SayRadio(Mike, 'DGa-G2');         
+
+end;
+
+Every 0$01 trigger GetDistUnits(Gali, Louis) < 7 or GetDistUnits(Mike, Louis) < 7 do
+begin
+
+    InGameOn;
+    DialogueOn;
+
+    CenterNowOnUnits(Louis);
+    ComTurnUnit([Mike, Gali, Nicolas, Rick], Louis);
+    ComTurnUnit(Louis, Mike);
+
+    Say(Rolf, 'DR-G2');
+
+    if Nicolas then
+       Say(Nicolas, 'DMi-G1');
+
+    if Gali then
+       Say(Gali, 'DJi-G1')
+        else
+         Say(Mike, 'DJi-G1');
+
+    if Rick then
+       Say(Rick, 'DGa-G3')
+        else
+         if Nicolas then
+             Say(Rick, 'DGa-G3');
+
+       Say(Louis, 'DL-G1');
+       Say(Rolf, 'DR-G3');
+
+    if Gali then
+       Say(Gali, 'DGa-G4')
+        else
+         Say(Mike, 'DGa-G4');
+
+       Say(Louis, 'DL-G2');
+
+    if Nicolas then
+       Say(Nicolas, 'DMi-G2');
+
+    DialogueOff;
+    InGameOff;
+
+end;
+
+Every 0$01 trigger GetResourceType(GetBase(ar_depot), mat_cans) < 200 do
+begin
+Ar_Squad := FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [Louis, Rolf, Jenna];
+DialogueOn;
+Say(Louis, 'DL-9');
+Say(Rolf, 'DR-7');
+Say(Louis, 'DL-10');
+Say(SayMen, 'DRa-1');
+Say(Louis, 'DL-11');
+Say(Ar_Squad[1], 'DRa-2');
+Say(SayMen, 'DRa-3');
+Say(Ar_Squad[1], 'DRa-4');
+
+if FilterAllUnits([[f_side, 2], [f_class, 4]]) then
+   begin
+   Say(SaySci, 'Dsci-1');
+   DWait(0$0.3);
+   end;
+
+Say(Louis, 'DL-Radar');
+DialogueOff;
+
+Wait(0$0.3);
+
+ChangeMissionObjectives('TRad');
+
+SetTech(7, 2, state_enabled);
+SetTech(8, 2, state_enabled);
+end;
+
+Every 0$01 trigger bazooka_dialog do
+begin
+DialogueOn;
+Say(Louis, 'DL-Baz1');
+Say(Rolf, 'DR-Baz1');
+Say(Louis, 'DL-BazN');
+DialogueOff;
+
+Hint('NBaz');
+End;
+
+Every 0$0.1 trigger bazooka_num do
+begin
+enable;
+
+       if FilterAllUnits([[f_side, 2], [f_class, 9]]) = bazooka_num then
+          SetTech(tech_bazooka, 2, state_disabled)
+           else
+       if FilterAllUnits([[f_side, 2], [f_class, 9]]) < bazooka_num then
+          SetTech(tech_bazooka, 2, state_researched);
+
+End;
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, 2], [f_class, class_bazooker]]) > bazooka_num do
+begin
+enable;
+SetClass(FilterAllUnits([[f_side, 2], [f_class, class_bazooker]])[1], 1);
+end;
+
+// block bazooka operators
+Every 0$01 trigger bazooka_num = 0 do
+begin
+SetTech(tech_bazooka, 2, state_disabled);
+End;
+
+Every 0$01 trigger comp_attack do
+var un;
+begin
+un := FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 9]]]) diff [Louis, Rolf];
+
+DialogueOn;
+Say(un[1], 'DRand-ruattack1');
+Say(Louis, 'DL-ruattack1');
+
+if IsLive(Rolf) then
+   Say(Rolf, 'DR-ruattack1')
+    else
+     Say(un[2], 'DR-ruattack1');
+
+Say(un[1], 'DRand-ruattack2');
+DialogueOff;
+End;
+
+
+Every 0$01 trigger tick > 35*60*30 and FilterAllUnits([[f_side, 2], [f_btype, b_warehouse]]) > 0 do
+begin
+InGameOn;
+DialogueOn;
+Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'Dradio1');
+DWait(0$0.3);
+SayRadio(Platonov, 'DPlat1');
+SayRadio(Gladkov, 'DGlad1');
+SayRadio(Platonov, 'DPlat2');
+SayRadio(Gladkov, 'DGlad2');
+DWait(0$0.3);
+Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'Dradio2');
+Say(Louis, 'DLradio1');
+
+   if IsLive(Nicolas) then
+      begin
+      Say(Nicolas, 'DVercken1');
+      Say(Gali, 'DGali1');
+      end;
+
+gladkov_attack := true;
+DialogueOff;
+InGameOff;    
+End;
+
+
+// sib 200
+Every 0$01 trigger GetResourceType(GetBase(ar_depot), 3) >= 200 do
+begin
+go_to_end := true;
+
+DialogueOn;
+Say(Louis, 'DL-Sib');
+if sib_pow then Say(Louis, 'DL-SibPowDes');
+DialogueOff;
+
+ChangeMissionObjectives('TEnd');
+
+SetAreaMapShow(exit_area, 1);
+End;
+
+
+// Sib Power Plant
+Every 0$01 trigger FilterAllUnits([f_btype, b_siberite_power]) do
+begin
+DialogueOn;
+
+if IsLive(Jenna) then
+   Say(Jenna, 'DSibPow-1')
+ else
+   Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'DSibPow-1');
+
+Say(Louis, 'DLSibPow-1');
+
+if IsLive(Jenna) then
+   Say(Jenna, 'DSibPow-2')
+ else
+   Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'DSibPow-2');
+
+Say(Louis, 'DLSibPow-2');
+
+DialogueOff;
+ChangeMissionObjectives('ESib');
+End;
+
+// bazooka ammo
+Every 0$30 trigger tick > 35*60*[19, 16, 13][Difficulty] do
+begin
+InGameOn;
+DialogueOn;
+Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'DAR1');
+SayRadio(Platonov, 'DAPlat1');
+SayRadio(Gladkov, 'DAGlad1');
+Say(Louis, 'DAR2');
+
+if IsLive(Gali) then
+   begin
+   Say(Gali, 'DARG1');
+   Say(Gali, 'DARG2');
+   end
+else
+   Say(Rolf, 'DARR1');
+
+Say(Louis, 'DAR2a');
+DialogueOff;
+InGameOff;
+
+dont_attack = true;
+Wait(Rand(5$00, 7$00));
+AmmoEvent;
+End;
+
+Every 0$01 trigger See(2, main_sci) and CanUseBazooka = false do
+begin        
+if Difficulty < 3 then
+   game_speed := 2;
+
+CenterOnUnits(main_sci);
+Say(Louis, 'DAR3');
+End;
+
+Every 0$01 trigger main_sci_dead and CanUseBazooka = false do
+begin
+Say(Louis, 'DAR4');
+Wait(4$00);
+Say(FilterAllUnits([[f_side, 2], [f_or, [f_class, 3], [f_class, 4]]])[1], 'DAR5');
+SetTech(29, 2, state_researched);
+Wait(0$10);
+dont_attack = false;
+End;
+
+
+Every 0$03 trigger go_to_end and FilterUnitsInArea(exit_area, [f_weapon, ar_cargo_bay]) >= 2 do
+var i, filter, cargo;
+begin
+enable;
+
+cargo  := 0;
+filter := FilterUnitsInArea(exit_area, [f_weapon, ar_cargo_bay]);
+
+     for i = 1 to filter do
+         cargo := cargo + GetCargo(filter[i], 3);
+
+     if cargo = 200 then
+        begin
+        END_MISSION;
+        go_to_end := false;
+        end;
+
+End;
+
+
+
+
+
+

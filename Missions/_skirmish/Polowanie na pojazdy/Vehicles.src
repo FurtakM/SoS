@@ -1,0 +1,207 @@
+Export Function SpawnCar(chas, area);
+var i, e, veh,
+    ar_chassis, ru_chassis, us_chassis,
+    ar_weapons, ru_weapons, us_weapons,
+    chassis,    engine,     weapon;
+begin
+
+
+     uc_side   := 0;
+     uc_nation := Rand(1,3);
+
+     // chassis
+        ar_chassis := [ar_hovercraft, ar_light_trike, ar_medium_trike, ar_half_tracked];
+        ru_chassis := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+        us_chassis := [us_light_wheeled, us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+
+        If chas > 0 then
+           vc_chassis := chas
+         else
+          begin
+
+        Case uc_nation of
+             1:chassis := us_chassis;
+             2:chassis := ar_chassis;
+             3:chassis := ru_chassis;
+        end;
+
+             vc_chassis := chassis[Rand(1, chassis)];
+        end;
+
+     // engine
+        If vc_chassis in [ar_hovercraft, ar_light_trike, us_light_wheeled] then
+           engine := Rand(1,2) // solar & combustion
+            else
+             begin
+               // all eng
+                If not vc_chassis in [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked, us_heavy_tracked, us_morphling] then
+                   engine := Rand(1,3)
+                    else  // chassis without solar eng
+                   e := Rand(1,2);
+
+                   Case e of
+                        1:engine := engine_combustion;
+                        2:engine := engine_siberite;
+                   end;
+             end;
+
+
+        vc_engine := engine;
+
+     // control
+        vc_control := control_manual;
+
+     // weapon
+        ar_weapons := [ar_multimissile_ballista, ar_double_machine_gun,
+                       ar_light_gun, ar_radar, ar_gatling_gun, ar_gun,
+                       ar_rocket_launcher, ar_selfpropelled_bomb, ar_flame_thrower];
+
+        ru_weapons := [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, 98,
+                       ru_rocket_launcher, ru_heavy_gun, ru_rocket,
+                       ru_bulldozer, ru_time_lapser];
+
+        us_weapons := [us_machine_gun, us_light_gun, us_radar,
+                       us_gatling_gun, us_double_gun, us_rocket_launcher,
+                       us_laser, us_heavy_gun, us_bulldozer,
+                       us_double_laser];
+
+     // check chassis
+        If uc_nation = nation_arabian then
+           begin
+
+                If vc_chassis in [ar_hovercraft, ar_light_trike] then
+                   weapon := ar_weapons[Rand(1, 3)]
+                    else
+                   weapon := ar_weapons[Rand(1, ar_weapons)];
+
+           end;
+
+        If uc_nation = nation_russian then
+           begin
+
+                If vc_chassis in [ru_medium_wheeled, ru_medium_tracked] then
+                   weapon := ru_weapons[Rand(1, 5)]
+                    else
+                   weapon := ru_weapons[Rand(1, ru_weapons)];
+
+           end;
+
+        If uc_nation = nation_american then
+           begin
+
+                If vc_chassis = us_light_wheeled then
+                   weapon := us_weapons[Rand(1, 3)];
+                If vc_chassis in [us_medium_tracked, us_medium_wheeled] then
+                   weapon := us_weapons[Rand(1, 7)]
+                    else
+                   If vc_chassis <> us_light_wheeled then
+                      weapon := us_weapons[Rand(1, us_weapons)];
+
+           end;
+
+     // weapon
+        vc_weapon := weapon;
+
+     // spawn
+        veh := CreateVehicle;
+        PlaceUnitArea(veh, area, true);
+
+End;
+
+
+Export Function SpawnSibRocket(area);
+var veh, p;
+begin
+
+     uc_side := 0;
+
+     p := Rand(1,2);
+
+     Case p of
+     1: begin
+        uc_nation := nation_american;
+
+        vc_chassis := us_heavy_tracked;
+        vc_engine  := engine_siberite;
+        vc_control := control_manual;
+        vc_weapon  := us_siberium_rocket;
+        end;
+
+     2: begin
+        uc_nation := nation_russian;
+
+        vc_chassis := ru_heavy_tracked;
+        vc_engine  := engine_siberite;
+        vc_control := control_manual;
+        vc_weapon  := ru_siberium_rocket;
+        end;
+
+     end;
+
+     veh := CreateVehicle;
+     PlaceUnitArea(veh, area, true);
+
+End;
+
+Export Function ScoreBoard(veh);
+var points;
+begin
+
+  points := 0;
+
+  // chassis
+  // 10 points
+     If GetChassis(veh) in [ar_light_trike, us_light_wheeled] then
+        points := points + 10;
+  // 15 points
+     If GetChassis(veh) in [ar_medium_trike, ru_medium_wheeled, us_medium_wheeled] then
+        points := points + 15;
+  // 20 points
+     If GetChassis(veh) in [ar_half_tracked, ru_medium_tracked, us_medium_tracked] then
+        points := points + 20;
+  // 25 points
+     If GetChassis(veh) in [ru_heavy_wheeled, ru_heavy_tracked, us_heavy_tracked] then
+        points := points + 25;
+  // 30 points
+     If GetChassis(veh) in [ar_hovercraft, us_morphling] then
+        points := points + 30;
+
+  // engin's
+  // 5 points
+     If GetEngine(veh) = [engine_combustion] then
+        points := points + 5;
+  // 15 points
+     If GetEngine(veh) = [engine_solar] then
+        points := points + 15;
+  // 25 points
+     If GetEngine(veh) = [engine_siberite] then
+        points := points + 25;
+
+  // weapon's
+  // 5 points
+     If GetWeapon(veh) in [ar_multimissile_ballista, ar_double_machine_gun, ar_light_gun, ru_heavy_machine_gun, us_machine_gun, us_light_gun] then
+        points := points + 5;
+  // 10 points
+     If GetWeapon(veh) in [ar_gatling_gun, ar_gun, ru_gatling_gun, ru_gun, us_gatling_gun, us_double_gun] then
+        points := points + 10;
+  // 20 points
+     If GetWeapon(veh) in [ar_rocket_launcher, ru_rocket_launcher, us_rocket_launcher] then
+        points := points + 20;
+  // 25 points
+     If GetWeapon(veh) in [ru_heavy_gun, us_heavy_gun] then
+        points := points + 25;
+  // 30 points
+     If GetWeapon(veh) in [us_laser, us_radar, ar_radar] then
+        points := points + 30;
+  // 50 points
+     If GetWeapon(veh) in [ar_selfpropelled_bomb, ru_time_lapser, ru_rocket, us_double_laser] then
+        points := points + 50;
+  // 100 points
+     If GetWeapon(veh) in [ru_siberium_rocket, us_siberium_rocket] then
+        points := points + 100;
+
+
+     result := points;
+
+End;
+

@@ -1,0 +1,101 @@
+// EVENTS
+On UnitDestroyed(un) do
+begin
+
+     if un in FilterAllUnits([[f_side, 5], [f_weapon, ar_cargo_bay]]) then
+        YouLost('cargolost');
+
+     if un = Louis then
+        YouLost('louisdead');
+
+  // american_force
+     if un in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) then
+        begin
+        if us_attack <> 1 then
+           begin
+           us_attack := 1;
+           if IsLive(Gali) and awp = false then
+              begin
+              awp := true;
+              Say(Gali, '09_DG-usattack');
+              end;
+           end;
+        end;
+     if un in us_buildings then
+        begin
+        if GetBType(un) = b_barracks then
+           us_blist := us_blist ^ b_armoury
+        else
+        if GetBType(un) = b_factory then
+           us_blist := us_blist ^ b_workshop
+        else
+        if GetBType(un) = b_lab_full then
+           us_blist := us_blist ^ b_lab
+        else
+        us_blist := us_blist ^ GetBType(un);
+        us_blist := us_blist ^ GetX(un);
+        us_blist := us_blist ^ GetY(un);
+        us_blist := us_blist ^ GetDir(un);
+        end;
+
+     if un in us_vehicles then
+        begin
+        us_vlist := us_vlist ^ GetChassis(un);
+        us_vlist := us_vlist ^ GetEngine(un);
+        us_vlist := us_vlist ^ control_remote;
+        us_vlist := us_vlist ^ GetWeapon(un);
+        end;
+
+End;   
+
+
+On VehicleConstructed(fac, veh) do
+var i;
+begin
+
+     if GetSide(veh) = 1 and not GetWeapon(veh) = us_cargo_bay and not GetWeapon(veh) = us_crane then
+        us_force := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_not, [f_weapon, us_crane]], [f_not, [f_weapon, us_cargo_bay]]]);
+
+     if GetSide(fac) = am then
+        for i = 1 to 4 do
+            us_vlist := Delete(us_vlist, 1); 
+End;
+
+On UnitGoesToRed(un) do
+begin
+if un in FilterAllUnits([f_side, 1]) and us_contact = false then
+   us_contact := true;
+End;
+
+
+On BuildingComplete(b) do
+var i;
+begin
+
+     if GetSide(b) = am then
+        for i = 1 to 4 do
+            us_blist := Delete(us_blist, 1);
+
+End;
+
+
+// CRATES
+Every 1$10 trigger tick < 35*60*60 do
+var i, chance;
+begin
+enable;
+
+chance := Rand(0, 100);
+
+if chance >= [40, 50, 60] then
+   CreateCratesArea(Rand(1,5), crates_spawn, true);
+
+   Wait(Rand(0$01, 0$11));
+
+if chance >= [20, 13, 10] then
+   CreateCratesArea(Rand(1,5), am_crates_spawn, true);
+
+if game_counter < 1340 then
+   CreateCratesArea(Rand(2,5), ar_crates_spawn, true);
+
+End;

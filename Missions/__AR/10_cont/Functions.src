@@ -1,0 +1,243 @@
+// Ape
+Export Function CreateApemans(n, area);
+var un, i;
+begin
+uc_side := 0;
+uc_nation := 0;
+
+   for i = 1 to n do
+       begin
+       hc_gallery := '';
+       hc_name := '';
+       hc_attr := [Rand(10,12), Rand(10,11)];
+       hc_class := class_apeman;
+       hc_skills := [0,0,0,0];
+
+       un := CreateHuman;
+       PlaceUnitArea(un, area, false);
+       end;
+End;
+
+Export Function CreateTigers(n, area, agres);
+var i, animal;
+begin
+uc_side := 0;
+uc_nation := 0;
+
+   for i = 1 to n do
+       begin
+       hc_class = class_tiger;
+       hc_gallery = 'sandnature';
+       hc_agressivity = Rand(agres, agres+30);
+       hc_face_number = 3;
+
+       animal := CreateHuman;
+       PlaceUnitArea(animal, area, false);
+       end;
+
+End;
+
+Export Function TameApeman(side, n);
+var i, filter, apes, ape, b, x, y;
+begin
+filter := FilterAllUnits([[f_side, side], [f_class, 4]]);
+apes := FilterAllUnits([[f_side, 0], [f_class, class_apeman]]);
+
+   if n > apes then
+      n = apes;
+
+   for i = 1 to n do
+       begin
+       if IsInUnit(filter[i]) then
+          begin
+          b := IsInUnit(filter[i]);
+          ComExitBuilding(filter[i]);
+          end;
+
+       Wait(0$0.3);
+
+       SetRememberedX(filter[i], GetX(filter[i]));
+       SetRememberedY(filter[i], GetY(filter[i]));
+
+       ape := NearestUnitToUnit(apes, filter[i]);
+       ComHold(ape);
+
+       ComTameXY(filter[i], GetX(ape), GetY(ape));
+
+       Repeat
+        Wait(0$01);
+       Until not HasTask(filter[i]);
+
+       if b then
+          AddComEnterUnit(filter[i], b)
+           else
+            AddComReturn(filter[i]);
+       
+       end;
+
+End;
+
+
+// SoS Macros ;d
+Export Function Cost(bdepot, btype);
+var pom, cost;
+begin
+pom := GetBase(bdepot);
+cost:= CostOfBuilding(btype, GetNation(bdepot));
+
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function GetLabs(side);
+begin
+result := FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]]]);
+End;
+
+Export Function GetLabKinds(lab);
+var kind1, kind2;
+begin
+kind1 := GetLabKind(lab, 1);
+kind2 := GetLabKind(lab, 2);
+result := [kind1, kind2];
+End;
+
+Export Function CheckTechList(side, tlist);
+var i;
+begin
+result := false;   // default all techs are researched
+
+for i = 1 to tlist do
+    if GetTech(tlist[i], side) <> state_researched then
+       begin
+       result := true;
+       break;
+       end;
+End;
+
+
+Export Function ResearchTechList(side, tlist);
+// tlist - lista techów (t_basic, t_weap,
+// t_sib, t_comp, t_opto, t_bio, t_time);
+var i, lab, pom, tmp, list, mylab;
+begin
+lab := GetLabs(side);
+tmp := 0;
+list := [];
+
+// check list
+   for i = 1 to tlist do
+       if GetTech(tlist[i], side) <> state_researched then
+          list := list ^ tlist[i];
+
+   if list then
+      begin
+   // get lab
+      for i = 1 to lab do
+          if GetTechLab(list[1]) in GetLabKinds(lab[i]) then
+             begin
+             mylab := lab[i];
+             break;
+             end;
+
+   // mylab
+      if mylab then
+         begin
+         if BuildingStatus(mylab) = bs_idle then
+            for i = 1 to list do
+                AddComResearch(mylab, list[i]);
+         end
+          else
+           result := false;
+      end
+       else
+        result := false;
+
+End;
+
+Export Function ComBuildLabKind(lab, bkind1, bkind2);
+begin
+
+    if GetLabKind(lab, 1) = b_lab_basic and
+       GetLabKind(lab, 2) = b_lab_basic then
+       begin
+       if Cost(lab, bkind1) and Cost(lab, bkind2) and BuildingStatus(lab) = bs_idle then
+          begin
+          ComUpgradeLab(lab, bkind1);
+          AddComUpgradeLab(lab, bkind2);
+          result := true;
+          end
+           else
+            result := false;
+       end
+        else
+         result := false;
+End;
+
+Export Function BuildingFull(building);
+begin
+if UnitsInside(building) = 6 then
+   result := true
+    else
+     result := false;
+End;
+
+
+Export Function PrepareMines();
+begin
+Randomize;
+PlaceMinesToArea(west_mines, Rand(39, 53), 0, 5, 0);
+PlaceMinesToArea(center_mines, Rand(61, 74), 0, 5, 0);
+PlaceMinesToArea(east_mines, Rand(36, 59), 0, 5, 0);
+mines := true;
+End;
+
+Export Function InitVehicle(n);
+var i, list;
+begin
+list := [];
+
+for i = 1 to n do
+    list := list ^ [[ar_medium_trike, ar_half_tracked][Rand(1,2)], engine_combustion, control_remote, [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_flame_thrower][Rand(1,4)]];
+
+result := list;
+End;
+
+Export Function sci(side, spec);
+var sci;
+begin
+sci := FilterAllUnits([[f_side, side], [f_class, 4]]) diff spec;
+result := sci;
+End;
+
+Export Function m(side, spec);
+var m;
+begin
+m := FilterAllUnits([[f_side, side], [f_class, 3]]) diff spec;
+result := m;
+End;
+
+Export Function GetVehicle(side, engine);
+begin
+result := FilterAllUnits([[f_side, side], [f_engine, engine]]);
+End;
+
+Export Function FindLab(side, kind);
+var labs, i, j, mode;
+begin
+mode := false;
+labs := FilterAllUnits([[f_side, side], [f_or,  [f_btype, 6], [f_btype, 7], [f_btype, 8]]]);
+
+for i = 1 to labs do
+    for j = 1 to 2 do
+        if GetLabKind(labs[i], j) = kind then
+           begin
+           mode := true;
+           break;
+           end;
+
+result := mode;
+End;

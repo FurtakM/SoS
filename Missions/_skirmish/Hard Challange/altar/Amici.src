@@ -1,0 +1,474 @@
+// Zdroják pro chování Amerièanù. Vzhledem k tomu, že za Amíky bude
+// hrát hráè, tak tady budou jen nìjaké kecy a taky pár pøekvapení,
+// které spustí akce hráèe.
+
+
+Var AmZakladni, AmPosily1, AmPosily2, AmPosily3;
+Var VidelRusy;
+Var Hotovo_Mine, Hotovo_MineDestroyed, Hotovo_Base;
+
+
+// Tato funkce inicializuje Americký kód.
+Export Function prepare_amici;
+Begin
+  If debug then Exit;
+  VidelRusy = 0;
+  Hotovo_Mine = 0; Hotovo_MineDestroyed = 0; Hotovo_Base = 0;
+  init_lidi;
+End;
+
+
+// Tato funkce nastaví cíle mise a øekne, co má vlastnì hráè udìlat.
+Export Function start_amici;
+Begin
+  dlg_Start;
+End;
+
+
+// Inicializace seznamu posil, nastavení øidièù do vozítek.
+Function init_lidi;
+Begin
+  AmZakladni = [AmEng1, AmSol1];
+  AmPosily1 = [AmSci1, AmEng2, AmMech1, AmSol2, AmSol3, AmVeh1, AmVeh2];
+  AmPosily2 = [AmSci2, AmMech2, AmSol4, AmSol5, AmVeh3];
+  AmPosily3 = [AmSol6, AmSol7, AmMech3]; SetLives (AmSol7, 450); SetLives (AmMech3, 870);
+  skryj (AmZakladni); prived (AmZakladni, AmikStart);
+  skryj (AmPosily1); skryj (AmPosily2); skryj (AmPosily3);
+  PlaceHumanInUnit (AmMech1, AmVeh1); SetFuel (AmVeh1, 79);
+  PlaceHumanInUnit (AmSol2, AmVeh2); SetFuel (AmVeh2, 74);
+  PlaceHumanInUnit (AmMech2, AmVeh3); SetFuel (AmVeh3, 68);
+End;
+
+
+// Skrytí všech jednotek v seznamu.
+Function skryj (Seznam);
+Var i, delka;
+Begin
+  Delka = Seznam;
+  For i = 1 to delka do RemoveUnit (Seznam [i]);
+End;
+
+
+// Pøíchod všech jednotek v seznamu.
+Function prived (Seznam, Area);
+Var i, delka, Co;
+Begin
+  Delka = Seznam;
+  For i = 1 to delka do Begin
+    Co = Seznam [i];
+    If IsInUnit (Co) then Continue;
+    PlaceUnitArea (Co, Area, false);
+  End;
+End;
+
+
+// Pøíchod prvních posil.
+Every 8$0 Marked 2 do
+Begin
+  if debug then Exit;
+  prived (AmPosily1, AmikPosily);
+  dlg_posily1;
+End;
+
+
+// Pøíchod druhých posil.
+Every 14$0 Marked 2 do
+Begin
+  if debug then Exit;
+  prived (AmPosily2, AmikPosily);
+  dlg_posily2;
+End;
+
+
+// Pøíchody tøetích posil.
+Every 19$0 Marked 2 do
+Begin
+  if debug then Exit;
+  prived (AmPosily3, AmikPosily);
+  dlg_posily3;
+End;
+
+
+// Až uvidí cestièku k brodu.
+Every 0$4 Trigger SeeArea (side_Am, CestickaKBrodu) do
+Begin
+  dlg_cesticka;
+End;
+
+
+// Až dojdou za øeku.
+Every 0$5 Trigger FilterUnitsInArea (ZaRekou, [[F_SIDE, side_Am]]) do
+Begin
+  dlg_zarekou;
+End;
+
+
+// Až poprvé uvidí ruskou základnu.
+Every 0$1.5 Trigger SeeArea (side_Am, Rusove) do
+Begin
+  VidelRusy = 1;
+  dlg_vidirusy;
+End;
+
+
+// Pøidání medailí apod.
+Function win;
+Begin
+  // Medaile za dùl?
+  If Hotovo_Mine then
+    If not Hotovo_MineDestroyed then AddMedal ('Mine', 1)
+    else AddMedal ('Mine', -1)
+  else AddMedal ('Mine', -2);
+  // Ještì nìjaké medaile? Musím nìco vymyslet.
+  // Konec mise.
+  YouWin;
+End;
+
+
+Function kontrola_lost;
+Begin
+  If not FilterAllUnits ([[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]]) then
+  Begin
+    YouLost ('Die');
+  End;
+End;
+
+
+Export Function kontrola_win;
+Begin
+  If not FilterAllUnits ([[F_SIDE, side_Ru], [F_TYPE, UNIT_HUMAN], [F_OK]]) then
+  Begin
+    win;
+  End;
+End;
+
+
+Export Function Amici_UnitGoesToRed (Un);
+Begin
+  // Zjištìní, zda jsou všichni Amíci mrtví.
+  kontrola_lost;
+  // Zjištìní, zda jsou všichni Rusáci mrtví.
+  kontrola_win;
+  // Zjištìní, zda je v háji dùl na siberit.
+  If not Hotovo_MineDestroyed and (GetBType (Un) = B_SIBERITE_MINE) then
+  Begin
+    Hotovo_MineDestroyed = 1;
+    dlg_minedestroyed (GetX (Un), GetY (Un));
+    Exit;
+  End;
+End;
+
+
+Export Function Amici_VehicleCaptured (VehNew, VehOld, OrigSide, Hum);
+Begin
+  // Zjištìní, zda jsou všichni Rusáci mrtví.
+  kontrola_win;
+End;
+
+
+Export Function Amici_BuildingCaptured (Build, OrigSide, Hum);
+Begin
+  // Zjištìní, zda jsou všichni Rusáci mrtví.
+  kontrola_win;
+End;
+
+
+Export Function Amici_BuildingComplete (Un);
+Var Typ;
+Begin
+  If GetSide (Un) = side_Am then Begin
+    Typ := GetBType (Un);
+    // Postavil dùl na siberit?
+    if not Hotovo_Mine and (Typ = B_SIBERITE_MINE) then Begin
+      Hotovo_Mine = 1;
+      dlg_mineok (GetX (Un), GetY (Un));
+      Exit;
+    End;
+    // Postavil základnu za øekou?
+    if not Hotovo_Base and ((Typ = B_DEPOT) or (Typ = B_WAREHOUSE)) and IsInArea (Un, ZaRekou) then Begin
+      Hotovo_Base = 1;
+      dlg_baseok (GetX (Un), GetY (Un));
+      Exit;
+    End;
+  End;
+End;
+
+
+// Tato funkce najde èlovìka, který bude mluvit. Nebude brát nikoho ze zadané množiny.
+Function najdi_mluvciho (Ignore);
+Var Seznam;
+Begin
+  Seznam = FilterAllUnits ([[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]]);
+  Seznam = Seznam diff Ignore;
+  if not Seznam then Result = 0
+  else if AmEng1 in Seznam then Result = AmEng1
+  else if AmSol1 in Seznam then Result = AmSol1
+  else Result = Seznam [1];
+End;
+
+
+// Tato funkce najde nejbližší postavu k oblasti.
+Function najdi_nejblizsi (Area, X, Y);
+Var Seznam;
+Begin
+  if Area then Seznam = FilterUnitsInArea (Area, [[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]])
+  else Seznam = [];
+  if Seznam then Result = Seznam [1]
+  else Begin
+    Seznam = FilterAllUnits ([[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]]);
+    Result = NearestUnitToXY (Seznam, X, Y);
+  End;
+End;
+
+
+// Tato funkce najde nejbližší postavu k oblasti.
+Function najdi_nejblizsi2 (Area, X, Y, Ignore);
+Var Seznam;
+Begin
+  Seznam = FilterUnitsInArea (Area, [[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]]) diff Ignore;
+  if Seznam then Result = Seznam [1]
+  else Begin
+    Seznam = FilterAllUnits ([[F_SIDE, side_Am], [F_TYPE, UNIT_HUMAN], [F_OK]]) diff Ignore;
+    Result = NearestUnitToXY (Seznam, X, Y);
+  End;
+End;
+
+
+// Tato funkce provede úvodní dialogy apod.
+Function dlg_start;
+Begin
+  If not movies then Begin
+    ChangeMissionObjectives ('M_main');
+    Exit;
+  End;
+  // Zaèátek prvního kecání.
+  InGameOn;
+  // Vycentrovat na grupu Amerièanù a zaøídit, aby nedìlali nic.
+  // Otoèím je navíc smìrem k depotu.
+  ComHold ([AmSol1, AmEng1]);
+  CenterNowOnUnits ([AmSol1, AmEng1]);
+  AddComTurnUnit ([AmSol1, AmEng1], AmDepot);
+  // První vìty.
+  Wait (0$2);
+  Say (AmEng1, 'D1-A-1');
+  Say (AmSol1, 'D1-B-1');
+  Say (AmEng1, 'D1-A-2');
+  Say (AmSol1, 'D1-B-2');
+  Say (AmEng1, 'D1-A-3');
+  Say (AmSol1, 'D1-B-3');
+  // Plazení k depotu.
+  AddComCrawl (AmSol1);
+  AddComMoveToArea (AmSol1, AmikPrvniDepot);
+  while not IsInArea (AmSol1, AmikPrvniDepot) do Begin
+    If not HasTask (AmSol1) then AddComMoveToArea (AmSol1, AmikPrvniDepot);
+    Wait (0$1);
+  End;
+  AddComWait (AmSol1, 0$5); AddComWalk (AmSol1);
+  AddComMoveToArea (AmEng1, AmikPrvniDepot);
+  while not IsInArea (AmEng1, AmikPrvniDepot) do Begin
+    If not HasTask (AmEng1) then AddComMoveToArea (AmEng1, AmikPrvniDepot);
+    Wait (0$1);
+  End;
+  AddComHold ([AmSol1, AmEng1]);
+  CenterOnUnits ([AmSol1, AmEng1]);
+  // Jsou u depotu.
+  Say (AmEng1, 'D1-A-10');
+  Say (AmSol1, 'D1-B-10');
+  Say (AmEng1, 'D1-A-11');
+  Say (AmSol1, 'D1-B-11');
+  Say (AmEng1, 'D1-A-12');
+  Say (AmSol1, 'D1-B-12');
+  Say (AmEng1, 'D1-A-13');
+  Say (AmSol1, 'D1-B-13');
+  Say (AmEng1, 'D1-A-14');
+  Say (AmSol1, 'D1-B-14');
+  Say (AmEng1, 'D1-A-15');
+  Say (AmSol1, 'D1-B-15');
+  Say (AmEng1, 'D1-A-16');
+  Say (AmSol1, 'D1-B-16');
+  Say (AmEng1, 'D1-A-17');
+  Say (AmSol1, 'D1-B-17');
+  Say (AmEng1, 'D1-A-18');
+  // Další èást povídání.
+  Wait (0$1);
+  Say (AmEng1, 'D1-A-20');
+  Say (AmSol1, 'D1-B-20');
+  Say (AmEng1, 'D1-A-21');
+  Say (AmSol1, 'D1-B-21');
+  Say (AmEng1, 'D1-A-22');
+  Say (AmEng1, 'D1-B-22');
+  Say (AmEng1, 'D1-A-23');
+  Say (AmEng1, 'D1-B-23');
+  Say (AmEng1, 'D1-A-24');
+  // Konec prvního kecání.
+  InGameOff;
+  // Uložit pto restart. Toto by mìlo být pøed objektivy.
+  SaveForQuickRestart;
+  // Nastavení úkolù pro misi.
+  ChangeMissionObjectives ('M_main');
+End;
+
+
+Function dlg_posily1;
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  CenterOnUnits (AmPosily1);
+  // Kecání.
+  Kdo = najdi_mluvciho (AmPosily2);
+  SayRadio (AmPosily1 [1], 'D2-A-1');
+  SayRadio (Kdo, 'D2-B-1');
+  SayRadio (AmPosily1 [1], 'D2-A-2');
+  SayRadio (Kdo, 'D2-B-2');
+  SayRadio (AmPosily1 [1], 'D2-A-3');
+  SayRadio (Kdo, 'D2-B-3');
+  // Konec dialogu.
+  DialogueOff;
+End;
+
+
+Function dlg_posily2;
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  CenterOnUnits (AmPosily2);
+  // Kecání.
+  Kdo = najdi_mluvciho (AmPosily2);
+  SayRadio (AmPosily2 [1], 'D3-A-1');
+  SayRadio (Kdo, 'D3-B-1');
+  SayRadio (AmPosily2 [1], 'D3-A-2');
+  SayRadio (Kdo, 'D3-B-2');
+  SayRadio (AmPosily2 [1], 'D3-A-3');
+  SayRadio (Kdo, 'D3-B-3');
+  SayRadio (AmPosily2 [1], 'D3-A-4');
+  SayRadio (Kdo, 'D3-B-4');
+  SayRadio (AmPosily2 [1], 'D3-A-5');
+  SayRadio (Kdo, 'D3-B-5');
+  // Konec dialogu.
+  DialogueOff;
+End;
+
+
+Function dlg_posily3;
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  CenterOnUnits (AmPosily3);
+  // Kecání.
+  Kdo = najdi_mluvciho (AmPosily3);
+  SayRadio (AmPosily3 [1], 'D4-A-1');
+  SayRadio (Kdo, 'D4-B-1');
+  SayRadio (AmPosily3 [1], 'D4-A-2');
+  SayRadio (Kdo, 'D4-B-2');
+  SayRadio (AmPosily3 [1], 'D4-A-3');
+  SayRadio (Kdo, 'D4-B-3');
+  SayRadio (AmPosily3 [1], 'D4-A-4');
+  SayRadio (Kdo, 'D4-B-4');
+  SayRadio (AmPosily3 [1], 'D4-A-5');
+  SayRadio (Kdo, 'D4-B-5');
+  SayRadio (AmPosily3 [1], 'D4-A-6');
+  SayRadio (Kdo, 'D4-B-6');
+  SayRadio (AmPosily3 [1], 'D4-A-7');
+  // Konec dialogu.
+  DialogueOff;
+End;
+
+
+Function dlg_cesticka;
+Var Kdo, Kdo2;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (CestickaKBrodu, 113, 44);
+  Kdo2 = najdi_nejblizsi2 (CestickaKBrodu, 113, 44, Kdo);
+  Say (Kdo, 'D5-A-1');
+  Say (Kdo2, 'D5-B-1');
+  // Konec dialogu.
+  DialogueOff;
+End;
+
+
+Function dlg_zarekou;
+Var Kdo, Kdo2;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (ZaRekou, 105, 21);
+  Kdo2 = najdi_nejblizsi2 (ZaRekou, 105, 24, Kdo);
+  Say (Kdo, 'D6-A-1');
+  Say (Kdo2, 'D6-B-1');
+  Say (Kdo, 'D6-A-2');
+  Say (Kdo2, 'D6-B-2');
+  Say (Kdo, 'D6-A-3');
+  // Konec dialogu.
+  DialogueOff;
+  // Nastavení úkolù pro misi.
+  ChangeMissionObjectives ('M_base');
+End;
+
+
+Function dlg_baseok (X, Y);
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (ZaRekou, X, Y);
+  Say (Kdo, 'D7-A-1');
+  // Konec dialogu.
+  DialogueOff;
+  // Nastavení úkolù pro misi.
+  ChangeMissionObjectives ('M_baseok');
+End;
+
+
+Function dlg_mineok (X, Y);
+Var Kdo, Kdo2;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (ZaRekou, X, Y);
+  Kdo2 = najdi_nejblizsi2 (ZaRekou, X, Y, Kdo);
+  Say (Kdo, 'D8-A-1');
+  Say (Kdo, 'D8-B-1');
+  // Konec dialogu.
+  DialogueOff;
+  // Nastavení úkolù pro misi.
+  ChangeMissionObjectives ('M_mineok');
+End;
+
+
+Function dlg_minedestroyed (X, Y);
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (0, X, Y);
+  Say (Kdo, 'D9-A-1');
+  // Konec dialogu.
+  DialogueOff;
+  // Nastavení úkolù pro misi.
+  ChangeMissionObjectives ('M_minedest');
+End;
+
+
+Function dlg_vidirusy;
+Var Kdo;
+Begin
+  // Zaèátek dialogu.
+  DialogueOn;
+  // Kecání.
+  Kdo = najdi_nejblizsi (Rusove, 1, 1);
+  Say (Kdo, 'D10-A-1');
+  // Konec dialogu.
+  DialogueOff;
+End;
+
+

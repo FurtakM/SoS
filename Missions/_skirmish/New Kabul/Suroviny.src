@@ -1,0 +1,68 @@
+// Zpracovávání surovin.
+
+
+Var BednyA;
+Var BednyRZ, BednyRV;
+
+
+Export Function init_Suroviny;
+Begin
+  BednyA = dif_BednyA [Difficulty];
+  If VsevSaved then
+  Begin
+    BednyRZ = dif_BednyR1 [Difficulty];
+    BednyRV = dif_BednyR2 [Difficulty];
+  End else Begin
+    BednyRZ = dif_BednyR2 [Difficulty];
+    BednyRV = dif_BednyR1 [Difficulty];
+  End;
+End;
+
+
+// Trigger pro bedny všude.
+Every 5$13.7+5$9 do
+Var Pocet;
+Begin
+  Wait (Rand (0$1, 1$30));
+  Pocet = Rand (0, 5);
+  If Pocet > 0 then CreateCratesAnywhere (Pocet, true);
+  Enable;
+End;
+
+
+// Trigger pro arabské bedny.
+Every 1$49 do
+Begin
+  Wait (Rand (0$1, 1$30));
+  If (BednyA <> 0) then Begin
+    CreateCratesArea (Rand (3, 5), BednyArabi, true);
+    If (BednyA <> -1) then BednyA = BednyA - 1;
+    If (BednyA <> 0) then Enable;
+  End;
+End;
+
+
+// Trigger pro ruské bedny na západì.
+Every 2$5+1$39 do
+Begin
+  Wait (Rand (0$1, 2$0));
+  If (BednyRZ <> 0) then Begin
+    CreateCratesArea (Rand (3, 5), BednyRusoveZ, true);
+    If (BednyRZ <> -1) then BednyRZ = BednyRZ - 1;
+    If (BednyRZ <> 0) then Enable;
+  End;
+End;
+
+
+// Trigger pro ruské bedny na východì.
+Every 2$23+0$53 do
+Begin
+  Wait (Rand (0$1, 2$0));
+  If (BednyRV <> 0) then Begin
+    CreateCratesArea (Rand (3, 5), BednyRusoveV, true);
+    If (BednyRV <> -1) then BednyRV = BednyRV - 1;
+    If (BednyRV <> 0) then Enable;
+  End;
+End;
+
+

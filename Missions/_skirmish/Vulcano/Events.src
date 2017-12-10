@@ -1,0 +1,109 @@
+On UnitDestroyed(un) do
+begin
+
+//if un in russian_in_base then
+//   russian_in_base := russian_in_base diff un;
+
+if GetSide(un) = your_side then
+   dead_counter := dead_counter + 1;
+
+if GetSide(un) in FilterAllUnits([f_enemy, your_side]) then
+   kill_counter := kill_counter + 1;
+
+if un = player_commander then
+   YouLost('vulcano-lost');
+
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) then
+   begin
+   if GetBType(un) = b_turret or GetBType(un) = b_siberite_power then
+      begin
+      ru_blist := ru_blist ^ GetBType(un);
+      ru_blist := ru_blist ^ GetX(un);
+      ru_blist := ru_blist ^ GetY(un);
+      ru_blist := ru_blist ^ GetDir(un);
+      end;
+   end;
+
+
+if un in FilterAllUnits([[f_side, 8], [f_type, unit_building]]) then
+   begin
+   if GetBType(un) = b_barracks then
+      legion_blist := legion_blist ^ b_armoury
+       else
+        if not GetBType(un) in [b_warehouse, b_lab, b_lab_full] then
+           legion_blist := legion_blist ^ GetBType(un);
+           legion_blist := legion_blist ^ GetX(un);
+           legion_blist := legion_blist ^ GetY(un);
+           legion_blist := legion_blist ^ GetDir(un);
+   end;
+
+if un in legion_force then
+   legion_force := legion_force diff un;
+
+if un in ru_force then
+   ru_force := ru_force diff un;
+
+if un in al_force then
+   al_force := al_force diff un;
+
+End;
+
+
+On BuildingComplete(b) do
+var i;
+begin
+
+if GetSide(b) = 8 then
+   for i = 1 to 4 do
+       legion_blist := Delete(legion_blist, 1);
+
+if GetSide(b) = 3 then
+   for i = 1 to 4 do
+       ru_blist := Delete(ru_blist, 1);
+
+End;
+
+
+On VehicleConstructed(veh, fac) do
+begin
+if not GetWeapon(veh) in [ru_cargo_bay, ru_siberium_rocket] then
+   begin
+   if GetSide(veh) = 3 then
+      begin
+      ComMoveXY(veh, 149, 8);
+      ru_force := ru_force ^ veh;
+      end;
+   end;
+if not GetWeapon(veh) in [ar_cargo_bay, ar_control_tower] then
+   begin
+   if GetSide(veh) = 8 then
+      legion_force := legion_force ^ veh;
+   end;
+if GetSide(veh) = 7 and your_side <> 7 then
+   al_force := al_force ^ veh;
+
+if GetSide(veh) = your_side then
+   veh_counter := veh_counter + 1;
+End;
+
+On SibDepositContaminated(contaminating_scientist, x_of_deposit, y_of_deposit) do
+begin
+if GetSide(contaminating_scientist) <> your_side then
+   sib_contamin_counter := sib_contamin_counter + 1;
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = your_side then
+   tech_counter := tech_counter + 1;
+End;
+
+
+
+Every 9$30 trigger FilterAllUnits([f_class, class_apeman]) < 9 do
+var i;
+begin
+enable;
+i := FilterAllUnits([f_class, class_apeman]);
+PrepareApeman(8-i);
+End;

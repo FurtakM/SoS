@@ -1,0 +1,530 @@
+// Zdroják pro chování Rusù. Nejdùlìitìjší a nejzajímavìjší èást
+// zdrojákù.
+
+// Základní fakta:
+// - Rusové mají dobøe opevnìnou základnu, ale trochu nedostatek surovin.
+
+// Informace o prùbìhu:
+// - Nejprve zaènou Rusové nosit pøipravené bedny z okolí dovnitø.
+// - Poté postaví pár vozítek.
+// - Pak se pojedou podívat ke zdroji ropy a postaví tam sklad.
+// - Rovnì postaví další tìební vì. Ta nebude moc dobøe hlídaná,
+//   take by hráè mùe brzy zlikvidovat (a pouít sám).
+// - Do té doby budou Rusové obèas vozit vytìenou ropu do své základny.
+// - Obèas vezmou pár tankù a pojedou se podívat po cestì, jestli
+//   se nìco nedìje. Jakmile zmerèí Amíky, vrátí se.
+// - "Nìkdy" vezmou pár vozítek a lidí a pojedou se mrknout na
+//   místo, kde Amík zaèínal.
+// - Mezitím budou vynalézat. Smìr, kterım se vydají, se zvolí na zaèátku
+//   náhodnì?
+// - Ten prùchod u ropnıch vìí v základnì moná zazdím, aby se tamtudy
+//   Amík nedostal do základny. Pùvodnì jsem chtìl, aby hráè nejdøív
+//   zlikvidoval zdroje ropy Rusáka, ale moná od toho ustoupím.
+
+
+// Seznam jednotlivıch postav.
+Var inzenyri, vedci;
+// Èísla stavìnıch budov.
+Var RuLab2, RuArmory, RuCompExt, RuTrackExt, RuGunExt, RuRocketExt;
+// Èísla vozidel.
+Var Nakladaky, Tanky, Obranci;
+// Útoèení na Amerièany.
+Var KdoUtoci, ProbihaUtok;
+// Pravdìpodobnosti.
+Var ProbHeavyWeapon, ProbRocket, ProbRocketHeavy;
+
+
+// Hlavní inicializace Rusù.
+Export Function prepare_rusove;
+Begin
+  Disable (21); Disable (22);
+  ProbHeavyWeapon = dif_RusoveProbHeavyWeapon [Difficulty];
+  ProbRocket = dif_RusoveProbRocket [Difficulty];
+  ProbRocketHeavy = dif_RusoveProbRocketHeavy [Difficulty];
+  init_jednotky;
+  lidi_do_budov;
+  nastavit_palivo;
+  init_research;
+  init_utoceni;
+End;
+
+
+// Inicializace èísel jednotek.
+Function init_jednotky;
+Begin
+  RuLab2 = 0; RuArmory = 0;
+  RuCompExt = 0; RuTrackExt = 0; RuGunExt = 0; RuRocketExt = 0;
+  Nakladaky = []; Tanky = []; KdoUtoci = [];
+  Obranci = [RuTank1, RuTank2];
+  vedci = FilterAllUnits ([[F_SIDE, side_Ru], [F_TYPE, UNIT_HUMAN], [F_CLASS, CLASS_SCIENTISTIC]]);
+  inzenyri = FilterAllUnits ([[F_SIDE, side_Ru], [F_TYPE, UNIT_HUMAN], [F_CLASS, CLASS_ENGINEER]]);
+End;
+
+
+// Tato funkce nechá vstoupit lidi do budov.
+Function lidi_do_budov;
+Begin
+  if debug then exit;
+  ComEnterUnit (vedci, RuLab1);
+  ComEnterUnit ([RuMech3, RuMech4], RuFact);
+  ComEnterUnit ([RuMech1], RuTank1);
+  ComEnterUnit ([RuMech2], RuTank2);
+End;
+
+
+// Funkce doplní palivo a nastaví suroviny.
+Function nastavit_palivo;
+Var Zakladna;
+Begin
+  SetFuel (FilterAllUnits ([[F_SIDE, side_Ru], [F_TYPE, UNIT_VEHICLE]]), 100);
+  Zakladna = GetBase (RuDepot);
+  SetResourceType (Zakladna, MAT_CANS, 220);
+  SetResourceType (Zakladna, MAT_OIL, 100);
+  SetResourceType (Zakladna, MAT_SIBERIT, 50);
+End;
+
+
+// Vynalézání.
+var Lab1_Tech1, Lab1_Upg1, Lab1_Upg2, Lab1_Tech2;
+var Lab2_Tech1, Lab2_Upg1, Lab2_Upg2, Lab2_Tech2;
+
+
+Function init_research;
+Begin
+  // Pøiøadím seznam technologií, které mám vynalézt v prvním labu.
+  Lab1_Tech1 = [TECH_GUN];
+  Lab1_Upg1 = B_LAB_COMPUTER; Lab1_Upg2 = 0;
+  Lab1_Tech2 = [TECH_AI, TECH_ADVAI, TECH_ROCKET, TECH_WEAP1, TECH_ADVMET, TECH_WEAP2, TECH_WEAP3];
+  // A pro druhı lab, kterı ovšem musí bıt nejdøíve postaven.
+  Lab2_Tech1 = [TECH_SIBDET, TECH_TECH1];
+  Lab2_Upg1 = B_LAB_SPACETIME; Lab2_Upg2 = B_LAB_SIBERIUM;
+  Lab2_Tech2 = [TECH_TECH2, TECH_TAURAD, TECH_SPACANOM, TECH_TECH3, TECH_TAUFIELD];
+End;
+
+
+Function vynalezani_simple (Lab, Var Seznam);
+Var Vevnitr, I, Delka, Co;
+Begin
+  // Pokud je lab v prdeli, konèím.
+  If not IsOK (Lab) then Begin Result = 0; Exit; End;
+  // Pokud probíhá vynalézání, èekám.
+  if HasTask (Lab) then Begin Result = 1; Exit; End;
+  // Nic právì nevynalézám, tak zaènu na nìèem pracovat. Nejprve ale musím zjistit
+  // první nevynalezenou technologii ze seznamu.
+  Delka = Seznam;
+  For I = 1 to Delka do Begin
+    Co = Seznam [I];
+    If CanBeResearched (Lab, Co) then Begin
+      AddComResearch (Lab, Co);
+      Seznam = Seznam diff Co;
+      Result = 1; Exit;
+    End;
+  End;                 
+  // U jsem vynalezl všechno.
+  Result = 0;
+End;
+
+
+Function vynalezani_upgrade (Lab, Var Upg);
+Var Vevnitr;
+Begin
+  // Provedeme upgrade.
+  ComUpgradeLab (Lab, Upg); Upg = 0;
+  // Pokud nìkdo zùstal vevnitø, vyhodíme ho.
+  Vevnitr = UnitsInside (Lab);
+  If Vevnitr then ComExitBuilding (Vevnitr);
+End;
+
+
+Function vynalezani (Lab, Var Seznam1, Var Upg1, Var Upg2, Var Seznam2);
+Begin
+  // Pokud ještì nemám hotov první seznam.
+  if Seznam1 then Begin
+    vynalezani_simple (Lab, Seznam1);
+    Result = 1; Exit;
+  End;
+  // Pokud mám první rundu vynalezenou, musím upgradovat lab.
+  if Upg1 then Begin
+    vynalezani_upgrade (Lab, Upg1);
+    Result = 1; Exit;
+  End;
+  if Upg2 then Begin
+    vynalezani_upgrade (Lab, Upg2);
+    Result = 1; Exit;
+  End;
+  // A pak vynalézat druhou rundu technologií.
+  if Seznam2 then Begin
+    vynalezani_simple (Lab, Seznam2);
+    Result = 1; Exit;
+  End;
+  // A mám vynalezeno všechno.
+  Result = 0;
+End;
+
+
+// Spustit vynalézání v prvním labu a vırobu náklaïáku a nìjakıch budov.
+Every 0$5 do
+Begin
+  If Debug then Exit;
+  vynalezani_simple (RuLab1, Lab1_Tech1);
+  postav_vozidlo (RU_MEDIUM_WHEELED, ENGINE_COMBUSTION, CONTROL_MANUAL, RU_CARGO_BAY);
+  postav_budovu (B_EXT_TRACK, 22, 19, 1);
+  AddComCollect (inzenyri, 20, 23);
+end;
+
+
+// Sebrat bedny, které jsou kolem ruské základny.
+Every 0$47+0$12 Marked 22 do
+Begin
+  sbirej_bedny;
+  Enable;
+End;
+
+
+// Vyrobit nìjaké vozidlo.
+Every 2$11.2 do
+Begin
+  If vyrabej_vozidlo then Enable;
+End;
+
+
+// Jednotka je znièena.
+Export Function Rusove_UnitDestroyed (Un);
+Begin
+  If Un in Nakladaky then Nakladaky = Nakladaky diff [Un];
+  If Un in Tanky then Tanky = Tanky diff [Un];
+  If Un in Obranci then Obranci = Obranci diff [Un];
+  If Un in KdoUtoci then Begin
+    KdoUtoci = KdoUtoci diff [Un];
+    If not KdoUtoci then skonci_utok;
+  End;
+End;
+
+
+// Vozidlo bylo postaveno.
+Export Function Rusove_VehicleConstructed (Un, Fact);
+Var Vevnitr;
+Begin
+  If Debug then Exit;
+  If GetSide (Un) <> side_Ru then Exit;
+  If GetWeapon (Un) = RU_CARGO_BAY then Begin
+    // Poznamenat si èíslo náklaïáku.
+    Nakladaky = Nakladaky union [Un];
+    // Zaøídit øidièe. Zatím tam nechám toho mechanika, kterı tam je.
+    // Zaèít se svozem beden.
+    sbirej_bedny; Enable (22);
+  End;
+  If GetWeapon (Un) in [RU_GUN, RU_HEAVY_MACHINE_GUN, RU_GATLING_GUN, RU_ROCKET_LAUNCHER, RU_HEAVY_GUN, RU_ROCKET] then Begin
+    // Poznamenat si èíslo tanku.
+    Tanky = Tanky union [Un];
+  End;
+End;
+
+
+// Spustit vynalézání v druhém labu.
+Export Function Rusove_BuildingComplete (Un);
+Begin
+  If Debug then Exit;
+  If GetSide (Un) <> side_Ru then Exit;
+  if GetBType (Un) = B_LAB then Begin
+    RuLab2 = Un;
+    // Poslat oba vìdce zpìt do laboratoøí.
+    do_budovy (RuSci1, RuLab1);
+    do_budovy (RuSci2, RuLab2);
+    // Zaèít vynalézat.
+    vynalezani_simple (RuLab2, Lab2_Tech1);
+    Exit;
+  End;
+  If GetBType (Un) = B_EXT_TRACK then Begin
+    RuTrackExt = Un;
+    Exit;
+  End;
+  If GetBType (Un) = B_EXT_COMPUTER then Begin
+    RuCompExt = Un;
+    Exit;
+  End;
+  If GetBType (Un) = B_EXT_GUN then Begin
+    RuGunExt = Un;
+    // Po dostavìní gun extension ještì postavím armory.
+    postav_budovu (B_ARMOURY, 34, 22, 5);
+    Exit;
+  End;
+  If GetBType (Un) = B_EXT_ROCKET then Begin
+    RuRocketExt = Un;
+    Exit;
+  End;
+  If GetBType (Un) = B_ARMOURY then Begin
+    RuArmory = Un;
+    // Po dostavìní armory ihned upgraduju na barracks.
+    ComUpgrade (Un);
+    Exit;
+  End;
+End;
+
+
+// Trigger na pokraèování ruského vızkumu.
+Export Function Rusove_ResearchComplete (Tech, Lab);
+Var OK;
+Begin
+  If Debug then Exit;
+  if GetSide (Lab) <> side_Ru then Exit;
+  // Dokonèen vızkum v prvním labu?
+  if (Lab = RuLab1) then Begin
+    OK = vynalezani (RuLab1, Lab1_Tech1, Lab1_Upg1, Lab1_Upg2, Lab1_Tech2);
+    if not OK and RuLab2 and Lab2_Tech2 then ComEnterUnit (RuSci1, RuLab2);
+  End;
+  // Dokonèen vızkum v druhém labu?
+  if (Lab = RuLab2) then Begin
+    OK = vynalezani (RuLab2, Lab2_Tech1, Lab2_Upg1, Lab2_Upg2, Lab2_Tech2);
+    if not OK and Lab1_Tech2 then ComEnterUnit (RuSci2, RuLab1);
+  End;
+  // Dokonèení technologií.
+  if (Tech = TECH_ADVAI) then Begin
+    postav_budovu (B_EXT_COMPUTER, 30, 23, 5);
+  End;
+  if (Tech = TECH_ROCKET) then Begin
+    postav_budovu (B_EXT_ROCKET, 29, 19, 4);
+  End;
+  if (Tech = TECH_GUN) then Begin
+    postav_budovu (B_EXT_GUN, 26, 15, 3);
+  End;
+End;
+
+
+// Trigger na pokraèování ruského vızkumu.
+Export Function Rusove_UpgradeComplete (Un);
+Begin
+  If Debug then Exit;
+  if (Un = RuLab1) then Begin
+    // Po upgradu prvního labu vejdou oba vìdci do prvního labu.
+    ComEnterUnit (RuSci1, RuLab1); ComEnterUnit (RuSci2, RuLab1);
+    // A zaènou vynalézat.
+    vynalezani (RuLab1, Lab1_Tech1, Lab1_Upg1, Lab1_Upg2, Lab1_Tech2);
+    // A inenır zaène stavìt druhou laboratoø.
+    if not RuLab2 then postav_budovu (B_LAB, 17, 4, 5);
+    Exit;
+  End;
+  if (Un = RuLab2) then Begin
+    // Dostat druhého vìdce zpátky do laboratoøe.
+    do_budovy (RuSci2, RuLab2);
+    // A vynalézat.
+    vynalezani (RuLab2, Lab2_Tech1, Lab2_Upg1, Lab2_Upg2, Lab2_Tech2);
+    Exit;
+  End;
+End;
+
+
+// Funkce pro stavìní.
+Function postav_budovu (Build, X, Y, Dir);
+Begin
+  If AddComBuild (inzenyri, Build, X, Y, Dir) then Result = 1
+  else Result = 0;
+End;
+
+
+Function postav_vozidlo (Chassis, Engine, Control, Weapon);
+Begin
+  If AddComConstruct (RuFact, Chassis, Engine, Control, Weapon) then Result = 1
+  else Result = 0;
+End;
+
+
+// Sbírání beden.
+Function sbirej_bedny;
+Var I, Delka, VolneVozy, Bedny, Vuz, X, Y;
+Begin
+  // Zjistit seznam beden v okolí Rusákù.
+  Bedny = GetListOfCratesInArea (BednyRusove);
+  If not Bedny then Exit;
+  // Zjistit, které vozy jsou volné.
+  VolneVozy = [];
+  For I = 1 to Nakladaky do Begin
+    Vuz = Nakladaky [I];
+    If not HasTask (Vuz) then VolneVozy = VolneVozy union [Vuz];
+  End;
+  If not VolneVozy then Exit;
+
+  // Postavit volné vozy k továrnì a doplnit jejich palivo.
+  ComMoveUnit (VolneVozy, RuFact);
+{  AddComMoveXY (VolneVozy, 18, 14);
+  Wait (0$1);  // Nutné - jinak vrací HasTask FALSE!!!
+  For I = 1 to VolneVozy do Begin
+    Vuz = VolneVozy [I];
+    While HasTask (Vuz) do Wait (0$1);
+  End;
+}
+  // Projít všechny bedny a øíct náklaïáku, aby je posbíral.
+  Delka = Bedny div 2;
+  // Kadı náklaïák ovšem dostane maximálnì jen jeden pøíkaz.
+  If Delka > VolneVozy then Delka = VolneVozy;
+  For I = 1 to Delka do Begin
+    // Zvolit vùz, spoèítat pozici a dát mu pøíkaz.
+    Vuz = VolneVozy [I];
+    X = Bedny [2 * I - 1]; Y = Bedny [2 * I];
+    AddComCollect (Vuz, X, Y);
+  End;
+  AddComMoveUnit (VolneVozy, RuDepot);
+{  AddComFree (VolneVozy);}
+End;
+
+
+// Vıroba ruskıch bojovıch vozidel.
+Function vyrabej_vozidlo;
+Var Base;
+Var Chassis, Weapon;
+Begin
+  // Zjistit, zda je továrna znièená. Pokud ne, konèím.
+  If (not IsOK (RuFact)) or (GetSide (RuFact) <> side_Ru) then Begin Result = 0; Exit; End;
+  // Enablovat znovu volající trigger (je-li vrácena 1).
+  Result = 1;
+  // Zjistit, zda jsou všechny potøebné extenze postavené.
+  If not RuCompExt then Exit;
+  // Zjistit základnu.
+  Base = GetBase (RuFact);
+  // Zjistit, zda je tam dostatek surovin.
+  If (GetResourceType (Base, MAT_CANS) < 200) or
+     (GetResourceType (Base, MAT_OIL) < 60) then Exit;
+  // Zjistíme parametry vozidla.
+  If RuTrackExt then Chassis = RU_MEDIUM_TRACKED
+  else Chassis = RU_HEAVY_WHEELED;
+  // Zbraò.
+  If RuGunExt and RuRocketExt then Begin
+    If Prob (ProbRocket) then Begin
+      If Prob (ProbRocketHeavy) then Weapon = RU_ROCKET
+      else Weapon = RU_ROCKET_LAUNCHER
+    End else Weapon = RU_HEAVY_GUN;
+  End else If RuGunExt then Weapon = RU_HEAVY_GUN
+  else If RuRocketExt then Weapon = RU_ROCKET_LAUNCHER
+  else Begin
+    Weapon = RU_HEAVY_MACHINE_GUN;
+    Chassis = RU_MEDIUM_WHEELED;
+  End;
+  If not Prob (ProbHeavyWeapon) then Begin
+    Weapon = RU_HEAVY_MACHINE_GUN;
+    Chassis = RU_MEDIUM_WHEELED;
+  End;
+  If not CanBeConstructed (RuFact, Chassis, ENGINE_COMBUSTION, CONTROL_COMPUTER, Weapon) then Begin
+    If not CanBeConstructed (RuFact, RU_MEDIUM_WHEELED, ENGINE_COMBUSTION,
+      CONTROL_COMPUTER, RU_HEAVY_MACHINE_GUN) then Exit;
+    Weapon = RU_HEAVY_MACHINE_GUN;
+    Chassis = RU_MEDIUM_WHEELED;
+  End;
+  // Necháme vozidlo postavit.
+  postav_vozidlo (Chassis, ENGINE_COMBUSTION, CONTROL_COMPUTER, Weapon);
+End;
+
+
+// Ruské útoky na Amerièany.
+Function init_utoceni;
+Begin
+  ProbihaUtok = 0;
+End;
+
+
+// Tato funkce zjistí, zda mám zaèít s útokem.
+Function zjisti_zda_mam_utocit;
+Var Chci;
+Begin
+  Result = 0;
+  // Pokud probíhá útok, nebudu zaèínat s dalším útokem.
+  If ProbihaUtok then Exit;
+  // Zjistit, zda mám dostateènı poèet tankù na útok.
+  Chci = dif_RusoveUtokPocet [Difficulty];
+  If Tanky < Chci then Exit;
+  // Vezmu danı poèet tankù do seznamu.
+  KdoUtoci = Tanky;
+  While KdoUtoci > Chci do KdoUtoci = KdoUtoci diff [KdoUtoci [Chci + 1]];
+  // Zaènu s útokem.
+  zacni_utok;
+  Result = 1;
+End;
+
+
+// Tato funkce zjistí, na které cíle mají jednotky útoèit.
+Function zjisti_cile;
+Var SpodniDomy, HorniDomy;
+Var SpodniAuta, HorniAuta;
+Var SpodniLidi, HorniLidi;
+Begin
+  Result = [];
+  // Zjistíme, které jednotky má Amerièan.
+  SpodniDomy = FilterUnitsInArea (AmerickaZakladna, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_BUILDING]]);
+  HorniDomy = FilterUnitsInArea (ZaRekou, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_BUILDING]]);
+  SpodniAuta = FilterUnitsInArea (AmerickaZakladna, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_VEHICLE]]);
+  HorniAuta = FilterUnitsInArea (ZaRekou, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_VEHICLE]]);
+  SpodniLidi = FilterUnitsInArea (AmerickaZakladna, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_HUMAN], [F_OUTSIDE]]);
+  HorniLidi = FilterUnitsInArea (ZaRekou, [[F_SIDE, side_Am], [F_OK], [F_TYPE, UNIT_HUMAN], [F_OUTSIDE]]);
+  // Zjistíme, zda stojí nìjaká budova v první základnì.
+  If SpodniDomy then Begin
+    // Zjistíme, zda stojí depot.
+    Result = depot_na_zacatek (SpodniDomy) union SpodniLidi union SpodniAuta;
+    Exit;
+  End;
+End;
+
+
+// Tato funkce zahájí útok na Amíky.
+Function zacni_utok;
+Var Cile, I, Combust;
+Begin
+  Msg ('zacina utok');
+  ProbihaUtok = 1;
+  // Zjistit cíle.
+  Cile = zjisti_cile;
+  // Doplnit palivo.
+  Combust = UnitFilter (KdoUtoci, [[F_ENGINE, ENGINE_COMBUSTION]]);
+  If Combust then ComMoveUnit (Combust, KdoUtoci);
+  // Útok na všechny cíle.
+  For I = 1 to Cile do AddComAttackUnit (KdoUtoci, Cile [I]);
+  // A skonèí útok, vrátím se.
+  AddComMoveToArea (KdoUtoci, RusoveSeradiste);
+End;
+
+
+// Trigger, kterı zjišuje, zda skonèíl útok.
+Every 0$5.4 Trigger ProbihaUtok do
+Var Filt, I;
+Begin
+  Enable;
+  // Pokud jsou všechny útoèící jednotky mrtvé, konèím.
+  Filt = UnitFilter (KdoUtoci, [[F_OK]]);
+  If not Filt then Begin
+    skonci_utok;
+    Exit;
+  End;
+  // Pokud jsou všichni v okolí ruské základny, skonèím útok.
+  Filt = FilterUnitsInArea (OkoliRusu, [[F_SIDE, side_Ru]]);
+  If KdoUtoci isect Filt = KdoUtoci then Begin
+    skonci_utok;
+    Exit;
+  End;
+End;
+
+
+// Tato funkce ukonèí útok Rusákù. Tøeba i proto, e jsou všichni
+// útoèníci znièeni.
+Function skonci_utok;
+Begin
+  ProbihaUtok = 0;
+  ComAgressiveMove (KdoUtoci, 51, 47);
+  ComMoveUnit (KdoUtoci, RuFact);
+  AddComMoveToArea (KdoUtoci, RusoveSeradiste);
+End;
+
+
+// Tento trigger spustí další trigger, kterı zaène provádìt útoky.
+// Tento trigger zaøizuje to, e útoky nezaènou døíve ne za danou dobu.
+Every 15$1.2 do
+Begin
+  Enable (21);
+End;
+
+
+// Tento trigger bude postupnì testovat, zda mám útoèit.
+Every 1$2.5+0$17.2 Marked 21 do
+Begin
+  zjisti_zda_mam_utocit;
+  Enable;
+End;
+
+

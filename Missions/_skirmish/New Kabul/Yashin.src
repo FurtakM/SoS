@@ -1,0 +1,371 @@
+// Kód pro Yashina.
+
+
+// Èísla jednotek.
+Export Yashin, YashinAutak;
+// U jsem s Yashinem zaèal?
+Var Zacal, Nastupuje, Nastoupil, Odjizdi;
+// Kterı bunkr Yashin nièí?
+Var Bunkr;
+// Jaké zbranì musí mít auák, do kterého Yashin nasedne?
+Var YashinPovoleneZbrane;
+
+
+Export Function init_yashin;
+Begin
+  Disable (51); Disable (52); Disable (53); Disable (54); Disable (55);
+  Disable (56); Disable (57);
+  Yashin = 0; YashinAutak = 0;
+  Zacal = false; Nastupuje = false; Nastoupil = false;
+  Odjizdi = false;
+  Bunkr = 0;
+  YashinPovoleneZbrane = [RU_HEAVY_MACHINE_GUN, RU_GATLING_GUN,
+    RU_GUN, RU_ROCKET_LAUNCHER, RU_HEAVY_GUN, RU_ROCKET];
+End;
+
+
+Export Function yashin_start_timer;
+Begin
+  If not Zacal then
+  Begin
+    Enable (51);
+    Zacal = true;
+  End;
+End;
+
+
+Function vytvor_yashina;
+Begin
+  Yashin = NewCharacter ('Yashin');
+  SetClass (Yashin, CLASS_BAZOOKER);
+  SetSide (Yashin, side_Ru2);
+  DoNotAttack (side_Ar, Yashin);
+End;
+
+
+// Pøichod Yashina.
+Function yashin_start;
+Var Vysledek, Area, Bunkry;
+Begin
+  // Vytvoøit Yashina.
+  vytvor_yashina;
+  // Plácnout ho na mapu.
+  If VsevSaved then
+  Begin
+    PlaceUnitArea (Yashin, YashinStart, false);
+    Area = YashinCil1;   
+  End else Begin
+    PlaceUnitArea (Yashin, YashinStart, false);
+    Area = YashinCil1a;
+  End;
+  If IsInArea (Burlak, Area) then ComMoveXY (Yashin, GetX (Burlak), GetY (Burlak))
+  else ComMoveToArea (Yashin, Area);
+  // Dialog.
+  CenterOnUnits (Yashin);
+  Wait (0$4);
+  DialogueOn;
+  dialog_YashinArrives;
+  Bunkry = yashin_zjisti_bunkry;
+  If Bunkry then Vysledek = query_YashinHelp
+  else Vysledek = query_YashinHelpNB;
+  // Zjistím, co vlastnì Burlak chce.
+  If Vysledek = 1 then
+  Begin
+    dialog_QrYashinHelp1;
+    DialogueOff;
+    // Znièit bunkr.
+    Bunkr = Bunkry [Rand (1, Bunkry)];
+    yashin_znic_bunkr (Area);
+  End else Begin
+    If Vysledek = 2 then dialog_QrYashinHelp2
+    else dialog_QrYashinHelp3;
+    // Odjet.
+    dialog_YashinLeave;
+    DialogueOff;
+    yashin_vyzadej_autak;
+  End;
+  // Kontrola, zda není na Yashina útoèeno.
+  Enable (53); Enable (57);
+End;
+
+
+// Yashin chce automobil.
+Function yashin_chci_autak;
+Var I, Temp, Kde, Volne, Dalka, Ridic;
+Begin
+  // Zjistím, zda u Yashin zabral nìjakej auák.
+  If YashinAutak then
+  Begin
+    // Není náhodou K.O.?
+    If not IsOK (YashinAutak) or (GetSide (YashinAutak) <> side_Ru2) then
+    Begin
+      YashinAutak = 0;
+    End else Begin
+      Ridic = IsDrivenBy (YashinAutak);
+      // Je uvnitø?
+      If Ridic = Yashin then
+      Begin
+        Nastupuje = false;
+        Nastoupil = true; Disable (55);
+        yashin_zacni_odjizdet;
+        Result = true;
+        Exit;
+      End;
+      // Je uvnitø nìkdo jinı?
+      If Ridic then
+      Begin
+        ComCancel (Yashin);
+        YashinAutak = 0;
+      End else Begin
+        // Nechám ho tam dojít.
+        If not HasTask (Yashin) then ComEnterUnit (Yashin, YashinAutak);
+      End;
+    End;
+  End;
+  // Kontrola, zda Yashin nesedí v jednotce.
+  Kde = IsInUnit (Yashin);
+  If (Kde <> 0) then Begin
+    // Je v auáku?
+    If GetType (Kde) = UNIT_VEHICLE then
+    Begin
+      Nastupuje = false;
+      Nastoupil = true; Disable (55);
+      YashinAutak = Kde;
+      yashin_zacni_odjizdet;
+      Result = true;
+      Exit;
+    End;
+    // Je v budovì?
+    If GetType (Kde) = UNIT_BUILDING then
+    Begin
+      ComExitBuilding (Yashin);
+      Wait (0$0.25);
+    End;
+  End;
+  Result = false;
+  // Dìlá Yashin nìco?
+  If HasTask (Yashin) then Exit;
+  // Zjistíme, zda je volnı nìjakı auák.
+  Volne = [];
+  Temp = FilterUnitsExceptArea (Nebezpeci, [[F_SIDE, side_Ru], [F_TYPE, UNIT_VEHICLE], [F_OK], [F_CONTROL, CONTROL_MANUAL]]);
+  For I in Temp do
+  Begin
+    // Je volnı?
+    If IsDrivenBy (I) then Continue;
+    // Má dost paliva?
+    If (GetEngine (I) = ENGINE_COMBUSTION) and (GetFuel (I) < 50) then Continue;
+    // Má zbraò?
+    If not GetWeapon (I) in YashinPovoleneZbrane then Continue;
+    // Je to OK, Yashin ho chce.
+    Volne = Volne union [I];
+  End;
+  // Pokud ne, musí Yashin èekat.
+  If not Volne then Exit;
+  // Ano, je volné. Zjistím tedy, kterej auák je Yashinovi nejblí.
+  YashinAutak = Volne [1];
+  Dalka = GetDistUnits (Yashin, YashinAutak);
+  For I in (Volne diff [YashinAutak]) do
+  Begin
+    Temp = GetDistUnits (Yashin, I);
+    If Temp < Dalka then
+    Begin
+      Dalka = Temp;
+      YashinAutak = I;
+    End;
+  End;
+  // Nechám Yashina nastoupit.
+  ComEnterUnit (Yashin, YashinAutak);
+  SetSide (YashinAutak, side_Ru2);
+End;
+
+
+// Yashin zaèíná ádat o auák.
+Function yashin_vyzadej_autak;
+Begin
+  Nastupuje = true;
+  ComCancel (Yashin);
+  If not yashin_chci_autak then
+  Begin
+    Enable (54);           // nastupování
+    Enable (55);           // kecání, pokud dlouho ádnej nedostane
+  End;
+End;
+
+
+// Zaèátek Yashinova odjezdu.
+Function yashin_zacni_odjizdet;
+Begin
+  Odjizdi = true;
+  Disable (54); Disable (55);   // Èekání na auák.
+  Disable (56);                 // Znièení bunkru
+  If not yashin_odjizdi then Enable (52);
+End;
+
+
+// Yashin odjídí.
+Function yashin_odjizdi;
+Var Jednotka;
+Begin
+  // Jednotka, která pojede.
+  If YashinAutak then Jednotka = YashinAutak
+  else Jednotka = Yashin;
+  // U odjel?
+  If IsInArea (Jednotka, YashinExit) then
+  Begin
+    yashin_odstran;
+    Result = true;
+  End else Begin
+    // Odjet.
+    ComMoveToArea (Jednotka, YashinExit);
+  End;
+End;
+
+
+// Existuje bunkr, kterı mùe Yashin znièit?
+Function yashin_zjisti_bunkry;
+Var Domy;
+Begin
+  Domy = FilterUnitsInArea (AraboveBunkry, [[F_SIDE, side_Ar], [F_OK], [F_TYPE, UNIT_BUILDING]]);
+  Result = UnitFilter (Domy, [[F_BTYPE, B_BREASTWORK]]) union
+           UnitFilter (Domy, [[F_BTYPE, B_BUNKER]]) union
+           UnitFilter (Domy, [[F_BTYPE, B_TURRET]]);
+End;
+
+
+// Yashin zaútoèí na bunkr.
+Function yashin_znic_bunkr (Zpatky);
+Begin
+  // Yashin dostane pøíkaz znièit danı bunkr.
+  ComAgressiveMove (Yashin, 32, 29);
+  AddComSailEvent (Yashin, 111);
+  AddComAttackUnit (Yashin, Bunkr);
+  AddComAgressiveMove (Yashin, 33, 35);
+  AddComMoveToArea (Yashin, Zpatky);
+  // Budeme kontrolovat, zda je znièenı. A se tak stane, poèkáme, a se
+  // Yashin vrátí zpìt a pak mu dáme auák.
+  Enable (56);
+End;
+
+
+Export Function event_YashinUtoci;
+Begin
+  RevealFogArea (side_Ru, AraboveBunkry);
+End;
+
+
+Export Function yashin_VehicleCaptured (VehNew, VehOld, OrigSide, Hum);
+Begin
+  // Nutnost zkontrolovat, zda náhodou není pøeèíslován
+  // vùz, do kterého nastupuju (jako e bude pøeèíslován).
+  If Nastupuje and (VehOld = YashinAutak) then YashinAutak = VehNew;
+End;
+
+
+// Kontrola, zda u Yashin odjel.
+Every 0$1.3 Marked 52 do
+Begin
+  If not yashin_odjizdi then Enable;
+End;
+
+
+// Nastupování.
+Every 0$2.7 Marked 54 do
+Begin
+  If not yashin_chci_autak then Enable;
+End;
+
+
+// Kontrola, zda dostal brzo auák.
+Every 5$3 Marked 55 do
+Begin
+  If Nastoupil then Exit;
+  DialogueOn;
+  CenterOnUnits (Yashin);
+  dialog_YashinLeave;
+  DialogueOff;
+  Enable;
+End;
+
+
+// Kontrola, zda je znièen bunkr.
+Every 0$7.1 Trigger (not IsOK (Bunkr)) or (GetSide (Bunkr) <> side_Ar) Marked 56 do
+Begin
+  RevealFogArea (side_Ru, AraboveBunkry);
+  DialogueOn;
+  dialog_YashinLeave;
+  dialogueOff;
+  yashin_vyzadej_autak;
+End;
+
+
+// Pøíchod Yashina.
+Every 2$55 Marked 51 do
+Begin
+  Wait (MultiRand (0$1, 2$0, 2));
+  yashin_start;
+End;
+
+
+Every 0$0.7 Marked 53 do
+Var Jednotky, Kdo, Cile, Utoci;
+Begin
+  // Cíle, na které nesmím útoèit.
+  Kdo = IsInUnit (Yashin);
+  If Kdo then Cile = [Yashin, Kdo]
+  else Cile = [Yashin];
+  // Kontrola útoku na Yashina.
+  Utoci = false;
+  Jednotky = FilterAllUnits ([[F_OK], [F_SIDE, side_Ru]]);
+  For Kdo in Jednotky do
+  Begin
+    If (WantsToAttack (Kdo) in Cile) or (Attacks (Kdo) in Cile) then
+    Begin
+      ComCancel (Kdo); ComHold (Kdo);
+      Utoci = true;
+    End;
+  End;
+  // Pokud na nìj bylo zaútoèeno, odjede.
+  If Utoci then
+  Begin
+    DialogueOn;
+    dialog_YashinAttack;
+    DialogueOff;
+    If not Odjizdi then yashin_zacni_odjizdet;
+  End;
+  // Znovu enablovat.
+  Enable;
+End;
+
+
+// Pøidávání ivotù.
+Every 0$0.6 Marked 57 do
+Var L;
+Begin
+  L = GetLives (Yashin);
+  If L < 1000 then
+  Begin
+    L = L + 20; If L > 1000 then L = 1000;
+    SetLives (Yashin, L);
+  End;
+  Enable;
+End;
+
+
+// Nesmí umøít.
+Export Function yashin_UnitGoesToRed (Un);
+Begin
+  If Un = Yashin then SetLives (Yashin, 300);
+End;
+
+
+// Odstranit Yashina z mapy.
+Function yashin_odstran;
+Begin
+  // Odstranit jednotky.
+  If YashinAutak then RemoveUnit (YashinAutak);
+  RemoveUnit (Yashin);
+  // Disablovat triggery.
+  Disable (53);
+End;
+
+

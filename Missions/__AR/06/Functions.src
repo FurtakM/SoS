@@ -1,0 +1,178 @@
+// global function
+// by SerpentSierp
+Export Function CreateHumanWithClass(clas, lvl);
+var skill_com, skill_eng, skill_mech, skill_sci, bonus;
+begin
+
+     hc_class := clas;
+
+     // randomize lvl
+        skill_com  := (lvl + Rand(-1, 1));
+        skill_eng  := (lvl + Rand(-1, 1));
+        skill_mech := (lvl + Rand(-1, 1));
+        skill_sci  := (lvl + Rand(-1, 1));
+
+     // add bonus level for class
+        If clas = 1 or clas = 9 then
+        bonus := [2,0,0,0];
+        If clas = 2 then
+        bonus := [0,2,0,0];
+        If clas = 3 then
+        bonus := [0,0,2,0];
+        If clas = 4 then
+        bonus := [0,0,0,2];
+        If clas > 4 and not clas = 9 then
+        bonus := [0,0,0,0];
+
+     // set main skills
+        hc_skills := [skill_com + bonus[1], skill_eng + bonus[2], skill_mech + bonus[3], skill_sci + bonus[4] ];
+
+     // other hc_
+        hc_sex     := Rand(sex_male, sex_female); // random
+        hc_gallery := ''; // random gall
+        hc_attr    := [Rand(8,12), Rand(9,11)];
+        hc_name    := '';
+        { place for rest hc_'s }
+
+     // final result
+        result := CreateHuman;
+
+End;
+
+
+
+Export Function RussianAttack(side, num, typ, area);
+var i, un, filter, veh, chassis, weapon;
+begin
+
+     uc_side := side;
+     uc_nation := nation_russian;
+
+     chassis := [ru_medium_tracked, ru_heavy_tracked, ru_heavy_wheeled];
+     weapon  := [ru_gatling_gun, ru_gun, ru_heavy_gun, ru_rocket_launcher];
+
+
+     // select type of attack
+        Case typ of
+        1: begin  // HG + Rockets
+
+           for i = 1 to num do
+               begin
+               vc_chassis := chassis[Rand(2,3)];
+               vc_engine  := engine_combustion;
+               vc_control := control_manual;
+               vc_weapon  := weapon[Rand(3,4)];
+
+               veh := CreateVehicle;
+
+               if area = ru_north_spawn then
+               SetDir(veh, 3)
+                else
+               SetDir(veh, 1);
+
+               PlaceUnitArea(veh, area, false);
+
+               un := CreateHumanWithClass(1, rus_skill);
+               PlaceHumanInUnit(un, veh);
+               end;
+
+               for i = 1 to 2 do
+               begin
+               un := CreateHumanWithClass(class_bazooker, rus_skill);
+               PlaceUnitArea(un, area, false);
+               end;
+          
+           end;
+
+
+        2: begin  // rrr
+
+           for i = 1 to num do
+               begin
+               vc_chassis := chassis[Rand(1,3)];
+               vc_engine  := engine_combustion;
+               vc_control := control_manual;
+               vc_weapon  := weapon[Rand(1,2)];
+
+               veh := CreateVehicle;
+
+               if area = ru_north_spawn then
+               SetDir(veh, 3)
+                else
+               SetDir(veh, 1);
+
+               PlaceUnitArea(veh, area, false);
+
+               un := CreateHumanWithClass(1, rus_skill);
+               PlaceHumanInUnit(un, veh);
+               end;
+           end;
+
+
+           End;
+
+End;
+
+
+
+Export function PrepareNature(num1,num2,num3);
+var l,                     apeman, tiger, bird;
+begin
+
+
+          uc_nation = nation_nature;
+          uc_side = 0;
+
+          l = 0;
+
+          // Ma³py
+          repeat
+          begin
+          uc_direction = Rand(0,5);
+          hc_agressivity = Rand(-5, 0);
+          hc_gallery = '';
+          hc_class = class_apeman;
+          hc_attr = [Rand(11,13),Rand(10,11)];
+          hc_sex = sex_male;
+          hc_skills = [Rand(0,2),0,0,0];
+
+          apeman = CreateHuman;
+          PlaceUnitArea(apeman, forest, false);
+
+          l = l + 1;
+          end until l = num1;
+
+          l = 0;
+
+          // Tygrysy
+          repeat
+          begin
+          hc_agressivity = Rand(0, 25);
+          hc_class = class_tiger;
+          hc_sex = sex_male;
+          hc_gallery = 'sandnature';
+          hc_face_number = 3;
+
+          tiger = CreateHuman;
+          PlaceUnitArea(tiger, forest, false);
+
+          l = l + 1;
+          end until l = num2;
+
+          l = 0;
+
+          // Ptaki
+          repeat
+          begin
+          hc_class = class_phororhacos;
+          hc_gallery = 'sandnature';
+          hc_face_number = 1;
+
+          bird = CreateHuman;
+          PlaceUnitAnywhere(bird, false);
+
+          l = l + 1;
+          end until l = num3;
+
+
+end;

@@ -1,0 +1,376 @@
+Export Function Action;
+var un;
+begin
+
+Case Query('QVul1') of  // Difficulty
+1: Difficulty := 1;
+2: Difficulty := 2;
+3: Difficulty := 3;
+end;
+
+{Case Query('QVul2') of  // Legion
+1: RemoveLegion;
+2: ;
+end;}
+
+Case Query('QVul3') of
+1: begin   // us
+   your_side := 1;
+   legion_enemy := 1;
+   PrepareAmerican;
+   end;
+2: begin   // zsi
+   your_side := 2;
+   legion_enemy := 2;
+   PrepareArabian;
+   end;
+3: begin   // ali
+   your_side := 7;
+   legion_enemy := 7;
+   PrepareAlliance;
+   end;
+End;
+
+
+if your_side = 1 then
+begin
+
+Case Query('QVul4') of
+1: ;
+end;
+
+InGameOn;
+
+  CenterNowOnXY(8, 5);
+
+// create random guy
+   uc_side := 4;
+   uc_nation := 1;
+
+   hc_importance := 0;
+   PrepareHuman(sex_male, 3, us_skill);
+   un := CreateHuman;
+   PlaceUnitXY(un, 12, 9, false);
+
+   hc_name := 'Stuart Carey';
+   hc_gallery := 'vulcano';
+   hc_face_number := 1;
+   us_guy := CreateHuman;
+
+   hc_gallery := '';
+   hc_name := '';
+
+   ComTurnUnit(un, us_commander);
+   ComTurnUnit(us_commander, un);
+
+   Say(un, 'VD-un1');
+   Say(us_commander, 'VDc-1');
+   Say(un, 'VD-un2');
+   Say(us_commander, 'VDc-2');
+   Say(un, 'VD-un3');
+
+   Wait(0$0.2);
+
+   Say(un, 'VD-un4');
+
+   ComMoveXY(un, 2, 2);
+
+   Say(us_commander, 'VDc-3');
+
+InGameOff;
+
+ChangeMissionObjectives('CVulc1');
+
+Repeat
+ Wait(0$01);
+Until GetX(un) = 2 and GetY(un) = 2;
+
+RemoveUnit(un);
+end
+ else
+
+if your_side = 2 then
+begin
+CenterNowOnUnits(player_commander);
+
+InGameOn;
+
+Say(ar_commander, 'VSd-1');
+Say(FilterAllUnits([[[f_side, 2], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VAd-1');
+Say(ar_commander, 'VSd-2');
+Say(FilterAllUnits([[[f_side, 2], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VAd-2');
+Say(ar_commander, 'VSd-3');
+
+InGameOff;
+
+ChangeMissionObjectives('CVulc5');
+end
+ else
+
+if your_side = 7 then
+begin
+CenterNowOnUnits(al_commander);
+
+InGameOn;
+Say(al_commander, 'VPd-1');
+Say(FilterAllUnits([[[f_side, 7], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VPpd-1');
+Say(al_commander, 'VPd-2');
+InGameOff;
+
+ChangeMissionObjectives('CVulc7');
+end;
+
+End;
+
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) do
+begin
+ChangeMissionObjectives('CVulc6');
+Wait([25$00, 22$30, 20$00][Difficulty]);
+ru_can_attack := true;
+End;
+
+Every 0$01 trigger GetSide(us_depot) = 1 or FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_factory], [f_btype, b_warehouse]]]) do
+begin
+ChangeMissionObjectives('CVulc2');
+
+DialogueOn;
+DWait(0$0.3);
+Say((FilterAllUnits([[f_side, 1], [f_class, 2]]) diff us_commander)[1], 'VDb-1');
+
+DWait(0$0.3);
+Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VDb-2');
+
+DWait(0$01);
+Say(us_commander, 'VDb-com1');
+DialogueOff;
+
+Wait([21$00, 17$30, 15$00][Difficulty]);
+ru_can_attack := true;
+End;
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, 7], [f_btype, b_factory]]) do
+begin
+Wait([20$00, 16$30, 14$00][Difficulty]);
+ru_can_attack := true;
+End;
+
+
+Every 0$01 trigger GetSide(us_lab) = 1 do
+begin
+DialogueOn;
+Say(FilterAllUnits([[f_side, 1], [f_class, 2]])[1], 'VDe-1');
+
+Case Query('SibNote') of
+1: ;
+End;
+
+Say(FilterAllUnits([[f_side, 1], [f_class, 2]])[1], 'VDe-2');
+Say(us_commander, 'VDc-4');
+DialogueOff;
+
+ChangeMissionObjectives('CVulc3');
+End;
+
+
+Every 0$01 trigger your_side = 1 and FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) > 0 do
+var i, un, veh;
+begin
+Wait(Rand(0$07, 0$37));
+
+DialogueOn;
+SayRadio(us_guy, 'VDG-1');
+Say(us_commander, 'VDc-5');
+SayRadio(us_guy, 'VDG-2');
+Say(us_commander, 'VDc-6');
+SayRadio(us_guy, 'VDG-3');
+Say(us_commander, 'VDc-7');
+SayRadio(us_guy, 'VDG-4');
+DialogueOff;
+
+ChangeMissionObjectives('CVulc4');
+
+Wait([9$00, 10$00, 11$00][Difficulty]);
+
+for i = 1 to [4,5,6][Difficulty] do
+    begin
+    uc_side := 1;
+    uc_nation := 1;
+    PrepareHuman(false, Rand(1,4), us_skill);
+    un := CreateHuman;
+
+    SetDir(un, 2);
+                  
+    if GetClass(un) = 3 then
+       begin
+       vc_chassis := [us_medium_wheeled, us_medium_tracked][i mod 2];
+       vc_engine := engine_combustion;
+       vc_control := control_manual;
+       vc_weapon := [us_laser, us_laser, us_double_gun, us_radar][rand(1,4)];
+
+       veh := CreateVehicle;
+       SetDir(veh, 2);
+       SetFuel(veh, Rand(77, 88));
+
+       PlaceUnitArea(veh, start_north, false);
+       PlaceHumanInUnit(un, veh);
+       end
+        else
+        PlaceUnitArea(un, start_north, false);
+    end;
+
+    CenterNowOnUnits(un);
+
+End;
+
+
+// player find artifact
+Every 0$01 trigger FilterUnitsInArea(vulc_artifact, [f_side, your_side]) do
+var un, filter;
+begin
+filter := FilterAllUnits([[f_side, your_side],
+         [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]])
+          diff player_commander;
+
+un := NearestUnitToXY(filter, 112, 67);
+
+if GetSide(un) = 7 then
+   Say(un, 'VD-find-al');
+if GetSide(un) = 2 then
+   Say(un, 'VD-find-ar');
+if GetSide(un) = 1 then
+   begin
+   Say(un, 'VD-find-us');
+   Say(un, 'VD-find-us2');
+   end;
+
+Wait(0$0.3);
+CenterNowOnXY(112, 67);
+End;
+
+
+// player res artifact
+Every 0$01 trigger player_artifact_ready do
+begin
+
+  // us
+     if your_side = 1 then
+        begin
+        Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VD-us-sci-art-1');
+        Say(us_commander, 'VDc-art1');
+        Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VD-us-sci-art-2');
+        Say(us_commander, 'VDc-art2');
+        end;
+  // ar
+     if your_side = 2 then
+        begin
+        Say(FilterAllUnits([[f_side, 2], [f_class, 4]])[1], 'VD-ar-sci-art-1');
+        end;
+
+  // al
+     if your_side = 7 then
+        begin
+        Say((FilterAllUnits([[f_side, 7], [f_class, 4]]) diff al_commander)[1], 'VD-al-sci-art-1');
+        Say(al_commander, 'VPd-art-1');
+        Say((FilterAllUnits([[f_side, 7], [f_class, 4]]) diff al_commander)[1], 'VD-al-sci-art-2');
+        Say(al_commander, 'VPd-art-2');
+        ChangeMissionObjectives('CVulc7out');
+        end;
+
+End;
+
+// player spot legion
+Every 0$01 trigger See(8, NearestUnitToSide(FilterAllUnits([f_side, your_side]), 8)) do
+begin
+if your_side = 1 then
+   Say((FilterAllUnits([f_side, 1]) diff us_commander)[1], 'VD-legion-us');
+if your_side = 2 then
+   Say(ar_commander, 'VD-legion-ar');
+if your_side = 7 then
+   Say(al_commander, 'VD-legion-al');
+End;
+
+// legion vulcano mines
+Every 0$01 trigger mine_vulc do
+begin
+Say(player_commander, 'VD-vulc-mines');
+End;
+
+Every 0$03 trigger difficulty > 1 do
+var mines, p, i;
+begin
+mines := [123,95, 119,89, 115,81];
+p := 1;
+
+for i = 1 to 3 do
+    begin
+    PlaceMine(mines[p], mines[p+1], 8, 0);
+    p := p + 2;
+    end;
+
+End;
+
+
+Every 0$01 trigger difficulty > 1 and FilterUnitsInArea(vulc_mines, [f_side, your_side]) do
+var p, i, mines;
+begin
+enable;
+
+p := 1;
+mines := [123,95, 119,89, 115,81];
+
+for i = 1 to 3 do
+    begin
+    if HexInfo(mines[p], mines[p+1]) > 0 then
+       if GetSide(HexInfo(mines[p], mines[p+1])) = your_side then
+          begin
+          LaunchMineAtPos(mines[p], mines[p+1], 8);
+          mine_vulc := true;
+          end;
+
+    p := p + 2;
+    end;
+End;
+
+Every 0$01 trigger FilterAllUnits([f_side, 3]) = 0 and your_side <> 2 do
+Win;
+
+Every 0$01 trigger FilterAllUnits([f_or, [f_side, 8], [f_side, 3]]) = 0 and your_side = 2 do
+Win;
+
+
+Function Win;
+var points;
+begin
+Case Query('VulcWin') of
+1: ;
+end;
+
+// artifact tested
+if medal_enabled then
+   AddMedal('vulc_1', 1)
+    else
+     AddMedal('vulc_1', -1);
+
+// legion
+if FilterAllUnits([f_side, 8]) = 0 then
+   AddMedal('vulc_2', 1)
+    else
+     AddMedal('vulc_2', -1);
+
+// commander points
+points := CalculateCommanderPoints;
+
+if points >= 2000 then
+   AddMedal('vulc_3', 2)
+    else
+     if points >= 0 then
+        AddMedal('vulc_3', 1)
+         else
+          AddMedal('vulc_3', -1);
+
+GiveMedals('MAIN');
+YouWin;
+End;

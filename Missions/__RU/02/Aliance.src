@@ -1,0 +1,178 @@
+Export tim, kir, john, lee, mario, savil, oscar, valentin, tilly, ryan;
+Export veh_x_ready, vehx;
+Export Function PrepareAliance;
+var force, i, veh, tim_team, un;
+begin
+
+     uc_side := 5;
+     uc_nation = 1;
+
+
+     hc_sex := sex_male;
+     hc_gallery := 'sandal';
+     hc_face_number := 7;
+     hc_class = 2;
+     hc_skills = [4, 8, 6, 3];
+     hc_name = 'Mario T. Buck';
+     hc_attr = [11, 10];
+
+     mario := CreateHuman;
+     PlaceUnitXY(mario, 56, 25, false);
+
+
+     hc_gallery := 'sandal';
+     hc_face_number := 8;
+     hc_class = 4;
+     hc_skills = [7, 6, 5, 9];
+     hc_name = 'Saville Marcil';
+     hc_attr = [10, 10];
+
+     savil := CreateHuman;
+     PlaceUnitXY(savil, 78, 32, false);
+
+       
+     hc_gallery := 'sandal';
+     hc_face_number := 6;
+     hc_class = 1;
+     hc_skills = [9, 8, 4, 3];
+     hc_name = 'Oscar Bradley';
+     hc_attr = [12, 11];
+
+     oscar := CreateHuman;
+     PlaceUnitXY(oscar, 66, 30, false);
+
+
+     uc_nation := nation_russian;
+     
+     hc_gallery := 'sandal';
+     hc_face_number := 9;
+     hc_class = 3;
+     hc_skills = [4, 7, 8, 8];
+     hc_name = 'Valentine Pokrovskii';
+     hc_attr = [9, 9];
+
+     valentin := CreateHuman;
+     PlaceUnitXY(valentin, 47, 18, false);
+
+
+     uc_nation := nation_american;
+     hc_sex := sex_female;
+
+     hc_gallery := 'sandal';
+     hc_face_number := 10;
+     hc_class = 3;
+     hc_skills = [7, 5, 10, 4];
+     hc_name = 'Tilly Fisher';
+     hc_attr = [11, 9];
+
+     tilly := CreateHuman;
+     PlaceUnitXY(tilly, 68, 28, false);
+
+
+     hc_gallery := 'sandal';
+     hc_face_number := 11;
+     hc_class = 2;
+     hc_skills = [7, 9, 5, 6];
+     hc_name = 'Bethany Ryan';
+     hc_attr = [12, 9];
+
+     ryan := CreateHuman;   
+     PlaceUnitXY(ryan, 64, 24, false);
+
+  // change side
+     SetSide(FilterAllUnits([f_side, 7]), 5);
+
+
+     uc_side := 7;
+     uc_nation := nation_american; // for us people
+
+     If TestCharacters('lee') then
+        lee := CreateCharacter('lee');
+     If TestCharacters('john') then
+        john := CreateCharacter('john');
+
+     uc_nation := nation_russian; // for ru people
+
+     If TestCharacters('tim') then
+        tim := CreateCharacter('tim');
+     If TestCharacters('kir') then
+        kir := CreateCharacter('kir');
+
+     tim_team := [tim, tim, kir, lee, john];
+
+
+     veh_x_ready := LoadVariable('hackveh-save', 0);
+
+     uc_nation = nation_american;
+
+     If veh_x_ready = 0 then
+        begin
+        vc_chassis := us_morphling;
+        vc_engine  := engine_siberite;
+        vc_control := control_computer;
+        vc_weapon  := 99; // us_hack 
+
+        vehx := CreateVehicle;
+        PlaceUnitArea(vehx, start_spawn_al, false);
+        end;
+
+  // vehicle's for tim team
+        vc_chassis := us_morphling;
+        vc_engine  := engine_siberite;
+        vc_control := control_manual;
+        vc_weapon  := us_heavy_gun;
+
+        For i = 1 to 2 do
+            begin
+            veh := CreateVehicle;
+            PlaceUnitArea(veh, start_spawn_al, false);
+            force := force ^ veh;
+            end;
+
+
+        vc_weapon := us_bulldozer;
+
+            veh := CreateVehicle;
+            PlaceUnitArea(veh, start_spawn_al, false);
+            force := force ^ veh;
+
+
+        uc_nation = nation_russian;
+
+        vc_chassis := ru_medium_tracked;
+        vc_engine  := engine_siberite;
+        vc_control := control_manual;
+        vc_weapon  := ru_rocket_launcher;
+
+            veh := CreateVehicle;
+            PlaceUnitArea(veh, start_spawn_al, false);
+            force := force ^ veh;
+
+      // place tim team on vehs
+         For i = 1 to 5 do
+             begin
+             PlaceHumanInUnit(tim_team[i], force[i]);
+             end;
+
+          
+
+End;
+
+
+
+
+Export Function Build_Beta_Base;
+begin
+
+      ComBuild(mario, b_depot, 60, 19, 2);
+
+      ComMoveXY(ryan, 61, 44);
+      AddComTurnXY(ryan, 72, 52);
+
+      Wait(0$08);
+
+      ComMoveXY(a_cr1, 81, 29);
+
+End;
+
+

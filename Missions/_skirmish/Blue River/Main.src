@@ -1,0 +1,83 @@
+Starting
+begin
+ResetFog;
+
+PlaceSeeing(0, 0, 7, -37963);
+RemoveSeeing(0, 0, 7);
+
+PrepareBase;
+
+// music_nat := 3;
+
+Action;
+
+SaveForQuickRestart;
+End;
+
+
+Function Action;
+var un, f, i;
+begin
+SetBName(brave, 'brave');
+
+Case Query('QDiff') of
+1: Difficulty := 1;
+2: Difficulty := 2;
+3: Difficulty := 3;
+End;
+
+Case Query('QStart') of
+1: ;
+End;
+
+SetResourceType(GetBase(brave), mat_cans, [6000, 4500, 3000][Difficulty]);
+
+InGameOn;
+CenterNowOnUnits(brave);
+
+Say(com, 'DJack1');
+Say(k1, 'DUn1');
+Say(com, 'DJack2');
+Say(k1, 'DUn2');
+Say(com, 'DJack3');
+
+uc_side := 7;
+uc_nation := 1;
+PrepareHuman(sex_male, 1, 0);
+hc_name := '';
+un := CreateHuman;
+
+Wait(0$03);
+
+SayRadio(un, 'DRadio1');
+Say(com, 'DJack4');
+SayRadio(un, 'DRadio2');
+
+Wait(0$01);
+
+SayRadio(doc, 'DDoc1');
+Say(com, 'DJack5');
+SayRadio(doc, 'DDoc2');
+SayRadio(un, 'DRadio3');
+Say(com, 'DJack6');
+
+f := FilterAllUnits([[f_side, 7], [f_type, unit_human]]);
+
+for i = 2 to f do
+    begin
+    ComExitBuilding(f[i]);
+    AddComMoveToArea(f[i], act_area);
+    AddComTurnUnit(f[i], com);
+    end;
+
+ComExitBuilding(com);
+AddComTurnXY(com, 45, 32);
+
+Wait(0$03);
+
+Say(com, 'DJack7');
+
+InGameOff;
+
+ChangeMissionObjectives('TDef');
+End;

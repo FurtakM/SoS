@@ -1,0 +1,70 @@
+// Pošle první jednotku k druhé, až tam dojde, tak se otoèí k sobì.
+Export Function jdete_k_sobe (Kdo, Kam);
+Begin
+  ComMoveUnit (Kdo, Kam);
+  While GetDistUnits (Kdo, Kam) > 3 do Wait (0$0.5);
+  AddComTurnUnit (Kdo, Kam); AddComTurnUnit (Kam, Kdo);
+End;
+
+
+// Plácne jednotky ze seznamu do oblasti.
+Export Function place_list (List, Area);
+Var I;
+Begin
+  For I in List do PlaceUnitArea (I, Area, false);
+End;
+
+
+// Vrátí true, pokud strana Kdo vidí stranu Koho.
+Export Function vidi_strana_stranu (Kdo, Koho);
+Var KohoJednotky, Jednotka;
+Begin
+  KohoJednotky = FilterAllUnits ([[F_SIDE, Koho]]);
+  For Jednotka in KohoJednotky do
+    If See (Kdo, Jednotka) then
+    Begin
+      Result = true;
+      Exit;
+    End;
+  Result = false;
+End;
+
+
+// Vrátí seznam jednotek ze strany Koho, které vidí Kdo.
+Export Function vidi_strana_jednotky (Kdo, Koho);
+Var KohoJednotky, Jednotka;
+Begin
+  KohoJednotky = FilterAllUnits ([[F_SIDE, Koho]]);
+  Result = [];
+  For Jednotka in KohoJednotky do
+    If See (Kdo, Jednotka) then Result = Result union [Jednotka];
+End;
+
+
+// Vrátí seznam jednotek ze strany Koho, které jsou nejdál Dalka od Kdo.
+Export Function jednotky_blizko (Kdo, Koho, Dalka);
+Var KohoJednotky, Jednotka;
+Begin
+  KohoJednotky = FilterAllUnits ([[F_SIDE, Koho]]);
+  Result = [];
+  For Jednotka in KohoJednotky do
+    If GetDistUnits (Kdo, Jednotka) <= Dalka then Result = Result union [Jednotka];
+End;
+
+
+// Náhodný prvek ze seznamu.
+Export Function nahoda_seznam (Seznam);
+Begin
+  If Seznam then Result = Seznam [Rand (1, Seznam)]
+  else Result = 0;
+End;
+
+
+Export Function bez_opic (List);
+Var Opice;
+Begin
+  Opice = UnitFilter (List, [[F_OR, [F_CLASS, CLASS_APEMAN], [F_CLASS, CLASS_APEMAN_SOLDIER], [F_CLASS, CLASS_APEMAN_ENGINEER], [F_CLASS, CLASS_APEMAN_KAMIKAZE]]]);
+  Result = List diff Opice;
+End;
+
+

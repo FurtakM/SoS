@@ -1,0 +1,323 @@
+// Spis:
+{
+1. Przybycie Dowodcy do Legionu
+2. Przybycie
+3. Pojawienie sie Arabow
+4. Pojawienie sie Amerykanow
+5. Pojawienie sie Rosjan
+10. Przedstawiciel
+31. Atak Arabski typ 1
+32. Atak Arabski typ 2
+33. Atak Arabski typ 3
+41. Atak USA typ 1
+42. Atak USA typ 2
+51. Atak ZSRR typ 1
+91. Pomoc USA
+92. Dezerterzy
+93. X
+94. Skazono syberyt?
+101. Tryb Skrzynek
+102. Amerykanskie testy bomby syberytowej
+}
+
+On SailEvent(num) do
+var i, filter, un, p, area;
+begin
+
+     Case num of
+     1: begin
+        ComMoveXY(leopold, GetX(l_cmndr), GetY(l_cmndr));
+        end;
+     2: begin
+        InGameOn;
+        meeting_start := true;
+        ComTurnUnit(leopold, l_cmndr);
+        ComTurnUnit(l_cmndr, leopold);
+        Say(leopold, 'DS-DL-1');
+        Say(l_cmndr, 'DS-DC-1');
+        Say(leopold, 'DS-DL-2');
+        ComEnterUnit(leopold, fort);
+        InGameOff;
+        Wait(0$01);
+        ChangeMissionObjectives('DS-T1');
+        end;
+    10: begin
+        uc_side := 6;
+        uc_nation := 2;
+
+        hc_gallery := '';
+        hc_skills := [skill+2, skill-1, skill, skill+1];
+        hc_sex := sex_male;
+        hc_name := 'Samuel van Horn';
+        hc_attr := [11, 10];
+        hc_class := 1;
+
+        samuel := CreateHuman;
+        PlaceUnitArea(samuel, south_spawn, false);
+
+        for i = 1 to 3 do
+            PlaceUnitArea(CreateHumanWithClass(class_mortar, skill), south_spawn, false);
+
+        ComEnterUnit(FilterAllUnits([f_side, 6]) diff [leopold, fort], fort);
+        end;
+     3: begin
+        arabian_attack := true;
+        end;
+     4: begin
+        american_attack := true;
+        end;
+     5: begin
+        russian_attack := true;
+        end;
+    31: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 2;
+        uc_nation := 2;
+
+        for i = 1 to arabian_force do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_remote;
+            vc_weapon  := ar_weapons[Rand(1, ar_weapons)];
+
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+     if FilterAllUnits([[f_side, 2], [f_control, control_manual]]) < 2 then
+        for i = 1 to 2 do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_manual;
+            vc_weapon  := ar_control_tower;
+
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            PlaceHumanInUnit(CreateHumanWithClass(3, skill), un);
+            end;
+
+        end;
+    32: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 2;
+        uc_nation := 2;
+
+        for i = 1 to (arabian_force-2) do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_remote;
+            vc_weapon  := ar_weapons[Rand(1, ar_weapons-1)];
+
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+        for i = 1 to Rand(0,1)+[3,4,5][game_difficulty] do
+            begin
+            uc_nation := 0;
+            PlaceUnitArea(CreateHumanWithClass(17, skill), area, false);
+            end;    
+
+            uc_nation := 2;
+
+     if FilterAllUnits([[f_side, 2], [f_control, control_manual]]) < 2 then
+        for i = 1 to 2 do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_manual;
+            vc_weapon  := ar_control_tower;
+
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            PlaceHumanInUnit(CreateHumanWithClass(3, skill), un);
+            end;
+
+        end;
+    33: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 2;
+        uc_nation := 2;
+
+        for i = 1 to (arabian_force/2) do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_manual;
+            vc_weapon  := ar_weapons[Rand(1, ar_weapons-2)];
+
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            PlaceHumanInUnit(CreateHumanWithClass(3, skill), un);
+            end;
+
+        for i = 1 to (arabian_force/2) do
+            begin
+            vc_chassis := ar_half_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_apeman;
+            vc_weapon  := ar_weapons[Rand(2, ar_weapons)];
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+        end;
+    41: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 1;
+        uc_nation := 1;
+
+        for i = 1 to american_force do
+            begin
+            vc_chassis := us_morphling;
+            vc_engine  := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon  := us_weapons[Rand(1, us_weapons-1)];
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+        end;
+    42: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 1;
+        uc_nation := 1;
+
+        for i = 1 to american_force do
+            begin
+            vc_chassis := us_morphling;
+            vc_engine  := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon  := us_weapons[Rand(1, us_weapons)];
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+        end;
+    51: begin
+        area := areas[Rand(1, areas)];
+
+        uc_side := 3;
+        uc_nation := 3;
+
+        for i = 1 to russian_force do
+            begin
+            vc_chassis := ru_heavy_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon  := ru_weapons[Rand(1, ru_weapons)];
+            un := CreateVehicle;
+            PlaceUnitArea(un, area, false);
+            end;
+
+        end;
+    91: begin
+        uc_side := 8;
+        uc_nation := 1;
+
+        for i = 1 to [5,4,3][game_difficulty] do
+            begin
+            vc_chassis := us_heavy_tracked;
+            vc_engine  := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon  := [us_double_gun, us_heavy_gun][Rand(1,2)];
+            un := CreateVehicle;
+            PlaceUnitArea(un, areas[1], false);
+            end;
+
+        end;
+    92: begin
+        uc_side := 5;
+        uc_nation := 2;
+
+        filter := [];
+
+        hc_sex := sex_male;
+        hc_gallery := '';
+        hc_class := 1;
+        hc_name := '';
+        un := CreateHuman;
+        filter := filter ^ un;
+
+        for i = 1 to [4, 3, 2][game_difficulty] do
+            begin
+            un := CreateHumanWithClass(1, l_skill);
+            filter := filter ^ un;
+            end;
+
+        DialogueOn;
+         SayRadio(filter[1], 'DS-DF-1');
+
+            Case Query('DS-dezert') of
+            1: Say(l_cmndr, 'DS-DC-dis');
+            2: begin
+               Say(l_cmndr, 'DS-DC-acp');
+
+               for i = 1 to filter do
+                   begin
+                   SetSide(filter[i], 8);
+                   PlaceUnitArea(filter[i], south_spawn, false);
+                   CenterNowOnXY(111, 121);
+                   end;
+
+               end;
+
+            end;
+        DialogueOff;
+        end;
+   101: begin
+        CreateCratesArea(Rand(3, 5), crates_area, true);
+        Wait(0$11);
+        CreateCratesArea(Rand(3, 5), crates_area, true);
+        end;
+   200: begin
+        Say(Leopold, 'DS-end');
+        AddMedal('med', 1);
+        AddMedal('med', 1);
+        AddMedal('med', 1);
+        GiveMedals('MAIN');
+        YouWin;
+        end;
+
+     End;
+
+End;
+
+
+On UnitGoesToRed(un) do
+begin
+
+     if un in FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]) then
+        begin
+        Wait(Rand(0$03, 0$06));
+        MineExplosion(GetX(un), GetY(un), 3);
+        MineExplosion(GetX(un), GetY(un), 3);
+        MineExplosion(GetX(un), GetY(un), 3);
+        MineExplosion(GetX(un), GetY(un), 3);
+        end;
+End;
+
+On UnitDestroyed(un) do
+begin
+
+     if un = fort then
+        fort_destroyed := true;
+
+     if un = l_cmndr then
+        hero_died := true;
+
+     if un in FilterAllUnits([f_weapon, ar_bio_bomb]) then
+        begin
+        if Rand(1, 100) <= 70 then
+           ArtContamination(GetX(un), GetY(un), 10);
+        end;
+
+End;

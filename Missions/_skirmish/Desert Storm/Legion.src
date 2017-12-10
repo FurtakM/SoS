@@ -1,0 +1,97 @@
+Export Function Start_Mission;
+begin
+PrepareLegion;
+PrepareMeeting;
+
+Case Query('textdiff') of
+1: game_difficulty = 1;
+2: game_difficulty = 2;
+3: game_difficulty = 3;
+end;
+
+Case Query('DS-text-beg') of
+1: ;
+end;
+
+game_on := true;
+End;
+
+Export l_cmndr, l_skill, l_units;
+Function PrepareLegion;
+var i, p, filter, team;
+begin
+
+   uc_side := 8;
+   uc_nation := 2;
+
+   l_skill := [7,6,5][difficulty];
+   l_units := [8,7,6][difficulty];
+   filter  := [];
+
+// Dowódca
+   hc_gallery := 'desert';
+   hc_face_number := 1;
+   hc_skills := [l_skill+2, l_skill-1, l_skill, l_skill+1];
+   hc_sex := sex_male;
+   hc_name := 'Henri Ruotz';
+   hc_attr := [10, 10];
+   hc_class := 1;
+   hc_importance := 100;
+
+   l_cmndr := CreateHuman;
+// filter := filter ^ l_cmndr;
+   hc_importance := 0;
+
+// Scout
+   scout := CreateHumanWithClass(1, 0);
+
+// Personel
+   for i = 1 to 4 do
+       for p = 1 to 6 do
+           filter := filter ^ CreateHumanWithClass(i, l_skill);
+
+// Wybór
+   team := CharacterSelection('text', l_units, l_units,[sel_change_class, l_cmndr, sel_changeable, sel_not_hired]^filter, [class_soldier, class_mechanic, class_engineer, class_scientistic, class_mortar]);
+
+   for i = 1 to l_units do
+       PlaceUnitArea(team[i], legion_spawn, false);
+
+   PlaceUnitArea(l_cmndr, legion_spawn, false);
+
+End;
+
+
+Export Function PlaceCamera;
+begin
+PlaceSeeing(46, 48, 8, 10);
+PlaceSeeing(58, 66, 8, 10);
+PlaceSeeing(82, 82, 8, 10);
+PlaceSeeing(107, 79, 8, 10);
+PlaceSeeing(101, 57, 8, 10);
+PlaceSeeing(85, 32, 8, 10);
+PlaceSeeing(108, 72, 8, 10);
+PlaceSeeing(124, 74, 8, 10);
+
+PlaceSeeing(67, 33, 8, 20);
+RemoveSeeing(67, 33, 8);
+PlaceSeeing(94, 84, 8, 20);
+RemoveSeeing(94, 84, 8);
+End;
+
+
+
+Export Function PrepareMeeting;
+begin
+uc_side := 6;
+
+hc_gallery := 'desert';
+hc_face_number := 2;
+hc_name := 'Leopold Drass';
+hc_class := 1;
+hc_sex := sex_male;                     
+hc_attr := [12, 12];
+
+Leopold := CreateHuman;
+PlaceUnitArea(Leopold, north_spawn, false);
+End;
+

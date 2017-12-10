@@ -1,0 +1,108 @@
+// Tady budou zdrojáky pro bedny a pøípadnì i další handlování
+// se surovinami.
+
+// - Amerièani budou dostávat celkovì o nìco více beden než Rusové.
+// - Rusové budou dostávat bedny pøímo do své základny, tedy do
+//   oblasti BednyRusove.
+// - Amerièani budou dostávat bedny na jihovýchod mapy, do oblastí
+//   BednyAmici a BednyAmici2. Základnu ale asi pozdìji pøesunou
+//   èi rozšíøí za øeku, takže pár beden pošleme pozdìji i do
+//   oblastni ZaRekou, ale hlavní zdroj bude na JV mapy.
+
+
+// Promìnné.
+Var BednyA, BednyAZ;           // Kolikrát mám ještì poslat pìtici beden. -1 = furt.
+Var BednyR, BednyRZ;           // Kolik pìtic pošlu na zaèátku.
+Var BednyK, BednyKZ;           // Kolik pìtic bude za øekou, kolik za øekou na zaèátek.
+
+
+// Tato funkce nastaví poèet beden, které ještì mají pøijít
+// Rusùm a Amerièanùm.
+Function prepare_bedny;
+Begin
+  BednyA = dif_BednyA [Difficulty];
+  BednyAZ = dif_BednyAZ [Difficulty];
+  BednyR = dif_BednyR [Difficulty];
+  BednyRZ = dif_BednyRZ [Difficulty];
+  BednyK = dif_BednyK [Difficulty];
+  BednyKZ = dif_BednyKZ [Difficulty];
+End;
+
+
+// Funkce vytvoøí poèáteèní bedny.
+Function create_bedny_start;
+Var i;
+Begin
+  For i = 1 to BednyAZ do CreateCratesArea (5, BednyAmici, false);
+  For i = 1 to BednyRZ do CreateCratesArea (5, BednyRusove, false);
+  For i = 1 to BednyKZ do CreateCratesArea (5, ZaRekou, false);
+End;
+
+
+// Trigger pro bedny všude.
+Every 5$13.7+5$9 do
+Var Pocet;
+Begin
+  Pocet = Rand (0, 5);
+  If Pocet > 0 then CreateCratesAnywhere (Pocet, true);
+End;
+
+
+// Trigger pro americké bedny.
+Every 3$0 do
+Begin
+  If debug then exit;
+  If (BednyA <> 0) then Begin
+    If (Prob (30)) then CreateCratesArea (5, BednyAmici2, true)
+    else CreateCratesArea (5, BednyAmici, true);
+    If (BednyA <> -1) then BednyA = BednyA - 1;
+    If (BednyA <> 0) then Enable;
+  End;
+End;
+
+
+// Trigger pro ruské bedny.
+Every 3$3+1$30 do
+Begin
+  If debug then Exit;
+  If (BednyR <> 0) then Begin
+    CreateCratesArea (5, BednyRusove, true);
+    If (BednyR <> -1) then BednyR = BednyR - 1;
+    If (BednyR <> 0) then Enable;
+  End;
+End;
+
+
+// Trigger pro bedny za øekou.
+Every 5$0+1$0 marked 1 do
+Begin
+  If debug then Exit;
+  If (BednyK <> 0) then Begin
+    CreateCratesArea (5, ZaRekou, true);
+    If (BednyK <> -1) then BednyK = BednyK - 1;
+    If (BednyK <> 0) then Enable;
+  End;
+End;
+
+
+// Trigger pro spuštìní triggeru 1 - pøidávání beden za øeku.
+// Ke spuštìní dojde poté, co vlezou Amerièani za øeku.
+Every 1$10+0$20 do
+Var Americani;
+Begin
+  If Debug then Exit;
+  Americani = FilterUnitsInArea (ZaRekou, [[F_SIDE, Side_Am], [F_TYPE, UNIT_HUMAN]]);
+  if Americani then Enable (1)
+  else Enable;
+End;
+
+
+// Hlavní inicializace.
+Export Function prepare_suroviny;
+Begin;
+  if debug then Exit;
+  Disable (1);
+  prepare_bedny;
+  create_bedny_start;
+End;
+

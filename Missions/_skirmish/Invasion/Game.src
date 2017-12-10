@@ -1,0 +1,104 @@
+Export Function InitGame;
+begin
+RandomizeAll;
+
+// prepare colors
+LoadColors;
+
+// init variables
+if isEditor then
+   debug := true // for test
+    else
+     debug := false;
+
+ar_bio_bomb := 91;
+us_artillery := 97;
+ru_radar := 98;
+
+game_started := false;
+points := 0;
+waveNumber := 0;
+timeToNextAttack := 0;
+graveyard := [];
+base_x := 1;
+base_y := 1;
+
+// drugs tech
+if difficultyLevel > 2 then
+   SetTech(5, 7, state_researched);
+
+
+// add points for random nation
+if not playerNation then
+   begin
+   points := 100; // add 100 points
+   playerNation := rand(1, 3);
+   end;
+
+// change player side
+your_side := playerNation;
+
+// fog
+ChangeSideFog(your_side, 4);
+
+// prepare resources
+PrepareResources([[10, 10, 8, 6][difficultyLevel],
+                  [3, 3, 2, 2][difficultyLevel],
+                  [2, 2, 1, 0][difficultyLevel]],
+                  [1, 2, 3], 88, 76, 6);
+
+// spawn player
+PrepareSquad(playerNation, [9, 7, 5, 3][difficultyLevel], [24, 16, 12, 8][difficultyLevel], 88, 76);
+
+// center cam
+CenterNowOnXY(88, 76);
+
+if debug then
+   FogOff(your_side);
+
+End;
+
+// Game Started!
+Every 0$01 trigger game_started do
+var i;
+begin
+
+       while(game_started) do
+       begin
+       // if map is empty
+       if FilterAllUnits([f_side, 7]) = 0 and timeToNextAttack <= 0$00 then
+          begin
+          if FilterAllUnits([f_side, 4]) then
+             for i in FilterAllUnits([f_side, 4]) do
+                 RemoveUnit(i);
+
+          if (waveNumber mod 3 = 0 or waveNumber mod 10 = 0) and waveNumber > 0 then
+             InitBonus;
+
+          if waveNumber mod 10 = 0 then
+             SaveForQuickRestart;
+
+          if waveNumber = 100 then
+             begin
+             FogOff(your_side);
+             break;
+             end;
+
+          timeToNextAttack := rand(2$00, 4$00);
+
+          Wait(timeToNextAttack);
+
+          waveNumber := waveNumber + 1;
+          PrepareWave(waveNumber);
+          end;
+
+       Wait(0$01);
+       end;
+End;
+
+// Wave Timer
+Every 0$01 trigger timeToNextAttack > 0$00 do
+begin
+enable;
+timeToNextAttack := timeToNextAttack - 0$01;
+End;

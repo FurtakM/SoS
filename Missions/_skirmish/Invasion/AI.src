@@ -1,0 +1,53 @@
+Every 0$01 trigger FilterAllUnits([f_side, 7]) do
+var i, un, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([f_side, 7]);
+
+  for i in tmp do
+      begin
+
+        case GetType(i) of
+        unit_human: begin
+                    if GetLives(i) < 250 and GetTech(5, 7) <> state_researched then
+                       continue;
+
+                    if GetClass(i) in [12, 15, 16, 17, 1, 5, 6, 7, 8, 9] then
+                       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), i));
+
+                    if GetClass(i) = 3 then
+                       if IsInUnit(i) then
+                          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), i))
+                           else
+                            ComEspace(i);
+                    end;
+
+        unit_vehicle: begin
+                      if GetLives(i) > 250 then
+                         begin
+                         if GetWeapon(i) = us_artillery then
+                            begin
+                            if IsInArea(i, zoneOut) then
+                               ComMoveToArea(i, zoneBorder)
+                                else
+                                 ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), i));
+                            end
+                             else
+                              if GetWeapon(i) in [us_radar, ar_radar, ru_radar, ru_time_lapser] then
+                                 begin
+                                 if IsInArea(i, zoneOut) then
+                                    ComSpecMove(i, specPos);
+                                 end
+                                  else
+                                   if GetWeapon(i) in [ar_bio_bomb, ar_selfpropelled_bomb] then
+                                      ComSpecAttack(i)
+                                       else
+                                        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), i));
+
+                         end;
+                      end;
+        end;
+
+      end;
+End;

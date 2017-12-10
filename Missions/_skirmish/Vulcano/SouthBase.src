@@ -1,0 +1,74 @@
+Export Function PrepareVulcanoBase;
+var i, filter, hp, un, area, p, russian_in_base;
+begin
+filter := FilterAllUnits([[f_side, 4], [f_type, unit_building]]);
+hp := [470, 370, 290][Difficulty];
+
+Case Difficulty of
+2: begin
+   DestroyUnit(UnitFilter(filter, [f_btype, b_bunker])[1]);
+   end;
+3: begin
+   DestroyUnit(UnitFilter(filter, [f_btype, b_bunker])[1]);
+   DestroyUnit(UnitFilter(filter, [f_btype, b_solar_power])[Rand(1,3)]);
+   end;
+End;
+
+for i = 1 to filter do
+    SetLives(filter[i], hp+Rand(-29, 29));
+
+// nazwa sk³adu
+   SetBName(us_depot, 'Vulcano1');
+
+
+hc_importance := 0;
+
+uc_side := 3;
+uc_nation := nation_russian;
+
+russian_in_base := [];
+area := RandPointsFromArea(82, 137, 106, 152, 10);
+p := 1;
+
+for i = 1 to [6,6,7][Difficulty] do
+    begin
+    PrepareHuman(false, 1, [4,5,6][Difficulty]);
+    un := CreateHuman;
+    russian_in_base := russian_in_base ^ un;
+    PlaceUnitXY(un, area[p], area[p+1], false);
+    p := p + 2;
+    end;
+
+End;
+
+
+Every 0$01 trigger GetDistUnitToSide(us_depot, 1) < 40 do
+var i, un;
+begin
+uc_side := 4;
+uc_nation := nation_american;
+
+hc_importance := 0;
+
+for i = 1 to 7 do
+    begin
+    PrepareHuman(false, Rand(1,3), us_skill);
+    un := CreateHuman;
+    PlaceUnitArea(un, base_resp, false);
+    SetLives(un, 10);
+    end;
+
+
+for i = 1 to 5 do
+    begin
+    PrepareHuman(false, 4, us_skill);
+    SetDir(un, 1);
+    un := CreateHuman;
+    PlaceUnitArea(un, rekt, false);
+    SetLives(un, 10);
+    end;
+
+End;
+
+
+

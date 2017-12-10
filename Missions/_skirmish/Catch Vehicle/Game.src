@@ -1,0 +1,93 @@
+Every 0$01 trigger time do
+var filter, i, side, driver, un;
+begin
+enable;
+
+     // active area
+     if tick < 36 then
+        SetAreaMapShow(exit_area, 1);
+
+     time := time - 0$01;
+
+     if time = 0$00 then
+        if p1 > p2 and p1 > p3 and p1 > p4 and p1 > p5 then
+           YouWin
+        else
+           YouLost('');
+
+     filter := FilterUnitsInArea(exit_area, [f_type, unit_vehicle]);
+
+     if filter then
+        for i = 1 to filter do
+            begin
+            side := GetSide(filter[i]);
+            driver := IsDrivenBy(filter[i]);
+            un := filter[i];
+
+            if IsInUnit(driver) then
+               ComExitVehicle(driver);
+
+            Wait(0$0.3);
+            RemoveUnit(filter[i]);
+
+            Case side of
+            1: p1 := p1 + ScoreBoard(un);
+            2: p2 := p2 + ScoreBoard(un);
+            3: p3 := p3 + ScoreBoard(un);
+            4: p4 := p4 + ScoreBoard(un);
+            5: p5 := p5 + ScoreBoard(un);
+            end;
+
+            end;
+
+
+      Case players of
+      3: begin
+         display_strings := ['#tick', time,
+                             '#player1', p1,
+                             '#player2', p2,
+                             '#player3', p3];
+         end;
+      4: begin
+         display_strings := ['#tick', time,
+                             '#player1', p1,
+                             '#player2', p2,
+                             '#player3', p3,
+                             '#player4', p4];
+         end;
+      5: begin
+         display_strings := ['#tick', time,
+                             '#player1', p1,
+                             '#player2', p2,
+                             '#player3', p3,
+                             '#player4', p4,
+                             '#player5', p5];
+         end;
+
+      End;
+
+End;
+
+
+// new vehicles
+Every 0$05 trigger time do
+var chance, p;
+begin
+enable;
+       Wait(Rand(0$01, 0$06));
+
+       if FilterAllUnits([f_type, unit_vehicle]) < veh_amount then
+          begin
+          SpawnCar(false, veh_spawn);
+
+       if sib_bomb and FilterAllUnits([f_or, [[f_weapon, us_siberium_rocket], [f_weapon, ru_siberium_rocket]]]) = 0 then
+          begin
+          chance := 23;
+          p := Rand(0, 100);
+
+          if p < chance then
+             SpawnSibRocket(veh_spawn);
+          end;
+
+          End;
+End;

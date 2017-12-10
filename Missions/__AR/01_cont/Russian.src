@@ -1,0 +1,441 @@
+Export ru; // side
+Export {rus_depot, rus_lab, rus_bar,} rus_bun;
+Export rus_sol, rus_eng, rus_mech, rus_sci, rus_pat;
+Export rus_tank;
+Export eng1, eng2;
+
+
+Export Function PrepareRussian;
+var un, veh, b, i, dif;
+begin
+
+
+     ru := 3; // side
+
+     rus_bun := FilterAllUnits([[f_side, ru], [f_btype, b_breastwork]]);
+     rus_tank := [];
+
+     dif := [1, 1, 2][Difficulty];
+
+
+
+     // create people
+     uc_side := ru;
+     uc_nation := ru;
+
+
+     // sold for bunker
+     For i = 1 to 7 do
+     begin
+     hc_class = 1;
+     hc_skills = [Rand(0,1)+(dif), Rand(0,2), Rand(0,2), Rand(0,2)];
+
+     hc_sex = Rand(sex_male, sex_female);
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceUnitArea(un, ru_bun, false);
+     ComEnterUnit(un, NearestUnitToUnit(rus_bun, un));
+     end;
+
+
+
+     For i = 1 to 3 do
+     begin
+     hc_class = 2;
+     hc_skills = [Rand(0,1), Rand(0,2)+(dif), Rand(0,2), Rand(0,2)];
+
+     hc_sex = sex_male;
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceUnitArea(un, ru_spawn, false);
+     end;
+
+
+
+     For i = 1 to 2 do
+     begin
+     hc_class = 4;
+     hc_skills = [Rand(0,1), Rand(0,2), Rand(0,1), Rand(0,4)];
+
+     hc_sex = sex_male;
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceHumanInUnit(un, rus_lab);
+     end;
+
+
+
+     For i = 1 to 3+[1,2,2][Difficulty] do
+     begin
+     hc_class = 1;
+     hc_skills = [Rand(0,1)+(dif), Rand(0,2), Rand(0,2), Rand(0,2)];
+
+     hc_sex = sex_male;
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceUnitArea(un, ru_spawn, false);
+     end;
+
+     For i = 1 to 4+[0,1,2][Difficulty] do
+     begin
+     uc_side = 6;
+
+     hc_class = 1;
+     hc_skills = [Rand(0,1)+(dif), Rand(0,2), Rand(0,2), Rand(0,2)];
+
+     hc_sex = sex_male;
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceUnitArea(un, ru_patrol, false);
+     end;
+
+
+
+     // filter
+   //rus_sol := FilterAllUnits([[f_side, ru], [f_class, 1], [f_outside]]);
+     rus_eng := FilterAllUnits([[f_side, ru], [f_class, 2]]);
+     rus_sci := FilterAllUnits([[f_side, ru], [f_class, 4]]);
+     rus_pat := FilterAllUnits([f_side, 6]);
+
+     eng1 := rus_eng[1];
+     eng2 := rus_eng[2];
+
+     // russian ready
+
+End;
+
+// event def base
+Every 0$01 trigger IsInArea(Louis, ru_base) do
+var un, i;
+begin
+
+
+          For i = 1 to 5+[1,2,2][Difficulty] do
+          begin
+          hc_class = 1;
+          hc_skills = [Rand(2,5), Rand(0,2), Rand(0,2), Rand(0,2)];
+
+          hc_sex = Rand(sex_male, sex_female);
+          hc_attr = [Rand(8,10), Rand(9,11)];
+          hc_name = '';
+          hc_gallery = '';
+
+          un := CreateHuman;
+          PlaceUnitArea(un, ru_spawn, false);
+          ComAgressiveMove(un, 144, 96);
+          end;
+
+end;
+
+Every 0$01 do
+var un, b, filter;
+begin
+enable;
+
+
+      filter := FilterAllUnits([[[f_side, ru], [f_type, unit_human], [f_not, [f_ok]]]]);
+
+     If filter > 0 then
+
+        // repair building
+        For b in filter do
+        begin
+        ComRepairBuilding(rus_eng, b);
+        ComAgressiveMove(rus_sol, GetX(b), GetY(b));
+        end;
+
+     If filter = 0 then
+     ComMoveXY([rus_sol, rus_eng], 94, 92);
+
+end;
+
+
+
+// ru patrol
+Every 0$02 do
+var un;
+begin
+enable;
+
+       If not See(2, rus_pat[1]) then
+       begin
+       AddComMoveToArea(rus_pat[1], ru_p1);
+       AddComMoveToArea(rus_pat[1], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[1], Louis);
+       end;
+
+       If not See(2, rus_pat[2]) then
+       begin
+       AddComMoveToArea(rus_pat[2], ru_p2);
+       AddComMoveToArea(rus_pat[2], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[2], Louis);
+       end;
+
+       If not See(2, rus_pat[3]) then
+       begin
+       AddComMoveToArea(rus_pat[3], ru_p3);
+       AddComMoveToArea(rus_pat[3], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[3], Louis);
+       end;
+
+       If not See(2, rus_pat[4]) then
+       begin
+       AddComMoveToArea(rus_pat[4], ru_p4);
+       AddComMoveToArea(rus_pat[4], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[4], Louis);
+       end;
+
+       If not See(2, rus_pat[5]) then
+       begin
+       AddComMoveToArea(rus_pat[5], ru_p5);
+       AddComMoveToArea(rus_pat[5], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[5], Louis);
+       end;
+
+       If not See(2, rus_pat[6]) then
+       begin
+       AddComMoveToArea(rus_pat[6], ru_p6);
+       AddComMoveToArea(rus_pat[6], ru_patrol);
+       end else
+       begin
+       ComAttackUnit(rus_pat[6], Louis);
+       end;
+
+End;
+
+// remove tank from map
+Every 0$01 do
+var un;
+begin
+enable;
+
+     For un in rus_tank do
+     begin
+
+          If IsInArea(un, tank1_area) then
+          RemoveUnit(un);
+     end;
+
+end;
+
+
+// spawn tank
+Every 0$01 do
+var i, un, veh, dif;
+begin
+
+
+            dif = [1,2,3][Difficulty];
+
+            uc_side = 3;
+            uc_nation = 3;
+
+            vc_chassis = ru_medium_wheeled;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = ru_heavy_machine_gun;
+
+            veh = CreateVehicle;
+            SetDir(veh, 4);
+            PlaceUnitXY(veh, 145, 96, false);
+
+           rus_tank = rus_tank ^ veh;
+
+
+            hc_class = 3;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,1), Rand(0,2), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+           rus_tank = rus_tank ^ un;
+
+End;
+
+// spawn next tanks
+Every 1$00 trigger tank_go do
+var i, un, veh, dif;
+begin
+enable;
+
+            dif = [1,2,3][Difficulty];
+            
+            uc_side = 3;
+            uc_nation = 3;
+
+            vc_chassis = ru_medium_wheeled;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = ru_heavy_machine_gun;
+
+            veh = CreateVehicle;
+            PlaceUnitXY(veh, 145, 96, false);
+            SetDir(veh, 4);
+
+            rus_tank = rus_tank ^ veh;
+
+
+            hc_class = 1;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,1), Rand(0,2), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            rus_tank = rus_tank ^ un;
+
+
+      For i = 1 to rus_tank do
+      begin
+        ComMoveXY(rus_tank[i], 33, 1);
+      end;
+
+End;
+
+
+// spawn attack
+Export Attackers;
+Export Function SpawnAttack;
+var un, veh, i, am, dif;
+begin
+
+     dif = [2,3,5][Difficulty];
+     attackers := [];
+
+            uc_side = 3;
+            uc_nation = 3;
+
+            For i = 1 to 10 do
+            begin
+            vc_chassis = ru_medium_wheeled;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = ru_heavy_machine_gun;
+
+            veh = CreateVehicle;
+            SetDir(veh, 0);
+            PlaceUnitArea(veh, ru_attack, false);
+
+            attackers = attackers ^ veh;
+
+
+            hc_class = 1;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,3), Rand(0,3), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            attackers = attackers ^ veh;
+            end;
+
+            Wait(0$01);
+            ComMoveXY(attackers, 65, 67);
+            Wait(0$10);
+
+            Repeat
+             begin
+             
+             For un in attackers do
+             begin
+              am := FilterAllUnits([f_side, 1]);
+              ComAttackUnit(un, NearestUnitToUnit(am, un));
+              Wait(0$01);
+             end;
+
+            End until FilterAllUnits([f_side, 1]) = 0;
+
+End;
+
+
+Every 0$01 trigger IsInArea(Louis, zone) do
+var i, un, dif;
+begin
+
+     uc_side = ru;
+     uc_nation = 3;
+
+     dif = [0,1,2][Difficulty];
+
+     For i = 1 to 2+[0,1,2][Difficulty] do
+     begin
+     hc_class = 1;
+     hc_skills = [Rand(0,1)+(dif), Rand(0,2), Rand(0,2), Rand(0,2)];
+
+     hc_sex = sex_male;
+     hc_attr = [Rand(8,10), Rand(9,11)];
+     hc_name = '';
+     hc_gallery = '';
+
+     un := CreateHuman;
+     PlaceUnitArea(un, escape, false);
+     end;
+
+End;
+
+
+
+// Russian (6) see Louis
+{Every 0$01 trigger See(6, Louis) do
+var t, un;
+begin
+enable;
+
+     un := NearestUnitToUnit(FilterAllUnits([f_side, 6]), Louis);
+      t := 5;
+
+     If GetAttitude(GetSide(Louis), GetSide(un)) <> att_enemy then
+     While(See(6,Louis) or t>0) do
+     begin
+          ComMoveXY(un, GetX(Louis), GetY(Louis));
+          t := t - 1;
+          Wait(0$01);
+          // if (...) do //
+          If t = 4 then
+          Say(un, 'D-Rus-Go1');
+          If t = 1 then
+          Say(un, 'D-Rus-Go2');
+          If t = 0 or GetDistUnits(un, Louis) < 3 then
+             begin
+             Say(un, 'D-Rus-Go3');
+             SetAttitude(GetSide(Louis), GetSide(un), att_enemy, true);
+             ComAttackUnit(un, Louis);
+             break;
+             end;
+
+     end;
+
+End;        }
+

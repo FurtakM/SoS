@@ -1,0 +1,299 @@
+// Player module
+Export game_status;
+Export helps_arrive, helps_can_arrive;
+Export beta_come, gamma_come, zeta_come, mine_ck, sib_bomb_constructed, mine_constructed;
+Export guyA, guyB;
+Export Function PrepareAmerican;
+var skill;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+   skill := [6, 5, 4][Difficulty];
+   game_status := false;
+   helps_arrive := false;
+   helps_can_arrive := false;
+   beta_come := false;
+   gamma_come := false;
+   zeta_come := false;
+   mine_ck := false;
+   sib_bomb_constructed := false;
+   mine_constructed := false;
+
+// prepare depot in forest
+   SetResourceType(GetBase(us_dep1), mat_cans, [200, 100, 70][Difficulty]);
+   // SetLives(us_dep1, 333);
+   SetSide(us_dep1, 4);
+
+// prepare started squad
+   hc_importance := 100;
+
+   PrepareHuman(sex_male, 2, skill+1);
+   hc_gallery := 'hardch';
+   hc_face_number := 1;
+   guyA := CreateHuman;
+
+   PrepareHuman(sex_male, 1, skill);
+   hc_face_number := 2;
+   guyB := CreateHuman;
+
+   hc_importance := 0;
+   hc_gallery := '';
+
+End;
+
+
+// 2 mechanics, 1 soldier, 1 scientist,
+// 1 tank, 1 cargobay
+Export Beta_Squad;
+Export Function AddBetaSquad(num);
+var i, un, sold, sci, mech, tank, cargo, skill;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+skill := [6, 5, 4][Difficulty];
+Beta_Squad := [];
+
+Case num of
+1: begin
+   sold := 2;
+   sci  := 1;
+   mech := 2;
+   tank := 1;
+   cargo:= 1;
+   end;
+2: begin
+   sold := 2;
+   sci  := 1;
+   mech := 1;
+   tank := 1;
+   cargo:= 0;
+   end;
+3: begin
+   sold := 1;
+   sci  := 1;
+   mech := 1;
+   tank := 1;
+   cargo:= 0;
+   end;
+End;
+
+for i = 1 to sold do
+    begin
+    if i = 1 then
+       PrepareHuman(sex_male, 1, skill)
+        else
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    Beta_Squad := Beta_Squad ^ un;
+    end;
+
+for i = 1 to mech do
+    begin
+    PrepareHuman(false, 3, skill);
+    un := CreateHuman;
+    SetTag(un, 3);
+    Beta_Squad := Beta_Squad ^ un;
+    end;
+
+for i = 1 to sci do
+    begin
+    PrepareHuman(false, 4, skill);
+    un := CreateHuman;
+    Beta_Squad := Beta_Squad ^ un;
+    end;
+
+for i = 1 to tank do
+    begin
+    Randomize;
+    vc_chassis := us_medium_tracked;
+    vc_engine := engine_solar;
+    vc_control := control_manual;
+    vc_weapon := [us_gatling_gun, us_double_gun][Rand(1,2)];
+    vc_fuel_battery := Rand(35, 55);
+    un := CreateVehicle;
+    SetTag(un, 5);
+    Beta_Squad := Beta_Squad ^ un;
+    end;
+
+if cargo then
+   begin
+   vc_chassis := us_medium_tracked;
+   vc_engine := engine_solar;
+   vc_control := control_manual;
+   vc_weapon := us_cargo_bay;
+   vc_fuel_battery := Rand(35, 55);
+   un := CreateVehicle;
+   SetTag(un, 5);
+   Beta_Squad := Beta_Squad ^ un;
+   SetCargo(un, mat_cans, 60);
+   end;
+
+End;
+
+
+// 1 mechanics, 2 soldier, 2 engineer,
+// 1 cargobay
+Export Gamma_Squad;
+Export Function AddGammaSquad(num);
+var i, un, sold, eng, sci, mech, tank, cargo, skill;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+skill := [6, 5, 4][Difficulty];
+Gamma_Squad := [];
+
+Case num of
+1: begin
+   sold := 2;
+   eng  := 2;
+   sci  := 0;
+   mech := 1; 
+   tank := 0;
+   cargo:= 1;
+   end;
+2: begin
+   sold := 1;
+   eng  := 2;
+   sci  := 0;
+   mech := 1;
+   tank := 0;
+   cargo:= 1;
+   end;
+3: begin
+   sold := 1;
+   eng  := 1;
+   sci  := 0;
+   mech := 1;
+   tank := 0;
+   cargo:= 1;
+   end;
+End;
+
+for i = 1 to sold do
+    begin
+    if i = 1 then
+       PrepareHuman(sex_male, 1, skill)
+        else
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    Gamma_Squad := Gamma_Squad ^ un;
+    end;
+
+for i = 1 to mech do
+    begin
+    PrepareHuman(false, 3, skill);
+    un := CreateHuman;
+    SetTag(un, 3);
+    Gamma_Squad := Gamma_Squad ^ un;
+    end;
+
+for i = 1 to eng do
+    begin
+    PrepareHuman(false, 2, skill);
+    un := CreateHuman;
+    Gamma_Squad := Gamma_Squad ^ un;
+    end;
+
+for i = 1 to tank do
+    begin
+    Randomize;
+    vc_chassis := us_medium_wheeled;
+    vc_engine := engine_siberite;
+    vc_control := control_manual;
+    vc_weapon := [us_rocket_launcher, us_laser][Rand(1,2)];
+    vc_fuel_battery := Rand(35, 55);
+    un := CreateVehicle;             
+    SetTag(un, 5);
+    Gamma_Squad := Gamma_Squad ^ un;
+    end;
+
+if cargo then
+   begin
+   vc_chassis := us_medium_tracked;
+   vc_engine := engine_combustion;
+   vc_control := control_manual;
+   vc_weapon := us_cargo_bay;
+   vc_fuel_battery := Rand(35, 55);
+   un := CreateVehicle;
+   SetTag(un, 5);
+   Gamma_Squad := Gamma_Squad ^ un;
+   SetCargo(un, 3, 30);
+   SetCargo(un, 1, 40);
+   end;
+
+End;
+
+
+// 2 mechanics, 1 soldier,
+// 3 tanks (1 rus tank)
+Export Zeta_Squad;
+Export Function AddZetaSquad();
+var i, un, sold, eng, sci, mech, tank, cargo, skill;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+skill := [6, 5, 4][Difficulty];
+Zeta_Squad := [];
+
+   sold := 1;  
+   eng  := 0;
+   sci  := 0;
+   mech := 3;
+   tank := 3;
+   cargo:= 0;
+
+
+for i = 1 to sold do
+    begin
+    if i = 1 then
+       PrepareHuman(sex_male, 1, skill)
+        else
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    Zeta_Squad := Zeta_Squad ^ un;
+    end;
+
+for i = 1 to mech do
+    begin
+    PrepareHuman(false, 3, skill);
+    un := CreateHuman;
+    SetTag(un, 3);
+    Zeta_Squad := Zeta_Squad ^ un;
+    end;
+
+for i = 1 to tank do
+    begin
+    Randomize;
+
+    if i < 3 then
+       begin
+       vc_chassis := us_medium_tracked;
+       vc_engine := engine_combustion;
+       vc_control := control_manual;
+       vc_weapon := [us_light_gun, us_laser][Rand(1,2)];
+       vc_fuel_battery := Rand(35, 55);
+       un := CreateVehicle;
+       SetTag(un, 5);
+       Zeta_Squad := Zeta_Squad ^ un;
+       end
+        else
+         begin
+         uc_nation := 3;
+         vc_chassis := ru_medium_tracked;
+         vc_engine := engine_combustion;
+         vc_control := control_manual;
+         vc_weapon := ru_cargo_bay;
+         vc_fuel_battery := Rand(35, 55);
+         un := CreateVehicle;
+         SetLives(un, 496);
+         SetTag(un, 5);
+         SetCargo(un, mat_oil, 100);
+         Zeta_Squad := Zeta_Squad ^ un;
+         end;
+    end;
+
+End;

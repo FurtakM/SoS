@@ -1,0 +1,389 @@
+Export Function Action;
+begin
+InGameOn;
+
+     CenterNowOnXY(151, 107);
+
+     PlaceUnitXY(guyA, 171, 108, false);
+     PlaceUnitXY(guyB, 172, 110, false);
+
+     ComMoveXY(guyA, 156, 107);
+     ComMoveXY(guyB, 154, 105);
+
+     Repeat
+      Wait(0$0.1);
+     Until GetX(guyA) = 156 and GetY(guyA) = 107;
+
+     ComTurnUnit([guyA, guyB], us_dep1);
+
+     Say(guyA, 'D1-A-1');
+     Say(guyB, 'D1-B-1');
+     Say(guyA, 'D1-A-2');
+     Say(guyB, 'D1-B-2');
+
+     ComMoveXY([guyA, guyB], 147, 108);
+
+     Say(guyA, 'D1-A-3');
+
+     Repeat
+      Wait(0$0.1);
+     Until GetDistUnits(guyA, us_dep1) < 8;
+
+     ComTurnUnit(guyA, guyB);
+     ComTurnUnit(guyB, guyA);
+
+     Say(guyA, 'D1-A-10');
+     Say(guyB, 'D1-B-10');
+     Say(guyA, 'D1-A-11');
+     Say(guyB, 'D1-B-11');
+     Say(guyA, 'D1-A-12');
+     Say(guyB, 'D1-B-12');
+     Say(guyA, 'D1-A-13');
+     Say(guyB, 'D1-B-13');
+     Say(guyA, 'D1-A-14');
+     Say(guyB, 'D1-B-14');
+     Say(guyA, 'D1-A-15');
+     Say(guyB, 'D1-B-15');
+     Say(guyA, 'D1-A-16');
+     Say(guyB, 'D1-B-16');
+     Say(guyA, 'D1-A-17');
+     Say(guyB, 'D1-B-17');
+     Say(guyA, 'D1-A-18');
+
+     SetSide(us_dep1, 1);
+     ComEnterUnit([guyA, guyB], us_dep1);
+
+     Repeat
+      Wait(0$0.1);
+     Until IsInUnit(guyA);
+
+     Wait(0$02);
+
+     Say(guyA, 'D1-A-19');
+     Say(guyB, 'D1-B-19');
+     Say(guyA, 'D1-A-20');
+
+     Wait(0$0.3);
+
+     Say(guyB, 'D1-B-20');
+     Say(guyA, 'D1-A-21');
+     Say(guyB, 'D1-B-21');
+     Say(guyA, 'D1-A-22');
+     Say(guyB, 'D1-B-22');
+     Say(guyA, 'D1-A-23');
+     Say(guyB, 'D1-B-23');
+     Say(guyA, 'D1-A-24');
+
+InGameOff;
+
+ChangeMissionObjectives('M_main');
+
+ChangeSideFog(4, 1);
+
+game_status := true;
+End;
+
+
+// Lab was build
+Every 0$01 trigger GetLabs(1) > 0 do
+begin
+
+Repeat
+ Wait(0$01);
+Until  BuildingStatus(GetLabs(1)[1]) <> bs_build;
+
+if IsLive(guyA) and IsLive(guyB) and not helps_arrive then
+   begin
+   Say(guyA, 'DL-A-1');
+   Say(guyB, 'DL-B-1');
+   end;
+
+if not helps_can_arrive then
+   helps_can_arrive := true;
+End;
+
+// See apeman
+Every 0$01 trigger GetLabs(1) > 0 and IsLive(guyA) and IsLive(guyB)
+               and FilterAllUnits([[f_side, 1], [f_class, class_apeman]]) = 0 and See(1, NearestUnitToUnit(FilterAllUnits([f_class, class_apeman]), guyA)) do
+begin
+Say(guyA, 'DA-A-1');
+Say(guyB, 'DA-B-1');
+Say(guyA, 'DA-A-2');
+End;
+
+
+// On river
+Every 0$01 trigger game_status and GetDistUnitArea(guyA, forest_path) < 7 do
+begin
+CenterNowOnXY(117, 50);
+
+Say(GetHuman(1)[2], 'D5-A-1');
+Say(GetHuman(1)[1], 'D5-B-1');
+End;
+
+// Cross river
+Every 0$01 trigger FilterUnitsInArea(river, [f_side, 1]) > 0 do
+begin
+Wait(0$03);
+
+DialogueOn;
+Say(GetHuman(1)[1], 'D6-A-1');
+Say(GetHuman(1)[2], 'D6-B-1');
+PlaceSeeing(95, 8, 1, 20);
+DWait(0$0.3);
+Say(GetHuman(1)[1], 'D6-A-2');
+Say(GetHuman(1)[2], 'D6-B-2');
+Say(GetHuman(1)[1], 'D6-A-3');
+DialogueOff;
+
+ChangeMissionObjectives('M_base');
+End;
+
+// See russian tank
+Every 0$01 trigger not helps_arrive and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) > 0 do
+begin
+Repeat
+ Wait(0$01);
+Until GetDistUnits(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]), GetHuman(1)[1]), GetHuman(1)[1]) < 7;
+Say(GetHuman(1)[1], 'DR-A-1');
+Say(GetHuman(1)[2], 'DR-B-1');
+
+Wait(3$00);
+ru_spotted := true;
+End;
+
+// South depot was destroy
+Every 0$01 trigger not IsLive(us_dep1) do
+Say(GetHuman(1)[1], 'DDR-A-1');
+
+
+// Siberite Mine Constructed
+Every 0$05 trigger GetBuilding(1, b_siberite_mine) do
+begin
+Repeat
+ Wait(0$01);
+Until BuildingStatus(GetBuilding(1, b_siberite_mine)[1]) <> bs_build;
+
+Say(GetHuman(1)[1], 'D8-A-1');
+Say(GetHuman(1)[2], 'D8-B-1');
+
+ChangeMissionObjectives('M_mineok');
+End;
+
+// New Depot
+Every 0$01 trigger FilterAllUnits([[f_side, 1], [f_btype, b_depot], [f_not, [f_constructed]]]) > 1 or (FilterAllUnits([[f_side, 1], [f_btype, b_depot], [f_not, [f_constructed]]]) = 1 and not IsLive(us_dep1)) do
+begin
+Say(FilterAllUnits([[f_side, 1], [f_class, 2]])[1], 'D7-A-1');
+ChangeMissionObjectives('M_baseok');
+End;
+
+Every 0$01 trigger mine_ck do
+begin
+Say(GetHuman(1)[1], 'D9-A-1');      
+ChangeMissionObjectives('M_minedest'); 
+End;
+
+// Beta come                   
+Every 7$00 trigger game_status do
+var time, i, un, r, to_veh;
+begin
+AddBetaSquad(Difficulty);
+
+if not helps_can_arrive then
+   begin
+   SayRadio(Beta_Squad[1], 'DB-Delay');
+   time := 10$00;
+   end
+    else
+     time := 3$00;
+
+     Repeat
+      begin
+       time := time - 0$01;
+       Wait(0$01);
+      end
+     Until time = 0$00;
+
+  // Spawn Beta
+     helps_arrive := true;
+
+     if IsLive(guyA) then
+        r := guyA
+         else
+          r := guyB;
+
+     SayRadio(Beta_Squad[1], 'D2-A-1');
+     Say(r, 'D2-B-1');
+     SayRadio(Beta_Squad[1], 'D2-A-2');
+     Say(r, 'D2-B-2');
+     SayRadio(Beta_Squad[1], 'D2-A-3');
+     Say(r, 'D2-B-3');
+
+     to_veh := [];
+
+     for i = 1 to Beta_Squad do
+         begin
+         if GetTag(Beta_Squad[i]) = 3 then
+            to_veh := to_veh ^ Beta_Squad[i]
+         else
+         if GetTag(Beta_Squad[i]) = 5 then
+            begin
+            SetDir(Beta_Squad[i], 4);
+            PlaceUnitArea(Beta_Squad[i], road_vehicle, false);
+            PlaceHumanInUnit(to_veh[1], Beta_Squad[i]);
+            to_veh := Delete(to_veh, 1);
+            end
+         else
+            PlaceUnitArea(Beta_Squad[i], road_vehicle, false);
+
+         ComMoveXY(Beta_Squad[i], 165, 105);
+
+         Wait(Rand(0$02, 0$04));
+
+         SetSide(Beta_Squad[i], 1);
+
+         if i = 1 then
+            CenterNowOnXY(168, 109);
+
+         ComStop(Beta_Squad[i]);
+         end;
+
+End;
+
+
+// Gamma Squad
+Every 0$10 trigger helps_arrive do
+var i, to_veh;
+begin
+
+    Wait(5$00);
+
+    AddGammaSquad(Difficulty);
+
+    to_veh := [];
+
+     for i = 1 to Gamma_Squad do
+         begin
+         if GetTag(Gamma_Squad[i]) = 3 then
+            to_veh := to_veh ^ Gamma_Squad[i]
+         else
+         if GetTag(Gamma_Squad[i]) = 5 then
+            begin
+            SetDir(Gamma_Squad[i], 4);
+            PlaceUnitArea(Gamma_Squad[i], road_vehicle, false);
+            PlaceHumanInUnit(to_veh[1], Gamma_Squad[i]);
+            to_veh := Delete(to_veh, 1);
+            end
+         else
+            PlaceUnitArea(Gamma_Squad[i], road_vehicle, false);
+
+         ComMoveXY(Gamma_Squad[i], 164, 104);
+
+         Wait(Rand(0$02, 0$04));
+
+         SetSide(Gamma_Squad[i], 1);
+        end;
+
+    SayRadio(Gamma_Squad[1], 'D3-A-1');
+    Say(GetHuman(1)[1], 'D3-B-1');
+    SayRadio(Gamma_Squad[1], 'D3-A-2');
+    Say(GetHuman(1)[1], 'D3-B-2');
+    SayRadio(Gamma_Squad[1], 'D3-A-3');
+    Say(GetHuman(1)[1], 'D3-B-3');  
+    SayRadio(Gamma_Squad[1], 'D3-A-4');
+    Say(GetHuman(1)[1], 'D3-B-4');
+    SayRadio(Gamma_Squad[1], 'D3-A-5');
+    Say(GetHuman(1)[1], 'D3-B-5');
+
+    for i = 1 to Gamma_Squad do
+        SetSide(Gamma_Squad[i], 1);
+
+    Wait([3$00, 5$00, 5$30][Difficulty]);
+
+    AddZetaSquad;
+
+    Wait(0$10);
+
+    to_veh := [];
+
+    for i = 1 to Zeta_Squad do
+         begin
+         if GetTag(Zeta_Squad[i]) = 3 then
+            to_veh := to_veh ^ Zeta_Squad[i]
+         else
+         if GetTag(Zeta_Squad[i]) = 5 then
+            begin
+            SetDir(Zeta_Squad[i], 4);
+            PlaceUnitArea(Zeta_Squad[i], road_vehicle, false);
+            PlaceHumanInUnit(to_veh[1], Zeta_Squad[i]);
+            to_veh := Delete(to_veh, 1);
+            end
+         else
+            PlaceUnitArea(Zeta_Squad[i], road_vehicle, false);
+
+         ComMoveXY(Zeta_Squad[i], 165, 105);
+
+         Wait(Rand(0$02, 0$04));
+         end;
+
+    SayRadio(Zeta_Squad[1], 'D4-A-1');
+    Say(GetHuman(1)[1], 'D4-B-1');
+    SayRadio(Zeta_Squad[1], 'D4-A-2');
+    Say(GetHuman(1)[1], 'D4-B-2');
+    SayRadio(Zeta_Squad[1], 'D4-A-3');
+    Say(GetHuman(1)[1], 'D4-B-3');
+    SayRadio(Zeta_Squad[1], 'D4-A-4');
+    Say(GetHuman(1)[1], 'D4-B-4');
+    SayRadio(Zeta_Squad[1], 'D4-A-5');
+    Say(GetHuman(1)[1], 'D4-B-5');
+    SayRadio(Zeta_Squad[1], 'D4-A-6');
+    Say(GetHuman(1)[1], 'D4-B-6');
+    SayRadio(Zeta_Squad[1], 'D4-A-7');
+
+    for i = 1 to Zeta_Squad do
+        SetSide(Zeta_Squad[i], 1);
+
+End;
+
+
+Every 0$01 trigger FilterUnitsInArea(rus_spot, [f_side, your_side]) > 0 do
+begin
+Say(guyA, 'D10-A-1');
+ru_spotted := true;
+End;
+
+Every 0$01 trigger IsDead(guyA) or IsDead(guyB) do
+begin
+YouLost('DieP');
+End;
+
+Every 0$01 trigger FilterAllUnits([f_weapon, us_siberium_rocket]) do
+sib_bomb_constructed := true;
+
+Every 0$01 trigger game_status and FilterAllUnits([f_side, 3]) = 0 do
+var i;
+begin
+game_status := false;
+
+if ((tick/35)/60) < [70, 60, 50][Difficulty] then
+   AddMedal('play', 1)
+    else
+     AddMedal('play', -1);
+
+if sib_bomb_constructed then
+   AddMedal('sibbomb', 1)
+    else
+     AddMedal('sibbomb', -1);
+
+if mine_constructed and not mine_ck then
+   AddMedal('mine', 1);
+
+if mine_ck then
+   AddMedal('mine', -1);
+
+if not mine_constructed then
+   AddMedal('mine', -2);
+
+GiveMedals('Main');
+YouWin;
+End;

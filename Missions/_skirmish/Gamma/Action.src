@@ -1,0 +1,94 @@
+Export event_rocket, event_comp, comp_tested, sikorski_run;
+Export Function Action;
+begin
+comp_tested := false;
+sikorski_run := false;
+
+InGameOn;
+CenterNowOnUnits(commander);
+
+Wait(0$01);
+
+SayRadio(popov, 'Dpop1');
+Say(commander, 'Dcomm1');
+SayRadio(popov, 'Dpop2');
+Say(commander, 'Dcomm2');
+InGameOff;
+
+ChangeMissionObjectives('T1');
+End;
+
+
+Every 0$01 trigger timer > 2$01 do
+begin
+SayRadio(kapral, 'DKap1');
+End;
+
+
+Every 0$01 trigger timer > [22$00, 25$00, 30$00][dif] do
+var i;
+begin
+SayRadio(kapral, 'DKap2');
+
+Wait(0$0.3);
+
+Say(commander, 'Dcommk');
+
+Wait(0$44);
+
+PlaceUnitArea(kapral, am_west_spawn, false);
+CenterNowOnUnits(kapral);
+
+Wait(0$10);
+
+NewForce([6, 7, 8][dif]);
+
+Wait(2$00);
+
+while(FilterAllUnits([[f_control, control_remote], [f_not, [f_weapon, us_crane]]]) < 3) do
+      Wait(0$01);
+
+
+uc_side := 4;
+uc_nation := 1;
+
+for i = 1 to [4,5,6][dif] do
+    PlaceUnitArea(CreateHumanWithClass(1, [5,6,7][dif]), am_east_spawn, false);
+
+
+sikorski_ar := true;
+
+SayRadio(sikorski, 'DSik1');
+
+Wait(0$30);
+
+uc_side := 4;
+uc_nation := 1;
+
+for i = 1 to [3,4,4][dif] do
+    PlaceUnitArea(CreateHumanWithClass(1, [5,6,7][dif]), am_south_spawn, false);
+End;
+
+
+Every 0$0.1 trigger GetLives(sikorski) < 650 do
+begin
+Say(sikorski, 'DSik2');
+
+while(IsLive(sikorski)) do
+begin
+ComMoveToArea(sikorski, am_main_spawn);
+Wait(0$01);
+
+if IsInArea(sikorski, am_main_spawn) then
+   begin
+   RemoveUnit(sikorski);
+   break;
+
+   sikorski_run := true;
+   end;
+end;
+
+End;
+
+Every 0$0.1 trigger GetLives(sikorski) < 1000 do
+Say(sikorski, 'DSkik3');

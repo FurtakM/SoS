@@ -1,0 +1,141 @@
+// Jednostki
+Export Function PrepareUnits;
+var filter, i, un;
+begin
+
+
+     SetBName(ar_depot, 'kaba');
+     
+
+     uc_side := 2;
+     uc_nation := 2;
+
+
+     hc_skills := [10, 10, 10, 10];
+
+     // magazyn
+     for i = 1 to 2 do
+         begin
+         hc_name := '';
+         hc_gallery := '';
+         hc_class := 2;
+         un := CreateHuman;
+         PlaceHumanInUnit(un, ar_depot);
+         end;
+
+    // fabryka
+    for i = 1 to 4 do
+         begin
+         hc_name := '';
+         hc_gallery := '';
+         hc_class := 3;
+         un := CreateHuman;
+         PlaceHumanInUnit(un, ar_fac);
+         end;
+
+    // laby
+    for i = 1 to 5 do
+         begin
+         hc_name := '';
+         hc_gallery := '';
+         hc_class := 4;
+         un := CreateHuman;
+         PlaceHumanInUnit(un, [ar_lab1, ar_lab2][Rand(1,2)]);
+         end;
+
+
+    filter := FilterAllUnits([[f_side, 2], [f_control, control_manual]]);
+
+    for i = 1 to filter do
+        begin
+        hc_class := 3;
+        PlaceHumanInUnit(CreateHuman, filter[i]);
+        end;
+
+
+    filter := FilterAllUnits([f_control, control_remote]);
+
+    for i = 1 to filter do
+        ComLinkTo(filter[i], IsDrivenBy(ctrl_twr));
+
+
+    filter := FilterAllUnits([f_btype, b_bunker]);
+
+    for i = 1 to filter do
+        begin
+        hc_class := 1;
+        PlaceHumanInUnit(CreateHuman, filter[i]);
+        end;
+
+
+    // Badania
+       ComResearch(ar_lab1, tech_tech1);
+       AddComResearch(ar_lab1, tech_tech2);
+       AddComResearch(ar_lab1, tech_tech3);
+
+       ComResearch(ar_lab2, tech_weap1);
+       AddComResearch(ar_lab2, tech_weap2);
+       AddComResearch(ar_lab2, tech_weap3);
+
+    // Produkcja
+       ComConstruct(ar_fac, ar_half_tracked, engine_combustion, control_manual, ar_gun);
+       AddComConstruct(ar_fac, ar_half_tracked, engine_combustion, control_manual, ar_gun);
+       AddComConstruct(ar_fac, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower);
+
+    // Elektrownia
+       filter := FilterAllUnits([f_class, 2]);
+
+       for i = 1 to filter do
+           begin
+           ComExitBuilding(filter[i]);
+           AddComBuild(filter[i], b_oil_power, 121, 59, 0);
+           AddComEnterUnit(filter[i], ar_depot);
+           end;
+
+End;
+
+
+
+On VehicleConstructed(veh, fac) do
+begin
+
+     ComMoveXY(IsDrivenBy(veh), 133, 37);
+     AddComExitVehicle(IsDrivenBy(veh));
+     AddComEnterUnit(IsDrivenBy(veh), ar_fac);
+
+End;
+
+
+
+
+Every 0$03 do
+begin
+enable;
+
+ CreateCratesArea(Rand(1,5), crates_spawn, true);
+  Wait(0$25);
+End;
+
+
+Every 0$03 trigger Louis do
+var skr, c;
+begin
+enable;
+
+     SetFuel(ar_cargo, 100);
+
+     skr = GetListOfCratesInArea(crates_spawn);
+
+
+     c = 1;
+
+
+     While c < skr do
+     begin
+     ComCollect(ar_cargo, skr[c], skr[c+1]);
+     c = c + 2;
+     end;
+
+End;
+
+

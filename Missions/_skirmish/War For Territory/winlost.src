@@ -1,0 +1,51 @@
+every 0$2 do
+  var win,i;
+  begin
+    if your_side then
+      if not filterAllUnits([[f_side,your_side],[f_or,[f_type,unit_human],[f_btype,b_depot],[f_btype,b_warehouse]]]) then
+        begin
+          wait(0$3);
+          YouLostInMultiplayer;
+          exit;
+        end
+      else
+        begin
+          win:=true;
+          for i:=1 to Side_positions do
+            if Side_positions[i] and (i<>your_side) then
+              begin
+                if MultiplayerSideAlive(i) then
+                  if not Side_Teams[i] or (Side_Teams[i]<>Side_Teams[your_side]) then
+                    win:=false;
+              end;
+           if win then
+             begin
+               wait(0$3);
+               YouWinInMultiplayer;
+               exit;
+             end;
+        end;
+    enable;
+  end;
+
+// lost a win s praporkama !!!
+EVERY 0$3 DO
+VAR teams_f;
+VAR i,j;
+VAR pom;
+begin
+  teams_f=[0,0,0,0];
+  for i in FLAGY do
+    if i<>0 then
+      begin
+        pom=Side_Teams[i];
+        teams_f=vloz_na_pozici(teams_f[pom]+1,pom,teams_f);
+      end;
+  for i:=1 to 4 do
+    if teams_f[i]>=4 then
+      for j:=1 to 8 do begin
+                         if Side_Teams[j]=i and j=your_side then YouWinInMultiplayer;
+                         if Side_Teams[j]<>i and j=your_side then YouLostInMultiplayer;
+                       end;
+  enable;
+end;

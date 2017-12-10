@@ -1,0 +1,348 @@
+// SouthBase Scripty
+// Plan:
+// Obrona (miny, pojazdy zdalne, bunkry, wieze)
+// Autonaprawa
+// Kamery
+//-------------------
+
+Export Function PrepareSouthBase;
+var i, p, un, skill;
+begin
+uc_side := 5;
+uc_nation := 2;
+
+   SetBName(ar_depot, 'tunis');
+   SetBName(ar2_depot, 'rabat');
+
+   skill := [6, 7, 8][Difficulty];
+
+   // base
+      SetResourceType(GetBase(ar2_depot), mat_cans, 3000);
+      SetResourceType(GetBase(ar2_depot), mat_oil, 100);
+
+   // sold
+      for i = 1 to 7 do
+          begin
+          PrepareHuman(false, 1, skill);
+          un := CreateHuman;
+          PlaceHumanInUnit(un, FilterAllUnits([[f_side, 5], [f_empty], [f_btype, b_bunker]])[1]);
+          end;
+
+   // sci
+      for i = 1 to 3 do
+          begin
+          PrepareHuman(false, 4, skill);
+          un := CreateHuman;
+          PlaceHumanInUnit(un, ar_lab);
+          end;
+
+   // mortar
+      for i = 1 to Difficulty+1 do
+          begin
+          PrepareHuman(false, class_mortar, skill);
+          for p = 1 to 2 do
+              begin
+              un := CreateHuman;
+              PlaceHumanInUnit(un, FilterAllUnits([[f_side, 5], [f_btype, b_barracks]])[p]);
+              end;
+          end;
+
+   // mech
+      for i = 1 to 6 do
+          begin
+          PrepareHuman(false, 3, skill);
+          un := CreateHuman;
+          PlaceHumanInUnit(un, ar_fac);
+          end;
+
+   // engs
+      for i = 1 to 4 do
+          begin
+          PrepareHuman(false, 2, skill);
+          un := CreateHuman;
+          PlaceHumanInUnit(un, ar2_depot);
+          end;
+
+   // SetBunkers
+      SetBunkers(2);
+
+   // towers
+      for i = 1 to 7 do
+          AddComPlaceWeapon(FilterAllUnits([[f_side, 5], [f_btype, b_bunker]])[i], [ar_rocket_launcher, ar_gun, ar_gatling_gun][Rand(1,3)]);
+
+End;
+
+
+Export ar_bunkers_list;
+Export Function SetBunkers(n);
+var i, b, un, xyd, p;
+begin
+uc_side := 5;
+
+bc_type := b_breastwork;
+bc_level := 5;
+
+     ar_bunkers_list := [];
+     xyd := [178,133,3, 148,104,3];
+
+     p := 1;
+
+     for i = 1 to n do
+         begin
+         b := CreateAndPlaceBuildingXYD(xyd[p], xyd[p+1], xyd[p+2]);
+         ar_bunkers_list := ar_bunkers_list ^ b;
+         p := p + 3;
+         end;
+
+End;
+
+
+Export ar_veh_list, control_towers, ar_vehs, ar_tasks;
+Every 1 do
+begin
+ar_veh_list := [];
+control_towers := [];
+ar_vehs := [];
+ar_tasks := 'back';
+End;
+
+Every 0$03 trigger FilterAllUnits([[f_side, 5], [f_btype, b_factory]]) do
+var i, un, fac;
+begin
+enable;
+
+     fac := FilterAllUnits([[f_side, 5], [f_btype, b_factory]])[1];
+
+     if ar_veh_list then
+        begin
+        if BuildingStatus(fac) = bs_idle and control_towers then
+           begin
+           ComConstruct(fac, ar_veh_list[1], ar_veh_list[2], ar_veh_list[3], ar_veh_list[4]);
+           for i = 1 to 4 do
+               ar_veh_list := Delete(ar_veh_list, 1);
+           end;
+        end;
+
+     if GetTech(tech_remcont, 5) = state_researched and FilterAllUnits([[f_side, 5], [f_weapon, ar_control_tower]]) < 2 then
+        begin
+        if BuildingStatus(fac) = bs_idle then
+           ComConstruct(fac, ar_half_tracked, engine_solar, control_manual, ar_control_tower);
+        end; 
+
+     if control_towers then
+        begin
+        for i = 1 to control_towers do
+            if not IsInArea(control_towers[i], control_parking) then
+               ComMoveToArea(control_towers[i], control_parking);
+        end;
+
+     if FilterAllUnits([[f_side, 5], [f_control, control_remote]]) and FilterAllUnits([[f_side, 5], [f_not, [f_linked]]]) and control_towers then
+        begin
+        for i in FilterAllUnits([[f_side, 5], [f_control, control_remote]]) do
+            if UnitFilter(i, [f_not, [f_linked]]) then
+               ComLinkTo(i, control_towers[Rand(1,2)]);
+        end;
+End;
+
+
+Every 0$01 trigger ar_vehs and ar_tasks do
+var i, enemy, enemyA, parking;
+begin
+enable;
+
+enemy := FilterAllUnits([f_side, 2]);
+enemyA := FilterAllUnits([f_side, 1]);
+parking := mobile_defense; // ---
+
+for i = 1 to ar_vehs do
+    begin
+    if not HasTask(ar_vehs[i]) then
+       case ar_tasks of
+       'defend': begin
+                 if GetDistUnitArea(ar_vehs[i], parking) > 6 and not See(2, ar_vehs[i]) then
+                    ComMoveToArea(ar_vehs[i], parking)
+                     else if See(2, ar_vehs[i]) then
+                      ComAttackUnit(ar_vehs[i], NearestUnitToUnit(enemy, ar_vehs[i]));
+                 end;
+       'attack_player': begin
+                        ComAttackUnit(ar_vehs[i], NearestUnitToUnit(enemy, ar_vehs[i]));
+                        end;
+       'support_player': begin
+                         ComAttackUnit(ar_vehs[i], NearestUnitToUnit(enemyA, ar_vehs[i]));
+                         end;
+       'back': begin
+               if GetDistUnitArea(ar_vehs[i], parking) > 6 then
+                  ComMoveToArea(ar_vehs[i], parking);
+               end;
+       end;
+    end;
+
+End;
+
+// Vehicles
+Every 5$00 do
+begin
+Case Difficulty of
+1: ar_veh_list := InitVehicle(5);
+2: ar_veh_list := InitVehicle(6);
+3: ar_veh_list := InitVehicle(8);
+end;
+End;
+
+// Repair buildings
+Every 0$01 do
+var i, filter, b;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 5], [f_class, 2]]);
+b := FilterAllUnits([[[f_side, 5], [f_not, [f_lives, 1000]], [f_type, unit_building]]]);
+
+if b then
+   for i = 1 to filter do
+       begin
+
+       if IsInUnit(filter[i]) then
+          ComExitBuilding(filter[i])
+           else
+            if not HasTask(filter[i]) then
+               ComRepairBuilding(filter[i], NearestUnitToUnit(b, filter[i]));
+       end;
+
+if not b then
+   for i = 1 to filter do
+       if not HasTask(filter[i]) then
+          ComEnterUnit(filter[i], ar2_depot);
+End;
+
+
+// Tech
+Export ar_tech_list;
+Every 1 do
+ar_tech_list := [tech_solpow, tech_tech1, tech_tech2, tech_soleng, tech_oilpow, tech_oileng, tech_apeagres];
+
+Every 0$01 trigger game do
+var i, side, techs, sci;
+begin
+
+     side := 5;
+     techs := ar_tech_list;
+
+     // TameApeman(5, 1);
+
+     Repeat
+        begin
+        if CheckTechList(side, techs) then
+           ResearchTechList(side, techs);
+
+        Wait(0$01);
+        end
+     Until CheckTechList(side, techs) = 0;
+
+     if not GetLabKinds(GetLabs(5)[1]) in [b_lab_weapon, b_lab_opto] then
+        begin
+        ComBuildLabKind(GetLabs(5)[1], b_lab_weapon, b_lab_opto);
+        techs := techs ^ [tech_weap1, tech_weap2, tech_gatling, tech_gun, tech_flame, tech_explos, tech_opto1, tech_opto2, tech_radar, tech_remcont, tech_remcharge];
+        end; 
+
+     Repeat
+        begin
+        if CheckTechList(side, techs) then
+           ResearchTechList(side, techs);
+        Wait(0$01);
+        end
+     Until CheckTechList(side, techs) = 0;
+
+End;
+
+Every 0$10 do
+var sci;
+begin
+enable;
+sci := FilterAllUnits([[f_side, 5], [f_class, 4]]);
+
+if UnitFilter(sci, [f_not, [f_inside]]) then
+           if not HasTask(UnitFilter(sci, [f_not, [f_inside]])[1]) then
+              ComEnterUnit(UnitFilter(sci, [f_not, [f_inside]])[1], ar_lab);
+End;
+
+// Tame Apeman
+Every 0$01 do
+var i, tmp, filter, apes;
+begin
+
+     While(FilterAllUnits([[f_side, 5], [f_btype, b_warehouse]])) do
+       begin
+       filter := FilterAllUnits([[[f_side, 5], [f_or, [f_class, class_apeman], [f_class, class_apeman_soldier]]]]);
+
+       if filter < 6 then
+          begin
+          apes := FilterAllUnits([[f_side, 0], [f_class, class_apeman]]);
+
+          if apes then
+             TameApeman(5, 1);
+          end;
+
+       Wait(4$45);
+       end;
+End;
+
+// Apeman - sold
+Every 0$01 trigger GetTech(tech_apeagres, 5) = state_researched do
+var un, tmp, filter, filter2, i, b;
+begin
+enable;
+       
+filter := FilterAllUnits([[f_side, 5], [f_class, class_apeman]]);
+filter2 := FilterAllUnits([[f_side, 5], [f_class, class_apeman_soldier]]);
+tmp := FilterAllUnits([[f_side, 5], [f_btype, b_barracks]]);
+b := FilterAllUnits([[f_side, 5], [f_btype, b_breastwork], [f_empty]]);
+
+ if filter then
+    for i = 1 to filter do
+        begin
+        if not HasTask(filter[i]) then
+           begin
+           if BuildingFull(tmp[2]) then
+              ComEnterUnit(filter[i], tmp[1])
+               else
+                ComEnterUnit(filter[i], tmp[2]);
+           AddComChangeProfession(filter[i], class_apeman_soldier);
+           end;
+        if IsInUnit(filter[i]) then
+           ComExitBuilding(filter[i]);
+        end;
+
+  if filter2 then
+     for i = 1 to filter2 do
+         begin
+         if b then
+            begin
+            if not IsInUnit(filter2[i]) in b and i <= b then
+               ComExitBuilding(filter2[i]);
+            if i <= b then
+               ComEnterUnit(filter2[i], b[i])
+                else
+                 ComEnterUnit(filter2[i], NearestUnitToUnit(tmp, filter2[i]));
+            end
+             else
+              if not IsInUnit(filter2[i]) then
+                 if BuildingFull(tmp[2]) then
+                    ComEnterUnit(filter2[i], tmp[2])
+                     else
+                      ComEnterUnit(filter2[i], tmp[1]);
+         end;
+End;
+                                                            
+
+Every 0$0.3 trigger mines do
+var i, un, filter;
+begin
+enable;
+
+       filter := FilterUnitsInArea(area_mines, [f_enemy, 5]);
+
+       for i = 1 to filter do
+           if MineAtPos(GetX(filter[i]), GetY(filter[i])) then
+              LaunchMineAtPos(GetX(filter[i]), GetY(filter[i]), 5);
+End;

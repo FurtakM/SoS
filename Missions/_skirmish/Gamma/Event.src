@@ -1,0 +1,260 @@
+//
+On ResearchComplete(tech, lab) do
+begin
+
+     if tech = tech_bazooka and event_rocket = false then
+        if FilterAllUnits([[f_side, 3], [f_class, 4]]) > 0 then
+           begin
+           event_rocket := true;
+           if FilterAllUnits([[[f_side, 3], [f_class, 4], [f_sex, sex_male]]]) > 0 then
+              Say(FilterAllUnits([[[f_side, 3], [f_class, 4], [f_sex, sex_male]]])[1], 'Dsci2');
+           end;
+End;
+
+On VehicleConstructed(un, fac) do
+begin
+if GetSide(un) = 3 and GetControl(un) = control_computer then
+   comp_tested := true;
+End;
+
+On UnitGoesToRed(un) do
+begin
+
+     if un in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) then
+        if attacked = false and sikorski_ar = false then
+           begin
+           attacked := true;
+           if IsInUnit(donald) then
+              SayRadio(donald, 'DGammaF')
+               else if IsInUnit(van) then
+                SayRadio(van, 'DGammaM');
+           end;
+
+     
+     if un in FilterAllUnits([f_control, control_remote]) then
+        ComUnlink(un);
+
+End;
+
+On ApemanTamed(ape, sci) do
+begin
+if GetSex(sci) = sex_male then
+   Say(sci, 'Dsci3');
+End;
+
+On BuildingComplete(b) do
+var i;
+begin
+
+     if GetBType(b) = b_depot and GetSide(b) = 3 and depot_rdy = false then
+        begin
+        SetBName(b, 'kalinin');
+        dep_x := GetX(b);
+        dep_y := GetY(b);
+        depot_rdy := true;
+        SayRadio(popov, 'Dpop3');
+        end;
+
+     if GetBType(b) = b_lab and GetSide(b) = 3 and event_comp = false then
+        if FilterAllUnits([[f_side, 3], [f_class, 4]]) > 0 then
+           begin
+           event_comp := true;
+           Say(FilterAllUnits([[f_side, 3], [f_class, 4], [f_sex, sex_male]])[1], 'Dsci1');
+           end;
+
+     if GetBType(b) = b_bunker and GetSide(b) = 1 then
+        begin
+        RaiseSailEvent(6); // obsada
+        AddComPlaceWeapon(b, gamma_towers[4]);
+
+        for i = 1 to 4 do
+            gamma_towers := Delete(gamma_towers, 1);
+        end;
+
+End;
+
+
+
+
+On UnitDestroyed(un) do
+begin    
+
+     if un in Patrol then
+        Patrol := Patrol diff un;
+
+     if un in FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) then
+        begin
+        gamma_towers := gamma_towers ^ GetX(un);
+        gamma_towers := gamma_towers ^ GetY(un);
+        gamma_towers := gamma_towers ^ GetDir(un);
+        gamma_towers := gamma_towers ^ GetBWeapon(un);
+        end;
+
+     if un in FilterAllUnits([[f_control, control_remote], [f_not, [f_weapon, us_crane]]]) then
+        new_veh := new_veh + 1;
+
+     if un in FilterAllUnits([f_weapon, us_crane]) then
+        AddComConstruct(am_fac, us_medium_tracked, engine_solar, control_remote, us_crane);
+     
+     if un = am_dep then
+        begin
+        SayRadio(Platonov, 'DPlat');
+
+        if timer <= 30$00 then
+           AddMedal('gamma_med3', 1)
+            else
+             if timer <= [50$00, 42$00, 35$00][dif] then
+                AddMedal('gamma_med3', 2)
+                 else
+                  AddMedal('gamma_med3', -1);
+
+        if not comp_tested then
+           AddMedal('gamma_med2', -1)
+            else
+             AddMedal('gamma_med2', 1);
+
+        if IsDead(sikorski) and not sikorski_run then
+           AddMedal('gamma_med1', 1)
+            else
+             AddMedal('gamma_med1', -1);
+
+        GiveMedals('GAMMA_MEDALS');
+        YouWin;
+        end;
+
+     if un = commander then
+        YouLost('comml');
+
+     if un = sikorski then
+        AddMedal('gamma_med1', 1);
+
+End;
+
+
+
+On SailEvent(event) do
+var i, un, filter, doc, bac, place, engs, crane, b;
+begin
+
+
+     if event = 1 then
+        begin
+        filter := FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+        engs   := FilterAllUnits([[[f_side, 1], [f_class, 2], [f_lives, 1000]]]);
+        crane  := FilterAllUnits([[f_side, 1], [f_weapon, us_crane]]);
+
+        if engs > 0 then
+        for i = 1 to engs do
+            begin
+            if IsInUnit(engs[i]) then
+               ComExitBuilding(engs[i]);
+
+               Wait(0$0.2);
+
+            if not HasTask(engs[i]) then
+               ComRepairBuilding(engs[i], filter[1]);
+            end;
+
+        if crane > 0 then
+           if not HasTask(crane[1]) then
+              ComRepairBuilding(crane[1], filter[1]);
+
+        end;
+
+     if event = 2 then
+        begin
+        engs := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
+        if engs > 0 then
+        for i = 1 to engs do
+            if not HasTask(engs[i]) and not IsInUnit(engs[i]) then
+               ComEnterUnit(engs[i], am_dep);
+
+        end;
+
+     if event = 3 then
+        begin
+        filter := FilterAllUnits([[[f_side, 1], [f_type, unit_human], [f_not, [f_class, 4]], [f_not, [f_lives, 800]]]]);
+        doc := FilterAllUnits([[f_side, 1], [f_class, 4]]);
+
+        if filter > 0 then
+           begin
+           // wyjscie naukowcow z laba
+              for i = 1 to doc do
+                  begin
+                  if IsInUnit(doc[i]) then
+                     ComExitBuilding(doc[i]);
+
+                  if GetDistUnits(filter[1], am_lab) < 10 and not HasTask(doc[i]) then
+                     ComHeal(doc[i], filter[1]);
+
+                  end;
+
+              for i = 1 to filter do
+                  if GetDistUnits(filter[i], am_lab) > 10 then
+                     ComMoveXY(filter[i], 47, 12);
+           end
+            else
+             for i = 1 to doc do
+                 if not IsInUnit(doc[i]) then
+                    ComEnterUnit(doc[i], am_lab);
+
+        end;
+
+     if event = 4 then
+        begin
+        bac := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
+
+        for i = 1 to bac do
+            if UnitsInside(bac[i]) < 6 then
+               place := bac[i];
+
+        if place then
+           begin
+           filter := FilterAllUnits([[[f_side, 1], [f_or, [f_class, 1], [f_class, 5]], [f_lives, 1000]]]) diff Patrol;
+
+           for i = 1 to filter do
+               if not IsInUnit(filter[i]) and not HasTask(filter[i]) then
+                  ComEnterUnit(filter[i], place);
+           end;
+
+                    
+     end;
+
+     if event = 5 then
+        begin
+        if FilterUnitsInArea(am_sec, [f_enemy, 1]) = 0 then
+           begin
+           engs := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
+           if engs > 0 then
+           for i = 1 to engs do
+               if not HasTask(engs[i]) then
+                  ComBuild(engs[i], b_bunker, gamma_towers[1], gamma_towers[2], gamma_towers[3]);
+           end;
+        end;
+
+
+     if event = 6 then
+        begin
+        bac := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
+
+        if bac and FilterAllUnits([[[f_side, 1], [f_btype, b_bunker], [f_empty]]]) > 0 then
+          begin
+          b := FilterAllUnits([[[f_side, 1], [f_btype, b_bunker], [f_empty]]])[1];
+          un := UnitsInside(bac[1]);
+          //if BuildingStatus(b) <> bs_build then
+             //begin
+             ComExitBuilding(un[1]);
+             AddComEnterUnit(un[1], b);
+             //end;
+          end;
+       end;
+End;
+
+
+On Contact(s1, s2) do
+begin
+if s1 = 1 and s2 = 3 then
+   contact_am := true;
+End;

@@ -1,0 +1,242 @@
+// Action Module
+Export Ronn_Scout;
+Export Function StartMission;
+var i, kom, filter;
+begin
+   // check Ronn status
+     If TestCharacters('Ronn_Scout') then
+        begin
+        Ronn_Scout := true  // add act with scout         
+        end else
+        begin
+        Ronn_Scout := false;
+        end;
+
+     If Ronn_Scout then
+        begin
+        i := Rand(1,2); // two direction's
+
+          Case i of
+           1:PlaceUnitXY(Ronn, 122, 36, false);
+           2:PlaceUnitXY(Ronn, 48, 6, false);
+          end;
+
+        End;
+
+  // start movie
+     InGameOn;
+      CenterNowOnXY(84, 4);
+
+      // dialogs
+         SayRadio(Gensher, 'DG-1');
+         Say(Louis, 'DL-1');
+         SayRadio(Gensher, 'DG-2');
+         Say(Louis, 'DL-2');
+         SayRadio(Gensher, 'DG-3');
+         Say(Louis, 'DL-3');
+
+         Say(AllPeo[5], 'DP-1');
+         Say(AllPeo[4], 'DP-2');
+
+         If Ronn_Scout then
+            begin
+            Say(Louis, 'DL-4-Scout');
+
+            ComMoveXY(Ronn, 86, 13);
+
+             Repeat
+              Wait(0$01);
+             Until GetDistUnitXY(Ronn, 80, 14) <= 10;
+
+            ComTurnXY(Ronn, 77, 3);
+            CenterOnUnits(Ronn);
+
+            SetVision(4-[Difficulty]);
+
+            // next dialogs
+               Say(Ronn, 'DR-1');
+               Say(Louis, 'DL-5-Scout');
+               Say(Ronn, 'DR-2');
+               Say(Ronn, 'DR-3');
+               Say(Ronn, 'DR-3a');
+               Say(Ronn, 'DR-4');
+               Say(Louis, 'DL-6-Scout');
+               Say(Ronn, 'DR-5');
+               Say(Ronn, 'DR-6');
+               Say(Louis, 'DL-7-Scout');
+               Say(Ronn, 'DR-7');
+               Say(Louis, 'DL-8-Scout');
+               Say(Ronn, 'DR-8');
+            //-------------
+            end;
+
+            InGameOff; // end movie <--------
+            
+
+  // objectives
+     ChangeMissionObjectives('Factory');
+
+     SaveForQuickRestart;
+
+
+  // suprise
+     kom := LoadVariable('VarKom', 0);
+
+     if kom = true then
+        begin
+
+        Wait(0$07);
+
+        SpawnVehs(6, 2+[Difficulty], at1_area);
+
+        filter := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]);
+
+        For i = 1 to filter do
+            ComAttackUnit(filter[i], NearestUnitToUnit(FilterAllUnits([f_side, 2]), filter[i]));
+        end;
+
+End;
+
+
+// VEH COUNT
+Every 0$01 trigger spoted = false do
+begin
+enable;
+veh_count := veh_count + 0$01;
+end;
+
+Every 0$01 trigger spoted and veh_count > 0 do
+begin
+enable;
+veh_count := veh_count - 0$01;
+end;
+
+
+// SPOT
+Every 0$01 trigger SeeSide(2, 3) do
+begin
+spoted := true;
+
+SayRadio(FilterAllUnits([[f_side, 3], [f_type, unit_human]])[3], 'D-help');
+End;
+
+
+Every 0$01 trigger SeeSide(8, 2) do
+begin
+DialogueOn;
+
+CenterNowOnXY(152, 143);
+Say(Louis, 'DL-empty');
+
+Wait(0$0.3);
+
+DialogueOff;
+End;
+
+
+// MM
+Every 0$01 trigger veh_count = 0 do
+var l;
+begin
+
+     DialogueOn;
+      Say(AllPeo[2], 'D-vehs');
+      PlaceSeeing(195, 124, 2, 10);
+      CenterOnXY(195, 124);
+     DialogueOff;
+
+     SpawnVehs(6, 5, at2_area);
+
+     Wait(0$03);
+
+     RemoveSeeing(195, 124, 2);
+
+     Wait(0$50);
+
+     l = 0;
+
+     Repeat
+      begin
+      SpawnVehs(6, 5, at2_area);
+      l = l + 1;
+      Wait(1$25);
+      end
+     Until l = 4;
+     
+End;
+
+
+Every 0$01 trigger veh_count = 0 do
+var un, filter;
+begin
+enable;
+
+       filter := FilterAllUnits([f_side, 6]);
+
+       for un in filter do
+        begin
+         ComAttackUnit(un, NearestUnitToUnit(filterallunits([f_side, 2]), un));
+        end;
+
+End;
+
+
+
+// Factory destroyed
+Every 0$01 trigger FilterAllUnits([f_btype, b_factory]) = 0 do
+begin
+
+     Say(Louis, 'DL-escape');
+
+     ChangeMissionObjectives('escape');
+
+     case query('info') of
+     1:begin end;
+     end;
+
+     SetAreaMapShow(exit_area, 1);
+
+End;
+
+
+
+
+// end
+Every 0$01 trigger FilterAllUnits([f_btype, b_factory]) = 0 and FilterUnitsInArea(exit_area, [f_side, 2]) > 0 and FilterAllUnits([[f_side, 2], [f_outside]]) = 0 do
+begin
+
+     // test
+     // Display_Strings := ['FINISH'];
+
+     // medals
+     if ar_count = 0 then
+        AddMedal('med1', 1)
+         else
+     if ar_count > 0 then
+     if ar_count < dif_count then
+        AddMedal('med1', 2)
+         else
+        AddMedal('med1', -1);
+
+     if clock < dif_time then
+        AddMedal('med2', 1)
+         else
+        AddMedal('med2', -1);
+
+     if smart_count <= [6,7,7][Difficulty] then
+        AddMedal('med3', 1)
+         else
+        AddMedal('med3', -1);
+
+     // save
+     GiveMedals('MAIN');
+
+     RewardPeople(AllPeo);
+
+     Save_Function;
+     Save_Variables;
+
+     SetNextMission(1);
+
+End;
+

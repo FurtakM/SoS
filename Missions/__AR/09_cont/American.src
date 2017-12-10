@@ -1,0 +1,520 @@
+// MAIN_US_AI
+Export am;
+Export us_depot, us_lab1, us_lab2, us_barracks, us_factory, us_ct,
+       us_towers, us_bunkers, us_force;
+Export us_sold, us_eng, us_mech, us_sci, us_snip;
+Export us_buildings, us_vehicles, us_humans;
+Export us_blist, us_vlist, us_hlist;
+Export us_skill, us_attack, us_contact;
+Export us_comander;
+Export Function PrepareAmerican;
+var i, p, un, veh, b;
+begin
+
+     uc_side := 1;
+     uc_nation := 1;
+
+     am := 1;
+     us_skill := [6, 7, 8][Difficulty];
+     us_force := [];
+     us_attack := 0; // 0 - standby 1 - attack  2 - def
+     us_contact := false;
+
+     case difficulty of
+     1: us_blist := [];
+     2: us_blist := [b_turret, 145, 42, 5];
+     3: us_blist := [b_turret, 123, 33, 5, b_turret, 123, 33, 5, b_turret, 145, 42, 5];
+     end;
+
+
+  // Filter
+     FilterUS();
+
+  // Base Name
+     SetBName(us_depot, 'Dzeta');
+
+  // Research
+     AddComResearch(us_lab1, tech_tech3);
+     AddComResearch(us_lab2, tech_comp1);
+     AddComResearch(us_lab2, tech_ai);
+     AddComResearch(us_lab2, tech_sib1);
+     AddComResearch(us_lab2, tech_comp2);
+     AddComResearch(us_lab2, tech_advai);
+
+  // Vehicles
+     us_vlist := [us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay,
+                  us_medium_tracked, engine_combustion, control_remote, us_double_gun];
+
+  // People
+     // comander
+        PrepareHuman(sex_male, 1, us_skill);
+        hc_name := 'Dominic A. Comer';
+        hc_gallery := 'sandar';
+        hc_face_number := 38;
+        hc_importance := 0;
+
+        us_comander := CreateHuman;
+        PlaceHumanInUnit(us_comander, us_depot);
+
+        RandFacesAndNames();
+
+     // towers
+     for i = 1 to us_towers do
+         begin
+         PrepareHuman(false, 1, us_skill);
+         PlaceHumanInUnit(CreateHuman, us_towers[i]);
+         end;
+     // sniper's
+     for i = 1 to [4,5,6][Difficulty] do
+         begin
+         PrepareHuman(false, 5, us_skill);
+         PlaceHumanInUnit(CreateHuman, us_barracks);
+         end;
+     // lab's
+     for i = 1 to 4 do
+         begin
+         PrepareHuman(false, 4, us_skill);
+         PlaceHumanInUnit(CreateHuman, us_lab1);
+         PlaceHumanInUnit(CreateHuman, us_lab2);
+         end;
+     // factory & ct
+     for i = 1 to 6 do
+         begin
+         PrepareHuman(false, 3, us_skill);
+         PlaceHumanInUnit(CreateHuman, us_factory);
+
+         if i < 4 then
+            PlaceHumanInUnit(CreateHuman, us_ct);
+         end;
+     // depot
+     for i = 1 to 6 do
+         begin
+         PrepareHuman(false, 2, us_skill);
+         PlaceHumanInUnit(CreateHuman, us_depot);
+         end;
+End;
+
+
+
+// AI_BLOCK
+Every 0$01 trigger AmBuilding(b_warehouse) do
+var i, b, p, v, filter, un;
+begin
+enable;
+
+     FilterUS(); // check building status
+
+     if FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]]) and GetDistUnitToSide(FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]])[1], 2) > 21 then
+        CollectCrates(am_crates_spawn);
+
+     // building repair
+     if UnitFilter(us_buildings, [f_not, [f_lives, 1000]]) diff us_force and us_eng > 0 then
+        begin
+
+        for i = 1 to us_eng do
+            begin
+            if IsInUnit(us_eng[i]) then
+               ComExitBuilding(us_eng[i])
+            else
+                if not HasTask(us_eng[i]) then
+                   ComRepairBuilding(us_eng[i], UnitFilter(us_buildings, [f_not, [f_lives, 1000]])[1]);
+            end;
+        
+        end
+          else
+           begin
+
+           for i = 1 to us_eng do
+               begin
+               if us_blist = 0 and not HasTask(us_eng[i]) and not IsInUnit(us_eng[i]) then
+                  ComEnterUnit(us_eng[i], us_depot)
+               else
+               if us_blist > 0 and GetDistUnitToSide(us_eng[i], 2) > 20 then
+                  ComBuild(us_eng[i], us_blist[1], us_blist[2], us_blist[3], us_blist[4]);
+               end;
+
+           end;
+
+     // human heal
+        if UnitFilter(us_humans, [f_not, [f_lives, 800]]) diff us_force and us_sci > 0 then
+           begin
+
+           if GetDistUnits(us_depot, UnitFilter(us_humans, [f_not, [f_lives, 800]])[1]) > 10 then
+              ComMoveXY(UnitFilter(us_humans, [f_not, [f_lives, 800]])[1], GetX(us_depot) - 2, GetY(us_depot));
+
+           if us_sci < 4 then
+              p := us_sci
+           else
+           if us_sci >= 4 then
+              p := us_sci/2;
+
+           for i = 1 to p do
+               begin
+
+               if IsInUnit(us_sci[i]) then
+                  ComExitBuilding(us_sci[i])
+               else
+                  if not HasTask(us_sci[i]) then
+                     ComHeal(us_sci[i], UnitFilter(us_humans, [f_not, [f_lives, 800]])[1]);
+               end;
+
+           end
+            else
+             begin 
+             for i = 1 to us_sci do
+                 if not HasTask(us_sci[i]) and not IsInUnit(us_sci[i]) then
+                    ComEnterUnit(us_sci[i], [us_lab1, us_lab2][Rand(1,2)]);
+             end;
+
+     // remote control
+        if UnitsInside(us_ct) < 3 then
+           begin
+           filter := us_mech diff UnitsInside(us_ct);
+
+           for i = 1 to (3-UnitsInside(us_ct)) do
+               if IsInUnit(filter[i]) then
+                  ComExitBuilding(filter[i])
+                   else
+                    ComEnterUnit(filter[i], us_ct);
+           end;
+
+        if UnitFilter(us_vehicles, [f_control, control_remote]) and us_ct then
+           begin
+
+           filter = FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_ok]]);
+
+           for v in filter do
+               begin
+               if not IsControledBy(v) and IsOk(v) then
+                  ComLinkTo(v, UnitsInside(us_ct)[1]);
+               if UnitsLinked(UnitsInside(us_ct)[1]) >= GetSkill(UnitsInside(us_ct)[1], 3) then
+                  ComLinkTo(v, UnitsInside(us_ct)[2]);
+               if UnitsLinked(UnitsInside(us_ct)[2]) >= GetSkill(UnitsInside(us_ct)[2], 3) then
+                  ComLinkTo(v, UnitsInside(us_ct)[3]);
+               end;
+
+           end;
+
+     // veh_build
+        if us_factory then
+           begin
+
+           if us_vlist > 0 and BuildingStatus(us_factory) = bs_idle then
+              ComConstruct(us_factory, us_vlist[1], us_vlist[2], us_vlist[3], us_vlist[4]);
+
+           if UnitFilter(us_towers, [f_bweapon, 0]) and BuildingStatus(us_factory) = bs_idle then
+              ComPlaceWeapon(UnitFilter(us_towers, [f_bweapon, 0])[1], [us_heavy_gun, us_rocket_launcher][Rand(1,2)]);
+
+           end;
+
+     // personel
+        if UnitFilter(us_sold, [f_not, [f_inside]]) diff us_force then
+           begin
+           filter := UnitFilter(us_sold, [f_not, [f_inside]]) diff us_force;
+
+           for i = 1 to filter do
+               if FilterAllUnits([[f_side, 1], [f_btype, b_bunker], [f_ok], [f_empty]]) = 0 then
+                  begin
+                  if GetDistUnits(filter[i], us_depot) > 10 then
+                     ComMoveXY(filter[i], GetX(us_depot) - 2, GetY(us_depot));
+                  end
+                   else
+                    if not HasTask(filter[1]) then
+                       ComEnterUnit(filter[1], FilterAllUnits([[f_side, 1], [f_btype, b_bunker], [f_ok], [f_empty]])[1]);
+           end;
+
+
+
+End;
+
+
+Every 0$01 trigger us_force do
+var i, un, filter, x, y, r;
+begin
+enable;
+
+       filter := FilterAllUnits([f_side, 2]);
+       x := [77, 59, 43, 27];
+       y := [41, 31, 28, 28];
+
+       if us_attack = 0 then   // standby
+          begin
+
+          for i = 1 to us_force do
+              if not HasTask(us_force[i]) then
+                 ComMoveToArea(us_force[i], standby);
+          end;
+
+       if us_attack = 1 then  // attack
+          begin
+
+          for i = 1 to us_force do
+              if IsOk(us_force[i]) then
+                 ComAttackUnit(us_force[i], NearestUnitToUnit(filter, us_force[i]));
+          end;
+
+       if us_attack = 2 then // defff
+          begin
+
+          for i = 1 to us_force do
+              begin
+
+              if not IsInArea(us_force[i], defff) and not HasTask(us_force[i]) then
+                 ComMoveToArea(us_force[i], defff);
+
+              if IsInArea(us_force[i], defff) and not HasTask(us_force[i]) and (GetDir(us_force[i]) < 2 and GetDir(us_force[i]) > 3) then
+                 begin
+                 ComTurnXY(us_force[i], 86, 117);
+                 end;
+
+              if GetDistUnitArea(us_force[i], defff) > 10 then
+                 begin
+                 r := Rand(1,4);
+                 ComMoveXY(us_force[i], x[r], y[r]);
+                 end
+                  else
+                   if See(2, us_force[i]) and not HasTask(us_force[i]) then
+                      ComAttackUnit(us_force[i], NearestUnitToUnit(filter, us_force[i]));
+              end;
+
+          end;
+
+End;
+
+
+Function AmBuilding(btype);
+begin
+result := FilterAllUnits([[f_side, 1], [f_btype, btype]])[1];
+End;
+
+Function FilterUS();
+begin
+
+  // main_filter
+     us_humans    := FilterAllUnits([[f_side, 1], [f_type, unit_human]]);
+     us_vehicles  := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]);
+     us_buildings := FilterAllUnits([[f_side, 1], [f_type, unit_building]]);
+
+  // b_filter
+     us_depot   := AmBuilding(b_warehouse);
+     us_factory := AmBuilding(b_factory);
+     us_ct      := AmBuilding(b_control_tower);
+     us_barracks:= AmBuilding(b_barracks);
+     us_towers  := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_turret], [f_btype, b_bunker]]]);
+     us_bunkers := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
+     us_lab1    := FilterAllUnits([[f_side, 1], [f_btype, b_lab_full]])[1];
+     us_lab2    := FilterAllUnits([[f_side, 1], [f_btype, b_lab_full]])[2];
+
+  // c_filter
+     us_sold    := FilterAllUnits([[f_side, 1], [f_class, 1]]);
+     us_eng     := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+     us_mech    := FilterAllUnits([[f_side, 1], [f_class, 3]]);
+     us_sci     := FilterAllUnits([[f_side, 1], [f_class, 4]]);
+     us_snip    := FilterAllUnits([[f_side, 1], [f_class, 5]]);
+
+End;
+
+
+Function CollectCrates(area);
+var c, skr, p, cargo, filter;
+begin
+
+     skr = GetListOfCratesInArea(area);
+     cargo := FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]]);
+
+     c = 1;
+
+
+     While c < skr do
+     begin
+
+     if FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]]) = 0 then
+        begin
+
+        for p = 1 to 2 do // always send 2 collector's
+            if not HasTask(filter[p]) and GetDistUnitXY(filter[p], skr[c], skr[c+1]) <= 40 and GetDistXYToSide(skr[c], skr[c+1], 2) > 20 then
+               ComCollect(filter[p], skr[c], skr[c+1]);
+
+         c = c + 2;
+        end;
+
+     if cargo > 0 then
+        begin
+
+        if GetFuel(cargo[1]) > 40 then
+           begin
+           if GetDistXYToSide(skr[c], skr[c+1], 2) > 20 then
+              ComCollect(cargo[1], skr[c], skr[c+1]);
+           end
+         else
+          begin
+
+          Repeat
+           begin
+           ComMoveXY(cargo[1], GetX(us_depot[1]), GetY(us_depot[1]));
+           Wait(0$01);
+           end
+          Until GetDistUnits(cargo[1], us_depot) < 7;
+
+          SetFuel(cargo[1], 100);
+          end;
+
+         c = c + 2;
+        end;
+
+
+     end;
+
+End;
+
+
+Export Function RandFacesAndNames();
+begin
+hc_gallery := '';
+hc_name := '';
+hc_importance := 0;
+
+result := true;
+End;
+
+
+Export Function SpawnUSF(num);
+var un, i, filter, c;
+begin
+
+     uc_side := 1;
+     uc_nation := 1;
+
+     c := [5, 7, 9][Difficulty];
+
+     Case num of
+     0: begin // snipers and tanks
+        for i = 1 to c do
+            begin
+
+            if i <= (c/2) then
+               begin
+               RandFacesAndNames();
+               PrepareHuman(false, class_sniper, us_skill);
+               un := CreateHuman;
+               us_force := us_force ^ un;
+               PlaceUnitArea(un, am_main_area, false);
+               //r := Rand(1,4);
+               //ComMoveXY(un, x[r], y[r]);
+               end;
+
+            vc_chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][Rand(1,3)];
+            vc_engine := engine_combustion;
+            vc_control := control_computer;
+
+            if vc_chassis = us_heavy_tracked then
+               vc_weapon := [us_double_gun, us_heavy_gun, us_rocket_launcher][Rand(1,3)]
+                else
+               vc_weapon := [us_double_gun, us_rocket_launcher][Rand(1,2)];
+
+            un := CreateVehicle;
+            us_force := us_force ^ un;
+            PlaceUnitArea(un, am_main_area, false);
+            //r := Rand(1,4);
+            //ComMoveXY(un, x[r], y[r]);
+
+            Wait(0$02);
+            end;
+               
+        end;
+     1: begin // snipers
+        for i = 1 to c do
+            begin
+
+            if i <= (c/2) then
+               begin
+               RandFacesAndNames();
+               PrepareHuman(false, class_sniper, us_skill);
+               un := CreateHuman;
+               us_force := us_force ^ un;
+               PlaceUnitArea(un, am_main_area, false);
+               //r := Rand(1,4);
+               //ComMoveXY(un, x[r], y[r]);
+               end;
+            end;
+        end;
+     2: begin // tanks  
+        for i = 1 to c do
+            begin
+            vc_chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][Rand(1,3)];
+            vc_engine := engine_combustion;
+            vc_control := control_computer;
+
+            if vc_chassis = us_heavy_tracked then
+               vc_weapon := [us_double_gun, us_heavy_gun, us_rocket_launcher][Rand(1,3)]
+                else
+               vc_weapon := [us_double_gun, us_rocket_launcher][Rand(1,2)];
+
+           un := CreateVehicle;
+           us_force := us_force ^ un;
+           PlaceUnitArea(un, am_main_area, false);
+
+           Wait(0$02);
+           end;  
+        end;
+     3: begin // produce rocket launcher
+        for i = 1 to 3 do
+            us_vlist := us_vlist ^ [[us_medium_tracked, us_heavy_tracked][Rand(1,2)], engine_combustion, control_remote, [us_double_gun, us_rocket_launcher][Rand(1,2)]];
+        end;
+     End;
+
+End;
+
+
+Every 0$01 trigger GetDistUnitToSide(AmBuilding(b_warehouse), 2) < 14 do
+var i;
+begin
+SpawnUSF(1);
+us_attack := 0;
+
+for i = 1 to us_snip do
+    if not IsInUnit(us_snip[i]) then
+       ComMoveXY(us_snip, 104, 4);
+End;
+
+Export us_cts;
+Every 1 do
+us_cts := 1;
+
+Every 5$00 trigger us_contact do
+var i;
+begin
+enable;
+
+   for i = 1 to us_cts do
+       SpawnUSF(3);
+
+   Wait(3$30);
+
+   if us_cts <= Difficulty then
+      us_cts := us_cts + 1;
+   
+End;
+
+Every 0$25 trigger us_contact and tick > 12$00 do
+var i;
+begin
+enable;
+
+if us_force < 10 then
+   us_attack := 0
+    else
+     us_attack := 1;
+
+if awp = false and See(1, Gali) then
+   begin
+   awp := true;
+   Say(Gali, '09_DG-usattack');
+   end;
+
+End;
+
+{--------------}
+{-1----55----1-}
+{--------------}
+{--------------}

@@ -1,0 +1,77 @@
+Export Davidov;
+Export Function PrepareRussian;
+var i, skill, un, tmp, amount, k;
+begin
+uc_side := 6;
+uc_nation := nation_russian;
+
+amount := [[8, 4], [7, 3], [6, 2]][Difficulty];
+skill := [9, 7, 6][Difficulty];
+
+tmp := [];
+
+// dawidov
+Davidov := NewCharacter('Davidov');
+
+SetSkill(Davidov, 1, 7);
+SetSkill(Davidov, 2, 8);
+SetSkill(Davidov, 3, 6);
+SetSkill(Davidov, 4, 10);
+
+SetClass(Davidov, 4);
+
+hc_importance := 0;
+
+while amount[1] do
+      begin
+      Wait(1);
+
+      k := rand(2, 4); // class
+
+      if amount[2] and tmp then
+         begin
+
+         if k in [1, 2] then
+            k := 3;
+
+         vc_chassis := [ru_medium_tracked, ru_heavy_tracked][rand(1,2)];
+         vc_engine := engine_siberite;
+         vc_control := control_manual;
+         vc_weapon := [ru_gun, ru_rocket_launcher, ru_gatling_gun][rand(1,3)];
+         tmp := Insert(tmp, 1, CreateVehicle);
+
+         amount := Replace(amount, 2, amount[2] - 1);
+         end;
+
+      if not tmp then
+         k := 2;
+
+      if amount[2] = 0 and k = 3 then
+         k := [class_bazooker, class_scientistic][rand(1,2)];
+
+      PrepareHuman(false, k, skill);
+      tmp := Insert(tmp, 1, CreateHuman);
+
+      amount := Replace(amount, 1, amount[1] - 1);
+      end;
+
+tmp := Insert(tmp, tmp+1, Davidov);
+
+for i = tmp downto 1 do
+    begin   
+
+    if GetType(tmp[i]) = unit_vehicle then
+       begin
+       SetDir(tmp[i], 3);
+       PlaceUnitXY(tmp[i], 193, 3, false);
+       PlaceHumanInUnit(tmp[i-1], tmp[i]);
+       i := i - 1;
+       end
+        else
+         PlaceUnitArea(tmp[i], start_area, false);
+
+    ComMoveXY(tmp[i], 197, 22);
+
+    Wait(0$02);
+    end;
+End;

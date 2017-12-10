@@ -1,0 +1,74 @@
+On LeaveBuilding(b, h) do
+begin
+if GetSide(b) = 1 then
+   if not us_retreat then
+      if GetClass(h) = 1 then
+         ComEnterUnit(h, us_arm);
+End;
+
+On UnitDestroyed(un) do
+begin
+if GetSide(un) = 1 then
+   us_count := us_count + 1;
+
+if un in us_force then
+   us_force := us_force diff un;
+
+if un in ar_force then
+   ar_force := ar_force diff un;
+
+if un = Stolypin then
+   YouLost('dead');
+
+if un in FilterAllUnits([[f_side, 1], [f_btype, b_depot]]) then
+   YouLost('depot');
+
+if GetSide(un) = 6 then
+   dest_counter := dest_counter + 1;
+End;
+
+On VehicleConstructed(un, fac) do
+begin
+if GetSide(un) = 1 then
+   ComMoveXY(un, 57, 52);
+End;
+
+On Contact(s1, s2) do
+begin
+if not us_alert then
+   if (s1 = 3 and s2 = 1) or (s1 = 1 and s2 = 3) then
+      us_alert := true;
+
+if (s1 = 6 and s2 = 3) or (s1 = 3 and s2 = 6) then
+   YouLost('alat');
+End;
+
+On DestinationUnreachable(un) do
+begin
+if GetSide(un) = 6 then
+   display_strings := display_strings union 'Convoy is blocked!';
+End;
+
+On UnitGoesToRed(un) do
+begin
+if GetSide(un) = 2 and un in FilterAllUnits([[f_empty], [f_type, unit_vehicle]]) then
+   if GetSide(NearestUnitToUnit(all_units diff un, un)) <> 2 then
+      begin
+      Wait(0$1.3);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      end;
+End;
+
+On EvacuateVehicle(driver, un, c1, c2) do
+begin
+if un in FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]) and not GetSide(NearestUnit(un)) = 2 then
+   begin
+   Wait(Rand(0$03, 0$06));
+   MineExplosion(GetX(un), GetY(un), 3);
+   MineExplosion(GetX(un), GetY(un), 3);
+   MineExplosion(GetX(un), GetY(un), 3);
+   MineExplosion(GetX(un), GetY(un), 3);
+   end;
+End;

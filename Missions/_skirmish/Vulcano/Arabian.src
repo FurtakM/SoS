@@ -1,0 +1,49 @@
+// AR
+Export ar_commander, ar_force, ar_skill;
+Export Function PrepareArabian;
+var i, filter, un, team;
+begin
+
+   ar_skill := [7, 6, 5][Difficulty];
+   ar_force := [];
+
+   RemoveAlliance;
+   RemoveEnvironmentArea(evn);
+
+   your_side := 2;
+   uc_side := 2;
+   uc_nation := nation_arabian;
+
+   hc_gallery := '';
+   hc_name    := '';
+   hc_importance := 0;
+
+// Przygotowanie dru¿yny
+   for i = 1 to 15 do
+       begin
+       PrepareHuman(false, Rand(1,4), ar_skill);
+       un := CreateHuman;
+       ar_force := ar_force ^ un;
+       end;
+
+   hc_importance := 100;
+
+   PrepareHuman(sex_male, class_desert_warior, ar_skill);
+   ar_commander := CreateHuman;
+   player_commander := ar_commander;
+
+// okno wyboru
+   team := CharacterSelection('text', [11,10,9][Difficulty], [11,10,9][Difficulty],[sel_change_class, ar_commander, sel_changeable, sel_not_hired]^ ar_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], class_mortar]);
+   team := team ^ ar_commander;
+
+   for i = 1 to team do
+       PlaceUnitArea(team[i], center_resp, false);
+
+
+   uc_side := 0;
+   uc_nation := 0;
+   vc_chassis := 31;
+   vc_control := control_rider;
+   PlaceUnitXY(CreateVehicle, 96, 20, false);
+
+End;

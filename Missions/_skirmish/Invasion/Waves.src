@@ -1,0 +1,280 @@
+// Waves module
+Export Function PrepareWave(num);
+var i, un, skill, veh, area, a, l, c;
+begin
+area := [Enemy1, Enemy2];
+uc_side := 7;
+l := 0;
+
+  case num of
+  1: result := Wave1(12, 1);
+  2: result := Wave2(12, 1);
+  3: result := Wave3(12, 1);
+  4: result := Wave4(7, 1);
+  5: result := Wave5(7, 1);
+  6: result := Wave6(6, 1);
+  7: result := Wave7(15, 1);
+  8: result := Wave8(7, 1);
+  9: result := Wave8(4, 1) ^ Wave5(7, 1);
+  10:result := Wave7(9, 1) ^ Wave3(14, 1);
+  11,21,31,41,51,61,71,81,91:
+     result := Wave1([20, 30, 40, 45, 50, 60, 70, 80, 100][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  12,22,32,42,52,62,72,82,92:
+     result := Wave2([16, 21, 28, 33, 39, 46, 56, 66, 80][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  13,23,33,43,53,63,73,83,93:
+     result := Wave3([14, 18, 22, 27, 33, 39, 44, 57, 65][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  14,24,34,44,54,64,74,84,94:
+     result := Wave4([9, 15, 22, 30, 39, 45, 56, 60, 65][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  15,25,35,45,55,65,75,85,95:
+     result := Wave5([6, 11, 15, 20, 25, 30, 35, 40, 45][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  16,26,36,46,56,66,76,86,96:
+     result := Wave6([9, 12, 15, 18, 21, 24, 27, 30, 33][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  17,27,37,47,57,67,77,87,97:
+     result := Wave7([14, 16, 18, 22, 24, 26, 28, 32, 35][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  18,28,38,48,58,68,78,88,98:
+     result := Wave8([9, 12, 15, 18, 21, 24, 27, 30, 33][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  19,29,39,49,59,69,79,89,99:
+     result := Wave8([4, 7, 10, 13, 14, 17, 19, 21, 23][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10])
+             ^ Wave5([4, 7, 10, 13, 14, 17, 19, 22, 25][num div 10], [2, 3, 4, 5, 6, 7, 8, 9, 10][num div 10]);
+  20,30,40,50,60,70,80,90,100:
+     result := Wave7([4, 7, 10, 13, 14, 17, 19, 21, 23][num / 10 - 1], [2, 3, 4, 5, 6, 7, 8, 9, 10][num / 10 - 1])
+             ^ Wave6([4, 7, 10, 13, 14, 17, 19, 22, 25][num / 10 - 1], [2, 3, 4, 5, 6, 7, 8, 9, 10][num / 10 - 1]);
+  end;
+
+  for i in result do
+      begin
+      a := rand(1,2);
+
+       if a = 1 then
+          SetDir(i, 3)
+           else
+            SetDir(i, 5);
+
+      PlaceUnitArea(i, area[a], false);
+
+      if GetControl(i) = control_manual then
+         begin
+         uc_nation := GetNation(i);
+         PrepareHuman(false, 3, skill);
+         PlaceHumanInUnit(CreateHuman, i);
+         end;
+
+      l := l + 1;
+
+      if l mod 10 = 0 then
+         Wait(0$02);
+      end;
+
+End;
+
+
+Export Function Wave1(n, skill);
+var i, un;
+begin
+uc_nation := nation_nature;
+
+  for i = 1 to n do
+      begin
+      PrepareHuman(false, class_apeman, skill);
+      result := result ^ CreateHuman;
+      end;
+
+End;
+
+Export Function Wave2(n, skill);
+var i, un;
+begin
+uc_nation := nation_nature;
+
+  for i = 1 to n do
+      begin
+      PrepareHuman(false, class_apeman_soldier, skill);
+      result := result ^ CreateHuman;
+      end;
+
+End;
+
+Export Function Wave3(n, skill);
+var i, un;
+begin
+
+  for i = 1 to n do
+      begin
+      uc_nation := rand(1, 3);
+      PrepareHuman(false, class_soldier, skill);
+      result := result ^ CreateHuman;
+      end;
+
+End;
+
+Export Function Wave4(n, skill); // small tanks
+var i, un, chassis, weapons, control, engine;
+begin
+
+   for i = 1 to n do
+       begin
+       uc_nation := rand(1, 3);
+
+       case uc_nation of
+       1: begin
+          chassis := [us_light_wheeled, us_medium_wheeled];
+          weapons := [us_machine_gun, us_light_gun];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_solar];
+          end;
+       2: begin
+          chassis := [ar_light_trike, ar_hovercraft];
+          weapons := [ar_light_gun, ar_double_machine_gun];
+          control := [control_manual, control_apeman];
+          engine  := [engine_combustion, engine_solar];
+          end;
+       3: begin
+          chassis := [ru_medium_wheeled];
+          weapons := [ru_heavy_machine_gun, ru_gun];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion];
+          end;
+      end;
+
+      vc_chassis := chassis[rand(1, chassis)];
+      vc_engine  := engine[rand(1, engine)];
+      vc_control := control[rand(1, control)];
+      vc_weapon  := weapons[rand(1, weapons)];
+      vc_fuel_battery := 100;
+
+      result := Insert(result, result+1, CreateVehicle);
+      end;
+
+End;
+
+Export Function Wave5(n, skill); // medium tanks
+var i, un, chassis, weapons, control, engine;
+begin
+
+   for i = 1 to n do
+       begin
+       uc_nation := rand(1, 3);
+
+       case uc_nation of
+       1: begin
+          chassis := [us_medium_wheeled, us_medium_tracked];
+          weapons := [us_gatling_gun, us_double_gun, us_laser];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_solar, engine_siberite];
+          end;
+       2: begin
+          chassis := [ar_medium_trike, ar_half_tracked];
+          weapons := [ar_gun, ar_flame_thrower, ar_gatling_gun];
+          control := [control_manual, control_apeman];
+          engine  := [engine_combustion, engine_solar, engine_siberite];
+          end;
+       3: begin
+          chassis := [ru_medium_tracked, ru_medium_wheeled];
+          weapons := [ru_gun, ru_gatling_gun];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_siberite];
+          end;
+      end;
+
+      vc_chassis := chassis[rand(1, chassis)];
+      vc_engine  := engine[rand(1, engine)];
+      vc_control := control[rand(1, control)];
+      vc_weapon  := weapons[rand(1, weapons)];
+      vc_fuel_battery := 100;
+
+      result := Insert(result, result+1, CreateVehicle);
+      end;
+
+End;
+
+Export Function Wave6(n, skill); // heavy tanks
+var i, un, chassis, weapons, control, engine;
+begin
+
+   for i = 1 to n do
+       begin
+       uc_nation := rand(1, 3);
+
+       case uc_nation of
+       1: begin
+          chassis := [us_heavy_tracked, us_morphling];
+          weapons := [us_heavy_gun, us_rocket_launcher, us_laser];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_siberite];
+          end;
+       2: begin
+          chassis := [ar_medium_trike, ar_half_tracked];
+          weapons := [ar_gun, ar_flame_thrower, ar_rocket_launcher, ar_selfpropelled_bomb];
+          control := [control_manual, control_apeman];
+          engine  := [engine_combustion, engine_solar, engine_siberite];
+          end;
+       3: begin
+          chassis := [ru_heavy_wheeled, ru_heavy_tracked];
+          weapons := [ru_heavy_gun, ru_rocket_launcher];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_siberite];
+          end;
+      end;
+
+      vc_chassis := chassis[rand(1, chassis)];
+      vc_engine  := engine[rand(1, engine)];
+      vc_control := control[rand(1, control)];
+      vc_weapon  := weapons[rand(1, weapons)];
+      vc_fuel_battery := 100;
+
+      result := Insert(result, result+1, CreateVehicle);
+      end;
+
+End;
+
+Export Function Wave7(n, skill);
+var i;
+begin
+
+     for i = 1 to n do
+         begin
+         uc_nation := rand(1, 3);
+         PrepareHuman(false, [class_mortar, class_bazooker, class_soldier][rand(1, 3)], skill);
+         result := result ^ CreateHuman;
+         end;
+End;
+
+Export Function Wave8(n, skill); // special tanks
+var i, un, chassis, weapons, control, engine;
+begin
+
+   for i = 1 to n do
+       begin
+       uc_nation := rand(1, 3);
+
+       case uc_nation of
+       1: begin
+          chassis := [us_heavy_tracked, us_morphling];
+          weapons := [us_heavy_gun, us_rocket_launcher, us_double_laser, us_artillery];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_siberite];
+          end;
+       2: begin
+          chassis := [ar_half_tracked];
+          weapons := [ar_bio_bomb, ar_flame_thrower, ar_rocket_launcher, ar_selfpropelled_bomb];
+          control := [control_manual, control_apeman];
+          engine  := [engine_combustion, engine_solar, engine_siberite];
+          end;
+       3: begin
+          chassis := [ru_heavy_wheeled, ru_heavy_tracked];
+          weapons := [ru_heavy_gun, ru_rocket_launcher, ru_time_lapser];
+          control := [control_manual, control_computer];
+          engine  := [engine_combustion, engine_siberite];
+          end;
+      end;
+
+      vc_chassis := chassis[rand(1, chassis)];
+      vc_engine  := engine[rand(1, engine)];
+      vc_control := control[rand(1, control)];
+      vc_weapon  := weapons[rand(1, weapons)];
+      vc_fuel_battery := 100;
+
+      result := Insert(result, result+1, CreateVehicle);
+      end;
+
+End;

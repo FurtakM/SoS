@@ -1,0 +1,52 @@
+Export n_xy, w_xy, n_armoury, n_lab, n_factory, n_towers;
+Export Function InitEnemy();
+begin
+n_xy := [177,55, 183,55, 173,47, 179,47, 183,68, 190,69, 187,76, 194,77, 179,72];
+w_xy := [166,66, 161,56];
+n_armoury := 3;
+n_lab := 1;
+n_factory := 1;
+n_towers := 3;
+End;
+
+
+Every 0$01 trigger enemy_crane do
+var crane;
+begin
+enable;
+
+crane := IsDrivenBy(enemy_crane);
+// sk³ad
+if FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]]) = 0 then
+   ComBuild(crane, b_depot, 186, 62, 4)
+    else    
+     if FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) > 0 and enemy_source > depot_cost then
+        ComUpgrade(FilterAllUnits([[f_side, 2], [f_btype, b_depot]])[1]);
+// zbrojownia
+if enemy_source > armoury_cost and FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_barracks], [f_btype, b_armoury]]]) < n_armoury then
+   begin
+   if FilterUnitsInArea(b1, [f_type, unit_building]) = 0 then
+      ComBuild(crane, b_armoury, n_xy[1], n_xy[2], 3);
+   if FilterUnitsInArea(b2, [f_type, unit_building]) = 0 then
+      ComBuild(crane, b_armoury, n_xy[3], n_xy[4], 3);
+   if FilterUnitsInArea(b3, [f_type, unit_building]) = 0 then
+      ComBuild(crane, b_armoury, n_xy[5], n_xy[6], 3);
+   end;
+// koszary
+if enemy_source > barracks_cost and FilterAllUnits([[f_side, 2], [f_btype, b_armoury]]) > 0 then
+   ComUpgrade(FilterAllUnits([[f_side, 2], [f_btype, b_armoury]])[1]);
+// warsztat
+if enemy_source > work_cost and FilterAllUnits ([[f_side, 2], [f_or, [f_btype, b_factory], [f_btype, b_workshop]]]) = 0 then
+   ComBuild(crane, b_workshop, n_xy[7], n_xy[8], 3);
+// fabryka
+if enemy_source > fac_cost and FilterAllUnits([[f_side, 2], [f_btype, b_workshop]]) > 0 then
+   ComUpgrade(FilterAllUnits([[f_side, 2], [f_btype, b_workshop]])[1]);
+// 2x bunkry
+if enemy_source > bunker_cost and FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]]) < 2 then
+   begin
+   if FilterUnitsInArea(w2, [f_type, unit_building]) = 0 then
+      ComBuild(crane, b_breastwork, w_xy[1], w_xy[2], 1);
+   if FilterUnitsInArea(w3, [f_type, unit_building]) = 0 then
+      ComBuild(crane, b_breastwork, w_xy[3], w_xy[4], 1);
+   end;
+End;

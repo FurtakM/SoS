@@ -1,0 +1,390 @@
+// This module was made and is developed by Radzio.
+// All rights reserved.
+
+EXPORT
+  Game_Type,
+  def_game_rules;
+
+// AB & Flags & *Babylon & *Bloody Valley
+EXPORT
+  def_base_level,         // (0)  No Base, Depot Only, Fortified, *Extra Fortified
+  def_amount_of_people,   // (1)  9, 12, 15, 24
+  def_skill_level,        // (2)  Unexperienced, Little Experienced, Experienced, More Experienced
+  def_starting_resources, // (3)  None, Few, Medium, Lots
+  def_shipments_density,  // (4)  Low, Medium, High, Very High
+  def_extra_oil_deposits, // (5)  Normal, Extra / *Bool
+  def_extra_sib_deposits, // (6)  None, Normal, Extra / *-
+  def_shared_vision,      // (10) True, False
+  def_morale_flags,       // (11) None, Fast Decreasing, Decreasing, Slowly Decreasing, Not Decreasing
+  def_siberite_detection, // (12) True, False
+  def_people_respawning,  // (13) None, Rare, Common
+  def_amount_of_apemen,   // (14) None, Few, Medium, Lots
+  def_siberite_bomb,      // (17)
+  def_builduptime;        // (20)
+
+EXPORT
+  No_Mechs;
+
+var Restricted_Builds, Restricted_Builds_Amount;
+var Banned_Weapons, Banned_Chassis, Banned_Controls, Banned_Engines;
+var Already_Built;
+
+var Limits_Info, Cheaters;
+
+export function LimitsStrings;
+var i;
+begin
+  if (not IAmSpec) then
+    Result:= Limits_Info ^ '';
+  for i:= 1 to 8 do
+    if Cheaters[i] then
+      Result:= Result ^ ['#Cheater', i, i];
+end;
+
+export function InitGameRules;
+var Unavailable_Techs, Unavailable_Builds;
+var i, j;
+begin
+  case Game_Type of
+    10: def_game_rules:= 1; // CB
+    11: def_game_rules:= 3; // SW
+  end;
+
+  case def_game_rules of
+  0: exit;
+  1: begin // Clan Base
+        def_base_level:=         2;
+        def_amount_of_people:=   2;
+        def_skill_level:=        1;
+        def_starting_resources:= 2;
+        def_shipments_density:=  1;
+        def_extra_oil_deposits:= 0;
+        def_extra_sib_deposits:= 1;
+        def_shared_vision:=      1;
+        def_morale_flags:=       3;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  1;
+        def_amount_of_apemen:=   1;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        2;
+
+        Unavailable_Techs:=         [];
+        Unavailable_Builds:=        [];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [[b_Behemoth], [b_Armoury, b_Barracks], [b_Breastwork, b_Bunker, b_Turret]];
+        Restricted_Builds_Amount:=  [2,            2,                       4                                 ];
+     end;
+  2: begin // Clan War
+        def_base_level:=         1;
+        def_amount_of_people:=   2;
+        def_skill_level:=        3;
+        def_starting_resources:= 3;
+        def_shipments_density:=  2;
+        def_extra_oil_deposits:= 1;
+        def_extra_sib_deposits:= 2;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  0;
+        def_amount_of_apemen:=   0;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        2;
+
+        Unavailable_Techs:=         [tech_ApeLang];
+        Unavailable_Builds:=        [];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [[b_Armoury, b_Barracks], [b_Breastwork, b_Bunker, b_Turret]];
+        Restricted_Builds_Amount:=  [1,                       2                                 ];
+     end;
+  3: begin // Soldier War
+        def_base_level:=         1;
+        def_amount_of_people:=   2;
+        def_skill_level:=        3;
+        def_starting_resources:= 3;
+        def_shipments_density:=  1;
+        def_extra_oil_deposits:= 0;
+        def_extra_sib_deposits:= 1;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  0;
+        def_amount_of_apemen:=   2;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        1;
+
+        Unavailable_Techs:=         [tech_Behemoth];
+        Unavailable_Builds:=        [b_Workshop, b_Behemoth, b_Bunker, b_Turret, b_Control_Tower,
+                                     b_ext_track, b_ext_stitch, b_ext_siberium, b_ext_rocket, b_ext_radio,
+                                     b_ext_radar, b_ext_noncombat, b_ext_laser, b_ext_gun, b_ext_computer];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [];
+        Restricted_Builds_Amount:=  [];
+
+        No_Mechs:= True;
+     end;
+  4: begin // Nuclear War
+        def_base_level:=         1;
+        def_amount_of_people:=   2;
+        def_skill_level:=        3;
+        def_starting_resources:= 3;
+        def_shipments_density:=  2;
+        def_extra_oil_deposits:= 1;
+        def_extra_sib_deposits:= 2;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  0;
+        def_amount_of_apemen:=   0;
+        def_siberite_bomb:=      1;
+        def_builduptime:=        3;
+
+        Unavailable_Techs:=         [tech_ApeLang];
+        Unavailable_Builds:=        [];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [];
+        Restricted_Builds_Amount:=  [];
+     end;
+  5: begin // Hardcore
+        def_base_level:=         0;
+        def_amount_of_people:=   0;
+        def_skill_level:=        0;
+        def_starting_resources:= 0;
+        def_shipments_density:=  0;
+        def_extra_oil_deposits:= 0;
+        def_extra_sib_deposits:= 0;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 0;
+        def_people_respawning:=  1;
+        def_amount_of_apemen:=   1;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        0;
+
+        Unavailable_Techs:=         [tech_Laser, tech_ApeNeural];
+        Unavailable_Builds:=        [b_Lab_Computer, b_Lab_Siberium, b_Lab_Spacetime, b_Lab_Biological, b_Barracks, b_ext_Computer, b_ext_Siberium, b_Turret, b_Control_Tower];
+
+        Banned_Weapons:=            [ar_Control_Tower];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [control_Remote];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [[b_Armoury], [b_Breastwork, b_Bunker]];
+        Restricted_Builds_Amount:=  [1,           1                       ];
+     end;
+  6: begin // Dynamic Soldier War
+        def_base_level:=         1;
+        def_amount_of_people:=   2;
+        def_skill_level:=        3;
+        def_starting_resources:= 3;
+        def_shipments_density:=  1;
+        def_extra_oil_deposits:= 0;
+        def_extra_sib_deposits:= 1;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  2;
+        def_amount_of_apemen:=   1;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        1;
+
+        Unavailable_Techs:=         [tech_Behemoth];
+        Unavailable_Builds:=        [b_Workshop, b_Behemoth, b_Breastwork, b_Bunker, b_Turret];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [];
+        Restricted_Builds_Amount:=  [];
+
+        No_Mechs:= True;
+     end;
+  7: begin // Old Rules
+        def_base_level:=         1;
+        def_amount_of_people:=   2;
+        def_skill_level:=        3;
+        def_starting_resources:= 3;
+        def_shipments_density:=  1;
+        def_extra_oil_deposits:= 1;
+        def_extra_sib_deposits:= 2;
+        def_shared_vision:=      1;
+        def_morale_flags:=       0;
+        def_siberite_detection:= 1;
+        def_people_respawning:=  0;
+        def_amount_of_apemen:=   1;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        3;
+
+        Unavailable_Techs:=         [tech_Behemoth];
+        Unavailable_Builds:=        [b_Behemoth];
+
+        Banned_Weapons:=            [];
+        Banned_Chassis:=            [];
+        Banned_Controls:=           [];
+        Banned_Engines:=            [];
+
+        Restricted_Builds:=         [[b_Breastwork, b_Bunker, b_Turret]];
+        Restricted_Builds_Amount:=  [10                                ];
+     end;
+  8: begin // Eco War
+        def_base_level:=         0; 
+        def_amount_of_people:=   Rand(0,1);
+        def_skill_level:=        0;
+        def_starting_resources:= 2;
+        def_shipments_density:=  1;
+        def_extra_oil_deposits:= 0;
+        def_extra_sib_deposits:= 0;
+        def_shared_vision:=      1;
+        def_morale_flags:=       Rand(0,2);
+        def_siberite_detection:= 0;
+        def_people_respawning:=  0;
+        def_amount_of_apemen:=   2;
+        def_siberite_bomb:=      0;
+        def_builduptime:=        0;
+
+
+        Unavailable_Techs:=            [tech_Behemoth, tech_SibDet, tech_Rocket, tech_OilEng, tech_OilPow,
+                                        tech_Gun, tech_AdvRocket, tech_AdvMet, tech_Mortar, tech_Bazooka,
+                                        tech_HidCam, tech_PartInvis];
+        Unavailable_Builds:=           [b_Behemoth, b_Barracks, b_Lab_Biological, b_Teleport,
+                                        b_Lab_Computer, b_Lab_Opto, b_Lab_Siberium, b_Lab_Spacetime,
+                                        b_Oil_Mine, b_Siberite_Mine, b_Siberite_Power, b_Ext_Computer,
+                                        b_Ext_Laser, b_Ext_Radar, b_Ext_Siberium, b_Ext_Radio,
+                                        b_Control_Tower];
+
+        Banned_Weapons:=               [];
+        Banned_Chassis:=               [ar_half_tracked];
+        Banned_Controls:=              [];
+        Banned_Engines:=               [];
+
+        Restricted_Builds:=            [[b_Breastwork, b_Bunker], [b_Armoury]];
+        Restricted_Builds_Amount:=     [2,                        1          ];
+
+        for i:= 1 to 8 do
+          if (Side_Nations[i] = 3) then
+            Side_Nations:= Replace(Side_Nations, i, Rand(1,2));
+    end;
+  end;
+
+  for i:= 1 to 8 do
+    if Side_Positions[i] then
+      begin
+        for j in Unavailable_Techs do
+          SetTech(j, i, 0);
+        for j in Unavailable_Builds do
+          SetRestrict(j, i, 0);
+      end;
+end;
+
+export function InitLimits;
+var i, j, k, amount, btype, list;
+begin
+  for i:= 1 to Restricted_Builds do
+    begin
+      // Firstly we map the first BType to its Record in Counters
+      case Restricted_Builds[i][1] of
+        b_Breastwork, b_Bunker, b_Turret:
+          btype:= '#Turrets';
+        b_Armoury, b_Barracks:
+          btype:= '#Armouries';
+        b_Behemoth:
+          btype:= '#Behemoths';
+      end;
+
+      list:= [];
+
+      // Then we add Info about it to Additional_Info
+      for j:= 1 to 8 do
+        if Side_Positions[j] then
+          begin
+            amount:= 0;
+              for k in Restricted_Builds[i] do
+                amount:= amount + FilterAllUnits([[f_side, j], [f_btype, k]]);
+            break;
+          end;
+
+      list:= [];
+      for j:= 1 to 8 do
+        list:= list ^ amount;
+      Already_Built:= Already_Built ^ [list];
+
+      Limits_Info:= Limits_Info ^ [btype, amount, Restricted_Builds_Amount[i]];
+    end;
+
+  Cheaters:= [0, 0, 0, 0, 0, 0, 0, 0];
+
+  if Limits_Info then
+    Limits_Info:= '#Limits' ^ Limits_Info;
+end;
+
+export function ExecuteLimits(un, BType, side, old_side, count);
+var i, j, Is_Cheater;
+begin
+  for i := 1 to Restricted_Builds do
+    if BType in Restricted_Builds[i] then
+      begin
+        if old_side then
+          if Already_Built[i][side] + count > Restricted_Builds_Amount[i] then
+            begin
+              SetSide(un, old_side);
+              count:= 0;
+            end
+          else
+            Already_Built:= Replace(Already_Built, i, Replace(Already_Built[i], old_side, Already_Built[i][old_side] - count));
+
+        Already_Built:= Replace(Already_Built, i, Replace(Already_Built[i], side, Already_Built[i][side] + count));
+
+        if count <> 0 and (side = your_side) then
+          Limits_Info:= Replace(Limits_Info, 3 * i, Already_Built[i][side]);
+
+        if Already_Built[i][side] > Restricted_Builds_Amount[i] then
+          begin
+            Cheaters:= Replace(Cheaters, side, 1);
+          end
+        else
+          begin
+            for j := 1 to Restricted_Builds do
+              if Already_Built[j][side] > Restricted_Builds_Amount[j] then
+                begin
+                  Is_Cheater:= true;
+                  break;
+                end;
+            Cheaters:= Replace(Cheaters, side, Is_Cheater);
+          end;
+
+        break;
+      end;
+end;
+
+on VehicleConstructionStarted(factory, chassis, engine, control, weapon) do
+begin
+  if (weapon in Banned_Weapons) or (chassis in Banned_Chassis) or (control in Banned_Controls) or (engine in Banned_Engines) then
+    ComCancel(factory);
+end;
+
+on WeaponPlaced(building, weapon) do
+begin
+  if (weapon in Banned_Weapons) then
+    ComCancel(building);
+end;

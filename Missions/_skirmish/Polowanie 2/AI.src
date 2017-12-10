@@ -1,0 +1,110 @@
+Export player_1, player_2, player, player_3, player_4,
+       player_5, player_6, player_7;
+Export class_1, class_2, class_0;
+Export score_player, score_enemy1, score_enemy2,
+       score_enemy3, score_enemy4, score_enemy5,
+       score_enemy6, score_enemy7;
+Export Function InitPlayers;
+begin
+
+
+     score_player := 0;
+     score_enemy1 := 0;
+     score_enemy2 := 0;
+     score_enemy3 := 0;
+     score_enemy4 := 0;
+     score_enemy5 := 0;
+     score_enemy6 := 0;
+     score_enemy7 := 0;
+
+     if difficulty > 1 then
+        class_2 := class_sniper
+     else
+        class_2 := class_soldier;
+
+
+     uc_side := 1;
+     uc_nation := 1;
+
+     hc_name := '';
+     hc_sex := sex_male;
+     hc_attr := [[12, 11, 10][difficulty], 10];
+     hc_class := class_1;
+     hc_skills := [[10, 7, 5][difficulty], 0, 0, 0];
+     hc_gallery := '';
+     player := CreateHuman; 
+
+     uc_side := 2;
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+
+     hc_sex := sex_male;
+     hc_attr := [[11, 12, 13][difficulty], 10];
+     hc_class := class_2;
+     hc_skills := [[8, 9, 10][difficulty], 0, 0, 0];
+     hc_gallery := '';
+     player_1 := CreateHuman;
+
+     uc_side := 3;
+     uc_nation := 1;
+
+     hc_sex := sex_male;
+     hc_attr := [[10, 11, 12][difficulty], 10];
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     hc_skills := [[5, 7, 10][difficulty], 0, 0, 0];
+     hc_gallery := '';
+     player_2 := CreateHuman;
+
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     player_3 := CreateHuman;
+
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     player_4 := CreateHuman;
+
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     player_5 := CreateHuman;
+
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     player_6 := CreateHuman;
+
+     class_2 := [class_sniper, class_soldier][Rand(1,2)];
+     hc_class := class_2;
+     player_7 := CreateHuman;
+
+     PlaceUnitArea(player_1, spawn1, false);
+     PlaceUnitArea(player_2, spawn2, false);
+     PlaceUnitArea(player, spawn4, false);
+     PlaceUnitArea(player_3, spawn3, false);
+     PlaceUnitArea(player_4, spawn5, false);
+     PlaceUnitArea(player_5, spawn6, false);
+     PlaceUnitArea(player_6, spawn7, false);
+     PlaceUnitArea(player_7, spawn8, false);
+    
+
+     CenterNowOnUnits(player);
+
+End;
+
+
+Every 0$01 trigger player do
+var i, un, tab;
+begin
+enable;
+
+      tab := [player_1, player_2, player_3, player_4, player_5, player_6, player_7];
+      un := UnitFilter(tab, [f_lives, 250]);
+
+      for i = 1 to un do
+      if IsLive(un[i]) and not HasTask(un[i]) then
+         begin
+         if GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_side, 0]), un[i]), un[i]) > 8 then
+            ComMoveXY(un[i], GetX(NearestUnitToUnit(FilterAllUnits([f_side, 0]), un[i])), GetY(NearestUnitToUnit(FilterAllUnits([f_side, 0]), un[i])))
+         else
+            ComAttackUnit(un[i], NearestUnitToUnit(FilterAllUnits([f_side, 0]), un[i]));
+         end;
+
+End;

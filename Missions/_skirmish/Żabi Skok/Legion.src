@@ -1,0 +1,138 @@
+Export Function PrepareLegion;
+var i, un, skill, dep, fac;
+begin
+uc_side := 8;
+uc_nation := 2;
+skill := [7, 8, 9][Difficulty];
+
+dep := ar_base;
+fac := FilterAllUnits([[f_side, 8], [f_btype, b_factory]])[1];
+
+SetResourceType(GetBase(dep), mat_cans, 999999);
+SetResourceType(GetBase(dep), mat_oil, 10000);
+SetResourceType(GetBase(dep), mat_siberit, 10000);
+
+// teleport
+TeleportExit(legion_telep, 224, 5);
+
+
+// bazooka
+for i = 1 to 4 do
+    begin
+    PrepareHuman(false, class_bazooker, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 8], [f_btype, b_barracks]])[1]);
+    end;
+
+// lab
+for i = 1 to 2 do
+    begin
+    PrepareHuman(false, 4, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 8], [f_btype, b_lab_full]])[1]);
+    end;
+
+// fab
+for i = 1 to 6 do
+    begin
+    PrepareHuman(false, 3, skill+1);
+    PlaceHumanInUnit(CreateHuman, fac);
+    end;
+
+// towers
+uc_nation := 0;
+
+for i in FilterAllUnits([[f_side, 8], [f_btype, b_bunker]]) do
+    begin
+    PrepareHuman(false, class_apeman_soldier, skill+1);
+    PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+
+for i = 1 to 2 do
+    AddComConstruct(fac, ar_half_tracked, engine_solar, control_manual, ar_control_tower);
+
+End;
+
+
+Export Function PrepareHovercraft(num);
+var i;
+begin
+for i = 1 to num do
+    AddComConstruct(FilterAllUnits([[f_side, 8], [f_btype, b_factory]])[1], ar_hovercraft, engine_combustion, control_remote, [ar_light_gun, ar_double_machine_gun][rand(1,2)]);
+End;
+
+Export Function AddKamikaze();
+var i, un;
+begin
+uc_side := 8;
+uc_nation := 0;
+
+hc_class := 17;
+hc_gallery := '';
+hc_name := '';
+hc_importance := 0;
+hc_skills := [10, 10, 10, 10];
+
+if ar_base then
+   begin
+   un := CreateHuman;
+   PlaceHumanInUnit(un, ar_base);
+   ComExitBuilding(un);
+   AddComEnterUnit(un, legion_telep);
+   end;
+
+End;
+
+// Attacks
+Export legion_force;
+Export Function PrepareAttack(n1, n2);
+var i;
+begin
+legion_force := [];
+
+PrepareHovercraft(n1);
+
+for i = 1 to n2 do
+    begin
+    AddKamikaze();
+    end;
+
+End;
+
+
+Every 1$00 trigger FilterAllUnits([[f_side, 6], [f_type, unit_building]]) > 1 do
+begin
+wait(3$00);
+
+PrepareAttack(4, 2);
+End;
+
+
+// ct control
+Every 0$01 trigger FilterAllUnits([[f_side, 8], [f_control, control_remote]]) do
+var i, j, cts, vehs, best, best_mechanic, p;
+begin
+enable;
+
+vehs := FilterAllUnits([[f_side, 8], [f_control, control_remote], [f_not, [f_linked]]]);
+cts := FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]);
+best := 10;
+best_mechanic := -1;
+
+if vehs then
+   begin
+   for j in cts do
+       begin
+       p := UnitsLinked(GetDriver(j));
+
+       if p < best then
+          begin
+          best := p;
+          best_mechanic := GetDriver(j);
+          end;
+       end;
+
+   ComLinkTo(vehs[1], best_mechanic);
+   end;
+
+
+End;

@@ -1,0 +1,136 @@
+// limit
+Every 0$01 trigger dip_points > 15 do
+begin
+enable;
+dip_points := 15;
+End;
+
+// limit
+Every 0$01 trigger dip_points < 0 do
+begin
+enable;
+dip_points := 0;
+End;
+
+
+// apeman
+Every 0$01 trigger FilterAllUnits([f_class, class_apeman_soldier]) > 0 and game_started do
+var i;
+begin
+
+     i := Rand(1,3);
+
+     Case i of
+     1: Say(Erwin, 'DE-ape1');
+     2: Say(Erwin, 'DE-ape2');
+     3: Say(Erwin, 'DE-ape3');
+     end;
+
+dip_points := dip_points - 2;
+End;
+
+
+// rem_ct
+Every 0$01 trigger FilterAllUnits([f_control, control_remote]) > 0 and game_started do
+begin
+Say(Erwin, 'DE-ct');
+dip_points := dip_points + 3;
+End;
+
+// robb
+Every 0$03 trigger game_started do
+var filter, i, p, deps;
+begin
+enable;
+
+     deps := [north_dep, south_dep];
+     filter := FilterAllUnits([[[f_side, 2], [f_or, [f_class, 2], [f_weapon, ar_cargo_bay]]]]);
+
+     p := Rand(1, 3);
+
+     for i = 1 to filter do
+         if IsInArea(filter[i], ar_robb) then
+            begin
+
+            Case p of
+            1:Say(Erwin, 'DE-robb1');
+            2:Say(Erwin, 'DE-robb2');
+            3:Say(Erwin, 'DE-robb3');
+            end;
+
+            dip_points := dip_points - 1;
+            end;
+
+End;
+
+
+Every 0$01 trigger game_started and FilterAllUnits([[f_side, 8], [f_class, 2]]) = 0 do
+Say(Erwin, 'DE-help');
+
+
+Every 0$01 trigger dip_points >= 10 do
+begin
+Say(Erwin, 'DE-mortar');
+SetTech(tech_mortar, 2, state_researched);
+End;
+
+Every 0$01 trigger dip_points >= 13 do
+begin
+Say(Erwin, 'DE-mines');
+SetTech(tech_remcharge, 2, state_researched);
+End;
+
+Every 0$01 trigger dip_count >= [3,4,5][Difficulty] do
+begin
+enable;
+
+Say(Erwin, 'DE-ruscount');
+dip_points := dip_points + 1;
+dip_count := 0;
+End;
+
+
+On BuildingStarted(build, builder) do
+begin
+
+     if IsInArea(build, al_area) and GetSide(build) = 2 then
+        begin
+        CenterNowOnUnits(build);
+        Say(Erwin, 'DE-burem');
+        dip_points := dip_points - 1;
+        RemoveUnit(build);
+        end;
+
+End;
+
+{
+System dyplomacji:
+Pocz¹tkowo:
+5/15 poziom
+
+Zdarzenia sprzyjaj¹ce:
++1 - Gracz zniszczyl 3 wrogie czo³gi
++5 - Efektywna obrona (gracz niedopuœci³ wrogich jednostek do bazy sojusznika)
++3 - Pojazdy zdalnie sterowane zbudowano (TYLKO RAZ)
+
+Zdarzenia negatywne:
+-3 - Dopuszczono wroga do bazy sojusznika
+-2 - Gracz posiada ma³pê-¿o³nierza (TYLKO RAZ)
+-2 - Zbudowano budynek na terenie sojusznika
+-1 - Próba zrabowania surowców sojusznika
+
+W przypadku gdy poziom spadnie do 0 sojusznik odmówi dalszej wspó³pracy i gdy otrzyma
+rozkaz ataku na Lenina wówczas wysadzi magazyn, fabrykê oraz labolatorium.
+
+Gdy poziom osi¹gnie 13/15 gracz otrzyma medal oraz technologiê zdalnych min.
+Gdy poziom osi¹gnie 10/15 gracz otrzyma technologiê moŸdzierza.
+
+Proœby:
+- Poproœ sojusznika o 100 skrzyñ (zawsze odmówi)
+- Poproœ sojusznika o pojazd (dostêpne gdy 9 lub wiêcej)
+- Poproœ sojusznika o technologiê (zawsze odmówi)
+- Poproœ sojusznika o pomoc (dostêpne gdy 6 lub wiêcej [TYLKO RAZ])
+
+Proœby sojusznika:
+- Proœba o pomoc w obronie (gdy wszyscy in¿ynierowie sojusznika zgin¹)
+}

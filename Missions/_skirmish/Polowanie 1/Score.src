@@ -1,0 +1,140 @@
+On UnitGoesToRed(un) do
+var score, players, play;
+begin
+
+     if un = player then
+        YouLost('hunt2');
+
+     players := [player, player_1, player_2, player_3, player_4, player_5, player_6, player_7];
+
+     if GetSide(un) = 0 then
+        begin
+        play := UnitShoot(un);
+
+        if play = 0 then
+           play := NearestUnitToUnit(players, un);
+
+        Case GetClass(un) of
+        18:          score := PB;
+        class_tiger: score := PT;
+        class_fish:  score := PF;
+        21:          score := PH;
+        13:          score := PE;
+        class_apeman:score := PA;
+        end;
+
+        if GetChassis(un) = 31 then
+           score := PM;
+
+        if play = player then
+           score_player := score_player + score;
+        if play = player_1 then
+           score_enemy1 := score_enemy1 + score;
+        if play = player_2 then
+           score_enemy2 := score_enemy2 + score;
+        if play = player_3 then
+           score_enemy3 := score_enemy3 + score;
+        if play = player_4 then
+           score_enemy4 := score_enemy4 + score;
+        if play = player_5 then
+           score_enemy5 := score_enemy5 + score;
+        if play = player_6 then
+           score_enemy6 := score_enemy6 + score;
+        if play = player_7 then
+           score_enemy7 := score_enemy7 + score;
+
+        SetTag(un, -100);
+        end;
+End;
+
+On UnitDestroyed(un) do
+var score, players, play;
+begin
+
+      players := [player, player_1, player_2, player_3, player_4, player_5, player_6, player_7];
+
+     if GetSide(un) = 0 and GetTag(un) <> -100 then
+        begin
+        play := UnitShoot(un);
+
+        if play = 0 then
+           play := NearestUnitToUnit(players, un);
+
+        Case GetClass(un) of
+        18:          score := PB;
+        class_tiger: score := PT;
+        class_fish:  score := PF;
+        21:          score := PH;
+        13:          score := PE;
+        class_apeman:score := PA;
+        end;
+
+        if GetChassis(un) = 31 then
+           score := PM;
+
+        if play = player then
+           score_player := score_player + score;
+        if play = player_1 then
+           score_enemy1 := score_enemy1 + score;
+        if play = player_2 then
+           score_enemy2 := score_enemy2 + score;
+        if play = player_3 then
+           score_enemy3 := score_enemy3 + score;
+        if play = player_4 then
+           score_enemy4 := score_enemy4 + score;
+        if play = player_5 then
+           score_enemy5 := score_enemy5 + score;
+        if play = player_6 then
+           score_enemy6 := score_enemy6 + score;
+        if play = player_7 then
+           score_enemy7 := score_enemy7 + score;
+
+        // SetTag(un, -100);
+        end;
+End;
+
+
+Every 0$0.1 do
+begin
+enable;
+
+       Display_Strings := ['#player1', score_player,
+                           '#player2', score_enemy1,
+                           '#player3', score_enemy2,
+                           '#player4', score_enemy3,
+                           '#player5', score_enemy4,
+                           '#player6', score_enemy5,
+                           '#player7', score_enemy6,
+                           '#player8', score_enemy7];
+
+
+End;
+
+
+On Contact(s1, s2) do
+begin
+
+     if s1 = your_side and s2 > 0 then
+        YouLost('hunt1');
+
+End;
+
+
+
+Every 0$01 trigger FilterAllUnits([f_side, 0]) = 0 do
+begin
+
+     Wait(0$03);
+
+     if score_player > score_enemy1 and
+        score_player > score_enemy2 and
+        score_player > score_enemy3 and
+        score_player > score_enemy4 and
+        score_player > score_enemy5 and
+        score_player > score_enemy6 and
+        score_player > score_enemy7 then
+        YouWin
+     else
+        YouLost('hunt3');
+
+End;

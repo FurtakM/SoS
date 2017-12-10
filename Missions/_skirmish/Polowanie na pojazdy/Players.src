@@ -1,0 +1,66 @@
+Export Function PrepareUnits;
+var i, side;
+begin
+
+     side := players;
+
+     uc_nation := 1;
+
+     for i = 1 to mechanics do
+         for side = 1 to players do
+             begin
+             uc_side := side;
+             PrepareHuman(false, 3, 10);
+             PlaceUnitArea(CreateHuman, mech_area, false);
+             end;
+
+End;
+
+
+Function ToSpawn(side);
+begin
+uc_side := side;
+PrepareHuman(false, 3, 10);
+PlaceUnitArea(CreateHuman, mech_area, false);
+End;
+
+
+Every 0$13 trigger time do
+var i, filter;
+begin
+enable;
+
+     for i = 1 to players do
+         begin
+         filter := FilterAllUnits([[[f_side, i], [f_class, 3], [f_type, unit_human]]]);
+
+         if filter < mechanics then
+            begin
+            Wait(0$03);
+            ToSpawn(i);             
+            end;
+
+         end;
+
+End;
+
+Every 0$01 trigger time do
+var i, filter, filter2, vehicles;
+begin
+enable;
+
+filter2 := FilterAllUnits([[f_type, unit_vehicle], [f_not, [f_side, 0]], [f_not, [f_side, 1]]]);
+filter := FilterAllUnits([[f_type, unit_human], [f_not, [f_inside]], [f_not, [f_side, 1]]]);
+vehicles := FilterAllUnits([[f_type, unit_vehicle], [f_empty]]);
+
+       if filter and vehicles then
+          for i = 1 to filter do
+              if not HasTask(filter[i]) and IsOk(filter[i]) then
+                 if GetDistUnits(filter[i], NearestUnitToUnit(vehicles, filter[i])) < 45 then
+                    ComEnterUnit(filter[i], NearestUnitToUnit(vehicles, filter[i]));
+
+       if filter2 then
+          for i = 1 to filter2 do
+              if not HasTask(filter2[i]) then
+                 ComMoveToArea(filter2[i], exit_area);
+End;

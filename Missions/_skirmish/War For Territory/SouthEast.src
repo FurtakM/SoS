@@ -1,0 +1,447 @@
+// South East Base Module
+// Player Alliance
+//--------------------------------------------------
+// Coords:
+// depot - 163,97,4
+// lab1  - 169,109,3
+// fac   - 175,126,4
+// oil   - 161,89,4
+// turret- [162,108,0,
+//          156,103,1,
+//          152,94,2,
+//          151,85,2,
+//          162,117,2
+//          165,127,1]
+//--------------------------------------------------
+// PLAN (PL)
+{
+   if enginner > 0 or crane > 0 then
+      if not base_exist then
+         BUILD_BASE
+       else
+         begin
+         if not lab_exist then
+            BUILD_LAB
+          else
+            if not fac_exist then
+               BUILD_FACTORY (with extensions)
+             else
+               if turrets_num < turrets_list then
+                  BUILD_TURRETS
+                else
+                  if turrets_without_weapon then
+                     PLACE_WEAPON_ON_TURRET
+
+         BUILD_POWER_PLANTS(TYPE)
+
+         COLLECT_CRATES(DIST_FROM_DEPOT)
+
+         if not team_attack then
+            BUILD_TEAM_ATTACK
+          else
+            GO_ATTACK(ENEMY_SIDE)
+
+         if enemy_nearby_base then
+            GO_DEFEND  // switch mode def:=1
+           else
+            BACK:      // switch mode def:=0
+         end
+}
+//--------------------------------------------------
+// TAG LIST
+{
+    0 - default
+   11 - soldier attacking enemy
+   12 - soldier scouting
+   31 - mechanic (in vehicle)
+   32 - mechanic in control_tower
+   41 - scientist attacking enemy (wtf)
+   42 - scientist scouting (searching depostits)
+   43 - scientist healing
+   44 - scientist tame apeman
+   51 - cargo special order
+   81 - vehicle need repair
+   82 - vehicle attack
+   83 - vehicle defend
+   91 - attacking group
+   92 - retreat group
+   99 - healing
+}
+
+Export powell;
+
+// main module AI
+Every 0$01 do
+var i, p, sold, eng, mech, sci,
+    b, veh, filter, side, pom, vehicles, tmp, en, enemy_xy,
+    depot_xy, lab_xy, fac_xy, turret_xy, lab_kind, fac_ext, arm_xy,
+    crates_area, tech_list, oil_xy, sib_xy, want_more_oil, want_more_sib,
+    sol_pow_list, oil_pow_list, sib_pow_list, turret_weapon, not_turret_weapon, veh_list, cargo_allow, cargo_chassis, cargo_type,
+    allow_ct, ct_xy, ct_chassis, xy_back, enemy_list, modernize_cargo_allow, crane_allow, crane_type, crane_engine, crane_chassis, crane_num, modernize_crane_allow,
+    bulldozer_allow, bulldozer_chassis, bulldozer_engine, bulldozer_type, tree_area, parking_area,
+    second_base_allow, second_base_xy, transport_from_second_base, build_second_base_after,
+    lab, base_status, sec_points, scout_near_base, repair_xy, vehicle_def, attack_info;
+begin
+Enable; // ~~~
+// side
+   side := 4;
+// enemy
+   enemy_list := [2, 3];
+   enemy_xy := [[10,9], [70,137]];
+// filters
+   sold := FilterAllUnits([[f_side, side], [f_class, 1]]);
+   eng  := FilterAllUnits([[f_side, side], [f_class, 2]]);
+   mech := FilterAllUnits([[f_side, side], [f_class, 3]]);
+   sci  := FilterAllUnits([[f_side, side], [f_class, 4]]);
+   vehicles := FilterAllUnits([[f_side, side], [f_type, unit_vehicle]]);
+// coords
+   sec_points := [158, 121, 149, 103, 152, 85, 147, 132];
+   depot_xy := [163,  97, 4];
+   lab_xy   := [169, 109, 0, 150, 73, 1];
+   lab_kind := [b_lab_weapon, b_lab_opto, b_lab_siberium, b_lab_computer];
+   fac_xy   := [175, 126, 4];      
+   arm_xy   := [159, 104, 1];
+   xy_back  := [160, 100];
+// turrets
+   turret_xy := [b_bunker, 152,  94, 2,
+                 b_bunker, 141, 101, 2,
+                 b_bunker, 143,  97, 2,
+                 b_bunker, 158, 122, 0];
+   not_turret_weapon := [us_crane, us_cargo_bay, us_bulldozer, us_machine_gun];
+// factory extension
+   fac_ext  := [b_ext_noncombat, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radar];
+// powers
+   sol_pow_list := [152, 86, 4, 156, 87, 4, 157, 110, 2];
+   oil_pow_list := [177, 120, 0];
+   sib_pow_list := [];
+// control tower (US AR)
+   allow_ct := true;
+   ct_xy := [168, 102, 4];
+   ct_chassis := 0;
+// second base
+   second_base_allow := true;
+   second_base_xy := [147, 135, 0];
+   transport_from_second_base := [true, 30]; // [mode(on,off), minimum source each type in second depot allow]
+   build_second_base_after := [11$00, tech_SibDet];  // [time in tick, tech]
+// deposits
+   oil_xy   := [161, 89, 146, 88];
+   sib_xy   := [157, 134];
+   want_more_oil := true;
+   want_more_sib := false;
+// techs
+   tech_list := [35, 45, 46, 47, 1, 48, 49, 50, 20, 51, 52, 69, 39, 60, 61, 6, 15];
+// crates area
+   crates_area := powell_crates;
+// vehicle list
+   veh_list := FilterAllUnits([[f_side, side], [f_type, unit_vehicle]]);
+   repair_xy := [171, 126];
+   vehicle_def := [3, ['after_CRANE', control_remote], [us_medium_tracked, engine_combustion, control_remote], [us_gatling_gun, us_double_gun]];
+   parking_area := powell_parking;
+// cargo bay
+   cargo_allow := true;
+   cargo_chassis := us_medium_tracked;
+   cargo_type := [us_cargo_bay];
+   modernize_cargo_allow := true;
+// crane
+   crane_allow := true;
+   crane_chassis := us_medium_tracked;
+   crane_engine := engine_solar;
+   crane_type := [us_crane];
+   crane_num := 1;
+   modernize_crane_allow := true;
+// bulldozer
+   bulldozer_allow := true;
+   bulldozer_chassis := us_heavy_tracked;
+   bulldozer_engine := engine_combustion;
+   bulldozer_type := [us_bulldozer];
+   tree_area := powell_tree;
+// attack
+   attack_info := [3, 5$00, 1, 4, ['electro']]; // min value, mod attack, increment, max_value, orders]
+
+
+
+// scout near base xy
+   scout_near_base := [sold[2], [144, 67, 134, 65, 125, 47, 100, 61, xy_back[1], xy_back[2]],
+                       sold[3], [179, 134, 152, 131, 121, 106, 123, 86, xy_back[1], xy_back[2]]];
+
+// base_status
+   if EnemyInRange(side, sec_points) then
+      base_status := true
+       else
+        base_status := false;
+
+   if base_status then
+      begin
+      VehicleMove(side, parking_area, 83, 'defend', []);
+      if eng then
+         RepairBase(side, enemy_list, xy_back[1], xy_back[2]);
+      if sci then
+         HealPersonel(side, 99);
+      if sold and not NeedBuilding(side, b_barracks) then
+              for i = 1 to sold do
+                  if not IsInUnit(sold[i]) and not HasTask(sold[i]) and GetTag(sold[i]) = 0 and FilterAllUnits([[[f_side, side], [f_btype, b_bunker], [f_empty]]]) = 0 then
+                     ComEnterUnit(sold[i], GetBuilding(side, b_barracks)[1]);
+      end;
+
+// scout near base
+   if tick = 105 then
+      begin
+      ScoutArea(scout_near_base[1], scout_near_base[2]);
+      ScoutArea(scout_near_base[3], scout_near_base[4]);
+      end;
+
+// scan vehicle
+   ScanVehicleStatus(side, repair_xy[1], repair_xy[2]);
+
+// attack
+   if Tag_List(vehicles, 84) >= NumAtt(attack_info[1], attack_info[2], attack_info[3], attack_info[4]) then
+      begin
+      en := SelectEnemy(side, enemy_list);
+      tmp := Tag_List(vehicles, 84);       
+
+      for i = 1 to tmp do
+          Attack(tmp[i], enemy_list[en], enemy_xy[en], attack_info[5]);
+      end;
+
+// base building
+   if eng and base_status = false then  // engs > 0
+      begin
+      VehicleMove(side, parking_area, 83, 'back', []);
+
+      if FilterAllUnits([[f_side, side], [f_type, unit_human], [f_not, [f_lives, 1000]]]) then
+         HealPersonel(side, 99);
+      if FilterAllUnits([[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]) then
+         RepairBase(side, enemy_list, xy_back[1], xy_back[2])
+      else
+      if NeedBase(side) then
+         ComBuildDepot(eng, depot_xy[1], depot_xy[2], depot_xy[3])   
+          else
+           begin
+        // finish all unfinished builds
+           FinishAllBuilds(side);
+
+        // build second base
+           if second_base_allow and tick >= build_second_base_after[1] and GetTech(build_second_base_after[2], side) = state_researched and HexInfo(second_base_xy[1], second_base_xy[2]) = 0 then
+              ComBuildDepot(eng, second_base_xy[1], second_base_xy[2], second_base_xy[3]);
+           if second_base_allow and GetBType(HexInfo(second_base_xy[1], second_base_xy[2])) = b_depot and transport_from_second_base[1] then
+              begin
+              for i = 1 to 3 do
+                  if GetBaseSource(HexInfo(second_base_xy[1], second_base_xy[2]))[i] > transport_from_second_base[2] then
+                     begin
+                     Transport(eng[1], HexInfo(second_base_xy[1], second_base_xy[2]), HexInfo(depot_xy[1], depot_xy[2]), i);
+                     break;
+                     end;
+              end;
+
+           if NeedBuilding(side, GetBuilding(side, b_depot)) then
+              ComBuildWarehouse(eng, GetBuilding(side, b_depot)[1]);
+
+        // lab
+           ComBuildLabList(eng, [[lab_xy[1], lab_xy[2], lab_xy[3], lab_kind[1], lab_kind[2]],
+                                 [lab_xy[4], lab_xy[5], lab_xy[6], lab_kind[3], lab_kind[4]]]);
+
+           if GetBuilding(side, b_lab_full) and sci then
+              begin
+              for p = 1 to GetLabs(side) do
+                  if BuildingStatus(GetLabs(side)[p]) = bs_working or BuildingStatus(GetLabs(side)[p]) = bs_need_people then
+                     begin
+                     lab := GetLabs(side)[p];
+                     break;
+                     end;
+
+              if not lab then
+                 lab := GetLabs(side)[1];
+
+              if Tag_List(sold^eng^mech^sci, 99) = 0 then
+                 for i = 1 to sci do
+                     if not IsInUnit(sci[i]) = lab and not HasTask(sci[i]) and GetTag(sci[i]) = 0 and BuildingStatus(lab) <> bs_build then
+                        if IsInUnit(sci[i]) then
+                           ComExitBuilding(sci[i])
+                            else
+                             ComEnterUnit(sci[i], lab);
+
+              if not BuildingStatus(lab) = bs_build then
+                 ResearchTechList(side, tech_list);
+              end;
+
+        // factory
+           BuildFactory(eng, fac_xy[1], fac_xy[2], fac_xy[3], fac_ext);
+
+           if mech and GetBuilding(side, b_factory) then
+              begin
+              // mechanic enter
+              for i = 1 to mech do
+                  if not IsInUnit(mech[i]) and not HasTask(mech[i]) and GetTag(mech[i]) = 0 and FilterAllUnits([[[f_side, side], [f_type, unit_vehicle], [f_not, [f_lives, 450]], [f_distxy, repair_xy[1], repair_xy[2], 10]]]) = 0 then
+                     ComEnterUnit(mech[i], GetBuilding(side, b_factory)[1]);
+
+              // turret list
+                 CheckTowersStatus(eng, turret_xy);
+                 turret_weapon := AvailableWeaponList(GetBuilding(side, b_factory)[1]) diff not_turret_weapon;
+
+                 if (GetBuilding(side, b_bunker) > 0 or GetBuilding(side, b_turret) > 0) and turret_weapon > 1 then
+                     CheckWeaponOnTowers(side, turret_weapon);
+
+              // produce vehicle
+                 // cargo bay
+                 if GetVehicle(side, cargo_chassis, cargo_type[1]) = 0 and (GetBuilding(side, b_ext_noncombat) or GetBuilding(side, b_ext_stitch)) and cargo_allow then
+                    IntConstruct(side, cargo_chassis, engine_combustion, control_manual, cargo_type);
+                 // modernize cargo bay
+                 if FilterAllUnits([[[f_side, side], [f_control, control_manual], [f_weapon, cargo_type[1]]]]) = 1 and modernize_cargo_allow and ((GetBuilding(side, b_ext_radar) and (GetBuilding(side, b_control_tower) or FilterAllUnits([[f_side, side], [f_weapon, ar_control_tower]]))) or GetBuilding(side, b_ext_computer)) then
+                    begin
+                    SetTag(GetVehicle(side, cargo_chassis, cargo_type[1])[1], 51);
+                    ComRecycle(GetVehicle(side, cargo_chassis, cargo_type[1])[1], GetBuilding(side, b_factory)[1]);
+                    end;
+                 // crane
+                 if GetVehicle(side, crane_chassis, crane_type[1]) < crane_num and (GetBuilding(side, b_ext_noncombat) or GetBuilding(side, b_ext_stitch)) and crane_allow then
+                    IntConstruct(side, crane_chassis, crane_engine, control_manual, crane_type);
+                 // modernize crane
+                 if FilterAllUnits([[[f_side, side], [f_control, control_manual], [f_weapon, crane_type[1]]]]) and modernize_crane_allow and ((GetBuilding(side, b_ext_radar) and (GetBuilding(side, b_control_tower) or FilterAllUnits([[f_side, side], [f_weapon, ar_control_tower]]))) or GetBuilding(side, b_ext_computer)) then
+                    begin
+                    SetTag(GetVehicle(side, crane_chassis, crane_type[1])[1], 51);
+                    ComRecycle(GetVehicle(side, crane_chassis, crane_type[1])[1], GetBuilding(side, b_factory)[1]);
+                    end;
+                 // bulldozer
+                 if GetVehicle(side, bulldozer_chassis, bulldozer_type[1]) = 0 and bulldozer_allow and ListEnvironmentArea(tree_area) > 0 then
+                    IntConstruct(side, bulldozer_chassis, bulldozer_engine, control_manual, bulldozer_type)
+                     else
+                      if GetVehicle(side, bulldozer_chassis, bulldozer_type[1]) then
+                         begin
+                         if ListEnvironmentArea(tree_area) then
+                            CutTreeInArea(GetVehicle(side, bulldozer_chassis, bulldozer_type[1])[1], tree_area)
+                             else
+                              ComRecycle(GetVehicle(side, bulldozer_chassis, bulldozer_type[1])[1], GetBuilding(side, b_factory)[1]);
+                         end;
+                 // tanks
+                 if (vehicles diff FilterNonCombatVehicle(side)) < NumAtt(attack_info[1], attack_info[2], attack_info[3], attack_info[4]) then
+                    begin
+                    Case vehicle_def[2][1] of
+                    '-': IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    'after_CARGO': if FilterAllUnits([[f_side, side], [f_weapon, cargo_type[1]], [f_control, vehicle_def[2][2]]]) then
+                                      IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    'after_CRANE': if FilterAllUnits([[f_side, side], [f_weapon, crane_type[1]], [f_control, vehicle_def[2][2]]]) then
+                                      IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    'after_BULL' : if FilterAllUnits([[f_side, side], [f_weapon, bulldozer_type[1]], [f_control, vehicle_def[2][2]]]) then
+                                      IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    'after_TICK' : if vehicle_def[2][2] > tick then
+                                      IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    'after_TECH' : if GetTech(vehicle_def[2][2], side) = state_researched then
+                                      IntConstruct(side, vehicle_def[3][1], vehicle_def[3][2], vehicle_def[3][3], vehicle_def[4]);
+                    End;
+                    end; 
+
+              // control_tower
+                 ControlTower(side, GetNation(mech[1]), ct_xy[1], ct_xy[2], ct_xy[3], ct_chassis);
+
+              // additional mechanic's
+                 if GetVehicle(side, crane_chassis, crane_type[1]) then
+                    AddMechanic(eng, 1);
+              end;
+
+        // vehicles filter
+           if vehicles then
+              begin
+              tmp := vehicles diff FilterNonCombatVehicle(side);
+              if Tag_List(tmp, 0) then
+                 for i = 1 to tmp  do
+                     if GetTag(tmp[i]) = 0 then
+                        begin
+                        if Tag_List(vehicles, 83) < vehicle_def[1] then
+                           SetTag(tmp[i], 83)
+                            else
+                             SetTag(tmp[i], 82);
+                        end;
+              // launch attack
+              if tick mod attack_info[3] = 0 then
+                 begin
+                 for i = 1 to tmp do
+                     if GetTag(tmp[i]) = 83 or GetTag(tmp[i]) = 82 then
+                        SetTag(tmp[i], 84);
+                 end;
+              
+              end;
+
+        // armoury
+           if NeedBuilding(side, b_barracks) and GetBaseSource(MyBase(side)[1])[1] > 30 and GetBuilding(side, b_lab_full) then
+              if NeedBuilding(side, b_armoury) then
+                 Build(eng, b_armoury, arm_xy[1], arm_xy[2], arm_xy[3])
+                  else
+                   if GetBaseSource(MyBase(side)[1])[1] > 30 then
+                      ComUpgrade(GetBuilding(side, b_armoury)[1]);
+
+           if sold and not NeedBuilding(side, b_barracks) then
+              for i = 1 to sold do
+                  if not IsInUnit(sold[i]) and not HasTask(sold[i]) and GetTag(sold[i]) = 0 and FilterAllUnits([[[f_side, side], [f_btype, b_bunker], [f_empty]]]) = 0 then
+                     ComEnterUnit(sold[i], GetBuilding(side, b_barracks)[1]);
+
+        // towers squad
+           GoToTower(Tag_List(sold, 0));
+
+        // oil deposits
+           if NeedBuilding(side, b_oil_mine) then
+              begin
+              if GetResourceVisibility(oil_xy[1], oil_xy[2], side) = false then
+                 ComFindDeposit(sci[sci], oil_xy[1], oil_xy[2])
+                  else
+                   begin
+                   if GetTag(sci[sci]) = 42 then SetTag(sci[sci], 0);
+                      Build(eng, b_oil_mine, oil_xy[1], oil_xy[2], Rand(0,5));
+                   end
+              end
+               else
+        // extra oil
+                if want_more_oil and GetBuilding(side, b_oil_mine) < 2 then
+                   if GetResourceVisibility(oil_xy[3], oil_xy[4], side) = false then
+                      ComFindDeposit(sci[sci], oil_xy[3], oil_xy[4])
+                       else
+                        begin
+                        if GetTag(sci[sci]) = 42 then SetTag(sci[sci], 0);
+                           Build(eng, b_oil_mine, oil_xy[3], oil_xy[4], Rand(0,5));
+                        end;
+        // sib mine
+           if NeedBuilding(side, b_siberite_mine) and GetTech(tech_SibDet, side) = state_researched then
+              begin
+              if GetResourceVisibility(sib_xy[1], sib_xy[2], side) = false then
+                 ComFindDeposit(sci[sci], sib_xy[1], sib_xy[2])
+                  else
+                   if GetResourceVisibility(sib_xy[1], sib_xy[2], side) then
+                      begin
+                      if GetTag(sci[sci]) = 42 then SetTag(sci[sci], 0);
+                         Build(eng, b_siberite_mine, sib_xy[1], sib_xy[2], Rand(0,5));
+                      end;
+              end
+               else
+        // extra sib
+                if want_more_sib and GetBuilding(side, b_siberite_mine) < 2 and GetTech(tech_SibDet, side) = state_researched then
+                   if GetResourceVisibility(sib_xy[3], sib_xy[4], side) = false then
+                      ComFindDeposit(sci[sci], sib_xy[3], sib_xy[4])
+                       else
+                        begin
+                        if GetTag(sci[sci]) = 42 then SetTag(sci[sci], 0);
+                        if GetResourceVisibility(sib_xy[3], sib_xy[4], side) then
+                           Build(eng, b_siberite_mine, sib_xy[3], sib_xy[4], Rand(0,5));
+                       end;
+
+        // solar powers
+           if GetTech(tech_solpow, side) = state_researched and sol_pow_list and
+              GetBuilding(side, b_solar_power) < (sol_pow_list/3) then
+              BuildPowerFromList(eng, sol_pow_list, b_solar_power);
+
+        // oil powers
+           if GetTech(tech_oilpow, side) = state_researched and oil_pow_list and
+              GetBuilding(side, b_oil_power) < (oil_pow_list/3) then
+              BuildPowerFromList(eng, oil_pow_list, b_oil_power);
+
+        // sib powers
+           if GetTech(tech_sibpow, side) = state_researched and sib_pow_list and
+              GetBuilding(side, b_siberite_power) < (sib_pow_list/3) then
+              BuildPowerFromList(eng, sib_pow_list, b_siberite_power);
+
+        // collect crates  //
+           if GetListOfCratesInArea(crates_area) then
+              CollectCrates(side, crates_area);
+           end;
+      end;
+
+End;
+
+

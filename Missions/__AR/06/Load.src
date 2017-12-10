@@ -1,0 +1,233 @@
+// Load Units
+Export Louis, Martin, Karla, Dwein, Joachim, Olaf,
+       Mmark, Herczeg, Mia, Kantor, Ronn, Gunther,
+       ot1, ot2, ot3, ot4, ot5, ot6, ot7;
+Export AllPeo;
+Export Function LoadUnits;
+begin
+
+
+    AllPeo := [];
+
+    uc_side := 2;
+
+
+    Louis := CreateCharacter('Louis');
+    AllPeo = AllPeo ^ Louis;
+
+
+    If TestCharacters('Martin_05') then
+    begin
+    Martin := CreateCharacter('Martin_05');
+    AllPeo = AllPeo ^ Martin;
+    end else
+    begin
+    Martin = false;
+    end;
+
+    If TestCharacters('Karla_05') then
+    begin
+    Karla := CreateCharacter('Karla_05');
+    AllPeo = AllPeo ^ Karla;
+    end else
+    begin
+    Karla = false;
+    end;
+
+    If TestCharacters('Mmark_05') then
+    begin
+    Mmark := CreateCharacter('Mmark_05');
+    AllPeo = AllPeo ^ Mmark;
+    end else
+    begin
+    Mmark = false;
+    end;
+
+    If TestCharacters('Joachim_05') then
+    begin
+    Joachim := CreateCharacter('Joachim_05');
+    AllPeo = AllPeo ^ Joachim;
+    end else
+    begin
+    Joachim = false;
+    end;
+
+    If TestCharacters('Olaf_05') then
+    begin
+    Olaf:= CreateCharacter('Olaf_05');
+    AllPeo = AllPeo ^ Olaf;
+    end else
+    begin
+    Olaf = false;
+    end;
+
+    If TestCharacters('Dwein_05') then
+    begin
+    Dwein := CreateCharacter('Dwein_05');
+    AllPeo = AllPeo ^ Dwein;
+    end else
+    begin
+    Dwein = false;
+    end;
+
+
+    If TestCharacters('Herczeg_05') then
+    begin
+    Herczeg := CreateCharacter('Herczeg_05');
+    AllPeo = AllPeo ^ Herczeg;
+    end else
+    begin
+    Herczeg = false;
+    end;
+
+
+    If TestCharacters('Mia_05') then
+    begin
+    Mia := CreateCharacter('Mia_05');
+    AllPeo = AllPeo ^ Mia;
+    end else
+    begin
+    Mia = false;
+    end;
+
+
+    If TestCharacters('Kantor_05') then
+    begin
+    Kantor := CreateCharacter('Kantor_05');
+    AllPeo = AllPeo ^ Kantor;
+    end else
+    begin
+    Kantor = false;
+    end;
+
+    If TestCharacters('Gunther_05') then
+    begin
+    Gunther := CreateCharacter('Gunther_05');
+    AllPeo = AllPeo ^ Gunther;
+    end else
+    begin
+    Gunther = false;
+    end;
+
+
+    If TestCharacters('Ronn_05') then
+    begin
+    Ronn := CreateCharacter('Ronn_05');
+    AllPeo = AllPeo ^ Ronn;
+    end;
+
+
+    // load other's
+    If TestCharacters('ot1_05') then
+    begin
+    ot1 := CreateCharacter('ot1_05');
+    AllPeo = AllPeo ^ ot1;
+    end else
+    begin
+    ot1 = false;
+    end;
+
+    If TestCharacters('ot2_05') then
+    begin
+    ot2 := CreateCharacter('ot2_05');
+    AllPeo = AllPeo ^ ot2;
+    end else
+    begin
+    ot2 = false;
+    end;
+
+    If TestCharacters('ot3_04') then
+    begin
+    ot3 := CreateCharacter('ot3_04');
+    AllPeo = AllPeo ^ ot3;
+    end else
+    begin
+    ot3 = false;
+    end;
+
+    If TestCharacters('ot4_05') then
+    begin
+    ot4 := CreateCharacter('ot4_05');
+    AllPeo = AllPeo ^ ot4;
+    end else
+    begin
+    ot4 = false;
+    end;
+
+    If TestCharacters('ot5_05') then
+    begin
+    ot5 := CreateCharacter('ot5_05');
+    AllPeo = AllPeo ^ ot5;
+    end else
+    begin
+    ot5 = false;
+    end;
+
+    If TestCharacters('ot6_05') then
+    begin
+    ot6 := CreateCharacter('ot6_05');
+    AllPeo = AllPeo ^ ot6;
+    end else
+    begin
+    ot6 = false;
+    end;
+
+    If TestCharacters('ot7_05') then
+    begin
+    ot7 := CreateCharacter('ot7_05');
+    AllPeo = AllPeo ^ ot7;
+    end else
+    begin
+    ot7 = false;
+    end;
+
+End;
+
+
+
+Export ar_vehicles;
+Export Function LoadVehicles;
+var tab, i, p, veh, filter;
+begin
+
+
+     uc_side := 2;
+
+     tab := LoadVariable('unit_vehs', []);
+       i := 1;
+       p := 1;
+
+     if tab > 0 then
+        while (i <= tab) do
+            begin
+
+            if tab[i] in [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked] then
+               uc_nation := nation_russian
+                else
+               uc_nation := nation_arabian;
+
+            vc_chassis := tab[i];
+            vc_engine  := tab[i+1];
+            vc_control := tab[i+2];
+            vc_weapon  := tab[i+3];
+
+            veh := CreateVehicle;
+            ar_vehicles := ar_vehicles ^ veh;
+
+            SetDir(veh, 3);
+
+            PlaceUnitArea(veh, ar2_spawn, false);
+            SetFuel(veh, Rand(35, 50));
+            PlaceHumanInUnit(AllPeo[p], veh);
+
+            p := p + 1;
+            i := i + 4;
+            end;
+
+            // remove all empty tanks
+               filter := FilterAllUnits([[[f_side, 2], [f_type, unit_vehicle], [f_empty]]]);
+
+               for i = 1 to filter do
+                   RemoveUnit(filter[i]);
+
+End;

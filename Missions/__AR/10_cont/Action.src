@@ -1,0 +1,223 @@
+// Start Game
+Export need_bio_lab, ape_brain, ape_neut, gensher_arrive, join_to_legion;
+Export Function Action;
+var un, str;
+begin
+need_bio_lab := false;
+ape_brain := false;
+ape_neut := false;
+gensher_arrive := false;
+join_to_legion := false;
+
+
+InGameOn;
+CenterNowOnXY(49, 30);
+
+if IsPlaced(Rolf) then
+   begin
+   un := Rolf;
+   str := 'RL';
+   end
+    else
+     if IsPlaced(Karla) then
+        begin
+        un := Karla;
+        str := 'KR';
+        end
+         else
+          begin
+          un := FilterAllUnits([[f_side, 2], [f_type, unit_human]])[Rand(2,8)];
+          str := 'RG';
+          end;
+
+Repeat
+ Wait(0$01);
+Until not IsInUnit(Louis);
+
+ComExitVehicle(Louis);
+
+ComTurnUnit(Louis, un);
+ComTurnUnit(un, Louis);
+
+Say(Louis, '10c_DL1');
+Say(un, '10c_'&str&'1');
+Say(Louis, '10c_DL2');
+Say(un, '10c_'&str&'2');
+Say(Louis, '10c_DL3');
+Say(un, '10c_'&str&'3');
+SayRadio(Shariff, '10c_DS1');
+Say(Louis, '10c_DL4');
+SayRadio(Shariff, '10c_DS2');
+Say(Louis, '10c_DL5');
+SayRadio(Shariff, '10c_DS3');
+Say(Louis, '10c_DL6');
+SayRadio(Shariff, '10c_DS4');
+Say(Louis, '10c_DL7');
+SayRadio(Shariff, '10c_DS5');
+Say(un, '10c_'&str&'4');
+Say(Louis, '10c_DL8');
+Say(un, '10c_'&str&'5');
+Say(Louis, '10c_DL9');
+InGameOff;
+
+game := true;
+
+ChangeMissionObjectives('Res');
+
+Wait(0$30);
+PrepareDoc;
+
+Repeat
+ Wait(0$01);
+Until GetDistUnits(Louis, Kunt) < 9;
+
+DialogueOn;
+CenterOnUnits(Kunt);
+SetSide(Kunt, 2);
+
+ComTurnUnit(Kunt, Louis);
+ComTurnUnit(Louis, Kunt);
+
+Say(Kunt, '10c_KN1');
+Say(Louis, '10c_DL10');
+Say(Kunt, '10c_KN2');
+
+if FindLab(2, 13) then
+   begin
+   Say(Louis, '10c_DL11a');
+   Say(Kunt, '10c_KN3a');
+   end
+    else
+     begin
+     Say(Louis, '10c_DL11b');
+     Say(Kunt, '10c_KN3b');
+
+     if IsPlaced(Rolf) then
+        begin
+        Say(Rolf, '10c_RF_doc1');
+        Say(Kunt, '10c_KN_doc1');
+        Say(Rolf, '10c_RF_doc2');
+        Say(Louis, '10c_DL_doc1');
+        Say(Kunt, '10c_KN_doc2');
+        end;
+
+     DialogueOff;
+     ChangeMissionObjectives('BioLab');
+     end;
+
+DialogueOff;
+End;
+
+
+
+
+
+// Action Events
+// Build Bio Lab
+Every 0$01 trigger need_bio_lab and FilterAllUnits([[f_side, 2], [f_btype, 13]]) do
+ChangeMissionObjectives('DesBioLab');
+
+// Ape res 1
+Every 0$01 trigger GetTech(tech_apelang, 2) = state_researched and GetSide(Kunt) = 2 do
+begin
+Say(Kunt, '10c_KN-ape-1');
+CreateApemans(5, east_ape);
+CreateTigers(1+Difficulty, east_ape, [10, 20, 30][Difficulty]);
+End;
+
+// Ape res 2
+Every 0$01 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman]]) do
+begin
+Say(Kunt, '10c_KN-ape2');
+SetTech(3, 2, state_enabled);
+SetTech(4, 2, state_enabled);
+End;
+
+// Ape Brain
+Every 0$01 trigger ape_brain do
+begin
+DialogueOn;
+Say(Louis, '10c_DL-apbrain1');
+Say(Kunt, '10c_KN-apbrain1');
+Say(Louis, '10c_DL-apbrain2');
+Say(Kunt, '10c_KN-apbrain2');
+
+if IsLive(Rolf) then
+   begin
+   Say(Rolf, '10c_RF-apbrain1');
+   Say(Kunt, '10c_KN-apbrain3');
+   end;
+
+DialogueOff;
+End;
+
+// Ape Neut
+Every 0$01 trigger ape_neut do
+begin
+DialogueOn;
+Say(Louis, '10c_DL-apenatur1');
+Say(Kunt, '10c_KN-apenatur1');
+Say(Louis, '10c_DL-apenatur2');
+Say(Kunt, '10c_KN-apenatur2');
+Say(Louis, '10c_DL-apenatur3');
+Say(Kunt, '10c_KN-apenatur3');   
+DialogueOff;
+
+Wait(Rand(0$14, 0$37));
+
+InGameOn;
+CenterOnUnits(Kunt);
+Wait(0$02);
+SetLives(IsInUnit(Kunt), 1);
+Wait(0$01);
+Say(Kunt, '10c_KN-labruin1');
+InGameOff;
+End;
+
+// SibEng
+Every 0$01 trigger GetTech(2, tech_sibPow) = state_researched do
+begin
+Say(sci(2, Kunt)[1], '10c_DS-SibEng1');
+End;
+
+Every 0$01 trigger GetTech(2, tech_sibEng) = state_researched do
+begin
+Say(sci(2, [Kunt, Louis])[1], '10c_DS-SibEng2');
+Say(Louis, '10c_DL-SibEng1');
+ChangeMissionObjectives('SibEng');
+End;
+
+Every 0$01 trigger GetVehicle(2, engine_siberite) do
+begin
+Say(m(2, Louis)[1], '10c_DS-SibEng3');
+Wait(0$44);
+ChangeMissionObjectives('SibEngOut');
+End;
+
+
+// SHARIFF COMM
+Every 18$19 do
+begin
+SayRadio(Shariff, '10c_DS-Cm1');
+End;
+
+// GENSHER COMM
+Every 27$12 do
+begin
+SayRadio(Gensher, '10c_DG-Cm1');
+End;
+
+// US ATTACK
+Every 30$00 trigger join_to_legion = false do
+begin
+PrepareAttack();
+End;
+
+// KURT OFFER
+Every 29$00 do
+begin
+InGameOn;
+SayRadio(Kurt, '10c_DK-LegionOffer1');
+InGameOff;
+ChangeMissionObjectives('Legion');
+End;

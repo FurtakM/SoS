@@ -1,0 +1,87 @@
+// US
+Export us_commander, us_force, us_skill, us_guy;
+Export Function PrepareAmerican;
+var i, filter, un, team;
+begin
+
+   us_skill := [7, 6, 5][Difficulty];
+   us_force := [];
+
+   RemoveEnvironmentArea(evn);
+
+   PrepareAllianceAI();
+
+   uc_side := 1;
+   uc_nation := nation_american;
+
+   hc_gallery := '';
+   hc_name    := '';
+   hc_importance := 0;
+
+// Przygotowanie dru¿yny
+   for i = 1 to 11 do
+       begin
+       PrepareHuman(false, Rand(1,4), us_skill);
+       un := CreateHuman;
+       us_force := us_force ^ un;
+       end;
+
+   hc_importance := 100;
+
+   PrepareHuman(sex_male, 1, us_skill);
+   us_commander := CreateHuman;
+   player_commander := us_commander;
+
+// okno wyboru
+   team := CharacterSelection('text', [6,5,4][Difficulty], [6,5,4][Difficulty],[sel_change_class, us_commander, sel_changeable, sel_not_hired]^ us_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], [5,5,-1][Difficulty]]);
+   team := team ^ us_commander;
+
+   for i = 1 to team do
+       PlaceUnitArea(team[i], start_north, false);
+
+End;
+
+
+
+
+// us_crates
+Every 0$38+2$00 trigger tick < 73500 do
+begin
+enable;
+CreateCratesArea(Rand(1,5), extra_crates, true);
+End;
+
+Every 1$10 do
+var time, p, l;
+begin
+time := 0$44;
+l := 0;
+
+   Repeat
+    begin
+     Wait(time);
+
+     l := l + 1;
+
+     if GetListOfCratesInArea(us_crates) < 30 then
+        begin
+        CreateCratesArea(Rand(1,5), us_crates, true);
+         Wait(Rand(0$33, 0$44));
+        CreateCratesArea(Rand(1,5), us_crates, true);
+        end;
+
+     p := Rand(0, 1);
+
+     if p then
+        begin
+        Wait(Rand(0$03, 0$10));
+        CreateCratesAnyWhere(Rand(1,4), true);
+        end;
+
+     if l mod [15,13,11][Difficulty] = 0 then
+        time := time + 2$00;
+
+     end
+   Until false;
+
+End;

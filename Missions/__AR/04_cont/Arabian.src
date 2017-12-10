@@ -1,0 +1,270 @@
+Export function PrepareCameraSides(s1,s2);
+begin
+ChangeSideFog(s1,s2);
+ChangeSideFog(s2,s1);
+end;
+
+
+Export ar;
+Export Louis, Martin, Karla, Dwein, Joachim, Gunther, Olaf, Mmark;
+//Export ot1, ot2, ot3, ot4, ot5, ot6, ot7; // other's people ident
+Export LostPeople, Others, AllPeo, OtChar;
+Export function PrepareArabian;
+var l, i, c, un, veh, vehs, counter, eng1, meh1, doc1, skill;
+begin
+
+ar := 2; // player side
+
+uc_side = ar;
+
+
+// list's
+LostPeople = [];
+Others = [];
+AllPeo = [];
+Vehs = [];
+OtChar = [];
+
+
+// your weapon?
+     Case Query('ArabianWeapon') of
+     1:begin
+       ar_weapon = 1;
+       end;
+     2:begin
+       ar_weapon = 2;
+       end;
+     3:begin
+       ar_weapon = 3;
+       end;
+     End;
+
+
+
+// prepare hero's
+    uc_nation = nation_russian;
+
+    //Louis := CreateCharacter('Louis');
+    hc_class = 1;
+    hc_gallery = 'sandar';
+    hc_importance := 0;
+    hc_face_number = 1;
+    hc_name = 'Louis Schulz';
+    hc_skills = [0,0,0,0];
+    hc_attr = [10, 10];
+    hc_sex = sex_male;
+
+    Louis = CreateHuman;
+
+// rest
+    uc_nation = nation_arabian;
+
+    If TestCharacters('Martin_02') then
+    begin
+    Martin := CreateCharacter('Martin_02');
+    AllPeo = AllPeo ^ Martin;
+    end else
+    begin
+    Martin = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Karla_02') then
+    begin
+    Karla := CreateCharacter('Karla_02');
+    AllPeo = AllPeo ^ Karla;
+    end else
+    begin
+    Karla = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Mmark_02') then
+    begin
+    Mmark := CreateCharacter('Mmark_02');
+    AllPeo = AllPeo ^ Mmark;
+    end else
+    begin
+    Mmark = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Joachim_02') then
+    begin
+    Joachim := CreateCharacter('Joachim_02');
+    AllPeo = AllPeo ^ Joachim;
+    end else
+    begin
+    Joachim = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Gunther_02') then
+    begin
+    Gunther := CreateCharacter('Gunther_02');
+    AllPeo = AllPeo ^ Gunther;
+    end else
+    begin
+    Gunther = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Olaf_02') then
+    begin
+    Olaf:= CreateCharacter('Olaf_02');
+    AllPeo = AllPeo ^ Olaf;
+    end else
+    begin
+    Olaf = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    If TestCharacters('Dwein_02') then
+    begin
+    Dwein := CreateCharacter('Dwein_02');
+    AllPeo = AllPeo ^ Dwein;
+    end else
+    begin
+    Dwein = false;
+    LostPeople = LostPeople + 1;
+    end;
+
+    
+    hc_importance := 0;
+
+// if player don't have 7 people
+    If LostPeople > 0 then
+       begin
+        l = 0;
+
+         Repeat
+             begin
+
+               hc_basic_skills := [Rand(0,1), Rand(0,1), Rand(0,1), Rand(0,1)];
+               hc_skills = [Rand(1,4), Rand(1,4), Rand(1,4), Rand(0,3)];
+
+               If GetSkill(un, 3) > 3 then
+                  c = 3 else c = Rand(1,4);
+
+               hc_class = c;
+               hc_name  = '';
+               hc_gallery = '';
+               hc_sex = Rand(sex_male, sex_female);
+               hc_attr = [Rand(9, 12), Rand(10, 12)];
+
+               un = CreateHuman;
+               Others = Others ^ un;
+               AllPeo = AllPeo ^ un;
+
+               l = l + 1;
+             end until l = LostPeople;
+
+       end else
+            begin
+            // none
+       end;
+
+       
+// prepare vehicles
+
+  l = 0;
+
+   repeat
+    begin
+    vc_chassis = ar_half_tracked;
+    vc_engine = engine_combustion;
+    vc_control = control_manual;
+
+
+
+   // gatling
+    If ar_weapon = 1 then
+     begin
+     
+     If l <= 4 then
+     vc_weapon = ar_gatling_gun
+     else
+     vc_weapon = [ar_gun, ar_double_machine_gun, ar_light_gun][Rand(1,3)];
+     end;
+
+    
+    
+   // gun
+    If ar_weapon = 2 then
+     begin
+
+     If l <= 3 then
+     vc_weapon = ar_gun
+     else
+     vc_weapon = [ar_gatling_gun, ar_double_machine_gun, ar_light_gun][Rand(1,3)];
+     end;
+
+   
+   // random gun
+    If ar_weapon = 3 then
+     begin
+     vc_weapon = [ar_gatling_gun, ar_gun, ar_gun, ar_double_machine_gun, ar_light_gun][Rand(1,5)];
+     end;
+
+    // MUST BE!
+    If l = 1 then
+       vc_weapon = ar_flame_thrower;
+
+
+   
+
+    veh = CreateVehicle;
+    SetDir(veh, 3);
+    PlaceUnitArea(veh, attack_area, false);
+    
+    SetFuel(veh, Rand(75, 95));
+    vehs = vehs ^ veh;
+    l = l + 1;
+    end until l = 7;
+
+    for i = 1 to 7 do
+    begin
+    PlaceHumanInUnit(AllPeo[i], vehs[i]);
+    end;
+
+
+
+    If FilterAllUnits([[[f_side, 2], [f_class, 2], [f_driving]]]) = 0 then
+       SetClass(AllPeo[Rand(1,AllPeo)], 2);
+
+    {If FilterAllUnits([[[f_side, 2], [f_class, 2], [f_driving]]]) = 0 then
+    begin
+    eng1 := FindMaxSkill(FilterAllUnits([f_side,2]), 2);
+    SetClass(eng1, 2); // player must have 1 eng
+    end;
+
+    If FilterAllUnits([[[f_side, 2], [f_class, 3], [f_driving]]]) = 0 then
+    begin
+    meh1 := FindMaxSkill((AllPeo) diff (eng1), 3);
+    SetClass(meh1, 3);
+    end;
+
+    If FilterAllUnits([[[f_side, 2], [f_class, 4], [f_driving]]]) = 0 then
+    begin
+    doc1 := FindMaxSkill((AllPeo) diff [eng1, meh1], 4);
+    SetClass(doc1, 4);
+    end;}
+
+
+
+
+    // start movie
+    PlaceHumanInUnit(Louis, attack_veh);
+    SetClass(Louis, 1);
+    PrepareGensher; // for later
+    StartMovie;
+
+End;
+
+
+
+
+
+
+
+

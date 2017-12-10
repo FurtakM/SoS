@@ -1,0 +1,567 @@
+Export function StartMovie;
+begin
+
+
+     InGameOn;
+
+     CenterNowOnXY(101, 70);
+     PlaceSeeing(101, 70, 2, 20);
+
+     Wait(3);
+
+     // louis move
+     ComMoveXY(Louis, 101, 70);
+     AddComExitVehicle(Louis);
+     AddComMoveXY(Louis, 96, 64);
+     AddComWait(Louis, 0$03);
+     AddComMoveXY(Louis, 93, 67);
+     AddComWait(Louis, 0$04);
+     AddComMoveXY(Louis, 107, 75);
+     AddComWait(Louis, 0$03);
+
+     AddComEnterUnit(Louis, attack_veh);
+     AddComMoveXY(Louis, 121, 55);
+
+     Repeat
+      Wait(0$01);
+     Until GetDistUnitArea(Louis, movie1_area) < 2;
+
+     Wait(0$05);
+
+     SetSide(Louis, 8);
+     SetSide(attack_veh, 8);
+
+     Wait(0$01);
+
+    // CenterNowOnXY(79, 9);
+
+    { ComExitBuilding(Gaidar);
+     AddComMoveXY(Gaidar, 98, 94);
+     AddComTurnXY(Gaidar, 83, 43); }
+
+  InGameOff;
+
+     CenterNowOnXY(79, 9);
+
+     ChangeMissionObjectives('AttackBase');
+
+     SaveForQuickRestart;
+
+     Starter := true; // time start!
+
+     SetAttitude(2, 3, att_enemy, true);
+
+     Wait(3);
+
+     SayRadio(Louis, 'MineReady');
+
+     RemoveUnit(Louis);
+     RemoveUnit(attack_veh);
+
+     // dialogs
+     Say(AllPeo[3], 'DAA-1');
+     Say(AllPeo[4], 'DAA-2');
+     Say(AllPeo[5], 'DAA-3');
+
+End;
+
+
+// YOU LOST
+Every 10$00 trigger GetSide(ru1_depot) = 3 do
+begin
+
+     InGameOn;
+       DialogueOn;
+
+        SayRadio(Gensher, 'YouLost1');
+
+      DialogueOff;
+     InGameOff;
+
+     Wait(0$0.3);
+
+     YouLost('Timer');
+
+End;
+
+
+// Russian was attack by Arabs
+Every 0$01 trigger Count > 0 do
+var sold, i, p, force;
+begin
+
+// test
+// PlaceSeeing(101, 70, 2, 20);
+// test end
+
+      force := [];
+      force := FilterUnitsInArea(russ_base, [[[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay]] ]]);
+
+
+      p := Rand(1,3);
+
+      Case p of
+       1:ComMoveXY(Gaidar, 174,  91);
+       2:ComMoveXY(Gaidar, 129, 118);
+       3:ComMoveXY(Gaidar,  55, 108);
+      End;
+
+
+           Wait(0$0.2);
+
+            MineExplosion( 93, 67, 1);
+            MineExplosion( 89, 63, 1);
+            MineExplosion( 94, 61, 1);
+            MineExplosion(107, 75, 1);
+            MineExplosion(112, 80, 1);
+            MineExplosion(112, 76, 1);
+
+           Wait(0$0.7);
+
+            SetLives(ru1_depot, 249);
+
+          Wait(0$02);
+
+           For i = 1 to force do
+               begin
+               ComAttackUnit(force[i], NearestUnitToUnit(FilterAllUnits([f_side, 2]), force[i]));
+               end;
+End;
+
+// Russian Escape {RU ESCP}
+Every 0$02 trigger Count >= 1 do
+var un, i;
+begin
+
+// all leave 
+for i = 1 to 11 do
+begin
+ComExitBuilding(ru_free[i]);
+end;
+
+// I
+for i = 1 to 3 do
+begin
+ComMoveToArea(ru_free[i], Point1);
+end;
+// II
+for i = 4 to 8 do
+begin
+ComMoveToArea(ru_free[i], Point2);
+end;
+// III
+ComMoveToArea(ru_free[9], Point4);
+ComMoveToArea(ru_free[10], Point5);
+ComMoveToArea(ru_free[11], Point6);
+
+
+       Wait(0$04);
+
+
+         DialogueOn;
+
+           CenterNowOnUnits(ru_free[8]);
+
+           DWait(0$0.3);
+
+           Say(AllPeo[2], 'Dru-run');
+           Say(AllPeo[Rand(3,4)], 'Dru-run1');
+
+           DWait(0$0.2);
+
+         DialogueOff;
+
+           ChangeMissionObjectives('Catch');
+
+           Wait(0$03);
+
+           For i in guards do
+            begin
+            ComExitBuilding(i);
+            AddComMoveXY(i, 101, 70);
+            end;
+
+End;
+
+
+// Caputre depot
+Every 0$01 trigger GetSide(ru1_depot) = 2 and GetLives(ru1_depot) > 250 do
+begin
+
+       Wait(0$10);
+
+              // louis return
+               uc_nation = nation_arabian;
+               uc_side = ar;
+
+               Louis := CreateCharacter('Louis');
+               PlaceUnitXY(Louis, 134, 75, false);
+
+
+       ComMoveXY(Louis, 101, 70);
+
+               Wait(0$05);
+
+       AddComTurnUnit(Louis, AllPeo[1]);
+       ComTurnUnit(AllPeo[1], Louis);
+
+        // dialogs
+              DialogueOn;
+
+               CenterNowOnUnits(Louis);
+               Say(Louis, 'Dl-1');
+               Say(AllPeo[1], 'Dp-1');
+               Say(Louis, 'Dl-2');
+
+                 If GetSide(ru_east) = 2 then
+                  begin
+                   Say(AllPeo[1], 'Dp-2b');
+                   Say(Louis,'Dl-3b');
+                  end else
+                   begin
+                    Say(AllPeo[1], 'Dp-2a');
+                    Say(Louis,'Dl-3a');
+
+                    ChangeMissionObjectives('Oil');
+                   end;
+
+              Say(Louis, 'Dl-4');
+
+              DialogueOff;
+
+       
+       ChangeMissionObjectives('Waiting');
+
+       Wait(1$05);
+     //  PrepareGensher;
+
+
+       DialogueOn;
+
+                 SayRadio(Gensher, 'DG-1');
+                 Say(Louis, 'DL-1g');
+                 SayRadio(Gensher, 'DG-2');
+                 Say(Louis, 'DL-2g');
+                 SayRadio(Gensher, 'DG-3');
+                 SayRadio(Gensher, 'DG-4');
+                 Say(Louis, 'DL-3g');
+                 SayRadio(Gensher, 'DG-5');
+
+       DialogueOff;
+
+    ChangeMissionObjectives('DestBase');
+
+    Wait(0$0.3);
+
+    CenterNowOnXY(100, 76);
+    Say(Louis, 'Dl-flame');
+
+End;
+
+// capture east base
+Every 0$01 trigger GetSide(ru_east) = 2 do
+begin
+
+     If not GetSide(Louis) = 2 then
+     begin
+     Say(AllPeo[Rand(1,4)], 'D-oil');
+     end else
+     begin
+     Say(Louis, 'Dl-oil');
+     ChangeMissionObjectives('OilOut');
+     end;
+
+end;
+
+// Gaidar dead
+Every 0$01 trigger GetLives(Gaidar) <= 260 do
+begin
+
+     ForceSay(Gaidar, 'DGai');
+
+     AddMedal('gaidar', 1);
+
+End;
+
+
+// nw
+Every 0$01 trigger GetSide(ru1_depot) = 2 do
+var time;
+begin
+
+time = [8$00, 9$00, 11$00][Difficulty];
+
+Wait(time);
+
+PrepareNewUnits;
+
+SayRadio(Ronn, 'Dron1');
+
+ChangeMissionObjectives('WaitingOut');
+end;
+
+
+Every 0$01 trigger Capt > 0 do
+var i, filter, un;
+begin
+
+     filter := FilterAllUnits([[f_side, 2], [f_class, 3]]);
+
+     If filter[2] then
+      begin
+       un = filter[2]
+      end else
+      begin
+       un = filter[1];
+      end;
+
+     Say(un, 'D-Capt1');
+
+End;
+
+
+Every 0$01 trigger Prod = 2 and IsLive(Ronn) do
+begin
+// Ronn want go to next map ;d
+DialogueOn;
+InGameOn;
+
+         Say(Ronn, 'D-Scout1');
+         Say(Louis, 'D-Scout2');
+
+         Case Query('ScoutQ') of
+         1:begin
+           Say(Louis, 'D-ScoutY');
+           Say(Ronn, 'D-ScoutY-R');
+           SetAreaMapShow(scot_area, 1);
+           Case Query('Info') of
+           1:Scout := true;
+           end;
+           end;
+         2:begin
+           Say(Louis, 'D-ScoutN');
+           end;
+
+         End;
+
+InGameOff;
+DialogueOff;
+
+End;
+
+
+Every 0$01 trigger Scout and IsInArea(Ronn, scot_area) do
+begin
+SaveCharacters(Ronn, 'Ronn_Scout');
+SaveVariable(1, 'Scout');
+
+       If IsInUnit(Ronn) then
+          begin
+          ComExitVehicle(Ronn);
+          Say(Ronn, 'Ronn-left');
+          end;
+
+RemoveUnit(Ronn);
+SetAreaMapShow(scot_area, 0);
+End;
+
+
+// out obj. base
+Every 0$01 trigger GetSide(ru_mainbase) = 2 or not IsLive(ru_mainbase) do
+begin
+ChangeMissionObjectives('OutBase');
+end;
+
+
+Every 0$01 trigger GetResourceType(GetBase(ru1_depot), mat_oil) >= [400, 600, 800][Difficulty] do
+begin
+Say(Louis, 'DL-oill1');
+End;
+
+ // END
+Every 0$01 trigger Prod >= 5 and FilterAllUnits([f_weapon, ar_radar]) > 0 do
+var i, filter, un;
+begin
+
+     filter := FilterAllUnits([[f_side, 2], [f_class, 3]]);
+
+     un = filter[1];
+
+     Say(un, 'rdy1');
+
+     End_The_Mission_Allowed := true;
+
+     Hint('Ending');
+
+End;
+
+
+
+On EndTheMissionRaised(exitt) do
+begin
+End_The_Mission_Allowed := false;
+End_Mission;
+End;
+
+Function End_Mission;
+var i, un, ident_list;
+begin
+
+    // Disable(0);
+
+     If GetResourceType(GetBase(ru1_depot), mat_oil) >= [400, 600, 800][Difficulty] then
+      begin
+      AddMedal('Oilm', 1);
+      end else
+      begin
+      AddMedal('Oilm', -1);
+      end;
+
+     If Capt >= [4,6,9][Difficulty] then
+      begin
+      AddMedal('Captm', 1);
+      end else
+      begin
+      AddMedal('Captm', -1);
+      end;
+
+     If IsLive(Gaidar) > 250 or kom_run then
+      begin
+      AddMedal('Gaidar', -1);
+      end;
+
+      GiveMedals('MAIN');
+
+      AllPeo := AllPeo ^ Louis;
+
+      RewardPeople(AllPeo);
+
+      SaveCharacters(Louis, 'Louis');
+
+      If IsLive(Martin) then
+       begin
+       SaveCharacters(Martin, 'Martin_04');
+       end;
+
+      If IsLive(Karla) then
+       begin
+       SaveCharacters(Karla, 'Karla_04');
+       end;
+
+      If IsLive(Dwein) then
+       begin
+       SaveCharacters(Dwein, 'Dwein_04');
+       end;
+
+      If IsLive(Joachim) then
+       begin
+       SaveCharacters(Joachim, 'Joachim_04');
+       end;
+
+      If IsLive(Olaf) then
+       begin
+       SaveCharacters(Olaf, 'Olaf_04');
+       end;
+
+      If IsLive(Mmark) then
+       begin
+       SaveCharacters(Mmark, 'Mmark_04');
+       end;
+
+      If IsLive(Herczeg) then
+       begin
+       SaveCharacters(Herczeg, 'Herczeg_04');
+       end;
+
+      If IsLive(Kantor) then
+       begin
+       SaveCharacters(Kantor, 'Kantor_04');
+       end;
+
+      If IsLive(Ronn) then
+       begin
+       SaveCharacters(Ronn, 'Ronn_04');
+       end;
+
+      If IsLive(Mia) then
+       begin
+       SaveCharacters(Mia, 'Mia_04');
+       end;
+
+      If IsLive(Gunther) then
+       begin
+       SaveCharacters(Gunther, 'Gunther_04');
+       end;
+
+
+      If others > 0 then
+         begin
+
+          //ident_list := [ot1, ot2, ot3, ot4, ot5, ot6, ot7];
+       
+
+             If IsLive(others[1]) then
+                begin
+                SaveCharacters(others[1], 'ot1_04');
+                end;
+             If IsLive(others[2]) then
+                begin
+                SaveCharacters(others[2], 'ot2_04');
+                end;
+             If IsLive(others[3]) then
+                begin
+                SaveCharacters(others[3], 'ot3_04');
+                end;
+             If IsLive(others[4]) then
+                begin
+                SaveCharacters(others[4], 'ot4_04');
+                end;
+             If IsLive(others[5]) then
+                begin
+                SaveCharacters(others[5], 'ot5_04');
+                end;
+             If IsLive(others[6]) then
+                begin
+                SaveCharacters(others[6], 'ot6_04');
+                end;
+             If IsLive(others[7]) then
+                begin
+                SaveCharacters(others[7], 'ot7_04');
+                end;
+       End;
+
+       // VARIABLE
+       oil_sor := GetResourceType(GetBase(ru1_depot), mat_oil);
+
+       SaveVariable(timer, 'VarTime');
+       SaveVariable(oil_sor, 'VarOil');
+
+       If not IsLive(Gaidar) then
+              begin
+              SaveVariable(false, 'VarKom');
+               end else
+                begin
+                if kom_run then
+                SaveVariable(true, 'VarKom');
+                end;
+
+       If GetLives(ru_mainbase) > 0 or GetSide(ru_mainbase) = 3 then
+       begin
+       SaveVariable(1, 'VarBase');
+       end else
+       begin
+       SaveVariable(0, 'VarBase');
+       end;
+
+       YouWin;
+       SetNextMission(1); // end
+
+
+end;
+
+
+
+
+
+
+

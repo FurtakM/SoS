@@ -1,0 +1,207 @@
+On VehicleConstructed(veh, fac) do
+var i;
+begin
+
+     if GetSide(fac) = 3 then
+        if not GetWeapon(veh) in [ru_cargo_bay, ru_crane, ru_bulldozer] then
+           for i = 1 to 4 do
+               rvehlist := Delete(rvehlist, 1);
+
+     if GetSide(fac) = 6 then
+        if not GetWeapon(veh) in [ru_cargo_bay, ru_crane, ru_bulldozer] then
+           for i = 1 to 4 do
+               r2vehlist := Delete(r2vehlist, 1);
+
+End;
+
+
+On ActiveUnitChanged(un) do
+begin
+
+  if bazooka_dialog = false then
+     if un = arr_arm or un = FilterAllUnits([[f_side, 2], [f_class, 9]])[1] then
+        bazooka_dialog := true;
+
+End;
+// OR
+Every 0$01 trigger IsSelected(arr_arm) do
+bazooka_dialog := true;
+
+
+On BuildingComplete(b) do
+var i;
+begin
+
+     if GetSide(b) = 3 then
+        for i = 1 to 4 do
+            rbullist := Delete(rbullist, 1);
+
+     if GetSide(b) = 6 then
+        for i = 1 to 4 do
+            r2bullist := Delete(r2bullist, 1);
+
+     if GetBType(b) = b_siberite_power then
+        sib_pow := true;
+
+End;
+
+On UnitDestroyed(un) do
+begin
+
+     if un = Louis then
+        YouLost('LouisDead');
+
+     if un = arr_arm then
+        Say(Louis, 'DL-force');
+
+     if un in FilterAllUnits([[f_side, 2], [f_class, 9]]) then
+        if bazooka_num > 0 then
+           bazooka_num = bazooka_num - 1;
+
+
+     if un in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_crane]], [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_weapon, ru_bulldozer]]]) then
+        begin
+        rvehlist := rvehlist ^ GetChassis(un);
+        rvehlist := rvehlist ^ GetEngine(un);
+        rvehlist := rvehlist ^ GetControl(un);
+        rvehlist := rvehlist ^ GetWeapon(un);
+        end;
+
+     if un in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) then
+        begin
+        if GetBType(un) = b_factory then
+           rbullist := rbullist ^ b_workshop
+            else
+        if GetBType(un) in [b_lab_full, b_lab, b_lab_half] then
+           rbullist := rbullist ^ b_lab
+            else
+        if GetBType(un) = b_warehouse then
+           rbullist := rbullist ^ b_depot
+            else
+        if GetBType(un) = b_barracks then
+           rbullist := rbullist ^ b_armoury
+            else
+           rbullist := rbullist ^ GetBType(un);
+
+        rbullist := rbullist ^ GetX(un);
+        rbullist := rbullist ^ GetY(un);
+        rbullist := rbullist ^ GetDir(un);
+
+        ru_angry := ru_angry + Rand(1, 39);
+        end;
+
+     if un in FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_not, [f_weapon, ru_crane]], [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_weapon, ru_bulldozer]]]) then
+        begin
+        r2vehlist := r2vehlist ^ GetChassis(un);
+        r2vehlist := r2vehlist ^ GetEngine(un);
+        r2vehlist := r2vehlist ^ GetControl(un);
+        r2vehlist := r2vehlist ^ GetWeapon(un);
+        end;
+
+     if un in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) then
+        begin
+        if GetBType(un) = b_factory then
+           r2bullist := r2bullist ^ b_workshop
+            else
+        if GetBType(un) in [b_lab_full, b_lab, b_lab_half] then
+           r2bullist := r2bullist ^ b_lab
+            else
+        if GetBType(un) = b_warehouse then
+           r2bullist := r2bullist ^ b_depot
+            else
+        if GetBType(un) = b_barracks then
+           r2bullist := r2bullist ^ b_armoury
+            else
+           r2bullist := r2bullist ^ GetBType(un);
+
+        r2bullist := r2bullist ^ GetX(un);
+        r2bullist := r2bullist ^ GetY(un);
+        r2bullist := r2bullist ^ GetDir(un);
+
+        ru_angry := ru_angry + Rand(1, 39);
+        end;
+End;
+
+
+On ResearchComplete(tech, lab) do
+begin
+
+     if tech = 7 then
+        begin
+        ChangeMissionObjectives('TRado');
+        Say(SaySci, 'Dsci-Brad');
+        Say(Louis, 'DL-Brad');
+        end;
+
+     if tech = 8 then
+        Say(SaySci, 'Dsci-bio');
+
+End;
+
+
+On EnterBuilding(b, un) do
+var deps;
+begin       
+
+     deps := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+     If un in FilterAllUnits([[f_side, 2],[f_class, class_apeman]]) or un in FilterAllUnits([[f_side, 2],[f_class, class_apeman_soldier]]) then
+        If b in deps then
+        begin
+        Wait(0$0.3);
+        SetClass(un, 16);
+        end;
+
+End;
+
+
+On UnitGoesToRed(un) do
+begin
+
+     if un in FilterAllUnits([f_control, control_computer]) and comp_destroyed = false then
+        begin
+        comp_destroyed := true;
+
+        DialogueOn;
+        CenterNowOnUnits(un);
+        DWait(0$0.1);
+        Say(Louis, 'DL-compd');
+        DWait(0$0.3);
+        DialogueOff;
+        end;
+
+    if un = main_sci then
+       main_sci_dead = true;
+
+    if un in FilterUnitsInArea(ru_at, [f_control, control_computer]) and comp_attack = false then
+       begin
+       comp_ct := comp_ct + 1;
+
+       if comp_ct >= 16 then
+          comp_attack := true;
+       end;
+
+End;
+
+
+
+Every 5$30 trigger tick < 35*60*70 do
+begin
+enable;
+
+CreateCratesArea(Rand(1,5), crates_area, true);
+ Wait(Rand(0$01, 0$10));
+CreateCratesArea(Rand(1,5), crates_area, true);
+ Wait(0$05);
+CreateCratesAnyWhere(Rand(1,5), true);
+End;
+
+
+Every 3$20 do
+begin
+enable;
+
+CreateCratesArea(Rand(1,5), super_crates, true);
+ Wait(Rand(0$08, 0$15));
+CreateCratesArea(Rand(1,5), super_crates, true);
+End;

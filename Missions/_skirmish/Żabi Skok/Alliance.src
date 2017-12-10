@@ -1,0 +1,62 @@
+Export Function PrepareAlliance;
+var i, un, skill;
+begin
+uc_side := 7;
+skill := [7, 8, 9][Difficulty];
+
+
+SetResourceType(GetBase(al_dep), mat_cans, 999999);
+SetResourceType(GetBase(al_dep), mat_oil, 10000);
+SetResourceType(GetBase(al_dep), mat_siberit, 10000);
+
+// engs
+for i = 1 to 6 do
+    begin
+    uc_nation := [1,3][Rand(1,2)];
+    PrepareHuman(false, class_engineer, skill);
+    PlaceUnitArea(CreateHuman, al_base, false);
+    end;
+
+// mechanics
+for i = 1 to 6 do
+    begin
+    uc_nation := [1,3][Rand(1,2)];
+    PrepareHuman(false, class_mechanic, skill);
+    PlaceHumanInUnit(CreateHuman, al_fac_ru);
+    end;
+
+// mechanics
+for i = 1 to 6 do
+    begin
+    uc_nation := [1,3][Rand(1,2)];
+    PrepareHuman(false, class_mechanic, skill);
+    PlaceHumanInUnit(CreateHuman, al_fac_us);
+    end;
+
+// sci
+for i = 1 to 6 do
+    begin
+    uc_nation := [1,3][Rand(1,2)];
+    PrepareHuman(false, class_scientistic, skill);
+    PlaceHumanInUnit(CreateHuman, [al_lab_us, al_lab_ru][Rand(1,2)]);
+    end;
+
+// sol
+for i = 1 to 6 do
+    begin
+    uc_nation := [1,3][Rand(1,2)];
+    PrepareHuman(false, [class_sniper, class_bazooker][Rand(1,2)], skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 7], [f_btype, b_barracks]])[1]);
+    end;
+
+    uc_nation := 3;
+    PrepareHuman(false, class_sniper, skill);
+    PlaceHumanInUnit(CreateHuman, al_bun);
+
+
+for i in FilterAllUnits([[f_side, 7], [f_btype, b_turret]]) do
+    if GetNation(i) = 1 then
+       AddComPlaceWeapon(i, us_double_laser)
+        else
+         AddComPlaceWeapon(i, [ru_rocket, ru_rocket_launcher][Rand(1,2)]);
+End;

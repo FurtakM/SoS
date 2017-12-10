@@ -1,0 +1,135 @@
+Export Louis, Louis_Veh;
+Export Function PrepareLouis;
+begin
+
+   uc_side := 2;
+   Louis := CreateCharacter('Louis');
+
+   if Louis = false then
+      begin
+      hc_gallery := '';
+      hc_name    := 'Louis Tester';
+      hc_class   := 1;
+      hc_skills  := [6, 2, 4, 3];
+      hc_sex     := sex_male;
+      Louis := CreateHuman;
+      FogOff(1);
+      end;
+
+// vehicle for Louis
+   uc_nation := 2;
+   vc_chassis := [ar_half_tracked, ar_half_tracked, ar_medium_trike][Difficulty];
+   vc_engine  := engine_combustion;
+   vc_control := control_manual;
+   vc_weapon  := [ar_flame_thrower, ar_gun, ar_light_gun][Difficulty];
+   Louis_Veh  := CreateVehicle;
+
+// flag
+   SetMark(Louis_Veh, 1);
+
+// place
+   SetDir(Louis_Veh, 4);
+   PlaceUnitArea(Louis_Veh, start_area, false);
+   SetFuel(Louis_Veh, [90, 80, 70][Difficulty]);
+   PlaceHumanInUnit(Louis, Louis_Veh);
+
+// camera
+   InGameOn;
+
+   CenterNowOnXY(188, 99);
+
+   ComMoveXY(Louis, 179, 99);
+   
+End;
+
+
+Export Gali, Nicolas, Mike, Jenna, Rick;
+Export Function LoadFrom03;
+begin
+
+     uc_side := 5;
+
+  // Louis Gali
+     Gali    := CreateCharacter('Gali_03');
+
+  // Mike Turssen
+     Mike    := CreateCharacter('Mike_03');
+
+  // Nicolas Vercen
+     Nicolas := CreateCharacter('Nicolas_03');
+
+  // Jenna Matover
+     Jenna   := CreateCharacter('Jenna_03');
+
+  // Rick Hoft
+     Rick    := CreateCharacter('Rick_03');
+
+End;
+
+Export Rolf, Ar_Squad, Skill;
+Export Function WestBase;
+var i, un;
+begin
+
+     LoadFrom03;
+      
+
+     // Base Name
+        SetBName(ar_depot, 'pavlov');
+
+     // person
+        uc_side := 5;
+        uc_nation := 2;
+
+     // Rolf Bergkampf
+        hc_gallery := 'sandar';
+        hc_face_number := 9;
+        hc_name := 'Rolf Bergkampf';
+        hc_basic_skills := [2, 0, 2, 0];
+        hc_skills := [7, 2, 4, 1];
+        hc_attr := [10, 10];
+        hc_sex := sex_male;
+        hc_class := 1;
+
+        Rolf := CreateHuman;
+
+     // -------------------
+        Ar_Squad := [];
+        Skill    := [5, 4, 4][Difficulty];
+
+     // apemans
+        uc_nation  := 0;
+        hc_basic_skills := [0, 0, 0, 0];
+        hc_skills  := [3, 0, 0, 0];
+        hc_gallery := '';
+        hc_class   := class_apeman_soldier;
+        hc_name    := '';
+        PlaceHumanInUnit(CreateHuman, arradar);
+
+        hc_class   := class_apeman_engineer;
+
+        for i = 1 to 2 do
+            PlaceHumanInUnit(CreateHuman, ar_depot);
+
+        uc_nation := 2;
+     // bazooker
+        PlaceHumanInUnit(CreateHumanWithClass(9, skill), arr_arm);
+        
+     // towers
+        for i in FilterAllUnits([[[f_side, 5], [f_empty], [f_btype, b_bunker]]]) do
+            PlaceHumanInUnit(CreateHumanWithClass(1, skill), i);
+
+     // lab
+        if Jenna then
+           PlaceHumanInUnit(Jenna, ar_depot)
+            else
+             PlaceHumanInUnit(CreateHumanWithClass(4, skill), ar_lab);
+
+        PlaceHumanInUnit(CreateHumanWithClass(4, skill), ar_lab);
+
+     // depot
+     PlaceHumanInUnit(Rolf, arr_arm);
+
+     Ar_Squad := FilterAllUnits([[f_side, 5], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [Rolf, Jenna];
+
+End;

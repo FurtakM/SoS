@@ -1,0 +1,108 @@
+// Vulcano Area
+Every 0$01 trigger FilterUnitsInArea(vulcano_area, [f_type, unit_human]) > 0 do
+var i, un;
+begin
+enable;
+
+for i in FilterUnitsInArea(vulcano_area, [f_type, unit_human]) do
+    if GetLives(i) > 4 then
+       SetLives(i, 4);
+
+End;
+
+
+// Artifact
+On ArtifactResearchComplete(lab) do
+begin
+if GetSide(lab) = your_side then
+   player_res_art := true;
+End;
+
+Every 0$01 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]) and player_res_art do
+var x, y, lab;
+begin
+enable;
+
+// display_strings := FindArtifact(1);
+
+x := FindArtifact(1)[1];
+y := FindArtifact(1)[2];
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), x, y);
+
+if player_artifact_ready = false then
+   if GetDistUnitXY(lab, x, y) < 6 then
+      begin
+      if BuildingStatus(lab) = bs_idle then
+         SetArtifactUse(your_side, art_exp_left, art_instant, lab)
+          else
+           SetArtifactUse(your_side, art_exp_left, art_gray, lab);
+      end
+       else
+        SetArtifactUse(your_side, art_exp_left, art_gray, lab);
+
+if player_artifact_ready then
+   if GetDistUnitXY(lab, x, y) < 6 then
+      begin
+      if BuildingStatus(lab) = bs_idle then
+         SetArtifactUse(your_side, art_icon, art_unit, lab)
+          else
+           SetArtifactUse(your_side, art_icon, art_gray, lab);
+      end
+       else
+        SetArtifactUse(your_side, art_icon, art_gray, lab);
+
+End;
+
+On ArtifactUsed(s, icon, cr1, cr2) do
+var x, y, i, lab, side;
+begin
+x := FindArtifact(1)[1];
+y := FindArtifact(1)[2];
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), x, y);
+
+if icon = art_exp_left then
+   begin
+   SetSpecResearch(lab, time_res_art, true);
+   SetArtifactUse(your_side, art_exp_left, art_no, lab);
+   end;
+
+if icon = art_icon then
+   begin
+   if cr1 in FilterAllUnits([f_type, unit_building]) then
+   begin
+   side := GetSide(cr1);
+
+   if FilterAllUnits([[f_side, side], [f_btype, b_siberite_power]]) > 0 then
+      begin
+      for i in FilterAllUnits([[f_side, side], [f_or, [f_btype, b_oil_power], [f_btype, b_solar_power], [f_btype, b_siberite_power]]]) do
+          SetLives(i, 1);
+
+      player_res_art := false;
+
+      SetArtifactUse(your_side, art_icon, art_gray, lab);
+       Wait(time_to_reuse);
+      //SetArtifactUse(your_side, art_icon, art_unit, lab);
+
+      player_res_art := true;
+      end;
+
+   end;
+   end;
+
+End;
+
+
+On SpecResearchComplete(lab) do
+begin
+if GetSide(lab) = your_side then
+   begin
+   SetArtifactUse(your_side, art_exp_left, art_no, lab);
+   player_artifact_ready := true;
+   Hint('ArtVulcano');
+   end;
+End;
+
+On SpecResearchCancel(lab, progress) do
+begin
+SetArtifactUse(your_side, art_exp_left, art_instant, lab);
+end;

@@ -1,0 +1,186 @@
+On ResearchComplete(tech, lab) do
+var sci, eng, sol;
+begin
+counttech = counttech + 1;
+
+If counttech = 3 then
+begin
+ChangeMissionObjectives('TechsEnd');
+end;
+
+If tech = 48 then
+begin
+sol := FilterAllUnits([[f_side, 2],[f_class, 1]]) diff Louis;
+sci := FilterAllUnits([[f_side, 2],[f_class, 4]]) diff Louis;
+
+DialogueOn;
+Say(sci[Rand(1, sci)], 'Dsci-1');
+Say(Louis, 'Dlsci-1');
+Say(sci[Rand(1, sci)], 'Dsci-2');
+If sol > 0 then
+begin
+Say(sol[1], 'Dsol-1');
+Say(sci[1], 'Dsci-3');
+DialogueOff;
+
+ChangeMissionObjectives('Techs');
+
+SetTech(tech_oilpow, 2, state_enabled);
+SetTech(tech_oileng, 2, state_enabled);
+
+SetRestrict(4, 2, state_enabled);
+SetRestrict(31, 2, state_enabled);
+SetRestrict(29, 2, state_enabled);
+end else
+begin
+DialogueOff;
+
+ChangeMissionObjectives('Techs');
+
+SetTech(tech_oilpow, 2, state_enabled);
+SetTech(tech_oileng, 2, state_enabled);
+
+SetRestrict(2, 2, state_enabled);
+SetRestrict(4, 2, state_enabled);
+SetRestrict(31, 2, state_enabled);
+SetRestrict(29, 2, state_enabled);
+end;
+end;
+
+end;
+
+
+// Veh
+On VehicleCaptured(new_identifier, old_identifier, old_side, human) do
+begin
+
+If FirstContact = true then
+begin
+SetRestrict(2, 2, state_enabled);
+
+If human = Louis or human = Martin then
+begin
+Say(Martin, 'DV-4a');
+Say(Louis, 'DV-4');
+FirstContact = false;
+
+ChangeMissionObjectives('BuildWorkShop');
+end else
+begin
+Say(human, 'DV-1');
+Say(Louis, 'DV-2');
+Say(Martin, 'DV-3');
+Say(Louis, 'DV-4');
+FirstContact = false;
+
+ChangeMissionObjectives('BuildWorkShop');
+end;
+
+end;
+end;
+
+On BuildingComplete(b) do
+begin
+
+If GetBType(b) = b_workshop then
+begin
+
+If FirstWorkShop = true then
+begin
+FirstWorkShop = false;
+
+Say(Martin, 'DV-5');
+Wait(0$0.2);
+Say(Martin, 'DV-6');
+Say(Martin, 'DV-7');
+ChangeMissionObjectives('BuildVeh');
+end;
+end;
+end;
+
+Export balista;
+On VehicleConstructed(un, fac) do
+begin
+If ThisIsFirstVeh = true then
+begin
+Wait(0$02);
+
+DialogueOn;
+Say(Martin, 'DP-1');
+Say(Louis, 'DP-2');
+Say(Martin, 'DP-3');
+Say(Louis, 'DP-4');
+DialogueOff;
+
+balista := [GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un)];
+
+ChangeMissionObjectives('VehOk');
+MedalAtVeh = true;
+ThisIsFirstVeh = false;
+
+AddMedal('vehicle', 1);
+end;
+end;
+
+
+On Contact(you, other_side) do
+begin
+
+If you = 2 and other_side = 5 then
+begin
+Wait(0$0.3);
+YouLost('AllyAt');
+end;
+
+If you = 2 and other_side = 1 or GetLives(Cathy) < 1000 then
+begin
+Wait(0$0.3);
+ComMoveXY(Cathy, 52, 103);
+end; 
+
+end;
+
+Export CountOfDead, RuDead;
+On UnitDestroyed(un) do
+begin
+
+If GetSide(un) = 3 then
+begin
+RuDead = RuDead + 1;
+end;
+
+
+If un in FilterAllUnits([[f_side, 2], [f_type, unit_human]]) then
+begin
+CountOfDead = CountOfDead + 1;
+end;
+
+If un = Louis then
+begin
+YouLost('Dead');
+end;
+
+if un = Abdul then
+begin
+YouLost('SDead');
+End;
+
+If GetBType(un) = b_depot then
+begin
+YouLost('BaseDestroy');
+end;
+end;
+
+On LeaveBuilding(b, un) do
+begin
+
+If un = Cathy then
+begin
+ComEnterUnit(Cathy, ar_dep1);
+end;
+
+end;
+
+
+
+

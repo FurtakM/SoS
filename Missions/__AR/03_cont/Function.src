@@ -1,0 +1,55 @@
+Export Function Attack(unit, enemy_side, path, target);
+var i, filter, all_vehs, capture_mode;
+begin
+// target (ignore) list: [towers, tanks, soldiers, civils, buildings, empty]
+
+filter := FilterAllUnits([[f_side, enemy_side], [f_dist, unit, 20]]);
+all_vehs := FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle]]);
+capture_mode := false;
+
+   for i = 1 to target do
+       begin
+             case target[i] of
+                  'towers':              filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret]]]);
+                  'tanks':               filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle]]);
+                  'soldiers':            filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_class, 1]]);
+                  'civils':              filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_class, 2], [f_class, 3], [f_class, 4]]]);
+                  'buildings':           filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_building]]);
+                  'empty_buildings':     filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_building], [f_empty]]);
+                  'empty_vehicles':      filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle], [f_empty]]);
+                  'electro':             filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_btype, b_solar_power], [f_btype, b_oil_power], [f_btype, b_siberite_power]]]);
+                  'capture_vehicle':     capture_mode := true;
+             end;
+       end;
+
+
+   if not WantsToAttack(unit) then
+      begin
+
+           if filter then
+              begin
+              ComAttackUnit(unit, NearestUnitToUnit(filter, unit));
+              end
+               else
+                if GetDistUnitXY(unit, path[1], path[2]) > 7 then
+                   ComMoveXY(unit, path[1], path[2]);
+
+           if capture_mode and unit in FilterAllUnits([f_type, unit_human]) then
+              begin
+              if NearestUnitToUnit(all_vehs, unit) in FilterAllUnits([[[f_type, unit_vehicle], [f_empty], [f_lives, 251]]]) then
+                 ComEnterUnit(unit, NearestUnitToUnit(all_vehs, unit));
+              end;
+      end;
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+for i = 1 to area do
+    if IsEnvironment(area[i][1], area[i][2]) then
+       if not HasTask(bulldozer) then
+          AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;

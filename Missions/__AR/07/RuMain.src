@@ -1,0 +1,341 @@
+// RuMainBase side = 3;
+Export ru3_sold, ru3_eng, ru3_mech, ru3_sci, ru3_bazz, ru3_veh, ru3_lab, ru3_fac, ru3_blist, ru3_bweap;
+Every 0$01 trigger FilterAllUnits([f_side, 3]) > 0 do
+var i, filter, list, p, l, range, al_build, buildings, towers, is_hurt, un, vehicles, cranes;
+begin
+Enable;
+
+     ru3_sold := FilterAllUnits([[f_side, 3], [f_class, 1]]) diff [ru_staff];
+     ru3_eng  := FilterAllUnits([[f_side, 3], [f_class, 2]]);
+     ru3_mech := FilterAllUnits([[f_side, 3], [f_class, 3]]);
+     ru3_sci  := FilterAllUnits([[f_side, 3], [f_class, 4]]);
+     ru3_bazz := FilterAllUnits([[f_side, 3], [f_class, 9]]);
+     ru3_veh  := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_crane]]]);
+
+     ru3_lab := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_half]]]);
+     ru3_fac := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+
+     towers    := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+     buildings := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+     al_build  := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+     vehicles  := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]);
+
+     // sta³e
+     is_hurt := [500, 510, 520][Difficulty];
+
+
+     if FilterAllUnits([[f_side, 3], [f_bweapon, 0], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]) > 0 and ru3_fac > 0 then
+        begin
+        filter := FilterAllUnits([[f_side, 3], [f_bweapon, 0], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
+
+        for i = 1 to filter do
+        ComPlaceWeapon(filter[i], ru3_bweap[1]);
+        end;
+
+     if UnitsInside(ru3_fac[1]) = 0 and BuildingStatus(ru3_fac) = bs_working then
+        ComCancel(ru3_fac[1]);
+
+
+
+  // Zolnierze
+     if ru3_sold > 0 then
+        begin
+
+             for i = 1 to ru3_sold do
+                 begin
+
+                 if GetLives(ru3_sold[i]) <= is_hurt then
+                    begin
+
+                    if IsInUnit(ru3_sold[i]) then
+                       ComExitBuilding(ru3_sold[i]);
+
+                    ComMoveXY(ru3_sold[i], GetX(ru_main_dep)-1, GetY(ru_main_dep)+2);
+                    end;
+
+
+                 if UnitFilter(towers, [[f_lives, 300], [f_empty]]) > 0 and UnitFilter(ru3_sold, [f_outside]) = 0 then
+                    begin
+                    filter := UnitsInside(buildings[1]);
+                    ComExitBuilding(filter[1]);
+                    end;
+
+
+                 if GetLives(ru3_sold[i]) > is_hurt and not HasTask(ru3_sold[i]) and not IsInUnit(ru3_sold[i]) then // Jednostka moze walczyc
+                    begin
+
+                    // szukanie pustej wiezyczki
+                       if UnitFilter(towers, [[f_lives, 300], [f_empty]]) > 0 then // znaleziono pust¹ wie¿e!
+                          begin
+                          ComEnterUnit(ru3_sold[i], UnitFilter(towers, [[f_lives, 300], [f_empty]])[1])
+                          end
+                           else
+                    // szukanie pustych koszar
+                            if UnitFilter(buildings, [f_lives, 251]) > 0 then
+                               begin
+
+                               for l = 1 to UnitFilter(buildings, [f_lives, 251]) do
+                                   if UnitsInside(buildings[l]) < 6 then
+                                      ComEnterUnit(ru3_sold[i], UnitFilter(buildings, [f_lives, 251])[l]);
+                               end
+                                else  // nie znaleziono miejsca, udaj sie pod magazyn
+                                 if GetDistUnits(ru3_sold[i], ru_main_dep) >= 12 then
+                                    ComMoveXY(ru3_sold[i], GetX(ru_main_dep)-1, GetX(ru_main_dep)+1);
+
+
+                    end;
+
+                 end;
+        end;
+
+
+  // bazzoki
+     if ru3_bazz > 0 then
+        begin
+
+        for i = 1 to ru3_bazz do
+            begin
+
+            if GetLives(ru3_bazz) <= is_hurt then
+               begin
+               if IsInUnit(ru3_bazz[i]) then
+                  ComExitBuilding(ru3_bazz[i]);
+
+               ComMoveXY(ru3_bazz[i], GetX(ru_main_dep)-1, GetY(ru_main_dep)+2);
+               end;
+
+            if GetLives(ru3_bazz[i]) > is_hurt then
+               if not IsInUnit(ru3_bazz[i]) then
+                  // szukanie pustych koszarów
+                     if UnitFilter(buildings, [f_lives, 251]) > 0 then
+                        begin
+
+                        for l = 1 to UnitFilter(buildings, [f_lives, 251]) do
+                            if UnitsInside(buildings[l]) < 6 then
+                               ComEnterUnit(ru3_bazz[i], UnitFilter(buildings, [f_lives, 251])[l]);
+                        end
+                         else  // nie znaleziono miejsca, udaj sie pod magazyn
+                         if GetDistUnits(ru3_bazz[i], ru_main_dep) < 12 then
+                            ComMoveXY(ru3_bazz[i], GetX(ru_main_dep)-1, GetX(ru_main_dep)+1);
+
+
+            end;
+
+        end;
+
+
+  // sci
+     if ru3_sci > 0 then
+        begin
+
+        for i = 1 to ru3_sci do
+            begin
+
+            if not HasTask(ru3_sci[i]) and FilterAllUnits([[[f_side, 3], [f_type, unit_human], [f_not, [f_lives, is_hurt]], [f_not, [f_class, 4]]]]) = 0 then
+               begin
+
+               if ru3_lab > 0 then
+                  ComEnterUnit(ru3_sci[i], ru3_lab[1])
+                   else
+                    if GetDistUnits(ru3_sci[i], ru_main_dep) > 10 then
+                       ComMoveXY(ru3_sci[i], GetX(ru_main_dep)-2, GetY(ru_main_dep)-2);
+
+               if ru3_mech = 0 and ru3_fac > 0 and ru3_sci > 2 then
+                  begin
+
+                  if IsInUnit(ru3_sci[1]) then
+                     ComExitBuilding(ru3_sci[1]);
+
+                  ComEnterUnit(ru3_sci[1], ru3_fac[1]);
+                  AddComChangeProfession(ru3_sci[1], class_mechanic);
+                  end;
+
+
+               end;
+
+            if not HasTask(ru3_sci[i]) and FilterAllUnits([[[f_side, 3], [f_type, unit_human], [f_not, [f_lives, is_hurt]], [f_not, [f_class, 4]]]]) > 0 then
+               begin
+
+               if IsInUnit(ru3_sci[i]) then
+                  ComExitBuilding(ru3_sci[i]);
+
+               filter := FilterAllUnits([[[f_side, 3], [f_type, unit_human], [f_not, [f_lives, is_hurt]], [f_not, [f_class, 4]]]]);
+
+               if filter > 0 then
+                  ComHeal(ru3_sci[i], NearestUnitToUnit(filter, ru3_sci[i]));
+
+               end;
+
+            end;
+
+        end;
+
+
+  // mechy
+     if ru3_mech > 0 then
+        begin
+
+        for i = 1 to ru3_mech do
+            begin
+
+            if not HasTask(ru3_mech) then
+               begin
+
+               if ru3_bweap > 0 and ru3_fac > 0 then
+                  begin
+
+                  if GetDistUnits(ru3_mech[i], ru_main_dep) > 11 then
+                     ComMoveXY(ru3_mech[i], GetX(ru_main_dep)-2, GetY(ru_main_dep)-2)
+                      else
+                       if IsDriver(ru3_mech[i]) then
+                          ComExitVehicle(ru3_mech[i]);
+
+                  ComEnterUnit(ru3_mech[i], NearestUnitToUnit(ru3_fac, ru3_mech[i]));
+                  end;
+
+
+               if UnitFilter(vehicles, [f_empty]) > 0 and ru3_bweap = 0 then
+                  begin
+
+                  if not IsDriver(ru3_mech[i]) then
+                     begin
+
+                     if UnitFilter(vehicles, [f_not, [f_lives, is_hurt]]) > 0 then
+                        ComRepairVehicle(ru3_mech[i], NearestUnitToUnit(ru3_mech[i], UnitFilter(vehicles, [f_not, [f_lives, is_hurt]])));
+
+                     if IsInUnit(ru3_mech[i]) then
+                        ComExitBuilding(ru3_mech[i]);
+
+                     if UnitFilter(vehicles, [f_not, [f_lives, 1000]]) = 0 then
+                        ComEnterUnit(ru3_mech[i], NearestUnitToUnit(UnitFilter(vehicles, [f_empty]), ru3_mech[i]))
+
+                     end;
+
+                  end
+                   else
+                    if ru3_fac > 0 then
+                       ComEnterUnit(ru3_mech[i], ru3_fac[1])
+                        else
+                         begin
+                         ComEnterUnit(ru3_mech[i], NearestUnitToUnit(buildings, ru3_mech[i]));
+                         AddComChangeProfession(ru3_mech[i], class_soldier);
+                         end;
+
+
+               end;
+
+
+            end;
+
+        end;
+
+
+     if ru3_eng > 0 then
+        begin
+
+        for i = 1 to ru3_eng do
+            begin
+
+            if UnitFilter(al_build, [f_not, [f_lives, 1000]]) > 0 then
+               begin
+
+               if IsInUnit(ru3_eng[i]) then
+                  ComExitBuilding(ru3_eng[i]);
+
+               if not HasTask(ru3_eng[i]) then
+                  ComRepairBuilding(ru3_eng[i], NearestUnitToUnit(UnitFilter(al_build, [f_not, [f_lives, 1000]]), ru3_eng[i]));
+
+               if FilterAllUnits([[[f_side, 3], [f_weapon, ru_crane], [f_not, [f_empty]]]]) > 0 then
+                  begin
+                  filter := FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]);
+
+
+                  for p = 1 to filter do
+                      if GetLives(filter[p]) >= is_hurt+100 then
+                         ComRepairBuilding(filter[p], NearestUnitToUnit(UnitFilter(al_build, [f_not, [f_lives, 1000]]), filter[p]))
+                          else
+                           begin
+                           ComMoveXY(filter[p], GetX(ru_main_dep)-2, GetY(ru_main_dep)-2);
+
+                           un := IsDrivenBy(filter[p]);
+
+                           if GetDistUnits(filter[p], ru_main_dep) <= 8 and GetLives(filter[p]) < is_hurt then
+                              begin
+                              SetFuel(filter[p], 100);
+                              ComExitVehicle(un);
+                              end;
+
+                           end;
+                  end;
+
+               end
+                else
+                 begin
+
+                 if not IsInUnit(ru3_eng[i]) and not HasTask(ru3_eng[i]) and ru3_blist = 0 then
+                    ComEnterUnit(ru3_eng[i], ru_main_dep);
+
+                 if ru3_blist > 0 and GetResourceType(GetBase(ru_main_dep), mat_cans >= 100) and FilterAllUnits([[f_enemy, 3], [f_distxy, GetX(ru_main_dep), GetY(ru_main_dep), 70]]) = 0 then
+                    begin
+                    ComBuild(ru3_eng[i], ru3_blist[1], ru3_blist[2], ru3_blist[3], ru3_blist[4]);
+                    end;
+
+                 end;
+
+            end;
+
+        end;
+
+
+     if vehicles > 0 then
+        begin
+        filter := UnitFilter(vehicles, [[f_not, [f_empty]], [f_not, [f_weapon, ru_crane]]]);
+
+        if filter > 0 then
+           begin
+
+           for i = 1 to filter do
+               begin
+
+               if GetDistUnits(filter[i], ru_main_dep) <= 8 and GetFuel(filter[i]) <= 63 then
+                  SetFuel(filter[i], 100);
+
+               if GetLives(filter[i]) > is_hurt then
+                  ProtectArea(filter[i], ru_main_dep)
+                   else
+                    begin
+                    ComMoveXY(filter[i], GetX(ru_main_dep)-2, GetY(ru_main_dep)-2);
+
+                    un := IsDrivenBy(filter[i]);
+
+                    if GetDistUnits(filter[i], ru_main_dep) <= 8 and GetLives(filter[i]) < is_hurt then
+                       begin
+                       ComExitVehicle(un);
+                       //AddComRepairVehicle(un, filter[i]);
+                       end;
+
+                    end;
+               end;
+
+           end;
+
+        end;
+
+
+End;
+
+
+// mine
+Every 0$01 trigger FilterUnitsInArea(m1, [f_side, 2]) > 0 do
+var i;
+begin
+for i = 1 to 6 do
+    MineExplosion(58, 63, 1);
+end;
+
+Every 0$01 trigger FilterUnitsInArea(m2, [f_side, 2]) > 0 do
+var i;
+begin
+for i = 1 to 6 do
+    MineExplosion(63, 64, 1);
+end;

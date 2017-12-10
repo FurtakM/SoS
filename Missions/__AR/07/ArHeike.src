@@ -1,0 +1,230 @@
+// Heike Force's
+Export Heike;
+Export Function PrepareHeike;
+var un;
+begin
+
+     uc_side := 8;
+     uc_nation := 2;
+
+
+     hc_gallery := 'sandar';
+     hc_face_number := 2;
+     hc_class := 1;
+     hc_skills := [8, 3, 6, 2];
+     hc_attr := [12, 11];
+     hc_sex := sex_female;
+     hc_name := 'Heike Steyer';
+
+     Heike := CreateHuman;
+
+
+     vc_chassis := ar_half_tracked;
+     vc_engine  := engine_combustion;
+     vc_control := control_manual;
+     vc_weapon  := ar_gun;
+
+     un := CreateVehicle;
+     SetDir(un, 4);
+     PlaceUnitXY(un, 166, 38, false);
+     PlaceHumanInUnit(heike, un);
+
+     SetMark(un, true);
+
+End;
+
+
+
+Export Ar8_Force;
+Export Function PrepareEastArForces;
+var area, list, i, p;
+begin
+uc_side := 8;
+uc_nation := 2;
+
+
+    Ar8_Force := [];
+
+    PrepareHeike;
+
+    // Area
+    list := AreaToList(ar_east_spawn, 0);
+    // display_strings := list;
+    p := 1;
+
+
+       for i = 1 to 2 do
+           begin
+           CreateRocketXY(8, 2, list[1][p], list[2][p], 4);
+           p = p + 1;
+           end;
+       for i = 1 to 2 do
+           begin
+           CreateGunXY(8, 1, list[1][p], list[2][p], 4);
+           p = p + 1;
+           end;
+
+           CreateRemTowerXY(8, list[1][p], list[2][p], 4);
+           p = p + 1;
+          
+           CreateRadarXY(8, 2, list[1][p], list[2][p], 4);
+           p := p + 1;
+
+           CreateFlameXY(8, 1, list[1][p], list[2][p], 4);
+           p := p + 1;
+
+
+           PlaceUnitXY(CreateHumanWithClass(class_mortar, [7,6,5][Difficulty]), list[1][p], list[2][p], false);
+           p := p + 1;
+           PlaceUnitXY(CreateHumanWithClass(class_scientistic, [7,6,5][Difficulty]), list[1][p], list[2][p], false);
+           p := p + 1;
+           PlaceUnitXY(CreateHumanWithClass(class_mechanic, [7,6,5][Difficulty]), list[1][p], list[2][p], false);
+           p := p + 1;
+          
+
+
+End;
+
+
+
+Every 0$01 trigger FilterAllUnits([f_side, 8]) > 0 and heike_return = false do
+var i, x, enemy, sci, radar, un, units, vehs, free_mechanic;
+begin
+enable;
+
+       enemy := FilterAllUnits([f_enemy, 8]) diff FilterAllUnits([f_side, 7]);
+
+       if ar8_force > 0 and enemy > 0 then
+          for i = 1 to ar8_force do
+              begin
+
+              if not HasTask(ar8_force[i]) and GetLives(ar8_force[i]) = 1000 then
+                 ComAttackUnit(ar8_force[i], NearestUnitToUnit(enemy, ar8_force[i]));
+
+
+              if UnitFilter(ar8_force, [f_weapon, ar_radar]) > 0 then
+                 begin
+                 radar := UnitFilter(ar8_force, [f_weapon, ar_radar])[1];
+
+
+                 if FilterAllUnits([[f_side, 8], [f_weapon, ar_rocket_launcher]]) > 0 then
+                 if GetDistUnits(radar, NearestUnitToUnit(UnitFilter(ar8_force, [f_weapon, ar_rocket_launcher]), radar)) <= 3 then
+                    ComHold(radar)
+                     else
+                      ComMoveXY(radar, GetX(UnitFilter(ar8_force, [f_weapon, ar_rocket_launcher])[1]), GetY(UnitFilter(ar8_force, [f_weapon, ar_rocket_launcher])[1]));
+                 end;
+
+
+              end;
+
+
+       for un in FilterAllUnits([[[f_side, 8], [f_class, class_mortar], [f_lives, 1000]]]) ^ FilterAllUnits([[[f_side, 8], [f_type, unit_vehicle], [f_lives, 1000]]]) diff Heike do
+           begin
+
+           if not un in ar8_force then
+              ar8_force := ar8_force ^ un;
+
+           if GetLives(un) <= 700 then
+              ar8_force := Delete(ar8_force, un);
+
+           end;
+
+       vehs := FilterAllUnits([[[f_side, 8], [f_type, unit_vehicle], [f_not, [f_lives, 700]]]]);
+       free_mechanic := FilterAllUnits([[[f_side, 8], [f_class, 3], [f_outside]]]);
+
+       if vehs > 0 then
+          begin
+
+          for i = 1 to vehs do
+              begin
+
+              if GetDistUnitXY(vehs[i], 179, 71) > 8 then
+                 ComMoveXY(vehs[i], 179, 71)
+                  else
+                   for x = 1 to free_mechanic do
+                       ComRepairVehicle(free_mechanic[x], vehs[i]);
+
+              end;
+
+          end
+           else
+            begin
+             if free_mechanic > 0 then
+                for x = 1 to free_mechanic do
+                    if GetDistUnitXY(free_mechanic[x], 179, 71) > 8 then
+                       ComMoveXY(free_mechanic[x], 179, 71);
+            end;
+
+
+       units := FilterAllUnits([[[f_side, 8], [f_type, unit_human], [f_not, [f_lives, 700]]]]);
+       sci   := FilterAllUnits([[[f_side, 8], [f_class, 4], [f_lives, 700]]]);
+
+       if units = 0 and sci > 0 then
+          for x = 1 to sci do
+              if GetDistUnitXY(sci[x], 179, 71) > 6 then
+                 ComMoveXY(sci[x], 179, 71);
+
+
+       if units > 0 and sci > 0 then
+          begin
+
+          for i = 1 to units do
+              begin
+
+              if GetDistUnits(units[i], sci[1]) > 4 then
+                 ComMoveXY(units[i], GetX(sci[1]), GetY(sci[1]))
+                  else
+                   for x = 1 to sci do
+                       ComHeal(sci[x], units[i]);
+
+
+              end;
+
+          end;
+
+End;
+
+
+// Zdalne Sterowanie (8)
+Every 0$01 trigger FilterAllUnits([f_side, 8]) > 0 do
+var filter, cont, i;
+begin
+enable;
+
+     filter := FilterAllUnits([[f_side, 8], [f_control, control_remote]]);
+     cont := FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]);
+
+     if filter > 0 and cont > 0 then
+        begin
+
+        for i = 1 to filter do
+            begin
+            if not IsControledBy(filter[i]) and IsOk(filter[i]) then
+            //   if i <= 2 then
+                  ComLinkTo(filter[i], cont[1]);
+            //       else
+            //         ComLinkTo(filter[i], cont[2]);
+
+            if GetLives(filter[i]) < 250 and IsControledBy(filter[i]) then
+               ComUnLink(filter[i]);
+
+            end;
+
+        end;
+
+End;
+
+
+Every 0$01 trigger heike_return do
+var i, c;
+begin
+enable;
+
+if filterallunits([f_side, 8]) > 0 then
+   for c in filterallunits([f_side, 8]) do
+       ComMoveXY(c, 171, 47);
+
+for i in FilterUnitsInArea(heike_back, [f_side, 8]) do
+    RemoveUnit(i);
+
+End;

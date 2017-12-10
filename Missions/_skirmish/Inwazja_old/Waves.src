@@ -1,0 +1,115 @@
+Every 0$01 trigger main_depot do // when depot is ready
+begin
+CreatorWaves;
+enable;
+End;
+
+
+Function CreatorWaves;
+var randmin, randmax, randmaxx, x, ad, i, filter;
+begin
+
+
+     filter := FilterAllUnits([f_side, 3]);
+
+     if filter > 0 then
+     for i = 1 to filter do
+         RemoveUnit(filter[i]);
+
+
+     randmin  =  3 + (level*2);
+     randmax  =  8 + (level*2);
+     randmaxx = 15 + (level*2);
+     ad       =  1            ;
+     
+   //time_to = 5$00;
+
+     If wave = 1 then // 1 wave
+     begin
+
+     time_to = 5$00;
+
+     While(time_to > 0) do
+     begin
+     time_to = time_to - 0$01;
+     Wait(0$01);
+     end;
+
+     CreateWave(Rand(1,3),p,Rand(randmin,randmax),Rand(2+1*level,2+2*level));
+     p = p + Rand(1,2);
+     end;  // end 1 wave
+
+
+     If wave > 1 then
+     begin
+
+     time_to = Rand(3$40,5$00);
+
+     While(time_to > 0) do
+     begin
+     time_to = time_to - 0$01;
+     Wait(0$01);
+     end;
+
+     // WAVE'S
+      // special wave's
+     If wave = 6 then
+     p = p - (Rand(1,2));
+
+     If wave = 8 then
+     p = 4;
+
+     If wave = 10 then
+     p = 6;
+
+     // sib bomb
+     If wave in [20, 30, 40, 60, 80, 90, 95, 99] then
+     begin
+     Wait(Rand(0$03, 0$10));
+     SendBombWave;
+     end;
+
+     // if p > 7 then restart p !!!
+     If p > 6 then
+     begin
+     p = 2;
+     end;
+
+
+     // spawn 
+     CreateWave(Rand(1,3),p,(Rand(randmin,randmax)+Rand(ad-1,ad+1)),Rand(2+1*level,2+2*level));
+     p = p + Rand(0,1);
+     end;
+
+     // add number
+     If wave in [5,10,15,20,25,30,40,50,60,80,90,92,94,96,97,98,99] and ad <= 10 then
+     begin
+     ad := ad + 2;
+     end;
+
+
+End;
+
+
+
+// SIB BOMB !!!
+Export Function SendBombWave;
+var x;
+begin
+
+     x := 0;
+     x := Rand(1,3);
+
+     Case x of
+     1:SendSiberiteRocket(71, 52); 
+     2:SendSiberiteRocket(118, 96);
+     3:;// empty ;)
+     end;
+
+     Wait(2$00);
+
+End;
+
+
+
+

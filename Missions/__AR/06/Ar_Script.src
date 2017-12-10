@@ -1,0 +1,445 @@
+// Ar 8 script
+// Building base
+Export ar_miners, mine_x, mine_y, ar_build_list, ar_tech_list, ar_produce_list;
+Export ar_engs, ar_mechs, ar_lab;
+Export Erwin;
+Export skill_level;
+Export Function ScriptArabian;
+var i, filter, un, barracks, bunkers;
+begin
+
+     uc_side   := 8;
+     uc_nation := nation_arabian;
+
+     // ar_build_list
+        ar_build_list := [b_lab, 117, 125, 5,
+                          b_armoury, 117, 112, 3,
+                          b_workshop, 100, 113, 2,
+                          b_solar_power, 93, 126, 3,
+                          b_solar_power, 91, 123, 5,
+                          b_solar_power, 91, 103, 2];
+
+     // fac_ext_coords
+        { 100/117/0
+          104/113/4
+          100/110/3
+          97/113/1
+        }
+
+     // ar tech list
+        ar_tech_list := [tech_oilpow, tech_oileng, tech_tech1, tech_tech2, tech_tech3, tech_weap1, tech_opto1, tech_weap2, tech_gatling, tech_gun, tech_flame, tech_explos, tech_radar, tech_remcont];
+
+     // ar produce list
+        ar_produce_list := [ar_cargo_bay, ar_gun, ar_flame_thrower];
+
+     // skillz
+        skill_level := [7,6,6][Difficulty];
+
+     // mines
+        mine_x := [102, 98,  104,  108];
+        mine_y := [65,  60,  60,  66];
+
+     // create soldier's
+        ar_miners := [];
+         barracks := FilterAllUnits([[f_side, 8], [f_btype, b_armoury]]);
+         bunkers  := FilterAllUnits([[f_side, 8], [f_btype, b_breastwork]]);
+
+     // miners
+         for i = 1 to 4 do
+             begin
+             un := CreateHumanWithClass(1, skill_level);
+             PlaceHumanInUnit(un, barracks[1]);
+             ar_miners := ar_miners ^ un;
+             end;
+
+     // mortar
+         for i = 1 to 2 do
+             begin
+             un := CreateHumanWithClass(class_mortar, skill_level);
+             PlaceHumanInUnit(un, barracks[1]);
+             end;
+
+         for i = 1 to 4 do
+             begin
+             un := CreateHumanWithClass(class_mortar, skill_level);
+             PlaceHumanInUnit(un, add_arm);
+             end;
+
+     // breastworks
+         for i = 1 to 2 do
+             begin
+             un := CreateHumanWithClass(1, skill_level);
+             PlaceUnitArea(un, ar_bunker_spawn, false);
+             ComEnterUnit(un, NearestUnitToUnit(bunkers, un));
+             end;
+
+     // south base
+        // comander "Erwin van der Veen"
+           hc_name := 'Erwin van der Veen';
+           hc_gallery := 'sandar';
+           hc_face_number := 35;
+           hc_basic_skills := [3, 0, 0, 0];
+           hc_skills := [7, 2, 4, 1];
+           hc_importance := 50;
+           hc_sex := sex_male;
+
+           Erwin := CreateHuman;
+           PlaceUnitXY(Erwin, 102, 120, false);
+       //  ComTurnXY(Erwin, 102, 119);
+
+
+        // reset hc_importance
+           hc_importance := 15;
+
+        // eng
+        for i = 1 to 7 do
+            begin
+            un := CreateHumanWithClass(2, skill_level);
+            PlaceUnitArea(un, ar_south_spawn, false);
+            ar_engs := ar_engs ^ un;
+            end;
+
+        // mechs in rocket_launcher
+        for i = 1 to 2 do
+            PlaceHumanInUnit(CreateHumanWithClass(3, skill_level), FilterAllUnits([f_weapon, ar_rocket_launcher])[i]);
+
+        // mechs
+        for i = 1 to 3 do
+            begin
+            un := CreateHumanWithClass(3, skill_level);
+            PlaceUnitArea(un, ar_south_spawn, false);
+            ar_mechs := ar_mechs ^ un;
+            end;
+
+End;
+
+
+
+// Build Script
+Every 0$01 trigger game_started do
+var i, filter;
+begin
+enable;
+
+       filter := FilterAllUnits([[f_side, 8], [f_class, 2]]);
+
+       if ar_build_list > 0 then
+          if filter > 0 then
+             for i = 1 to filter do
+                 begin
+
+                 if not HasTask(filter[i]) and FilterAllUnits([f_or, [f_side, 3], [f_side, 6]]) = 0 then
+                    AddComBuild(filter[i], ar_build_list[1], ar_build_list[2], ar_build_list[3], ar_build_list[4]);
+                 end;
+
+End;
+
+
+// ar_res
+Every 0$05 trigger ar_res do
+begin
+enable;
+
+if ar_tech_list > 0 then //and IsIdle(FilterAllUnits([[f_side, 8], [f_class, 4]])[1]) then
+ComResearch(ar_lab, ar_tech_list[1]);
+end;
+
+
+Every 0$03 trigger ar_produce do
+var fac;
+begin
+enable;
+
+      fac := FilterAllUnits([[f_side, 8], [f_btype, b_factory]]);
+
+      if ar_produce_list > 0 then
+         if CanBeConstructed(fac[1], ar_half_tracked, engine_combustion, control_manual, ar_produce_list[1]) then
+            begin
+            ComConstruct(fac[1], ar_half_tracked, engine_combustion, control_manual, ar_produce_list[1]);
+            ar_produce_list := Delete(ar_produce_list, 1);
+            end;
+
+End;
+
+
+// source
+Every 0$10 trigger GetResourceType(GetBase(north_dep), mat_cans) >= 200 and game_started do
+var sor;
+begin
+enable;
+
+     sor := GetResourceType(GetBase(south_dep), mat_cans);
+
+     SetResourceType(GetBase(south_dep), mat_cans, sor+100);
+     SetResourceType(GetBase(north_dep), mat_cans, 100);
+
+End;
+
+
+Every 0$03 trigger game_started do
+var i, c, p, skr, filter, cargo, dep;
+begin
+Enable;
+
+     filter := FilterAllUnits([[f_ok], [f_side, 8], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]] ]);
+     cargo  := FilterAllUnits([[f_side, 8], [f_weapon, ar_cargo_bay]]);
+     dep    := FilterAllUnits([[f_side, 8], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+     skr = GetListOfCratesInArea(crates_spawn);
+     
+
+     c = 1;
+
+
+     While c < skr do
+     begin
+
+     if FilterAllUnits([[f_side, 8], [f_weapon, ar_cargo_bay]]) = 0 then
+        begin
+
+        for p = 1 to 2 do // always send 2 collector's
+            if not HasTask(filter[p]) and GetDistUnitXY(filter[p], skr[c], skr[c+1]) <= 40 then
+            ComCollect(filter[p], skr[c], skr[c+1]);
+
+         c = c + 2;
+        end;
+
+     if cargo > 0 then
+        begin
+
+        if GetFuel(cargo[1]) > 80 then
+        ComCollect(cargo[1], skr[c], skr[c+1])
+         else
+          begin
+
+          Repeat
+           begin
+           ComMoveXY(cargo[1], GetX(south_dep[1]), GetY(south_dep[1]));
+           Wait(0$01);
+           end
+          Until GetDistUnits(cargo[1], south_dep) < 7;
+
+          SetFuel(cargo[1], 100);
+          end;
+
+         c = c + 2;
+        end;
+
+
+     end;
+
+End;
+
+
+// MINES :>
+Every 0$01 trigger game_started do
+var i, barracks;
+begin
+enable;
+
+
+     barracks := FilterAllUnits([[f_side, 8], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+
+     if ar_miners > 0 then
+        for i = 1 to ar_miners do
+            begin
+
+            if MineAtPos(mine_x[i], mine_y[i]) = false then
+               begin
+
+            if not HasTask(ar_miners[i]) and FilterAllUnits([f_side, 3]) = 0 then
+               begin
+
+               if IsInUnit(ar_miners[i]) then
+                  ComExitBuilding(ar_miners[i]);
+
+               AddComPlaceRemoteCharge(ar_miners[i], mine_x[i], mine_y[i], 0);
+
+               Repeat
+                Wait(0$01);
+               Until MineAtPos(mine_x[i], mine_y[i]);
+
+               ComEnterUnit(ar_miners[i], NearestUnitToUnit(barracks, ar_miners[i]));
+               end;
+
+               end;
+
+            end; // end block
+
+End;
+
+
+// Active MINES
+Every 0$0.7 trigger game_started do
+var i, h, filter;
+begin
+enable;
+
+     filter := FilterAllUnits([f_side, 3]);
+     
+     for i = 1 to filter do
+         begin
+     for h = 1 to mine_x do
+         begin
+
+         if MineAtPos(mine_x[h], mine_y[h]) then
+         if GetDistUnitXY(filter[i], mine_x[h], mine_y[h]) <= 2 then
+            LaunchMineAtPos(mine_x[h], mine_y[h], 8);
+
+         end;
+         end;
+
+End;
+
+
+
+// DEFENSE
+// Vehicles
+Every 0$01 trigger game_started do
+var i, un, filter, fac;
+begin
+enable;
+
+       filter := FilterAllUnits([[[f_side, 8], [f_type, unit_vehicle], [f_or, [f_weapon, ar_gun], [f_weapon, ar_gatling_gun], [f_weapon, ar_rocket_launcher], [f_weapon, ar_flame_thrower]]]]);
+       fac := FilterAllUnits([[f_side, 8], [f_btype, b_factory]]);
+
+     // produce new units when all was destroyed
+        if ar_mechs = [] then
+           begin
+       //  ar_produce_list := ar_produce_list ^ [ar_gun] ^ [ar_gun] ^ [ar_gatling_gun];
+
+           for i = 1 to 3 do
+               begin
+               un := CreateHumanWithClass(3, skill_level);
+               ar_mechs := ar_mechs ^ un;
+               ComEnterUnit(un, fac[1]);
+               end;
+
+           end;
+
+     // refuel
+        if filter > 0 and FilterAllUnits([f_enemy, 8]) = 0 then
+           begin
+
+           for i = 1 to filter do
+               if GetFuel(filter[i]) < 30 then
+                  begin
+                  ComMoveXY(filter[i], 110, 123);
+                   repeat
+                    Wait(0$01);
+                   until GetDistUnits(filter[i], south_dep) < 4;
+                   SetFuel(filter[i], 100);
+                   end;
+
+           end;
+
+     // def
+        if filter > 0 then
+           begin
+
+           for i = 1 to filter do
+               if GetFuel(filter[i]) > 90 and GetLives(filter[i]) = 1000 and not IsInArea(filter[i], ar_mobile_def) then
+                  ComMoveToArea(filter[i], ar_mobile_def);
+
+           end;
+
+        if filter > 0 then
+           begin
+
+           for i = 1 to filter do
+               if GetLives(filter[i]) <= 650 then
+                  begin
+                  un := IsDrivenBy(filter[i]);
+
+                  ComMoveToArea(filter[i], ar_repair_zone);
+                  AddComExitVehicle(un);
+                  AddComRepairVehicle(un, filter[i]);
+                 
+                  repeat
+                   Wait(0$01);
+                  until GetLives(filter[i]) = 1000;
+
+                  AddComEnterUnit(un, filter[i]);
+                  AddComMoveToArea(un, ar_mobile_def);
+                  end;
+           end;
+End;
+
+
+
+// Repair
+Every 0$01 trigger game_started do
+var filter, heal, sci, buildings, un, i;
+begin
+enable;
+
+
+          filter := FilterAllUnits([[f_side, 8], [f_class, 2], [f_ok]]);
+            heal := FilterAllUnits([[f_side, 8], [f_class, 2], [f_not, [f_lives, 725]]]);
+       buildings := FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+             sci := FilterAllUnits([[f_side, 8], [f_class, 4]]);
+
+
+       for i = 1 to filter do
+           begin
+
+           if IsInUnit(filter[i]) then
+              ComExitBuilding(filter[i]);
+
+           if buildings > 0 then
+              ComRepairBuilding(filter[i], buildings[1])
+
+           end;
+
+
+       for i = 1 to heal do
+           begin
+           ComEnterUnit(heal[i], ar_lab);
+           AddComExitBuilding(heal[i]);
+           end;
+           
+
+End;
+
+
+// mechanic escape
+Every 0$01 trigger game_started do
+var factory, filter, vehicles, i;
+begin
+enable;
+
+     factory := FilterAllUnits([[f_side, 8], [f_btype, b_factory]]);
+     filter := FilterAllUnits([[[f_side, 8], [f_class, 3], [f_not, [f_inside]], [f_not, [f_driving]]]]);
+     vehicles := FilterAllUnits([[[f_side, 8], [f_type, unit_vehicle], [f_empty]]]);
+
+     if factory > 0 and filter > 0 and vehicles = 0 then
+        for i = 1 to filter do
+            ComEnterUnit(filter[i], factory[1]);
+
+     if filter > 0 and vehicles = 0 then
+        for i = 1 to filter do
+            if not GetLives(filter[i]) = 1000 then
+               begin
+               ComEnterUnit(filter[i], ar_lab);
+               AddComExitBuilding(filter[i]);
+               end;
+
+End;
+
+
+Every 0$01 trigger game_started do
+var i, filter;
+begin
+enable;
+
+       filter := FilterAllUnits([[f_side, 8], [f_class, 4]]);
+
+       if ar_lab then
+          for i = 1 to filter do
+              if not HasTask(filter[i]) then
+                 ComEnterUnit(filter[i], ar_lab);
+
+End;
+
+

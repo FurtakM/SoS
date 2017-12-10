@@ -1,0 +1,126 @@
+Export Louis, Rolf, Jenna, Nicolas, Rick, Mike, Gali;
+Export ar_pep;
+Export Function LoadPeople;
+var i, names, un, nums, ammo;
+begin
+
+     uc_side := 2;
+     uc_nation := 2;
+     ar_pep := [];
+     nums := 1005;
+
+     Louis   := CreateCharacter('Louis');
+     ar_pep := Louis;
+
+     Rolf    := CreateCharacter('Rolf_08');
+     ar_pep := ar_pep ^ Rolf;
+     SetTag(Rolf, 1000);
+
+  // Louis Gali
+     Gali    := CreateCharacter('Gali_08');
+     ar_pep := ar_pep ^ Gali;
+     SetTag(Gali, 1001);
+
+  // Mike Turssen
+     Mike    := CreateCharacter('Mike_08');
+     ar_pep := ar_pep ^ Mike;
+     SetTag(Mike, 1002);
+
+  // Nicolas Vercen
+     Nicolas := CreateCharacter('Nicolas_08');
+     ar_pep := ar_pep ^ Nicolas;
+     SetTag(Nicolas, 1003);
+
+  // Jenna Matover
+     Jenna   := CreateCharacter('Jenna_08');
+     ar_pep := ar_pep ^ Jenna;
+     SetTag(Jenna, 1004);
+
+  // Rick Hoft
+     Rick    := CreateCharacter('Rick_08');
+     ar_pep := ar_pep ^ Rick;
+     SetTag(Rick, 1005);
+
+     names  := ['a_08', 'b_08', 'c_08', 'd_08', 'e_08', 'f_08', 'g_08', 'h_08', 'i_08', 'j_08', 'k_08', 'l_08', 'm_08', 'n_08', 'o_08', 'p_08'];
+
+     for i = 1 to names do
+         begin
+         un  := CreateCharacter(names[i]);
+         ar_pep := ar_pep ^ un;
+         SetTag(un, nums+i);
+         end;
+
+     ammo := LoadVariable('var_ammo', 0);
+
+     if ammo = 1 then
+        SetTech(29, 2, state_researched);
+
+End;
+
+
+Export ar_vehicles;
+Export Function LoadVehicles;
+var tab, i, p, veh, filter;
+begin
+
+
+     uc_side := 2;
+
+     tab := LoadVariable('unit_vehs', []);
+       i := 1;
+       p := 1;
+
+     if tab > 0 then
+        while (i <= tab) do
+            begin
+
+            if tab[i] in [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked] then
+               uc_nation := nation_russian
+                else
+               uc_nation := nation_arabian;
+
+            vc_chassis := tab[i];
+            vc_engine  := tab[i+1];
+            vc_control := tab[i+2];
+            vc_weapon  := tab[i+3];
+
+            veh := CreateVehicle;
+
+            if GetControl(veh) = control_manual then
+               ar_vehicles := ar_vehicles ^ veh;
+
+            SetDir(veh, 0);
+
+            PlaceUnitArea(veh, veh_start, false);
+            SetFuel(veh, Rand(65, 78));
+
+            if GetWeapon(veh) = ar_cargo_bay or GetWeapon(veh) = ru_cargo_bay then
+               SetCargo(veh, 3, 100);
+
+            
+
+            p := p + 1;
+            i := i + 4;
+            end;
+
+            if FilterAllUnits([f_weapon, ar_control_tower]) = 0 then
+               begin
+               while(FilterAllUnits([f_control, control_remote]) > 0) do
+                     RemoveUnit(FilterAllUnits([f_control, control_remote])[1]);
+               end
+                else
+                 if FilterAllUnits([f_control, control_remote]) > 3 then
+                    while(FilterAllUnits([f_control, control_remote]) > 3) do
+                          RemoveUnit(FilterAllUnits([f_control, control_remote])[1]);
+
+            LoadPeople;
+
+            PlaceUnitArea(Louis, hum_start, false);
+
+            for i = 2 to ar_pep do
+                if UnitFilter(ar_vehicles, [f_empty]) then
+                   PlaceHumanInUnit(ar_pep[i], UnitFilter(ar_vehicles, [f_empty])[1])
+                    else
+                   PlaceUnitArea(ar_pep[i], hum_start, false);
+
+End;

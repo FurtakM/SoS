@@ -1,0 +1,1406 @@
+// Functions - Macros
+// ---
+// Functions by Serpent
+// SoS Macros
+Export Function EnemyNearbyBase(side, area, x, y); // <<< off
+var i;
+begin
+
+     i := NearestUnitToXY(FilterAllUnits([f_side, side]), x, y);
+
+     if GetDistUnitXY(i, x, y) < 17 or
+        FilterUnitsInArea(area, [f_side, side]) > 0 then
+        result := true
+         else
+          result := false;
+End;
+
+Export Function DistFromEnemy(unit, enemy_list);
+var i, dist;
+begin
+dist := 9999;
+
+for i = 1 to enemy_list do
+    if GetDistUnitToSide(unit, enemy_list[i]) < dist and GetDistUnitToSide(unit, enemy_list[i]) > 0 then
+       dist := GetDistUnitToSide(unit, enemy_list[i]);
+
+result := dist;
+End;
+
+Export Function EnemyInRange(side, xy_list); // xylist[x1,y1,x2,y2...]
+var i, p, enemy_side, mode, x;
+begin
+enemy_side := FilterAllUnits([f_enemy, side]);
+mode := false;
+p := 1;
+
+for i = 1 to xy_list do
+    begin     
+    x := NearestUnitToXY(enemy_side, xy_list[p], xy_list[p+1]);
+    if GetDistUnitToSide(x, side) > 0 and GetDistUnitToSide(x, side) < 26 then
+       begin
+       mode := true;
+       break;
+       end;
+    end;
+
+result := mode;
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+for i = 1 to area do
+    if IsEnvironment(area[i][1], area[i][2]) then
+       if not HasTask(bulldozer) then
+          AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;
+
+Export Function Cost(bdepot, btype);
+var pom, cost;
+begin
+pom := GetBase(bdepot);
+cost:= CostOfBuilding(btype, GetNation(bdepot));
+
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function GetBaseSource(bdepot);
+var pom, sor;
+begin
+pom := GetBase(bdepot);
+sor := [];
+
+sor := sor ^ GetResourceType(pom, mat_cans);
+sor := sor ^ GetResourceType(pom, mat_oil);
+sor := sor ^ GetResourceType(pom, mat_siberit);
+
+result := sor;
+End;
+
+Export Function Hex(x, y);
+begin
+if ValidHex(x, y) and HexInfo(x, y) = 0 then
+   result := true
+    else
+     result := false;
+End;
+
+
+Export Function NeedBuilding(side, btype);
+begin
+if FilterAllUnits([[f_side, side], [f_btype, btype], [f_not, [f_constructed]]]) = 0 then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function NeedBase(side);
+begin
+if NeedBuilding(side, b_depot) and
+   NeedBuilding(side, b_warehouse) then
+    result := true
+     else
+      result := false;
+End;
+
+Export Function MyBase(side);
+begin
+if not NeedBase(side) then
+   result := FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]])[1]
+    else
+     result := false;
+End;
+
+Export Function GetBuilding(side, btype);
+begin
+if FilterAllUnits([[f_side, side], [f_btype, btype]]) > 0 then
+   result := FilterAllUnits([[f_side, side], [f_btype, btype]])
+    else
+     result := false;
+End;
+
+Export Function GetCrates(side);
+begin
+if MyBase(side) then
+   result := GetResourceType(GetBase(MyBase(side)), mat_cans)
+    else
+     result := false;
+End;
+
+Export Function GetLabs(side);
+begin
+result := FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]]]);
+End;
+
+Export Function GetLabKinds(lab);
+var kind1, kind2;
+begin
+kind1 := GetLabKind(lab, 1);
+kind2 := GetLabKind(lab, 2);
+result := [kind1, kind2];
+End;
+
+Export Function CheckTechList(side, tlist);
+var i;
+begin
+result := false;   // default all techs are researched
+
+for i = 1 to tlist do
+    if GetTech(tlist[i], side) <> state_researched then
+       begin
+       result := true;
+       break;
+       end;
+End;
+
+
+Export Function ResearchTechList(side, tlist);
+// tlist - lista techów (t_basic, t_weap,
+// t_sib, t_comp, t_opto, t_bio, t_time);
+var i, lab, pom, tmp, list, mylab, basic_tech;
+begin
+lab := GetLabs(side);
+tmp := 0;
+list := [];
+basic_tech := [35, 45, 46, 47, 1, 2, 48, 49, 50, 20];
+
+// check list
+   for i = 1 to tlist do
+       if GetTech(tlist[i], side) <> state_researched then
+          list := list ^ tlist[i];
+
+   if list then
+      begin
+   // get lab
+      for i = 1 to lab do
+          if (list[1] in basic_tech) or (GetTechLab(list[1]) in GetLabKinds(lab[i])) then
+             begin
+             mylab := lab[i];
+             break;
+             end;
+
+   // mylab
+      if mylab then
+         begin
+         if BuildingStatus(mylab) = bs_idle then
+            for i = 1 to list do
+                AddComResearch(mylab, list[i]);
+         end
+          else
+           result := false;
+      end
+       else
+        result := false;
+
+End;
+
+Export Function GetTowers(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
+End;
+//------------------------------------------------
+
+Export Function ComBuildDepot(plist, x, y, d);
+var i;
+begin
+if Hex(x, y) then
+   for i = 1 to plist do
+       if not HasTask(plist[i]) then
+          ComBuild(plist[i], b_depot, x, y, d);
+End;
+
+
+Export Function ComBuildWarehouse(plist, bident);
+var i;
+begin
+if GetBType(bident) = b_depot and Cost(bident, b_warehouse) and not BuildingsInProgress(GetSide(plist[1])) then
+   begin
+   ComUpgrade(bident);
+
+   for i = 1 to plist do
+       if not HasTask(plist[i]) then
+          ComCompleteUpgrade(plist[i], HexInfo(GetX(bident), GetY(bident)));
+
+   result := true;
+   end
+    else
+     result := false;
+End;
+
+Export Function ComBuildLab(plist, x, y, d);
+var i;
+begin
+if GetCrates(GetSide(plist[1])) >= 20 and Hex(x, y) then
+   begin
+   for i = 1 to plist do
+       if not HasTask(plist[i]) then
+          ComBuild(plist[i], b_lab, x, y, d);
+   result := true;
+   end
+    else
+     result := false;
+End;
+
+Export Function ComBuildLabKind(lab, bkind1, bkind2);
+var buildings_cost;
+begin
+buildings_cost := [0,0,0];
+buildings_cost := RefreshList(buildings_cost, CostOfBuilding(bkind1, GetNation(lab)));
+buildings_cost := RefreshList(buildings_cost, CostOfBuilding(bkind2, GetNation(lab)));
+
+    if GetLabKind(lab, 1) = b_lab_basic and
+       GetLabKind(lab, 2) = b_lab_basic then
+       begin
+       if buildings_cost < GetBaseSource(MyBase(GetSide(lab))[1]) and BuildingStatus(lab) = bs_idle then
+          begin
+          ComUpgradeLab(lab, bkind1);
+          AddComUpgradeLab(lab, bkind2);
+
+          result := true;
+          end
+           else
+            result := false;
+       end
+        else
+         result := false;
+End;
+
+Export Function CheckTowersStatus(plist, tlist);
+// towerslist (tlist) - (type, x, y, d);
+var i, tmp, p, c;
+begin
+
+     p := 1;
+
+     for i = 1 to (tlist/4) do
+         begin
+         if HexInfo(tlist[p+1], tlist[p+2]) = 0 and Hex(tlist[p+1], tlist[p+2]) and GetCrates(GetSide(plist[1])) >= 20 then
+            begin
+            for c = 1 to plist do
+                if not HasTask(plist[c]) then
+                   ComBuild(plist[c], tlist[p], tlist[p+1], tlist[p+2], tlist[p+3]);
+            break;
+            end
+             else
+              if (p + 4 < tlist) then
+                  p := p + 4;
+         end;
+
+End;
+
+Export Function CheckWeaponOnTowers(side, wlist);
+var i, tmp, fac;
+begin
+tmp := GetTowers(side);
+fac := GetBuilding(side, b_factory)[1];
+
+    if fac then
+       for i = 1 to tmp do
+           if GetBWeapon(tmp[i]) = 0 then
+              begin
+              if BuildingStatus(fac) = bs_idle then
+                 ComPlaceWeapon(tmp[i], wlist[Rand(1, wlist)]);
+              break;
+              end;
+End;
+
+Export Function GetVehicle(side, chassis, weapon);
+begin
+if FilterAllUnits([[[f_side, side], [f_weapon, weapon], [f_chassis, chassis]]]) then
+   result := FilterAllUnits([[[f_side, side], [f_weapon, weapon], [f_chassis, chassis]]])
+    else
+     result := false;
+End;
+
+Export Function ComProduce(factory, chassis, engine, control, weapon);
+begin
+if BuildingStatus(factory) = bs_idle and
+   CanBeConstructed(factory, chassis, engine, control, weapon) and
+   CostOfVehicle(chassis, engine, control, weapon)[1] <= GetBaseSource(factory)[1] and
+   CostOfVehicle(chassis, engine, control, weapon)[2] <= GetBaseSource(factory)[2] and
+   CostOfVehicle(chassis, engine, control, weapon)[3] <= GetBaseSource(factory)[3] then
+   begin
+   ComConstruct(factory, chassis, engine, control, weapon);
+   end
+     else
+      result := false;
+End;
+
+
+Export Function GetBuildingList(side, type);
+var i, tmp, filter;
+begin
+filter := FilterAllUnits([[f_side, side], [f_btype, type]]);
+tmp := [];
+
+       for i = 1 to filter do
+           begin
+           tmp := tmp ^ [[GetBType(filter[i]), GetX(filter[i]), GetY(filter[i]), GetDir(filter[i])]];
+           end;
+
+result := tmp;
+End;
+
+
+Export Function ComBuildLabList(plist, list);
+var i, p;
+begin
+// lablist [x, y, d, kind1, kind2]
+// check cost and base source
+// check hexes
+// build if lab not exist
+  if GetBaseSource(MyBase(GetSide(plist[1])))[1] > 75 then
+     for i = 1 to list do
+         begin
+         if HexInfo(list[i][1], list[i][2]) > 0 then
+            begin
+            ComBuildLabKind(HexInfo(list[i][1], list[i][2]), list[i][4], list[i][5]);
+
+            if GetBType(HexInfo(list[i][1], list[i][2])) <> b_lab_full then
+               ComCompleteUpgrade(plist, HexInfo(list[i][1], list[i][2]));
+
+            end
+             else
+              if Cost(MyBase(GetSide(plist[1])), b_lab) and
+                 Cost(MyBase(GetSide(plist[1])), list[i][4]) and
+                 Cost(MyBase(GetSide(plist[1])), list[i][5]) then
+                 for p = 1 to plist do
+                     if IsInUnit(plist[p]) then
+                        ComExitBuilding(plist[p])
+                         else
+                          ComBuild(plist[p], b_lab, list[i][1], list[i][2], list[i][3]);
+         end;
+End;
+
+
+Export Function ComFindDeposit(sci, x, y);
+begin
+SetTag(sci, 42);
+
+if IsInUnit(sci) then
+   ComExitBuilding(sci)
+    else
+     if not HasTask(sci) and GetTag(sci) = 42 then
+        begin
+        ComMoveXY(sci, x, y);
+        //AddComReturn(sci);
+        end;
+End;
+
+Export Function NeedHeal(side, tag_list, list);
+var i, filter, tmp;
+begin
+filter := FilterAllUnits([[f_side, side], [f_type, unit_human]]) diff list;
+tmp := tag_list;
+
+for i = 1 to filter do
+    begin
+    if GetLives(filter[i]) = 1000 and GetTag(filter[i]) >= 100 then
+       begin
+       SetTag(filter[i], 0);
+       tmp := tmp diff filter[i];
+       end;
+
+    if GetLives(filter[i]) < 1000 then
+       begin
+       if not filter[i] in tmp then
+          tmp := tmp ^ filter[i];
+
+       if GetLives(filter[i]) < 250 then // need fast help!
+          SetTag(filter[i], 100)
+       else
+       if GetLives(filter[i]) < 500 then
+          SetTag(filter[i], 101)
+       else
+       if GetLives(filter[i]) < 1000 then
+          SetTag(filter[i], 102);
+       end;
+    end;
+
+result := tmp;
+End;
+
+
+Export Function WantHeal(sci, tag);
+begin
+if GetTaskList(sci) > 0 then
+   begin
+   if GetTaskList(sci)[1][1] = 'l' and GetTag(GetTaskList(sci)[1][4]) = tag then
+      result := true
+       else
+        result := false;
+   end
+    else
+     result := false;
+End;
+
+
+Export Function IntBazooka(list, side);
+var ta, c, i, filter;
+begin
+
+     // list   := FilterAllUnits([[f_side, 3], [f_class, class_bazooker]]);
+     filter := FilterAllUnits([[f_side, side], [f_not, [f_type, unit_building]]]);
+
+     c := Rand(1, 3);
+
+     if filter > 0 then
+         for i = 1 to list do
+         for ta in filter do
+             begin
+
+              if GetDistUnits(list[i], ta) <= 13 then
+                 begin
+
+                      Case c of
+                      1: ComTimeShift(list[i], GetX(ta), GetY(ta));
+                      2: ComSpaceShift(list[i], GetX(ta) + Rand(-1,1), GetY(ta) + Rand(-1,1));
+                      3: ;
+                      end;
+
+                 end;
+             end;
+
+End;
+
+
+Export Function ComChangeClassToBazooker(plist);
+var i;
+begin
+for i = 1 to plist do
+    if not IsInUnit(plist[i]) in FilterAllUnits([[f_btype, b_barracks]]) then
+       begin
+       if IsInUnit(plist[i]) then
+          ComExitBuilding(plist[i])
+           else
+            if not HasTask(plist[i]) then
+               begin
+               ComEnterUnit(plist[i], NearestUnitToUnit(FilterAllUnits([[f_side, GetSide(plist[1])], [f_btype, b_barracks]]), plist[i]));
+               AddComChangeProfession(plist[i], 9);
+               end;
+       end
+        else
+         ComChangeProfession(plist[i], 9);
+End;
+
+Export Function GetHuman(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_type, unit_human]]);
+End;
+
+Export Function PrepareTigers(area);
+var tiger, i;
+begin
+uc_side := 0;
+uc_nation := 0;
+
+ for i = 1 to [4,5,6][Difficulty] do
+     begin
+     hc_class = class_tiger;
+     hc_gallery = 'sandnature';
+     hc_agressivity = Rand(0, 50);
+     hc_face_number = 3;
+
+     tiger := CreateHuman;
+     PlaceUnitArea(tiger, area, false);
+     end;
+
+End;
+
+Export Function PrepareApemans(area);
+var ape, i;
+begin
+uc_side := 0;
+uc_nation := 0;
+
+ for i = 1 to 8 do
+     begin
+     hc_class = class_apeman;
+     hc_gallery = '';
+     hc_agressivity = Rand(-5, 20);
+
+     ape := CreateHuman;
+     PlaceUnitArea(ape, area, false);
+     end;
+
+End;
+
+Export Function ComCompleteUpgrade(plist, b);
+var i;
+begin
+if BuildingStatus(b) = bs_build then
+   for i = 1 to plist do
+       begin
+       if IsInUnit(plist[i]) then
+          begin
+          ComExitBuilding(plist[i]);
+          AddTaskList(plist[i], [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+          end
+           else
+            if not HasTask(plist[i]) then
+               SetTaskList(plist[i], [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+       end;
+End;
+
+Export Function WantRepair(eng, x, y);
+begin
+if GetTaskList(eng) > 0 then
+   begin
+   if GetTaskList(eng)[1][1] = 'o' and GetTaskList(eng)[1][2] = x and GetTaskList(eng)[1][3] = y then
+      result := true
+       else
+        result := false;
+   end
+    else
+     result := false;
+End;
+
+Export Function GetBuildingsList(side, btype);
+var i, tmp, list;
+begin
+if btype = -1 then
+   tmp := FilterAllUnits([[f_side, side], [f_type, unit_building]])
+    else
+     tmp := FilterAllUnits([[f_side, side], [f_btype, btype]]);
+
+    list := [];
+
+    for i = 1 to tmp do
+        list := list ^ [[GetBType(tmp[i]), GetX(tmp[i]), GetY(tmp[i]), GetDir(tmp[i])]];
+
+    result = list;
+End;
+
+Export Function GetBehemoth(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_chassis, 25]]);
+End;
+
+
+Export Function GetFacExt(factory);
+var tmp, i, list;
+begin
+tmp := [];
+list := [];
+
+for i = 16 to 25 do
+    tmp := tmp ^ FilterAllUnits([[[f_side, GetSide(factory)], [f_dist, factory, 6], [f_btype, i]]]);
+
+for i = 1 to tmp do
+    list := list ^ [[GetBType(tmp[i]), GetX(tmp[i]), GetY(tmp[i]), GetDir(tmp[i])]];
+
+result := list;
+End;
+
+Export Function RefreshList(list, list2);
+begin
+list := Replace(list, 1, list[1]+list2[1]);
+list := Replace(list, 2, list[2]+list2[2]);
+list := Replace(list, 3, list[3]+list2[3]);
+result := list;
+End;
+
+Export Function BuildFactory(plist, x, y, d, ext_list);
+var i, j, buildings_cost, ext_info, _x, _y, _d;
+begin
+
+  if not plist then
+     result := false;
+
+     buildings_cost := [0,0,0];
+
+  // add workshop
+     if GetBType(HexInfo(x, y)) <> b_workshop then
+        buildings_cost := RefreshList(buildings_cost, CostOfBuilding(b_workshop, GetNation(plist[1])));
+  // add factory
+     if GetBType(HexInfo(x, y)) <> b_factory then
+        buildings_cost := RefreshList(buildings_cost, CostOfBuilding(b_factory, GetNation(plist[1])));
+  // add extension from extlist
+     for i = 1 to ext_list do
+         buildings_cost := RefreshList(buildings_cost, CostOfBuilding(ext_list[i], GetNation(plist[1])));
+
+     // only for debuger
+     // display_strings := buildings_cost;
+
+     // build workshop
+        if HexInfo(x, y) = 0 and ValidHex(x, y) and GetBaseSource(MyBase(GetSide(plist[1]))) >= buildings_cost then
+           for i = 1 to plist do
+               begin
+               if IsInUnit(plist[i]) then
+                  ComExitBuilding(plist[i])
+                   else
+                    if not HasTask(plist[i]) then
+                       begin
+                       ComBuild(plist[i], b_workshop, x, y, d);
+                       end;
+               end;
+     // build factory
+        if GetBType(HexInfo(x, y)) = b_workshop and GetBaseSource(MyBase(GetSide(plist[1]))) >= buildings_cost then
+           begin
+           ComUpgrade(HexInfo(x, y));
+           ComCompleteUpgrade(plist, HexInfo(x, y));
+           end;
+
+        if GetBType(HexInfo(x, y)) = b_factory and GetBaseSource(MyBase(GetSide(plist[1]))) >= buildings_cost then
+           if GetFacExt(HexInfo(x, y)) < ext_list then
+              begin
+              ext_info := GetFacExtDir(x, y, d);
+
+              for i = 1 to ext_list do
+                  begin
+                  if HexInfo(ext_info[i][1], ext_info[i][2]) = 0 and ExtensionAllow(GetSide(plist[1]), ext_list[i]) then
+                     begin
+                     _x := ext_info[i][1];
+                     _y := ext_info[i][2];
+                     _d := ext_info[i][3];
+
+
+                     for j = 1 to plist do
+                         begin
+                         if IsInUnit(plist[j]) then
+                            ComExitBuilding(plist[j])
+                             else
+                              if not HasTask(plist[j]) then
+                                 begin
+                                 ComBuild(plist[j], ext_list[i], _x, _y, _d);
+                                 end;
+                          end;
+
+                     break;
+                     end;
+                  end;
+              end;
+
+
+End;
+
+Export Function ExtensionAllow(side, ext_type);
+var i, mode;
+begin
+mode := false;
+
+     case ext_type of
+     b_ext_gun:      if GetTech(tech_gun, side) = state_researched then
+                        mode := true;
+     b_ext_laser:    if GetTech(tech_laser, side) = state_researched then
+                        mode := true;
+     b_ext_rocket:   if GetTech(tech_rocket, side) = state_researched then
+                        mode := true;
+     b_ext_computer: if GetTech(tech_ai, side) = state_researched then
+                        mode := true;
+     b_ext_siberium: if GetTech(tech_sibeng, side) = state_researched then
+                        mode := true;
+     b_ext_radar:    if GetTech(tech_radar, side) = state_researched then
+                        mode := true;
+     b_ext_noncombat:   mode := true;
+     b_ext_track:       mode := true;
+     b_ext_stitch:      mode := true;
+     end;
+
+result := mode;
+End;
+
+
+Export Function DisplayFactoryInfo(factory);
+begin
+display_strings := ['Factory(x,y): ', GetX(factory), GetY(factory),
+                    'Factory Ext: ', GetFacExt(factory)];
+End;
+
+
+
+Export Function GetFacExtDir(x, y, dir);
+var list, i;
+begin
+list := [];
+
+     Case dir of
+     0: begin
+        list := [[x-4, y-4, 2], [x-3, y, 1], [x+4, y, 4], [x+3, y+3, 5], [x, y+4, 0]];
+        end;
+     1: begin
+        list := [[x, y-4, 3], [x-3, y-3, 2], [x-3, y, 1], [x, y+3, 0], [x+4, y+4, 5]];
+        end;
+     2: begin
+        list := [[x, y-3, 3], [x+3, y, 4], [x, y+4, 0], [x-3, y, 1], [x-4, y-4, 2]];
+        end;
+     3: begin
+        list := [[x+3, y, 4], [x+4, y+4, 5], [x-4, y, 1], [x, y-4, 3], [x-3, y-3, 2]];
+        end;
+     4: begin
+        list := [[x, y+4, 0], [x+3, y+3, 5], [x+3, y, 4], [x, y-3, 3], [x-4, y-4, 2]];
+        end;
+     5: begin
+        list := [[x-4, y, 1], [x, y-4, 3], [x+4, y+4, 5], [x+3, y, 4], [x, y+3, 0]];
+        end;
+     End;
+
+result := list;
+End;
+
+Export Function CreateFactoryWithExt(x, y, d); // debug function
+var i, list, fac;
+begin
+list := GetFacExtDir(x, y, d);
+
+
+    uc_side := 1;
+    uc_nation := 1;
+    bc_type = b_factory;
+    fac = CreateAndPlaceBuildingXYD(x, y, d);
+
+
+    for i = 1 to 5 do
+        begin
+        bc_type = [b_ext_laser, b_ext_gun, b_ext_radar, b_ext_noncombat, b_ext_rocket][i];
+        CreateAndPlaceBuildingXYD(list[i][1], list[i][2], list[i][3]);
+        display_strings := list[i];
+        Wait(0$01);
+        end;
+End;
+
+Export Function ComBuildTurretFromList(side, tlist);
+var i, plist, c, j;
+begin
+plist := FilterAllUnits([[f_side, side], [f_class, 2]]);
+c := 1;
+
+    for i = 1 to tlist do
+        begin
+        if HexInfo(tlist[c+1], tlist[c+2]) = 0 then
+           begin
+           if GetBaseSource(MyBase(GetSide(plist[1]))) >= 20 then
+              for j = 1 to plist do
+                  if IsInUnit(plist[i]) then
+                     ComExitBuilding(plist[i])
+                      else
+                       if not HasTask(plist[i]) then
+                          ComBuild(plist[i], tlist[c], tlist[c+1], tlist[c+2], tlist[c+3]);
+
+           break;
+           end
+            else
+             c := c + 4;
+        end;
+End;
+
+Export Function CollectCrates(side, area);
+var cargo, engs, skr;
+begin
+skr = GetListOfCratesInArea(area);
+cargo := FilterAllUnits([[f_side, side], [f_lives, 450], [[[f_or, [f_weapon, us_cargo_bay],
+                                                                       [f_weapon, ru_cargo_bay],
+                                                                       [f_weapon, ar_cargo_bay]]]]]);
+engs := FilterAllUnits([[f_side, side], [f_or, [f_class, 2], [f_class, 16]]]);
+
+if skr then
+   begin
+
+   if cargo then
+      begin
+      if GetFuel(cargo[1]) < 30 and GetDistUnits(cargo[1], GetBuilding(side, b_warehouse)[1]) < 4 then
+         SetFuel(cargo[1], 100);
+
+      if not HasTask(cargo[1]) and GetTag(cargo[1]) <> 51 then
+         ComCollect(cargo[1], skr[1], skr[2]);
+      end
+       else
+           if engs then
+              if not HasTask(engs[engs]) then
+                 ComCollect(engs[engs], skr[1], skr[2]);
+         
+   end;
+
+End;
+{
+Export Function CollectCrates(side, area);
+var c, skr, cargo, engs;
+begin
+
+     skr = GetListOfCratesInArea(area);
+     cargo := FilterAllUnits([[f_side, side], [f_lives, 450], [[[f_or, [f_weapon, us_cargo_bay],
+                                                                       [f_weapon, ru_cargo_bay],
+                                                                       [f_weapon, ar_cargo_bay]]]]]);
+     engs := FilterAllUnits([[f_side, side], [f_class, 2]]);
+
+     c = 1;   
+
+     While c < skr do
+     begin
+     Wait(0$0.3);
+
+     if cargo = 0 and not HasTask(engs[engs]) then
+        begin
+        ComCollect(engs[engs], skr[c], skr[c+1]);
+        c = c + 2;
+        end;
+
+     if cargo then
+        begin
+
+        if GetTag(cargo[1]) = 51 then
+           break;
+
+        if GetFuel(cargo[1]) > 10 and not HasTask(cargo[1]) then
+           begin
+           ComCollect(cargo[1], skr[c], skr[c+1]);
+           end;
+
+        if GetFuel(cargo[1]) < 30 and GetDistUnits(cargo[1], GetBuilding(side, b_warehouse)[1]) < 4 then
+           SetFuel(cargo[1], 100);
+
+        c = c + 2;
+        end; 
+
+     end;
+
+End; }
+
+Export Function EnterToBuilding(plist, building);
+var i;
+begin
+
+   for i = 1 to plist do
+       if not HasTask(plist[i]) then
+          ComEnterUnit(plist[i], building);
+  
+End;
+
+Export Function Build(plist, btype, x, y, d);
+var i, costs, dep;
+begin
+dep := NearestUnitToXY(FilterAllUnits([[[f_side, GetSide(plist[1])], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]]), x, y);
+costs := Cost(dep, btype);
+
+if costs and GetDistUnitXY(dep, x, y) <= 30 then
+   for i = 1 to plist do
+       if IsInUnit(plist[i]) then
+          ComExitBuilding(plist[i])
+           else
+            if not HasTask(plist[i]) then
+               ComBuild(plist[i], btype, x, y, d);
+End;
+
+Export Function BuildPowerFromList(plist, slist, btype);
+var p, j, side;
+begin
+side := GetSide(plist[1]);
+p := 1;
+
+if Cost(MyBase(side)[1], btype) then
+   begin
+   while (p < slist) do
+       begin
+       if HexInfo(slist[p], slist[p+1]) = 0 then
+          begin
+          Build(plist, btype, slist[p], slist[p+1], slist[p+2]);
+          break; // !!!
+          end
+           else
+            p := p + 3;
+       end;
+   end;
+
+End;
+
+Export Function Tag_List(plist, tag);
+var i, list;
+begin
+list := [];
+
+for i = 1 to plist do
+    if GetTag(plist[i]) = tag then
+       list := list ^ plist[i];
+
+result := list;
+End;
+
+Export Function GoToTower(plist);
+var i, filter, towers, barracks, outside, inside, side;
+begin
+side := GetSide(plist[1]);
+filter := FilterAllUnits([[f_side, side], [f_btype, b_bunker]]);
+towers := FilterAllUnits([[[f_side, side], [f_btype, b_bunker], [f_empty]]]);
+barracks := FilterAllUnits([[f_side, side], [f_btype, b_barracks]]);
+
+if towers then
+   begin
+   outside := UnitFilter(plist, [f_not, [f_inside]]);
+
+   if not outside then
+      begin
+      inside := UnitsInside(barracks[1]);
+      if inside then
+         ComExitBuilding(inside[1]);
+      end
+       else
+        ComEnterUnit(outside[1], towers[1]);
+   end;
+
+End;
+
+
+Export Function ControlTower(side, nation, x, y, d, chassis);
+var i, eng, mech, fac, ct, remveh;
+begin
+eng := FilterAllUnits([[f_side, side], [f_class, 2]]);
+mech := FilterAllUnits([[f_side, side], [f_class, 3]]);
+fac := GetBuilding(side, b_factory)[1];
+remveh := FilterAllUnits([[[f_side, side], [f_type, unit_vehicle], [f_control, control_remote]]]);
+
+if GetTech(tech_remCont, side) = state_researched then
+   case nation of
+   nation_american: begin
+                    if GetBuilding(side, b_control_tower) = 0 then
+                       Build(eng, b_control_tower, x, y, d)
+                        else
+                         if UnitsInside(GetBuilding(side, b_control_tower)[1]) = 0 and Tag_List(mech, 32) = 0 and BuildingStatus(GetBuilding(side, b_control_tower)[1]) <> bs_build then
+                            GoToControlTower(side)
+                             else
+                              ct := GetBuilding(side, b_control_tower);
+                    end;
+   nation_arabian:  begin
+                    if FilterAllUnits([[f_side, side], [f_weapon, ar_control_tower]]) < 3 then
+                       ComProduce(fac, chassis, engine_combustion, control_manual, ar_control_tower)
+                        else
+                         begin
+                         if HexInfo(x, y) = 0 then
+                            ComMoveXY(GetVehicle(side, chassis, ar_control_tower)[1], x, y);
+
+                         ct := GetVehicle(side, chassis, ar_control_tower);
+                         end;
+                    end;
+   end;
+
+// link vehicle to ct
+   if ct and remveh and UnitsInside(ct[1]) then
+      begin
+      for i = 1 to remveh do
+          begin
+          if IsControledBy(remveh[i]) = 0 and GetLives(remveh[i]) >= 250 then
+             if GetNation(ct[1]) = 1 then // <!!----
+                ComLinkTo(remveh[i], UnitsInside(ct[1])[Rand(1, UnitsInside(ct[1]))])
+             else
+                 ComLinkTo(remveh[i], ct[Rand(1, ct)]);
+
+          if IsControledBy(remveh[i]) and GetLives(remveh[i]) < 250 then
+             ComUnlink(remveh[i]);
+          end;
+      end;
+
+
+End;
+
+
+Export Function GoToControlTower(side);
+var i, mech, n;
+begin
+mech := FilterAllUnits([[f_side, side], [f_class, 3]]);
+n := 0;
+
+for i = 1 to mech do
+    if GetTag(mech[i]) = 0 then
+       begin
+       if IsInUnit(mech[i]) then
+          ComExitBuilding(mech[i])
+           else
+            begin
+            SetTag(mech[i], 32);
+            ComEnterUnit(mech[i], GetBuilding(side, b_control_tower)[1]);
+            n := n + 1;
+            end;
+       if n = 2 then
+          break;
+       end;
+End;
+
+Export Function GetDistUnitToSide(unit, side);
+var tmp, dist;
+begin
+tmp  := NearestUnitToUnit(FilterAllUnits([f_side, side]), unit);
+dist := GetDistUnits(unit, tmp);
+
+if dist >= 9999 then
+   result := -1
+    else
+     result := dist;
+End;
+
+Export Function RepairBase(side, enemy_list, x, y);
+var i, j, eng, building, pr_build, crane;
+begin
+eng := FilterAllUnits([[f_side, side], [f_class, 2]]);
+building := FilterAllUnits([[[[f_side, side], [f_type, unit_building], [f_or, [f_not, [f_btype, b_oil_mine]], [f_not, [f_btype, b_siberite_mine]]],
+                             [f_not, [f_lives, 1000]]]]]);
+pr_build := FilterAllUnits([[[[f_side, side], [f_type, unit_building], [f_or, [f_not, [f_btype, b_oil_mine]], [f_not, [f_btype, b_siberite_mine]]],
+                             [f_not, [f_lives, 250]]]]]);
+crane := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_crane], [f_weapon, ar_crane], [f_weapon, ru_crane]]]);
+
+
+for i = 1 to eng do
+    begin      
+    if building = 0 and GetDistUnitXY(eng[i], x, y) > 20 and not HasTask(eng[i]) then
+       ComMoveXY(eng[i], x, y);
+    if DistFromEnemy(eng[i], enemy_list) < 11 then
+       ComMoveXY(eng[i], x, y);
+    if GetLives(eng[i]) < 750 and GetTag(eng[i]) = 0 then
+       begin
+       SetTag(eng[i], 99);
+       ComMoveXY(eng[i], x, y);
+       end;
+    if GetLives(eng[i]) = 1000 and GetTag(eng[i]) = 99 then
+       SetTag(eng[i], 0);
+    if building > 0 then
+       begin
+       if GetTag(eng[i]) = 0 and IsInUnit(eng[i]) then
+          ComExitBuilding(eng[i]);
+
+       if GetTag(eng[i]) = 0 and not HasTask(eng[i]) and not IsInUnit(eng[i]) and pr_build = 0 then
+          for j = 1 to building do
+              if DistFromEnemy(building[j], enemy_list) > 11 then
+                 begin
+                 ComRepairBuilding(eng[i], building[j]);
+                 break; // !!!
+                 end;
+
+       if GetTag(eng[i]) = 0 and not IsInUnit(eng[i]) and pr_build then
+          for j = 1 to pr_build do
+              if not WantRepair(eng[i], GetX(pr_build[j]), GetY(pr_build[j])) and DistFromEnemy(pr_build[j], enemy_list) > 10 then
+                 begin
+                 ComRepairBuilding(eng[i], pr_build[j]);
+                 break; // !!!
+                 end;
+       end;
+    end;
+
+if crane and building then
+   begin
+   for i = 1 to crane do
+       begin
+       if not HasTask(crane[i]) and GetLives(crane[i]) > 450 and GetTag(crane[i]) = 0 then
+          for j = 1 to building do
+              if DistFromEnemy(building[j], enemy_list) > 9 then
+                 begin
+                 ComRepairBuilding(crane[i], building[j]);
+                 break; // !!!
+                 end;
+
+       if GetLives(crane[i]) < 450 and GetTag(crane[i]) = 0 then
+          SetTag(crane[i], 81);
+
+       if GetLives(crane[i]) = 1000 and GetTag(crane[i]) = 81 then
+          SetTag(crane[i], 0);
+       end;
+   end;
+End;
+
+Export Function HealPersonel(side, tag);
+var i, sci, damage, plist;
+begin
+sci := FilterAllUnits([[f_side, side], [f_class, 4]]);
+plist := FilterAllUnits([[f_side, side], [f_type, unit_human]]);
+damage := Tag_List(plist, 99);
+
+if damage then
+   for i = 1 to sci do
+       if IsInUnit(sci[i]) then
+          ComExitBuilding(sci[i])
+           else
+            if not HasTask(sci[i]) then
+               ComHeal(sci[i], damage[1]);
+End;
+
+Export Function FinishAllBuilds(side);
+var plist, builds, i, crane;
+begin
+plist := FilterAllUnits([[f_side, side], [f_class, 2]]);
+builds := FilterAllUnits([[f_side, side], [f_type, unit_building]]);
+crane := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_crane], [f_weapon, ar_crane], [f_weapon, ru_crane]]]);
+
+if tick mod 175 = 0 and builds and plist then
+   for i = 1 to builds do
+       if BuildingStatus(builds[i]) = bs_build then
+          begin
+          ComCompleteUpgrade(plist, builds[i]);
+          break;
+          end;
+
+if tick mod 175 = 0 and builds and crane then
+   for i = 1 to builds do
+       if BuildingStatus(builds[i]) = bs_build then
+          begin
+          ComCompleteUpgrade(crane, builds[i]);
+          break;
+          end;
+
+End;
+
+Export Function ElementOnList(list1, list2);
+var i, mode;
+begin
+mode := false;
+
+for i = 1 to list1 do
+    if list1[i] in list2 then
+       begin
+       mode := true;
+       break;
+       end;
+
+result := mode;
+End;
+
+Export Function IntConstruct(side, chassis, engine, control, weapon_list);
+var factory, apes, weapon;
+begin
+// allow_control
+// 1 - control manual
+// 2 - control remote
+// 3 - control computer
+// 4 - control apeman
+// allow engine
+// 0 - engine combustion OR engine solar
+// 1 - engine siberite
+
+       factory := GetBuilding(side, b_factory)[1];
+       apes := FilterAllUnits([[f_side, side], [f_class, class_apeman]]);
+
+       if GetBuilding(side, b_ext_computer) then
+          control = control_computer
+           else
+            if GetBuilding(side, b_ext_radar) then
+               control = control_remote
+                else
+                 if apes then
+                    if ElementOnList(UnitsInside(factory), apes) then
+                       control = control_apeman
+                        else
+                         control = control_manual;
+
+       if GetBuilding(side, b_ext_siberium) then
+          engine = engine_siberite;
+
+       if weapon_list > 1 then
+          weapon := weapon_list[Rand(1, weapon_list)]
+           else
+            weapon := weapon_list[1];
+              
+       ComProduce(factory, chassis, engine, control, weapon);
+
+End;
+
+Export Function ScoutArea(unit, xy_list);
+var i, p, tag;
+begin
+p := 1;
+
+case GetClass(unit) of
+class_soldier: tag = 12;
+class_engineer: tag = 22;
+class_scientistic: tag = 42;
+end;
+
+SetTag(unit, tag);
+
+for i = 1 to (xy_list/2) do
+    begin
+    AddComMoveXY(unit, xy_list[p], xy_list[p+1]);
+    AddComWait(unit, Rand(0$01, 0$03));
+    p := p + 2;
+    end;
+
+SetTag(unit, 0);
+End;
+
+Export Function Transport(eng, from_dep, to_dep, source);
+var i;
+begin
+if IsInUnit(eng) then
+   ComExitBuilding(eng)
+    else
+     if not HasTask(eng) then
+        begin
+        ComTransport(eng, from_dep, source);
+        AddComGive(eng, to_dep);
+        end;
+End;
+
+Export Function ScanVehicleStatus(side, x, y);
+var i, vehs, mech, filter, j, fac;
+begin
+mech := FilterAllUnits([[f_side, side], [f_class, class_mechanic], [f_not, [f_inside]]]);
+vehs := FilterAllUnits([[f_side, side], [f_type, unit_vehicle]]);
+filter := UnitFilter(vehs, [[f_not, [f_lives, 450]], [f_distxy, x, y, 10]]);
+fac := UnitsInside(GetBuilding(side, b_factory)[1]);
+j := mech^fac;
+
+for i = 1 to vehs do
+    if GetLives(vehs[i]) < 450 and GetTag(vehs[i]) = 0 and GetDistUnitXY(vehs[i], x, y) > 10 then
+       ComMoveXY(vehs[i], x, y);
+
+if filter then
+   for i = 1 to j do
+       if IsInUnit(j[i]) then
+          ComExitBuilding(j[i])
+           else
+            if not HasTask(j[i]) then
+               ComRepairVehicle(j[i], filter[1]);
+End;
+
+Export Function VehicleMove(side, area, tag, task, info);
+var i, filter, list, mech, parking, d, enemy;
+begin
+mech := UnitsInside(GetBuilding(side, b_factory)[1]) ^ FilterAllUnits([[[f_side, side], [f_class, 3], [f_not, [f_inside]]]]);
+parking := FilterUnitsInArea(area, [[f_side, side], [f_type, unit_vehicle]]);
+list := Tag_List(FilterAllUnits([[f_side, side], [f_type, unit_vehicle]]), tag);
+enemy := FilterAllUnits([f_enemy, side]);
+
+if list then
+   for i = 1 to list do
+   Case task of
+    'back':   begin   // 83
+              if not GetDistUnitArea(list[i], area) > 6 then
+                 ComMoveToArea(list[i], area)
+                  else
+                   begin
+                   if GetControl(list[i]) = control_manual then
+                      begin
+                      d := IsDrivenBy(list[i]);
+                      if GetTag(d) = 41 then
+                         SetTag(d, 0);
+                      ComExitVehicle(d);
+                      end;
+                   if GetLives(list[i]) < 90 then
+                      SetFuel(list[i], 100);
+                   end;
+              end;
+    'defend': begin   // 83
+              if not IsDrivenBy(list[i]) then
+                 ComEnterUnit(mech[1], list[i]);
+              if IsDrivenBy(list[i]) or not GetControl(list[i]) = control_manual then
+                 if GetLives(list[i]) > 450 then
+                    ComAttackUnit(list[i], NearestUnitToUnit(enemy, list[i]));
+              if GetLives(list[i]) <= 450 then
+                 SetTag(list[i], 84);
+              end;
+    'attack': begin  // 84
+              if GetLives(list[i]) > 450 and GetFuel(list[i]) > 20 then
+                 Attack(list[i], info[1], info[2], info[3])
+                  else
+                   SetTag(list[i], 84);
+              end;
+    end;
+End;
+
+
+Export Function Attack(unit, enemy_side, path, target);
+var i, filter, all_vehs, capture_mode;
+begin
+// target (ignore) list: [towers, tanks, soldiers, civils, buildings, empty]
+
+filter := FilterAllUnits([[f_side, enemy_side], [f_dist, unit, 20]]);
+all_vehs := FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle]]);
+capture_mode := false;
+
+   for i = 1 to target do
+       begin
+             case target[i] of
+                  'towers':              filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret]]]);
+                  'tanks':               filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle]]);
+                  'soldiers':            filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_class, 1]]);
+                  'civils':              filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_class, 2], [f_class, 3], [f_class, 4]]]);
+                  'buildings':           filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_building]]);
+                  'empty_buildings':     filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_building], [f_empty]]);
+                  'empty_vehicles':      filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_type, unit_vehicle], [f_empty]]);
+                  'electro':             filter := filter diff FilterAllUnits([[f_side, enemy_side], [f_or, [f_btype, b_solar_power], [f_btype, b_oil_power], [f_btype, b_siberite_power]]]);
+                  'capture_vehicle':     capture_mode := true;
+             end;
+       end;
+
+
+   if not WantsToAttack(unit) then
+      begin
+
+           if filter then
+              begin
+              ComAttackUnit(unit, NearestUnitToUnit(filter, unit));
+              end
+               else
+                if GetDistUnitXY(unit, path[1], path[2]) > 7 then
+                   ComMoveXY(unit, path[1], path[2]);
+
+           if capture_mode and unit in FilterAllUnits([f_type, unit_human]) then
+              begin
+              if NearestUnitToUnit(all_vehs, unit) in FilterAllUnits([[[f_type, unit_vehicle], [f_empty], [f_lives, 251]]]) then
+                 ComEnterUnit(unit, NearestUnitToUnit(all_vehs, unit));
+              end;
+      end;
+End;
+
+Export Function FilterNonCombatVehicle(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_cargo_bay], [f_weapon, us_bulldozer],
+                                                 [f_weapon, us_crane], [f_weapon, ar_cargo_bay],
+                                                 [f_weapon, ar_crane], [f_weapon, ru_cargo_bay],
+                                                 [f_weapon, ru_big_cargo_bay], [f_weapon, ru_bulldozer],
+                                                 [f_weapon, ru_crane], [f_weapon, ar_control_tower]]]);
+End;
+
+
+Export Function SelectEnemy(side, list);
+var tlist, i;
+begin
+tlist := 0;
+
+for i = 1 to list do
+    if FilterAllUnits([f_side, list[i]]) then
+       tlist := i;
+
+result := tlist;
+End;
+
+
+Export Function NumAtt(min, mod_attack, increment, max);
+var i, n, t_tick;
+begin
+t_tick := tick;
+n := t_tick/mod_attack;
+
+if n >= max then
+   n := max
+    else
+     if n < max then
+        n := n * increment;
+
+if n > max then
+   result := max
+    else
+     if n >= min then
+        result := n
+         else
+          result := min;
+End;
+
+Export Function AddMechanic(plist, amount);
+var i;
+begin
+if amount >= plist then
+   result := false
+else
+for i = plist downto amount do
+    begin
+    if not IsInUnit(plist[i]) and not HasTask(plist[i]) and GetTag(plist[i]) = 0 and GetBuilding(GetSide(plist[plist]), b_factory) then
+       begin
+       ComEnterUnit(plist[i], GetBuilding(GetSide(plist[plist]), b_factory)[1]);
+       AddComChangeProfession(plist[i], 3);
+       end;
+    end;
+End;

@@ -1,0 +1,72 @@
+Export Function CreateTank(side, nation, chassis, engine, control, weapon);
+begin
+uc_side := side;
+uc_nation := nation;
+
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+
+result := CreateVehicle;
+End;
+
+
+Export Function IsNearbyPoint(un, x, y);
+begin
+if GetDistUnitXY(un, x, y) < 6 then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function ComRetreat(un);
+var coord_dist, dir, x, y;
+begin
+
+    ComTurnUnit(un, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(un)]), un));
+    dir := GetDir(un);
+
+    dir := dir - 3;
+
+    if dir < 0 then
+       dir := dir + 6;
+
+    While true do
+    begin
+        coord_dist := 3;
+
+        x := ShiftX(GetX(un), dir, coord_dist);
+        y := ShiftY(GetY(un), dir, coord_dist);
+
+        if IsEnvironment(x, y) or ValidHex(x, y) = 0 or HexInfo(x, y) <> 0 then
+           begin
+
+           Repeat
+            begin
+              coord_dist := coord_dist + 1;
+              dir := dir + 1;
+
+              if dir > 5 then
+                 dir = 0;
+
+              x := ShiftX(GetX(un), dir, coord_dist);
+              y := ShiftY(GetY(un), dir, coord_dist);
+            end
+           Until not IsEnvironment(x, y) and ValidHex(x, y) and HexInfo(x, y) = 0;
+
+           end;
+
+        ComMoveXY(un, x, y);
+        Wait(0$1);
+
+        if GetDistUnits(un, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(un)]), un)) >= 10 then
+           begin
+            ComStop(un);
+            break;
+           end;
+
+      end;
+
+
+End;

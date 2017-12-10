@@ -1,0 +1,584 @@
+Export ru;
+Export skill_lvl;
+Export Gaidar; Export ru_free;
+Export Guards, false_tw;
+Export function PrepareRussian;
+var i, un, b, x,y, l, ru_tw, ru_bar, {ru_fac}{ru_lab} ru_patrol, ru_bun, ru_others;
+begin                               {on map!}
+
+
+        SetBName(ru_mainbase, 'malenkov');
+
+
+        
+
+        ru := 3; // side
+
+        uc_side = ru;
+        uc_nation = nation_russian;
+
+
+    If Difficulty > 1 then
+    begin
+    uc_side = 6;
+
+    bc_type = b_bunker;
+    bc_level = 5 + [0,0,1][Difficulty];
+
+    PlaceWeaponTurret(CreateAndPlaceBuildingXYD(87, 47, 3), ru_gun);
+    end;
+
+
+// filter's
+    ru_tw := FilterAllUnits([[f_side, ru], [f_btype, b_bunker]]);
+    ru_bar := FilterAllUnits([[[f_side, ru],{[f_or, [f_btype, b_armoury],}[f_btype, b_barracks]{]}]]);
+    ru_free := [];
+    ru_patrol := [];
+    ru_bun := FilterAllUnits([[f_side, ru], [f_btype, b_breastwork]]);
+    guards := [];
+    false_tw := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
+    ru_others := [];
+// hc_
+
+    hc_gallery = '';
+    hc_name = '';
+    hc_importance := 0;
+    skill_lvl = [1,2,3][Difficulty];
+
+// tower's
+    for i in false_tw do
+    begin
+
+         If IsInUnit(i) = 0 then
+           begin
+           uc_side = 6;
+
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(1,2)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,1)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 1;
+
+           un := CreateHuman;
+           guards = guards ^ un;
+           PlaceHumanInUnit(un, i);
+           end;
+
+    end;
+
+
+    SetSide(FilterAllUnits([f_side, 6]), 3);
+
+    uc_side = 3;
+    
+
+    for i in ru_tw do
+    begin
+
+        If IsInUnit(i) = 0 then
+           begin
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(3,4)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,2)+skill_lvl, Rand(0,2)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 1;
+
+           un := CreateHuman;
+           PlaceHumanInUnit(un, i);
+           end;
+
+    end;
+
+
+// barracks
+
+    for i in ru_bar do
+    begin
+
+    l = 0;
+
+        If IsInUnit(i) = 0 then
+           begin
+           repeat begin
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(0,2)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,1)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 1;
+
+           un := CreateHuman;
+           PlaceHumanInUnit(un, i);
+           l = l + 1;
+           end
+           until l = 1+[0,1,1][Difficulty];
+           end;
+
+    end;
+
+
+// breastwork's
+
+    for i = 1 to 4 do
+        begin
+         hc_attr = [Rand(9,11), Rand(10, 12)];
+         hc_skills = [Rand(2,3)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,2)+skill_lvl, Rand(0,1)+skill_lvl];
+         hc_sex = Rand(sex_male, sex_female);
+         hc_class = 1;
+
+         un := CreateHuman;
+         PlaceUnitArea(un, bun_a, false);
+         
+
+         ComEnterUnit(un, NearestUnitToUnit(ru_bun, un));
+         end;
+
+
+    for i in ru1_lab do
+        begin
+
+        l = 0;
+
+        If IsInUnit(i) = 0 then
+           begin
+           repeat begin
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(0,2)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,3)+skill_lvl, Rand(2,5)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 4;
+
+           un := CreateHuman;
+           PlaceHumanInUnit(un, i);
+           l = l + 1;
+
+           ru_free = ru_free ^ un; // add unit to list
+           end
+           until l = 3;
+           end;
+    end;
+
+    for i in ru1_fac do
+        begin
+
+        l = 0;
+
+        If IsInUnit(i) = 0 then
+           begin
+           repeat begin
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(0,2)+skill_lvl, Rand(1,2)+skill_lvl, Rand(2,5)+skill_lvl, Rand(2,5)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 3;
+
+           un := CreateHuman;
+           PlaceHumanInUnit(un, i);
+           l = l + 1;
+
+           ru_free = ru_free ^ un; // add unit to list
+           end
+           until l = 3;
+           end;
+    end;
+
+// engs
+
+           l = 0;
+
+           Repeat
+            begin
+           hc_attr = [Rand(9,11), Rand(10, 12)];
+           hc_skills = [Rand(0,2)+skill_lvl, Rand(3,5)+skill_lvl, Rand(0,1)+skill_lvl, Rand(0,1)+skill_lvl];
+           hc_sex = Rand(sex_male, sex_female);
+           hc_class = 2;
+
+           un := CreateHuman;
+           PlaceUnitArea(un, rus_engs, false);
+           l = l + 1;
+            end
+           Until l = 5;
+
+
+
+
+// mechanic in hg
+           hc_class = 3;
+           hc_skills = [Rand(0,2)+skill_lvl, Rand(1,2)+skill_lvl, Rand(2,5)+skill_lvl, Rand(2,5)+skill_lvl];
+
+           un = CreateHuman;
+           PlaceHumanInUnit(un, ru_hg);
+
+// Komisarz
+           If Difficulty = 1 then
+              hc_importance := 100
+               else
+              hc_importance := 90;
+
+           hc_attr = [10, 11];
+           hc_skills = [4+skill_lvl, 2+skill_lvl, 3+skill_lvl, 1+skill_lvl];
+           hc_sex = sex_male;
+           hc_gallery = '';
+     //    hc_face_number = ;
+           hc_class = 1;
+           hc_name = '';
+
+           Gaidar = CreateHuman;
+           PlaceUnitXY(Gaidar, 96, 58, false);
+           ComTurnXY(Gaidar, 90, 46);
+
+           hc_importance := 0;
+           
+
+
+           // other soldier's
+           x := [77, 119, 114];
+           y := [64,  73,  89];
+
+           For i = 1 to 3 do
+               begin
+               hc_name = '';
+               hc_gallery = '';
+               hc_skills = [Rand(2,4), 0, 3, 2];
+
+               un := CreateHuman;
+               PlaceUnitXY(un, x[i], y[i], false);
+               guards := guards ^ un;
+               end;
+
+End;
+
+
+Export rus_tank;
+Every 8$20 trigger GetSide(ru1_depot) = 2 and GetLives(ru_mainbase) > 0 and Attack_Limit <= [5,6,8][Difficulty]  do
+var un, veh, i, weapon, chassis, dif, enemy, cont;
+begin
+enable;
+
+
+         Attack_Limit := Attack_Limit + 1;
+
+
+           For i in rus_tank do
+            begin
+             If IsInArea(i, rus_spawn) then
+                RemoveUnit(i);
+             end;
+
+
+           rus_tank := [];
+
+           Wait(Rand(0$30, 2$10));
+
+           dif = [2,3,4][Difficulty];
+           cont = [3,4,5][Difficulty];
+           weapon = [ru_gatling_gun, ru_gun, ru_gun, ru_rocket_launcher][Difficulty];
+           chassis = [ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked][Difficulty];
+
+            hc_importance := 0; // !!!
+
+            
+
+            For i = 1 to cont do
+            begin
+            uc_side = 3;
+            uc_nation = 3;
+
+            vc_chassis = chassis;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = (weapon + Rand(0,1));
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, rus_spawn, false);
+            SetDir(veh, 4);
+
+            rus_tank = rus_tank ^ veh;
+
+
+            hc_class = 3;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,1), Rand(0,2), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+            hc_attr = [Rand(10,11), Rand(10,11)];
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            rus_tank = rus_tank ^ un;
+            End;
+
+
+            Wait(0$03);
+
+            Repeat
+             begin
+
+             For un in rus_tank do
+             begin
+             Wait(0$0.2);
+
+             enemy := NearestUnitToUnit(FilterAllUnits([f_side, 2]), un);
+             ComAttackUnit(un, enemy[1]);
+             end;
+
+            End Until rus_tank = [];
+            
+
+End;
+
+
+// ru_hg ;)
+Every 0$01 trigger ru_hg and GetSide(ru_east) = 2 do
+begin
+ComAgressiveMove(ru_hg, 134, 21);
+end;
+
+
+//  Event
+Every 3$30 trigger Difficulty > 1 and GetSide(ru1_depot) = 3 do
+var veh, un, i;
+begin
+enable;
+
+     uc_side = 3;
+     uc_nation = 3;
+
+     For i = 1 to (difficulty - 1) do
+     begin
+     hc_class = 3;
+     hc_gallery = '';
+     hc_name = '';
+
+     un = CreateHuman;
+
+     Case Difficulty of
+     2: vc_chassis = ru_medium_wheeled;
+     3: vc_chassis = ru_medium_tracked;
+     end;
+
+     vc_engine = engine_combustion;
+     vc_control = control_manual;
+
+     Case Difficulty of
+     2: vc_weapon = ru_gatling_gun;
+     3: vc_weapon = ru_gun;
+     end;
+
+     veh = CreateVehicle;
+
+     // place
+     PlaceUnitArea(veh, rem_area, false);
+     PlaceHumanInUnit(un, veh);
+
+     Wait(0$0.3);
+
+     ComAgressiveMove(veh, 88, 68);
+     end;
+
+
+End;
+
+
+// base ru
+Every 0$20 trigger Count = 0 do
+begin
+
+        ComResearch(ru1_lab, tech_gun);
+     AddComResearch(ru1_lab, tech_weap1);
+
+     Wait(0$35);
+
+     ComConstruct(ru1_fac, ru_medium_wheeled, engine_combustion, control_manual, ru_gun);
+
+End;
+
+// cargo
+Every 0$01 trigger GetSide(ru_east) = 3 and GetSide(ru1_depot) = 3 and GetResourceType(GetBase(ru1_depot), mat_oil) <= 30 do
+var un;
+begin
+
+     uc_side = 3;
+     uc_nation = 3;
+
+     If not un then
+        begin
+        hc_class = 2;
+        hc_name = '';
+        hc_gallery = '';
+
+        un = CreateHuman;
+        PlaceHumanInUnit(un, ru_east);
+        end;
+
+     If IsInUnit(un) then
+     ComExitBuilding(un);
+
+     AddComEnterUnit(un, ru_car1);
+     AddComTransport(un, ru_east, mat_oil);
+     AddComGive(un, ru1_depot);
+     AddComMoveXY(un, 130, 12);
+     AddComMoveXY(un, GetX(ru_east), GetY(ru_east));
+     AddComExitVehicle(un);
+     AddComEnterUnit(un, ru_east);
+
+End;
+
+
+
+// kom
+Every 0$01 trigger IsInArea(Gaidar, kom_a) do
+begin
+RemoveUnit(Gaidar);
+kom_run := true;
+End;
+
+
+// Attack from North
+Every 25$00 trigger GetSide(ru1_depot) = 2 and Difficulty >= 2 do
+var un, veh, i, weapon, chassis, dif, enemy, cont;
+begin
+
+
+           rus_tank := [];
+
+           Wait(Rand(0$21, 31));
+
+           dif = [2,3,4][Difficulty];
+           cont = [0,4,6][Difficulty];
+           weapon = [ru_gatling_gun, ru_gun, ru_gun, ru_rocket_launcher][Difficulty];
+           chassis = [ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked][Difficulty];
+
+            hc_importance := 0; // !!!
+
+
+
+            For i = 1 to cont do
+            begin
+            uc_side = 3;
+            uc_nation = 3;
+
+            vc_chassis = chassis;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = (weapon + Rand(0,1));
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, north_resp, false);
+            SetDir(veh, 4);
+
+            rus_tank = rus_tank ^ veh;
+
+
+            hc_class = 3;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,1), Rand(0,2), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+            hc_attr = [Rand(10,11), Rand(10,11)];
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            rus_tank = rus_tank ^ un;
+            End;
+
+
+            Wait(0$03);
+
+            Repeat
+             begin
+
+             For un in rus_tank do
+             begin
+             Wait(0$0.2);
+
+             enemy := NearestUnitToUnit(FilterAllUnits([f_side, 2]), un);
+             ComAttackUnit(un, enemy[1]);
+             end;
+
+            End Until rus_tank = [];
+
+
+End;
+
+
+
+// Attack from North
+Every 30$00 trigger GetSide(ru1_depot) = 2 and Difficulty = 3 do
+var un, veh, i, weapon, chassis, dif, enemy, cont;
+begin
+
+
+           rus_tank := [];
+
+           Wait(Rand(0$21, 31));
+
+           dif = [2,3,4][Difficulty];
+           cont = [0,0,7][Difficulty];
+           weapon = [ru_gatling_gun, ru_gun, ru_gun, ru_rocket_launcher][Difficulty];
+           chassis = [ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked][Difficulty];
+
+            hc_importance := 0; // !!!
+
+
+
+            For i = 1 to cont do
+            begin
+            uc_side = 3;
+            uc_nation = 3;
+
+            vc_chassis = chassis;
+            vc_engine = engine_combustion;
+            vc_control = control_manual;
+            vc_weapon = (weapon + Rand(0,1));
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, north_resp, false);
+            SetDir(veh, 4);
+
+            rus_tank = rus_tank ^ veh;
+
+
+            hc_class = 3;
+            hc_gallery = '';
+            hc_name = '';
+            hc_skills = [Rand(0,1), Rand(0,2), Rand(0,2)+(dif), Rand(0,2)];
+            hc_sex = sex_male;
+            hc_attr = [Rand(10,11), Rand(10,11)];
+
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            rus_tank = rus_tank ^ un;
+            End;
+
+
+            Wait(0$03);
+
+            Repeat
+             begin
+
+             For un in rus_tank do
+             begin
+             Wait(0$0.2);
+
+             enemy := NearestUnitToUnit(FilterAllUnits([f_side, 2]), un);
+             ComAttackUnit(un, enemy[1]);
+             end;
+
+            End Until rus_tank = [];
+
+
+End;
+
+
+// Depot
+Every 0$01 trigger GetSide(ru1_depot) = 3 and GetLives(ru1_depot) < 100 do
+begin
+enable;
+SetLives(ru1_depot, 100);
+End;
+
+
+
+
+
+
+
+

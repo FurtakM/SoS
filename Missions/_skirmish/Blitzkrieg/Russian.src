@@ -1,0 +1,706 @@
+// Rosjanie
+// 2 strony Rosjan
+// ru = rozowy
+// ru2 = czerwony
+
+Export ru_sold, ru_stw, ru_tw, ru_tech, ru_veh, ru_eng, ru_mech, ru_sci,
+       ru_bul, ru_b;
+
+Export ru2_sold, ru2_stw, ru2_tw, ru2_tech, ru2_veh, ru2_eng, ru2_mech, ru2_sci,
+       ru2_bul, ru2_b;
+
+Export ru_radar;
+
+Export Function InitRussian;
+var ru, ru2, i, un, filter;
+begin
+
+     ru := 6;
+     ru2 := 3;
+
+     uc_nation := nation_russian;
+
+     ru_radar := 98;
+     
+
+// RU ======================================== //
+
+
+     // kolor
+     uc_side := ru;
+
+     ru_sold := []; // ¿o³nierze ogó³em
+     ru_stw := []; // personel wie¿yczek
+     ru_tw := []; // wie¿e
+     ru_b := [];
+
+     ru_eng := [];
+     ru_mech := [];
+     ru_sci := [];
+
+     ru_bul := [b_bunker, 162, 101, 0]; // budynki
+
+     ru_tech := [tech_tech1, tech_tech2, tech_tech3, tech_oilpow, tech_oileng,
+                 tech_weap1, tech_weap2, tech_gatling, tech_advmet,
+                 tech_weap3]; // badania
+
+     ru_veh := [ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay,
+                ru_medium_tracked, engine_combustion, control_manual, ru_crane,
+                ru_medium_tracked, engine_combustion, control_manual, ru_crane]; // pojazdy
+
+              
+
+     // Kirow
+        SetBName(kirov, 'kirov');
+
+     // Kurin
+        hc_gallery := 'ru';
+        hc_face_number := 8;
+        hc_skills := [7, 4, 3, 2];
+        hc_sex := sex_male;
+        hc_name := 'P³k. Iwan Kurin';
+        hc_attr := [10, 10];
+
+        kurin := CreateHuman;
+        PlaceHumanInUnit(kurin, kirov);
+
+     // personel defensywny xD
+        filter := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
+
+        for i = 1 to ru_force do
+            begin
+            un := CreateHumanWithClass(1, ru_def);
+
+            if i <= filter then
+               PlaceHumanInUnit(un, filter[i])
+                else
+                 PlaceUnitArea(un, ru_area, false);
+            end;
+
+     // mechanicy
+        for i = 1 to 6 do
+            begin
+            un := CreateHumanWithClass(3, ru_def);
+            PlaceUnitArea(un, ru_area, false);
+            end;
+
+     // naukowcy
+        for i = 1 to 3 do
+            begin
+            un := CreateHumanWithClass(4, ru_def);
+            PlaceUnitArea(un, ru_area, false);
+            end;
+
+     // in¿ynierowie
+        for i = 1 to 4 do
+            begin
+            un := CreateHumanWithClass(2, ru_def);
+            PlaceUnitArea(un, ru_area, false);
+            end;
+
+// RU2 ======================================== //
+
+
+     // kolor
+     uc_side := ru2;
+
+     ru2_sold := []; // ¿o³nierze ogó³em
+     ru2_stw := []; // personel wie¿yczek
+     ru2_tw := []; // wie¿e
+     ru2_b := [];
+
+     ru2_eng := [];
+     ru2_mech := [];
+     ru2_sci := [];
+
+     ru2_bul := [];
+
+     ru2_tech := [tech_tech1, tech_tech2, 
+                 tech_weap1, tech_weap2, tech_gatling, tech_gun, tech_advmet,
+                 tech_weap3, tech_tech3]; // badania
+
+     ru2_veh := [ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay,
+                ru_medium_tracked, engine_combustion, control_manual, ru_crane,
+                ru_medium_tracked, engine_combustion, control_manual, ru_crane]; // pojazdy
+
+
+// BERIA =======================================
+
+     // Beria
+        SetBName(beria, 'beria');
+     // Kaganowicz
+        SetBName(kagan, 'kagan');
+
+
+     // personel defensywny xD
+        for i = 1 to 12 do
+            begin
+            un := CreateHumanWithClass(1, ru_def);
+            PlaceUnitArea(un, ru2_area, false);
+            end;
+
+     // mechanicy
+        for i = 1 to 6 do
+            begin
+            un := CreateHumanWithClass(3, ru_def);
+            PlaceUnitArea(un, ru2_area, false);
+            end;
+
+     // naukowcy
+        for i = 1 to 4 do
+            begin
+            un := CreateHumanWithClass(4, ru_def);
+            PlaceUnitArea(un, ru2_area, false);
+            end;
+
+     // in¿ynierowie
+        for i = 1 to 4 do
+            begin
+            un := CreateHumanWithClass(2, ru_def);
+            PlaceUnitArea(un, ru2_area, false);
+            end;
+
+End;
+
+
+
+// Skrypt RU
+Every 0$01 do
+var i, p, un, filter, h_dmgunit, b_dmgunit, b_unit, b_weap, b_upgrade, enemy_detected;
+begin
+enable;
+
+       // filtry
+          ru_sold := FilterAllUnits([[[f_side, 6], [f_class, 1], [f_lives, 600]]]) diff Kurin;
+          ru_eng  := FilterAllUnits([[[f_side, 6], [f_class, 2], [f_lives, 600]]]);
+          ru_mech := FilterAllUnits([[[f_side, 6], [f_class, 3], [f_lives, 600]]]);
+          ru_sci  := FilterAllUnits([[[f_side, 6], [f_class, 4], [f_lives, 600]]]);
+
+          ru_tw   := FilterAllUnits([[[f_side, 6], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]], [f_lives, 250]]]);
+
+          ru_b    := FilterAllUnits([[f_side, 6], [f_type, unit_building]]);
+
+          b_dmgunit := FilterAllUnits([[[f_side, 6], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
+          h_dmgunit := FilterAllUnits([[[f_side, 6], [f_type, unit_human], [f_not, [f_lives, 600]]]]);
+
+         {
+          if ru_fac = 0 then
+             ru_fac  := FilterAllUnits([[f_side, 6], [f_btype, b_factory]]);
+
+          if ru_lab = 0 then
+             ru_lab := FilterAllUnits([[f_side, 6], [f_or, [f_btype, b_lab], [f_btype, b_lab_full]]]);
+         }
+
+       // tablice
+          b_weap := AvailableWeaponList(ru_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
+          b_upgrade := [b_depot, b_armoury, b_breastwork, b_workshop];
+                                
+
+      // wróg
+         if FilterUnitsInArea(kirov_strict, [f_or, [f_side, 1], [f_side, 2]]) > 0 then
+            enemy_detected := true
+             else
+            enemy_detected := false;
+
+      // upgrade budynkow
+         if enemy_detected = false then
+            for i = 1 to ru_b do
+                if GetBType(ru_b[i]) in b_upgrade then
+                   ComUpgrade(ru_b[i]);
+
+      // wie¿yczki
+         if ru_sold > 0 then
+            begin
+            filter := UnitFilter(ru_sold, [f_not, [f_inside]]);
+
+            if UnitFilter(ru_tw, [f_empty]) > 0 then // s¹ pust wie¿e
+               begin
+
+               if filter = 0 then
+                  ComExitBuilding(ru_sold[Rand(1, ru_sold)]);
+
+               ComEnterUnit(filter[1], UnitFilter(ru_tw, [f_empty])[1]);
+               end;
+
+            if UnitFilter(ru_tw, [f_empty]) = 0 then // nie ma pustych wie¿
+               begin
+               b_unit := FilterAllUnits([[f_side, 6], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+               if b_unit > 0 then
+               for p = 1 to b_unit do
+                   if UnitsInSide(b_unit[p]) < 6 then
+                      for i = 1 to filter do
+                          ComEnterUnit(filter[i], b_unit[p]);
+
+               end;
+
+
+            if UnitFilter(ru_tw, [[f_btype, b_bunker], [f_bweapon, 0]]) > 0 then
+               begin
+               filter := UnitFilter(ru_tw, [[f_btype, b_bunker], [f_bweapon, 0]]);
+
+               if BuildingStatus(ru_fac) = bs_idle then
+               ComPlaceWeapon(filter[1], b_weap[Rand(1, b_weap)]);
+               end;
+
+            end; // koniec bloku wieze i umocnienia
+
+
+     // MECHANICY
+        // wejscie do fabryki gdy mechanik nie jest w pojezdzie
+           if ru_mech > 0 then
+              for i = 1 to ru_mech do
+                  if not IsInUnit(ru_mech[i]) then
+                     ComEnterUnit(ru_mech[i], ru_fac);
+
+        // nowy mechanik
+           if ru_fac then
+
+        // produkcja wozow
+           if ru_veh > 0 then
+              if BuildingStatus(ru_fac) = bs_idle then
+                 //if CanBeConstructed(ru_fac, ru_veh[1], ru_veh[2], ru_veh[3], ru_veh[4]) then
+                 begin
+                 ComConstruct(ru_fac, ru_veh[1], ru_veh[2], ru_veh[3], ru_veh[4]);
+
+                 for i = 1 to 4 do
+                 ru_veh := Delete(ru_veh, 1);
+                 end;
+
+        // budowanie
+        {
+           if ru_bul > 0 and enemy_detected = false then
+             if ru_eng > 0 then
+              for i = 1 to ru_eng do
+                  if not HasTask(ru_eng[i]) then
+                     begin
+                     ComBuild(ru_eng[i], ru_bul[1], ru_bul[2], ru_bul[3], ru_bul[4]);
+
+                     //for i = 1 to 4 do
+                     //ru_bul := Delete(ru_bul, 1);
+                     end;
+         }
+
+        // naprawa budynkow
+           if b_dmgunit > 0 then
+              begin
+
+              if ru_eng > 0 then
+                 for i = 1 to ru_eng do
+                     begin
+                     if IsInUnit(ru_eng[i]) then
+                        ComExitBuilding(ru_eng[i]);
+
+                     ComRepairBuilding(ru_eng[i], b_dmgunit[1]);
+                     end;
+
+                      if FilterAllUnits([[f_side, 6], [f_weapon, ru_crane]]) > 0 then
+                         for p in FilterAllUnits([[f_side, 6], [f_weapon, ru_crane]]) do
+                             ComRepairBuilding(p, b_dmgunit[1]);
+              end
+               else
+                if ru_bul = 0 then
+                for i = 1 to ru_eng do
+                    if not HasTask(ru_eng[i]) then
+                       ComEnterUnit(ru_eng[i], NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]), ru_eng[i]));
+
+
+       // leczenie
+          if h_dmgunit > 0 then
+             begin
+
+             for p = 1 to h_dmgunit do
+                 if GetDistUnits(h_dmgunit[p], ru_lab) > 6 then
+                    ComMoveXY(h_dmgunit[p], 140, 76);
+
+             if ru_sci > 0 then
+             for i = 1 to ru_sci do
+                 if IsInUnit(ru_sci[i]) then
+                    ComExitBuilding(ru_sci[i])
+                     else
+                    if not HasTask(ru_sci[i]) then
+                       if GetDistUnits(ru_sci[i], h_dmgunit[1]) <= 15 then
+                          ComHeal(ru_sci[i], h_dmgunit[1]);
+
+             end;
+
+          // badania etc.
+          if h_dmgunit = 0 then
+             begin
+
+             for i = 1 to ru_sci do
+                 if not IsInUnit(ru_sci[i]) then
+                    ComEnterUnit(ru_sci[i], ru_lab);
+
+             if ru_tech > 0 then
+                if BuildingStatus(ru_lab) = bs_idle then
+                   begin
+                   ComResearch(ru_lab, ru_tech[1]);
+                   ru_tech := Delete(ru_tech, 1);
+                   end;
+
+             end;
+
+End;
+
+
+Every 4$00 trigger ru_fac do
+var weap;
+begin
+enable;
+
+       weap := AvailableWeaponList(ru_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer];
+       ru_veh := ru_veh ^ [ru_heavy_wheeled, engine_combustion, control_manual, weap[Rand(1, weap)]];
+       ru2_veh:= ru2_veh ^ [ru_heavy_wheeled, engine_combustion, control_manual, weap[Rand(1, weap)]];
+
+End;
+
+// Zbieranie skrzyñ RU
+{
+Every 0$03 do
+var i, c, p, skr, filter, cargo, dep;
+begin
+Enable;
+
+     filter := FilterAllUnits([[f_ok], [f_side, 6], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]] ]);
+     cargo  := FilterAllUnits([[f_or, [f_side, 6], [f_side, 3]], [f_weapon, ru_cargo_bay], [f_lives, 600]]);
+     dep    := FilterAllUnits([[f_or, [f_side, 6], [f_side, 3]], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+     skr = GetListOfCratesInArea(crates_main_area);
+
+
+     c = 1;
+
+
+     if cargo > 0 then // zabezpieczenie
+     While c < skr do
+     begin
+
+     if cargo > 0 then
+        for i = 1 to cargo do
+        begin
+
+        if GetFuel(cargo[i]) > 40 and GetDistUnitXY(cargo[i], skr[c], skr[c+1]) < 51 then
+        ComCollect(cargo[i], skr[c], skr[c+1]);
+
+        if GetFuel(cargo[i]) <= 40 then
+           begin
+
+          Repeat
+           begin
+           ComMoveXY(cargo[i], GetX(dep[i]), GetY(dep[1]));
+           Wait(0$01);
+           end
+          Until GetDistUnits(cargo[i], dep[i]) < 7;
+
+          SetFuel(cargo[i], 100);
+          end;
+
+         c = c + 2;
+        end;
+
+
+     end;
+
+End;
+}
+
+
+
+//============================================KONIEC 1
+
+// Skrypt RU2
+Every 0$01 do
+var i, p, un, filter, h_dmgunit, b_dmgunit, b_unit, b_weap, b_upgrade, b_fac, b_labb, b_ext, enemy_detected;
+begin
+enable;
+
+       // filtry
+          ru2_sold := FilterAllUnits([[[f_side, 3], [f_class, 1], [f_lives, 600]]]);
+          ru2_eng  := FilterAllUnits([[[f_side, 3], [f_class, 2], [f_lives, 600]]]);
+          ru2_mech := FilterAllUnits([[[f_side, 3], [f_class, 3], [f_lives, 600]]]);
+          ru2_sci  := FilterAllUnits([[[f_side, 3], [f_class, 4], [f_lives, 600]]]);
+
+          ru2_tw   := FilterAllUnits([[[f_side, 3], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]], [f_lives, 250]]]);
+
+          ru2_b    := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+          b_dmgunit := FilterUnitsInArea(beria_defa, [[[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
+          h_dmgunit := FilterAllUnits([[[f_side, 3], [f_type, unit_human], [f_not, [f_lives, 600]]]]);
+
+          b_fac  := FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1];
+          b_labb := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])[1];
+
+
+       // tablice
+          b_weap := AvailableWeaponList(b_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
+          b_upgrade := [b_depot, b_armoury, b_workshop];
+          b_ext := [];
+
+      // wróg
+         if FilterUnitsInArea(beria_strict, [f_or, [f_side, 1], [f_side, 2]]) diff FilterAllUnits([f_weapon, us_radar]) > 0 then
+            enemy_detected := true
+             else
+            enemy_detected := false;
+
+
+      // upgrade budynkow
+         if enemy_detected = false then
+            for i = 1 to ru2_b do
+                begin
+
+                if GetBType(ru2_b[i]) in b_upgrade then
+                   ComUpgrade(ru2_b[i]);
+
+                if GetBType(ru2_b[i]) in b_lab then
+                   ComUpgradeLab(ru2_b[i], b_lab_weapon);
+
+                end;
+
+      // wie¿yczki
+         if ru2_sold > 0 then
+            begin
+            filter := UnitFilter(ru2_sold, [f_not, [f_inside]]);
+
+            if UnitFilter(ru2_tw, [f_empty]) > 0 then // s¹ pust wie¿e
+               begin
+
+               if filter = 0 then
+                  ComExitBuilding(ru2_sold[Rand(1, ru2_sold)]);
+
+               if filter > 0 then
+                  for i = 1 to UnitFilter(ru2_tw, [f_empty]) do
+                      ComEnterUnit(filter[i], UnitFilter(ru2_tw, [f_empty])[i]);  //  ComEnterUnit(filter[1], UnitFilter(ru2_tw, [f_empty])[1]);
+               end;
+
+            if UnitFilter(ru2_tw, [f_empty]) = 0 then // nie ma pustych wie¿
+               begin
+               b_unit := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+               if b_unit > 0 then
+               for p = 1 to b_unit do
+                   if UnitsInSide(b_unit[p]) < 6 then
+                      for i = 1 to filter do
+                          ComEnterUnit(filter[i], b_unit[p]);
+
+               end;
+
+
+            if UnitFilter(ru2_tw, [[f_btype, b_bunker], [f_bweapon, 0]]) > 0 then
+               begin
+               filter := UnitFilter(ru2_tw, [[f_btype, b_bunker], [f_bweapon, 0]]);
+
+               if BuildingStatus(b_fac) = bs_idle then
+               ComPlaceWeapon(filter[1], b_weap[Rand(1, b_weap)]);
+               end;
+
+            end; // koniec bloku wieze i umocnienia
+
+
+     // MECHANICY
+        // wejscie do fabryki gdy mechanik nie jest w pojezdzie
+           if b_fac > 0 and ru2_mech > 0 then
+              for i = 1 to ru2_mech do
+                  if not IsInUnit(ru2_mech[i]) then
+                     ComEnterUnit(ru2_mech[i], b_fac);
+
+        
+        // produkcja wozow
+           if b_fac > 0 and ru2_veh > 0 then
+              if BuildingStatus(b_fac) = bs_idle then
+                 //if CanBeConstructed(ru_fac, ru_veh[1], ru_veh[2], ru_veh[3], ru_veh[4]) then
+                 begin
+                 ComConstruct(b_fac, ru2_veh[1], ru2_veh[2], ru2_veh[3], ru2_veh[4]);
+
+                 for i = 1 to 4 do
+                     ru2_veh := Delete(ru2_veh, 1);
+
+                 end;
+                 
+
+        // budowanie
+        {
+           if ru2_bul > 0 and enemy_detected = false then
+             if ru2_eng > 0 then
+              for i = 1 to ru2_eng do
+                  if not HasTask(ru2_eng[i]) then
+                     begin
+                     ComBuild(ru2_eng[i], ru2_bul[1], ru2_bul[2], ru2_bul[3], ru2_bul[4]);
+
+                     {if BuildingStatus(ru2_bul[1]) = bs_build then
+                        for i = 1 to 4 do
+                            ru2_bul := Delete(ru2_bul, 1);}
+                     end;
+        }
+
+        // fabryka - rozbudowy
+           for i = 1 to ru2_b do
+               if BuildingStatus(ru2_b[i]) = bs_need_extension then
+                  begin
+                  b_ext := GetExtPositions(ru2_b[i]);
+
+                  if b_ext > 0 and not b_ext_gun in ru2_bul then
+                     ru2_bul := ru2_bul ^ [b_ext_noncombat, b_ext[1][1], b_ext[1][2], 3,
+                                           b_ext_track, b_ext[2][1], b_ext[2][2], 5,
+                                           b_ext_gun, b_ext[3][1], b_ext[3][2], 2];
+
+
+                  end;
+
+
+        // naprawa budynkow
+           if b_dmgunit > 0 then
+              begin
+
+              if ru2_eng > 0 then
+                 for i = 1 to ru2_eng do
+                     begin
+                     if IsInUnit(ru2_eng[i]) then
+                        ComExitBuilding(ru2_eng[i]);
+                     
+                     ComRepairBuilding(ru2_eng[i], b_dmgunit[1]);
+                     end;
+
+                      if FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]) > 0 then
+                         for p in FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]) do
+                             ComRepairBuilding(p, b_dmgunit[1]);
+              end
+               else
+                if ru2_bul = 0 then
+                for i = 1 to ru2_eng do
+                    if not HasTask(ru2_eng[i]) then
+                       ComEnterUnit(ru2_eng[i], NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]), ru2_eng[i]));
+
+
+       // leczenie
+          if b_labb > 0 then
+             begin
+
+          if h_dmgunit > 0 then
+             begin
+
+             for p = 1 to h_dmgunit do
+                 if GetDistUnits(h_dmgunit[p], b_labb) > 6 then
+                    ComMoveXY(h_dmgunit[p], 95, 72);
+
+             if ru2_sci > 0 then
+             for i = 1 to ru2_sci do
+                 if IsInUnit(ru2_sci[i]) then
+                    ComExitBuilding(ru2_sci[i])
+                     else
+                    if not HasTask(ru2_sci[i]) then
+                       if GetDistUnits(ru2_sci[i], h_dmgunit[1]) <= 15 then
+                          ComHeal(ru2_sci[i], h_dmgunit[1]);
+
+             end;
+
+          // badania etc.
+          if h_dmgunit = 0 then
+             begin
+
+             for i = 1 to ru2_sci do
+                 if not IsInUnit(ru2_sci[i]) then
+                    ComEnterUnit(ru2_sci[i], b_labb);
+
+             if ru2_tech > 0 then
+                if BuildingStatus(b_labb) = bs_idle then
+                   begin
+                   ComResearch(b_labb, ru2_tech[1]);
+                   ru2_tech := Delete(ru2_tech, 1);
+                   end;
+
+             end;
+
+             End;
+
+End;
+
+
+
+// Source
+Every 0$03 trigger beria and kirov do
+begin
+enable;
+
+     SetResourceType(beria, mat_cans, 10000);
+     SetResourceType(beria, mat_oil, 10000);
+     SetResourceType(kirov, mat_cans, 10000);
+     SetResourceType(kirov, mat_oil, 10000);
+
+End;
+
+
+
+
+// Rosyjska produkcja czo³gów
+Every 0$01 trigger russian_produce do
+begin
+
+     Case global_diff of
+     1: ru_veh := ru_veh ^ [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun];
+
+     2: ru_veh := ru_veh ^ [ru_medium_wheeled, engine_combustion, control_manual, ru_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gatling_gun];
+
+     3: ru_veh := ru_veh ^ [ru_heavy_wheeled,  engine_combustion, control_manual, ru_gatling_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gun];
+     End;
+
+     Case global_diff of
+     1: ru2_veh := ru2_veh ^ [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun];
+
+     2: ru2_veh := ru2_veh ^ [ru_medium_wheeled, engine_combustion, control_manual, ru_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gatling_gun];
+
+     3: ru2_veh := ru2_veh ^ [ru_heavy_wheeled,  engine_combustion, control_manual, ru_heavy_machine_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gun,
+                   ru_medium_tracked, engine_combustion, control_manual, ru_gun];
+     End;
+
+End;
+
+
+
+Every 0$04 trigger attack_omicron and FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]) do
+var filter, enemy, i;
+begin
+enable;
+
+filter := FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]);
+enemy := FilterAllUnits([f_side, 1]);
+
+if enemy = 0 or IsDead(kurin) then
+   enemy := FilterAllUnits([f_side, 2]);
+
+     for i = 1 to filter do
+         begin
+         ComAttackUnit(filter[i], NearestUnitToUnit(enemy, filter[i]));
+         Wait(0$01);
+         end;
+
+
+End;
+
+Export Function RusSpecForce;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+for i = 1 to 5 do
+    begin
+    un := CreateHumanWithClass(3, ru_def);
+    PlaceHumanInUnit(un, FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]])[1]);
+    end;
+End;
+
+
+
+

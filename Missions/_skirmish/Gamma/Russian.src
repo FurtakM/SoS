@@ -1,0 +1,123 @@
+Export Popov, Commander, Platonov, Kapral;
+Export depot_rdy, dep_x, dep_y;
+Export Function PrepareRussian;
+var i, un, skill, team, p;
+begin
+depot_rdy := false;
+
+uc_side := 6;
+uc_nation := 3;
+
+
+hc_gallery := 'ru';
+hc_face_number := 10;
+hc_name := 'Siergiej I. Popov';
+hc_class := 1;
+hc_sex := sex_male;
+popov := CreateHuman;
+
+hc_gallery := 'general';
+hc_face_number := 1;
+hc_name := 'Mjr. D. N. Platonow';
+platonov := CreateHuman;
+
+
+uc_side := 3;
+ChangeSideFog(3, 6);
+
+skill := [6,5,4][dif];
+team := [];
+
+hc_importance := 100;
+hc_gallery := 'gamma';
+hc_face_number := 1;
+hc_class := 1;
+hc_skills := [[8,7,6][dif], 5, 3, 0];
+hc_sex := sex_male;
+hc_name := 'Mjr. Jurij Karakanov';
+hc_attr := [10, 11];
+commander := CreateHuman;
+
+team := team ^ commander;
+hc_importance := 0;
+
+hc_name := '';
+hc_gallery := '';
+hc_attr := [12, 10];
+hc_sex := sex_male;
+Kapral := CreateHuman;
+
+for i = 3 downto dif do
+    begin
+    vc_chassis := ru_medium_tracked;
+    vc_engine := engine_combustion;
+    vc_control := control_manual;
+    vc_weapon := [ru_gatling_gun, ru_gun, ru_gun][i];
+    vc_fuel_battery := Rand(55, 77);
+    un := CreateVehicle;
+    SetDir(un, 5);
+    PlaceUnitArea(un, rus_spawn, false);
+    end;
+
+    vc_weapon := ru_heavy_machine_gun;
+    vc_fuel_battery := Rand(55, 77);
+    un := CreateVehicle;
+    SetDir(un, 5);
+    PlaceUnitArea(un, rus_spawn, false);
+
+for p = 1 to 4 do
+for i = 1 to [5, 4, 3][dif] do
+    team := team ^ CreateHumanWithClass(p, skill);
+
+for i = 1 to team do
+    if GetClass(team[i]) = 3 and FilterAllUnits([[f_side, 3], [f_empty]]) then
+       PlaceHumanInUnit(team[i], FilterAllUnits([[f_side, 3], [f_empty]])[1])
+        else
+         PlaceUnitArea(team[i], rus_spawn, false);
+End;
+
+
+
+Every 0$10 trigger depot_rdy do
+var i, un, l, driver;
+begin
+Wait(0$07);
+
+l := 0;
+
+Repeat
+begin
+uc_side := 6;
+uc_nation := 3;
+CreateVehicleWithDriver(ru_medium_tracked, engine_combustion, ru_cargo_bay, rus_cr_spawn, 5, Rand(3, 6));
+un := FilterAllUnits([[f_side, 6], [f_weapon, ru_cargo_bay]])[1];
+SetCargo(un, mat_cans, 100);
+ComMoveXY(un, dep_x+2, dep_y);
+AddComUnload(un);
+
+if (l = 0) then
+   begin
+   Wait(0$03);
+   driver := IsDrivenBy(un);
+   Say(driver, 'Dtran');
+   end;
+
+if (l = [7,6,5][dif]-1) then
+   begin
+   Wait(0$03);
+   driver := IsDrivenBy(un);
+   Say(driver, 'Dtrans');
+   end;
+
+while(not IsInArea(un, rus_exit)) do
+      begin
+      Wait(0$01);
+      AddComMoveXY(un, 69, 97);
+      end;
+
+RemoveUnit(un);
+
+l = l + 1;
+Wait(Rand(0$33, 2$33));
+end Until l = [7, 6, 5][dif];
+End;

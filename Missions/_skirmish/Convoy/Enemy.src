@@ -1,0 +1,282 @@
+Export Function InitEnemy;
+var bunker_xy, sold_stand, sold_crawl,
+    tanks_xy, hover_x, mines_xy, camera_xy,
+    i, p, veh, un, b, x, d, dir;
+begin
+uc_side := 2;
+uc_nation := 2;
+
+
+ // Difficulty
+ // Arabowie moga uzywac min
+ // Arabowie czo³gaj¹ siê
+ // Arabowie maja ukryte kamery
+ // Arabowie maja bunkry
+ // Arabowie maja poduszkowce
+ // Uzywaja zdalnie sterowanych czo³gów (opcjonalnie)
+ // Czo³gi wyposazone w: miotacze ognia, dzia³a
+
+ if road = 1 then
+ begin
+
+ case Difficulty of
+ 1: begin
+    bunker_xy := [56, 37, 2,  81, 6, 1,  90, 25, 3,  105, 68, 2,  96, 82, 4,  80, 109, 4];
+    sold_stand := [sold1, sold3, sold4, sold5];
+    sold_crawl := [cr1, cr2, cr3, cr4];
+    d := [4, 5, 0, 1];
+    camera_xy := [68, 5,  96, 53,  142, 98,  96, 82];
+    hover_x := [hovercraft_area, 2];
+    tanks_xy := [104, 21, 4,  100, 21, 4];
+    mines_xy := [38, 28,  41, 29,  62, 5,  65, 7,  95, 55,  98, 54,  96, 111, 99, 112];
+    end;
+ 2: begin
+    bunker_xy := [56, 37, 2,  81, 6, 1,  90, 25, 3,  105, 68, 2,  96, 82, 4,  80, 109, 4];
+    sold_stand := [sold1, sold2, sold3, sold4, sold5, sold6, sold7, sold8];
+    sold_crawl := [cr1, cr2, cr3, cr4];
+    d := [4, 5, 0, 1];
+    camera_xy := [68, 5,  96, 53,  142, 98,  96, 82];
+    hover_x := [hovercraft_area, 3];
+    tanks_xy := [104, 21, 4,  100, 21, 4,  91, 28, 0,  92, 31, 1,  71, 106, 2,  71, 103, 2,  66, 102, 2];
+    mines_xy := [38, 28,  41, 29,  62, 5,  65, 7,  95, 55,  98, 54,  96, 111, 99, 112,  86, 17,  89, 17,  136, 91,  140, 91,  102, 54];
+    end;
+ end;
+
+ end
+  else
+ if road = 2 then
+ begin
+       
+ case Difficulty of
+ 1: begin
+    bunker_xy := [44, 22, 2,  62, 8, 0,  106, 68, 2,  143, 96, 3,  90, 115, 4,  56, 59, 5];
+    sold_stand := [ccr1, ccr2, ccr3, ccr4, ccr5, ccr6];
+    sold_crawl := [ccr1, ccr2, ccr3, ccr4, ccr5, ccr6];
+    d := [0, 0, 5, 0, 1, 1];
+    camera_xy := [44, 22,  62, 8,  106, 68,  143, 96,  90, 115,  56, 59];
+    hover_x := [hovercraft_area, 3];
+    tanks_xy := [51, 29, 5,  55, 33, 5];
+    mines_xy := [31,13, 33,13, 35,13, 98,20, 102,25, 97,33, 101,54, 98,54, 96,55, 94,56, 145,102, 146,100, 97,114, 99,117, 54,58, 55,56];
+    end;
+ 2: begin
+    bunker_xy := [44, 22, 2,  62, 8, 0,  106, 68, 2,  143, 96, 3,  90, 115, 4,  56, 59, 5];
+    sold_stand := [ccr1, ccr2, ccr3, ccr4, ccr5, ccr6];
+    sold_crawl := [ccr1, ccr2, ccr3, ccr4, ccr5, ccr6];
+    d := [0, 0, 5, 0, 1, 1];
+    camera_xy := [21, 27,  44, 22,  62, 8,  106, 68,  143, 96,  90, 115,  56, 59];
+    hover_x := [hovercraft_area, 4];
+    tanks_xy := [51, 29, 5,  55, 33, 5, 97, 37, 0,  112, 72, 5,  120, 93, 2,  25, 45, 1,  27, 48, 1,  28, 51, 1];
+    mines_xy := [31,13, 33,13, 35,13, 98,20, 102,25, 97,33, 101,54, 98,54, 96,55, 94,56, 145,102, 146,100, 97,114, 99,117, 54,58, 55,56];
+    end;
+ end;
+
+ end;
+
+ // skill
+    skill := [4, 5, 6][Difficulty];
+
+ // drugs
+    if Difficulty > 1 then
+       SetTech(tech_stimdrugs, 2, state_researched);
+
+ // tech_weap2
+    if Difficulty > 1 then
+       SetTech(tech_weap2, 2, state_researched);
+
+ // miners
+    miners := [];
+    hovers := [];
+    hovers_driver := [];
+    tanks  := [];
+
+ // bunkers
+    p := 1;
+
+    bc_level = [4, 5, 6, 7][Difficulty+1];
+    bc_type = b_breastwork;
+
+    for i = 1 to (bunker_xy/3) do
+        begin
+        b := CreateAndPlaceBuildingXYD(bunker_xy[p], bunker_xy[p+1], bunker_xy[p+2]);
+        PrepareHuman(false, 1, skill);
+        un := CreateHuman;
+        dir := GetDir(b);
+
+        if dir < 3 then
+           dir := dir + 3
+            else
+             dir := dir - 3;
+
+        SetDir(un, dir);
+        PlaceHumanInUnit(un, b);
+        p := p + 3;
+        end;
+
+// sold_stands
+   x := [2, 3, 4][Difficulty];
+
+   for i = 1 to sold_stand do
+       for p = 1 to x do
+           begin
+           if sold_stand[i] = sold4 or (road = 2 and difficulty > 1 and p = x) then
+              PrepareHuman(false, class_mortar, skill)
+               else
+              PrepareHuman(false, 1, skill);
+
+           un := CreateHuman;
+
+           if GetClass(un) = 1 then
+              miners := miners ^ un;
+
+           PlaceUnitArea(un, sold_stand[i], false);
+           ComHold(un);
+           end;
+
+// sold_crawl
+   x := [3, 4, 4][Difficulty];
+
+   for i = 1 to sold_crawl do
+       for p = 1 to x do
+           begin
+           PrepareHuman(false, 1, skill);
+           un := CreateHuman;
+           SetDir(un, d[i]);
+           PlaceUnitArea(un, sold_crawl[i], false);
+           ComCrawl(un);
+           AddComHold(un);
+           end;
+
+// camera
+   p := 1;
+
+   for i = 1 to (camera_xy/2) do
+       begin
+       PlaceSeeing(camera_xy[p], camera_xy[p+1], 2, 10);
+       p := p + 2;
+       end;
+
+
+// hovercraft
+   for i = 1 to hover_x[2] do
+       begin
+       PrepareHuman(false, 3, skill+1);
+       un := CreateHuman;
+       hovers_driver := hovers_driver ^ un;
+       veh := CreateTank(2, 2, ar_hovercraft, engine_solar, control_manual, [ar_double_machine_gun, 22][Rand(1,2)]);
+       hovers := hovers ^ veh;
+       PlaceUnitArea(veh, hover_x[1], false);
+       PlaceHumanInUnit(un, veh);
+       end;
+
+// tanks
+   p := 1;
+
+   for i = 1 to (tanks_xy/3) do
+       begin
+       PrepareHuman(false, 1, skill+1);
+       un := CreateHuman;
+       veh := CreateTank(2, 2, ar_half_tracked, engine_solar, control_manual, [ar_gun, ar_gatling_gun, ar_flame_thrower][Rand(1,3)]);
+       SetDir(veh, tanks_xy[p+2]);
+       PlaceUnitXY(veh, tanks_xy[p], tanks_xy[p+1], false);
+       PlaceHumanInUnit(un, veh);
+       p := p + 3;
+       end;
+
+
+// mines
+   p := 1;
+
+   for i = 1 to (mines_xy/2) do
+       begin
+       PlaceMine(mines_xy[p], mines_xy[p+1], 2, 0);
+       p := p + 2;
+       end;
+
+   mines := mines_xy;
+
+End;
+
+
+Export mines, miners, hovers, hovers_driver, tanks;
+Every 0$01 do
+var un, p, i;
+begin
+enable;
+
+       if tanks > 0 then
+          begin
+          for i = 1 to tanks do
+              if See(2, tanks[i]) and not HasTask(tanks[i]) then
+                 ComAttackUnit(tanks[i], NearestUnitToUnit(FilterAllUnits([f_side, 2]), tanks[i]));
+          end;
+
+       if hovers > 0 then
+          begin
+           for i = 1 to hovers do
+               begin
+               if GetLives(hovers[i]) < 600 then
+                  begin
+                  if not IsInArea(hovers[i], hovercraft_park) then
+                     ComMoveToArea(hovers[i], hovercraft_park)
+                      else
+                       if IsDrivenBy(hovers[i]) then
+                          begin
+                          ComExitVehicle(IsDrivenBy(hovers[i]));
+                          AddComRepairVehicle(IsDrivenBy(hovers[i]), hovers[i]);
+                          end;
+                  end;
+
+               if GetLives(hovers[i]) > 998 then
+                  begin
+                  if not IsDrivenBy(hovers[i]) then
+                     ComEnterUnit(hovers_driver[i], UnitFilter(hovers, [f_empty])[1]);
+
+                  if FilterUnitsInArea(water_area, [f_side, 3]) > 0 then
+                     if not HasTask(IsDrivenBy(hovers[i])) then
+                        ComAttackUnit(IsDrivenBy(hovers[i]), NearestUnitToUnit(FilterAllUnits([f_side, 3]), hovers[i]));
+                  end;
+
+               end;
+          end;
+
+       p := 1;
+
+       for i = 1 to (mines/2) do
+           begin
+           if GetSide(HexInfo(mines[p], mines[p+1])) in [3,6] then
+              if MineAtPos(mines[p], mines[p+1]) then
+                 if GetDistUnitXY(NearestUnitToXY(miners, mines[p], mines[p+1]), mines[p], mines[p+1]) < 30 then
+                    begin
+                    LaunchMineAtPos(mines[p], mines[p+1], 2);
+                    if not mines_trigger then
+                       mines_trigger := true;
+                    end;
+
+           p := p + 2;
+           end;
+End;
+
+
+Every 0$30 trigger GetDistUnits(cargos[1], player_commander) > 20 or GetDistUnits(cargos[1], player_commander) > 20 do
+var i, un;
+begin
+
+for i = 1 to Difficulty+1 do
+    begin
+    uc_side := 2;
+    uc_nation := 2;
+
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    PlaceUnitArea(un, back, false);
+
+    ComAttackUnit(un, NearestUnitToUnit(cargos, un));
+    end;
+
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if veh in FilterAllUnits([[f_side, 2], [f_not, [f_chassis, ar_hovercraft]]]) then
+   ComRetreat(driver);
+End;

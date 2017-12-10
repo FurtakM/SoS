@@ -1,0 +1,78 @@
+// Wybierz stronê konfliktu oraz poziom trudnosci
+Export game_type, game_diff, game_skill, game_eskill;
+Export Function GameType;
+begin
+
+     Case Query('GameTyp') of
+     1: game_type := 1; // Amerykanie
+     2: game_type := 2; // Rosjanie
+     3: game_type := 0; // brak
+     end;
+
+     Case Query('GameDiff') of
+     1: game_diff := 1; // ³atwy
+     2: game_diff := 2; // sredni
+     3: game_diff := 3; // trudny
+     end;
+
+     if game_type = 1 then
+     Case Query('GameRulesAm') of
+     1: ;
+     end;
+
+     if game_type = 2 then
+     Case Query('GameRulesRu') of
+     1: ;
+     end;
+
+     // poziom umiejetnosci dla postaci gracza
+        game_skill := [6, 4, 2][game_diff];
+        game_eskill := [4, 5, 6][game_diff];
+
+End;
+
+
+
+// Cele gry
+Export need_to_win, timer, force_timer, depot_captured;
+Export Function GameStarted;
+begin
+
+     if game_type = 1 then // Amerykanie
+        begin
+        need_to_win := [350, 375, 400][game_diff];
+        force_timer := [95, 100, 105][game_diff]; // czas do pojawienia sie posi³ków
+
+
+        // centruj kamerê
+        CenterNowOnXY(84, 45);
+
+        // cele misji
+        ChangeMissionObjectives('GType1');
+        end;
+
+     if game_type = 2 then // Rosjanie
+        begin
+        need_to_win := [300, 350, 400][game_diff];
+        depot_captured := false;
+
+
+        // Kamera
+        CenterNowOnUnits(ru_dow);
+
+        // cele misji
+        ChangeMissionObjectives('GType2');
+
+        Wait(0$03);
+
+        SayRadio(gorki, 'D-gorky1');
+        Say(ru_dow, 'D-rudow1');
+        end;
+
+     // licznik czasu
+        timer := 0$00;
+
+End;
+
+
+

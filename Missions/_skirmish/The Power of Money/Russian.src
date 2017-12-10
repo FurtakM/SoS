@@ -1,0 +1,409 @@
+Export Stolypin, Popov, Saseda;
+Export Function PrepareRussian;
+var un, force, i, c, skill, team;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+ChangeSideFog(3, 6);
+
+Popov := NewCharacter('Gaydar');
+
+uc_side := 7;
+hc_gallery := 'sandal';
+hc_face_number := 9;
+hc_skills := [3, 5, 2, 7];
+hc_sex := sex_male;
+hc_attr := [10, 11];
+hc_class := 4;
+hc_name := 'Fiodor Saseda';
+Saseda := CreateHuman;
+
+uc_side := 3;
+
+hc_importance := 100;
+
+hc_class := 1;
+hc_sex := sex_male;
+hc_skills := [6, 3, 4, 2];
+hc_name := 'W. I. Stolypin';
+hc_attr := [10, 11];
+hc_gallery := 'ru';
+hc_face_number := 15;
+Stolypin := CreateHuman;
+
+hc_importance := 0;
+hc_gallery := '';
+hc_name := '';
+
+skill := [6, 5, 5][Difficulty];
+c := 1;
+
+for i = 1 to 21 do
+    begin
+
+    if i = 10 then
+       c := 2;
+    if i = 14 then
+       c := 3;
+    if i = 18 then
+       c := 4;
+
+    PrepareHuman(false, c, skill);
+    un := CreateHuman;
+    force := force ^ un;
+    end;
+
+    team := CharacterSelection('text', [8,7,7][Difficulty], [8,7,7][Difficulty],[sel_change_class, Stolypin, sel_changeable, sel_not_hired]^force, [[class_soldier, 3], class_mechanic, [class_engineer, 1], class_scientistic]);
+    team := team ^ Stolypin;
+
+for i = 1 to team do
+    PlaceUnitArea(team[i], rus_start, false);
+
+
+    CenterNowOnUnits(Stolypin);
+
+End;
+
+
+{ TYPY Konwoju
+- 1x Komora transportowa z ³adunkiem [skrzynie, ropa]
+- 3x Komora transportowa z ³adunkiem + eskorta [2 czo³gi]
+- 2x Komora transportowa z ³adunkiem + eskorta [1 czo³g, 2 ¿o³nierzy]
+- 5 cywili
+- 2x Komora 2x Eskorta Dziwg/Buldozer
+}
+Export conv_ready;
+Export Function Convoy(type);
+var i, veh, skill;
+begin
+Randomize;
+
+uc_side := 6;
+uc_nation := 3;
+
+hc_name := '';
+hc_gallery := '';
+
+skill := [5, 5, 4][Difficulty];  
+conv_ready := false;
+
+     case type of
+     1: begin
+        if Rand(0, 1) = 1 then
+           AddEscort();
+
+        Wait(0$02);
+
+        vc_chassis := ru_medium_wheeled;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_weapon := ru_cargo_bay;
+        vc_fuel_battery := Rand(50, 99);
+
+        veh := CreateVehicle;
+        SetDir(veh, 3);
+
+        PlaceUnitArea(veh, conv_start, false);
+
+        PrepareHuman(false, Rand(1, 2), skill);
+        PlaceHumanInUnit(CreateHuman, veh);
+
+        SetLives(veh, Rand(500, 1000));
+        SetCargo(veh, Rand(1, 2), Rand(2, 10)*10);
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        Wait(0$01);
+
+        conv_ready := true;
+        end;
+     2: begin
+        AddEscort();
+
+        Wait(0$02);
+
+        for i = 1 to 2 do
+        begin
+        vc_chassis := ru_medium_wheeled;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_weapon := ru_cargo_bay;
+        vc_fuel_battery := Rand(50, 99);
+
+        veh := CreateVehicle;
+        SetDir(veh, 3);
+
+        PlaceUnitArea(veh, conv_start, false);
+
+        PrepareHuman(false, Rand(1, 2), skill);
+        PlaceHumanInUnit(CreateHuman, veh);
+
+        SetLives(veh, Rand(500, 1000));
+        SetCargo(veh, Rand(1, 2), Rand(2, 10)*10);
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        ComMoveXY(veh, 120, 10);
+        Wait(0$02);
+        end;
+
+        AddEscort();
+
+        Wait(0$02);
+
+        conv_ready := true;
+        end;
+     3: begin
+        AddEscort();
+
+        Wait(0$02);
+
+        for i = 1 to 2 do
+        begin
+        vc_chassis := ru_medium_wheeled;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_weapon := ru_cargo_bay;
+        vc_fuel_battery := Rand(50, 99);
+
+        veh := CreateVehicle;
+        SetDir(veh, 3);
+
+        PlaceUnitArea(veh, conv_start, false);
+
+        PrepareHuman(false, Rand(1, 2), skill);
+        PlaceHumanInUnit(CreateHuman, veh);
+
+        SetLives(veh, Rand(500, 1000));
+        SetCargo(veh, Rand(1, 2), Rand(2, 10)*10);
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        ComMoveXY(veh, 120, 10);
+        Wait(0$02);
+        end;
+
+        for i = 1 to 2 do
+            begin
+            PrepareHuman(false, 1, skill);
+            veh := CreateHuman;
+            PlaceUnitArea(veh, conv_start, false);
+
+            escort := Insert(escort, 1, veh);
+
+            ComMoveXY(veh, 120, 10);
+
+            Wait(0$02);
+            end;
+
+        Wait(0$02);
+
+        conv_ready := true;
+        end;
+     4: begin
+        if Rand(0,1) = 1 then
+           AddEscort();
+
+        Wait(0$02);
+
+        for i = 1 to 5 do
+        begin
+        PrepareHuman(false, Rand(2, 4), skill);
+        veh := CreateHuman;
+        PlaceUnitArea(veh, conv_start, false);
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        ComMoveXY(veh, 120, 10);
+        Wait(0$02);
+        end;
+
+        for i = 1 to 2 do
+            begin
+            PrepareHuman(false, 1, skill);
+            veh := CreateHuman;
+            PlaceUnitArea(veh, conv_start, false);
+
+            escort := Insert(escort, 1, veh);
+
+            ComMoveXY(veh, 120, 10);
+
+            Wait(0$02);
+            end;
+
+        Wait(0$02);
+
+        conv_ready := true;
+        end;
+     5: begin
+        AddEscort();
+
+        Wait(0$02);
+
+        AddEscort();
+
+        Wait(0$02);
+
+        for i = 1 to 2 do
+        begin
+        vc_chassis := ru_medium_wheeled;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_weapon := ru_cargo_bay;
+        vc_fuel_battery := Rand(50, 99);
+
+        veh := CreateVehicle;
+        SetDir(veh, 3);
+
+        PlaceUnitArea(veh, conv_start, false);
+
+        PrepareHuman(false, Rand(1, 2), skill);
+        PlaceHumanInUnit(CreateHuman, veh);
+
+        SetLives(veh, Rand(500, 1000));
+        SetCargo(veh, Rand(1, 2), Rand(2, 10)*10);
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        ComMoveXY(veh, 120, 10);
+        Wait(0$02);
+        end;
+
+        if Rand(0, 1) = 1 then
+        begin
+        vc_chassis := ru_medium_tracked;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_weapon := ru_crane;
+        end
+         else
+          begin
+          vc_chassis := ru_heavy_wheeled;
+          vc_engine := engine_combustion;
+          vc_control := control_manual;
+          vc_weapon := ru_bulldozer;
+          end;
+
+        vc_fuel_battery := Rand(50, 99);
+
+        veh := CreateVehicle;
+        SetDir(veh, 3);
+
+        PlaceUnitArea(veh, conv_start, false);
+
+        PrepareHuman(false, Rand(1, 2), skill);
+        PlaceHumanInUnit(CreateHuman, veh);
+
+        SetLives(veh, Rand(500, 1000));
+
+        conv_squad := Insert(conv_squad, 1, [veh, 1]);
+
+        ComMoveXY(veh, 120, 10);
+        
+        Wait(0$02);
+
+        conv_ready := true;
+        end;
+     end;
+End;
+
+Export Function AddEscort();
+var veh, skill;
+begin
+skill := [5, 5, 4][Difficulty];
+
+uc_side := 6;
+uc_nation := 3;
+
+vc_chassis := ru_medium_wheeled;
+vc_engine := engine_combustion;
+vc_control := control_manual;
+vc_weapon := [ru_gun, ru_heavy_machine_gun][Rand(1,2)];
+vc_fuel_battery := Rand(50, 99);
+
+veh := CreateVehicle;
+SetDir(veh, 3);
+
+PlaceUnitArea(veh, conv_start, false);
+
+PrepareHuman(false, 3, skill);
+PlaceHumanInUnit(CreateHuman, veh);
+
+SetLives(veh, Rand(500, 1000));
+
+escort := Insert(escort, 1, veh);
+
+ComMoveXY(veh, 120, 10);
+End;
+
+Every 4 trigger conv_ready and FilterAllUnits([f_side, 6]) do
+var i, j;
+begin
+enable;
+
+if conv_squad then
+   for i = conv_squad downto 1 do
+       begin
+       if IsInArea(conv_squad[i][1], conv_end) then
+          begin
+          for j in FilterUnitsInArea(conv_end, [f_side, 6]) do
+              RemoveUnit(j);
+
+              conv_squad := Delete(conv_squad, i);
+          break;
+          end;
+
+       if IsInArea(conv_squad[i][1], path[conv_squad[i][2]]) then
+          conv_squad := Replace2(conv_squad, i, 2, conv_squad[i][2]+1)
+       else
+         if not HasTask(conv_squad[i][1]) then
+            ComMoveToArea(conv_squad[i][1], path[conv_squad[i][2]]);
+       end;
+
+if escort then
+   for i = escort downto 1 do
+       begin
+       if IsInArea(escort[i], conv_end) then
+          begin
+          for j in FilterUnitsInArea(conv_end, [f_side, 6]) do
+              RemoveUnit(j);
+
+          escort := Delete(escort, i);
+          break;
+          end;
+
+       if FindTarget(escort[i]) and GetDistUnits(escort[i], FindTarget(escort[i])) < 13 then
+          ComAttackUnit(escort[i], FindTarget(escort[i]))
+       else
+       if conv_squad and GetDistUnitXY(escort[i], 64, 117) > 35 and not HasTask(escort[i]) then
+          begin
+          if GetDistUnits(escort[i], conv_squad[1][1]) > 6 then
+             ComMoveUnit(escort[i], conv_squad[1][1])
+          end
+           else
+            ComMoveToArea(escort[i], conv_end);
+
+       end;
+
+if FilterAllUnits([[f_side, 6], [f_type, unit_human]]) then
+   for j in FilterAllUnits([[f_side, 6], [f_type, unit_human]]) do
+       begin
+       if not HasTask(j) and not IsInArea(j, conv_end) then
+          ComMoveToArea(j, conv_end);
+
+       if IsInArea(j, conv_end) then
+          RemoveUnit(j);
+       end;
+       
+End;
+
+
+Every 0$01 trigger UnitFilter([escort, conv_squad], [f_side, 3]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter([escort, conv_squad], [f_side, 3]) do
+    SetSide(i, 6);
+End;

@@ -1,0 +1,534 @@
+Export ru_force, ru_group1, ru_group2, ru_tech_list, ru_towers_list, ru_weapon_list, ru_reserve, ru_attack_list;
+Export ru_lab_list, ru_heal_list, ru_blist, ru_buildings, ru_behemoth_mechanic, ru_spotted, ru_protector;
+Export need_buldozer, need_crane;
+Export Function PrepareRussian;
+var skill, i, un;
+begin
+uc_side := 3;
+uc_nation := nation_russian;
+
+skill := [6,7,8][Difficulty];
+
+    // source
+       SetResourceType(GetBase(ru_depot), mat_cans, 1200);
+       SetResourceType(GetBase(ru_depot), mat_oil, 600);
+       //SetResourceType(GetBase(ru_depot), 3, 50);
+
+    // oil visible
+       SetResourceVisibility(33, 4, 3);
+       SetResourceVisibility(37, 3, 3);
+                 
+    // group
+       ru_force := [];
+       ru_group1 := [];
+       ru_group2 := [];
+       ru_reserve := [];
+       ru_attack_list := [];
+       ru_protector := [];
+
+    // tech
+       ru_tech_list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+
+    // turret
+       ru_towers_list := GetBuildingList(3, b_turret);
+       ru_weapon_list := [ru_heavy_gun, ru_rocket_launcher, ru_rocket];
+       ru_blist := [b_turret, 36, 8, 3];
+       ru_buildings := [];
+
+    // lab
+       ru_lab_list := [[GetX(GetLabs(3)[1]), GetY(GetLabs(3)[1]), GetDir(GetLabs(3)[1]), GetLabKind(GetLabs(3)[1], 1), GetLabKind(GetLabs(3)[1], 2)], [12, 13, 1, b_lab_siberium, b_lab_spacetime]];
+
+    // heal
+       ru_heal_list := [];
+
+    // var
+       need_buldozer := false;
+       need_crane := true;
+       ru_spotted := false;
+
+    // people spawn
+       // sci
+          for i = 1 to 6 do
+              begin
+              PrepareHuman(false, 4, skill);
+              un := CreateHuman;
+              PlaceHumanInUnit(un, ru_lab);
+              end;
+       // mech
+          for i = 1 to 6 do
+              begin
+              PrepareHuman(false, 3, skill);
+              un := CreateHuman;
+              PlaceHumanInUnit(un, ru_fac);
+              end;
+       // eng
+          for i = 1 to 6 do
+              begin
+              PrepareHuman(false, 2, skill);
+              un := CreateHuman;
+              PlaceUnitArea(un, ru_spawn, false);
+              end;
+       // sold
+          for i = 1 to 6 do
+              begin
+              PrepareHuman(false, 1, skill);
+              un := CreateHuman;
+              PlaceUnitArea(un, ru_spawn, false);
+              ComEnterUnit(un, NearestUnitToUnit(FilterAllUnits([f_btype, b_barracks]), un));
+              end;
+
+       // ru protector
+          for i = 1 to Difficulty do
+              begin
+              vc_chassis := ru_medium_tracked;
+              vc_engine := engine_siberite;
+              vc_control := control_computer;
+              vc_weapon := [ru_gatling_gun, ru_rocket_launcher][i mod 2 + 1];
+              un := CreateVehicle;
+              PlaceUnitXYR(un, 52, 42, 6, false);
+              ru_protector := Insert(ru_protector, 1, un);
+              end;
+End;
+
+Every 150$00 trigger Difficulty = 2 and GetBuilding(3, b_factory) do
+ComProduce(GetBuilding(3, b_factory)[1], ru_heavy_tracked, engine_combustion, control_computer, ru_siberium_rocket);
+
+
+Every 120$00 trigger Difficulty = 3 and GetBuilding(3, b_factory) do
+ComProduce(GetBuilding(3, b_factory)[1], ru_heavy_tracked, engine_combustion, control_computer, ru_siberium_rocket);
+
+
+// Ru Protect Area
+Every 0$01 trigger ru_protector do
+var i;
+begin
+enable;
+
+if FilterUnitsInArea(ru_protect_area, [f_enemy, 3]) then
+   begin
+   for i = 1 to ru_protector do
+       ComAttackUnit(ru_protector[i], NearestUnitToUnit(FilterUnitsInArea(ru_protect_area, [f_enemy, 3]), ru_protector[i]));
+   end
+    else
+     for i = 1 to ru_protector do
+         if GetDistUnitXY(ru_protector[i], 49, 39) > 10 then
+            ComMoveXY(ru_protector[i], 49, 39);
+end;
+
+// bulldozer
+Every 0$01 trigger tick > [2$00, 1$00, 0$30][Difficulty] do
+need_buldozer := true;
+
+// Active Filter
+Export ru_sold, ru_eng, ru_mech, ru_sci, ru_bazz,
+       ru_base_personel, ru_bulldozers, ru_crans, ru_cargos;
+Every 0$01 do
+begin
+enable;
+
+ru_sold := FilterAllUnits([[f_side, 3], [f_class, 1]]);
+ru_eng  := FilterAllUnits([[f_side, 3], [f_class, 2]]);
+ru_mech := FilterAllUnits([[f_side, 3], [f_class, 3]]);
+ru_sci  := FilterAllUnits([[f_side, 3], [f_class, 4]]);
+ru_bazz  := FilterAllUnits([[f_side, 3], [f_class, 9]]);
+ru_base_personel := FilterUnitsInArea(ru_base_area, [[f_side, 3], [f_type, unit_human]]);
+ru_bulldozers := FilterAllUnits([f_weapon, ru_bulldozer]);
+ru_crans := FilterAllUnits([f_weapon, ru_crane]);
+ru_cargos := FilterAllUnits([f_weapon, ru_cargo_bay]);
+ru_buildings := GetBuildingsList(3, -1);
+End;               
+
+
+// Base AI
+Every 0$01 trigger FilterAllUnits([f_side, 3]) and game_status or debug do
+var i, j, un, b, p, l, fac, lab, list, c;
+begin
+enable;
+
+
+    //if debug then display_strings := [GetBaseSource(MyBase(3))[1], GetBaseSource(MyBase(3))[3]];
+
+    // engs idle
+       for i = 1 to ru_eng do
+           if not HasTask(ru_eng[i]) and not IsInUnit(ru_eng[i]) then
+              ComEnterUnit(ru_eng[i], MyBase(3));
+
+
+    // repair buildings
+       if FilterUnitsInArea(ru_base_area, [[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]) then
+          begin
+          b := FilterUnitsInArea(ru_base_area, [[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+
+          for i = 1 to ru_eng do
+              begin
+              if IsInUnit(ru_eng[i]) then
+                 ComExitBuilding(ru_eng[i])
+                  else
+                   if not WantRepair(ru_eng[i]) then
+                      ComRepairBuilding(ru_eng[i], NearestUnitToUnit(b, ru_eng[i]));
+              end;
+          end;
+
+    
+    // rebuild
+       if EnemyNearbyBase(your_side, 38, 26) = false and
+          EnemyNearbyBase(your_side, 29, 37) = false then
+          begin
+          if ru_blist > 0 then
+             begin
+             for i = 1 to ru_eng do
+                 if IsInUnit(ru_eng[i]) then
+                    ComExitBuilding(ru_eng[i])
+                     else
+                      if not HasTask(ru_eng[i]) then
+                         ComBuild(ru_eng[i], ru_blist[1], ru_blist[2], ru_blist[3], ru_blist[4]);
+             end;
+          end;
+    
+    // heal
+       // get hurt people
+          ru_heal_list := NeedHeal(3, ru_heal_list, ru_behemoth_mechanic); // dodac mechanikow od behemotha
+          if debug then display_strings := ru_heal_list;
+       // doc move
+          for i = 1 to ru_sci do
+              begin
+              if ru_heal_list then
+                 begin
+                 list := ru_heal_list;
+
+                 if IsInUnit(ru_sci[i]) then
+                    ComExitBuilding(ru_sci[i]);
+                                  
+                 for p = 1 to list do
+                     begin
+                     if GetTag(list[p]) = 100 and not WantHeal(ru_sci[i], 100) then
+                        ComHeal(ru_sci[i], list[p]);
+                     if GetTag(list[p]) > 100 then
+                        AddComHeal(ru_sci[i], list[p]);
+                        if not IsInArea(list[p], ru_heal_area) then
+                           ComMoveToArea(list[p], ru_heal_area)
+                            else
+                             ComHold(list[p]);
+                     end;
+                 end
+                  else
+                   if not HasTask(ru_sci[i]) and not IsInUnit(ru_sci[i]) and ru_heal_list = 0 then
+                      ComEnterUnit(ru_sci[i], NearestUnitToUnit(GetLabs(3), ru_sci[i]));
+              end;
+
+    // research tech
+       if CheckTechList(3, ru_tech_list) then
+          ResearchTechList(3, ru_tech_list);
+
+    // check lab
+       ComBuildLabList(ru_eng, ru_lab_list);
+
+    // lab need people
+       lab := GetLabs(3);
+
+       if lab and ru_heal_list = 0 then
+       for i = 1 to lab do
+           if BuildingStatus(lab[i]) = bs_need_people then
+              begin
+              for p = 1 to ru_sci do
+                  if IsInUnit(ru_sci[p]) then
+                     ComExitBuilding(ru_sci[p])
+                      else
+                       ComEnterUnit(ru_sci[p], lab[i]);
+              end;
+
+
+    // turrets
+       if GetTowers(3) < 5 then
+          CheckTowersStatus(ru_eng, ru_towers_list)
+           else
+            CheckWeaponOnTowers(3, ru_weapon_list);
+
+    // veh production
+       if GetBuilding(3, b_factory) then
+          if BuildingStatus(GetBuilding(3, b_factory)[1]) = bs_idle then
+             begin
+             fac := GetBuilding(3, b_factory)[1];
+
+             // cargo
+                //if GetVehicle(3, ru_medium_tracked, ru_cargo_bay) = 0 then
+                  //ComProduce(fac, ru_medium_tracked, engine_combustion, control_computer, ru_cargo_bay);
+                 
+             // bulldozer
+                if GetVehicle(3, ru_heavy_tracked, ru_bulldozer) = 0 and need_buldozer then
+                   ComProduce(fac, ru_heavy_tracked, engine_combustion, control_manual, ru_bulldozer);
+
+             // crane (we need this rly?)
+                if GetVehicle(3, ru_medium_tracked, ru_crane) = 0 and need_crane then
+                   ComProduce(fac, ru_medium_tracked, engine_combustion, control_computer, ru_crane);
+
+             // time lapsers
+                if GetVehicle(3, ru_medium_tracked, ru_time_lapser) < 4 and
+                   GetTech(tech_lapser, 3) = state_researched then
+                   ComProduce(fac, ru_medium_tracked, engine_combustion, control_computer, ru_time_lapser);
+
+             // tanks
+                if ru_reserve < [5,6,7][Difficulty] then
+                   begin
+                   ComProduce(fac, ru_heavy_tracked, engine_combustion, control_computer, [ru_heavy_gun, ru_rocket_launcher, ru_rocket, ru_heavy_gun][Rand(1,4)]);
+                   end;
+             end;
+
+    // behemoth
+       if GetBaseSource(MyBase(3))[1] > 250 and GetBaseSource(MyBase(3))[3] > 50 and
+          GetTech(tech_behemoth, 3) = state_researched and GetBehemoth(3) = 0 and
+          FilterAllUnits([[f_side, 3], [f_weapon, ru_time_lapser]]) > 3 and
+          EnemyNearbyBase(your_side, 51, 42) = false then
+          begin
+          // if debug then display_strings := [GetBaseSource(MyBase(3))[1], GetBaseSource(MyBase(3))[3]];
+          for i = 1 to ru_mech do
+              begin
+              if IsInUnit(ru_mech[i]) then
+                 ComExitBuilding(ru_mech[i])
+                  else
+                   ComBuildBehemoth(ru_mech[i], b_behemoth, 51, 43, 0);
+              end;
+          end;
+
+    // vehicles attack
+       if tick >= [45$00, 40$00, 34$00][Difficulty] then
+          begin
+          if tick mod [9$00, 8$00, 7$00][Difficulty] = 0 then
+             if ru_reserve then
+                begin
+                ru_attack_list := ru_reserve;
+                ru_reserve := [];
+                end;
+          end;
+          
+    // veh attack
+       if ru_attack_list then
+          begin
+          for i = 1 to ru_attack_list do
+              if GetLives(ru_attack_list[i]) >= 250 and not HasTask(ru_attack_list[i]) then
+                 ComAttackUnit(ru_attack_list[i], NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(ru_attack_list[i])]), ru_attack_list[i]));
+          end;
+
+    // behemoth attack
+       if GetBehemoth(3) then
+          begin
+          if ru_mech >= 4 then
+             ru_behemoth_mechanic := [ru_mech[1], ru_mech[2], ru_mech[3], ru_mech[4]]
+              else
+               ru_behemoth_mechanic := ru_mech;
+
+          for i = 1 to ru_mech do
+              if IsInUnit(ru_mech[i]) and ru_mech[i] in ru_behemoth_mechanic then
+                 ComExitBuilding(ru_mech[i]);
+
+          if FilterUnitsInArea(alt_base, [[f_side, 1], [f_type, unit_building]]) > 0 then
+             BehemothAttack(GetBehemoth(3)[1], FilterAllUnits([[f_type, unit_vehicle], [f_weapon, ru_time_lapser]]), ru_behemoth_mechanic, 97, 9)
+              else
+               BehemothAttack(GetBehemoth(3)[1], FilterAllUnits([[f_type, unit_vehicle], [f_weapon, ru_time_lapser]]), ru_behemoth_mechanic, 153, 102);
+          end;
+
+    // int bazooka
+       if ru_bazz = 0 and GetTech(tech_bazooka, 3) = state_researched then
+          ComChangeClassToBazooker(ru_sold);
+
+       if ru_bazz then
+          IntBazooka(ru_bazz, 1);
+    // -------------------
+
+    // sib deposit
+       if GetResourceVisibility(67, 39, 3) = false and GetTech(tech_SibDet, 3) = state_researched then
+          ComFindDeposit(ru_sci[1], 67, 39);
+       if GetResourceVisibility(89, 66, 3) = false then
+          ComFindDeposit(ru_sci[1], 87, 60);
+       if GetResourceVisibility(104, 94, 3) = false and GetTech(tech_SibDet, 3) = state_researched then
+          ComFindDeposit(ru_sci[1], 104, 94);
+
+    // --------------------
+    // buldozer
+       if GetVehicle(3, ru_heavy_tracked, ru_bulldozer) = 1 and need_buldozer then
+          begin
+          need_buldozer := false;
+          ComMoveXY(GetVehicle(3, ru_heavy_tracked, ru_bulldozer)[1], 67, 39);
+          AddComMoveXY(GetVehicle(3, ru_heavy_tracked, ru_bulldozer)[1], 71, 10);
+          CutTreeInArea(GetVehicle(3, ru_heavy_tracked, ru_bulldozer)[1], cut_area);
+          AddComWait(GetVehicle(3, ru_heavy_tracked, ru_bulldozer)[1], 0$10);
+          AddComRecycle(GetVehicle(3, ru_heavy_tracked, ru_bulldozer)[1], ru_fac);
+          end;
+    // sib mine
+       if GetResourceVisibility(67, 39, 3) and HexInfo(67, 39) = 0 and GetBType(HexInfo(79, 45)) = b_depot and EnemyNearbyBase(1, 79, 45) = false then
+          begin
+          for i = 1 to ru_eng do
+              if IsInUnit(ru_eng[i]) then
+                 ComExitBuilding(ru_eng[i])
+                  else
+                   if not HasTask(ru_eng[i]) then
+                      ComBuild(ru_eng[i], b_siberite_mine, 67, 39, 3);
+          end;
+
+       if EnemyNearbyBase(1, 79, 45) = false then
+          begin
+          if HexInfo(79, 45) = 0 then
+             ComBuildDepot(ru_eng, 79, 45, 3)
+          else if HexInfo(89, 66) = 0 and GetResourceVisibility(89, 66, 3) then
+               begin
+               SetResourceType(GetBase(HexInfo(79, 45)), mat_cans, 100);
+
+               for i = 1 to ru_eng do
+                   if IsInUnit(ru_eng[i]) then
+                      ComExitBuilding(ru_eng[i])
+                       else
+                        if not HasTask(ru_eng[i]) then
+                           ComBuild(ru_eng[i], b_oil_mine, 89, 66, 3);
+               end;
+             
+          end;
+
+    // oil deposits
+       if GetBuilding(3, b_oil_mine) = 0 and EnemyNearbyBase(1, 36, 6) = false
+          and Cost(MyBase(3), b_oil_mine) then
+          begin
+
+               for i = 1 to ru_eng do
+                   begin
+                   if IsInUnit(ru_eng[i]) then
+                      ComExitBuilding(ru_eng[i])
+                   else
+                   if not HasTask(ru_eng[i]) then
+                      begin
+                      AddComBuild(ru_eng[i], b_oil_mine, 33, 4, 0);
+                      end;
+                   end;
+          end;
+
+    // collect
+    {
+       if GetResourceArea(ru_base_area, mat_oil) > 0 then
+          begin
+          c := GetResourceArea(ru_base_area, mat_oil);
+
+          for i = 1 to ru_eng do
+              if IsInUnit(ru_eng[i]) then
+                 ComExitBuilding(ru_eng[i])
+                  else
+                   if not HasTask(ru_eng[i]) then
+                      ComCollect(ru_eng[i], c[1], c[2]);
+          end;    }
+
+       if ru_eng and HexInfo(79, 45) > 0 and GetBType(HexInfo(79, 45)) = b_depot then
+          if GetSide(HexInfo(79, 45)) = 3 and EnemyNearbyBase(1, 79, 45) = false and GetResourceType(GetBase(HexInfo(79, 45)), 3) >= 10 then
+             begin
+             if IsInUnit(ru_eng[1]) then
+                ComExitBuilding(ru_eng[1])
+                 else
+                  if not HasTask(ru_eng[1]) then
+                     begin
+                     ComTransport(ru_eng[1], HexInfo(79, 45), 3);
+                     AddComGive(ru_eng[1], ru_depot);
+                     end;
+             end;
+
+      if ru_eng > 2 and HexInfo(79, 45) > 0 and GetBType(HexInfo(79, 45)) = b_depot then
+          if GetSide(HexInfo(79, 45)) = 3 and EnemyNearbyBase(1, 79, 45) = false and GetResourceType(GetBase(HexInfo(79, 45)), 1) > 20 then
+             begin
+             if IsInUnit(ru_eng[2]) then
+                ComExitBuilding(ru_eng[2])
+                 else
+                  if not HasTask(ru_eng[2]) then
+                     begin
+                     ComTransport(ru_eng[2], HexInfo(79, 45), 1);
+                     AddComGive(ru_eng[2], ru_depot);
+                     end;
+             end;
+
+      // collect
+         if EnemyNearbyBase(1, 59, 60) = false and
+            EnemyNearbyBase(1, 67, 76) = false and
+            EnemyNearbyBase(1, 79, 100) = false then
+         CollectCrates(3, west_crates);
+
+End;
+
+
+
+Every 4$00+2$00 trigger tick <= 53$00 or not helps_arrive do
+var veh;
+begin
+enable;
+               
+uc_nation := 3;
+uc_side := 3;
+
+vc_chassis := ru_medium_tracked;
+vc_engine := engine_siberite;
+vc_control := control_computer;
+vc_weapon := ru_cargo_bay;
+
+veh := CreateVehicle;
+SetDir(veh, 4);
+PlaceUnitArea(veh, upper_road_area, false);
+SetCargo(veh, [1, 2, 3, 2][Rand(1,4)], 100);
+
+ComGive(veh, ru_depot);
+AddComMoveToArea(veh, upper_road_area);
+
+Wait(0$10);
+
+Repeat
+ Wait(0$01);
+Until IsInArea(veh, upper_road_area);
+
+RemoveUnit(veh);
+End;
+
+
+On VehicleConstructed(un, fac) do
+begin
+if GetSide(un) = 3 and un in FilterAllUnits([[f_or, [f_weapon, ru_heavy_gun], [f_weapon, ru_rocket], [f_weapon, ru_rocket_launcher]]]) then
+   ru_reserve := ru_reserve ^ un;
+
+if un in FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) then
+   if FilterUnitsInArea(alt_base, [f_side, 1]) then
+      ComAttackPlace(un, 98, 10)
+       else
+        ComAttackPlace(un, 134, 99);
+End;
+
+On UnitDestroyed(un) do
+begin
+
+     if un in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) and
+        not GetBType(un) in [b_depot, b_oil_mine, b_siberite_mine, b_oil_power] then
+        begin
+        ru_blist := ru_blist ^ GetBType(un);
+        ru_blist := ru_blist ^ GetX(un);
+        ru_blist := ru_blist ^ GetY(un);
+        ru_blist := ru_blist ^ GetDir(un);
+        end;
+
+     if un in ru_attack_list then
+        ru_attack_list := ru_attack_list diff un;
+
+     if un in ru_protector then
+        ru_protector := ru_protector diff un;
+
+     if GetBType(un) = b_siberite_mine and GetSide(un) = 1 then
+        mine_ck := true;
+End;
+
+On BuildingComplete(un) do
+var i;
+begin
+
+     if GetSide(un) = 3 and GetBType(un) = b_depot then
+        begin
+        for i = 1 to 2 do
+            begin
+            ComExitBuilding(ru_sold[i]);
+            AddComEnterUnit(ru_sold[i], un);
+            end;
+        end;
+
+     if GetSide(un) = 3 and GetBType(un) in ru_blist then
+        for i = 1 to 4 do
+            ru_blist := Delete(ru_blist, 1);
+End;

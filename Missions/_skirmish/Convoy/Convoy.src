@@ -1,0 +1,96 @@
+Export Function PrepareConvoy;
+var un, area, i, bull_xy;
+begin
+
+     SetAttitude(3, 6, att_friend, true);
+
+     case road of
+     1: begin area := pos2; bull_xy := [30, 46]; end;
+     2: begin area := pos1; bull_xy := [18,  3]; end;
+     end;
+
+     if road = 1 then
+        conv_road := [36,43, 40,29, 56,37, 70,32, 63,6, 84,8, 90,24, 96,47, 110,73, 143,102, 121,93, 98,100, 62,114];
+     if road = 2 then
+        conv_road := [39,18, 61,36, 62,15, 75,5, 97,17, 98,30, 95,49, 110,71, 146,112, 100,81, 99,115, 77,105, 65,75, 45,46, 26,47, 29,54];
+   
+
+     conv_am := 1;
+     conv := 0;
+
+     uc_side := 6;
+     uc_nation := 3;
+
+     for i = 1 to 2 do
+         begin
+         un := CreateTank(6, 3, ru_medium_tracked, engine_siberite, control_computer, ru_cargo_bay);
+         cargos := cargos ^ un;
+         PlaceUnitArea(un, area, false);
+         SetCargo(un, 3, 100);
+         end;
+
+  // bulldozer
+  {
+     un := CreateTank(6, 3, ru_heavy_tracked, engine_siberite, control_computer, ru_bulldozer);
+     cargos := cargos ^ un;
+     SetDir(un, 1);
+     PlaceUnitXY(un, bull_xy[1], bull_xy[2], false);
+  }
+End;
+
+Export conv, conv_am, conv_road;
+Every 0$01 trigger cargos marked 01 do
+begin
+enable;
+
+if IsSelected(cargos[1]) or IsSelected(cargos[2]) then
+   begin
+
+   if debug then display_strings := conv;
+
+   case Query('QConv') of
+   1: conv := 0;
+   2: conv := 1;
+   end;
+
+   disable(01);
+   Wait(0$05);
+   enable(01);
+
+   end;
+
+End;
+
+
+// convoy move
+Every 0$01 trigger conv = 1 do
+var i, area, car;
+begin
+enable;
+
+       car := FilterAllUnits([f_weapon, ru_cargo_bay]);
+
+       if debug then
+          display_strings := [conv_road[conv_am], conv_road[conv_am+1]];
+
+
+       for i = 1 to car do
+           begin
+           if IsNearbyPoint(car[i], conv_road[conv_am], conv_road[conv_am+1]) then
+              conv_am := conv_am + 2
+               else
+                if not HasTask(car[i]) then
+                   ComMoveXY(car[i], conv_road[conv_am], conv_road[conv_am+1]);
+           end;
+End;
+
+// convoy stop
+Every 0$01 trigger conv = 0 do
+var i;
+begin
+enable;
+
+   for i = 1 to cargos do
+       if HasTask(cargos[i]) then
+          ComStop(cargos[i]);
+End;

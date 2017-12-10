@@ -1,0 +1,95 @@
+// Difficulty
+// 1-2-3
+
+Export com, doc, k1;
+Export Function PrepareBase;
+var i, un, skill;
+begin
+
+     PlaceSeeing(30, 14, 7, 20);
+     PlaceSeeing(49, 17, 7, 20);
+     PlaceSeeing(35, 46, 7, 20);
+     PlaceSeeing(70, 39, 7, 20);
+     RemoveSeeing(30, 14, 7);
+     RemoveSeeing(49, 17, 7);
+     RemoveSeeing(35, 46, 7);
+     RemoveSeeing(70, 39, 7);
+
+     uc_side := 7;
+     uc_nation := 1;
+
+     if Difficulty < 3 then
+        begin
+        for i = 1 to 2 do
+            begin
+            vc_chassis := us_heavy_tracked;
+            vc_engine := 3;
+            vc_control := control_computer;
+            vc_weapon := us_double_laser;
+
+            un := CreateVehicle;
+            SetDir(un, Rand(0,5));
+            PlaceUnitArea(un, base_spawn, false);
+            end;
+        end
+         else
+          begin
+          vc_chassis := us_medium_tracked;
+          vc_engine := engine_combustion;
+          vc_control := control_manual;
+          vc_weapon := us_gatling_gun;
+
+          un := CreateVehicle;
+          SetDir(un, Rand(0,5));
+          SetFuel(un, 75);
+          PlaceUnitArea(un, base_spawn, false);
+          end;
+
+     skill := [8, 7, 6][Difficulty];
+
+     hc_importance := 100;  
+
+     PrepareHuman(sex_male, 1, skill);
+     hc_name := 'Jack Collins';
+     com := CreateHuman;
+     PlaceHumanInUnit(com, brave);
+
+     hc_importance := 0;
+     hc_gallery := '';
+
+     PrepareHuman(sex_male, 1, skill);
+     hc_name := 'Thomas Jackson';
+     k1 := CreateHuman;
+     PlaceHumanInUnit(k1, brave);
+
+     hc_name := '';
+
+     for i = 1 to [9,8,7][Difficulty] do
+         begin
+         Randomize;
+
+         uc_nation := [1,3][Rand(1,2)];
+         PrepareHuman(false, Rand(1,4), skill);
+         un := CreateHuman;
+
+         case GetClass(un) of
+         1: PlaceHumanInUnit(un, br);
+         2: PlaceHumanInUnit(un, brave);
+         3: PlaceHumanInUnit(un, fac);
+         4: PlaceHumanInUnit(un, lab);
+         end;
+
+         end;
+
+
+      // doc
+         uc_side := 2;
+         uc_nation := 2;
+
+         hc_name := '_';
+         hc_gallery := '';
+         hc_class := 4;
+         hc_sex := sex_male;
+
+         doc := CreateHuman;
+End;

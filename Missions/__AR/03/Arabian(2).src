@@ -1,0 +1,107 @@
+Export Louis, men1, men2, men3,
+       Martin, Karla, Dwein, Gunther;
+
+Export MyVeh;
+
+Export ArPep;
+Export ArVeh;
+Export function PreparePeople;
+begin
+
+    uc_side = 2;
+    uc_nation = 2;
+
+    Louis := CreateCharacter('Louis');
+    PlaceUnitArea(Louis, StartA, false);
+    ComTurnXY(Louis, 42, 62);
+
+
+    ArVeh = LoadVariable('VehReady', []);
+    If ArVeh > 0 then
+    begin
+    vc_chassis = ArVeh[1];
+    vc_engine = ArVeh[2];
+    vc_control = ArVeh[3];
+    vc_weapon = ArVeh[4];
+
+    MyVeh = CreateVehicle;
+    PlaceUnitXY(MyVeh, 34, 64, false);
+    end;
+
+    If TestCharacters('Martin_02') then
+    begin
+    Martin := CreateCharacter('Martin_02');
+    SaveCharacters(Martin, 'Martin_02'); // save for next missions
+    end
+    else
+    begin
+    hc_class = 3;
+    hc_sex = sex_male;
+    hc_gallery = '';
+    hc_name = '';
+    hc_skills = [0,0,0,0];
+    Martin = CreateHuman;  // second martin
+    end;
+
+    If MyVeh then
+    begin
+    InVeh = true;
+    PlaceHumanInUnit(Martin, MyVeh);
+    end else
+    begin
+    InVeh = false;
+    PlaceUnitArea(Martin, StartA, false);
+    ComTurnXY(Martin, 35, 30);
+    end;
+
+   
+
+     // random men
+    hc_class = 1;
+    hc_sex = Rand(sex_male, sex_female);
+    hc_gallery = '';
+    hc_name = '';
+    hc_skills = [0,0,0,0];
+    Men1 = CreateHuman;
+    Men2 = CreateHuman;
+    Men3 = CreateHuman;
+
+    PlaceUnitArea(Men1, StartA, false);
+    ComTurnXY(Men1, 42, 62);
+
+    PlaceUnitArea(Men2, StartA, false);
+    ComTurnXY(Men2, 42, 62);
+
+    PlaceUnitArea(Men3, StartA, false);
+    ComTurnXY(Men3, 42, 62);
+
+    ArPep := FilterAllUnits([[f_side, 2], [f_type, unit_human]]);
+
+end;
+
+Every 1 trigger MovieStart = true do
+begin
+CenterNowOnUnits(Louis);
+enable;
+end;
+
+Export Cathy;
+Export function CheckCathy;
+begin
+
+If TestCharacters('Cathy') then
+begin
+Cathy := CreateCharacter('Cathy');
+SaveCharacters(Cathy, 'Cathy');
+
+CathyWasCatch = true;
+end
+else
+begin
+CathyWasCatch = false;
+end;
+end;
+
+
+
+

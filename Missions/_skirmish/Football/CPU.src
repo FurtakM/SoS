@@ -1,0 +1,153 @@
+Export Function PrepareCPU;
+var i, k;
+begin
+uc_side := 2;
+uc_nation := 1;
+k := 1;
+
+hc_importance := 100;
+PrepareHuman(false, 1, skill);
+PlaceUnitArea(CreateHuman, CPUArea, false);
+
+hc_importance := 0;
+
+for i = 1 to 8 do
+    begin
+    PrepareHuman(true, k, skill);
+    PlaceUnitArea(CreateHuman, CPUArea, false);
+    if (i mod 2 = 0) then
+        k = k + 1;
+    end;
+
+cpu_counter := 0;
+cpu_goal := 0;
+End;
+
+Export cpu_counter, cpu_goal;
+Export f_sol, f_eng, f_mech, f_sci;
+Export dep, lab, fac, teleport, barracks, towers;
+Every 0$01 do
+var i, skr, p, k, c, xy, pom;
+begin
+enable;
+
+       f_sol := FilterAllUnits([[f_side, 2], [f_class, 1]]);
+       f_eng := FilterAllUnits([[f_side, 2], [f_class, 2]]);
+       f_mech:= FilterAllUnits([[f_side, 2], [f_class, 3]]);
+       f_sci := FilterAllUnits([[f_side, 2], [f_class, 4]]);
+
+       dep := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]]);
+       lab := scs_scan_lab(2); //FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+       fac := FilterAllUnits([[f_side, 2], [f_btype, b_factory]]);
+
+       if dep = 0 then
+          ComBuild(f_eng[1], b_depot, 178, 63, 1)
+       else
+        begin    
+
+        // inzynierowie - mechanicy
+           if fac = 0 then
+              begin
+              for i = 1 to f_mech do
+                  if IsInUnit(f_mech[i]) then
+                     ComExitBuilding(f_mech[i])
+                  else
+                     if not HasTask(f_mech[i]) then
+                        begin
+                        ComEnterUnit(f_mech[i], FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1]);
+                        AddComChangeProfession(f_mech[i], 2);
+                        AddComExitBuilding(f_mech[i]);
+                        end;
+              end;
+
+        // budynki
+        // lab
+           if lab = 0 and GetResourceType(GetBase(dep[1]), mat_cans) > 20 then
+              begin
+              for i = 1 to f_eng do
+                  if not HasTask(f_eng[i]) then
+                     ComBuild(f_eng[i], b_lab, 180, 51, 3);
+              end
+               else
+                if lab then
+                   begin
+                   for i = 1 to f_sci do
+                       begin
+                       if not IsInUnit(f_sci[i]) and not HasTask(f_sci[i]) then
+                          ComEnterUnit(f_sci[i], lab[1]);
+                       end;
+                   {
+                   if BuildingStatus(lab[1]) = bs_idle then
+                      begin
+                      display_strings := 'c';
+
+                      //pom := FilterAllUnits([[f_side, 2], [f_btype, b_lab]])[1];
+                      pom := lab[lab];
+
+                      if GetTech(tech_tech1, 2) = state_enabled then
+                         ComResearch(pom, tech_tech1);
+                      if GetTech(tech_tech2, 2) = state_enabled then
+                         ComResearch(pom, tech_tech2);
+                      if GetTech(tech_solpow, 2) = state_enabled then
+                         ComResearch(pom, tech_solpow);
+                      if GetTech(tech_oilpow, 2) = state_enabled then
+                         ComResearch(pom, tech_oilpow);
+                      if GetTech(tech_oilpow, 2) = state_enabled then
+                         ComResearch(pom, tech_oileng);
+                      end;
+                   }
+                   end;
+
+        // elektrownie 3x
+           if GetTech(tech_solpow, 2) = state_researched and GetResourceType(GetBase(dep[1]), mat_cans) > 35 and FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_solar_power], [f_btype, b_oil_power]]]) < 3 then
+              begin
+              xy := [196, 79, 190, 72, 190, 77];
+              
+              if HexInfo(xy[1], xy[2]) = 0 then
+                 begin
+                 for p = 1 to f_eng do
+                     if not HasTask(f_eng[p]) then
+                        ComBuild(f_eng[p], b_solar_power, xy[1], xy[2], Rand(0,5));
+                 end
+               else
+              if HexInfo(xy[3], xy[4]) = 0 then
+                 begin
+                 for p = 1 to f_eng do
+                     if not HasTask(f_eng[p]) then
+                        ComBuild(f_eng[p], b_solar_power, xy[3], xy[4], Rand(0,5));
+                 end
+               else
+              if HexInfo(xy[5], xy[6]) = 0 then
+                 begin
+                 for p = 1 to f_eng do
+                     if not HasTask(f_eng[p]) then
+                        ComBuild(f_eng[p], b_solar_power, xy[5], xy[6], Rand(0,5));
+                 end;
+
+              end;
+
+
+        // skrzynki
+           if GetResourceType(GetBase(dep[1]), mat_cans) < 350 then
+              begin
+              skr = GetListOfCratesInArea(crates_collect);
+
+              if skr > 0 then
+                 begin
+                 for i = 1 to 2 do // always send 2 collector's
+                     //if not HasTask(f_eng[i]) then
+                        ComCollect(f_eng[i], skr[1], skr[2]);
+                 end;
+
+              end;
+
+        end;
+
+
+End;
+
+
+Export Function scs_scan_lab(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+End;

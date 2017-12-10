@@ -1,0 +1,67 @@
+On VehicleConstructed(veh, fac) do
+var side;
+begin
+side := GetSide(fac);
+
+     Case side of
+     8: begin
+        if GetWeapon(veh) = ar_control_tower then
+           ComMoveXY(veh, 145, 66);
+        if GetChassis(veh) = ar_hovercraft then
+           legion_force := Insert(legion_force, 1, veh);
+        end;
+
+     End;
+
+End;
+
+On UnitTeleported(b, un) do
+begin
+if b = legion_telep and GetClass(un) = 17 then
+   begin
+   Wait(0$03);
+   ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_side, 6]), un));
+   end;
+End;
+
+Export unreachableList;
+On DestinationUnreachable(unit) Do
+begin
+if not unit in unreachableList then
+   unreachableList := Insert(unreachableList, unreachableList+1, unit);
+End;
+
+On CrateSpawn(id, x, y, amount, mode) do
+var i, apes, n;
+begin
+if InArea(x, y, cratesArea) then
+   begin
+   apes := FilterAllUnits([[f_side, 6], [f_class, 16], [f_not, [f_inside]], [f_not, [f_hastask]]]);
+
+   if apes = 0 or FilterAllUnits([[f_side, 6], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) = 0 then
+      exit;
+
+   if apes < amount then
+      n := apes
+       else
+      n := amount;
+
+   for i = 1 to n do
+       AddComCollect(apes[i], x, y);
+   end;
+End;
+
+On UnitGoesToRed(un) do
+begin
+if GetSide(un) = 8 and un in FilterAllUnits([[f_control, control_remote], [f_type, unit_vehicle]]) then
+   if GetSide(NearestUnitToUnit(all_units diff un, un)) <> 8 then
+      begin
+      Wait(0$1.3);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      MineExplosion(GetX(un), GetY(un), 1);
+      end;
+
+if GetControl(un) = control_remote then
+   ComUnlink(un);
+End;

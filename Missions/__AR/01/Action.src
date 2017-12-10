@@ -1,0 +1,391 @@
+Every 0$01 do
+begin
+
+     HideArea(2, ant);
+
+     Repeat
+     Wait(1);
+
+                If IsInArea(Louis, ant) then
+                begin
+                     InGameOn;
+                     ComMoveXY(Louis, GetX(Louis), (GetY(Louis)+1));
+                     Wait(0$02);
+                     InGameOff;
+                end;
+
+     Until ActiveEng = true;
+
+     ShowArea(2, ant);
+
+End;
+
+
+Export Helen, Cords, cr;
+Every 0$01 trigger Louis_Ok = True do
+begin
+
+CenterNowOnXY(103, 81);
+ComMoveXY(Louis, 103, 81);
+
+Wait(0$04);
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+
+
+Wait(0$03);
+
+    uc_side = 5;
+    uc_nation = 2;
+
+    hc_gallery = '';
+    hc_name = 'Helen Marevick';
+    hc_skills = [3,4,2,1];
+    hc_attr = [11,12];
+    hc_sex = sex_female;
+    hc_class = 1;
+    hc_importance = 0;
+
+    Helen = CreateHuman;
+    arab_force1 := arab_force1 ^ Helen;
+    PlaceUnitXY(Helen, 85, 47, false);
+    Wait(0$0.1);
+
+    repeat
+    begin
+    ComMoveXY(Helen, GetX(Louis), GetY(Louis));
+    Wait(0$0.3);
+    end until GetDistUnits(Helen, Louis) < 6 or See(Louis, Helen);
+
+           If GetDistUnits(Helen, Louis) < 6 or See(Louis, Helen) then
+
+              ComStop(Helen);
+
+              DialogueOn; 
+              Say(Helen, 'DH-1');
+              Say(Louis, 'DL-1');
+              Say(Helen, 'DH-2');
+              DWait(0$0.1);
+              DialogueOff;
+
+              Wait(0$0.6);
+
+              ChangeMissionObjectives('M2');
+
+              
+              
+
+              SetAreaMapShow(ToAr, 1);
+              
+              cr    := 0;
+              cords := [78, 47, 52, 33, 46, 45, 52, 62, 37, 66];
+
+              repeat
+              begin
+              AddComMoveXY(Helen, cords[cr+1], cords[cr+2]);
+              cr = cr + 2;
+              Wait(0$02);
+              end until cr > 9;
+
+              If GetDistUnits(Louis, Helen) > 5 or not See(Louis, 5) then
+              Say(Louis, 'DL-2');
+
+end;
+
+
+Every 0$01 trigger GetDistUnits(Louis, Sheik1) < 6 do
+begin
+
+    InGameOn;
+    SetAreaMapShow(ToAr, 0);
+    CenterNowOnUnits(Sheik1);
+    ChangeSideFog(2,5);
+    ComTurnUnit([Sheik1, Sheik2, Sheik3], Louis);
+
+    Wait(0$0.2);
+
+    Say(Louis, 'DL-3');
+    ComTurnUnit(Louis, Sheik1);
+
+    Wait(0$0.3);
+
+    Say(Sheik1, 'DS-1');
+    Say(Louis, 'DL-4');
+    Say(Sheik1, 'DS-2');
+    Say(Louis, 'DL-5');
+    Say(Sheik3, 'DSa-1');
+
+    Wait(0$0.2);
+
+    ComEnterUnit(Sheik3, NearestUnitToUnit(FilterAllUnits([f_btype, b_depot]), Sheik3));
+
+    Wait(0$0.2);
+
+    Say(Sheik1, 'DS-3');
+    Say(Louis, 'DL-6');
+    Say(Sheik1, 'DS-4');
+    Say(Louis, 'DL-7');
+
+    ComMoveXY(Sheik1, 56, 62);
+    AddComTurnUnit(Sheik1, eon);
+
+    Wait(0$0.3);
+
+    Wait(0$05);
+    ComEnterUnit(FilterAllUnits([f_class, 4]), eon);
+    
+    Wait(0$0.4);
+
+    Say(Sheik2, 'DSb-1');
+
+    Wait(0$0.2);
+    ComTurnUnit(Louis, Sheik2);
+
+    Say(Louis, 'DL-8');
+    Say(Sheik2, 'DSb-2');
+    Say(Louis, 'DL-9');
+    Say(Sheik2, 'DSb-3');
+    Say(Louis, 'DL-10');
+    Say(Sheik2, 'DSb-4');
+    Say(Louis, 'DL-11');
+    Say(Sheik2, 'DSb-5');
+    Say(Louis, 'DL-12');
+    Say(Sheik2, 'DSb-6');
+    Say(Louis, 'DL-13');
+    Say(Sheik2, 'DSb-7');
+    Say(Louis, 'DL-14');
+
+    Wait(0$0.3);
+
+    ComMoveXY(Sheik1, GetX(Louis) + 3, GetY(Louis) - 2);
+    AddComTurnUnit(Sheik1, Louis);
+    ComTurnUnit(Sheik2, Sheik1);
+
+    Say(Sheik2, 'DSb-8');
+    ComEnterUnit(Sheik2, NearestUnitToUnit(FilterAllUnits([f_btype, b_depot]), Sheik2));
+
+    Wait(0$0.3);
+
+    ComTurnUnit(Louis, Sheik1);
+
+    If GetDistUnits(Sheik1, Louis) < 6 then
+    ComTurnUnit(Sheik1, Louis);
+    Say(Sheik1, 'DS-5');
+    Say(Louis, 'DL-141');
+    Say(Sheik1, 'DS-6');
+    Say(Louis, 'DL-15');
+    Say(Louis, 'DL-16');
+    Say(Sheik1, 'DS-7');
+
+    Wait(0$0.2);
+
+    InGameOff;
+
+    ComFree(Louis);
+    ComTurnUnit(Sheik1, EON);
+
+   
+    
+    ChangeMissionObjectives('G1');
+
+    Wait(0$03);
+
+    ActiveEng = true;
+
+end;
+
+// russian attack
+Every 0$01 trigger GetGun = true do
+begin
+Wait(Rand(0$20, 0$30));
+
+EON_Block = false;
+
+SayRadio(arab_force2[Rand(1,5)], 'DZ-1'); // komunikat
+
+If MusicIsPlaying then
+begin
+PrepareAudio(3, 1);
+end;
+
+
+InGameOn;
+
+ChangeSideFog(2,3);
+
+PrepareRussian;
+end;
+
+
+
+// Camera
+Every 0$01 trigger GetSide(Louis) = 2 do
+begin
+PlaceSeeing(GetX(Louis), GetY(Louis), 2, 11);
+Wait(0$01);
+enable;
+end;
+
+
+// Dialogs in base 0.04m ver.
+// hr1 talk
+Every 0$01 trigger GetDistUnits(Louis, hr1) < 6 or See(hr1, 2) do
+begin
+If GetGun = false then
+InGameOn;
+ComTurnUnit(Louis, hr1);
+ComTurnUnit(hr1, Louis);
+
+Say(hr1, 'RandomD1');
+Say(Louis, 'RandomD2');
+Say(hr1, 'RandomD3');
+
+ComHold(hr1);
+
+InGameOff;
+end;
+// hr2 talk
+Every 0$01 trigger GetDistUnits(Louis, hr2) < 6 or See(hr2, 2) do
+begin
+If GetGun = false then
+InGameOn;
+
+ComTurnUnit(Louis, hr2);
+ComTurnUnit(hr2, Louis);
+
+Say(hr2, 'RandomD4');
+Say(Louis, 'RandomD5');
+Say(hr2, 'RandomD6');
+
+ComHold(hr2);
+
+InGameOff;
+end;
+// hr3 talk
+Every 0$01 trigger GetDistUnits(Louis, hr3) < 6 or See(hr3, 2) do
+begin
+If GetGun = false then
+begin
+InGameOn;
+
+ComTurnUnit(Louis, hr3);
+ComTurnUnit(hr3, Louis);
+
+Say(hr3, 'RandomD7');
+Say(Louis, 'RandomD8');
+Say(hr3, 'RandomD9');
+Say(Louis, 'RandomD10');
+Say(hr3, 'RandomD11');
+Say(Louis, 'RandomD12');
+
+InGameOff;
+
+ComHold(hr3);
+end;
+end;
+
+// Xavier talk
+Every 0$01 trigger GetDistUnits(Louis, Xavier) < 6 or See(Xavier, 2) do
+begin
+If GetGun = false then
+InGameOn;
+
+Wait(0$01);
+
+ComTurnUnit(Louis, Xavier);
+ComTurnUnit(Xavier, Louis);
+
+Say(Louis, 'XvL1');
+Say(Xavier, 'XvD1');
+Say(Xavier, 'XvD2');
+
+InGameOff;
+
+ComHold(Xavier);
+end;
+
+// kurt talk
+Every 0$01 trigger GetDistUnits(Louis, Hans) < 6 or See(Hans, 2) do
+begin
+If GetGun = false then
+Say(Kurt, 'DK-1');
+Say(Olaf, 'DO-1');
+Say(Kurt, 'DK-2');
+Say(Hans, 'DHa-1');
+Say(Kurt, 'DK-3');
+end;
+
+
+Every 0$01 trigger GetDistUnits(Louis, Felix) < 5 do
+begin
+
+     InGameOn;
+
+     ComTurnUnit(Louis, Felix);
+     
+     Say(Felix, 'DF-1');
+
+     ComTurnUnit(Felix, Louis);
+
+     Wait(0$02);
+
+     Say(Louis, 'DLf-1');
+     Say(Felix, 'DF-2');
+
+     SetSide(Felix, 8);
+     SetSide(Louis, 8);
+
+     ComEnterUnit([Felix, Louis], specbar);
+
+     Wait(0$06);
+
+     Say(Felix, 'DF-3');
+
+     ChangeSideFog(2, 8);
+
+     CenterNowOnXY(50, 99);
+     
+     SetClass(Louis, 1);
+
+     Case Query('After') of
+     1:begin
+       CenterNowOnUnits(specbar);
+       ChangeSideFog(2, 5);
+
+       SetSide(Louis, 2);
+
+       ComExitBuilding([Louis, Felix]);
+       end;
+       end;
+
+     Say(Felix, 'DF-4');
+
+     ComMoveXY(Felix, 98, 18);
+     AddComTurnXY(Felix, 95, 15);
+
+     InGameOff;
+
+     ChangeMissionObjectives('G2');
+
+     GetGun = true; // attack on
+
+End;
+
+
+Every 0$03 trigger GetGun = true do
+begin
+ComEnterUnit([Olaf, Hans, Kurt], eon);
+Wait(0$03);
+ComEnterUnit([hr1, hr2, hr3, Xavier], eon);
+end;
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,116 @@
+// Function's by Serpent ;)
+Export Function RandPointsFromArea(x1, y1, x2, y2, num);
+var list, i;
+begin
+list := [];
+
+     for i = 1 to num do
+         begin
+         list := list ^ Rand(x1, x2);
+         list := list ^ Rand(y1, y2);
+         end;
+
+result := list;
+End;
+
+
+Export Function IntBazooka(list, filter);
+var ta, c, i;
+begin
+
+     // list   := FilterAllUnits([[f_side, 3], [f_class, class_bazooker]]);
+     // filter := FilterAllUnits([[f_side, side], [f_not, [f_type, unit_building]]]);
+
+      c := Rand(1, 3);
+
+         for i = 1 to list do
+         for ta in filter do
+             begin
+
+              if GetDistUnits(list[i], ta) <= 15 then
+                 begin
+
+                      Case c of
+                      1: ComTimeShift(list[i], GetX(ta), GetY(ta));
+                      2: ComSpaceShift(list[i], GetX(ta) + Rand(-1,1), GetY(ta) + Rand(-1,1));
+                      3: ;
+                      end;
+
+                 end;
+             end;
+
+End;
+
+
+Export Function PrepareApeman(n);
+var un, i;
+begin
+for i = 1 to n do
+    begin
+    uc_side := 0;
+    uc_nation := 0;
+
+    hc_class := class_apeman;
+    hc_skills := [0,0,0,0];
+    hc_name := '';
+    hc_gallery := '';
+    hc_importance := 0;
+
+    un := CreateHuman;
+    PlaceUnitArea(un, [ape1, ape2][Rand(1,2)], false);
+    Wait(Rand(0$33, 2$33));
+    end;
+End;
+
+
+Export Function GetDistUnitToSide(unit, side);
+var tmp, dist;
+begin
+tmp  := NearestUnitToUnit(FilterAllUnits([f_side, side]), unit);
+dist := GetDistUnits(unit, tmp);
+
+if dist >= 9999 then
+   result := -1
+    else
+     result := dist;
+End;
+
+Export Function NearestUnitToSide(plist, side);
+var i, tmp, unit;
+begin
+
+     tmp := 9999;
+
+     for i = 1 to plist do
+         if GetDistUnitToSide(plist[i], side) < tmp then
+            begin
+            tmp := GetDistUnitToSide(plist[i], side);
+            unit := plist[i];
+            end;
+
+result := unit;
+End;
+
+
+Export Function CalculateCommanderPoints;
+var points, crates_collected, sib_collected, i;
+begin
+// points for difficulty
+points := [1000, 2500, 5000][Difficulty];
+// points for buildings
+points := points + (-1 * FilterAllUnits([[f_side, your_side], [f_type, unit_building]]) * 30);
+// points for kills
+points := points + (kill_counter * 10);
+// points for deads
+points := points + (-1 * kill_counter * 20);
+// points for time
+points := points + (-1 * ((tick / 35) / 60) * 25);
+// points for techs
+points := points + (tech_counter * 15);
+// points for con_sib
+points := points + (-1 * sib_contamin_counter) * 1000;
+// points for vehicles
+points := points + (veh_counter * 5);
+
+result := points;
+End;

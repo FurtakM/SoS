@@ -1,0 +1,468 @@
+// Strategia:
+// Sprawdza ilosc i jakosc jednostek (ludzie, budynki, pojazdy)
+// Reguluje liczbe danych jednostek
+// Sprawdza ilosc surowcow (jesli magazyn istnieje)
+// Rozbudowa bazy
+// Technologie
+// Atak
+// Obrona
+
+{================================================}
+// Blok g³ówny []
+EVERY 0$01 trigger b1_act do
+var sol, eng, mech, sci, bazz, snip, mort, apeng, apsol, apkami,
+    i, p, b, un, veh, bul, x, y, d,
+    side, nation, area, people, skill, tech, lab,
+    cr_dep, cr_lab, cr_fab, cr_ext, cr_pow,
+    cr_tw, cr_br, cr_add,
+    ally, enemy,
+    skr, c, fac, filter, filter_c,
+    x_a, x_b, x_c, x_d, x_e, x_f, x_g, x_h, x_j;
+begin
+
+     // sprawdzanie czy gracz nadal zyje
+        if scs_scan_side(b1_side) then
+           enable
+            else
+             disable;
+
+     // przypisanie strony
+        if side = 0 then
+           side := b1_side;
+
+     // dyplomacja
+        enemy   := FilterAllUnits([f_enemy, side]);
+        ally    := FilterAllUnits([f_ally, side]) diff scs_scan_side(side);
+
+     // przypisanie innych sta³ych
+        nation := b1_nation;
+        area   := b1_area;
+        people := b1_people;
+        skill  := b1_skill;
+        cr_dep := b1_cr_dep;
+        cr_lab := b1_cr_lab;
+        cr_fab := b1_cr_fab;
+        cr_ext := b1_cr_ext;
+        cr_pow := b1_cr_pow;
+        cr_tw  := b1_cr_tw;
+        cr_br  := b1_cr_br;
+        cr_add := b1_cr_add;
+
+     // filtrowanie
+        sol  := scs_scan_class(side, 1, true);
+        eng  := scs_scan_class(side, 2, true);
+        mech := scs_scan_class(side, 3, true);
+        sci  := scs_scan_class(side, 4, true);
+
+
+     // dzia³anie
+        // Priorytety:
+
+           // Sprawdzenie czy istnieje magazyn
+              if AnyBuildingExist(side, b_depot) or AnyBuildingExist(side, b_warehouse) then
+                 begin
+                 // magazyn istnieje
+                    // skan terenu, sprawdza czy mozna budowac
+                    if scs_scan_area(side, cr_dep[1], cr_dep[2], 20) then
+                       exit // wykytow wroga w pobli¿u bazy, opusc dalsze wykonywanie czynnosci w tym bloku
+                        else
+                          begin
+                          // SEKCJA BUDOWANIA
+                          // Kolejnosc: Koszary, Lab, Fabryka, 3x Elektrownie, Szyb, Wie¿e, itd...
+                             // Koszary (Zbrojownia)
+                                x_a := cr_br/3;
+
+                                if scs_scan_buildings(side, b_armoury)^scs_scan_buildings(side, b_barracks) < (x_a-1)  then
+                                   begin
+                                   if HexInfo(cr_br[1], cr_br[2]) = 0 then
+                                      Build(eng, b_armoury, cr_br[1], cr_br[2], cr_br[3], 30)
+                                       else
+                                        if HexInfo(cr_br[4], cr_br[5]) = 0 then
+                                           Build(eng, b_armoury, cr_br[4], cr_br[5], cr_br[6], 30)
+                                            else
+                                             if HexInfo(cr_br[7], cr_br[8]) = 0 then
+                                                Build(eng, b_armoury, cr_br[7], cr_br[8], cr_br[9], 30);
+                                   end;
+
+                             // ulepszenie zbrojownii (jesli istnieje gotowa zbrojownia i w magazynie jest 30 skrzyn to rozbuduwuje j¹)
+                                if AnyBuildingExist(side, b_armoury) then
+                                   Upgrade(side, b_armoury, 30);
+
+                          // Labolatorium (buduje 2 labolatoria)
+                             x_b := (cr_lab)/5;
+
+                             if scs_scan_lab(side) < (x_b-1) then
+                                begin
+                                if HexInfo(cr_lab[1], cr_lab[2]) = 0 then
+                                   Build(eng, b_lab, cr_lab[1], cr_lab[2], cr_lab[3], 20)
+                                    else
+                                     if HexInfo(cr_lab[6], cr_lab[7]) = 0 then
+                                        Build(eng, b_lab, cr_lab[6], cr_lab[7], cr_lab[8], 20)
+                                         else
+                                          if HexInfo(cr_lab[11], cr_lab[12]) = 0 then
+                                             Build(eng, b_lab, cr_lab[11], cr_lab[12], cr_lab[13], 20);
+                                end;
+
+                          // Rozbudowa labolatorium (sprawdza jakie rozbudowy s¹ potrzebne (czy istnieja juz na mapie))
+                             if scs_scan_lab(side) = 2 then
+                                begin
+                                if scs_scan_buildings(side, 6) <= 2 and scs_scan_buildings(side, 7) = 0 then
+                                   UpgradeLab(scs_scan_lab(side)[1], cr_lab[4], 50);
+                                if scs_scan_buildings(side, 6) = 1 and scs_scan_buildings(side, 7) = 1 then
+                                   UpgradeLab(scs_scan_lab(side)[2], cr_lab[9], 20);
+                                if scs_scan_buildings(side, 7) = 1 and scs_scan_buildings(side, 8) = 0 then
+                                   UpgradeLab(scs_scan_lab(side)[1], cr_lab[5], 20);
+                                if scs_scan_buildings(side, 7) = 1 and scs_scan_buildings(side, 8) = 1 then
+                                   UpgradeLab(scs_scan_lab(side)[2], cr_lab[10], 20);
+                                end;
+
+                          // Elektrownie
+                             x_c := cr_pow/4;
+                             
+                             if scs_scan_buildings(side, b_solar_power) + scs_scan_buildings(side, b_oil_power) + scs_scan_buildings(side, b_siberite_power) < (x_c-1) then
+                                begin
+                                if HexInfo(cr_pow[1], cr_pow[2]) = 0 then
+                                   BuildPowerPlant(eng, cr_pow[4], cr_pow[1], cr_pow[2], cr_pow[3])
+                                    else
+                                     BuildPowerPlant(eng, cr_pow[8], cr_pow[5], cr_pow[6], cr_pow[7]);
+                                end;
+
+                          // Szyb Naftowy (12/3)/2 = 4/2 = 2
+                             x_d := (cr_add/3)/2;
+
+                             if super_source = false then
+                                x_d := x_d - 1;
+
+                             if scs_scan_buildings(side, b_oil_mine) < x_d then
+                                begin
+                                if GetResourceVisibility(cr_add[1], cr_add[2], side) = false then
+                                   begin
+                                   if IsInUnit(sci[1]) then
+                                      ComExitBuilding(sci[1]);
+
+                                   if not HasTask(sci[1]) then
+                                      ComMoveXY(sci[1], cr_add[1], cr_add[2]);
+                                   end
+                                    else
+                                     begin
+                                     if HexInfo(cr_add[1], cr_add[2]) = 0 then
+                                        Build(eng, b_oil_mine, cr_add[1], cr_add[2], Rand(0,5), 10);
+                                     end;
+
+                                if GetResourceVisibility(cr_add[4], cr_add[5], side) = false and super_source then
+                                   begin
+                                   if IsInUnit(sci[1]) then
+                                      ComExitBuilding(sci[1]);
+
+                                   if not HasTask(sci[1]) then
+                                      ComMoveXY(sci[1], cr_add[4], cr_add[5]);
+                                   end
+                                    else
+                                     begin
+                                     if HexInfo(cr_add[4], cr_add[5]) = 0 then
+                                        Build(eng, b_oil_mine, cr_add[4], cr_add[5], Rand(0,5), 10);
+                                     end;
+                                   end;
+                             end;
+
+                             // Kopalnia Syberytu
+                             if scs_scan_buildings(side, b_siberite_mine) < x_d and GetTech(20, side) = state_researched then
+                                begin
+                                if GetResourceVisibility(cr_add[7], cr_add[8], side) = false then
+                                   begin
+                                   if IsInUnit(sci[1]) then
+                                      ComExitBuilding(sci[1]);
+
+                                   if not HasTask(sci[1]) then
+                                      ComMoveXY(sci[1], cr_add[7], cr_add[8]);
+                                   end
+                                    else
+                                     begin
+                                     if HexInfo(cr_add[7], cr_add[8]) = 0 then
+                                        Build(eng, b_siberite_mine, cr_add[7], cr_add[8], Rand(0,5), 10);
+                                     end;
+
+                                if GetResourceVisibility(cr_add[10], cr_add[11], side) = false and super_source then
+                                   begin
+                                   if IsInUnit(sci[1]) then
+                                      ComExitBuilding(sci[1]);
+
+                                   if not HasTask(sci[1]) then
+                                      ComMoveXY(sci[1], cr_add[10], cr_add[11]);
+                                   end
+                                    else
+                                     begin
+                                     if HexInfo(cr_add[10], cr_add[11]) = 0 then
+                                        Build(eng, b_siberite_mine, cr_add[10], cr_add[11], Rand(0,5), 10);
+                                     end;
+                                
+                             end;
+
+                             // Warsztat
+                             if AnyBuildingExist(side, b_workshop) = false and AnyBuildingExist(side, b_factory) = false then
+                                begin
+                                if HexInfo(cr_fab[1], cr_fab[2]) = 0 then
+                                   Build(eng, b_workshop, cr_fab[1], cr_fab[2], cr_fab[3], 40);
+                                end;
+                             // Rozbudowa
+                             if AnyBuildingExist(side, b_workshop) then
+                                Upgrade(side, b_workshop, 40);
+                             // Fabryka
+                             if AnyBuildingExist(side, b_factory) then
+                                begin
+                                fac := scs_scan_buildings(side, b_factory)[1];
+
+                                if AnyBuildingExist(side, cr_ext[4]) = 0 then
+                                   Build(eng, cr_ext[4], cr_ext[1], cr_ext[2], cr_ext[3], 30);
+                                    
+                                if AnyBuildingExist(side, cr_ext[8]) = 0 then
+                                   Build(eng, cr_ext[8], cr_ext[5], cr_ext[6], cr_ext[7], 30);
+
+                                if AnyBuildingExist(side, cr_ext[12]) = 0 then
+                                   Build(eng, cr_ext[12], cr_ext[9], cr_ext[10], cr_ext[11], 35);
+                                
+                                end;
+                 end
+                  else 
+                   begin
+                   // magazyn nieistnieje
+                   // buduj nowy magazyn jesli zyje przynajmniej 1 inzynier
+                      if eng > 0 then
+                         begin
+                         for i = 1 to eng do
+                             if not HasTask(eng[i]) and scs_scan_area(side, cr_dep[1], cr_dep[2], 15) = false then
+                                ComBuild(eng[i], b_depot, cr_dep[1], cr_dep[2], cr_dep[3]);
+                         
+                         for un in sol^mech^sci do
+                             begin
+                             if not HasTask(un) and GetDistUnitXY(un, cr_dep[1], cr_dep[2]) > 7 then
+                                ComMoveXY(un, cr_dep[1], cr_dep[2]);
+                             end;
+                         end
+                          else
+                           begin
+                        // wszyscy inzynierowie polegli
+                           if sol^mech^sci = 0 then
+                               exit
+                                else
+                                 if ally then
+                                    scs_change_side(side, GetSide(ally[1]))
+                                     else
+                                      begin
+                                       for un in sol^mech^sci do
+                                           if not HasTask(un) then
+                                              ComAttackUnit(un, NearestUnitToUnit(enemy, un));
+                                       end;
+                           end;
+                                     
+                   end;
+
+     // Zmiana klas!
+        // ¯o³nierze (W razie wykrytego wroga)
+        if scs_scan_area(side, cr_dep[1], cr_dep[2], 45) then
+           begin
+           if AnyBuildingExist(side, b_armoury) or AnyBuildingExist(side, b_barracks) then
+              begin
+         
+              if test then
+                 display_strings := 'sold_1';
+
+              if scs_find_barracks(side) > 0 then
+                 begin
+                       
+                   if (sol < FilterAllUnits([[f_side, side], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]])*6 + FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_empty]])) then {+}
+                       begin
+                       
+                       if filter_c = 0 then
+                          begin
+                          filter_c := eng^mech^sci;               
+                          filter_c := SortFilter(filter_c, 1);
+                          end;
+
+                       if filter_c > 0 then
+                          scs_change_class(filter_c[filter_c], 1);
+                       end;
+
+                 if sol > 0 then
+                    begin
+                    if FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_empty]]) > 0 then
+                       FillTowers(side)
+                        else
+                          for i = 1 to sol do
+                              if not IsInUnit(sol[i]) and not HasTask(sol[i]) then
+                                 ComEnterUnit(sol[i], scs_find_barracks(side)[1]);
+                    end;
+
+                 end;
+
+
+              end;
+
+           end;
+        // Zamiana odwrotna
+        if AnyBuildingExist(side, b_depot) or AnyBuildingExist(side, b_warehouse) then
+           begin
+
+           if scs_scan_area(side, cr_dep[1], cr_dep[2], 45) = false then
+              begin
+
+              for i = 1 to sol do
+                  begin
+                  if IsInUnit(sol[i]) then
+                     ComExitBuilding(sol[i]);
+
+                  if mech <= 5 and AnyBuildingExist(side, b_factory) then
+                     begin
+                     sol := SortFilter(sol, skill_mechanical);
+                     scs_change_class(sol[sol], class_mechanic);
+                     end
+                      else
+                       scs_change_class(sol[sol], class_engineer);
+                  end;
+
+              end;
+
+           end;
+
+        // Mechanicy
+           if AnyBuildingExist(side, b_depot) or AnyBuildingExist(side, b_warehouse) then
+              begin
+
+              if AnyBuildingExist(side, b_factory) = false then
+                 begin
+                 for i = 1 to mech do
+                     scs_change_class(mech[i], 2);
+                 end
+                  else
+                   if mech > 0 then
+                      for i = 1 to mech do
+                          if not IsInUnit(mech[i]) and not HasTask(mech[i]) then
+                             ComEnterUnit(mech[i], scs_find_factory(side));
+
+              if scs_scan_buildings(side, b_factory) > 0 then
+                 begin
+                 fac := scs_scan_buildings(side, b_factory)[1];
+
+                 if BuildingStatus(fac) = bs_working and mech < 6 then
+                    begin
+                    filter := eng^sci;
+                    filter := SortFilter(filter, 3);
+
+                    while(mech < 6) do
+                     begin
+                     scs_change_class(filter[filter], 3);
+                     wait(0$0.1);
+                     end;
+
+                    end;
+
+                 end;
+
+              end;
+
+
+        // Naukowcy
+           if AnyBuildingExist(side, b_depot) or AnyBuildingExist(side, b_warehouse) then
+              begin
+
+              if scs_scan_lab(side) = 0 then
+                 begin
+                 for i = 1 to sci do
+                     if not HasTask(sci[i]) then
+                        scs_change_class(sci[i], 2);
+                 end
+                  else
+                 if sci < 6 then
+                   begin
+                   eng := SortFilter(eng, 4);
+                   
+                   if eng > 7 then
+                      begin
+                      for i = 1 to 6 do
+                          scs_change_class(eng[i], 4);
+                      end
+                       else
+                        if eng > 2 and eng <= 7 and sci < 6 then
+                           for i = 1 to (eng-2) do
+                               scs_change_class(eng[i], 4);
+                   end;
+
+                   for i = 1 to sci do
+                       if not IsInUnit(sci[i]) and (not HasTask(sci[i])) then
+                          ComEnterUnit(sci[i], NearestUnitToUnit(scs_scan_lab(side), sci[i]));
+
+                
+
+              end;
+
+     // Badania
+        if scs_scan_lab(side) > 0 then
+           begin
+
+           for i = 1 to scs_scan_lab(side) do
+           begin
+
+           if b_lab_basic in [GetLabKind(scs_scan_lab(side)[i], 1), GetLabKind(scs_scan_lab(side)[i], 2)] then
+              if b1_tech = [] and GetTech(tech_lab[1], side) <> state_researched then
+                 b1_tech = b1_tech ^ tech_lab;
+           if b_lab_weapon in [GetLabKind(scs_scan_lab(side)[i], 1), GetLabKind(scs_scan_lab(side)[i], 2)] then
+              if b1_tech = [] and GetTech(tech_weap[1], side) <> state_researched then
+                 b1_tech = b1_tech ^ tech_weap;
+
+           // DOPISAC
+           display_strings := b1_tech;
+                
+           if BuildingStatus(scs_scan_lab(side)[i]) = bs_idle and b1_tech > 0 then
+              begin
+              
+              if GetTech(b1_tech[1], side) = state_enabled then
+                 ComResearch(scs_scan_lab(side)[i], b1_tech[1])
+                  else
+                   if GetTech(b1_tech[1], side) = state_researched then
+                      b1_tech := Delete(b1_tech, 1);
+              end;
+
+           end;
+
+           end;
+
+
+
+
+     // Zbieranie skrzyn
+        if scs_scan_area(side, cr_dep[1], cr_dep[2], 45) = false and (AnyBuildingExist(side, b_depot) or AnyBuildingExist(side, b_warehouse)) then
+           begin
+
+           skr = GetListOfCratesInArea(CratesArea);
+           c = 1;
+
+           While c < skr do
+           begin
+
+           if FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) = 0 then
+              begin
+
+              for p = 1 to (eng/3) do
+                  if not HasTask(eng[p]) and GetDistUnitXY(eng[p], skr[c], skr[c+1]) <= 25 then
+                     ComCollect(eng[p], skr[c], skr[c+1]);
+
+                  c = c + 2;
+              end
+               else
+                 begin
+
+                 if GetLives(veh[1]) > 300 and GetDistUnitXY(veh[1], skr[c], skr[c+1]) <= 45 then
+                    begin
+                    veh := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]);
+                    ComCollect(veh[1], skr[c], skr[c+1]);
+                    end;
+
+                 end;
+
+           end;
+
+           End;
+
+End;
+
+

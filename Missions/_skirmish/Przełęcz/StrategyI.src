@@ -1,0 +1,507 @@
+
+// STRATEGY I
+Export Function StrategyI;
+var i, un, pos_x, pos_y;
+begin
+
+     SetTech(20, comp_side, state_researched);
+
+     for i = 1 to comp_engs do
+     begin
+     BuildDepot(comp_engs[i], 61, 106, 0);
+     end;
+
+     Wait(0$03);
+
+     for i = 1 to comp_mechs do
+     begin
+     // ComMoveXY(comp_sold[i], 59, 104);
+     ComMoveXY(comp_mechs[i], 59, 104);
+     ComMoveXY(comp_sci[i], 59, 104);
+     end;
+
+     // find oil
+     ComMoveXY(comp_sci[1], comp_oil[1], comp_oil[2]);
+     AddComMoveXY(comp_sci[1], GetX(comp_sci[3]), GetY(comp_sci[3]));
+     // find another oil near base
+     If comp_oil > 2 then // if another oil exsist
+     begin
+     ComMoveXY(comp_sci[2], comp_oil[3], comp_oil[4]);
+     AddComMoveXY(comp_sci[2], GetX(comp_sci[3]), GetY(comp_sci[3]));
+     end;
+
+     repeat
+      begin
+      Wait(0$01);
+     end until CanBuildBase = true;
+
+     Wait(0$02);
+
+     // build oil tower
+     AddComBuild(comp_engs[1], b_oil_mine, comp_oil[1], comp_oil[2], Rand(0,5));
+     AddComBuild(comp_engs[3], b_siberite_mine, 53, 102, Rand(0,5));
+     // build second tower
+     If comp_oil > 2 then
+     begin
+     AddComBuild(comp_engs[2], b_oil_mine, comp_oil[3], comp_oil[4], Rand(0,5));
+     end;
+
+
+     for i = 3 to comp_engs do
+     begin
+       // build armoury
+       AddComBuild(comp_engs[i], b_armoury, 61, 84, 3); // build aromury
+     end;
+
+End;
+
+Every 0$01 trigger ArmouryComplete = true and AlertOff = true do
+var i;
+begin
+
+     // enter to armoury
+        for i = 1 to comp_sold do
+        begin
+        ComEnterUnit(comp_sold[i], comp_arm[1]);
+        end;
+
+
+         // change proffesion mech to eng
+         for i = 1 to comp_mechs do
+         begin
+         SetClass(comp_mechs[i], class_engineer);
+         end;
+
+         Wait(0$01);
+
+         // build lab
+         for i = 1 to comp_mechs do  // still comp_mechs
+         begin
+         ComBuild(comp_mechs[i], b_lab, 53, 97, 1);
+         end;
+
+         repeat
+         begin
+         Wait(0$01);
+         end until LabComplete = true;
+
+         // enter to lab
+         for i = 1 to comp_sci do
+         begin
+         ComEnterUnit(comp_sci[i], comp_lab);
+         end;
+
+
+
+    // start reserach
+    // LAB MODULE
+       AddComResearch(comp_lab, tech_oilpow);
+       AddComResearch(comp_lab, tech_oileng);
+       AddComResearch(comp_lab, tech_solpow);
+       AddComResearch(comp_lab, tech_soleng);
+
+End;
+
+
+
+// build powerplant, factory and bunker's
+Every 0$01 trigger AlertOff = true and CanBuildPlants = true do
+var i;
+begin
+
+    for i = 1 to comp_engs do
+    begin
+    AddComBuild(comp_engs[i], b_oil_power, 57, 110, Rand(0,5));
+    AddComBuild(comp_engs[i], b_oil_power, 46, 88, Rand(0,5));
+    AddComBuild(comp_engs[i], b_solar_power, 53, 84, Rand(0,5));
+
+     // build fort's
+    AddComBuild(comp_engs[i], b_bunker, 71, 86, 2);
+    AddComBuild(comp_engs[i], b_bunker, 47, 82, 2);
+
+    If diff_def > 2 then
+    begin
+    AddComBuild(comp_engs[i], b_bunker, 81, 96, 4);
+    end;
+
+    // build factory
+    AddComBuild(comp_mechs[i], b_workshop, 68, 100, 5);
+    end;
+
+    If diff_def < 3 then
+    begin
+
+    repeat
+     begin
+     Wait(0$01);
+     end until comp_towers >= 2;
+
+    end;
+
+    If diff_def = 3 then
+    begin
+
+    repeat
+     begin
+     Wait(0$01);
+     end until comp_towers >= 3;
+
+    end;
+
+    for i = 1 to comp_towers do
+    begin
+    ComExitBuilding(comp_sold[i]);
+    Wait(0$01);
+    ComEnterUnit(comp_sold[i], comp_towers[i]);
+    end;
+
+END;
+
+
+// when factory complete
+Every 0$01 trigger FacComplete = true do
+var i;
+begin
+
+     for i = 1 to comp_mechs do
+     begin
+     ComEnterUnit(comp_mechs[i], comp_factory);
+     AddComChangeProfession(comp_mechs[i], class_mechanic);
+     end;
+
+CanFactoryWork = true;
+end;
+
+Every 0$01 trigger Researched(comp_side, tech_ai) = true do
+var i;
+begin
+
+     for i = 1 to comp_engs do
+     begin
+     AddComBuild(comp_engs[i], b_turret, 55, 82, 2);
+     AddComBuild(comp_engs[i], b_turret, 75, 106, 4);
+     end;
+
+end;
+
+// place weapon on turret
+Every 0$30 trigger CanFactoryWork = true and comp_towers > 1 do
+var i;
+begin
+
+     
+
+     AddComConstruct(comp_factory, us_medium_tracked, engine_combustion, control_manual, us_cargo_bay);
+     Wait(0$35);
+    
+     For i = 1 to comp_towers do
+     begin
+
+          If diff_def = 1 then
+          begin
+          AddComPlaceWeapon(comp_towers[i], us_machine_gun);
+          end;
+
+
+          If diff_def = 2 then
+          begin
+          AddComPlaceWeapon(comp_towers[i], us_gatling_gun);
+          end;
+
+
+
+          If diff_def >= 3 then
+          begin
+          AddComPlaceWeapon(comp_towers[i], us_double_gun);
+          end;
+
+          
+     END;
+     
+End;
+
+// change weapon in towers
+Every 0$02 trigger Researched(comp_side, tech_advmet) = true do
+var i;
+begin
+
+     If diff_def = 1 then
+     begin
+
+     for i = 1 to comp_towers do
+     begin
+     AddComPlaceWeapon(comp_towers[i], us_double_gun);
+     end;
+
+     End;
+
+     If diff_def = 2 then
+     begin
+
+     for i = 1 to comp_towers do
+     begin
+     AddComPlaceWeapon(comp_towers[i], us_heavy_gun);
+     end;
+
+     End;
+
+     If diff_def > 2 then
+     begin
+
+     for i = 1 to comp_towers do
+     begin
+     AddComPlaceWeapon(comp_towers[i], us_rocket_launcher);
+     end;
+
+     End;
+
+
+end;
+
+
+
+// TECHNOLOGY LAB
+Every 0$30 trigger LabComplete = true do
+begin
+
+     If GetNation(comp_sold[1]) < 3 then
+     begin
+     AddComUpgradeLab(comp_lab, b_lab_weapon); // upgrade lab
+     AddComUpgradeLab(comp_lab, b_lab_opto); // upgrade lab
+     end;
+
+     If GetNation(comp_sold[1]) = 3 then
+     begin
+     AddComUpgradeLab(comp_lab, b_lab_weapon); // upgrade lab
+     AddComUpgradeLab(comp_lab, b_lab_computer); // up
+     end;
+
+End;
+
+
+
+Every 0$01 trigger LabFull1 do
+var i;
+begin
+
+     for i = 1 to comp_sci do
+     begin
+     AddComEnterUnit(comp_sci[i], comp_lab);
+     end;
+
+
+     AddComResearch(comp_lab, tech_tech1);
+     AddComResearch(comp_lab, tech_tech2);
+     AddComResearch(comp_lab, tech_tech3);
+     AddComResearch(comp_lab, tech_weap1);
+     AddComResearch(comp_lab, tech_weap2);
+     AddComResearch(comp_lab, tech_gatling);
+     AddComResearch(comp_lab, tech_gun);
+     AddComResearch(comp_lab, tech_opto1);
+     AddComResearch(comp_lab, tech_radar);
+     AddComResearch(comp_lab, tech_opto2);
+     AddComResearch(comp_lab, tech_remcont);
+  
+
+     If diff_attack > 1 then
+     begin
+     AddComResearch(comp_lab, tech_advmet);
+     AddComResearch(comp_lab, tech_rocket);
+     end;
+
+     If diff_attack > 2 then
+     begin
+     AddComResearch(comp_lab, tech_weap3);
+     end;
+
+      AddComResearch(comp_lab, tech_lassight);
+     
+
+End;
+
+Every 0$01 trigger AlertOff = true and Researched(comp_side, tech_tech3) = true do
+var i;
+begin
+
+     for i = 1 to comp_engs do
+     begin
+     AddComBuild(comp_engs[i], b_lab, 68, 114, 0);
+     end;
+
+end;
+
+{
+Every 0$01 trigger Researched(comp_side, tech_rocket) = true do
+var i, ext;
+begin
+
+ext = GetExtPositions(comp_factory);
+
+     for i = 1 to comp_engs do
+     begin
+     AddComBuild(comp_engs[i], b_ext_rocket, ext[5][1], ext[5][2], 2);
+     end;
+
+end;   }
+
+Every 0$01 trigger LabComplete2 = true do
+begin
+AddComUpgradeLab(comp_lab2, b_lab_computer);
+AddComUpgradeLab(comp_lab2, b_lab_siberium);
+end;
+
+Every 0$01 trigger LabFull2 = true do
+var i;
+begin
+
+     Wait(0$10);
+
+     for i = 3 to 4 do
+     begin
+     AddComExitBuilding(comp_sci[i]);
+
+     AddComEnterUnit(comp_sci[i], comp_lab2);
+     end;
+
+     AddComResearch(comp_lab2, tech_comp1);
+     AddComResearch(comp_lab2, tech_comp2);
+     AddComResearch(comp_lab2, tech_comp3);
+
+     AddComResearch(comp_lab2, tech_ai);
+     AddComResearch(comp_lab2, tech_advai);
+
+     If diff_attack > 2 then
+     AddComResearch(comp_lab2, tech_advchassis);
+     
+     AddComResearch(comp_lab2, tech_sib1);
+     AddComResearch(comp_lab2, tech_sib2);
+     AddComResearch(comp_lab2, tech_sib3);
+     AddComResearch(comp_lab2, tech_sibpow);
+     AddComResearch(comp_lab2, tech_sibeng);
+     AddComResearch(comp_lab2, tech_sibfiss);
+
+end;
+
+
+
+
+
+Every 0$01 trigger AlertOff = true and TechRemoteControl = true do
+var i;
+begin
+
+     for i = 1 to comp_engs do
+     begin
+     AddComBuild(comp_engs[i], b_control_tower, 78, 115, 5);
+     AddComBuild(comp_engs[i], b_solar_power, 76, 110, Rand(0,5));
+     end;
+
+end;
+
+
+Every 0$01 trigger AlertOff = true and dlimiter > 0 do
+begin
+ComUpgrade(comp_arm);
+end;
+
+
+Every 0$01 trigger AlertOff = true and TowerComplete = true do
+var i;
+begin
+
+     ComMoveXY(comp_engs, 61, 104);
+
+     ComExitBuilding(comp_mechs[1]);
+     ComExitBuilding(comp_mechs[2]);
+     // remove mechanic from group
+     comp_rdriver = comp_rdriver ^ comp_mechs[1];
+     comp_rdriver = comp_rdriver ^ comp_mechs[2];
+
+     for i = 1 to 2 do
+     begin
+     ComExitBuilding(comp_sci[i]);
+     AddComEnterUnit(comp_sci[i], comp_factory);
+     AddComChangeProfession(comp_sci[i], 3);
+     end;
+
+     Wait(0$10);
+     
+     comp_mechs = FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_inside]]]);
+     comp_sci = FilterAllUnits([[[f_side, comp_side], [f_class, 4], [f_inside]]]);
+
+     AddComEnterUnit(comp_rdriver[1], comp_ct);
+     AddComEnterUnit(comp_rdriver[2], comp_ct);
+
+
+     ProductionRADAR = true;
+
+end;
+
+
+// PRODUCTION I RADAR
+Export lvl;
+Every 0$10 trigger ProductionRADAR = true do
+var i, us_weap, ar_weap;
+begin
+
+     us_weap = [us_gatling_gun, us_double_gun, us_rocket_launcher][diff_attack];
+     ar_weap = [ar_gatling_gun, ar_light_gun, ar_gun][diff_attack];
+     lvl = 0;
+
+     For i = 1 to limiter do
+     begin
+
+          If GetNation(comp_factory) = 1 then
+          begin
+          AddComConstruct(comp_factory, us_medium_tracked, engine_combustion ,control_remote , us_weap);
+          end;
+
+          If GetNation(comp_factory) = 2 then
+          begin
+          AddComConstruct(comp_factory, ar_half_tracked, engine_combustion ,control_remote , ar_weap);
+          end;
+
+    End;
+
+End;
+
+
+// CHECK IDIOT IN BASE { mechanic }
+{Every 1$30 trigger FacComplete do
+var i, un;
+begin
+enable;
+
+for un in FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_outside]]]) do
+begin
+ComEnterUnit(un, comp_factory);
+end;
+
+end; }
+{
+Every 0$30 trigger LabComplete do
+var i, un;
+begin
+enable;
+
+for un in FilterAllUnits([[[f_side, comp_side], [f_class, 4], [f_outside]]]) do
+begin
+ComEnterUnit(un, comp_lab);
+end;
+
+end;  }
+
+Every 1$25 trigger Comp_Arm and comp_towers > 1 do
+var i, un;
+begin
+enable;
+
+for un in FilterAllUnits([[[f_side, comp_side], [f_or, [f_class, 1], [f_class, class_sniper]], [f_outside]]]) do
+begin
+ComEnterUnit(un, comp_arm);
+end;
+
+end;
+
+
+

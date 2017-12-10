@@ -1,0 +1,286 @@
+// Akcja
+Export Er, Abdul;
+// Start
+Export Function Action;
+begin
+uc_side := 5;
+uc_nation := 2;
+
+hc_gallery := 'sandar';
+hc_face_number := 5;
+hc_skills := [0,0,0,0];
+hc_name := 'Abdul Shariff';
+hc_sex := sex_male;
+hc_class := class_desert_warior;
+
+Abdul := CreateHuman;
+
+
+uc_side := 2;
+
+hc_class := 3;
+hc_skills := [4, 0, 5, 3];
+hc_attr := [10, 11];
+hc_name := '';
+hc_sex := 1;
+hc_gallery := '';
+
+Er := CreateHuman;
+PlaceUnitXY(Er, 96, 141, 0); // 96,141
+ComHold(Er);
+SetLives(Er, 450);
+
+
+CenterNowOnXY(88, 144);
+
+InGameOn;
+Say(Louis, 'DL-1');
+ComMoveXY(Er, 89, 150);
+Wait(0$03);
+ComTurnXY(er, 85, 167);
+Say(UnitFilter(AllPeo, [f_sex, sex_female])[1], 'DPf-1');
+Say(Er, 'DE-1');
+Say(Louis, 'DL-2');
+Say(Er, 'DE-2');
+Say(Louis, 'DL-3');
+Say(Er, 'DE-3');
+
+if Martin then
+Say(Martin, 'DM-1')
+ else
+  Say(UnitFilter(AllPeo, [f_class, 4])[1], 'DP-2');
+
+Say(Louis, 'DL-4');
+
+
+ComMoveXY(er, 88, 150);
+AddComHold(er);
+
+if IsInUnit(UnitFilter(AllPeo, [f_class, 4])[1]) then
+   ComExitVehicle(UnitFilter(AllPeo, [f_class, 4])[1]);
+
+Wait(0$02);
+
+ComHeal(UnitFilter(AllPeo, [f_class, 4])[1], er);
+
+
+Say(Louis, 'DL-5');
+SayRadio(Abdul, 'DS-1');
+Say(Louis, 'DL-6');
+SayRadio(Abdul, 'DS-2');
+Say(Louis, 'DL-7');
+SayRadio(Abdul, 'DS-3');
+Wait(0$01);
+SayRadio(Abdul, 'DS-4');
+Say(Louis, 'DL-8');
+SayRadio(Abdul, 'DS-5');
+Say(Louis, 'DL-9');
+SayRadio(Abdul, 'DS-6');
+Say(Louis, 'DL-10');
+SayRadio(Abdul, 'DS-7');
+
+InGameOff;
+
+ChangeMissionObjectives('Ob1');
+SaveForQuickRestart;
+End;
+
+
+// Ukryty tunel
+Every 0$01 trigger FilterUnitsInArea(secret_tunnel, [f_side, 2]) > 0 do
+begin
+Say(UnitFilter(AllPeo, [f_sex, sex_male])[1], 'DPm-tunnel');
+CenterNowOnXY(58, 64);
+End;
+
+
+// Omar atakuje!
+Every 0$10 trigger GetSide(ru_west_dep) = 2 or IsDead(ru_west_dep) do
+begin
+Wait(Rand(1$00, 2$00));
+
+PrepareSouthArForces;
+
+Wait(0$01);
+
+// Omar Dialog
+SayRadio(Omar, 'DO-1');
+ChangeMissionObjectives('Ob2');
+End;
+
+
+// Morozow komunikaty
+Every 4$45 trigger GetLives(Morozov) = 1000 and jaszyn_activ = false do
+var i;
+begin
+enable;
+
+    Wait(Rand(0$00, 0$22));
+
+    i := Rand(0, 5);
+
+         Case i of
+         0: ;
+         1: SayRadio(Morozov, 'DMor-1');
+         2: SayRadio(Morozov, 'DMor-2');
+         3: SayRadio(Morozov, 'DMor-3');
+         4: SayRadio(Morozov, 'DMor-4');
+         5: SayRadio(Morozov, 'DMor-5');
+         End;
+
+    AddAttack(Rand(0+Difficulty, 1+Difficulty));
+
+End;
+
+
+// Omar komunikaty
+Every 0$01 trigger omar_count > 6 do
+begin
+SayRadio(Omar, 'DO-2');
+
+if omar_count = 9 then
+   SayRadio(Omar, 'DO-3');
+
+if omar_count > 9 then
+   medal_omar := false;
+
+End;
+
+
+// Omar wycofuje sie
+Every 0$01 trigger GetSide(ru_east_dep) <> 7 or IsDead(ru_east_dep) do
+begin
+Wait(0$37);
+
+DialogueOn;
+SayRadio(Omar, 'DO-4');
+Say(Louis, 'DL-O1');
+SayRadio(Omar, 'DO-5');
+DialogueOff;
+
+ChangeMissionObjectives('Ob3');
+
+omar_return := true;
+End;
+
+
+// Heike
+Every 1$30 trigger omar_return do
+begin
+SayRadio(Abdul, 'DS-O1');
+Wait(Rand(5$00, 5$30));
+PrepareEastArForces;
+Wait(0$01);
+SayRadio(Heike, 'DH-1');
+ChangeMissionObjectives('Ob4');
+
+heike_counter := 1;
+End;
+
+
+Every 0$01 trigger heike_counter > 0 and heike_counter < 324 do
+var i;
+begin
+enable;
+heike_counter := heike_counter + 1;
+End;
+
+
+Every 0$01 trigger heike_counter > 322 do
+begin
+SayRadio(Abdul, 'DS-H1');
+SayRadio(Heike, 'DH-2');
+heike_return := true;
+ChangeMissionObjectives('Ob5');
+End;
+
+
+
+// Jaszyn
+Every 0$01 trigger jaszyn_count = 3 do
+begin
+jaszyn_activ := true; // blokuje p³acze Morozowa i odpala licznik przybycia posi³ków
+
+PrepareJaszyn;
+
+SayRadio(morozov, 'DMor-J0');
+SayRadio(jaszyn, 'DJ-1');
+SayRadio(morozov, 'DMor-J1');
+
+While(jaszyn_time > 0) do
+begin
+jaszyn_time := jaszyn_time - 0$01;
+Wait(0$01);
+end;
+End;
+
+
+// lenin
+Every 0$01 trigger lenin_des do
+begin
+DialogueOn;
+
+Say(Louis, 'DL-lenin');
+ChangeMissionObjectives('Ob6');
+SetAreaMapShow(escape_area, 1);
+DialogueOff;
+End;
+
+
+// morozov die
+Every 0$01 trigger IsDead(morozov) do
+begin
+morozov_die := true;
+ChangeMissionObjectives('Ob7');
+End;
+
+
+
+// Wygrana
+Every 0$01 trigger FilterUnitsInArea(escape_area, [f_side, 2]) > 1 and lenin_des do
+begin
+
+if player_count <= [10,8,6][Difficulty] then
+   AddMedal('lose_mat', 1)
+    else
+   AddMedal('lose_mat', -1);
+
+if morozov_die then
+   begin
+   AddMedal('morozov_die', 1);
+   SaveVariable(1, 'morozov_die');
+   end
+    else
+     begin
+     AddMedal('morozov_die', -1);
+     SaveVariable(0, 'morozov_die');
+     end;
+
+if heike_count+omar_count < [9, 7, 6][Difficulty] then
+   AddMedal('aliance', 1)
+    else
+   AddMedal('aliance', -1);
+
+GiveMedals('MAIN');
+
+
+SaveFunction;
+YouWin;
+SetNextMission(1);   // konczymy ;d
+End;
+
+
+
+
+// przegrana
+Every 0$05 trigger jaszyn_time = 0$00 do
+begin
+YouLost('lostj');
+End;
+
+
+
+
+
+
+

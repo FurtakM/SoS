@@ -1,0 +1,331 @@
+// arr - tablica [1, 2, 3]
+// pos - pozycja [przechowywana w formacie tablicy]
+// value - wartosc wstawiana
+Export Function ReplaceIn(arr, pos, value);
+var i, tmp, s_arr;
+begin
+if pos < 1 then
+   exit;
+
+if pos = 1 then
+   result := Replace(arr, pos[1], value)
+    else
+     begin
+     tmp := arr;
+     s_arr := [tmp];
+
+     for i = 1 to pos-1 do
+         begin
+         tmp := tmp[pos[i]];
+         s_arr := s_arr ^ [tmp];
+         end;
+
+     tmp := Replace(tmp, pos[pos], value);
+     s_arr := Replace(s_arr, s_arr, tmp);
+
+     for i = s_arr downto 2 do
+         begin
+         tmp := Replace(s_arr[i-1], pos[i-1], s_arr[i]);
+         s_arr := Replace(s_arr, i-1, tmp);
+         end;
+
+     result := s_arr[1];
+     end;
+
+End;
+
+
+Export Function PrepareSquad(nation, skill, num, x, y);
+var i, team, c;
+begin
+team := [];
+playerSquad := [];
+
+uc_side := nation;
+uc_nation := nation;
+
+// prepare commander
+hc_importance := 100;
+PrepareHuman(false, 1, skill);
+team := Insert(team, 1, CreateHuman);
+//
+
+// rest
+hc_importance := 0;
+
+for i = 1 to num-1 do
+    begin
+    PrepareHuman(false, i div (num / 4) + 1, skill);
+    team := Insert(team, 2, CreateHuman);
+    end;
+
+for i in team do
+    begin
+    PlaceUnitXYR(i, x, y, 8, false);
+
+    c := c + 1;
+    SaveCharacters(i, 'grave'&c);
+
+    playerSquad := Insert(playerSquad, c, [i, 'grave'&c]);
+    end;
+End;
+
+Export Function PrepareResources(num, type_allowed, x, y, r);
+var i, n;
+begin
+for i = 1 to type_allowed do
+    while (num[i] > 0) do
+     begin
+     if num[i] > 5 then
+        n := 5
+         else
+          n := num[i];
+
+     CreateResourcesXYR(type_allowed[i], n, x, y, r, false);
+     num := Replace(num, i, num[i] - n);
+     end;
+End;
+
+Export Function AddPoints(p);
+begin
+points := points + p;
+End;
+
+Export Function LoadColors;
+var file;
+begin
+case GetMonth of
+1..3, 12: file = 'colors.txt';
+4..5:     file = 'colors-spring.txt';
+6..8:     file = 'colors-summer.txt';
+9..11:    file = 'colors-autumn.txt';
+end;
+
+LoadColorsTxt(file);
+End;
+
+
+Export Function TestColor;
+var i;
+begin
+i = 1;
+
+repeat
+begin
+wait(0$01);
+LoadColorsTxt(['colors-spring.txt', 'colors-summer.txt', 'colors-autumn.txt', 'colors.txt'][i mod 4 + 1]);
+display_strings := ['Wiosna', 'Lato', 'Jesien', 'Zima'][i mod 4 + 1];
+
+i := i + 1;
+end
+until false;
+End;
+
+Function FindDir(x1, y1, x2, y2);
+begin
+if x1 = x2 and y1 > y2 then
+   result := 0;
+if x1 < x2 and y1 = y2 then
+   result := 1;
+if x1 < x2 and y1 < y2 then
+   result := 2;
+if x1 = x2 and y1 < y2 then
+   result := 3;
+if x1 > x2 and y1 = y2 then
+   result := 4;
+if x1 > x2 and y1 > y2 then
+   result := 5;
+End;
+
+Export Function SetTeamExp(amount);
+var i, team, pep;
+begin
+team := FilterAllUnits([[f_side, your_side], [f_type, unit_human]]);
+
+for i = 1 to amount do
+    begin
+    pep := rand(1, team);
+    AddExperience(team[pep], rand(1, 4), rand(1000, 10000));
+    team := team diff team[pep];
+    end;
+End;
+
+Export Function PrepareGuards(strenght);
+var i, un, area, base_area, points, p, x, y, c, tmp;
+begin
+
+     area := AreaToList(guardDir, 0);
+     base_area := AreaToList(guardArea, 0);
+     
+     for i = 1 to area[1] do
+         begin
+         points := Replace(points, points+1, area[1][i]);
+         points := Replace(points, points+1, area[2][i]);
+         end;
+
+     uc_side := 4;
+
+     case strenght of
+     1..10: begin
+        uc_nation := 0;
+
+        for i = 1 to 20 do
+            begin
+            PrepareHuman(false, class_apeman_soldier, strenght);
+            result := result ^ CreateHuman;
+            end;
+        end;
+     11..40: begin
+        uc_nation := 1;
+
+        for i = 1 to 20 do
+            begin
+            vc_chassis := us_medium_tracked;
+            vc_engine := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon := us_laser;
+            result := result ^ CreateVehicle;
+            end;
+        end;
+     41..100: begin
+        uc_nation := 1;
+
+        for i = 1 to 20 do
+            begin
+            vc_chassis := us_morphling;
+            vc_engine := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon := us_double_laser;
+            result := result ^ CreateVehicle;
+            end;
+        end;
+     end;
+
+     for i in result do
+         begin
+         x := base_area[1][1];
+         y := base_area[2][1];
+         p := FindNearestPoint(points, x, y);
+
+         SetDir(i, FindDir(x, y, p[1], p[2]));
+
+         PlaceUnitXY(i, x, y, true);
+         ComHold(i);
+
+         for c = 1 to 2 do
+             begin
+             tmp := base_area[c];
+             tmp := Delete(tmp, 1);
+             base_area := Replace(base_area, c, tmp);
+             end;
+         end;
+
+End;
+
+Export Function GetBack();
+var i, c, un, new;
+begin
+if graveyard = 0 then
+   exit;
+
+i := rand(1, graveyard);
+
+un := graveyard[i];
+
+for c in playerSquad do
+    if un = c[1] then
+       begin
+       new := c[2];
+       break;
+       end;
+
+uc_side := your_side;
+uc_nation := playerNation;
+
+un := CreateCharacter(new);
+PlaceUnitXYR(un, base_x, base_y, 10, true);
+
+graveyard := Delete(graveyard, i);
+End;
+
+Export Function ComEspace(un);
+begin
+if not IsInArea(un, zoneOut) then
+   ComMoveToArea(un, zoneOut)
+    else
+     RemoveUnit(un);
+End;
+
+Export Function ComSpecMove(un, area);
+var list, new_list, i, x;
+begin
+list := AreaToList(area, 0);
+
+if not list then
+   exit;
+
+for i = 1 to list do
+    begin
+    new_list := Replace(new_list, new_list + 1, list[1][i]);
+    new_list := Replace(new_list, new_list + 1, list[2][i]);
+    end;
+
+x := FindNearestPoint(new_list, GetX(un), GetY(un));
+
+ComMoveXY(un, x[1], x[2]);
+End;
+
+Export Function ExplodeVehicle(un);
+var i, timer;
+begin
+timer := rand(2, 5);
+
+   while(timer > 0) do
+      begin
+      SetUnitDisplayNumber(un, timer);
+      timer := timer - 1;
+      Wait(0$01);
+      end;
+
+   if timer = 0 then
+      for i = 1 to 3 do
+          MineExplosion(GetX(un), GetY(un), 10);
+
+End;
+
+Export Function DestinationReachable(unit, x, y);
+begin
+if unit in unreachableList then
+  unreachableList := unreachableList diff unit;
+
+   ComAttackUnit(unit, HexInfo(x, y));
+
+   Wait(1);
+
+if unit in unreachableList then
+   result := false
+    else
+     result := true;
+End;
+
+Export Function ComSpecAttack(unit);
+var i, enemy, t, x, y;
+begin
+enemy := FilterAllUnits([f_enemy, GetSide(unit)]);
+
+if not enemy then
+   exit;
+
+if UnitFilter(enemy, [f_occupied]) then
+   begin
+   t := NearestUnitToUnit(UnitFilter(enemy, [f_occupied]), unit);
+
+   x := GetX(t);
+   y := GetY(t);
+
+   if not DestinationReachable(unit, x, y) then
+      ComAttackUnit(unit, NearestUnitToUnit(enemy, unit));
+   end
+    else
+     ComAttackUnit(unit, NearestUnitToUnit(enemy, unit));
+End;

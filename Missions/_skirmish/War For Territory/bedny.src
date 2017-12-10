@@ -1,0 +1,202 @@
+var shipment,respawn,inqueue;
+
+// selection of first kvadrant
+export function init_shipments_and_respawning;
+  begin
+    shipment:=Rand(0,3);
+//    respawn:=Rand(1,8);
+    inqueue:=[0,0,0,0,0,0,0,0];
+  end;
+
+
+// new people
+EVERY 3$0 DO
+begin
+   if Prob(time_new_people) then vytvor_noveho_cloveka;
+   enable;
+end;
+
+// vytvoreni noveho clovicka
+function vytvor_noveho_cloveka;
+VAR pom,pom1;
+VAR cla;
+VAR i;
+VAR sidy;
+VAR poc;
+begin
+  pom=Rand(1,11);
+  case pom of
+   1:cla=class_apeman;
+   2:cla=class_apeman_engineer;
+   3:cla=class_apeman_soldier;
+   4:cla=class_apeman_kamikaze;
+   5:cla=class_soldier;
+   6:cla=class_mechanic;
+   7:cla=class_engineer;
+   8:cla=class_scientistic;
+   9:cla=class_sniper;
+   10:cla=class_mortar;
+   11:cla=class_bazooker;
+  end;
+
+  sidy=[];
+  poc=1;
+  for i in Side_Nations do
+    begin
+      if i>0 then sidy=sidy^poc;
+      poc=poc+1;
+    end;
+
+  pom1=sidy[Rand(1,sidy+0)];
+
+  uc_side=pom1;
+  if pom<=4 then uc_nation=nation_nature
+            else uc_nation=Side_Nations[pom1];
+  pom1=get_human(get_sex,cla,Rand(1,5),'');
+  PlaceUnitXYR(pom1,81,97,4,false);
+end;
+
+
+// vraci cislo creatnuteho humana
+function get_human(sex,clas,level,name);
+var pom;
+begin
+  PrepareHuman(sex,clas,level);
+  hc_name:=name;
+  pom=CreateHuman;
+  result:=pom;
+end;
+
+// vraci sex daneho vojaka - sance na zenskou 1/5
+function get_sex;
+begin
+  if Prob(20) then result=sex_female
+              else result=sex_male;
+end;
+
+
+{
+every 0$1+0$0.5 do
+  var n,dep,aktresp;
+  begin
+    if respawning_time_max=0 then
+      exit;
+
+    if respawn=8 then respawn:=1
+    else respawn:=respawn+1;
+
+    if Side_Positions[respawn] and not inqueue[respawn] then
+      begin
+        n:=FilterAllUnits([[f_type,unit_human],[f_side,respawn]]);
+        if n<number_of_people then
+          begin
+            dep:=FilterAllUnits([[f_type,unit_building],[f_or,[f_btype,b_depot],[f_btype,b_warehouse]],[f_ok],[f_side,respawn]]);
+            if dep then
+              begin
+                aktresp:=respawn;
+                inqueue:=Replace(inqueue,aktresp,true);
+                enable;
+                wait(rand(respawning_time_min,respawning_time_max));
+                inqueue:=Replace(inqueue,aktresp,false);
+                hc_name:='';
+                hc_importance:=0;
+                PrepareHuman(0,0,initial_level div 2);
+                uc_nation:=Side_Nations[aktresp];
+                uc_side:=aktresp;
+                dep:=Rand(1,dep);
+                PlaceUnitXYR(CreateHuman,GetX(dep),GetY(dep),7,true);
+              end
+            else
+              enable;
+          end
+        else
+          enable;
+      end
+    else
+      enable;
+  end;
+}
+every 0$5+0$1.1 do
+  var d;
+  begin
+    case tick of
+          1.. 1$0:d:=150;
+      1$0+1.. 5$0:d:=100;
+      5$0+1..10$0:d:=90;
+     10$0+1..20$0:d:=70;
+     20$0+1..30$0:d:=60;
+     30$0+1..50$0:d:=35;
+     50$0+1..300$0:d:=20;
+      else d:=0;
+    end;
+
+    if rand(1,10000)<=d*shipments_density then
+      begin
+        wait(Rand(1,0$4));
+        shipment:=(shipment+1) mod 4;
+        CreateCratesArea(Rand(3,5),q1+shipment,true);
+      end;
+    enable;
+  end;
+
+
+
+{starting
+  begin
+    shipment:=0;
+    if multiplayer then
+      begin
+        pnum:=multi_players;
+        npeople:=mp_people;
+        if npeople<3 then
+          npeople:=3;
+        nats:=mp_nations;
+        teams:=mp_teams;
+      end
+    else
+      begin
+        pnum:=4;
+        npeople:=10;
+        nats:=BuildQuery('Select your nation',['Americans','Arabians','Russians'])^[1,2,3];
+        teams:=[0,1,1,1];
+      end;
+
+    npeople:=npeople-2;
+    nsci:=npeople div 3;
+    nmech:=npeople div 4;
+    neng:=npeople-nsci-nmech;
+
+    prepare_neutrals;
+    if pnum>=1 then
+      prepare_side_1(nats[1],3);
+
+    if not multiplayer then
+      begin
+        nsci:=nsci*2;
+        nmech:=nmech*2;
+        neng:=neng*2;
+      end;
+
+    if pnum>=2 then
+      prepare_side_2(nats[2],3);
+    if pnum>=3 then
+      prepare_side_3(nats[3],3);
+    if pnum>=4 then
+      prepare_side_4(nats[4],3);
+
+    for i:=1 to pnum do
+      for j:=1 to pnum do
+        if i<>j then
+          if (teams[i]>0)and(teams[i]=teams[j]) then
+            SetAttitude(i,j,att_friend,true);
+
+    CenterOnUnits(FilterAllUnits([f_side,your_side]));
+
+  end;}
+
+
+on UnitDestroyed(j) do
+ begin
+  if not (getBType(j) in [b_depot,b_warehouse]) then exit;
+  KillBattleFlag(FindBattleFlag(GetX(j),GetY(j)));
+ end;

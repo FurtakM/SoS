@@ -1,0 +1,310 @@
+Export Sikorski, Game_Started, SForce, Sikorski_Ar, Donald, Van, attacked, contact_am;
+Export patrol;
+Export gamma_towers;
+Export Function PrepareAmerican;
+var i, un, b, skill, weapons, sol, lw;
+begin
+skill := [5, 6, 7][dif];
+weapons := [us_gatling_gun, us_gatling_gun, us_gatling_gun, {us_radar} us_double_gun, us_double_gun, us_double_gun, us_heavy_gun];
+
+SForce := [];
+Sikorski_Ar := false;
+attacked := false;
+contact_am := false;
+patrol := [];
+gamma_towers := [];
+
+SetBName(am_dep, 'gamma');
+
+uc_side := 1;
+uc_nation := 1;
+
+hc_importance := 0;
+hc_name := 'Jeremy Sikorski';
+hc_gallery := 'us';
+hc_face_number := 19;
+hc_skills := [Rand(skill, skill+2), 4, 6, 3];
+hc_sex := sex_male;
+hc_class := 1;
+hc_attr := [10, 11];
+sikorski := CreateHuman;
+
+
+hc_name := 'Lucy Donaldson';
+hc_gallery := 'us';
+hc_face_number := 2;
+hc_skills := [Rand(skill, skill+2), 6, 4, 2];
+hc_sex := sex_female;
+hc_class := 1;
+donald := CreateHuman;
+
+hc_name := 'Peter Van Houten';
+hc_gallery := 'us';
+hc_face_number := 16;
+hc_sex := sex_male;
+van := CreateHuman;
+hc_importance := 0;
+
+
+Case dif of
+1: lw = 1;
+2: lw = Rand(1,2);
+3: lw = 2;
+end;
+
+Case lw of
+1: PlaceHumanInUnit(donald, am_dep);
+2: PlaceHumanInUnit(van, am_dep);
+end;
+
+
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) do
+    begin
+    PlaceHumanInUnit(CreateHumanWithClass(1, skill), i);
+    PlaceWeaponTurret(i, weapons[Rand(1, weapons)]);
+    end;
+
+sol := FilterAllUnits([[f_side, 1], [f_or, [f_class, class_soldier], [class_sniper]]]);
+
+for i = 1 to sol do
+    SetTag(sol[i], 1);
+
+for i = 1 to 3 do
+    PlaceHumanInUnit(CreateHumanWithClass(3, skill), am_ct);
+
+for i = 1 to 6 do
+    PlaceHumanInUnit(CreateHumanWithClass(3, skill), am_fac);
+
+for i = 1 to 5 do
+    PlaceUnitArea(CreateHumanWithClass(2, skill), am_base, false);
+
+for i = 1 to 3 do
+    PlaceHumanInUnit(CreateHumanWithClass(4, skill), am_lab);
+
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]) do
+    begin
+    PlaceHumanInUnit(CreateHumanWithClass(class_sniper, skill), i);
+    PlaceHumanInUnit(CreateHumanWithClass(class_sniper, skill), i);
+    PlaceHumanInUnit(CreateHumanWithClass(1, skill), i);
+    PlaceHumanInUnit(CreateHumanWithClass(1, skill), i);
+    PlaceHumanInUnit(CreateHumanWithClass(1, skill), i);
+    end;
+
+if dif > 1 then
+for i = 1 to (dif-1) do
+begin
+    patrol := patrol ^ CreateHumanWithClass(1, skill);
+    PlaceUnitArea(patrol[i], am_west_spawn, false);
+end;
+
+game_started := true;
+
+
+ComConstruct(am_fac, us_medium_tracked, engine_solar, control_remote, us_crane);
+
+while(contact_am = false) do
+begin
+ Wait(0$01);
+end;
+
+Wait([4$00, 3$00, 2$30][dif]);
+
+Case dif of
+1: begin
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_machine_gun, us_gatling_gun, us_double_gun, us_double_gun][Rand(1,4)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_light_gun, us_double_gun][Rand(1,3)]);
+   end;
+
+2: begin
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_light_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][Rand(1,3)]);
+   end;
+
+3: begin
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_medium_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_double_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][Rand(1,3)]);
+   AddComConstruct(am_fac, us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][Rand(1,3)]);
+   end;
+
+end;
+
+
+End;
+
+
+
+// SAIL EVENT
+{
+1 - Naprawa budynkow
+2 - Powrot do zajec (1)
+3 - Leczenie rannych
+4 - Obsadzanie ludzmi budynkow
+5 - Odbudowa zniszczonych wiezyczek
+}
+Every 0$01 do
+var i, filter;
+begin
+enable;
+
+if FilterAllUnits([[f_side, 1], [f_class, 4]]) > 0 then
+   RaiseSailEvent(3);
+
+if FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_not, [f_lives, 1000]]]) > 0 then
+   RaiseSailEvent(1)
+    else
+     RaiseSailEvent(2);
+
+if FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]) > 0 then
+   RaiseSailEvent(4);
+
+if gamma_towers > 0 then
+   RaiseSailEvent(5);
+
+End;
+
+
+Export new_veh;
+Every 9$00 do
+var chassis, weapon;
+begin
+enable;
+
+if new_veh > 0 then
+while(new_veh > 0) do
+   begin
+   Wait(0$01);
+
+   if BuildingStatus(am_fac) = bs_idle then
+      begin
+      chassis := [us_medium_wheeled, us_medium_tracked, us_medium_tracked, us_heavy_tracked][Rand(1, 4)];
+
+      if chassis in [us_medium_wheeled, us_medium_tracked] then
+         weapon := [us_gatling_gun, us_double_gun, us_rocket_launcher][Rand(1,3)]
+          else
+           weapon := [us_double_gun, us_rocket_launcher, us_heavy_gun][Rand(1,3)];
+
+      ComConstruct(am_fac, chassis, engine_combustion, control_remote, weapon);
+      new_veh := new_veh - 1;
+      end;
+   end;
+
+End;
+
+
+Every 0$01 do
+var v, filter, am_cmeh;
+begin
+enable;
+
+am_cmeh := UnitsInside(am_ct);
+filter = FilterAllUnits([[[f_side, 1], [f_control, control_remote], [f_ok]]]);
+
+if filter > 0 then
+begin
+
+for v in filter do
+begin
+If not IsControledBy(v) and IsOk(v) then
+ComLinkTo(v, am_cmeh[Rand(1,3)]);
+end;
+
+end;
+
+End;
+
+
+Every 0$03 trigger FilterAllUnits([[f_control, control_remote], [f_not, [f_weapon, us_crane]]]) = [4,5,7][dif] and BuildingStatus(am_fac) = bs_idle do
+var i, un, enemy;
+begin
+enable;
+
+if Sikorski_Ar then
+   SForce := FilterAllUnits([[f_or, [f_side, 4], [[f_side, 1],[f_control, control_remote], [f_not, [f_weapon, us_crane]]]]])
+    else
+     SForce := FilterAllUnits([[f_control, control_remote], [f_not, [f_weapon, us_crane]]]);
+
+Repeat
+ begin
+ for un in SForce do
+     begin
+     enemy := FilterAllUnits([f_side, 3]);
+     ComAttackUnit(un, NearestUnitToUnit(enemy, un));
+     Wait(0$01);
+     end;
+ end
+Until SForce = 0;
+
+End;
+
+
+
+Export Function NewForce(num);
+var i, filter, veh;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+vc_chassis := us_heavy_tracked;
+vc_control := control_manual;
+vc_engine  := engine_combustion;
+vc_weapon  := [us_gatling_gun, us_double_gun, us_rocket_launcher][dif];
+veh := CreateVehicle;
+PlaceUnitArea(veh, am_main_spawn, false);
+PlaceHumanInUnit(sikorski, veh);
+SetMark(veh, 1);
+
+while(num > 0) do
+begin
+CreateVehicleWithDriver([us_medium_tracked, us_medium_tracked, us_medium_tracked, us_heavy_tracked][Rand(dif, 4)], engine_combustion, [us_gatling_gun, us_double_gun, us_double_gun, us_rocket_launcher][Rand(1, dif+1)], am_sik, 2, [5, 6, 7][dif]);
+filter := FilterAllUnits([f_side, 4]);
+ComMoveXY(filter[filter], 36, 18);
+Wait(0$02);
+num := num - 1;
+end;
+
+End;
+
+
+Every 0$03 trigger patrol > 0 do
+var i;
+begin
+enable;
+
+for i = 1 to patrol do
+    begin
+    if patrol[i] and IsLive(patrol[i]) and not HasTask(patrol[i]) then
+       case i of
+       1: begin
+          ComMoveXY(patrol[i], 53, 91);
+          AddComWait(patrol[i], 0$07);
+          AddComMoveXY(patrol[i], 24, 26);
+          end;
+       2: begin
+          ComMoveXY(patrol[i], 83, 57);
+          AddComWait(patrol[i], 0$07);
+          AddComMoveXY(patrol[i], 47, 53);
+          end;
+       end;
+
+     if GetLives(patrol[i]) < 1000 then
+        patrol := patrol diff patrol[i];
+     end;
+
+End;
+
+
+Every 0$10 do
+begin
+Wait([20$00, 18$00, 16$00][dif]);
+if not contact_am then
+   contact_am := true;
+end;

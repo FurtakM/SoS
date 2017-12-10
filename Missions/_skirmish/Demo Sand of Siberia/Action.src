@@ -1,0 +1,324 @@
+Export function Action;
+begin
+InGameOn;
+
+Say(Louis, 'DLc-1');
+Say(Louis, 'DLc-2');
+Wait(0$0.7);
+Say(Louis, 'Dlc-3');
+Wait(0$0.3);
+Say(Louis, 'Dlc-4');
+Wait(0$0.3);
+ComHold(Louis);
+Say(Louis, 'Dlc-5');
+Wait(0$01);
+SayRadio(Abdul, 'Dlo-1');
+Say(Louis, 'Dlc-6');
+Wait(0$01);
+SayRadio(Abdul, 'Dlo-2');
+Say(Louis, 'Dlc-7');
+
+InGameOff;
+
+SaveForQuickRestart;
+ChangeMissionObjectives('FindArabian');
+Wait(0$05);
+
+Louis_Prepare = true;
+
+Wait(0$02.3);
+
+ComAttackLouis;
+end;
+
+Every 0$0.2 trigger IsInArea(Louis, RadioA) do
+begin
+InGameOn;
+ComMoveToArea(Louis, RadioA);
+AddComHold(Louis);
+AddComWait(Louis, 0$0.1);
+
+Say(Louis, 'Rad1');
+Say(Louis, 'Rad2');
+SayRadio(Abdul, 'Rad3');
+Say(Louis, 'Rad4');
+SayRadio(Abdul, 'Rad5');
+Say(Louis, 'Rad6');
+InGameOff;
+
+ComStop(Louis);
+Wait(0.01);
+ChangeMissionObjectives('GoToEast');
+
+Wait(0$03.2);
+
+If GetSide(kl) <> 8 then
+begin
+SetSide(kl, 8);
+end;
+
+DialogueOn;
+SayRadio(kl, 'RadAm');
+DWait(0$0.3);
+DialogueOff;
+
+
+Wait(0$0.2);
+ChangeMissionObjectives('GoToNorth');
+
+ComMoveXY([block1, block2], 91, 117);
+
+Wait(0$20);
+MarkSpawn;
+
+Wait(0$0.8);
+
+DialogueOn;
+SayRadio(mmark, 'helpm1');
+SayRadio(mmark, 'helpm2');
+
+Case Query('MarkHelp') of
+1:begin  // Help him
+  Say(Louis, 'helpl1');
+  SayRadio(mmark, 'helpm3');
+  Say(Louis, 'helpl2');
+  DialogueOff;
+  ChangeMissionObjectives('HelpM');
+  end;
+
+2:begin  // non help
+  DialogueOff;
+  Wait(0$02);
+  SayRadio(mmark, 'markend');
+  SetLives(mmark, 1);
+  end;
+
+end;
+end;
+
+Every 0$01 trigger GetDistUnits(Louis, mmark) < 7 do
+begin
+SetSide(mmark, 2);
+Wait(0$0.5);
+Say(mmark, 'Thx1');
+Say(Louis, 'Thx2');
+ChangeMissionObjectives('nonhelp');
+end;
+
+
+Every 0$01 trigger IsInArea(Louis, SwampArea) do
+begin
+Say(Louis, 'Dlc-Swamp');
+end;
+
+
+Every 0$01 trigger See(1, Louis) do
+begin
+InGameOn;
+
+ComHold(Louis);
+PlaceSeeing(79, 124, 2, 20);
+
+CenterOnXY(79, 124);
+
+Wait(0$01);
+
+Say(Louis, 'DLam1');
+
+CenterNowOnUnits(Louis);
+
+RemoveSeeing(79, 124, 2);
+
+InGameOff;
+end;
+
+
+
+// Kontakt
+On Contact(side1, side2) do
+begin
+
+     If side1 = GetSide(Louis) then
+      // Rosjanie atakuja Louisa
+       If side2 = ru2 and First_Warn = True then
+          begin
+           Say(Louis, 'Ru-Warn');
+            First_Warn = False;
+          end;
+end;
+
+
+
+// Louis spotyka Arabów
+Every 0$01 trigger IsInArea(Louis, ArSpot) do
+begin
+
+      InGameOn;
+
+      SetSide(ArTeam, 2);
+      SetSide(Abdul, 2);
+
+      ComMoveXY(Louis, GetX(Louis) + 2, GetY(Abdul) - 2);
+      ComTurnUnit(ArTeam, Louis);
+      ComTurnUnit(Abdul, Louis);
+      AddComTurnUnit(Louis, Abdul);
+
+      Wait(0$0.3);
+
+      Say(Louis, 'Dm1');
+      Say(Abdul, 'Dm2');
+      Say(Louis, 'Dm3');
+      Say(Abdul, 'Dm4');
+      Say(Abdul, 'Dm5');
+      Say(Louis, 'Dm6');
+      Say(Abdul, 'Dm7');
+      Say(Louis, 'Dm8');
+
+      ComMoveXY(Karla, GetX(louis)+2, GetY(louis)+3);
+      
+      InGameOff;
+
+      ChangeMissionObjectives('DestroyRussianBases');
+    
+
+      SaveForQuickRestart;
+
+      list = FilterAllUnits([[f_side, 2],[f_class, 1]]) diff [Louis];
+      SetTech(tech_explos, 2, state_researched);
+      TimeUp = True;
+
+end;
+
+
+
+Every 0$01 trigger TimeUp = True do
+begin
+enable;
+
+ display_strings := ['#Ar01-1', counter,
+                     '#Ar01-2', russian_kills];
+
+ wait(0$01);
+ counter := counter + 0$01;
+end;
+
+
+
+{=========EVENT===============}
+On UnitDestroyed(un) do
+var i, driver, uni, rulist;
+begin
+
+// Arabowie
+    If un = Louis then
+       begin
+       YouLost('Dead');
+       end;
+
+    If un = Abdul then
+       begin
+       YouLost('SDead');
+       end;
+
+    If GetSide(un) = ru2 then
+       begin
+       russian_kills = russian_kills + 1;
+       mines = mines - 1;
+
+       rulist := FilterAllUnits([[f_side, 6], [f_type, unit_human]]);
+
+       If un in rulist then
+       // Say(Karla, 'Collect');
+       end;
+
+
+
+// Amerykanie
+    If un = am_veh and GetSide(un) = am then
+       begin
+       uni = UnitFilter(am_mech, [f_class, 3]);
+       driver = IsDrivenBy(uni);
+
+       ComEnterUnit(driver, am_factory);
+       AddComConstruct(am_factory, us_medium_wheeled, engine_combustion ,control_manual ,us_gatling_gun);
+       end;
+
+    If un = am_mech then
+       begin
+       ComExitBuilding(am_sci);
+       AddComEnterUnit(am_sci, am_factory);
+       AddComChangeProfession(am_sci, 3);
+
+       am_sci := [];
+
+       If am_sci = [] then
+       exit;
+       end;
+
+end;
+
+
+On VehicleCaptured(new_ident, old_ident, old_side, un) do
+begin
+veh_list = veh_list + 1;
+
+If vehisnotcapt = true then
+begin
+DialogueOn;
+
+If GetClass(un) = 3 then
+begin
+Say(un, 'Capt-VehMech');
+end;
+
+If GetClass(un) <> 3 then
+begin
+Say(un, 'Capt-Veh');
+Say(Abdul, 'Capt-Veh2');
+DWait(0$0.2);
+Say(un, 'Capt-Veh3');
+end;
+
+DialogueOff;
+vehisnotcapt = false;
+end;
+
+end;
+
+
+// Miny
+Every 0$01 trigger mines = 0 do
+begin
+ 
+       SetTech(42, 2, 0); // Zablokowanie min
+
+       DialogueOn;
+
+       DWait(0$0.2);
+
+       Say(Karla, 'MinEndKarla');
+       Say(Joachim, 'MisEndJoachim');
+
+       DWait(0$0.3);
+       Say(Dwein, 'MisEndDwein');
+
+       DialogueOff;
+end;
+
+
+// Zmiana celów misji po zabiciu Rosjan
+Every 0$01 trigger russian_kills > statistic do
+begin
+DialogueOn;
+Say(Abdul, 'EndMis1');
+Say(Louis, 'EndMis2');
+Say(Karla,'EndMis3');
+Say(Louis, 'EndMis4');
+DialogueOff;
+
+ChangeMissionObjectives('GoToHome');
+
+SetAreaMapShow(Finish, 1);
+end;
+
+

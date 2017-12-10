@@ -1,0 +1,467 @@
+On BuildingComplete(build) do
+var i;
+begin
+
+     If GetSide(build) = player_side then
+     begin
+
+          If GetBType(build) = b_depot then
+          begin
+          CreateCratesArea(5, PlayerResp, true);
+          Wait(0$06);
+          CreateCratesArea(Rand(2,4), PlayerResp, true);
+          Wait(0$10);
+          CreateCratesArea(5, PlayerResp, true);
+          end;
+
+     End;
+
+
+     If GetSide(build) = comp_side then
+     begin
+
+           If GetBType(build) = b_turret then
+           begin
+
+                If not Researched(comp_side, tech_rocket) = true then
+                AddComPlaceWeapon(build, us_heavy_gun)
+                else
+                AddComPlaceWeapon(build, us_rocket_launcher);
+
+           end;
+
+           If GetBType(build) = b_depot then
+           begin
+           comp_dep = GetBase(build);
+
+           CanBuildBase = true;
+           CanBuildLab = true;
+           CanBuildFactory = true;
+
+           SetResourceType(GetBase(build), mat_cans, 900000);
+           SetResourceType(GetBase(build), mat_oil, 100000);
+           SetResourceType(GetBase(build), mat_siberit, 1000);
+           AddComUpgrade(build);
+           end;
+
+           If GetBType(build) = b_armoury then
+           begin
+           comp_arm = build;
+
+           ArmouryComplete = true;
+           end;
+
+           If GetBType(build) = b_lab then
+           begin
+
+                If Researched(comp_side, tech_oilpow) = false then
+                begin
+                comp_lab = build;
+
+                labs = labs + 1;
+                LabComplete = true;
+                end;
+
+                If Researched(comp_side, tech_oilpow) = true then
+                begin
+                comp_lab2 = build;
+
+                labs = labs + 1;
+                LabComplete2 = true;
+                end;
+
+           End;
+
+           If GetBType(build) = b_bunker then
+           begin
+           comp_towers = comp_towers ^ build;
+           end;
+
+           If GetBType(build) = b_workshop then
+           begin
+           Comp_Factory = build;
+           ComUpgrade(build);
+           end;
+
+           If GetBType(build) = b_control_tower then
+           begin
+           Comp_CT = build;
+           TowerComplete = true;
+           end;
+
+           If GetBType(build) = b_ext_gun then
+           begin
+
+                for i = 1 to comp_towers do
+                begin
+                AddComPlaceWeapon(comp_Towers[i], us_double_gun);
+                end;
+
+           end;
+
+
+           If GetBType(build) = b_ext_rocket then
+           begin
+           CanBuildRocket = true;
+           end;
+
+     End;
+
+
+END;
+
+
+On UpgradeComplete(build) do
+var ext, i;
+begin
+
+    If build = comp_arm then
+    begin
+            
+    for i = comp_towers+1 to comp_sold do
+    begin
+    SetClass(comp_sold[i], class_sniper);
+    ComEnterUnit(comp_sold[i], comp_arm);
+    end;
+
+    End;
+
+
+    If build = comp_factory then
+    begin
+    comp_factory = build;
+    FacComplete = true;
+
+    ext = GetExtPositions(build);
+
+    for i = 1 to comp_engs do
+    begin
+
+         If GetNation(comp_sold[1]) = 1 or GetNation(comp_dep) = 3 then
+         begin
+         AddComBuild(comp_engs[i], b_ext_noncombat, ext[1][1], ext[1][2], 4);
+         end;
+
+         If GetNation(comp_sold[1]) = 2 then
+         begin
+         AddComBuild(comp_engs[i], b_ext_stitch, ext[1][1], ext[1][2], 4);
+         end;
+
+    AddComBuild(comp_engs[i], b_ext_gun, ext[2][1], ext[2][2], 5);
+    AddComBuild(comp_engs[i], b_ext_track, ext[3][1], ext[3][2], 3);
+
+    If not GetNation(comp_factory) = 3 then
+    AddComBuild(comp_engs[i], b_ext_radar, ext[4][1], ext[4][2], 1);
+    end;
+    end;
+
+    // Lab
+    If build = comp_lab then
+    begin
+    LabFull1 = true;
+    end;
+
+    If build = comp_lab2 then
+    begin
+    LabFull2 = true;
+    end;
+
+end;
+
+
+// VEHICLE'S
+On VehicleConstructed(veh, fac) do
+begin
+
+     If GetSide(fac) = comp_side then
+     begin
+
+        If GetNation(veh) = nation_american then
+         begin
+
+          If veh in FilterAllUnits([f_weapon, us_cargo_bay]) then
+          begin
+          comp_cargo = veh;
+          comp_mechs = FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_inside]]]);
+          end;
+
+          If not veh in FilterAllUnits([f_weapon, us_cargo_bay]) then
+          begin
+          CLimiter = CLimiter + 1;
+          comp_attgr = comp_attgr ^ veh;
+          ComMoveXY(veh, 60, 96);
+          end;
+
+         end;
+
+       If GetNation(veh) = nation_arabian then
+         begin
+
+          If veh in FilterAllUnits([f_weapon, ar_cargo_bay]) then
+          begin
+          comp_cargo = veh;
+          comp_mechs = FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_inside]]]);
+          end;
+
+         end;
+
+      If GetNation(veh) = nation_russian then
+         begin
+
+          If veh in FilterAllUnits([f_weapon, ru_cargo_bay]) then
+          begin
+          comp_cargo = veh;
+          comp_mechs = FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_inside]]]);
+          end;
+
+         end;
+
+    End;
+
+
+END;
+
+
+// REMOTE CONTROL
+On UnitGoesToRed(un) do
+begin
+
+     If un in FilterAllUnits([[f_side, comp_side], [f_control, control_remote]]) then
+     begin
+     ComUnlink(un);
+     end;
+
+end;
+
+On UnitDestroyed(un) do
+var  r_side, r_nation, r_class;
+begin
+
+    // respawn
+    If un in FilterAllUnits([[[f_side, player_side], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, class_sniper], [f_class, class_mortar], [f_class, class_bazooker]]]]) then
+    begin
+
+         If p_resp <= r_limit then
+         begin
+         p_resp = p_resp + 1;
+
+         r_side = GetSide(un);
+         r_nation = GetNation(un);
+         r_class = GetClass(un);
+
+         Wait(Rand(2$30, 15$00));
+
+         uc_side = r_side;
+         uc_nation = r_nation;
+
+         hc_sex = Rand(sex_male, sex_female);
+         hc_gallery = '';
+         hc_skills = [comp_skill1+Rand(-3,1), comp_skill2+Rand(-3,1), comp_skill3+Rand(-3,1), comp_skill4+Rand(-3,1)];
+         hc_attr = [Rand(8,12), Rand(9,11)];
+         hc_name = '';
+         hc_class = r_class;
+
+         un = CreateHuman;
+         PlaceUnitArea(un, ApeResp, true);
+         end;
+
+    End;
+
+
+    // respawn
+    If un in FilterAllUnits([[f_side, comp_side], [f_type, unit_human]]) then
+    begin
+
+         If c_resp <= r_limit then
+         begin
+         c_resp = c_resp + 1;
+
+         r_side = GetSide(un);
+         r_nation = GetNation(un);
+         r_class = GetClass(un);
+
+         Wait(Rand(2$30, 15$00));
+
+         uc_side = r_side;
+         uc_nation = r_nation;
+
+         hc_sex = Rand(sex_male, sex_female);
+         hc_gallery = '';
+         hc_skills = [comp_skill1+Rand(-3,1), comp_skill2+Rand(-3,1), comp_skill3+Rand(-3,1), comp_skill4+Rand(-3,1)];
+         hc_attr = [Rand(8,12), Rand(9,11)];
+         hc_name = '';
+         hc_class = r_class;
+
+         un = CreateHuman;
+         PlaceUnitArea(un, CompResp, true);
+
+                           If r_class = 1 then
+                           begin
+                           ComEnterUnit(un, comp_arm);
+                           comp_sold = comp_sold ^ un;
+                           end;
+
+                           If r_class = 2 then
+                           begin
+                           comp_engs = comp_engs ^ un;
+                           end;
+
+                           If r_class = 3 then
+                           begin
+                           ComEnterUnit(un, comp_factory);
+                           comp_mechs = comp_mechs ^ un;
+                           end;
+
+                           If r_class = 4 then
+                           begin
+                           SetClass(un, 1);
+                           ComEnterUnit(un, comp_arm);
+                           comp_sold = comp_sold ^ un;
+                           end;
+
+         end;
+
+    End;
+
+
+
+// rest
+    If un = comp_cargo or un in FilterAllUnits([[[f_side, comp_side], [f_class, 3], [f_driving]]])  then
+    begin
+    comp_cargo = [];
+
+               If Researched(comp_side, tech_advchassis) = true then
+               begin
+               AddComConstruct(comp_factory, us_morphling, engine_combustion, control_remote, us_cargo_bay);
+               end else
+               begin
+               AddComConstruct(comp_factory, us_medium_tracked, engine_combustion, control_remote, us_cargo_bay);
+               end;
+
+    end;
+
+    If un in comp_attgr then
+    begin
+    CLimiter = CLimiter - 1;
+    comp_attgr = FilterAllUnits([[f_side, comp_side], [f_control, control_remote]]);
+    dlimiter = dlimiter + 1;
+    end;
+
+    If GetSide(un) = comp_side then
+    begin
+
+         If un in FilterAllUnits([f_type, unit_human]) then
+            begin
+            Score = Score + 100;
+            end;
+
+         If un in FilterAllUnits([f_type, unit_building]) then
+            begin
+            Score = Score + 50;
+            end;
+
+         If un in FilterAllUnits([f_type, unit_vehicle]) then
+            begin
+            Score = Score + 10;
+            end;
+
+    End;
+
+
+    If GetNation(un) = nation_nature then
+    begin
+
+         Wait(Rand(0$30, 4$00));
+         PrepareApeman(1);
+
+    end;
+
+
+End;
+
+
+// TECHNOLOGY
+On ResearchComplete(tech, lab) do
+var i, ext;
+begin
+
+     If lab = comp_lab or lab = comp_lab2 then
+     begin
+
+          If tech = tech_oilpow then
+          begin
+          CanBuildPlants = true;
+          end;
+
+          If tech = tech_gun then
+          begin
+          TechGun = true;
+          end;
+
+          If tech = tech_radar then
+          begin
+          TechRadar = true;
+          end;
+
+          If tech = tech_remcont then
+          begin
+          TechRemoteControl = true;
+          end;
+
+          If tech = tech_ai then
+          begin
+          TechAI = true;
+          end;
+
+          If tech = tech_rocket then
+          begin
+          ext = GetExtPositions(comp_factory);
+
+           for i = 1 to comp_engs do
+           begin
+           AddComBuild(comp_engs[i], b_ext_rocket, ext[5][1], ext[5][2], 5); // 2
+           end;
+
+          end;
+
+          If tech = tech_lassight then
+          begin
+
+               for i = 1 to comp_sci do
+               begin
+               ComExitBuilding(comp_sci[i]);
+               Wait(0$01);
+               AddComEnterUnit(comp_sci[i], comp_lab2);
+               end;
+
+          end;
+
+          
+
+      End;
+
+
+END;
+
+
+On EnterBuilding(b, un) do
+begin
+
+     If GetSide(b) = comp_side then
+     begin
+
+          If b = comp_arm and Researched(comp_side, tech_lassight) = true then
+          begin
+          SetClass(un, class_sniper);
+          end;
+
+          If b = comp_factory then
+          begin
+          SetClass(un, class_mechanic);
+          end;
+
+    end;
+
+End;
+
+          

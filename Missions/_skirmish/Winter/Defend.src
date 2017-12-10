@@ -1,0 +1,126 @@
+Export EnemyDetected;
+Every 0$01 trigger Comp_Units > 0 do
+var i, un;
+begin
+enable;
+
+
+        // check where is enemy
+        If EnemyDetected = false then
+        begin
+
+             If FilterAllUnits([[f_enemy, comp_side],[f_inarea, compdeff]]) > 0 then
+             EnemyDetected = true
+             else
+             EnemyDetected = false;
+
+        end;
+
+        
+
+End;
+
+// Defend Base Function !!!
+Every 0$01 trigger EnemyDetected = true do
+var i, un, b, d, repair_list, task_list, build_list;
+begin
+enable;
+
+       
+       repair_list = UnitFilter(comp_engs, [f_ok]);
+       task_list = [];
+       build_list = [];
+
+              i = 1;
+
+               Repeat
+
+                     Case i of
+                     1: Build_List = FilterAllUnits([[[f_side, comp_side], [f_type, unit_building], [f_not,[f_ok]]]]);
+                     2: Build_List = FilterAllUnits([[[f_side, comp_side], [f_type, unit_building], [f_not,[f_lives,1000]]]]);
+                     end;
+
+               i = i + 1;
+
+              Until Build_List > 0 or i > 2;
+
+
+
+              If Build_List = 1 then
+              begin
+
+                 For i in repair_list do
+                 begin  // save tasks
+                 Task_List := Task_List ^ GetTaskList(repair_list[i]);;
+                 end;
+
+              end;
+
+
+              If Build_List > 0 then
+              begin
+              ComRepairBuilding(repair_list, build_list[1]);
+              end;
+
+
+              If Build_List <= 0 and Task_List > 0 then
+              begin
+
+                   for i in repair_list do
+                   begin
+                   SetTaskList(repair_list[i], task_list[i]);
+                   end;
+
+              end;
+
+              For un in repair_list do
+              begin
+              If not IsInArea(un, CompBase) then
+              ComMoveXY(un, 62, 94);
+              end;
+
+End;
+
+Every 0$01 do
+var heal_list, doctor, un, i, d, lab;
+begin
+enable;
+
+
+              heal_list = UnitFilter(comp_engs, [f_not, [f_lives, 800]]);
+              doctor = [];
+
+              d = 0;
+
+              If heal_list > 0 then
+              begin
+
+              For un in heal_list do
+              begin
+
+              
+              ComMoveXY(un, 64, 103);
+
+                            // find doctor
+                            If IsOk(comp_sci[d+1]) then
+                            doctor := comp_sci[d+1] else
+                            repeat
+                            d = d + 1;
+                            until IsOk(comp_sci[d+1]) or d > 6;
+
+                            If d <= 6 then  // if computer find any doctor
+                            doctor := comp_sci[d+1];
+
+              // leave lab, find target, heal, return to lab
+              If doctor then
+              Lab := IsInUnit(doctor);
+
+              ComExitBuilding(doctor);
+              AddComHeal(doctor, un);
+              AddComEnterUnit(doctor, lab);
+              end;
+              End;
+
+                            
+
+End;

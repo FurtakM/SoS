@@ -1,0 +1,239 @@
+Export Function PrepareArabian;
+begin
+RobertFarmer;
+PrepareHovercrafts;
+
+ar_attacks := true;
+End;
+
+
+Export Farmer;
+Export Function RobertFarmer;
+begin
+uc_side := 2;
+uc_nation := 2;
+
+Farmer := NewCharacter('Farmer');
+SayRadio(Farmer, 'DPM_F1');
+End;
+
+{ Typy
+1 - Zolnierze i modzierze (poludnie)
+2 - Zolnierze i czolgi
+3 - Czolgi
+}
+
+Export Function PrepareAttack(type);
+var i, un, veh, skill;
+begin
+uc_side := 2;
+uc_nation := 2;
+skill := [4, 5, 6][Difficulty];
+
+Randomize;
+
+case type of
+1: begin
+   for i = 1 to [4, 5, 6][Difficulty] do
+       begin
+       PrepareHuman(false, [class_soldier, class_soldier, class_mortar][Rand(1,3)], skill);
+       un := CreateHuman;
+       PlaceUnitArea(un, ar3, false);
+
+       ComMoveToArea(un, spot3);
+
+       Wait(0$01);
+       end;
+   end;
+
+2: begin
+   for i = 1 to [4, 5, 5][Difficulty] do
+       begin
+       PrepareHuman(false, class_soldier, skill);
+       un := CreateHuman;
+       PlaceUnitArea(un, ar2, false);
+
+       ComMoveToArea(un, spot2);
+
+       Wait(0$01);
+       end;
+
+   for i = 1 to [2, 3, 4][Difficulty] do
+       begin
+       vc_chassis := ar_medium_trike;
+       vc_engine := engine_combustion;
+       vc_control := control_manual;
+       vc_weapon := [ar_double_machine_gun, ar_light_gun][Rand(1,2)];
+       veh := CreateVehicle;
+       PlaceUnitArea(veh, ar2, false);
+
+       PrepareHuman(false, 1, skill);
+       PlaceHumanInUnit(CreateHuman, veh);
+
+       ComMoveXY(veh, 89, 40);
+
+       Wait(0$02);
+       end;
+   end;
+
+3: begin
+   for i = 1 to [4, 5, 6][Difficulty]+(tick div 15$00) do
+       begin
+       PrepareHuman(false, [class_soldier, class_mortar][Rand(1,2)], skill);
+       un := CreateHuman;
+       PlaceUnitArea(un, ar2, false);
+       ar_force := Insert(ar_force, 1, un);
+
+       ComMoveXY(un, 17, 9);
+       Wait(0$01);
+       end;
+
+   for i = 1 to [5, 6, 7][Difficulty] do
+       begin
+       vc_chassis := ar_half_tracked;
+       vc_engine := engine_combustion;
+       vc_control := control_manual;
+       vc_weapon := [ar_gatling_gun, ar_gun, ar_rocket_launcher, ar_flame_thrower][Rand(1,4)];
+       veh := CreateVehicle;
+       PlaceUnitArea(veh, ar1, false);
+
+       PrepareHuman(false, 3, skill);
+       PlaceHumanInUnit(CreateHuman, veh);
+
+       ar_force := Insert(ar_force, 1, veh);
+
+       ComMoveXY(veh, 125, 31);
+
+       Wait(0$02);
+       end;
+   end;
+
+end;
+
+End;
+
+
+Export Function PrepareHovercrafts;
+var i, un, areas, skill;
+begin
+areas := [river1, river2];
+skill := [5, 6, 7][Difficulty];
+
+uc_side := 2;
+uc_nation := 2;
+
+hc_name := '';
+hc_gallery := '';
+
+for i = 1 to [1, 2, 2][Difficulty] do
+    begin
+    vc_chassis := ar_hovercraft;
+    vc_engine := engine_solar;
+    vc_control := control_manual;
+    vc_weapon := ar_double_machine_gun;
+    vc_fuel_battery := 100;
+    un := CreateVehicle;
+    PlaceUnitArea(un, areas[i], false);
+
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, un);
+    riv := Insert(riv, 1, [un, i]);
+    end;
+End;
+
+
+// EVENT
+Every 0$01 trigger riv do
+var i, c;
+begin
+enable;
+
+for i = riv downto 1 do
+    begin
+    if not riv[i][1] then
+       begin
+       riv := Delete(riv, 1);
+       break;
+       end;
+
+    if not HasTask(riv[i][1]) then
+       begin
+       if riv[i][2] = 1 then
+          c := 2
+           else
+            c := 1;
+
+       riv := Replace2(riv, i, 2, c);
+       end;
+
+    if not IsInArea(riv[i][1], [river1, river2][riv[i][2]]) then
+       begin
+       if GetFuel(riv[i][1]) < 50 then
+          SetFuel(riv[i][1], 67);
+
+       ComMoveToArea(riv[i][1], [river1, river2][riv[i][2]]);
+       AddComWait(riv[i][1], 0$10);
+       end;
+    end;
+
+End;
+
+
+Every 10$00 trigger convoy_start do
+var i, un;
+begin
+enable;
+
+for i = 1 to 2 do
+    begin
+    uc_side := 2;
+    uc_nation := 2;
+
+    PrepareHuman(false, 1, 4);
+    un := CreateHuman;
+    PlaceUnitXY(un, 10, 2, false);
+
+    ComMoveXY(un, 24, 36);
+    AddComMoveToArea(un, conv_end);
+    Wait(0$02);
+    end;
+
+End;
+
+// Attackers
+Every 0$01 trigger FilterAllUnits([f_side, 2]) do
+var i, rest;
+begin
+enable;
+
+rest := FilterAllUnits([f_side, 2]) diff ar_force;
+
+if rest then
+for i in rest do
+    if GetClass(i) = 3 then
+       begin
+       if not IsInArea(i, ar2) then
+          ComMoveToArea(i, ar2)
+           else
+            RemoveUnit(i);
+       end;
+
+if ar_force then
+for i in ar_force do
+    begin
+    if GetClass(i) = class_soldier then
+       if FindTarget(i) in FilterAllUnits([f_type, unit_building]) then
+          ComPlaceDelayedCharge(i, GetX(FindTarget(i)), GetY(FindTarget(i)), 0)
+           else
+            ComAttackUnit(i, FindTarget(i));
+
+    if not GetClass(i) = 1 then
+       ComAttackUnit(i, FindTarget(i));
+
+    if GetDistUnitXY(i, 65, 118) < 40 then
+       ComMoveXY(i, 65, 118);
+    end;
+End;
+
+Every 0$01 trigger FilterUnitsInArea(conv_end, [f_side, 2]) do
+medal2 := false;

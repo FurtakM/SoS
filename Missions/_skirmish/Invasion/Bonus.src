@@ -1,0 +1,221 @@
+Export Function InitBonus;
+var i, chance;
+begin
+     chance := rand(1, 99);
+
+     case chance of
+      1..10: i := 5;
+     11..25: i := 3;
+     26..40: i := 2;
+     41..60: i := 4;
+     61..99: i := 1;
+     end;
+
+     case i of
+     1: begin // 3 apemans, 100 crates, exp
+        if FilterAllUnits([[f_side, your_side], [f_or, [f_class, class_apeman], [f_class, class_apeman_engineer], [f_class, class_apeman_soldier], [f_class, class_apeman_kamikaze]]]) >= 10 then
+           BonusIV
+            else
+             BonusI;
+        end;
+     2: begin // 500 crates, exp, behemoth
+        BonusII;
+        end;
+     3: begin // allies, sib rocket, 1000 crates
+        BonusIII;
+        end;
+     4: begin // 100 crates, exp, 1 random tank
+        BonusIV;
+        end;                    
+     5: begin // respawn from graveyard, 3 tanks, 500 crates
+        if graveyard then
+           BonusV
+            else
+             BonusIII;
+        end;
+     end;
+End;
+
+Export Function BonusI;
+var i;
+begin
+
+     Case Query('AddGift1') of
+     1: begin// 3 apemans
+        for i = 1 to 3 do
+            begin
+            uc_side := your_side;
+            uc_nation := 0;
+
+            PrepareHuman(false, class_apeman, 1);
+            PlaceUnitXYR(CreateHuman, base_x, base_y, 15, true);
+            end;
+        end;
+     2: begin // 100 crates         
+        SetResourceType(GetBase(base), mat_cans, GetResourceType(GetBase(base), mat_cans) + 100);
+        end;
+     3: begin // 2 pep exp
+        SetTeamExp(2);
+        end;
+     end;
+
+End;
+
+Export Function BonusII;  // 500 crates, exp, behemoth
+var i;
+begin
+
+     Case Query('AddGift2') of
+     1: begin// 500 crates
+        SetResourceType(GetBase(base), mat_cans, GetResourceType(GetBase(base), mat_cans) + 500);
+        end;
+     2: begin // 3 pep exp
+        SetTeamExp(3);
+        end;
+     3: begin // behemoth
+        uc_side = your_side;
+        uc_nation = nation_russian;
+        vc_chassis = 25;
+        PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+        end;
+     end;
+
+End;
+
+Export Function BonusIII;  //  1000 crates, allies, sib rocket,
+var i;
+begin
+
+     Case Query('AddGift3') of
+     1: begin// 1000 crates         
+        SetResourceType(GetBase(base), mat_cans, GetResourceType(GetBase(base), mat_cans) + 1000);
+        end;
+     2: begin // allies
+        PrepareGuards(waveNumber);
+        end;
+     3: begin // sib rocket
+        uc_side = your_side;
+        uc_nation = nation_american;
+        vc_chassis = us_morphling;
+        vc_engine := engine_siberite;
+        vc_control := control_computer;
+        vc_weapon := us_siberium_rocket;
+        PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+        end;
+     end;
+
+End;
+
+
+Export Function BonusIV;
+var i;
+begin
+
+     Case Query('AddGift4') of
+     1: begin// random tank
+        i := rand(1, 3);
+
+        uc_side := your_side;
+
+           case i of
+           1: begin
+              uc_nation := nation_arabian;
+
+              vc_chassis := ar_half_tracked;
+              vc_engine := engine_combustion;
+              vc_control := control_manual;
+              vc_weapon := [ar_gun, ar_rocket_launcher][rand(1,2)];
+
+              PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+              end;
+
+           2: begin
+              uc_nation := nation_american;
+
+              vc_chassis := us_morphling;
+              vc_engine := engine_siberite;
+              vc_control := control_computer;
+              vc_weapon := [us_cargo_bay, us_radar, us_rocket_launcher][rand(1,3)];
+              PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+              end;
+
+           3: begin
+              uc_nation := nation_russian;
+
+              vc_chassis := ru_medium_tracked;
+              vc_engine := engine_combustion;
+              vc_control := control_manual;
+              vc_weapon := [ru_rocket_launcher, ru_gun][rand(1,2)];
+              PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+              end;
+           end;
+        end;
+     2: begin // 100 crates          
+        SetResourceType(GetBase(base), mat_cans, GetResourceType(GetBase(base), mat_cans) + 100);
+        end;
+     3: begin // 2 pep exp
+        SetTeamExp(2);
+        end;
+     end;
+
+End;
+
+Export Function BonusV; // respawn from graveyard, 3 tanks, 500 crates
+var i, j;
+begin
+
+     Case Query('AddGift5') of
+     1: begin// random tank
+
+        for j = 1 to 3 do
+            begin
+            i := rand(1, 3);
+
+            uc_side := your_side;
+
+            case i of
+            1: begin
+               uc_nation := nation_arabian;
+
+               vc_chassis := ar_half_tracked;
+               vc_engine := engine_combustion;
+               vc_control := control_manual;
+               vc_weapon := [ar_gun, ar_rocket_launcher][rand(1,2)];
+
+               PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+               end;
+
+            2: begin
+               uc_nation := nation_american;
+
+               vc_chassis := us_morphling;
+               vc_engine := engine_siberite;
+               vc_control := control_computer;
+               vc_weapon := [us_cargo_bay, us_radar, us_rocket_launcher][rand(1,3)];
+               PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+               end;
+
+            3: begin
+               uc_nation := nation_russian;
+
+               vc_chassis := ru_medium_tracked;
+               vc_engine := engine_combustion;
+               vc_control := control_manual;
+               vc_weapon := [ru_rocket_launcher, ru_gun][rand(1,2)];
+               PlaceUnitXYR(CreateVehicle, base_x, base_y, 15, true);
+               end;
+            end;
+
+            end;
+        end;
+     2: begin // 500 crates
+        SetResourceType(GetBase(base), mat_cans, GetResourceType(GetBase(base), mat_cans) + 500);
+        end;
+     3: begin // graveyard
+        GetBack();
+        end;
+     end;
+
+End;
+
+

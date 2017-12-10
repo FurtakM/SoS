@@ -1,0 +1,189 @@
+Export player_force, player_commander, start_area, finish_area, hurt, mines_trigger;
+Export Function InitPlayer;
+var i, un, s, sk, veh, vehs, mech, mech_group;
+begin
+uc_nation := nation_russian;
+uc_side := your_side;
+
+
+       player_force := [];
+       mech_group := [];
+       vehs := [];
+       hurt := false;
+       mines_trigger := false;
+
+       sk := [7, 6, 5][Difficulty];
+
+       hc_gallery := '';
+       hc_name := '';
+       hc_importance := 100;
+       PrepareHuman(sex_male, 1, sk+1);
+       player_commander := CreateHuman;
+       player_force := player_force ^ player_commander;
+
+       hc_importance := 0;
+              
+
+       case difficulty of
+       1: s = [4, 3, 2];
+       2: s = [3, 2, 2];
+       3: s = [3, 1, 1];
+       end;
+
+       ChangeSideFog(3, 6);
+
+       // sold
+       for i = 1 to s[1] do
+           begin
+           PrepareHuman(false, 1, sk);
+           un := CreateHuman;
+           player_force := player_force ^ un;
+           end;
+
+       // tanks
+       for i = 1 to s[2] do
+           begin
+           if Prob(30) then
+              veh := CreateTank(3, 3, ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_heavy_machine_gun, ru_gun][Rand(1,3)])
+               else
+                veh := CreateTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_heavy_machine_gun, ru_gun, ru_heavy_machine_gun, ru_gun][Rand(1,5)]);
+           PrepareHuman(false, 3, sk);
+           mech := CreateHuman;
+           vehs := vehs ^ veh;
+           player_force := player_force ^ veh;
+           mech_group := mech_group ^ mech;
+           end;
+
+       // sci
+       for i = 1 to s[3] do
+           begin
+           PrepareHuman(false, 4, sk);
+           un := CreateHuman;
+           player_force := player_force ^ un;
+           end;
+
+       case road of
+       1: begin
+          start_area := pos2;
+          finish_area := pos3;
+          end;
+       2: begin
+          start_area := pos1;
+          finish_area := pos2;
+          end;
+       end;
+       
+
+       // place
+       for i = 1 to player_force do
+           PlaceUnitArea(player_force[i], start_area, false);
+
+       for i = 1 to s[2] do
+           PlaceHumanInUnit(mech_group[i], vehs[i]);
+
+End;
+
+
+Export Function Action;
+begin
+CenterNowOnUnits(player_commander);
+
+InGameOn;
+Say(player_commander, 'DS1');
+Say(player_commander, 'DS2');
+Say(player_commander, 'DS3');
+InGameOff;
+
+ChangeMissionObjectives('ObConv');
+
+if road = 1 then
+   SetAreaMapShow(pos3, 1)
+    else if road = 2 then
+     SetAreaMapShow(pos2, 1);
+End;
+
+
+
+// Konwoj dotra³
+Every 0$01 trigger FilterUnitsInArea(finish_area, [f_weapon, ru_cargo_bay]) > 0 or (FilterAllUnits([f_side, 2]) = 0 and not debug) do
+var i;
+begin
+Say(player_commander, 'DS-6');
+Wait(0$01);
+
+AddMedal('med', 1);
+
+if FilterAllUnits([f_side, 2]) = 0 then
+   AddMedal('convoy_clear', 1)
+    else
+     AddMedal('convoy_clear', -1);
+
+if FilterAllUnits([f_side, 6]) >= 2 then
+   AddMedal('convoy_cargos', 1)
+    else
+     AddMedal('convoy_cargos', -1);
+
+GiveMedals('MAIN');
+YouWin;
+End;
+
+
+// Ranny
+On UnitGoesToRed(un) do
+begin
+
+if GetSide(un) = 3 and GetType(un) = unit_human and FilterAllUnits([[f_side, 3], [f_sex, sex_male]]) > 1 and not hurt then
+   begin
+   hurt := true;
+   Say((FilterAllUnits([[f_side, 3], [f_sex, sex_male]]) diff player_commander)[1], 'DM4');
+   end;
+
+if un in FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]) then
+   begin
+   Wait(Rand(0$08, 0$14));
+   MineExplosion(GetX(un), GetY(un), 10);
+   MineExplosion(GetX(un), GetY(un), 10);
+   MineExplosion(GetX(un), GetY(un), 10);
+   MineExplosion(GetX(un), GetY(un), 5);
+   end;
+
+
+End;
+
+
+// Poduszkowce
+Every 0$01 trigger See(3, FilterAllUnits([f_chassis, ar_hovercraft])[1]) do
+begin
+Say((FilterAllUnits([[f_side, 3], [f_sex, sex_male]]) diff player_commander)[1], 'DM2');
+end;
+
+// Spot
+Every 0$03 trigger See(3, NearestUnitToUnit(FilterAllUnits([[f_side, 2], [f_class, 1]]), player_commander)) do
+begin
+Say((FilterAllUnits([[f_side, 3], [f_sex, sex_male]]) diff player_commander)[1], 'DM3');
+End;
+
+// Miny
+Every 0$01 trigger mines_trigger do
+begin
+DialogueOn;
+Say((FilterAllUnits([[f_side, 3], [f_sex, sex_male]]) diff player_commander)[1], 'DM1');
+Say(player_commander, 'DS4');
+DialogueOff;
+End;
+
+// Cie¿arowka
+Every 0$01 trigger FilterAllUnits([f_weapon, ru_cargo_bay]) = 1 do
+begin
+Say(player_commander, 'DS5');
+End;
+
+Every 0$01 trigger FilterAllUnits([f_weapon, ru_cargo_bay]) = 0 do
+begin
+YouLost('qconvl');
+End;
+
+Every 0$01 trigger IsDead(player_commander) do
+begin
+YouLost('qcom');
+End;

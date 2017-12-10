@@ -1,0 +1,81 @@
+Export Function InitMap;
+begin
+
+  // Mg³a Wojny
+     ResetFog;
+
+  // Dodaj Zwierzêta
+     PrepareAnimals(2, 3, 3, nature_area);
+
+End;
+
+
+// Skrzynki
+Export Function SpawnCrates;
+var i;
+begin
+
+     While(crates_allow) do
+       begin
+       Wait(crates_time+Rand(-0$10, 0$20)); // czas do zrzutu
+
+       for i = 1 to crates_num do
+           begin
+           CreateCratesArea(Rand(1,5), crates_main_area, true);
+            Wait(Rand(0$03, 0$12));
+           CreateCratesArea(Rand(1,5), crates_main_area, true);
+            Wait(Rand(0$04, 0$15));
+           CreateCratesAnyWhere(Rand(1,5), true);
+            Wait(Rand(0$05, 0$10));
+           end;
+
+       //if timer <= [25$00, 23$00, 22$00][global_diff] then
+          //CreateCratesArea(Rand(3,5), us_crates, true);
+
+       end;
+
+End;
+
+
+Every 1$25 trigger game_started do
+begin
+enable;
+
+       if timer <= [23$00, 21$00, 19$00][global_diff] then
+          CreateCratesArea(Rand(2,5), us_crates, true);
+
+End;
+
+// Uruchamiamy powy¿sza funkcjê tutaj gdy¿ bêdzie sie ona wykonywaæ praktycznie bezkoñca i
+// w razie gdyby umiescic za funkcj¹ "SpawnCrates" jakas inna funkcje BETA to funkcja BETA nie wykona sie nigdy.
+Every 0$01 trigger game_started do
+SpawnCrates;  // odpalamy funkcje gdy gra wystartuje
+
+
+
+
+
+// Licznik
+export timer;
+Every 1 do
+timer := 0$00;
+
+Every 0$01 trigger game_started do
+begin
+enable;
+
+     timer := timer + 0$01;
+     Display_Strings := ['#tick', timer];
+
+End;
+
+
+// Muzyka
+Every 0$01 trigger timer <= 13$00 do
+music_nat := 1;
+
+Every 5$00 trigger timer > 13$00 do
+begin
+enable;
+music_nat := [1,3][Rand(1,2)];
+End;

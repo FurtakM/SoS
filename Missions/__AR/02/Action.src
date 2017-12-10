@@ -1,0 +1,483 @@
+Export function MissionStart;
+begin
+InGameOn;
+
+CenterNowOnXY(130, 74);
+
+ComMoveXY(FilterAllUnits([f_side, 2]), 139, 76);
+ComMoveXY(Karla, 140, 77);
+ComMoveXY(Dwein, 141, 79);
+ComMoveXY(Abdul, 142, 76);
+
+AddComTurnUnit(FilterAllUnits([f_side, 2]), Louis);
+ComMoveXY(Louis, 141, 84);
+AddComTurnUnit(Louis, Abdul);
+
+Wait(0$04);
+
+Say(Louis, 'Dl-1');
+Say(Abdul, 'Da-1');
+
+
+If IsOk(Mmark) then
+begin
+     Say(Mmark, 'Dm-1');
+     Say(Louis, 'Dl-2a');
+     Say(Mmark, 'Dm-2');
+  end else
+begin
+     Say(Dwein, 'Dd-1');
+     Say(Louis, 'Dl-2b');
+end;
+
+If IsOk(Karla) then
+begin
+Say(Karla, 'Dk-1');
+end else
+begin
+Say(Louis, 'Dk-1');
+end;
+
+Say(Abdul, 'Da-2');
+InGameOff;
+
+SaveForQuickRestart;
+ChangeMissionObjectives('FindBase');
+ComFree(FilterAllUnits([f_side, 2]));
+end;
+
+Every 0$01 trigger GetDistUnits(Louis, Farmer) < 5 do
+var Team, Arabs2, Arabs5, FarmerGroup, the_team,
+    un, eng;
+begin
+
+ 
+  InGameOn;
+  ISeeBase;
+  ComFree(FilterAllUnits([f_side, 2]));
+  ComTurnUnit(Louis, Farmer);
+  ComTurnUnit(Farmer, Louis);
+  Say(Farmer, 'DF-1');
+  Say(Louis, 'Dl-1F');
+  Say(Farmer, 'DF-2');
+  Say(Louis, 'Dl-2F');
+  Say(Farmer, 'DF-3');
+  Say(Louis, 'Dl-3F');
+  Say(Farmer, 'DF-4');
+  Say(Farmer, 'DF-5');
+  Wait(0$0.2);
+  Say(Farmer, 'DF-6');
+  Say(Louis, 'Dl-4F');
+  Say(Farmer, 'DF-7');
+  Say(Louis, 'Dl-5F');
+  Say(Farmer, 'DF-8');
+  Wait(0$0.5);
+  SayRadio(Gensher, 'DG-1');
+  Say(Farmer, 'DF-1G');
+  Say(Farmer, 'DF-2G');
+  SayRadio(Gensher, 'DG-2');
+  Say(Farmer, 'DF-3G');
+  Say(Louis, 'Dl-2G');
+  Say(Farmer, 'DF-4G');
+  InGameOff;
+
+PrepareMartin;
+
+Arabs5 := FilterAllUnits([f_side, 5]);
+
+SetSide(Arabs5, 2);
+SetSide(Farmer, 5);
+SetSide(Abdul, 5);
+
+
+Arabs2 := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff [Louis, Martin];
+
+Team := CharacterSelection('text', [5,5,6][Difficulty], [7,7,8][Difficulty],[sel_change_class, Louis, Martin, sel_changeable, sel_not_hired]^Arabs2^[sel_not_changeable, Farmer, Abdul],[[1,2],[2,1]]);
+SetSide(Team, 2);
+SetSide(FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff Team, 5);
+SetSide(Louis, 2);
+SetSide(Martin, 2);
+
+FarmerGroup := FilterAllUnits([f_side, 5]);
+Say(Farmer, 'Goodbye');
+ComMoveXY(FarmerGroup, 53, 104);
+enable(01);
+
+Wait(0$03);
+
+InGameOn;
+SayRadio(Gensher, 'DG-1m');
+Say(Louis, 'DL-1l');
+SayRadio(Gensher, 'DG-2m');
+Say(Louis, 'DL-2l');
+SayRadio(Gensher, 'DG-3m');
+InGameOff;
+
+Wait(0$0.3);
+
+ChangeMissionObjectives('DefendBase');
+
+Wait(0$02);
+
+eng := FilterAllUnits([[f_side, 2], [f_class, 2]]);
+
+Say(Louis, 'Dl-build1');
+
+un := eng[Rand(1, eng)];
+Say(un, 'Du-build1');
+un := eng[Rand(1, eng)];
+Say(un, 'Du-build2');
+
+Wait(0$0.3);
+
+ChangeMissionObjectives('BuildLab');
+
+SetRestrict(6, 2, state_enabled);
+SetTech(48, 2, state_enabled);
+
+
+FarmerGone = true;
+RussianTimeStart = true;
+Hint('Hill');
+Hint('Oil');
+end;
+
+// Save hero
+Every 0$01 trigger GetSide(ar_dep1) = 2 marked 01 do
+begin
+
+
+If GetSide(Karla) = 5 and IsOK(Karla) then
+begin
+SaveCharacters(Karla, 'Karla_02_FarmerTeam'); // for next mission
+end;
+
+If GetSide(Dwein) = 5 and IsOK(Dwein) then
+begin
+SaveCharacters(Dwein, 'Dwein_02_FarmerTeam'); // ~~~~
+end;
+
+If GetSide(Gunther) = 5 and IsOK(Gunther) then
+begin
+SaveCharacters(Gunther, 'Gunther_02_FarmerTeam');
+end;
+
+If GetSide(Olaf) = 5 and IsOK(Olaf) then
+begin
+SaveCharacters(Olaf, 'Olaf_02_FarmerTeam'); // ~~~~
+end;
+
+If GetSide(Joachim) = 5 and IsOK(Joachim) then
+begin
+SaveCharacters(Joachim, 'Joachim_02_FarmerTeam');
+end;
+
+If GetSide(Mmark) = 5 and IsOK(Mmark) then
+begin
+SaveCharacters(Mmark, 'Mark_02_FarmerTeam');
+end;
+
+end;
+
+
+// tiger event
+Every 0$03 trigger FilterUnitsInArea(tigerevent, [[f_class, 2], [f_ok]]) do
+begin
+Say(FilterUnitsInArea(tigerevent, [[f_class, 2], [f_ok]])[1], 'D-TE');
+Say(Louis, 'D-TE2');
+end;
+
+
+
+
+Every 0$01 marked 01 do
+var list, un;
+begin
+enable;
+
+list = FilterAllUnits([f_side, 5]);
+un = list[Rand(1, list)];
+
+If IsInArea(un, River) then
+RemoveUnit(un);
+
+If FilterAllUnits([f_side, 5]) = 0 then
+disable(01);
+end;
+
+
+Every 0$10 trigger FilterAllUnits([f_side, 3]) > 0 do
+begin
+SayRadio(Gensher, 'AttackCome');
+RussianIsHere = true;
+end;
+
+Every 0$03 trigger RussianIsHere = true and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+var hum;
+begin
+hum = FilterAllUnits([[f_side, 2], [f_class, 1]]) diff Louis;
+
+If IsLive(Louis) then
+DialogueOn;
+DWait(0$0.2);
+Say(Louis, 'RuAttack1');
+Say(hum[Rand(1, 2)], 'RuAttack2');
+Say(hum[Rand(3, 4)], 'RuAttack3');
+Say(Louis, 'RuAttack4');
+DialogueOff;
+end;
+
+Every 0$35 trigger Counter > 9$00 and FilterAllUnits([f_side, 3]) = 0 do
+begin
+PrepareAmericanInMyBase;
+end;
+
+Export Spy;
+Every 1$10 trigger Counter > 16$0 and FilterAllUnits([f_side, 3]) = 0 do
+var ar_units;
+begin
+
+ar_units = FilterAllUnits([[[f_side, 2], [f_type, unit_human], [f_ok]]]) diff [Louis, Martin, Mmark, Karla, Joachim, Olaf, Dwein, Gunther];
+spy := ar_units[Rand(1, ar_units)];
+
+
+InGameOn;
+DialogueOn;
+Say(Spy, 'DM-MG1');
+
+Case Query('SpyQ') of
+1:begin
+Say(Louis, 'DL-MG2');
+Say(Spy, 'DM-MG2');
+DialogueOff;
+InGameOff;
+SetSide(Spy, 5);
+ComExitBuilding(Spy);
+ComExitVehicle(Spy);
+
+If GetClass(Spy) > 1 then
+begin
+ComMoveXY(Spy, 80, 71);
+AddComWait(Spy, 0$02);
+SetClass(Spy, 1);
+end;
+
+AddComMoveXY(Spy, 45, 86);
+AddComHold(Spy);
+AddComWait(Spy, 0$25);
+AddComMoveToArea(Spy, SB);
+Wait(0$10);
+SpyIsHere = true;
+end;
+
+2:begin
+Say(Louis, 'DL-MG3');
+DialogueOff;
+InGameOff;
+end;
+end;
+end;
+
+Every 0$01 trigger IsInArea(Spy, SB) and SpyIsHere = true do
+begin
+SetSide(Spy, 2);
+end;
+
+
+// Attack
+Every 0$0.2 do
+var list, enemy;
+begin
+list = FilterAllUnits([[f_side, 3],[f_see, 2]]);
+
+If list = 0 then
+begin
+enable;
+exit;
+end;
+
+DialogueOn;
+enemy = list[1];
+CenterNowOnUnits(enemy);
+DWait(0$0.2);
+Say(Louis, 'enemy');
+DialogueOff;
+end;
+
+Every 0$10 trigger FilterAllUnits([f_side, 3]) = 0 and RuDead > 0 do
+begin
+PrepareRussianComand;
+
+InGameOn;
+DialogueOn;
+CenterOnUnits(Louis);
+Say(Martin, 'RuD-1');
+SayRadio(Sejenevich, 'RuD-2');
+SayRadio(Lotysz, 'RuD-3');
+SayRadio(Sejenevich, 'RuD-4');
+SayRadio(Lotysz, 'RuD-5');
+DWait(0$0.3);
+Say(Louis, 'RuD-6');
+DialogueOff;
+InGameOff;
+end;
+
+Every 0$1 trigger Counter = MissEnd do
+begin
+
+     RemoveUnit(FilterAllUnits([f_side, 3]));
+
+    { Repeat
+      begin
+      Wait(0$01);
+      end
+     Until FilterAllUnits([f_side, 3]) = 0; }
+
+     Wait(0$0.3);
+
+
+InGameOn;
+CenterNowOnUnits(Louis);
+DialogueOn;
+
+
+// RemoveUnit(FilterAllUnits([f_side, 3]));
+
+SayRadio(Gensher, 'FarmerCom');
+
+
+music_nat = 4; // ar music
+
+
+If MedalAtVeh = false or FilterAllUnits([[f_side, 2], [f_weapon, ar_multimissile_ballista]]) = 0 then
+begin
+AddMedal('vehicle', -1);
+end;
+
+If FilterAllUnits([[f_side, 2], [f_weapon, ar_multimissile_ballista]]) > 0 then
+begin
+SaveVariable(balista, 'vehready');
+end;
+
+If CountOfDead >= [4,3,2][Difficulty] then
+begin
+AddMedal('pep_live', -1);
+end else
+begin
+AddMedal('pep_live', 1);
+end;
+
+If IsOk(Martin) then
+begin
+AddMedal('martin_live', 1);
+// Save Variables for Martin
+end else
+begin
+AddMedal('martin_live', -1);
+end;
+
+GiveMedals('MAIN');
+
+SetSide(Cathy, 5);
+
+RewardPeople(FilterAllUnits([f_side, 2]));
+
+SaveCharacters(Louis, 'Louis');
+
+If IsLive(Cathy) then
+begin
+SaveCharacters(Cathy, 'Cathy');
+end;
+
+If GetSide(Karla) = 2 and IsOK(Karla) then
+begin
+SaveCharacters(Karla, 'Karla_02');
+end;
+
+If GetSide(Dwein) = 2 and IsOK(Dwein) then
+begin
+SaveCharacters(Dwein, 'Dwein_02');
+end;
+
+If GetSide(Gunther) = 2 and IsOK(Gunther) then
+begin
+SaveCharacters(Gunther, 'Gunther_02');
+end;
+
+If GetSide(Olaf) = 2 and IsOK(Olaf) then
+begin
+SaveCharacters(Olaf, 'Olaf_02');
+end;
+
+If GetSide(Joachim) = 2 and IsOK(Joachim) then
+begin
+SaveCharacters(Joachim, 'Joachim_02');
+end;
+
+If GetSide(Mmark) = 2 and IsOK(Mmark) then
+begin
+SaveCharacters(Mmark, 'Mmark_02');
+end;
+
+If GetSide(Andreas) = 2 and IsOk(Andreas) then
+begin
+SaveCharacters(Andreas, 'Andreas_02');
+end;
+
+SaveCharacters(Martin, 'Martin_02');
+
+YouWin;
+SetNextMission(1);
+End;
+
+
+
+
+// 18-05-15 ADDED
+Export Andreas;
+Every 0$33 trigger FilterAllUnits([f_side, 3]) = 0 and tick > 35*60*21 do // 21 minut
+begin
+// Andreas L. Kristiansen
+uc_side := 5;
+uc_nation := 2;
+
+hc_gallery := 'sandar';
+hc_face_number := 36;
+hc_name := 'Andreas L. Kristiansen';
+hc_sex := sex_male;
+hc_basic_skills := [1, 1, 1, 0];  // ralf concept
+hc_skills := [1, 2, 0, 1]; // ?
+hc_class := 2;
+hc_attr := [10, 10];
+hc_importance := 0;
+
+Andreas := CreateHuman;
+PlaceUnitXY(Andreas, 118, 2, true);
+
+Wait(0$04);
+
+DialogueOn;
+SayRadio(Andreas, 'DA-1A');
+Say(Karla, 'DK-A');
+Say(Louis, 'DL-A');
+DialogueOff;
+End;
+
+
+Every 0$01 trigger See(2, Andreas) do
+begin
+Say(Andreas, 'DA-2A');
+SetSide(Andreas, 2);
+End;
+
+
+
+Every 0$02 trigger IsInUnit(Andreas) do
+begin
+Say(Andreas, 'DA-B');
+Say(Karla, 'DK-A2');
+Say(Andreas, 'DA-B1');
+Say(Louis, 'DL-B1');
+End;
+
+

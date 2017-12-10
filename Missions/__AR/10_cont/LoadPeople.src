@@ -1,0 +1,165 @@
+// Dostêpni ludzie: Zapisane jako: 09 = (09c)
+// MAIN:       + Doktor Jan Kunt
+// Rolf (09)
+// Jenna (09)
+// Rick (09)
+// Mike (09)
+// Nicolas (09)
+// Gali (09)
+// Martin (07)
+// Karla (07)
+// Dwein (07)
+// Joachim (07)
+// Olaf (07)
+// Mmark (07)
+// Herczeg (07)
+// Kantor (07)
+// Ronn (07)
+// Gunther (07)
+// OTHER:
+// ot1_07
+// a_09c
+
+// Wybierz 9 ludzi (Louis + Doctor + 9)=11
+
+Export Louis, Rolf, Jenna, Nicolas, Rick, Mike, Gali,
+       Martin, Karla, Dwein, Joachim, Olaf, Mmark,
+       Herczeg, Mia, Kantor, Ronn, Gunther;
+
+Export Function LoadPeople;
+var p, i, un, names, names2, filter, main_filter, others, team, ftp, list, veh;
+begin
+
+ uc_side := 2;
+ uc_nation := nation_arabian;
+
+ names := ['Louis', 'Jenna_09c', 'Gali_09c', 'Nicolas_09c', 'Rick_09c', 'Mike_09c',
+           'Rolf_09c', 'Martin_07', 'Karla_07', 'Dwein_07', 'Joachim_07', 'Olaf_07',
+           'Mmark_07', 'Herczeg_07', 'Kantor_07', 'Mia_07', 'Ronn_07', 'Gunther_07'];
+ names2 := ['a_09c', 'b_09c', 'c_09c', 'd_09c', 'e_09c', 'f_09c', 'g_09c', 'h_09c', 'i_09c', 'j_09c', 'k_09c', 'l_09c', 'm_09c', 'n_09c', 'o_09c', 'p_09c'];
+
+ 
+ filter := 0;
+ ftp    := [];
+ others := [];
+
+ Louis   := CreateCharacter('Louis');
+ Jenna   := CreateCharacter('Jenna_09c');
+ Gali    := CreateCharacter('Gali_09c');
+ Rick    := CreateCharacter('Rick_09c');
+ Rolf    := CreateCharacter('Rolf_09c');
+ Nicolas := CreateCharacter('Nicolas_09c');
+ Mike    := CreateCharacter('Mike_09c');
+ Martin  := CreateCharacter('Martin_07');
+ Karla   := CreateCharacter('Karla_07');
+ Dwein   := CreateCharacter('Dwein_07');
+ Joachim := CreateCharacter('Joachim_07');
+ Olaf    := CreateCharacter('Olaf_07');
+ Mmark   := CreateCharacter('Mmark_07');
+ Herczeg := CreateCharacter('Herczeg_07');
+ Mia     := CreateCharacter('Mia_07');
+ Kantor  := CreateCharacter('Kantor_07');
+ Gunther := CreateCharacter('Gunther_07');
+ Ronn    := CreateCharacter('Ronn_07');
+
+ main_filter := [Rolf, Jenna, Nicolas, Rick, Mike, Gali,
+                 Martin, Karla, Dwein, Joachim, Olaf, Mmark,
+                 Herczeg, Mia, Kantor, Ronn, Gunther];
+
+
+ for i = 1 to main_filter do
+     if IsLive(main_filter[i]) then
+        begin
+        filter := filter + 1;
+
+        //if GetClass(filter[i]) > 4 then
+           //SetClass(filter[i], 1);
+        end;
+
+  // load others
+     p := 1;
+     if filter < 16 then
+        for i = filter to 16 do
+            begin
+            if p > 7 then
+               break;
+
+            un := CreateCharacter('ot' & p & '_07');
+            others := others ^ un;
+            p := p + 1;
+
+           // if GetClass(un) > 4 then
+              // SetClass(un, 1);
+            end;   
+
+     for i = 1 to names2 do
+         begin
+         un := CreateCharacter(names2[i]);
+         others := others ^ un;
+         end;
+
+     ftp := main_filter ^ others;
+
+     for i = 1 to ftp do
+         if GetClass(ftp[i]) > 4 then
+            SetClass(ftp[i], 1);
+
+     team := CharacterSelection('text', 11, 11, [sel_change_class, Louis, sel_changeable, sel_not_hired]^ftp, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 2]]);
+     //team := team ^ Louis;
+
+     for i = 1 to team do
+         begin
+         PlaceUnitArea(team[i], ar_north_base, false);
+         end;
+
+     vc_chassis := ar_half_tracked;
+     vc_engine := engine_combustion;
+     vc_control := control_manual;
+     vc_weapon := ar_gatling_gun;
+
+     veh := CreateVehicle;
+     SetDir(veh, 5);
+     PlaceUnitXY(veh, 70, 60, false);
+     PlaceHumanInUnit(Louis, veh);
+
+     ComMoveXY(Louis, 50, 29);
+     AddComExitVehicle(Louis);
+
+End;
+
+
+Export Function PrepareBase;
+var i, veh;
+begin
+for i = 1 to [4,3,2][Difficulty] do
+    begin
+    vc_chassis := ar_medium_trike;
+    vc_engine := engine_solar;
+    vc_control := control_manual;
+    vc_weapon := ar_cargo_bay;
+    veh := CreateVehicle;
+    SetDir(veh, Rand(0, 5));
+    PlaceUnitArea(veh, north_parking, false);
+    SetCargo(veh, [mat_cans, mat_oil][i mod 2 + 1], [30, 50, 70][Rand(1,3)]);
+    AddCargo(veh, 3, 30);
+    end;
+End;
+
+Export Kunt;
+Export Function PrepareDoc;
+begin
+uc_side := 6;
+uc_nation := 2;
+
+hc_name := 'Jan Kunt';
+hc_gallery := 'sandar';
+hc_face_number := 30;
+hc_sex := sex_male;
+hc_skills := [3, 4, 2, 8];
+hc_attr := [10, 10];
+hc_class := 4;
+
+Kunt := CreateHuman;
+PlaceUnitXY(Kunt, 136, 131, false);
+ComMoveXY(Kunt, 48, 28);
+End;

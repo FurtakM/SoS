@@ -1,0 +1,386 @@
+// Desert Storm - Pustynna Burza
+// Autorzy: Nefarem (mapa), Serpent (SAIL, fabu³a)
+// 10-01-2015@
+
+Starting
+begin
+PrepareMap;
+Main_Variables;
+Start_Mission;
+End;
+
+
+Function PrepareMap;
+begin
+ResetFog;
+RandomizeAll;
+ChangeSideFog(8, 6);
+PlaceCamera;
+PrepareNature(nature, 4, 3, 2, 1);
+PrepareComm;
+SetSide(fort, 6);
+CenterNowOnUnits(fort);
+End;
+
+{
+Za³ozenia:
+- Obrona dwóch dowódców Legionu przed atakami szejków
+- Dowódcy siedza w forcie
+- Wydarzenia: Posi³ki, Arabscy Dezerterzy, Amerykanie oferuja pomoc
+- ...
+}
+
+Export game_on, game_difficulty, game_time, game_option, game_end, game_strings;
+Export leopold, leopold_in_fort, samuel, samuel_in_fort, mortars_in_fort, scout;
+Export u_mine, u_fac;
+Export areas;
+Export skill;
+Export ar_bio_bomb, us_art;
+Export ar_weapons, ru_weapons, us_weapons;
+Export arabian_force, russian_force, american_force, arabian_timeing, russian_timeing, american_timeing;
+Export meeting_start, meeting_arive, meeting_break, meeting_end, meeting_time, russian_timer,
+       fort_destroyed, hero_died, mission_time, cargo_ok, american_hchan, dezert,
+       arabian_attack, russian_attack, american_attack,
+       american_help, american_sib_bomb, russian_trade, heike_dialog1, heike_dialog2;
+Export am_comander, ru_comander, ar_comander;
+Function Main_Variables;
+begin
+game_on         := false;
+// game_difficulty := 2; // domyslna wartosc
+game_time       := 0$00;
+game_option     := [1{legion}];
+game_end        := false;
+game_strings    := [];
+game_time       := 0$00;
+mission_time    := 0$00;
+skill           := [5, 7, 9][game_difficulty];
+areas           := [a_swest, a_nwest, a_neast, a_seast];
+meeting_start   := false;
+meeting_arive   := false;
+meeting_break   := false;
+meeting_end     := false;
+meeting_time    := [4$00, 3$40, 3$20][game_difficulty];
+arabian_force   := [5, 6, 7][game_difficulty];
+american_force  := [6, 8, 9][game_difficulty]; 
+russian_force   := [7, 9, 10][game_difficulty];
+u_mine          := false;
+u_fac           := false;
+leopold_in_fort := false;
+samuel_in_fort  := false;
+mortars_in_fort := false;
+fort_destroyed  := false;
+hero_died       := false;
+dezert          := false;
+arabian_attack  := false;
+russian_attack  := false;
+american_attack := false;
+american_help   := false;
+american_hchan  := [91, 81, 71][game_difficulty];
+american_sib_bomb:=false;
+russian_trade   := false;
+russian_timer   := 5$00;
+cargo_ok        := false;
+heike_dialog1   := false;
+heike_dialog2   := false;
+american_timeing:= [10$00, 9$40, 9$10][game_difficulty];
+arabian_timeing := [8$00, 7$30, 7$20][game_difficulty];
+russian_timeing := [11$00, 10$30, 9$20][game_difficulty];
+ar_bio_bomb     := 91;   // sta³a bronii
+us_art          := 97;
+ar_weapons      := [ar_rocket_launcher, ar_gun, ar_flame_thrower, ar_selfpropelled_bomb, ar_bio_bomb];
+us_weapons      := [us_rocket_launcher, us_heavy_gun, us_double_laser];
+ru_weapons      := [ru_rocket_launcher, ru_rocket, ru_heavy_gun];
+End;
+
+
+Every 0$01 trigger game_on do
+var i, p, x, filter;
+begin
+enable;
+
+// monitor
+Display_Strings := ['#tick', game_time]^game_strings;
+
+// Czasy
+// czas misji
+game_time := RefreshTime(game_time, true);
+//
+if meeting_start and meeting_time > 0$00 then
+   begin
+   game_strings := ['#mtime', meeting_time];
+   meeting_time := RefreshTime(meeting_time, false);
+   end;
+//
+if meeting_arive then
+   mission_time := RefreshTime(mission_time, true);
+//
+if arabian_attack and arabian_timeing > 0$00 and meeting_arive then
+   begin
+   arabian_timeing := RefreshTime(arabian_timeing, false);
+   end;
+
+if russian_attack and russian_timeing > 0$00 and meeting_arive then
+   begin
+   russian_timeing := RefreshTime(russian_timeing, false);
+   end;
+
+if american_attack and american_timeing > 0$00 and meeting_arive then
+   begin
+   american_timeing := RefreshTime(american_timeing, false);
+   end;
+
+if russian_trade and russian_timer > 0$00 then
+   begin
+   game_strings := ['#rtime', russian_timer];
+   russian_timer := RefreshTime(russian_timer, false);
+   end;
+
+if russian_trade and russian_timer = 0$00 or cargo_ok then
+   game_strings := [];
+
+if dezert = false and tick mod 33600 = 0 then
+   begin
+   p := Rand(1, 5);
+   if p <= [4,3,3][game_difficulty] then
+      begin
+      RaiseSailEvent(92);
+      dezert := true;
+      end;
+   end;
+//
+//------------------------------------------
+// skrzynki
+if tick mod 8400 = 0 then
+   RaiseSailEvent(101);
+
+// cele misji
+if MineExist(8) and u_mine = false then
+   begin
+   u_mine := true;
+   ChangeMissionObjectives('DS-T1m');
+   end;
+
+if FacExist(8) and u_fac = false then
+   begin
+   u_fac := true;
+   ChangeMissionObjectives('DS-T1f');
+   end;
+// -----------------------------------------
+
+// przegrane
+if hero_died then
+   YouLost('DS-h1');
+
+if fort_destroyed then
+   YouLost('DS-h2');
+// ----------------------------------
+
+// Eventy
+// pocz¹tek misji
+if GetDistUnits(leopold, l_cmndr) > 6 and meeting_start = false then
+   begin
+   if not HasTask(leopold) then
+      RaiseSailEvent(1);
+   end
+    else
+     if meeting_start = false then
+        begin
+        RaiseSailEvent(2);
+        end;
+
+// koniec misji
+if game_time >= [50$00, 62$30, 75$00][game_difficulty] and meeting_end = false then
+   begin
+   meeting_end := true;
+   RaiseSailEvent(200);
+   end;
+
+// pojawienie sie poslancow
+if meeting_time = 0$00 and meeting_arive = false then
+   begin
+   meeting_arive := true;
+   game_strings := [];
+   RaiseSailEvent(10);
+   end;
+
+
+// losowanie atakow
+if meeting_arive {and tick mod 4200 = 0} then
+   begin
+   if arabian_attack = false and tick mod 4200 = 0 then
+      begin
+      p := Rand(1, 100);
+      if p <= [75, 85, 90][game_difficulty] then
+         arabian_attack := true;
+      end;   
+
+   if russian_trade = false and russian_attack = false and tick > 52500 then
+      begin
+      russian_trade = true;
+
+      DialogueOn;
+       SayRadio(ru_comander, 'DS-DR-RTr');
+       Say(l_cmndr, 'DS-DC-RTr');
+       SayRadio(ru_comander, 'DS-DR-RTr2');
+      DialogueOff;
+
+      ChangeMissionObjectives('DS-T2');
+      SetAreaMapShow(tree, 1);
+      end;
+// trade
+   if russian_trade and cargo_ok = false and russian_timer > 0$00 then
+      begin
+      if FilterUnitsInArea(tree, ([[f_empty], [f_weapon, ar_cargo_bay], [f_not, [f_control, control_remote]]])) > 0 then
+         if GetCargo(FilterUnitsInArea(tree, ([[f_empty], [f_weapon, ar_cargo_bay], [f_not, [f_control, control_remote]]]))[1], mat_siberit) = 100 then
+            begin
+            cargo_ok := true;
+            RemoveUnit(FilterUnitsInArea(tree, ([[f_empty], [f_weapon, ar_cargo_bay], [f_not, [f_control, control_remote]]]))[1]);
+            ChangeMissionObjectives('DS-T2-out');
+            SetAreaMapShow(tree, 0);
+            end;
+      end;
+
+   if russian_attack = false and russian_trade and cargo_ok = false and russian_timer = 0$00 then
+      begin
+      russian_attack := true;
+      ChangeMissionObjectives('DS-T2-out');
+      SetAreaMapShow(tree, 0);
+      end;
+
+   if russian_trade = false and russian_attack = false and american_attack = false and tick mod 21000 = 0 then
+      begin
+      p := Rand(1, 100);
+      if p <= [25, 35, 45][game_difficulty] then
+         russian_attack := true;
+      end;
+
+   if american_help = false and american_attack = false and russian_attack = false and tick mod 31500 = 0 then
+      begin
+      p := Rand(1, 100);
+      if p <= [22, 33, 44][game_difficulty] then
+         american_attack := true;
+      end;
+
+   if american_attack = false and russian_attack = false and american_help = false and tick mod 21200 = 0 then
+      begin
+      p := Rand(1, 100);
+      if p <= american_hchan then
+         begin
+         american_help := true;
+         SayRadio(am_comander, 'DS-amhelp');
+         RaiseSailEvent(91);
+         end;
+      end;
+
+   end;
+
+
+// Ataki
+if american_attack and american_timeing = 0$00 and FilterAllUnits([f_side, 1]) = 0 then
+   begin
+   american_timeing := Rand(17$00, 20$00);
+   SayRadio(scout, 'DS-DZ-U');
+   Wait(0$33);
+
+   x := Rand(1, 2);
+   Case x of
+   1: RaiseSailEvent(41);
+   2: RaiseSailEvent(42);
+   end;
+
+   RaiseSailEvent(42);
+   end;
+
+// Ruskie Ataki
+if russian_attack and russian_timeing = 0$00 and FilterAllUnits([f_side, 3]) = 0 then
+   begin
+   russian_timeing := Rand(17$00, 20$00);
+   SayRadio(scout, 'DS-DZ-R');
+   Wait(0$45);
+   SayRadio(ru_comander, 'DS-DR-R1');
+   RaiseSailEvent(51);
+   end;
+
+// Arabskie Ataki
+if mission_time >= 10$00 and arabian_force < 10 then
+   begin
+   mission_time := 0$00;
+   arabian_force := arabian_force + 1;
+   end;    
+
+if arabian_timeing = 0$00 and FilterAllUnits([[f_side, 2], [f_not, [f_weapon, ar_control_tower]]]) = 0 then
+   begin
+   arabian_timeing := 7$30;
+
+   x := Rand(1, 3);
+   
+      SayRadio(scout, 'DS-DZ-H');
+
+      Case x of
+      1: RaiseSailEvent(31);
+      2: RaiseSailEvent(32);
+      3: RaiseSailEvent(33);
+      end;  
+
+      RaiseSailEvent(33);
+
+      if game_difficulty > 1 then
+         RaiseSailEvent(33);
+
+      if heike_dialog1 = false then
+         begin
+         heike_dialog1 := true;
+         Wait(0$03);
+         SayRadio(ar_comander, 'heike1');
+         end
+          else
+           if heike_dialog2 = false then
+              begin
+              heike_dialog2 := true;
+              Wait(0$03);
+              SayRadio(ar_comander, 'heike2');
+              end;
+   end;
+
+if FilterAllUnits([[f_side, 2], [f_control, control_remote]]) > 0 then
+   ConnectWithTower(2);
+
+if FilterAllUnits([[[f_side, 2], [f_not, [f_weapon, ar_control_tower]], [f_not, [f_hastask]]]]) > 0 then
+   begin
+   filter := FilterAllUnits([[[f_side, 2], [f_not, [f_weapon, ar_control_tower]], [f_not, [f_hastask]]]]);
+   x      := SpeedFilter(FilterAllUnits([f_enemy, 2]), 20);
+
+   for i = 1 to filter do
+       ComAttackUnit(filter[i], NearestUnitToUnit(x, filter[i]));
+   end;
+
+if FilterAllUnits([[[f_side, 3], [f_not, [f_hastask]]]]) > 0 then
+   begin
+   filter := FilterAllUnits([[[f_side, 3], [f_not, [f_weapon, ar_control_tower]], [f_not, [f_hastask]]]]);
+   x      := SpeedFilter(FilterAllUnits([f_enemy, 3]), 20);
+
+   for i = 1 to filter do
+       ComAttackUnit(filter[i], NearestUnitToUnit(x, filter[i]));
+   end;
+
+if FilterAllUnits([[[f_side, 1], [f_not, [f_hastask]]]]) > 0 then
+   begin
+   filter := FilterAllUnits([[[f_side, 1], [f_not, [f_weapon, ar_control_tower]], [f_not, [f_hastask]]]]);
+   x      := SpeedFilter(FilterAllUnits([f_enemy, 1]), 20);
+
+   for i = 1 to filter do
+       ComAttackUnit(filter[i], NearestUnitToUnit(x, filter[i]));
+   end;
+
+
+if FilterAllUnits([[[f_side, 2], [f_weapon, ar_bio_bomb], [f_not, [f_lives, 700]]]]) > 0 then
+   begin
+   filter := FilterAllUnits([[[f_side, 2], [f_weapon, ar_bio_bomb], [f_not, [f_lives, 700]]]]);
+
+   for i = 1 to filter do
+       SetLives(filter[i], 1);
+   end;
+// ---------------------------------------------
+
+End;
+

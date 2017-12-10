@@ -1,0 +1,126 @@
+Export function ISeeBase;
+begin
+PlaceSeeing(51, 60, 2, 10);
+PlaceSeeing(37, 47, 2, 10);
+PlaceSeeing(21, 24, 2, 10);
+
+RemoveSeeing(51, 60, 2);
+RemoveSeeing(37, 47, 2);
+RemoveSeeing(21, 24, 2);
+end;
+
+
+Export Cathy;
+Export function PrepareAmericanInMyBase;
+var hum, ar_units;
+begin
+music_nat = 1;
+
+uc_side = 1;
+uc_nation = 1;
+
+hc_sex = sex_female;
+hc_class = 4;
+hc_skills = [1, 4, 3, 6];
+hc_name = 'Cathy Simms';
+hc_gallery = 'us';
+hc_face_number = 21;
+
+Cathy = CreateHuman;
+PlaceUnitXY(Cathy, 63, 71, true);
+
+
+ar_units = FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff [Louis];
+hum = ar_units[Rand(1, ar_units)];
+
+InGameOn;
+ComHold(Cathy);
+CenterNowOnUnits(Cathy);
+Say(hum, 'DH-1');
+Say(Cathy, 'DC-1');
+
+ComExitBuilding(Louis);
+ComMoveXY(Louis, GetX(Cathy)+Rand(-3,3), GetY(Cathy)+Rand(-3,3));
+
+  
+ComTurnUnit(Cathy, Louis);
+
+repeat
+begin
+Wait(0$01);
+CenterOnUnits(Louis);
+end until GetDistUnits(Louis, Cathy) < 6;
+
+AddComTurnUnit(Louis, Cathy);
+Say(Louis, 'DC-2');
+Say(Cathy, 'DC-3');
+Say(Louis, 'DC-4');
+Say(Cathy, 'DC-5');
+
+
+Case Query('CathyInBase') of
+1:begin
+Say(Louis, 'DC-kill1');
+Say(Cathy, 'DC-kill2');
+SetAttitude(1, 2, att_enemy, true);
+InGameOff;
+
+ComMoveXY(Cathy, 52, 103);
+Wait(0$03);
+end;
+2:begin
+WasCatch = true;
+Say(Louis, 'DC-close');
+
+ComMoveXY(Cathy, 80, 71);
+InGameOff;
+end;
+
+end;
+end;
+
+
+Every 0$01 trigger IsInArea(Cathy, depaaa) or GetDistUnits(Cathy, ar_dep1) < 4 do
+begin
+SetSide(Cathy, 2);
+ComEnterUnit(Cathy, ar_dep1);
+end;
+
+Every 0$0.3 trigger GetClass(Cathy) <> 4 do
+begin
+enable;
+SetClass(Cathy, 4);
+End;
+
+Every 0$01 trigger not IsInUnit(Cathy) and WasCatch and not UnitGoingToBuilding(Cathy, ar_dep1) do
+begin
+enable;
+ComEnterUnit(Cathy, ar_dep1);
+//Say(Louis, 'DC-close');
+End;
+
+// Cathy Escape
+Every 0$01 trigger IsInArea(Cathy, River) do
+begin
+RemoveUnit(Cathy);
+end;
+
+
+Export Function UnitGoingToBuilding(unit, building);
+var x, y;
+begin
+x := GetX(building);
+y := GetY(building);
+
+     if GetTaskList(unit) then
+        begin
+        if 'e' = GetTaskList(unit)[1][1] and
+             x = GetTaskList(unit)[1][2] and
+             y = GetTaskList(unit)[1][3] then
+          result := true
+           else
+            result := false;
+        end
+         else
+          result := false;
+End;

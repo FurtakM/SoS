@@ -1,0 +1,232 @@
+// Alliance
+Export al_commander, al_force, al_skill;
+Export Function PrepareAlliance;
+var i, filter, un, team;
+begin
+
+   al_skill := [7, 6, 5][Difficulty];
+   al_force := [];
+
+   RemoveAlliance;
+   ResetFog;
+
+   your_side := 7;
+   uc_side := 7;
+   // uc_nation := nation_american;
+
+   hc_gallery := '';
+   hc_name    := '';
+   hc_importance := 0;
+
+// Przygotowanie dru¿yny
+   for i = 1 to 17 do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, Rand(1,4), al_skill);
+       un := CreateHuman;
+       al_force := al_force ^ un;
+       end;
+
+   hc_importance := 100;
+
+   uc_nation := 1;
+   PrepareHuman(sex_male, 1, al_skill);
+   al_commander := CreateHuman;
+   player_commander := al_commander;
+
+// okno wyboru
+   team := CharacterSelection('text', [9,9,8][Difficulty], [9,9,8][Difficulty],[sel_change_class, al_commander, sel_changeable, sel_not_hired]^ al_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], class_bazooker, class_sniper]);
+   team := team ^ al_commander;
+
+   for i = 1 to team do
+       PlaceUnitArea(team[i], south_resp, false);
+
+End;
+
+
+Export Function RemoveAlliance;
+var i;
+begin
+DestroyUnit(FilterAllUnits([[f_side, 7], [f_btype, b_warehouse]])[1]);
+
+for i in FilterAllUnits([f_side, 7]) do
+    RemoveUnit(i);
+End;
+
+Export Function PrepareAllianceAI;
+var i, un, b;
+begin
+
+   SetTech(tech_lapser, 7, state_researched);
+   SetTech(tech_ai, 7, state_researched);
+   SetTech(tech_comp3, 7, state_researched);
+
+   al_skill := [5, 6, 7][Difficulty];
+   al_force := [];
+   al_vehs := [];
+
+   uc_side := 7;
+   uc_nation := 1;
+
+   bc_type := b_oil_mine;
+   b := CreateBuilding;
+   PlaceUnitXYR(b, 61, 7, 0, false);
+
+   bc_type := b_siberite_mine;
+   b := CreateBuilding;
+   PlaceUnitXYR(b, 69, 13, 0, false);
+
+   hc_gallery := '';
+   hc_name    := '';
+   hc_importance := 0;
+
+   for i in FilterAllUnits([[f_side, 7], [f_btype, b_bunker]]) do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, 1, al_skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, i);
+       end;
+
+   for i = 1 to 3 do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, 4, al_skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, al_lab1);
+       end;
+
+   for i = 1 to 6 do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, [class_sniper, class_bazooker, class_bazooker][Rand(1,3)], al_skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, al_bar);
+       end;
+
+   for i = 1 to 6 do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, 3, al_skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, FilterAllUnits([[f_side, 7], [f_btype, b_factory]])[1]);
+       end;
+
+   for i = 1 to 4 do
+       begin
+       uc_nation := [1,3][Rand(1,2)];
+       PrepareHuman(false, 2, al_skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, al_depot);
+       end;
+
+   uc_nation := 3;
+   vc_chassis := ru_medium_wheeled;
+   vc_engine := engine_siberite;
+   vc_control := control_computer;
+   vc_weapon := ru_cargo_bay;
+   PlaceUnitXY(CreateVehicle, 49, 13, false);
+
+
+   // turrets
+      al_turrets := FilterAllUnits([[f_side, 7], [f_btype, b_turret]]);
+   // set time lapser
+      for i = 1 to FilterAllUnits([[[f_side, 7], [f_btype, b_turret], [f_bweapon, 0]]]) do
+          AddComPlaceWeapon(FilterAllUnits([[[f_side, 7], [f_btype, b_turret], [f_bweapon, 0]]])[i], ru_time_lapser);
+
+End;
+
+// Alliance AI
+Export al_eng, al_sold, al_mech, al_sci;
+Export al_vehs, al_cargo, al_turrets;
+Export al_dep, al_lab, al_fac;
+Export al_bul;
+Every 0$01 trigger your_side = 1 do
+var i, un, veh, cr;
+begin
+enable;
+
+   al_bul := FilterAllUnits([[f_side, 7], [f_type, unit_building]]);
+   al_lab := [al_lab1, al_lab2];
+   al_dep := FilterAllUnits([[f_side, 7], [f_btype, b_warehouse]])[1];
+   al_fac := FilterAllUnits([[f_side, 7], [f_btype, b_factory]])[1];
+
+if FilterAllUnits([[f_side, 7], [f_weapon, ru_cargo_bay]]) then
+   al_cargo := FilterAllUnits([[f_side, 7], [f_weapon, ru_cargo_bay]])[1];
+
+   al_sold := FilterAllUnits([[f_side, 7], [f_class, class_bazooker]]);
+   al_eng := FilterAllUnits([[f_side, 7], [f_class, 2]]);
+   al_mech := FilterAllUnits([[f_side, 7], [f_class, 3]]);
+   al_sci := FilterAllUnits([[f_side, 7], [f_class, 4]]);
+
+// bazz
+   IntBazooka(al_sold, FilterAllUnits([f_enemy, 7]));
+
+// cargo
+   if not HasTask(al_cargo) and GetCargo(al_cargo, mat_cans) < 100 then
+      begin
+      cr := GetListOfCratesInArea(us_crates);
+
+      if cr then
+         ComCollect(al_cargo, cr[1], cr[2]);
+      end;
+
+   if UnitFilter(al_bul, [f_not, [f_lives, 1000]]) then
+      begin
+      if al_eng then
+         for i = 1 to al_eng do
+             if IsInUnit(al_eng[i]) then
+                ComExitBuilding(al_eng[i])
+                 else
+                  if not HasTask(al_eng[i]) then
+                     ComRepairBuilding(al_eng[i], UnitFilter(al_bul, [f_not, [f_lives, 1000]])[1]);
+      end
+       else
+        if al_eng then
+           if not IsInUnit(al_eng[1]) then
+              for i = 1 to al_eng do
+                  if not IsInUnit(al_eng[i]) then
+                     ComEnterUnit(al_eng[i], al_dep);
+
+
+if al_vehs then
+   if BuildingStatus(al_fac) = bs_idle then
+      begin
+      ComConstruct(al_fac, al_vehs[1], al_vehs[2], al_vehs[3], al_vehs[4]);
+
+      for i = 1 to 4 do
+          al_vehs := Delete(al_vehs, 1); 
+      end;
+
+
+if al_force = 0 and tick mod 23100 = 0 then
+   begin
+   for i = 1 to [4,5,6][Difficulty] do
+       begin
+       al_vehs := al_vehs ^ ru_heavy_wheeled;
+       al_vehs := al_vehs ^ engine_combustion;
+       al_vehs := al_vehs ^ control_computer;
+       al_vehs := al_vehs ^ [ru_heavy_gun, ru_rocket][Rand(1,2)];
+       end;
+   end;
+
+if FilterAllUnits([[f_side, 7], [f_weapon, ru_cargo_bay]]) = 0 then
+   ComConstruct(al_fac, ru_medium_wheeled, engine_combustion, control_computer, ru_cargo_bay);
+
+if al_force and tick mod 25200 = 0 then
+   begin
+   for i = 1 to al_force do
+       if GetTag(al_force[i]) <> 11 then
+          SetTag(al_force[i], 11);
+   end;
+
+if al_force then
+   for i = 1 to al_force do
+       begin
+       if GetTag(al_force[i]) = 11 then
+          begin
+          if not HasTask(al_force[i]) then
+             ComAttackUnit(al_force[i], NearestUnitToUnit(FilterAllUnits([f_enemy, 7]), al_force[i]));
+          end;
+       end;
+End;

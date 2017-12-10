@@ -1,0 +1,52 @@
+Export Function NearestUnitToSide(plist, side);
+var i, tmp, unit;
+begin
+
+     tmp := 9999;
+
+     for i = 1 to plist do
+         if GetDistUnitToSide(plist[i], side) < tmp then
+            begin
+            tmp := GetDistUnitToSide(plist[i], side);
+            unit := plist[i];
+            end;
+
+result := unit;
+End;
+
+Export Function GetDistUnitToSide(unit, side);
+var tmp, dist;
+begin
+tmp  := NearestUnitToUnit(FilterAllUnits([f_side, side]), unit);
+dist := GetDistUnits(unit, tmp);
+
+if dist >= 9999 then
+   result := -1
+    else
+     result := dist;
+End;
+
+
+Export Function GetDistXYToSide(x, y, side);
+var tmp, dist;
+begin
+tmp := NearestUnitToXY(FilterAllUnits([f_side, side]), x, y);
+dist := GetDistUnitXY(tmp, x, y);
+result := dist;
+End;
+
+Export Function SeeSniper(side);
+var i, filter, sniper;
+begin
+filter := FilterAllUnits([f_side, 2]);
+sniper := FilterAllUnits([[f_side, 1], [f_class, class_sniper]]);
+
+    for i = 1 to filter do
+        if UnitShoot(filter[i]) in sniper then
+           begin
+           result := true;
+           break;
+           end
+            else
+             result := false;
+End;

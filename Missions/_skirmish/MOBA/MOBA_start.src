@@ -1,0 +1,111 @@
+// MOBA by Serpent & Nefarem
+// Sand of Siberia 2015-07-16
+// Script by Serpent
+// Siedzê sobie w lipcow¹ noc i piszê SAIL'a... Jestem stukniêty ;p
+// Projekt niedokoñczony. 
+// Ostatnia aktualizacja: 2-08-2015
+Export test;
+Starting
+begin
+ResetFog;
+CenterNowOnXY(45, 59);
+Welcome;
+
+   //test := true; // true - on ; false - off
+
+   if test then
+      FogOff(1);
+
+InitEnemy();
+InitCost();
+PrepareGame;
+End;
+
+Function Welcome;
+begin
+Case Query('MOBA') of
+1: ;
+End;
+{
+Case Query('MOBA1') of
+1: test := true;
+2: test := false;
+End;
+}
+test := false;
+End;
+
+Export Function Lost;
+begin
+YouLost('MOBAl');
+End;
+
+Export Function Win;
+begin
+Case Query('MOBAw') of
+1: YouWin;
+end;
+End;
+
+Every 35 trigger test do
+begin
+enable;
+display_strings := [tick/35, enemy_source];
+End;
+
+Export your_crane, enemy_crane, your_source,
+       enemy_source, sides_pom, game_time,
+       your_skills, enemy_skills, main_skills;
+Function PrepareGame;
+var i, tab;
+begin
+
+     // fog
+        ChangeSideFog(1, 6);
+
+     // attitude
+        SetAttitude(1, 6, att_friend, true);
+        SetAttitude(2, 3, att_friend, true);
+
+     // see
+        PlaceSeeing(49, 59, your_side, 40);
+
+
+     // cranes
+        uc_nation := 1;
+        tab := [player1, player2];
+        sides_pom := [6, 3];
+
+        your_source := 0;
+        enemy_source := 0;
+
+        your_skills := [0,0,0,0];
+        enemy_skills := [0,0,0,0];
+        main_skills := [your_skills, enemy_skills];
+
+        for i = 1 to 2 do
+            begin
+            uc_side := i;
+
+            vc_chassis := us_medium_wheeled;
+            vc_engine  := engine_siberite;
+            vc_control := control_computer;
+            vc_weapon  := us_crane;
+
+            if i = 1 then
+               begin
+               your_crane = CreateVehicle;
+               PlaceUnitArea(your_crane, tab[i], false);
+               end
+                else
+                 begin
+                 vc_control := control_manual;
+                 enemy_crane = CreateVehicle;
+                 PlaceUnitArea(enemy_crane, tab[i], false);
+                 PrepareHuman(sex_male, 3, 10);
+                 PlaceHumanInUnit(CreateHuman, enemy_crane);
+                 end;
+
+            end;
+
+End;
