@@ -9,6 +9,8 @@ Export ru_sold, ru_stw, ru_tw, ru_tech, ru_veh, ru_eng, ru_mech, ru_sci,
 Export ru2_sold, ru2_stw, ru2_tw, ru2_tech, ru2_veh, ru2_eng, ru2_mech, ru2_sci,
        ru2_bul, ru2_b;
 
+Export ru_list_attackers;
+
 Export ru_radar;
 
 Export Function InitRussian;
@@ -21,6 +23,7 @@ begin
      uc_nation := nation_russian;
 
      ru_radar := 98;
+     ru_list_attackers := [];
 
 // RU ======================================== //
 
@@ -37,7 +40,8 @@ begin
      ru_mech := [];
      ru_sci := [];
 
-     ru_bul := [b_bunker, 162, 101, 0]; // budynki
+     ru_bul := [b_bunker, 162, 101, 0,
+                b_ext_rocket, 149, 86, 4]; // budynki
 
      ru_tech := [tech_tech1, tech_tech2, tech_tech3, tech_oilpow, tech_oileng,
                  tech_weap1, tech_weap2, tech_gatling, tech_advmet,
@@ -57,7 +61,7 @@ begin
         hc_face_number := 8;
         hc_skills := [7, 4, 3, 2];
         hc_sex := sex_male;
-        hc_name := 'P³k. Iwan Kurin';
+        hc_name := 'Ivan Kurin';
         hc_attr := [10, 10];
 
         kurin := CreateHuman;
@@ -113,7 +117,8 @@ begin
      ru2_sci := [];
 
      ru2_bul := [b_lab, 90, 71, 1,
-                 b_armoury, 88, 58, 2,                 b_workshop, 103, 66, 4,
+                 b_armoury, 88, 58, 2,
+                 b_workshop, 103, 66, 4,
                  b_oil_power, 106, 77, 3,
                  b_oil_power, 110, 77, 3,
                  b_bunker, 109, 65, 4,
@@ -357,8 +362,10 @@ var weap;
 begin
 enable;
 
-       weap := AvailableWeaponList(ru_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
+       weap := AvailableWeaponList(FilterAllUnits([[f_side, 6], [f_btype, b_factory]])[1]) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
        ru_veh := ru_veh ^ [ru_heavy_wheeled, engine_combustion, control_manual, weap[Rand(1, weap)]];
+
+       weap := AvailableWeaponList(FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1]) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
        ru2_veh:= ru2_veh ^ [ru_heavy_wheeled, engine_combustion, control_manual, weap[Rand(1, weap)]];
 
 End;
@@ -442,7 +449,7 @@ enable;
 
 
        // tablice
-          b_weap := AvailableWeaponList(b_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer];
+          b_weap := AvailableWeaponList(b_fac) diff [ru_crane, ru_cargo_bay, ru_bulldozer, ru_radar];
           b_upgrade := [b_depot, b_armoury, b_workshop];
           b_ext := [];
 
@@ -655,7 +662,7 @@ begin
 
      3: ru_veh := ru_veh ^ [ru_heavy_wheeled,  engine_combustion, control_manual, ru_gatling_gun,
                    ru_medium_tracked, engine_combustion, control_manual, ru_gun,
-                   ru_medium_tracked, engine_combustion, control_manual, ru_gun];
+                   ru_medium_tracked, engine_combustion, control_manual, ru_rocket_launcher];
      End;
 
      Case global_diff of
@@ -706,27 +713,30 @@ End;
 
 // Ataki
 Every 4$35 trigger FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]) >= 6 do
-var filter, enemy, i;
+var filter, enemy, i, _list;
 begin
 enable;
 
-     filter := FilterAllUnits([[f_or, [f_side, 6], [f_side, 3]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]);
+     _list := [ [b_oil_mine, b_solar_power, b_oil_power], [us_cargo_bay], [ ] ];
+     filter := ru_list_attackers;
 
-     While(filter >= 4) do
+     While (filter) do
      begin
      Wait(0$01);
-
-     filter := FilterAllUnits([[f_or, [f_side, 6], [f_side, 3]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]);
 
      if FilterAllUnits([f_side, 2]) = 0 then
         enemy  := FilterAllUnits([f_or, [f_side, 1], [f_side, 4]])
          else
           enemy := FilterAllUnits([f_side, 2]);
 
-     if filter > 0 then
-        for i = 1 to filter do
-            ComAttackUnit(filter[i], NearestUnitToUnit(enemy, filter[i]));
+     for i = filter downto 1 do
+         if not IsPlaced(filter[i]) then
+            filter := Delete(filter, i)
+             else
+              ComAttack(filter[i], _list);
 
+     if not filter then
+        break;
      end;
 
 End;

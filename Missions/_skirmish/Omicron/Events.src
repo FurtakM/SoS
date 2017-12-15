@@ -10,6 +10,9 @@ begin
      if un = omikron then
         YouLost('omi');
 
+     if un in ru_list_attackers then
+        ru_list_attackers := ru_list_attackers diff un;
+
      // RU 6
      if GetSide(un) = 6 and un in FilterAllUnits([f_type, unit_building]) then
         begin
@@ -79,6 +82,12 @@ begin
         PlaceHumanInUnit(un, FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1]);
         end;
 
+End;
+
+On VehicleConstructed(veh, fac) do
+begin
+if veh in FilterAllUnits([[f_or, [f_side, 6], [f_side, 3]], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer]]]]) then
+   ru_list_attackers := Insert(ru_list_attackers, 1, veh);
 End;
 
 

@@ -112,3 +112,68 @@ i := NearestUnitToUnit(FilterAllUnits([f_side, side]), unit);
 if GetDistUnits(unit, i) < 9 then
    result := true;
 End;
+
+//Destination Reachable Function by Serpent
+Export unreachableList;
+On DestinationUnreachable(unit) Do
+begin
+if not unit in unreachableList then
+   unreachableList := Insert(unreachableList, unreachableList+1, unit);
+end;
+
+// ignore_list [ [building_types], [vehicle_weapons], [human_classes] ]
+Export Function ComAttack(unit, ignore_list);
+var i, j, target, enemy_list, _list, types_list;
+begin
+if not IsPlaced(unit) then
+   exit;
+
+// get enemy list
+enemy_list := FilterAllUnits([f_enemy, GetSide(unit)]);
+
+if not enemy_list then
+   exit;
+
+if ignore_list then
+   begin
+   _list := [];
+   types_list := [f_btype, f_weapon, f_class];
+
+   for i = 1 to 3 do
+       begin
+       if not ignore_list[i] then
+          continue
+           else
+            for j in ignore_list[i] do
+                begin
+                _list := Insert(_list, _list+1, UnitFilter(enemy_list, [types_list[i], j]));
+                end;
+       end;
+   end;
+
+if enemy_list diff _list > 0 then
+   enemy_list := enemy_list diff _list;
+
+// get target
+target := NearestUnitToUnit(enemy_list, unit);
+
+if not DestinationReachable(unit, GetX(target), GetY(target)) then
+   ComAttackUnit(unit, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(unit)]), unit));
+End;
+
+Export Function DestinationReachable(unit, x, y);
+begin
+if unit in unreachableList then
+   unreachableList := unreachableList diff unit;
+
+   if ValidHex(x, y) then
+      ComAttackUnit(unit, HexInfo(x, y));
+
+   Wait(1);
+
+if unit in unreachableList then
+   result := false
+    else
+     result := true;
+End;
+
