@@ -1,0 +1,368 @@
+Export ru_rebuild_list;
+Export Function PrepareRussians;
+var i, j, r, un, skill, filter, tmp, dep_list, lab_list, fac_list, breastworks_list, bunker_list, turret_list, weapons_list, personel_counter;
+begin
+ru_rebuild_list := [];
+
+uc_side := 3;
+uc_nation := 3;
+
+if Difficulty > 1 then
+   begin
+   bc_type := b_breastwork;
+   CreateAndPlaceBuildingXYD(78, 74, 2);
+   CreateAndPlaceBuildingXYD(171, 193, 4);
+
+   bc_type := b_turret;
+   CreateAndPlaceBuildingXYD(129, 96, 3);
+
+   if Difficulty > 2 then
+      begin
+      RemoveUnit(HexInfo(83, 141));
+      RemoveUnit(HexInfo(78, 133));
+
+      CreateAndPlaceBuildingXYD(83, 141, 2);
+      CreateAndPlaceBuildingXYD(78, 133, 2);
+      CreateAndPlaceBuildingXYD(145,112, 3);
+      end;
+   end;
+
+dep_list := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+lab_list := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+fac_list := FilterAllUnits([[f_side, 3], [f_btype, b_factory]]);
+breastworks_list := FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]]);
+bunker_list := FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]);
+turret_list := FilterAllUnits([[f_side, 3], [f_btype, b_turret]]);
+
+weapons_list := [[ru_heavy_machine_gun, 5], [ru_gatling_gun, 50], [ru_gun, 30], [ru_heavy_gun, 15]];
+personel_counter := [0, 4, 6, 3];
+skill := [4, 5, 6][Difficulty];
+
+SetBName(ru_dep_main, 'am_tukh');
+
+for i in FilterAllUnits([f_type, unit_building]) do
+    SetBLevel(i, [4, 5, 6][Difficulty]);
+
+for i in dep_list do
+    begin
+    SetResourceType(GetBase(i), mat_cans, 1000);
+    SetResourceType(GetBase(i), mat_oil, 1000);
+    end;
+
+InitHc;
+
+// soldiers in towers [50%, 70%, 85%]
+tmp := bunker_list * [50, 70, 85][Difficulty] div 100;
+personel_counter := Replace(personel_counter, 1, tmp);
+
+// sort
+tmp := [];
+
+for i in bunker_list do
+    if i mod 10 + 1 < tmp then
+       tmp := Insert(tmp, i mod rand(3,5) + 1, i)
+      else
+       tmp := Insert(tmp, tmp + 1, i);
+
+bunker_list := tmp;
+
+// place weapon on turrets
+for i in bunker_list^turret_list do
+    begin
+    tmp := rand(0, 100);
+    r := 0;
+
+    for j in weapons_list do
+        begin
+        r := r + j[2];
+
+        if r >= tmp then
+           begin
+           PlaceWeaponTurret(i, j[1]);
+           break;
+           end;
+        end;
+    end;
+
+// place personel in base
+while (personel_counter[1]) do
+    begin
+    i := rand(1, bunker_list);
+
+    PrepareHuman(false, 1, skill);
+    PlaceHumanInUnit(CreateHuman, bunker_list[i]);
+
+    bunker_list := Delete(bunker_list, i);
+    personel_counter := Replace(personel_counter, 1, personel_counter[1] - 1);
+    end;
+
+for i = 1 to personel_counter[2] do
+    begin
+    PrepareHuman(false, 2, skill);
+    PlaceHumanInUnit(CreateHuman, ru_dep_main);
+    end;
+
+for i = 1 to personel_counter[3] do
+    begin
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, fac_list[i mod 2 + 1]);
+    end;
+
+for i = 1 to personel_counter[4] do
+    begin
+    PrepareHuman(false, 4, skill);
+    PlaceHumanInUnit(CreateHuman, lab_list[1]);
+    end;
+
+for i in breastworks_list do
+    begin
+    r := GetDir(i);
+
+    if r > 3 then
+       r := r - 3
+      else
+       r := r + 3;
+
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    SetDir(un, r);
+    PlaceHumanInUnit(un, i);
+    end;
+
+tmp := FilterAllUnits([[f_side, 3], [f_class, 3]]);
+r := [4, 5, 6][Difficulty];
+
+for i = 1 to r do
+    begin
+    un := PrepareTank(3, 3, [ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked][i mod 3 + 1], engine_combustion, control_manual, [ru_gatling_gun, ru_gun, ru_heavy_machine_gun][i mod 3 + 1], 100);
+    SetDir(un, rand(0, 5));
+    PlaceUnitArea(un, parkingArea, false);
+
+    if i > tmp-2 then
+       continue;
+
+    ComExitBuilding(tmp[i]);
+    AddComEnterUnit(tmp[i], un);
+    end; 
+    
+End;
+
+// Ru script
+// Done: 
+// - Wycofywanie zolnierzy z uszkodzonych bunkrow/wiez
+// - Elastyczna obrona pojazdami
+// - Posilki z Trockiego
+// - Naprawa budynkow w bazie
+// - Odbudowywanie niektorych bunkrow w bazie (zeby wkurzyc Livida)
+// - W razie ataku glownego magazynu wszyscy zolnierze przychodza go bronic! (if GetLives(ru_dep_main) < 800)
+//
+//
+// Dragon zapcha³ kibel i zrzuci³ na kolege
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_class, 2], [f_ok]]) do
+var i, filter, tmp, engs, enemy;
+begin
+enable;
+
+filter := FilterUnitsInArea(baseArea, [[f_not, [f_lives, 1000]], [f_type, unit_building]]);
+engs := FilterAllUnits([[f_side, 3], [f_class, 2], [f_lives, 650]]);
+
+if not filter and not ru_rebuild_list then
+   begin
+   if not IsInUnit(engs[1]) then
+      ComEnterUnit(engs, ru_dep_main);
+   exit;
+   end;
+
+if debug then
+   display_strings := [engs, filter];
+
+if UnitFilter(engs, [f_not, [f_lives, 650]]) then
+   begin
+   tmp := UnitFilter(engs, [f_not, [f_lives, 650]]);
+
+   for i in tmp do
+       if not IsInArea(i, mainBaseArea) then
+          begin
+          ComMoveXY(i, 129, 125);
+          AddComWait(i, 0$30);
+          end;
+   end;
+
+if filter then
+   begin
+   for i in engs do
+       if IsInUnit(i) then
+          ComExitBuilding(i);
+
+   wait(3);
+
+   if filter >= 2 and engs >= 2 then
+      begin
+      for i = 1 to engs / 2 do
+          if not HasTask(engs[i]) then
+             ComRepairBuilding(engs[i], filter[1]);
+      for i = engs / 2 + 1 to engs do
+          if not HasTask(engs[i]) then
+             ComRepairBuilding(engs[i], filter[filter]);
+      end
+     else
+      for i in engs do
+          if not HasTask(i) then
+             ComRepairBuilding(i, filter[1]);
+   end;
+
+enemy := FilterAllUnits([f_enemy, 3]);
+
+if ru_rebuild_list and not filter then
+   begin
+   ComExitBuilding(engs);
+
+   if GetDistUnitXY(NearestUnitToXY(enemy, ru_rebuild_list[2], ru_rebuild_list[3]),  ru_rebuild_list[2], ru_rebuild_list[3]) > 10 then
+      ComBuild(engs, ru_rebuild_list[1], ru_rebuild_list[2], ru_rebuild_list[3], ru_rebuild_list[4]);
+   end;
+
+
+End;
+
+// Def main depot
+Every 0$1 trigger GetLives(ru_dep_main) < 650 do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, 3], [f_class, 1]]);
+
+ComExitBuilding(tmp);
+wait(3);
+ComAgressiveMove(tmp, GetX(ru_dep_main), GetY(ru_dep_main));
+End;
+
+// Idle
+Every 0$01 trigger GetLives(ru_dep_main) > 650 and FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside], [f_not, [f_hastask]]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    GoToAnotherTower(i, 0, 143, 143);
+End;
+
+// Heal
+Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_class, 4]]) do
+var i, tmp, doc;
+begin
+enable;
+
+tmp := FilterUnitsInArea(mainBaseArea, [[f_side, 3], [f_type, unit_human], [f_not, [f_lives, 1000]]]);
+doc := FilterAllUnits([[f_side, 3], [f_class, 4]]);
+
+if not doc then
+   exit;
+
+if not tmp then
+   begin
+   if not IsInUnit(doc[1]) then
+      ComEnterUnit(doc, FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])[1]);
+   exit;
+   end;
+
+if IsInUnit(doc[1]) then
+   ComExitBuilding(doc);
+
+wait(3);
+
+ComHeal(doc, tmp[1]);
+End;
+
+Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_class, 3]]) and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) do
+var i, tmp, areas, area;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]);
+areas := [sectorAlpha, sectorBeta, sectorDelta, mainBaseArea];
+area := 0;
+
+for i in areas do
+    if FilterUnitsInArea(i, [f_side, 1]) then
+       begin
+       area := i;
+       break;
+       end;
+
+if area then
+   begin
+   for i in tmp do
+       begin
+       if GetFuel(i) < 33 then
+          SetFuel(i, 33);
+
+       if not IsInArea(i, area) then
+          ComMoveToArea(i, area);
+       end;
+   end;
+End;
+
+Every 10$00 do
+var i, j, un, veh, time, count;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+time := [6$00, 5$00, 4$00][Difficulty];
+count := [3, 4, 5][Difficulty];
+
+for i = 1 to count do
+    begin
+    wait(time);
+
+    for j = 1 to rand(1, Difficulty) do
+        begin
+        veh := PrepareTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_gun, ru_heavy_machine_gun][i mod 3 + 1], 80);
+        PlaceUnitArea(veh, southArea, false);
+        PrepareHuman(false, 3, [4, 5, 5][Difficulty]);
+        PlaceHumanInUnit(CreateHuman, veh);
+        wait(0$01);
+        ComMoveXY(veh, 143, 143);
+        end;  
+
+    if count < 3 then
+       continue;
+
+    for j = 1 to 1+Difficulty do
+        begin
+        PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+        un := CreateHuman;
+        PlaceUnitArea(un, southArea, false);
+        ComMoveXY(un, 143, 143);
+        wait(0$01);
+        end;
+    end;
+
+End;
+
+// Kill Frank Patrol
+Every 4$00 do
+var i, un, time;
+begin
+time := [2$00, 1$00, 0$30];
+
+wait(time);
+
+uc_side := 3;
+uc_nation := 3;
+
+for i = 1 to 2 do
+    begin
+    PrepareHuman(false, 1, 4);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ru_dep_main);
+
+    ComExitBuilding(un);
+    AddComAgressiveMove(un, 41, 76);
+    end;
+
+End;

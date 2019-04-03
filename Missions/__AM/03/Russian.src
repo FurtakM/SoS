@@ -1,0 +1,189 @@
+Export Pokryshkin;
+Export ru_patrol, ru_spec_patrol, ru_forest, ru_vehicles, ru_produce_list, ru_cornel_attack;
+Export ru_firepoints_south, ru_alert, ru_alert_xy;
+Export Function PrepareRussian;
+var i, j, b, un, veh, tw, bar, lab, fac, skill, vehicles, spot_xy;
+begin
+ru_alert := false;
+ru_produce_list := [];
+
+if Difficulty > 1 then
+   begin          
+   uc_side := 3;
+   uc_nation := 3;
+   bc_type := b_breastwork;
+   bc_level := Difficulty;   
+   CreateAndPlaceBuildingXYD(22, 14, 0);
+   CreateAndPlaceBuildingXYD(48, 46, 0);
+   CreateAndPlaceBuildingXYD(86, 65, 5);
+   CreateAndPlaceBuildingXYD(165,73, 5);
+   end;
+
+if Difficulty = 3 then
+   SetTech(tech_weap1, 3, state_researched);
+
+tw := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+bar := FilterAllUnits([[f_side, 3], [f_btype, b_armoury]]);
+fac := FilterAllUnits([[f_side, 3], [f_btype, b_factory]]);
+lab := FilterAllUnits([[f_side, 3], [f_btype, b_lab]]);
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) do
+    begin
+    SetResourceType(GetBase(i), mat_cans, 5000);
+    SetResourceType(GetBase(i), mat_oil, 3000);
+    end;
+
+uc_side := 3;
+uc_nation := 3;
+skill := [2, 3, 4][Difficulty];
+
+Pokryshkin := PrepareUnit('Pokryshkin', false);
+PlaceUnitXY(Pokryshkin, 63, 21, false);
+ComHold(Pokryshkin);
+
+InitHc;
+
+for i in fac do
+    begin
+    for j = 1 to 6 do
+        begin
+        PrepareHuman(false, 3, skill);
+        PlaceHumanInUnit(CreateHuman, i);
+        end;
+    end;
+
+for i in lab do
+    begin
+    PrepareHuman(false, 4, skill);
+    PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+for i in tw do
+    begin
+    PlaceWeaponTurret(i, [ru_heavy_machine_gun, ru_gatling_gun][rand(1,2)]);
+    PrepareSolBun(skill, i);
+    end;
+
+for i in bar do
+    begin
+    PrepareHuman(false, 1, skill);
+    PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+spot_xy := [ [100,9], [135,60], [41,6],  [22,9], [84,14] ];
+vehicles := [ ];
+
+for i in spot_xy do
+    begin
+    veh := PrepareTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][rand(1,3)], 100);
+    vehicles := Insert(vehicles, vehicles+1, veh);
+    SetDir(veh, 3);
+    PlaceUnitXY(veh, i[1], i[2], false);
+
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+
+for i = 1 to [5, 7, 8][Difficulty] do
+    begin
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    PlaceUnitArea(un, forestGuardArea, false);
+    ru_forest := ru_forest ^ un;
+    end;
+
+for i = 1 to [2, 3, 4][Difficulty] do
+    begin
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    PlaceUnitArea(un, forestSouthGuardArea, false);
+    ru_patrol := ru_patrol ^ un;
+    end;
+
+for i = 1 to 2 do
+    begin
+    PrepareHuman(sex_male, 1, skill);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 39, 12, 3, false);
+    ru_spec_patrol := ru_spec_patrol ^ un;
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 180, 11, 4, false);
+    ru_cornel_attack := ru_cornel_attack ^ un;
+    end;
+
+ru_vehicles := vehicles;
+ru_firepoints_south := [ [ [131,121], [113,90], [93,62] ],
+                         [ [106,54],  [120,80], [143,120] ],
+                         [ [154,116], [140,93], [130,58] ],
+                         [ [105,106], [134,98], [159,113] ],
+                       ];
+
+
+for i = 1 to Difficulty-1 do
+    ru_produce_list := ru_produce_list ^ [ru_medium_tracked, engine_combustion, control_manual, ru_gatling_gun];
+End;
+
+
+Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) do
+var i, filter;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]);
+
+if filter then
+   for i in filter do
+       if GetFuel(i) < 20 then
+          SetFuel(i, 20);
+End;
+
+Every 0$01 trigger ru_produce_list do
+var i, fac, can_produce;
+begin
+enable;
+
+fac := FilterAllUnits([[f_side, 3], [f_btype, b_factory]]);
+can_produce := [];
+
+if not fac then
+   begin
+   disable;
+   exit;
+   end;
+
+for i in fac do
+    if UnitsInside(i) then
+       can_produce := Insert(can_produce, 1, i);
+
+if not can_produce then
+   exit;
+
+ComConstruct(can_produce[rand(1, can_produce)], ru_produce_list[1], ru_produce_list[2], ru_produce_list[3], ru_produce_list[4]);
+
+for i = 1 to 4 do
+    ru_produce_list := Delete(ru_produce_list, 1);
+End;
+
+Export Function AddMoreTanks();
+var i, veh;
+begin
+for i = 1 to 6 do
+    begin
+    PrepareHuman(false, 3, 3);
+    veh := PrepareTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_heavy_machine_gun][rand(1,2)], 70);
+
+    SetDir(veh, 4);
+    PlaceUnitXY(veh, 229, 44, false);
+    PlaceHumanInUnit(CreateHuman, veh);
+
+    ru_vehicles := ru_vehicles ^ veh;
+
+    ComMoveXY(veh, 191, 32);
+    Wait(0$02);
+    end;
+End;

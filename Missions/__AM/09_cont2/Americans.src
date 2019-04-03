@@ -1,0 +1,178 @@
+Export JMM, Gary, Bobby, Cyrus, Houten, alpha_engs, powell_trans, Powell;
+Export Function PrepareAmerican;
+var tmp, un, veh, i;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+// Prepare JMM
+JMM := PrepareUnit('JMM', (not debug), '08_');
+
+veh := PrepareTank(1, 1, us_medium_tracked, engine_solar, control_manual, us_double_gun, 55);
+SetDir(veh, 3);
+
+PlaceUnitXY(veh, 43, 3, false);
+PlaceHumanInUnit(JMM, veh);
+
+// prepare alfa engs
+tmp := [];
+
+uc_side := 4;
+hc_gallery := 'SecondCharsGal';
+hc_class := 2;
+
+hc_sex := sex_female;
+hc_basic_skills := [0, 1, 1, 0];
+hc_skills := [3, 4, 2, 1];
+hc_attr := [10, 11];
+hc_name := 'Naoma Goichman';
+hc_face_number := 43;
+tmp := tmp ^ CreateHuman;
+
+hc_basic_skills := [0, 2, 0, 1];
+hc_skills := [0, 5, 3, 1];
+hc_attr := [10, 10];
+hc_name := 'Magdalene Glance';
+hc_face_number := 44;
+tmp := tmp ^ CreateHuman;
+
+hc_sex := sex_male;
+hc_basic_skills := [2, 2, 0, 0];
+hc_skills := [3, 4, 1, 0];
+hc_attr := [12, 10];
+hc_name := 'Steve Holland';
+hc_face_number := 60;
+tmp := tmp ^ CreateHuman;
+
+alpha_engs := tmp diff 0;
+
+for un in alpha_engs do
+    PlaceUnitXYR(un, 52, 35, 3, false);
+
+for tmp = 1 to (1 + LoadVariable('06_crates_1', 0)) * 2 do
+    CreateResourcesXYR(mat_cans, 5, 56, 40, 2, false);
+
+if LoadVariable('gamma_commander', 0) < 3 then
+   Houten := PrepareUnit('VanHouten', false, '');
+
+Powell := PrepareUnit('Powell', false, '');
+
+InitHc;
+InitUc;
+End;
+
+Export Function PrepareOvsyenko;
+var i, b, tmp, un;
+begin
+uc_side := 4;
+
+// place buildings
+uc_nation := 3;
+
+tmp := LoadVariable('09_ovsyenko_base', [[b_depot, 101, 118, 2, 500],
+                                         [b_breastwork, 109, 114, 4, 500],
+                                         [b_breastwork, 115, 132, 5, 500],
+                                         [b_breastwork, 98, 120, 1, 500]]);
+
+for i in tmp do
+    begin
+    bc_type := i[1];
+    bc_level := 3;
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if GetBType(b) = b_depot then
+       begin
+       SetBName(b, 'ovsyenko');
+       SetResourceType(GetBase(b), mat_cans, 50);
+       end;
+
+    if i[5] < 250 then
+       SetLives(b, 333)
+      else
+       SetLives(b, i[5]);
+    end;
+
+// place squad
+uc_nation := 1;
+
+tmp := [];
+
+Gary := PrepareUnit('Gary', (not debug), '');
+tmp := tmp ^ Gary;
+
+Bobby := PrepareUnit('Bobby', (not debug), '08_');
+
+if not Bobby then
+   Bobby := PrepareUnit('Bobby', (not debug), '03_');
+
+if Bobby then
+   tmp := tmp ^ Bobby;
+
+Cyrus := PrepareUnit('Cyrus', (not debug), '08_');
+
+if not Cyrus then
+   Cyrus := PrepareUnit('Cyrus', (not debug), '03_');
+
+if Cyrus then
+   tmp := tmp ^ Cyrus;
+
+tmp := tmp ^ CreateCharacterSet('09_prev_squad');
+
+tmp := tmp diff 0;
+
+if debug then
+   begin
+
+   for i = 1 to 6 do
+       begin
+       PrepareHuman(false, 1, 6);
+       tmp := tmp ^ CreateHuman;
+       end;
+
+   end;
+
+for i in tmp do
+    begin
+
+    if GetClass(i) in [2,3] then
+       SetClass(i, 1);
+
+    PlaceUnitXYR(i, 106, 122, 5, false);
+    end;
+
+tmp := tmp diff Gary;
+b := FilterAllUnits([[f_side, 4], [f_btype, b_breastwork]]);
+
+for i = 1 to b do
+    begin
+    ComEnterUnit(tmp[i], b[i]);
+    end;
+
+InitHc;
+InitUc;
+End;
+
+
+Export Function PowellTransport;
+var i, un;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+// prepare mechs
+PrepareHuman(sex_male, 3, 6);
+hc_name := '';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 30;
+
+powell_trans := CreateHuman;
+
+hc_face_number := 31;
+powell_trans := powell_trans ^ CreateHuman;
+
+for i = 1 to 2 do
+    begin
+    un := PrepareTank(4, 1, us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 66);
+    powell_trans := powell_trans ^ un;
+    end;
+End;

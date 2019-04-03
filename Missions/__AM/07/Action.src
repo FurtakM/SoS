@@ -1,0 +1,146 @@
+// Action module
+Export Function Action;
+var points, i, sol, team, filter;
+begin
+InGameOn;
+
+CenterNowOnXY(33, 11);
+           
+points := [ [29,21], [41,28], [52,26], [49,16] ];
+
+sol := (FilterAllUnits([[f_side, 1], [f_sex, 1]]) diff [JMM, Brown, Cyrus, Bobby, Gladstone, Houten, Khatam])[1];
+
+
+if sol then
+   begin
+   ComMoveXY(sol, 50, 18);
+   AddComTurnUnit(sol, Harisson);
+   end;
+
+for i in points do
+    AddComMoveXY(Harisson, i[1], i[2]);
+
+
+AddComExitVehicle(Harisson);
+
+repeat
+ wait(3);
+until not IsInUnit(Harisson);
+
+Say(sol, 'D1-Sol1-1');
+
+ComTurnUnit(Harisson, sol);
+
+Say(Harisson, 'D1-Har-1');
+
+Wait(0$0.3);
+
+ComMoveXY(sol, 35, 21);
+
+ComExitBuilding(JMM);
+AddComMoveUnit(JMM, Harisson);
+
+ComTurnUnit(Harisson, JMM);
+
+repeat
+ wait(3);
+until GetDistUnits(JMM, Harisson) < 4;
+
+ComTurnUnit(JMM, Harisson);
+
+Say(JMM, 'D1-JMM-1');
+Say(Harisson, 'D1-Har-2');
+Say(JMM, 'D1-JMM-2');
+Say(Harisson, 'D1-Har-3');
+Say(JMM, 'D1-JMM-3');
+Say(Harisson, 'D1-Har-4');
+Say(JMM, 'D1-JMM-4');
+Say(Harisson, 'D1-Har-5');
+Say(JMM, 'D1-JMM-5');
+Say(Harisson, 'D1-Har-6');
+Say(JMM, 'D1-JMM-6');
+
+EndMission;
+End;
+
+
+Export Function EndMission;
+var commander, i, all;
+begin
+case gamma_commander of
+     1: commander := Donaldson;
+     2: commander := Brown;
+     3: commander := Houten;
+end;
+
+all := FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM, commander];
+
+save_group := CharacterSelection('1', 10, 10,
+                                [sel_change_class, JMM,
+                                 sel_not_hired, sel_changeable, sel_change_class]^all^
+                                [sel_dont_change_class, sel_not_changeable, [commander, Harisson]],
+                                [[class_soldier, 3], [class_mechanic, 3, 6], [class_scientistic, 1]]);
+
+SaveCharacters(all diff [JMM, Gladstone, Lisa, Cyrus, Bobby, Frank, Donaldson, Brown, Houten, Harisson, Khatam]^save_group, '07_othersGamma');
+SaveCharacters(save_group diff [JMM, Gladstone, Lisa, Cyrus, Bobby, Frank, Donaldson, Brown, Houten, Harisson, Khatam, 0], '07_others');
+
+SaveCharacters(JMM, mission_prefix&'JMM');
+
+if Lisa then
+   begin
+   SaveCharacters(Lisa, mission_prefix&'Lisa');
+
+   if Lisa in save_group then
+      SaveVariable(true, 'LisaIn07');
+   end;
+
+if Bobby then
+   begin
+   SaveCharacters(Bobby, mission_prefix&'Bobby');
+
+   if Bobby in save_group then
+      SaveVariable(true, 'BobbyIn07');
+   end;
+
+if Cyrus then
+   begin
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+
+   if Cyrus in save_group then
+      SaveVariable(true, 'CyrusIn07');
+   end;
+
+if Brown then
+   begin
+   SaveCharacters(Brown, mission_prefix&'Brown');
+
+   if Brown in save_group then
+      SaveVariable(true, 'BrownIn07');
+   end;
+
+if Donaldson then
+   begin
+   SaveCharacters(Donaldson, mission_prefix&'Donaldson');
+
+   if Donaldson in save_group then
+      SaveVariable(true, 'DonaldsonIn07');
+   end;
+
+if Gladstone then
+   begin
+   SaveCharacters(Gladstone, mission_prefix&'Gladstone');
+
+   if Gladstone in save_group then
+      SaveVariable(true, 'GladstoneIn07');
+   end;
+
+if Khatam then
+   begin
+   SaveCharacters(Khatam, mission_prefix&'Khatam');
+
+   if Khatam in save_group then
+      SaveVariable(true, 'KhatamIn07');
+   end;
+
+ChangeMap(1, '%_cont');
+End;

@@ -1,0 +1,752 @@
+Export am, dow, kl;
+Export am_arm, am_bun, am_tw, {am_lab}
+       am_sol, am_eng, am_mech, am_sci,
+       am_veh, am_factory, am_limit, am_list,
+       am_bul, diff_patrol, am_cmeh,
+       am_diff, am_weapon, am_chassis, dskill,
+       am_count, count_dif;
+
+Export function PrepareAmerican;
+var i, un, b, x1, y1, k, l;
+begin
+
+    am = 1; 
+
+    am_list := [];
+    am_arm  := FilterAllUnits([[f_side, am], [f_btype, b_armoury]]);
+    am_bun  := FilterAllUnits([[f_side, am], [f_btype, b_breastwork]]);
+    am_tw   := FilterAllUnits([[f_side, am], [f_btype, b_bunker]]);
+    // am_lab  := FilterAllUnits([[f_side, am], [f_btype, b_lab_full]]);
+    am_veh  := [];
+    am_cmeh := [];
+    dskill  := [3,5,7][Difficulty];
+    diff_patrol = [3, 4, 4][Difficulty];
+    am_diff := [4, 5, 6][Difficulty];
+    am_count := 0;
+    count_dif := [3, 4, 4][Difficulty];
+    am_weapon := [us_machine_gun, us_light_gun, us_gatling_gun, us_double_gun][Difficulty];
+    am_chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][Difficulty];
+
+    uc_side = am;
+    uc_nation = 1;
+
+    hc_gallery = '';
+    hc_name = '';
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    
+
+    i = 0;
+
+    k  = 1;
+    x1 = [77, 104, 96, 89, 111, 17, 16];
+    y1 = [13, 63, 57, 67, 85, 4, 15];
+
+    // zo³nierze bunkry
+    for i = 1 to 7 do
+    begin
+    hc_class = 1;
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceUnitXY(un, x1[k], y1[k], false);
+    k := k + 1;
+
+    ComEnterUnit(un, NearestUnitToUnit(am_bun, un));
+    end;
+
+    
+    for i in am_tw do
+    begin
+
+    If IsInUnit(i) = 0 then
+    begin
+    hc_class = 1;
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceHumanInUnit(un, i);
+    end;
+    end;
+
+    l = 0;
+    
+    // barracks
+    hc_class = 1;
+
+    repeat
+    begin
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+
+    if l <= 6 then
+    PlaceHumanInUnit(un, am_arm[1])
+     else
+    PlaceHumanInUnit(un, am_arm[2]);
+
+    l = l + 1;
+    end until l = 12;
+
+ 
+
+    l = 0;
+
+    for i in am_lab do
+    begin
+    hc_class = 4;
+    repeat
+    begin
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceHumanInUnit(un, i);
+    l = l + 1;
+    end until l = 6;
+    end;
+
+    l = 0;
+
+    for i in am_fac do
+    begin
+    hc_class = 3;
+    repeat
+    begin
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceHumanInUnit(un, i);
+    l = l + 1;
+    end until l = 6;
+    end;
+
+
+    l = 0;
+
+    for i in am_ct do
+    begin
+    hc_class = 3;
+    repeat
+    begin
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-3,1), DSkill+Rand(-3, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceHumanInUnit(un, i);
+    am_cmeh = am_cmeh ^ un;
+    l = l + 1;
+    end until l = 3;
+
+    end;
+
+    l = 0;
+
+    repeat
+    begin
+    hc_class = 2;
+    hc_skills = [DSkill+Rand(-2, 1), DSkill+Rand(-1,1), DSkill+Rand(-3, 1), DSkill+Rand(-3, 1)];
+    hc_attr = [Rand(8,12), Rand(9,11)];
+    hc_sex = Rand(sex_male, sex_female);
+    un = CreateHuman;
+    PlaceUnitArea(un, AmBase, false);
+    l = l + 1;
+    end until l = 5;
+
+ 
+// Sikorsky
+   hc_gallery = 'us';
+   hc_face_number = 19;
+   hc_name = 'Jeremy Sikorski';
+   hc_attr = [11, 10];
+   hc_skills = [8,5,7,3];
+   hc_sex = sex_male;
+   hc_class = 1;
+
+   dow := CreateHuman;
+   PlaceHumanInUnit(dow, am_dep);
+
+// Base
+   SetDefenseAI;
+// Out Base
+   PlaceBunker;
+
+end;
+
+
+Every 15$00 trigger Difficulty > 1 do
+begin
+ComResearch(am_lab, tech_weap2);
+end;
+
+Export def_un;
+Function SetDefenseAI;
+var i, veh,un;
+begin
+
+uc_side = am;
+uc_nation = 1;
+
+def_un = [];
+
+for i = 1 to 3 do
+begin
+vc_chassis = us_heavy_tracked;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = us_gatling_gun;
+veh = CreateVehicle;
+
+PlaceUnitArea(veh, AMAI, false);
+
+def_un = def_un ^ veh;
+
+hc_class = 3;
+hc_skills = [Rand(5,6), Rand(1,5), DSkill, Rand(0,1)];
+hc_sex = sex_male;
+hc_name = '';
+hc_gallery = '';
+
+un = CreateHuman;
+PlaceHumanInUnit(un, veh);
+end;
+
+end;
+
+
+Every 0$01 trigger def_un > 0 do
+var un, enemy, can_attack, liv;
+begin
+enable;
+
+can_attack = UnitFilter(def_un, [f_lives, 600]);
+
+for un in def_un do
+begin
+
+If not IsInArea(un, AmBase) then
+begin
+ComMoveToArea(un, AmBase);
+end;
+
+If GetFuel(un) < 700 then
+begin
+If not See(2, un) then
+SetFuel(un, 1000);
+end;
+
+If GetLives(un) < 600 then
+begin
+ComMoveXY(un, 85, 23);
+AddComWait(un, 0$10);
+SetLives(un, 1000);
+end;
+end;
+
+for enemy in FilterAllUnits([f_side, 2]) do
+begin
+If IsInArea(enemy, AmBase) then
+begin
+ComAttackUnit(can_attack, enemy[1]);
+end;
+end;
+
+end;
+
+
+Every 0$01 trigger Time > 20$0 do
+begin
+ComResearch(am_lab, tech_weap1);
+AddComResearch(am_lab, tech_weap2);
+end;
+
+Every 0$01 do
+var b, engs, hurts, un, i;
+begin
+enable;
+
+am_bul = FilterUnitsInArea(ambase, [[[f_side, am], [f_type, unit_building], [f_not,[f_lives, 1000]]]]);
+am_eng = FilterAllUnits([[f_side, am], [f_class, 2]]);
+engs = UnitFilter(am_eng, [f_lives, 1000]);
+hurts = UnitFilter(am_eng, [f_not, [f_lives, 650]]);
+
+If am_eng > 0 then
+begin
+
+if hurts > 0 then
+for un in hurts do
+begin
+ComEnterUnit(un, am_dep);
+AddComExitBuilding(un);
+end;
+
+
+if am_bul > 0 then
+   for i = 1 to engs do
+       begin
+       if not HasTask(engs[i]) then
+          ComRepairBuilding(engs[i], am_bul[1]);
+       end;
+end;
+
+End;
+
+
+
+{   MC-TEST FUNCTION
+
+Export repair_strategy, main_buildings;
+Function ProtectBlueBase;
+var b;
+begin
+
+am_eng = FilterAllUnits([[f_side, 1], [f_class, 2]]);
+am_bul = FilterAllUnits([[f_side, 1], [f_type, unit_building]]);
+
+main_buildings := FilterAllUnits([ [f_side, am], [f_type, unit_building], [f_not, [f_btype, b_turret]], [f_not, [f_btype, b_bunker]], [f_not, [f_btype, b_breastwork]], [f_not, [f_btype, b_barracks]] ]);
+repair_strategy := McRepair(80, am_eng, main_buildings,[[mcr_bui_limit, 1000]]);
+end; }
+
+
+Every 10$0 do // unlimited
+begin
+enable;
+
+If IsOk(am_dep) then
+   begin
+   SetResourceType(am_dep, mat_cans, 10000);
+   SetResourceType(am_dep, mat_oil, 1000);
+   end;
+
+end;
+
+
+Every 0$01 do
+var v, filter;
+begin
+enable;
+
+filter = FilterAllUnits([[[f_side, 1],[f_control, control_remote], [f_ok]]]);
+
+for v in filter do
+begin
+If not IsControledBy(v) and IsOk(v) then
+ComLinkTo(v, am_cmeh[1]);
+If UnitsLinked(am_cmeh[1]) >= 2 then
+ComLinkTo(v, am_cmeh[2]);
+If UnitsLinked(am_cmeh[2]) >= 2 then
+ComLinkTo(v, am_cmeh[3]);
+end;
+end;
+
+
+
+Every 0$01 trigger AmerikaAttack = true do
+var i;
+begin
+
+If GetSide(ar_depe) = 8 then
+begin
+Wait(12$00); // tick tick
+end else
+begin
+Wait(10$00);
+end;
+
+for i = 1 to am_diff do
+begin
+AddComConstruct(am_fac, us_medium_wheeled, engine_combustion, control_remote , am_weapon + Rand(0,1));
+end;
+
+Wait(0$20);
+
+AddComExitBuilding(for_sol);
+AddComAgressiveMove(for_sol, 98, 5);
+AddComAgressiveMove(for_sol, 126, 7);
+end;
+
+Every 0$10 trigger CanAttack = true do
+var i, filter;
+begin
+enable;
+
+filter = FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_not, [f_weapon, us_bulldozer]]]);
+
+If filter >= am_diff then
+begin
+CanAttack = false;
+Wait(0$03);
+ComAttackArabianBase(filter);
+end;
+end;
+
+Every 16$00 trigger AmerikaAttack = true and am_count <= count_dif do  // 4 cyan
+var i, veh, un, am_troops, ar_units;
+begin
+enable;
+
+Wait(Rand(0$01, 0$30));
+
+for i = 1 to 3 do
+begin
+uc_side = 4;
+uc_nation = 1;
+
+vc_chassis = us_medium_tracked;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = am_weapon + Rand(0,1);
+
+veh = CreateVehicle;
+PlaceUnitArea(veh, AmSpawn, false);
+
+
+hc_class = 1;
+hc_name = '';
+hc_gallery = '';
+hc_sex = sex_male;
+hc_skills = [Rand(1,3), Rand(0,1), Rand(3, 6), Rand(0,2)];
+
+un = CreateHuman;
+PlaceHumanInUnit(un, veh);
+end;
+
+Wait(3);
+am_troops = FilterAllUnits([[f_side, 4], [f_type, unit_vehicle]]);
+
+repeat
+begin
+ar_units := FilterAllUnits([f_side, 5]);
+
+for i = 1 to am_troops do
+begin     
+if not HasTask(am_troops[i]) then
+   ComAttackUnit(am_troops[i], NearestUnitToUnit(ar_units, am_troops[i]));
+end;
+
+Wait(0$02);
+
+end until am_troops = 0; 
+end;
+
+
+
+Export function ComAttackArabianBase(am_vehs);
+var un, i, ar_units, e;
+begin
+
+
+ComMoveXY(am_vehs, 136, 73);
+AddComMoveXY(am_vehs, 131, 49);
+Wait(0$30);
+
+repeat
+begin
+
+for i = 1 to am_vehs do
+begin
+ar_units := FilterAllUnits([f_side, 2]);
+e := NearestUnitToUnit(ar_units, am_vehs[i]);
+
+if not HasTask(am_vehs[i]) and e then
+   begin
+   Attack(am_vehs[i], 2, [132, 12], ['empty_buildings']);
+   end;
+end;
+
+Wait(0$02);
+end until am_vehs = 0;
+
+end;
+
+
+Export for_sol;
+Export function SendPatrol;
+var un, i;
+begin
+
+for_sol = [];
+
+uc_side = 1;
+uc_nation = 1;
+
+for i = 1 to diff_patrol do
+begin
+hc_name = '';
+hc_gallery = '';
+hc_skills = [Rand(3,7), Rand(0,3), Rand(0,5), Rand(1,2)];
+hc_attr = [10, Rand(11,12)];
+hc_class = 1;
+
+un = CreateHuman;
+PlaceUnitArea(un, forest_area, false);
+for_sol = for_sol ^ un;
+end;
+
+end;
+
+Function PlaceBunker;
+var i, b, a, x, y, d, un;
+begin
+
+  uc_side = am;
+  uc_nation = 1;
+
+  bc_type = 31;
+  bc_level = 5 + [-1,0,1][Difficulty];
+
+  a := 0;
+  x := [164, 179, 149, 158, 122, 46];
+  y := [130, 164, 87, 135, 20, 58];
+ // d := [1,5,0,0,0,0]; // dir
+
+If Difficulty = 1 then
+begin
+exit;
+end;
+
+If Difficulty = 2 then
+begin
+repeat
+begin
+b = CreateBuilding;
+PlaceUnitXY(b, x[a], y[a], false);
+
+hc_class = 1;
+hc_skills = [DSkill+Rand(-3, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+hc_gallery = '';
+hc_attr = [Rand(8,12), Rand(9,11)];
+hc_sex = Rand(sex_male, sex_female);
+un = CreateHuman;
+PlaceUnitXY(un, x[a]+3, y[a], false);
+
+ComEnterUnit(un, b);
+
+a = a + 1;
+end until a = 3;
+end;
+
+If Difficulty = 3 then
+begin
+repeat
+begin
+b = CreateBuilding;
+PlaceUnitXY(b, x[a], y[a], false);
+
+hc_class = 1;
+hc_skills = [DSkill+Rand(-3, 1), DSkill+Rand(-3,1), DSkill+Rand(-1, 1), DSkill+Rand(-3, 1)];
+hc_name = '';
+hc_gallery = '';
+hc_attr = [Rand(8,12), Rand(9,11)];
+hc_sex = Rand(sex_male, sex_female);
+un = CreateHuman;
+PlaceUnitXY(un, x[a]+3, y[a], false);
+
+ComEnterUnit(un, b);
+
+a = a + 1;
+end until a = 5;
+end;
+end;
+
+
+
+
+
+Every 0$01 trigger for_sol = diff_patrol do
+begin
+
+If AmerikaAttack = false then
+begin
+enable;
+AddComMoveToArea(for_sol[1], fa1);
+AddComMoveToArea(for_sol[1], forest_area);
+AddComMoveToArea(for_sol[2], fa2);
+AddComMoveToArea(for_sol[2], forest_area);
+AddComMoveToArea(for_sol[3], fa3);
+AddComMoveToArea(for_sol[3], forest_area);
+if for_sol > 3 then
+   begin
+   AddComMoveToArea(for_sol[4], fa4);
+   AddComMoveToArea(for_sol[4], forest_area);
+   end;
+end;
+
+If AmerikaAttack = true then
+begin
+ComStop(for_sol);
+AddComEnterUnit(for_sol, am_dep2);
+end;
+end;
+
+
+
+Export function PrepareConvoyA;
+var un, veh;
+begin
+
+uc_side = am;
+uc_nation = 1;
+
+vc_chassis = us_medium_wheeled;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = us_cargo_bay;
+veh = CreateVehicle;
+PlaceUnitXYR(veh, 180, 87, 4, false);
+
+SetCargo(veh, mat_cans, 100);
+
+hc_class = 3;
+hc_gallery = '';
+hc_name = '';
+un = CreateHuman;
+PlaceHumanInUnit(un, veh);
+
+Wait(1);
+
+ComMoveXY(un, 162, 85);
+AddComExitVehicle(un);
+AddComMoveXY(un, 169, 94);
+AddComTurnXY(un, 170, 95);
+AddComWait(un, 0$10);
+
+If GetSide(veh) = 1 then
+begin
+AddComEnterUnit(un, veh);
+AddComMoveXY(un, 95, 61)
+end else
+begin
+ComMoveXY(un, 162, 85);
+AddComWait(un, 0$10);
+AddComMoveXY(un, 95, 61);
+VehGone = true;
+Wait(0$20);
+RemoveUnit(un);
+end;
+end;
+
+Export Convoy;
+Export function PrepareConvoyB;
+var i, un, veh;
+begin
+
+uc_side = 4;
+uc_nation = 1;
+Convoy = [];
+
+for i = 1 to 2 do
+begin
+vc_chassis = us_medium_wheeled;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = us_cargo_bay;
+
+veh = CreateVehicle;
+PlaceUnitArea(veh, ConvoySpawn, false);
+Convoy = Convoy ^ veh;
+
+SetCargo(veh, Rand(mat_cans, mat_oil), 100);
+SetDir(veh, 4);
+
+hc_class = 3;
+hc_gallery = '';
+hc_name = '';
+
+un = CreateHuman;
+PlaceHumanInUnit(un, veh);
+Convoy = Convoy ^ un;
+end;
+
+for i = 1 to 3 do
+begin
+vc_chassis = us_medium_wheeled;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = Rand(us_machine_gun, us_light_gun);
+
+veh = CreateVehicle;
+PlaceUnitArea(veh, ConvoySpawn, false);
+Convoy = Convoy ^ veh;
+
+SetDir(veh, 4);
+
+hc_class = 3;
+hc_gallery = '';
+hc_name = '';
+
+un = CreateHuman;
+PlaceHumanInUnit(un, veh);
+Convoy = Convoy ^ un;
+end;
+
+Wait(1);
+
+ComAgressiveMove(Convoy, 91, 58);
+end;
+
+Every 0$01 do
+var un;
+begin
+enable;
+
+for un in FilterAllUnits([[f_side, 4], [f_inarea, AmBase]]) do
+begin
+Wait(0$07);
+RemoveUnit(un);
+end;
+
+end;
+
+
+Every 22$00 do
+var bull;
+begin
+uc_side := 1;
+uc_nation := 1;
+vc_chassis := us_heavy_tracked;
+vc_engine := engine_combustion;
+vc_control := control_remote;
+vc_weapon := us_bulldozer;
+bull := CreateVehicle;
+PlaceUnitXY(bull, 56, 21, false);
+Wait(0$03);
+CutTreeInArea(bull, cut1);
+
+repeat
+ begin
+ if not HasTask(bull) then
+    CutTreeInArea(bull, cut1);
+ Wait(0$01);
+ end
+until ListEnvironmentArea(cut1) = 0;
+
+
+repeat
+ begin
+ if not HasTask(bull) then
+    CutTreeInArea(bull, cut2);
+ Wait(0$01);
+ end
+until ListEnvironmentArea(cut2) = 0;
+
+ComMoveXY(bull, 99, 65);
+Wait(0$30);
+SetFuel(bull, 100);
+
+CutTreeInArea(bull, cut3);
+
+repeat
+ begin
+ Wait(0$01);
+ if not HasTask(bull) then
+    CutTreeInArea(bull, cut3);
+ end
+until ListEnvironmentArea(cut3) = 0;
+
+ComAttackUnit(bull, NearestUnitToUnit(FilterAllUnits([f_side, 5]), bull));
+End;

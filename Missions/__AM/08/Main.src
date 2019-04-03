@@ -1,0 +1,95 @@
+{
+    Mission scripts: Nefarem
+    Status: 100%
+}
+
+Export JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Khatam;  // heroes from mission 07
+Export others_gamma; // Other characters in Gamma
+Export gammaCommander, Houten; // Gamma commander
+Export Denis, Joan; // heroes from mission 06
+Export Sikorski, SikorskyTank, SikorskyArrive, SikorskyTimer, SikorskyAI, SikorskyStatus; // Sikorsky
+Export Harisson, Powell; // Am commanders
+Export Borodin; // Ru commander
+
+Export RuSolMinLevel, RuSolMaxLevel;
+
+Export russianAI;
+Export ruDepot, ruLab, ruFab;
+Export ruDestroyedBuildings;
+Export defenders_list;
+
+Export firstAttack, secondAttack;
+Export timerStatus;
+Export escapeAvalaible;
+
+Export amDepot;
+
+Export startCutscene;
+
+Export JMMArrive;
+
+Export supply;
+Export varEvent1;
+
+Export mission_prefix, mission_prefix_prev;
+
+Export debugMode;
+
+Starting
+begin
+    Resetfog;
+    RandomizeAll;
+
+    mission_prefix := '08_';
+    mission_prefix_prev := '07c_';
+
+    JMMArrive = 0; // 0 - don't arrive, 1 - arrive
+    SikorskyArrive = 0;  // 0 - don't arrive, 1 - arrive
+    SikorskyTimer = 0$1; // time to attack
+    SikorskyAI = 0; 
+    SikorskyStatus = 0; // 0 - off, 1 - good battle, 2 - Sikorsky alone destroy ru base
+
+    firstAttack = 0; // first attack durring arrive two men from Delta
+    secondAttack = 0; // seoncd attack durring arrive Macmillan
+
+    startCutscene = 1;
+
+    gammaCommander = LoadVariable('GammaCommander', 0); // 1 - Donaldson, 2 - Brown, 3 - Van Houten
+
+    russianAI = 0; // 0 - off, 1 - on
+    ruDestroyedBuildings = []; // russian destroyed buildings
+    escapeAvalaible = 0;
+    defenders_list = [];
+
+    varEvent1 = 0; // Block event
+    timerStatus = 0; // 0 - off, 1 - on
+
+    supply = [18, 17, 15][Difficulty];
+
+    debugMode = 0; // 0 - player, 1 - developer
+
+    PrepareDifficulty;
+
+    PlaceSeeing(43, 22, 1, -333);
+    RemoveSeeing(43, 22, 1);
+
+    PrepareBase;
+    PrepareHeroes;
+
+    PrepareRussianCommander;
+    PrepareRussians;
+    AddComBuild(FilterAllUnits([[f_side, 3], [f_class, 2]]), b_depot, 90, 86, 3);
+    BaseDefendersSpawn(3, RussianBaseTerritory, 3, rand(RuSolMinLevel, RuSolMaxLevel), 6, 4);
+
+    PrepareCutsceneAttack;
+end;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    for i in FilterAllUnits([[f_side, 1], [f_btype, 1]]) do SetResourceType(GetBase(i), 1, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_btype, 1]]) do SetResourceType(GetBase(i), 2, 9999);
+end;

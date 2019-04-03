@@ -1,0 +1,365 @@
+Export Function Action;
+begin
+CenterNowOnXY(28, 3);
+
+PlaceSeeing(41, 76, 1, 10);
+RemoveSeeing(41, 76, 1);
+
+InGameOn;
+SayRadio(Harisson, 'D2-Har-1');
+InGameOff;
+
+ChangeMissionObjectives('M1');
+End;
+
+
+Every 0$1 trigger buildings_counter > 1 do
+var un;
+begin
+un := GetRandom(sex_male)[1];
+Say(un, 'D2a-Sol1-1');
+
+if not un then
+   begin
+   un := GetRandom(sex_female)[1];
+   Say(un, 'D2a-FSol1-1');
+   end;
+
+if Khatam then
+   Say(Khatam, 'D3b-Khat-3');
+End;
+
+// Frank spotted
+Every 0$1 trigger Frank and GetDistUnits(JMM, Frank) < 5 and not InBattle(1) do
+var i, ape;
+begin
+InGameOn;
+
+ape := FilterAllUnits([[f_side, 0], [f_class, class_apeman]]);
+ape := NearestUnitToUnit(ape, Frank);
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_dist, Frank, 20]]) do
+    ComTurnUnit(i, Frank);
+
+SetSide(Frank, 1);
+
+ComMoveUnit(JMM, Frank);
+AddComTurnUnit(JMM, Frank);
+
+CenterOnUnits(Frank);
+
+Say(Frank, 'D3a-Frank-1');
+
+ComMoveXY(ape, 42, 78);
+AddComTurnUnit(ape, Frank);
+
+if Lisa then
+   Say(Lisa, 'D3a-Lisa-1');
+
+Say(JMM, 'D3a-JMM-1');
+
+if Cyrus then
+   Say(Cyrus, 'D3a-Cyrus-1');
+
+if GetRandom(sex_male) then
+   Say(GetRandom(sex_male)[1], 'D3a-Sol1-1');
+
+if GetRandom(sex_female) then
+   Say(GetRandom(sex_female)[1], 'D3a-FSol1-1');
+
+if Gladstone then
+   Say(Gladstone, 'D3a-Glad-1');
+
+ComMoveXY(ape, 60, 113);
+
+Say(Frank, 'D3a-Frank-2');
+
+ComTurnUnit(Frank, JMM);
+
+Say(JMM, 'D3a-JMM-2');
+
+RevealFogArea(1, spotArea);
+
+CenterOnXY(85, 134);
+
+Say(Frank, 'D3a-Frank-3');
+
+Wait(0$01);
+
+CenterOnXY(166, 136);
+Say(JMM, 'D3a-JMM-3');
+
+Wait(0$01);
+
+CenterNowOnUnits(Frank);
+
+Say(Frank, 'D3a-Frank-4');
+
+if Lisa then
+   Say(Lisa, 'D3a-Lisa-4');
+
+Say(JMM, 'D3a-JMM-4');
+Say(Frank, 'D3a-Frank-5');
+Say(JMM, 'D3a-JMM-5');
+Say(Frank, 'D3a-Frank-6');
+Say(JMM, 'D3a-JMM-6');
+Say(Frank, 'D3a-Frank-7');
+
+InGameOff;
+End;
+
+// Yamoko spotted
+Every 0$1 trigger Kikuchi and GetDistUnits(JMM, Kikuchi) < 5 and not InBattle(1) do
+begin
+InGameOn;
+
+ComTurnUnit(JMM, Kikuchi);
+ComTurnUnit(Kikuchi, JMM);
+
+CenterOnUnits(Kikuchi);
+
+Say(Kikuchi, 'D3b-Yam-1');
+Say(JMM, 'D3b-JMM-1');
+
+RevealFogArea(1, spotArea);
+
+CenterOnXY(85, 134);
+
+Say(Kikuchi, 'D3b-Yam-2');
+
+Wait(0$01);
+
+Say(JMM, 'D3b-JMM-2');
+
+CenterOnXY(166, 136);
+
+Say(Kikuchi, 'D3b-Yam-3');
+
+CenterNowOnUnits(JMM);
+
+Say(JMM, 'D3b-JMM-3a');
+
+SetSide(Kikuchi, 1);
+
+InGameOff;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(massDamageArea, [[f_side, 1], [f_not, [f_lives, 1000]]]) do
+var un, x, i;
+begin
+un := FilterUnitsInArea(massDamageArea, [[f_side, 1], [f_not, [f_lives, 1000]]])[1];
+
+DialogueOn;
+
+CenterNowOnUnits(un);
+
+if Lisa then
+   begin
+   Say(Lisa, 'D5-Lisa-1');
+   Say(JMM, 'D5-JMM-1a');
+   end
+  else
+   Say(JMM, 'D5-JMM-1');
+
+DialogueOff;
+
+while (true) do
+begin
+
+  wait(0$01);
+
+  x := FilterUnitsExceptArea(northElectro, [[f_btype, b_oil_power], [f_see, 1]]);
+
+  if x then
+     break;
+end;
+
+CenterOnUnits(x[1]);
+
+if Frank and GetSide(Frank) = 1 then
+   Say(Frank, 'D5a-Frank-1')
+  else
+   if Kikuchi and GetSide(Kikuchi) = 1 then
+      Say(Kikuchi, 'D5a-Yam-1')
+     else
+      Say(GetRandom(sex_male)[1], 'D5a-Sol1-1');
+
+Say(JMM, 'D5a-JMM-1');
+
+if Cyrus then
+   Say(Cyrus, 'D5a-Cyrus-1');
+
+x := false;
+
+while (true) do
+begin
+
+ wait(0$01);
+
+ for i in FilterAllUnits([f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) diff ru_dep_west do
+     if BaseNeedEnergy(i) then
+        x := true;
+
+ if x then
+    break;
+
+end;
+
+Say(JMM, 'D5b-JMM-1');
+End;
+
+// Harisson first call
+Every 0$1 trigger time_to_end[1] < tick do
+begin
+if not IsDead(ru_dep_main) then
+   begin    
+   SayRadio(Harisson, 'D3b-Har-3');
+   ChangeMissionObjectives('M2a');
+   end
+  else
+   begin
+   SayRadio(Harisson, 'D3b-Har-3a');
+   ChangeMissionObjectives('M2');
+   end;
+
+can_end := true;
+SetAreaMapShow(endArea, 1);
+
+Wait(0$02);
+
+if Lisa then
+   Say(Lisa, 'D3b-Lisa');
+
+if Bobby then
+   Say(Bobby, 'D3b-Bobby-3');
+
+if Cyrus then
+   Say(Cyrus, 'D3b-Cyrus-3');
+
+if Frank and GetSide(Frank) = 1 then
+   Say(Frank, 'D3b-Frank-3');
+
+if Kikuchi and GetSide(Kikuchi) = 1 then
+   Say(Kikuchi, 'D3b-Yam-4');
+End;
+
+// Harisson second call
+Every 0$1 trigger time_to_end[2] < tick do
+begin
+SayRadio(Harisson, 'D4-Har-1');
+ChangeMissionObjectives('M3');
+must_end := true;
+End;
+
+// Time out
+Every 0$01 trigger time_to_end[3] < tick do
+begin
+if not IsDead(ru_dep_main) then
+   YouLost('TimeOut1')
+  else
+   YouLost('TimeOut2');
+End;
+
+// End Mission     
+Every 0$1 trigger IsInArea(JMM, endArea) and can_end do
+var wait_on, i, tmp;
+begin
+wait_on := false;
+
+if FilterPeople(1)+0 > (FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea))+0 then
+   Case Query('Q1') of
+   1: wait_on := true;
+   2: wait_on := false;
+   end;
+
+repeat
+ wait(0$01);
+until (not wait_on) or (FilterPeople(1)+0) = (FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea))+0;
+
+
+DialogueOn;
+
+CenterNowOnUnits(JMM);
+
+Say(JMM, 'D6-JMM-1');
+SayRadio(Harisson, 'D6-Har-1');
+Say(JMM, 'D6-JMM-2');
+SayRadio(Harisson, 'D6-Har-2');
+Say(JMM, 'D6-JMM-3');
+SayRadio(Harisson, 'D6-Har-3');
+Say(JMM, 'D6-JMM-4');
+SayRadio(Harisson, 'D6-Har-4');
+Say(JMM, 'D6-JMM-5');
+
+DialogueOff;
+
+tmp := FilterBuildings(3);
+
+if tmp >= 35 then
+   begin
+   AddMedal('Destroy1', -1);
+   AddMedal('Destroy2', -1);
+   AddMedal('Destroy3', -1);
+   end
+  else
+   begin
+   AddMedal('Destroy1', 1);
+
+   if tmp >= 25 then
+      begin
+      AddMedal('Destroy2', -1);
+      AddMedal('Destroy3', -1);
+      end
+     else
+      begin
+      AddMedal('Destroy2', 1);
+
+      if tmp >= 15 then
+         AddMedal('Destroy3', -1)
+        else
+         AddMedal('Destroy3', 1);
+      end;
+   end;
+
+GiveMedals('MAIN');
+
+tmp := FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea);
+
+RewardPeople(tmp);
+
+SaveCharacters(JMM, mission_prefix&'JMM');
+
+// JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Khatam, Kikuchi
+if Brown in tmp then
+   SaveCharacters(Brown, mission_prefix&'Brown');
+if Donaldson in tmp then
+   SaveCharacters(Donaldson, mission_prefix&'Donaldson');
+if Bobby in tmp then
+   SaveCharacters(Bobby, mission_prefix&'Bobby');
+if Cyrus in tmp then
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+if Lisa in tmp then
+   SaveCharacters(Lisa, mission_prefix&'Lisa');
+if Frank in tmp then
+   SaveCharacters(Frank, mission_prefix&'Frank');
+if Gladstone in tmp then
+   SaveCharacters(Gladstone, mission_prefix&'Gladstone');
+if Khatam in tmp then
+   SaveCharacters(Khatam, mission_prefix&'Khatam');
+if Kikuchi in tmp then
+   SaveCharacters(Kikuchi, mission_prefix&'Kikuchi');
+
+SaveCharacters(tmp diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Khatam], mission_prefix&'others');
+
+SaveVariable(tick, '07_time');
+
+tmp := [];
+
+for i in FilterAllUnits([[[f_side, 1], [f_nation, 1], [f_type, unit_vehicle]]]) do
+    tmp := tmp ^ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)];
+
+SaveVariable(tmp, '07_vehicles');
+
+YouWin;
+End;
+

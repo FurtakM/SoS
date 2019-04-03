@@ -1,0 +1,78 @@
+Export Yakotich, Platonov, Rusole;
+Export Function PrepareRussian;
+var i, un, d, rusol;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+SetBName(ru_dep, 'ovsyenko');
+SetResourceType(GetBase(ru_dep), 3, 200);
+
+Platonov := PrepareUnit('Platonov', false, '');
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]]) do
+    begin
+    PrepareHuman(false, 1, 0);
+    un := CreateHuman;
+    SetLives(un, 500);
+
+    if GetDir(i) > 3 then
+       SetDir(un, GetDir(i)-3)
+      else
+       SetDir(un, GetDir(i)+3);
+
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i = 1 to 2 do
+    begin
+    PrepareHuman(sex_male, 2, 10);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ru_dep);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(sex_male, 1, 7);
+    rusol := CreateHuman;
+    PlaceHumanInUnit(rusol, ru_dep);
+    rusole := rusole ^ rusol;
+    end;
+
+    Yakotich = PrepareUnit('Yakotich', false, '');
+    PlaceHumanInUnit(Yakotich, ru_dep);
+
+End;
+
+Export Function Transport(eng_list, cargo_list);
+var i;
+begin
+for i = 1 to eng_list do
+    begin
+    AddComTransport(eng_list[i], ru_dep, 3);
+    AddComWait(eng_list[i], 0$1);
+    AddTaskList(eng_list[i], [['5', GetX(cargo_list[i]), GetY(cargo_list[i]), cargo_list[i], 0, 0, 0]]);
+    end;
+End;
+
+Export Posily, Robotniki;
+Export Function RusPosily;
+var i,rusol;
+begin
+uc_side := 3;
+uc_nation := 3;
+for i = 1 to 5 do
+    begin
+    PrepareHuman(false, 1, 7);
+    rusol := CreateHuman;
+    PlaceUnitArea(rusol,rus_posily,false);
+    posily := posily ^ rusol;
+    end;
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, 2, 7);
+    rusol := CreateHuman;
+    PlaceUnitArea(rusol,rus_posily,false);
+    robotniki := robotniki ^ rusol;
+    end;
+end;

@@ -8,7 +8,7 @@ begin
      uc_side   := 3;
      uc_nation := 3;
 
-     ru_skill  := [1, 2, 3][game_difficulty];
+     ru_skill  := [1, 2, 3][Difficulty];
      ru_patrol := [];
      ru_force  := [];
      ru_vehs   := [];
@@ -36,87 +36,21 @@ begin
             end;
 
      // patrol
-        vc_chassis := [ru_medium_wheeled, ru_medium_tracked, ru_medium_tracked][game_difficulty];
+        vc_chassis := [ru_medium_wheeled, ru_medium_tracked, ru_medium_tracked][Difficulty];
         vc_engine  := engine_combustion;
         vc_control := control_manual;
-        vc_weapon  := [ru_heavy_machine_gun, ru_heavy_machine_gun, ru_gatling_gun][game_difficulty];
+        vc_weapon  := [ru_heavy_machine_gun, ru_heavy_machine_gun, ru_gatling_gun][Difficulty];
         veh := CreateVehicle;
         // ru_vehs := ru_vehs ^ veh;
         SetDir(veh, 2);
         PlaceUnitXY(veh, 39, 38, false);
         PlaceHumanInUnit(CreateHumanWithClass(3, ru_skill), veh);
 
-        for i = 1 to FilterAllUnits([[f_type, unit_vehicle], [f_empty]]) do
-            PlaceHumanInUnit(CreateHumanWithClass(3, ru_skill), FilterAllUnits([[f_type, unit_vehicle], [f_empty]])[1]);
-
         ru_vehs := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]);
 
 End;
 
-// Gdy Rosjanie okupuja baze
-Every 0$01 trigger ru_cont_base do
-var i, engs, filter, dmg_b, b, heal, sci, tower, sol;
-begin
-Enable;
 
-      engs := FilterAllUnits([[[f_side, 3], [f_class, 2], [f_ok]]]);
-      dmg_b := FilterUnitsInArea(ru_base, [[[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
-      heal := FilterUnitsInArea(ru_base, [[[f_side, 3], [f_type, unit_human], [f_not, [f_lives, 880]]]]);
-      sci := FilterAllUnits([[f_side, 3], [f_class, 4]]);
-      tower := FilterAllUnits([[[f_side, 3], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]], [f_empty]]]);
-      sol := FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) diff ru_patrol;
-
-
-      if tower then
-         if not HasTask(sol[1]) then
-            ComEnterUnit(sol[1], tower[1]);
-
-      if heal then
-         begin
-
-         for i = 1 to sci do
-             if IsInUnit(sci[i]) then
-                ComExitBuilding(sci[i])
-                 else
-                  if not HasTask(sci[i]) then
-                     ComHeal(sci[i], heal[1]);
-
-         end
-          else
-           for i = 1 to sci do
-               if not IsInUnit(sci[i]) then
-                  ComEnterUnit(sci[i], FilterAllUnits([[f_side, 3], [f_btype, b_lab]])[1]);
-
-      if FilterAllUnits([[[f_side, 3], [f_btype, b_bunker], [f_bweapon, 0]]]) and BuildingStatus(ru_fac) = bs_idle then
-         ComPlaceWeapon(FilterAllUnits([[[f_side, 3], [f_btype, b_bunker], [f_bweapon, 0]]])[1], ru_heavy_machine_gun);
-
-      if engs then
-         begin
-
-              if dmg_b then
-                 begin
-                 for i = 1 to engs do
-                     if IsInUnit(engs[i]) then
-                        ComExitBuilding(engs[i])
-                         else
-                          if not HasTask(engs[i]) then
-                             ComRepairBuilding(engs[i], dmg_b[1]);
-                 end
-                  else
-                   if ru_blist = 0 then
-                      begin
-                      for i = 1 to engs do
-                          if not HasTask(engs[i]) and not IsInUnit(engs[i]) then
-                             ComEnterUnit(engs[i], ru_dep);
-                      end
-                       else
-                        if ru_blist then
-                           for i = 1 to engs do
-                               if not HasTask(engs[i]) then
-                                  ComBuild(engs[i], ru_blist[1], ru_blist[2], ru_blist[3], ru_blist[4]);
-         end;
-
-End;
 
 
 

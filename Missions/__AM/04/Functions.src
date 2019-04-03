@@ -1,0 +1,710 @@
+// Functions by Serpent
+Export Function PrepareUnit(ident, exist_mode);
+var unit;
+begin
+
+if exist_mode then
+begin
+   unit := CreateCharacter(mission_prefix_prev&ident);
+  end else
+  begin
+   unit := NewCharacter(ident);
+  end; 
+
+result := unit;
+End;
+
+// Function by Nefarem
+Export function RespawnInside(side, nation, build, skill, class, count);
+var i,l, un;
+begin
+
+   for i = 1 to count do
+   begin
+
+      uc_side = side;
+      uc_nation = nation;
+
+      hc_gallery = '';
+      hc_name = '';
+      PrepareHuman(false, class, skill);
+
+      un = CreateHuman;
+      PlaceHumanInUnit(un,build);
+
+   end;
+
+END;
+
+// Function by Serpent
+Export Function PrepareSolBun(skill, b);
+var un, dir;
+begin
+     uc_side := GetSide(b);
+     uc_nation := GetNation(b);
+
+     PrepareHuman(false, 1, skill);
+     un = CreateHuman;
+
+     dir := GetDir(b)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, b);
+End;
+
+// Function by Nefarem
+// Function is used to call the dialogue spoken by random male or female characters
+// Example: DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 'DAtt1-Sol1-1', 'DAtt1-FSol1-1');
+Export function DialogRandom(characters, dialogMID, dialogFID);
+var i, rnd;
+begin
+    rnd = rand(1, characters);  
+
+    for i = 1 to characters do
+    begin
+
+       if i = rnd AND GetSex(characters[i]) = 1 then Say(characters[i], dialogMID);
+       if i = rnd AND GetSex(characters[i]) = 2 then Say(characters[i], dialogFID);
+
+    end;
+  
+end;
+//rubbrwr1 rubbrwr0
+Export function PrepareDifficulty;
+var tmp;
+begin
+  if Difficulty = 1 then
+  begin 
+    RuSoldMinLevel = 0;
+    RuSoldMaxLevel = 2;
+  end;
+
+  if Difficulty = 2 then
+  begin 
+    RuSoldMinLevel = 1;
+    RuSoldMaxLevel = 2;
+    RemoveUnit(ambbrwr1);
+    RemoveUnit(rubbrwr1);
+
+    uc_nation = 3;
+    uc_side = 3;
+
+    bc_level = 5;
+    bc_type = 32;
+    tmp = CreateAndPlaceBuildingXYD(76, 91, 2);
+    PlaceWeaponTurret(tmp, 43);
+
+    SetTech(51, 3, state_enabled);
+  end;
+
+    if Difficulty = 3 then
+  begin 
+    RuSoldMinLevel = 1;
+    RuSoldMaxLevel = 3;
+    RemoveUnit(ambbrwr0);
+    RemoveUnit(ambbrwr1);
+    RemoveUnit(rubbrwr0);
+    RemoveUnit(rubbrwr1);
+
+    uc_nation = 3;
+    uc_side = 3;
+
+    bc_level = 5;
+    bc_type = 32;
+    tmp = CreateAndPlaceBuildingXYD(76, 91, 2);
+    PlaceWeaponTurret(tmp, 44);
+
+    tmp = CreateAndPlaceBuildingXYD(83, 84, 2);
+    PlaceWeaponTurret(tmp, 43);
+
+    SetTech(51, 3, state_enabled);
+    SetTech(52, 3, state_enabled);
+    PlaceWeaponTurret(rubbunk0, ru_gun);
+  end;
+
+end;
+
+Export function EnergyDialog;
+begin
+             
+        if GetTech(46, 1) = state_enabled and GetTech(35, 1) = state_enabled then
+        begin
+                Say(JMM, 'D9c-JMM-1');
+                energyVDialog = 1;
+        end else
+        begin
+                if GetTech(35, 1) = state_researched and energyVDialog = 0 then
+                begin
+                        Say(JMM, 'D9c-JMM-1a');
+                        energyVDialog = 1;
+                end;
+
+                if GetTech(46, 1) = state_researched and energyVDialog = 0 then
+                begin
+                        Say(JMM, 'D9c-JMM-1b');
+                        energyVDialog = 1;
+                end;
+
+                if GetTech(46, 1) = state_researched and GetTech(21, 1) = state_researched and energyVDialog = 0 then
+                begin
+                        Say(JMM, 'D9c-JMM-1c');
+                        energyVDialog = 1;
+                end;
+                
+        end; 
+end;
+
+
+ // Serpent functions
+Export Function CutTreeInArea(bulldozer, area);
+var i, list, tmp, hex;
+begin
+if not bulldozer or GetLives(bulldozer) < 250 or (HasTask(bulldozer) and GetFuel(bulldozer) > 20) then
+   exit;
+
+if GetFuel(bulldozer) < 20 and not GetTag(bulldozer) = 21 then
+   begin
+   ComStop(bulldozer);
+   SetTag(bulldozer, 21);
+   exit;
+   end
+    else
+     if GetFuel(bulldozer) > 20 then
+        SetTag(bulldozer, 0);
+
+list := ListEnvironmentArea(area);
+tmp := [];
+
+for i = 1 to list do
+    if IsEnvironmentDestroyable(list[i][1], list[i][2]) then
+       begin
+       tmp := Replace(tmp, tmp+1, [list[i][1], list[i][2]]);
+       end;
+
+
+ComStop(bulldozer);
+
+hex := [GetX(bulldozer), GetY(bulldozer)];
+
+for i = tmp downto 1 do
+    begin
+    hex := GetClosestPoint(hex[1], hex[2], tmp);
+    AddComCutTreeOnHex(bulldozer, hex[1], hex[2]);
+    tmp := Delete(tmp, hex[3]);
+    end;
+End;
+
+Export Function AddComCutTreeOnHex(bulldozer, x, y);
+begin
+if IsEnvironment(x, y) and IsEnvironmentDestroyable(x, y) and ValidHex(x, y) and HexInfo(x, y) = -1 then
+   AddComMoveXY(bulldozer, x, y);
+End;
+
+Export Function GetClosestPoint(x, y, list);
+var i, dist, d, _x, _y, _i;
+begin
+
+dist := 99999;
+
+for i = 1 to list do
+    begin
+    d := GetDistXY(x, y, list[i][1], list[i][2]);
+
+    if d = 0 then
+       continue;
+
+    if d < dist then
+       begin
+       _x := list[i][1];
+       _y := list[i][2];
+       _i := i;
+       dist := d;
+       end;
+    end;
+
+result := [_x, _y, _i, dist];
+End;
+
+
+// AI functions
+
+Export function ResAllTechs(side, lab, nation);
+var i, tech, cout;
+begin
+
+  For i = 1 to 72 do
+    If GetTech(i, side) = state_enabled and TechNationAvailable(i, nation) = true then AddComResearch(lab, i);
+
+end; 
+
+Export function RepairBuilding(side, building, area);
+var buildings_list, i,engineerOkInside, engineerOkOutside, j;
+begin
+
+
+  engineerOkInside = UnitsInside(building);
+  engineerOkOutside = FilterUnitsInArea(area,[[f_side, side], [f_class, 2], [f_lives, 750], [f_not, [f_inside]]]);
+  buildings_list = FilterUnitsInArea(area,[[[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
+
+  if not buildings_list and not FilterAllUnits([[f_side, side], [f_class, 2], [f_lives, 250]]) then exit;
+
+  if buildings_list > 0 and engineerOkInside then ComExitBuilding(engineerOkInside);
+
+  if buildings_list > 0  and engineerOkOutside > 0 then ComRepairBuilding(engineerOkOutside, buildings_list[1]);
+
+  if buildings_list = 0 and engineerOkOutside > 0 then ComEnterUnit(engineerOkOutside, building);
+END;
+
+Export function HealUnitInBase(side, healArea, baseArea, build);
+var sci_list, sci_listOutside,  i, j, damageUnits, unitsToHeal, tmp, rnd;
+begin
+
+  sci_list = FilterAllUnits([[f_side, side], [f_class, 4], [f_nation ,2], [f_lives, 251]]);
+  sci_listOutside = FilterUnitsInArea(baseArea, [[f_side, side], [f_nation, 2], [f_class, 4], [f_ok]]);
+  damageUnits = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_human], [f_not, [f_class, 3]], [f_not, [f_lives, 750]]]);
+  unitsToHeal = FilterUnitsInArea(healArea,[[f_side, side], [f_type, unit_human], [f_not, [f_class, 3]], [f_not, [f_lives, 1000]]]);
+
+  if not damageUnits and not unitsToHeal and not sci_list then exit;
+
+  if damageUnits > 0 and sci_list > 0 then ComMoveToArea(damageUnits, healArea);
+
+  if unitsToHeal > 0 and sci_list > 0 then ComExitBuilding(sci_list);
+
+  if unitsToHeal > 0 and sci_listOutside > 0 then ComHeal(sci_listOutside, unitsToHeal[1]);
+
+  if damageUnits = 0 and unitsToHeal = 0 and sci_listOutside > 0 then
+  begin
+          tmp = FilterAllUnits([[f_side, side], [f_type, unit_building], [f_btype, b_lab_full]]);
+          rnd = rand(1, tmp);
+          ComEnterUnit(UnitFilter(sci_listOutside, [f_not, [f_hastask]]), tmp[rnd]);
+  end;
+
+END;
+
+Export function BuildingVehicle(side, fabric, vehCount, weaponTab, engine, control, chassis);
+var i;
+begin
+
+    if FilterAllUnits([[f_side, side], [f_type, unit_vehicle]]) <= vehCount then
+        for i = 1 to vehCount do AddComConstruct(fabric, chassis, engine, control, weaponTab[Rand(1, weaponTab)]);
+
+END;
+
+Export function AttackVehicles(side, meetArea, wayX, wayY);
+var i, j, vehiclesOK, target1, target2, seeEnemy;
+begin
+    vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 650]]);
+
+    if FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 1000]]) >= [3, 4, 5][Difficulty] then
+        repeat
+            wait(0$1);
+
+            vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 650]]);
+
+            if not FilterAllUnits([[f_side, side], [f_inarea, meetArea]]) and seeEnemy = 0 then for i := 1 to wayX do AddComAgressiveMove(vehiclesOK, wayX[i], wayY[i]);
+
+            if FilterAllUnits([[f_side, side], [f_inarea, meetArea]]) then
+            begin
+                seeEnemy = 1;
+
+                for j in vehiclesOK do
+                begin
+                    target1 := NearestUnitToUnit(FilterAllUnits([[f_enemy, side], [f_see, 1]]), j);
+                    target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, side], [f_see, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), j);
+
+                    If GetDistUnits(j, target1)+8 < GetDistUnits(j, target2) then ComAttackUnit(j, target1)
+                    else ComAttackUnit(j, target2);
+                end;
+            end;
+
+
+        until FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 1000]]) = 0;
+        seeEnemy = 0;
+end;
+
+Export function RepairVehicles(side, area, repX, repY);
+var i, j, damageVehicles;
+begin
+    damageVehicles = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_not, [f_lives, 650]]]);
+
+    if damageVehicles > 0 then ComMoveXY(damageVehicles, repX, repY);
+
+    if UnitFilter(damageVehicles, [[f_inarea, area], [f_not, [f_empty]]]) > 0 then
+        for i in UnitFilter(damageVehicles, [[f_inarea, area], [f_not, [f_empty]]]) do ComExitVehicle(UnitsInside(i));
+end;
+
+
+
+
+
+
+Export function RespawnAttackInfantry(side, nation, soldierCount, sniperCount, bazookCount, mortalCount, medicCount, skil, spawnArea, healArea, targetSide, strategy);
+var i, j,  un, damageUnit_list, medic_list, soldiersOK_list, enemyUnits, und, target1, target2;
+begin
+
+        for i = 1 to medicCount do
+        begin
+
+                uc_side = side;
+                uc_nation = nation;
+
+                hc_name = '';
+                hc_gallery = '';
+                PrepareHuman(false, 4, skil);
+
+                un = CreateHuman;
+                PlaceUnitArea(un, spawnArea, false);
+
+        end;
+
+
+       for i = 1 to soldierCount do
+        begin
+
+                uc_side = side;
+                uc_nation = nation;
+
+                hc_name = '';
+                hc_gallery = '';
+                PrepareHuman(false, 1, skil);
+
+                un = CreateHuman;
+                PlaceUnitArea(un, spawnArea, false);
+
+        end;
+
+        for i = 1 to sniperCount do
+        begin
+
+                uc_side = side;
+                uc_nation = nation;
+
+                hc_name = '';
+                hc_gallery = '';
+                PrepareHuman(false, 5, skil);
+
+                un = CreateHuman;
+                PlaceUnitArea(un, spawnArea, false);
+
+        end;
+
+        for i = 1 to bazookCount do
+        begin
+
+                uc_side = side;
+                uc_nation = nation;
+
+                hc_name = '';
+                hc_gallery = '';
+                PrepareHuman(false, 9, skil);
+
+                un = CreateHuman;
+                PlaceUnitArea(un, spawnArea, false);
+
+        end;
+
+        for i = 1 to mortalCount do
+        begin
+
+                uc_side = side;
+                uc_nation = nation;
+
+                hc_name = '';
+                hc_gallery = '';
+                PrepareHuman(false, 8, skil);
+
+                un = CreateHuman;
+                PlaceUnitArea(un, spawnArea, false);
+
+        end;
+
+
+        soldiersOK_list =  FilterAllUnits([[f_side, side], [f_or,[f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]]);
+
+        medic_list = FilterAllUnits([[f_side, side], [f_class, 4]]);
+
+        ComMoveToArea(medic_list, healArea);
+
+
+        // strategy , 1 - flank and attack oil drilling mine,  2 - front attack, 
+  
+        if strategy = 1 then
+        begin
+                repeat
+                        wait(0$3);
+                        for i in soldiersOK_list do
+                        begin
+                                AddComAgressiveMove(i, 91, 63);
+                                AddComAgressiveMove(i, 101, 53);
+                                AddComAgressiveMove(i, 75, 23);
+                                AddComAgressiveMove(i, 78, 8);
+                        end;
+                until FilterUnitsInArea(EnemyTargetArea1, [f_side, side]) > 2;
+
+                repeat
+                        wait(0$1);
+                        damageUnit_list = FilterAllUnits([[f_side, side], [f_and, [f_not, [f_lives, 550]],[f_lives, 250]]]);
+                        soldiersOK_list =  FilterAllUnits([[f_side, side], [f_or,[f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]], [f_lives, 1000]]);
+
+                        IF medicCount > 0  then
+                        begin
+                                if damageUnit_list > 0 then
+                                begin
+                                    ComMoveToArea(damageUnit_list, healArea);
+                                    AddComHeal(medicCount, damageUnit_list[1]);
+                                 end;
+                        end;
+
+
+                        for i in soldiersOK_list do
+                        begin
+                                target1 := NearestUnitToUnit(FilterAllUnits([f_side, targetSide]), i);
+                                target2 := NearestUnitToUnit(FilterAllUnits([[[f_side, targetSide], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), i);
+
+                                If GetDistUnits(i, target1)+8 < GetDistUnits(i, target2) then
+                                begin
+                                ComAttackUnit(i, target1);
+                                end else
+                                begin
+                                ComAttackUnit(i, target2);
+                        end;
+               end; until soldiersOK_list = [];
+        end;
+
+
+      if strategy = 2 then
+      begin
+                repeat
+                        wait(0$1);
+                        for i in soldiersOK_list do
+                        begin
+                                AddComAgressiveMove(i, 91, 63);
+                                AddComAgressiveMove(i, 75, 33);
+                        end;
+                until FilterUnitsInArea(EnemyTargetArea2, [f_side, side]) > 2;
+
+                repeat
+                        wait(0$3);
+                        damageUnit_list = FilterAllUnits([[f_side, side], [f_and, [f_not, [f_lives, 550]],[f_lives, 250]]]);
+                        soldiersOK_list =  FilterAllUnits([[f_side, side], [f_or,[f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]], [f_lives, 1000]]);
+
+                        IF medicCount > 0  then
+                        begin
+                                if damageUnit_list > 0 then
+                                begin
+                                    ComMoveToArea(damageUnit_list, healArea);
+                                    AddComHeal(medicCount, damageUnit_list[1]);
+                                 end;
+                        end;
+                                        
+                        for i in soldiersOK_list do
+                        begin
+                                target1 := NearestUnitToUnit(FilterAllUnits([f_side, targetSide]), i);
+                                target2 := NearestUnitToUnit(FilterAllUnits([[[f_side, targetSide], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), i);
+
+                                If GetDistUnits(i, target1)+8 < GetDistUnits(i, target2) then
+                                begin
+                                ComAttackUnit(i, target1);
+                                end else
+                                begin
+                                ComAttackUnit(i, target2);
+                        end;
+               end; until soldiersOK_list = [];
+        end;
+
+END;
+
+
+// Spawn vehicle and attack
+
+export function RespawnAttackVehicle(area, side, vehCount, mehskill, nation, vehEngine, vehControl, RUWeapons, ARWeapons, AMWeapon, targetSide);
+var i, j, un, veh, ruChassisTab, arChassisTab, amChassisTab, vehicleOK_list, target1, target2;
+begin
+
+  amChassisTab = [];
+  arChassisTab = [];
+  ruChassisTab = [];
+
+  repeat
+
+  wait(0$01);
+
+  IF nation = 1 then
+  begin
+
+            uc_side = side;
+            uc_nation = nation;
+
+            vc_engine = vehengine;
+            vc_control = vehcontrol;
+            vc_weapon = AMWeapon[Rand(1, AMWeapon)];
+
+            for j = 1 to AMWeapon do
+            begin
+                 IF AMWeapon[j] = 2 or AMWeapon[j] = 3 then
+                 begin
+                      amChassisTab = [1,2,3,4,5];
+                      vc_chassis = amChassisTab[Rand(1,amChassisTab)];
+                 end;
+
+                 IF AMWeapon[j] = 4 or AMWeapon[j] = 5 or AMWeapon[j] = 9 or AMWeapon[j] = 11 or AMWeapon[j] = 7 then
+                 begin
+                      amChassisTab = [2,3,4,5];
+                      vc_chassis = amChassisTab[Rand(1, amChassisTab)];
+                 end;
+
+                 IF AMWeapon[j] = 8 or AMWeapon[j] = 6 or AMWeapon[j] = 10 then
+                 begin
+                      amChassisTab = [4,5];
+                      vc_chassis = amChassisTab[Rand(1, amChassisTab)];
+                 end;
+
+           end;
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, area, false);
+
+            IF vehControl = 1 then
+            begin
+
+                hc_gallery = '';
+                hc_name = '';
+                PrepareHuman(false, 3, mehskill);
+
+                un = CreateHuman;
+                PlaceHumanInUnit(un, veh);
+
+            end;
+
+
+            i = i + 1;
+
+    end;
+
+  IF nation = 2 then
+  begin
+
+            uc_side = side;
+            uc_nation = nation;
+
+            vc_engine = vehengine;
+            vc_control = vehcontrol;
+            vc_weapon = ARWeapons[Rand(1, ARWeapons)];
+
+            for j = 1 to ARWeapons do
+            begin
+
+                 IF ARWeapons[j] = 24 or ARWeapons[j] = 22 or ARWeapons[j] = 23 or ARWeapons[j] = 30 then
+                 begin
+                      arChassisTab = [11, 12, 13, 14];
+                      vc_chassis = arChassisTab[Rand(1, arChassisTab)];
+                 end;
+
+                 IF ARWeapons[j] = 29 or ARWeapons[j] = 28 or ARWeapons[j] = 27 or ARWeapons[j] = 26 or ARWeapons[j] = 25 then
+                 begin
+                      arChassisTab = [13, 14];
+                      vc_chassis = arChassisTab[Rand(1, arChassisTab)];
+                 end;
+
+           end;
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, area, false);
+
+            IF vehcontrol = 1 then
+            begin
+
+                hc_gallery = '';
+                hc_name = '';
+                PrepareHuman(false, 3, mehskill);
+
+                un = CreateHuman;
+                PlaceHumanInUnit(un, veh);
+
+            end;
+
+
+            i = i + 1;
+
+    end;
+
+
+  IF nation = 3 then
+  begin
+
+            uc_side = side;
+            uc_nation = nation;
+
+            vc_engine = vehengine;
+            vc_control = vehcontrol;
+            vc_weapon = RUWeapons[Rand(1, RUWeapons)];
+
+
+            for j = 1 to RuWeapons do
+            begin
+
+                IF RUWeapons[j] = 42 or RUWeapons[j] = 43 or RUWeapons[j] = 44 or RUWeapons[j] = 45 or RUWeapons[j] = 49 then
+                begin
+                    ruChassisTab = [21, 22, 23, 24];
+                    vc_chassis = ruChassisTab[Rand(1, ruChassisTab)];
+                end;
+
+                IF RUWeapons[j] = 46 or RUWeapons[j] = 47 then
+                begin
+                    ruChassisTab = [23, 24];
+                    vc_chassis = ruChassisTab[Rand(1, ruChassisTab)];
+                end;
+
+           end;
+
+
+            veh = CreateVehicle;
+            PlaceUnitArea(veh, area, false);
+
+            IF vehcontrol = 1 then
+            begin
+
+                hc_gallery = '';
+                hc_name = '';
+                PrepareHuman(false, 3, mehskill);
+
+                un = CreateHuman;
+                PlaceHumanInUnit(un, veh);
+
+            end;
+
+
+            i = i + 1;
+
+    end;
+
+  until i = vehCount;
+
+    repeat
+        wait(0$1);
+
+        IF FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 250], [f_not, [f_empty]]]) > 0 then
+        begin
+
+            for i in FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 250], [f_not, [f_empty]]]) do
+            begin
+
+            target1 := NearestUnitToUnit(FilterAllUnits([f_side, targetSide]), i);
+            target2 := NearestUnitToUnit(FilterAllUnits([[[f_side, targetSide], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), i);
+
+            If GetDistUnits(i, target1)+8 < GetDistUnits(i, target2) then
+            begin
+                ComAttackUnit(i, target1);
+            end
+            else
+            begin
+                ComAttackUnit(i, target2);
+            end;
+        end;
+      end;
+    until FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 250], [f_not, [f_empty]]]) = 0;
+
+
+END;

@@ -1,0 +1,223 @@
+Export time, limit, base;
+Every 0$01 do
+begin
+time = 0;
+limit = [44$00, 42$00, 40$00][Difficulty];
+end;
+
+Every 0$01 trigger CounterStart = true do
+begin
+Enable;
+Display_strings := ['#Ar03-1', time,
+                    '#Ar03-2', base];
+
+time = time + 0$01;
+base = GetResourceType(GetBase(ar_deps), mat_cans);
+
+// Wait(0$01);
+End;
+
+
+Every 0$01 trigger Count_of_Apeman >= 6 do
+begin
+If Difficulty = 1 then
+ChangeMissionObjectives('ApeOt')
+end;
+
+Every 0$01 trigger Count_of_Apeman >= 8 do
+begin
+If Difficulty = 2 then
+ChangeMissionObjectives('ApeOt')
+end;
+
+Every 0$01 trigger Count_of_Apeman >= 10 do
+begin
+If Difficulty = 3 then
+ChangeMissionObjectives('ApeOt')
+end;
+
+
+Every 0$01 trigger base >= 800 and Difficulty = 1 do
+begin
+EndGame;
+end;
+
+Every 0$01 trigger base >= 1000 and Difficulty = 2 do
+begin
+EndGame;
+end;
+
+Every 0$01 trigger base >= 1300 and Difficulty = 3 do
+begin
+EndGame;
+end;
+
+
+Export function EndGame;
+begin
+Wait(0$03);
+
+InGameOn;
+DialogueOn;
+
+CenterNowOnUnits(Louis);
+
+SayRadio(Jan, 'DDJcend');
+Say(Louis, 'DDLcend');
+
+DWait(0$0.3);
+
+If time > limit then
+begin
+AddMedal('Timeing', -1);
+end else
+begin
+AddMedal('Timeing', 1);
+end;
+
+{ old medals
+If AmAngry > 20 then
+begin
+AddMedal('EnemyFall', 1);
+If AmAngry > 40 then
+AddMedal('EnemyFall', 2);
+end;
+
+If AmAngry < 20 then
+begin
+AddMedal('EnemyFall', -1);
+end;   }
+
+If FilterAllUnits([[f_side, 2], [f_weapon, ar_radar]]) > 0 then
+begin
+AddMedal('RadarC', 1);
+end else
+begin
+AddMedal('RadarC', -1);
+end;
+
+                      //   6,8,10
+If Count_of_Apeman >= [6,8,10][Difficulty] then
+begin
+AddMedal('ApeTam', 1);
+end else
+begin
+AddMedal('ApeTam', -1);
+end;
+
+
+music_nat = 4; // ar music
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_type, unit_human]]));
+
+
+     if Jenna then
+        begin
+        AddExperience(Jenna, 1, 1234);
+        AddExperience(Jenna, 2, 4356);
+        AddExperience(Jenna, 3, 6759);
+        AddExperience(Jenna, 4, 21678);
+        end;
+
+     if Gali then
+        begin
+        AddExperience(Gali, 1, 4500);
+        AddExperience(Gali, 2, 10000);
+        AddExperience(Gali, 3, 2500);
+        AddExperience(Gali, 4, 110);
+        end;
+
+     if Hubert then
+        begin
+        AddExperience(Hubert, 1, 12000);
+        AddExperience(Hubert, 2, 5466);
+        AddExperience(Hubert, 3, 1230);
+        AddExperience(Hubert, 4, 456);
+        end;
+
+     if Mike then
+        begin
+        AddExperience(Mike, 1, 21000);
+        AddExperience(Mike, 2, 5000);
+        AddExperience(Mike, 3, 11000);
+        AddExperience(Mike, 4, 4300);
+        end;
+
+     if Rick then
+        begin
+        AddExperience(Rick,  1, 4300);
+        AddExperience(Rick,  2, 7800);
+        AddExperience(Rick,  3, 8000);
+        AddExperience(Rick,  4, 19020);
+        end;
+
+SaveCharacters(Louis, 'Louis');
+
+If IsLive(Jan) then
+begin
+SaveCharacters(Jan, 'Jan_03');
+end;
+
+If IsLive(Gali) then
+begin
+SaveCharacters(Gali, 'Gali_03');
+end;
+
+If IsLive(Mike) then
+begin
+SaveCharacters(Mike, 'Mike_03');
+end;
+
+If IsLive(Jenna) then
+begin
+SaveCharacters(Jenna, 'Jenna_03');
+end;
+
+If IsLive(Hubert) then
+begin
+SaveCharacters(Hubert, 'Nicolas_03');
+end;
+
+If IsLive(Rick) and GetSide(Rick) = 2 then
+begin
+SaveCharacters(Rick, 'Rick_03');
+end;
+
+If IsLive(dow) then
+begin
+SaveCharacters(dow, 'Sikorski');
+end;
+
+YouWin;
+SetNextMission(1);
+// END
+End;
+
+
+
+// Crates spawn
+Every 3$40 trigger GetSide(ar_depe) = 2 do
+begin
+enable;
+
+If Time < 10$0 then
+begin
+CreateCratesArea(Rand(3,5), CratesBonusArea, true);
+Wait(Rand(0$45, 1$25));
+CreateCratesArea(Rand(3,5), CratesBonusArea, true);
+end;
+
+If Time > 10$0 then
+begin
+CreateCratesArea(Rand(1,3), CratesBonusArea, true);
+Wait(Rand(1$15, 2$25));
+CreateCratesArea(Rand(1,2), CratesBonusArea, true);
+end;
+
+If Time > 35$0 then
+disable;
+end;
+// Stop spawn at 35 min.
+

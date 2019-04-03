@@ -1,0 +1,165 @@
+Export Function PrepareLegion;
+var i, k, class, b, un, team, skill, sold_num, eng_num, mech_num, sci_num, ape_num, dep_x, dep_y, weapons, weapon, vehicles;
+begin
+uc_side := 2;
+uc_nation := nation_arabian;
+
+PrepareHuman(sex_male, 1, 6);
+hc_name := 'Nicolas Vervecken';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 3;
+hc_attr := [11, 10];
+
+Vervecken := CreateHuman;
+
+
+InitHc;
+
+uc_side := 8;
+
+SetResourceType(GetBase(main_base), mat_cans, [4000, 2500, 1250][Difficulty]);
+SetResourceType(GetBase(main_base), mat_oil, 300);
+SetResourceType(GetBase(main_base), mat_siberit, [100, 50, 30][Difficulty]);
+
+dep_x := GetX(main_base);
+dep_y := GetY(main_base);
+
+team := [];
+
+skill := [9, 8, 7][Difficulty];
+sold_num := [11, 9, 8][Difficulty];
+eng_num  := [3, 2, 2][Difficulty];
+mech_num := [5, 4, 3][Difficulty];
+sci_num  := [3, 2, 2][Difficulty];
+ape_num  := [6, 5, 4][Difficulty];
+
+vehicles := [ [ar_medium_trike, engine_combustion, control_manual, ar_flame_thrower],
+              [ar_half_tracked, engine_siberite, control_manual, ar_gatling_gun],
+              [ar_half_tracked, engine_siberite, control_apeman, ar_cargo_bay],
+              [ar_half_tracked, engine_siberite, control_manual, ar_control_tower],
+              [ar_half_tracked, engine_siberite, control_remote, ar_double_machine_gun],
+              [ar_half_tracked, engine_siberite, control_remote, ar_gatling_gun],
+              [ar_medium_trike, engine_siberite, control_manual, ar_double_machine_gun] ];
+
+for i = 1 to vehicles-Difficulty+1 do
+    begin
+    vc_chassis := vehicles[i][1];
+    vc_engine  := vehicles[i][2];
+    vc_control := vehicles[i][3];
+    vc_weapon  := vehicles[i][4];
+    un := CreateVehicle;
+    SetDir(un, rand(0, 5));
+    PlaceUnitArea(un, parking, false);
+    end;
+
+for i = 1 to ape_num do
+    begin
+    PrepareHuman(false, [class_apeman_engineer, class_apeman_soldier][rand(1, 2)], skill);
+    team := Insert(team, team+1, CreateHuman);
+    end;
+
+PrepareHuman(sex_male, 1, skill);
+l1 := CreateHuman;
+PlaceHumanInUnit(l1, main_base);
+
+PrepareHuman(sex_male, 1, skill);
+l2 := CreateHuman;
+PlaceHumanInUnit(l2, main_base);
+
+for class = 1 to 4 do
+    for i = 1 to [sold_num, eng_num, mech_num, sci_num][class] do
+        begin
+        PrepareHuman(false, class, skill);
+        team := Insert(team, team+1, CreateHuman);
+        end;
+
+for i in team do
+    begin
+    b := 0;
+
+    case GetClass(i) of
+    class_soldier:     begin
+                       b := FilterAllUnits([[f_side, uc_side], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]], [f_empty]]);
+
+                       if not b then
+                          b := FilterAllUnits([[f_side, uc_side], [f_btype, b_barracks]]);
+                       end;
+
+    class_engineer:    b := FilterAllUnits([[f_side, uc_side], [f_btype, b_warehouse]]);
+ 
+    class_mechanic:    begin
+                       b := FilterAllUnits([[f_side, uc_side], [f_type, unit_vehicle], [f_empty]]);
+
+                       if not b then
+                          b := FilterAllUnits([[f_side, uc_side], [f_btype, b_factory]]);
+                       end;
+
+    class_scientistic: begin
+                       b := FilterAllUnits([[f_side, uc_side], [f_btype, b_lab_full]]);
+                       end;
+
+    class_apeman_soldier: b := FilterAllUnits([[f_side, uc_side], [f_btype, b_barracks]]);
+    end;
+
+    if b then
+       begin
+       if GetBType(b[1]) = b_breastwork then
+          PlaceHumanInBunker(i, b[1])
+           else              
+            PlaceHumanInUnit(i, b[rand(1, b)])
+       end
+        else
+         PlaceUnitXYR(i, dep_x, dep_y, 15, false);
+
+    end;
+
+
+weapons := [ [ar_flame_thrower, [3, 2, 1][Difficulty]],
+             [ar_gatling_gun, [5, 4, 3][Difficulty]],
+             [ar_double_machine_gun, [5, 5, 4][Difficulty]],
+             [ar_radar, [2, 1, 1][Difficulty]] ];
+
+for i in FilterAllUnits([[f_side, uc_side], [f_btype, b_bunker]]) do
+    begin
+
+    if weapons then
+       begin
+       k := rand(1, weapons);
+       weapon := weapons[k][1];
+       weapons := Replace2(weapons, k, 2, weapons[k][2]-1);
+       if weapons[k][2] = 0 then
+          weapons := Delete(weapons, k);
+       end
+        else
+         weapon := [ar_gun, ar_light_gun][rand(1, 2)];
+
+    PlaceWeaponTurret(i, weapon);
+    end;
+
+
+// commander
+PrepareHuman(sex_male, 1, skill+1);
+hc_gallery := 'potter';
+hc_face_number := 1;
+hc_importance := 100;
+hc_name := 'Mike Gerste';
+hc_attr := [10, 11];
+legion_commander := CreateHuman;
+PlaceHumanInUnit(legion_commander, main_base);
+
+// potter
+uc_side := 5;
+PrepareHuman(sex_male, 4, skill);
+hc_gallery := 'potter';
+hc_face_number := 2;
+hc_importance := 0;
+hc_name := 'George Potter';
+hc_attr := [12, 9];
+potter := CreateHuman;
+SetDir(potter, 4);
+PlaceUnitXY(potter, 103, 45, false);
+ComTurnUnit(potter, main_base);
+
+InitHc();
+End;
+

@@ -1,0 +1,62 @@
+Export Sikorski, Bobby, Cyrus, Gary;
+Export Function PrepareAmerican;
+var tmp, i;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+Sikorski = PrepareUnit('Sikorski', false, '');
+PlaceUnitXY(Sikorski, 98, 97, false);
+
+Gary := PrepareUnit('Gary', false, '');
+tmp := Gary;
+
+Bobby := PrepareUnit('Bobby', (not debug), '08_');
+
+if not Bobby then
+   Bobby := PrepareUnit('Bobby', (not debug), '03_');
+
+if Bobby then
+   tmp := tmp ^ Bobby;
+
+Cyrus := PrepareUnit('Cyrus', (not debug), '08_');
+
+if not Cyrus then
+   Cyrus := PrepareUnit('Cyrus', (not debug), '03_');
+
+tmp := tmp ^ CreateCharacterSet('03_others');
+
+if UnitFilter(tmp, [f_sex, sex_female]) = 0 then
+   begin
+   PrepareHuman(sex_female, 1, 5);
+   hc_name := 'Julia ' & profile_name & 's';
+   hc_gallery := '';
+   hc_attr := [12, 12];
+   tmp := tmp ^ CreateHuman;
+   end;
+
+if tmp < 9 then
+   begin
+   InitHc;
+
+   for i = tmp to 9 do
+       begin
+
+       if UnitFilter(tmp, [f_class, 4]) = 0 then
+          PrepareHuman(sex_male, 4, 5)
+         else
+          PrepareHuman(false, 1, 5);
+
+       tmp := tmp ^ CreateHuman;
+       end;
+
+   end;
+
+for i in tmp do
+    begin
+    if GetClass(i) in [2,3] then
+       SetClass(i, 1);
+
+    PlaceUnitArea(i, area_start, false);
+    end;
+End;

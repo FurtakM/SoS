@@ -1,0 +1,55 @@
+Export Function PlaceHumanInBunker(un, b);
+var dir;
+begin
+dir := GetDir(b);
+
+if dir < 3 then
+   dir := dir + 3
+    else
+     dir := dir - 3;
+
+SetDir(un, dir);
+PlaceHumanInUnit(un, b);
+End;
+
+Export Function Replace2(tab, j, k, value);
+var i, tmp;
+begin
+tmp := Replace(tab[j], k, value);
+tab := Replace(tab, j, tmp);
+
+result := tab;
+End;
+
+Export Function IsDriver(unit);
+begin
+if unit in FilterAllUnits([f_driving]) then
+   result := IsInUnit(unit)
+    else
+     result := false;
+End;
+
+
+Export Function GetDriver(veh);
+var i, filter;
+begin
+if not GetControl(veh) = control_manual then
+   result := false
+    else
+     if veh in FilterAllUnits([f_empty]) then
+        result := false
+         else
+          begin
+          filter := FilterAllUnits([[f_side, GetSide(veh)], [f_driving]]);
+
+          if not filter then
+             result := false
+              else
+               for i = 1 to filter do
+                   if IsDriver(filter[i]) = veh then
+                      begin
+                      result := filter[i];
+                      break;
+                      end;
+         end;
+End;

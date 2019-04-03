@@ -1,0 +1,1009 @@
+Export Function Action;
+var i, veh;
+begin
+ComBuild(alpha_engs, b_depot, 50, 38, 2);
+
+InGameOn;
+CenterNowOnXY(43, 9);
+
+ComMoveXY(JMM, 54, 34);
+AddComExitVehicle(JMM);
+
+AddComTurnUnit(JMM, alpha_engs[1]);
+
+repeat
+ wait(0$01);
+until See(4, JMM);
+
+CenterNowOnUnits(JMM);
+
+Say(JMM, 'D2-JMM-1');
+
+ComTurnUnit(alpha_engs[3], JMM);
+
+Say(alpha_engs[3], 'D2-Eng1-1');
+Say(JMM, 'D2-JMM-2');
+Say(alpha_engs[3], 'D2-Eng1-2');
+Say(JMM, 'D2-JMM-3');
+
+if Houten then
+   begin
+   veh := PrepareTank(4, 1, us_medium_tracked, engine_solar, control_manual, us_gatling_gun, 55);
+   SetDir(veh, 3);
+   PlaceUnitXY(veh, 46, 19, false);
+   PlaceHumanInUnit(Houten, veh);
+   ComMoveXY(Houten, 49, 33);
+   AddComExitVehicle(Houten);
+   AddComTurnUnit(Houten, JMM);
+
+   repeat
+    wait(0$01);
+   until See(1, Houten);
+
+   ComTurnUnit(JMM, Houten);
+   Say(JMM, 'D1d-JMM-1');
+   Say(Houten, 'D1-VanH-1');
+   Say(JMM, 'D1-JMM-1v');
+   Say(JMM, 'D1-JMM-2v');
+   end;
+
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+SetSide(FilterAllUnits([[f_side, 4], [f_distxy, GetX(JMM), GetY(JMM), 15]]), 1);
+
+ComStop(alpha_engs^JMM^Houten);
+End;
+
+
+// JMM in ovsyenko
+Every 0$1 trigger See(1, Gary) and GetDistUnits(JMM, Gary) < 6 do
+var un1, un2, un3, tmp, i;
+begin
+InGameOn;
+
+SetSide(FilterAllUnits([f_side, 4]), 1);
+tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]);
+
+ComHold(tmp);
+
+Say(JMM, 'D2-JMM-3a');
+
+ComTurnUnit(Gary, JMM);
+
+Say(Gary, 'D2-Gary-3');
+
+ComTurnUnit(JMM, Gary);
+
+for i in tmp do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    wait(1);
+
+    ComTurnUnit(i, JMM);
+    end;
+
+tmp := tmp diff [JMM, Houten, Gary, Cyrus, Bobby] ^ alpha_engs;
+
+if Bobby then
+   Say(Bobby, 'D2-Bobby-3');
+
+if Cyrus then
+   Say(Cyrus, 'D2-Cyrus-3');
+
+Say(JMM, 'D2-JMM-4');
+Say(Gary, 'D2-Gary-4');
+
+un1 := UnitFilter(tmp, [f_sex, sex_male])[1];
+
+if Cyrus then
+   Say(Cyrus, 'D2-Cyrus-4')
+  else
+   Say(un1, 'D2-Sol1-4');
+
+Say(JMM, 'D2-JMM-5');
+
+un2 := UnitFilter(alpha_engs, [[f_dist, JMM, 10], [f_sex, sex_female]]);
+
+if un2 then
+   begin
+   un2 := un2[un2]; // eh..
+   Say(un2, 'D2-FEng1-5');
+   Say(JMM, 'D2-JMM-6');
+   Say(un2, 'D2-FEng1-6');
+   end;
+
+un3 := UnitFilter(alpha_engs, [[f_dist, JMM, 10], [f_sex, sex_male]]);
+
+if un3 then
+   begin
+   un3 := un3[1];
+
+   ComMoveXY(un3, 114, 122);
+
+   Say(un3, 'D2-Eng1-6');
+   Say(JMM, 'D2-JMM-7');
+   end;
+
+Say(Gary, 'D2-Gary-7');
+
+if un2 then
+   Say(un2, 'D2-FEng1-7');
+
+Say(un1, 'D2-Sol1-7');
+Say(JMM, 'D2-JMM-8');
+
+ComStop(FilterAllUnits([f_side, 1]));
+
+InGameOff;
+
+ChangeMissionObjectives('M1a');
+
+jmm_in_ovsyenko := true;
+
+
+wait(0$30);
+
+tmp := FilterAllUnits([f_class, class_tiger]);
+
+if not tmp then
+   exit;
+
+ComMoveXY(tmp, 75, 75);
+End;
+
+// player builded sib mine
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_siberite_mine], [f_not, [f_constructed]]]) do
+var tmp;
+begin
+tmp := ['M2easy', 'M2', 'M2hard'];
+
+ChangeMissionObjectives(tmp[Difficulty]);
+End;
+
+
+// powell radio
+Every 3$00 do
+begin
+DialogueOn;
+
+SayRadio(Powell, 'D3-Pow-1');
+
+if jmm_in_ovsyenko then
+   begin
+   Say(JMM, 'D3-JMM-1');
+   Say(JMM, 'D3-JMM-1b');
+   end
+  else
+   Say(JMM, 'D3-JMM-1a');
+
+SayRadio(Powell, 'D3-Pow-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('M3'); // 60 sib for powell
+
+powell_want_sib := true;
+End;
+
+
+// Powell want sib! Now!
+Every 0$1 trigger powell_want_sib_counter = 0$00 {or (debug and tick > 0$5 and terminal)} do
+var tmp, x, y, i, un, powell_happy, take_cargo, time;
+begin
+
+ChangeSideFog(4, 1);
+PowellTransport;
+
+for i = 1 to 3 do
+    begin
+    tmp := GetResourceArea(terminalArea, i);
+
+    if not tmp then
+       continue;
+
+    EraseResourceArea(terminalArea, i);
+    AddResourceType(GetBase(terminal), i, tmp);
+    end;
+
+x := 43;
+y := 3;
+
+for i = 3 to 4 do
+    begin
+    SetDir(powell_trans[i], 4);
+    PlaceUnitXY(powell_trans[i], x, y, false);
+    PlaceHumanInUnit(powell_trans[i-2], powell_trans[i]);
+    SetCargo(powell_trans[i], mat_cans, 100);
+    ComMoveXY(powell_trans[i-2], 54, 42);
+    AddComMoveXY(powell_trans[i-2], GetX(terminal), GetY(terminal));
+    AddComHold(powell_trans[i-2]);
+    Wait(0$02);
+    end;
+
+time := 0$20;
+
+repeat
+ wait(0$01);
+ time := time - 0$01;
+
+ for i = 3 to 4 do
+     if GetCargo(powell_trans[i], mat_cans) > 0 and not HasTask(powell_trans[i]) then
+        begin
+        x := rand(0, 5);
+        AddComMoveXY(powell_trans[i], ShiftX(GetX(powell_trans[i]), x, 3), ShiftY(GetY(powell_trans[i]), x, 3));
+        end;
+until GetDistUnitXY(powell_trans[1], 54, 42) < 4 or time = 0;
+
+SetCargo(powell_trans[3], mat_cans, 0);
+SetCargo(powell_trans[4], mat_cans, 0);
+
+AddResourceType(GetBase(terminal), mat_cans, 200);
+
+DialogueOn;
+CenterNowOnXY(53, 35);
+
+un := powell_trans[1];
+
+Say(un, 'D4-Mech1-1');
+Say(JMM, 'D4-JMM-1');
+Say(un, 'D4-Mech1-2');
+
+powell_happy := false;
+take_cargo := false;
+
+if GetTerminalCargo >= 60 then  // you got sib!
+   begin
+   Say(JMM, 'D5-JMM-1');
+   Say(un, 'D6-Mech1-1');
+   powell_happy := true;
+   take_cargo := true;
+   DialogueOff;
+   end
+  else
+   if GetTerminalCargo > 0 then
+   begin
+    case Query('QWait') of
+    1: begin // niech mechanik poczeka 5 min
+       Say(JMM, 'D5b-JMM-1');
+       DialogueOff;
+       wait(5$00);
+
+       if GetTerminalCargo < 60 then
+          begin
+          DialogueOn;
+          CenterNowOnUnits(terminal);
+          Say(un, 'D6-Mech1-1a');
+          DialogueOff;
+          powell_happy := false;
+          end
+         else
+          begin
+          powell_happy := true;
+          take_cargo := true;            
+          end;
+       end;
+    2: begin // przeproœ powella za zw³oke
+       Say(JMM, 'D5b-JMM-1');
+       Say(un, 'D6-Mech1-1a');
+       DialogueOff;
+       take_cargo := true;
+       end;
+    3: begin // powiedz powellowi zeby sie odpieroli³
+       Say(JMM, 'D5c-JMM-1');
+       Say(un, 'D6-Mech1-1b');
+       DialogueOff;
+       end;
+   end;
+   end
+  else
+   begin
+   Say(JMM, 'D5c-JMM-1');
+   Say(un, 'D6-Mech1-1b');
+   DialogueOff;
+   end;
+
+if take_cargo then
+   begin
+   x := GetTerminalCargo;
+
+   if x > 60 then
+      x := 60;
+
+   SetResourceType(GetBase(terminal), mat_siberit, GetTerminalCargo()-x);
+   AddCargo(powell_trans[3], mat_siberit, x);
+   end;
+
+AddComMoveXY(powell_trans, 43, 3);
+
+x := 0$20;
+
+repeat
+ wait(0$01);
+ x := x - 0$01;
+until x = 0$00 or (GetDistUnitXY(powell_trans[3], 43, 3) < 4 and GetDistUnitXY(powell_trans[3], 43, 3) < 4);
+
+for i in powell_trans do
+    RemoveUnit(i);
+
+if not powell_happy then
+   powell_happy := -1;
+
+AddMedal('EarlySiberite', powell_happy);
+
+if powell_happy then
+   ChangeMissionObjectives('M3a')
+  else
+   ChangeMissionObjectives('M3b');
+
+ru_can_attack_terminal := true;
+
+// Ar comes
+Wait(12$00);
+time := 2$00;
+
+repeat
+ wait(0$1);
+ time := time - 0$1;
+until not ru_can_attack or ru_force = 0 or time = 0$0;
+
+if ru_force then
+   for i in ru_force do
+       if not See(1, i) and GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i)) > 10 then
+          begin
+          RemoveUnit(i);
+          ru_force := ru_force diff i;
+          end;
+
+repeat
+ wait(0$03);
+until not ru_can_attack or ru_force < 3;
+
+ar_can_arrive := true;
+End;
+
+// Sib research
+Every 0$1 trigger Researched(1, 20) do
+var un;
+begin
+un := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_class, 4]]) diff [JMM, Cyrus, Bobby, Houten];
+
+if not un then
+   exit;
+
+DialogueOn;
+
+Say(un[1], 'D13-Sci1-1');
+Say(JMM, 'D13-JMM-1');
+Say(un[1], 'D13-Sci1-2');
+
+DialogueOff;
+End;
+
+// Artifact found
+Every 0$1 trigger GetPlayerSib(1) > 77 and (not ru_can_attack) and FilterAllUnits([[f_side, 1], [f_class, 4], [f_sex, sex_male]]) diff [JMM, Bobby, Cyrus, Gary, Houten] do
+var sci;
+begin
+sci := FilterAllUnits([[f_side, 1], [f_class, 4], [f_sex, sex_male]]) diff [JMM, Bobby, Cyrus, Gary, Houten];
+
+DialogueOn;
+Say(sci[1], 'D7-Sci1-1');
+Say(JMM, 'D7-JMM-1');
+Say(sci[1], 'D7-Sci1-2');
+Say(JMM, 'D7-JMM-2');
+Say(sci[1], 'D7-Sci1-3');
+Say(JMM, 'D7-JMM-3');
+DialogueOff;
+End;
+
+// Arabian arrive
+Every 0$1 trigger ar_can_arrive do
+var i, x, tmp, dep, time, no_oil_gain, first_warn, b;
+begin
+PrepareArabian;
+
+repeat
+ wait(0$01);
+until ar_spawned;
+
+// cinematics
+DialogueOn;
+
+SayRadio(Vervecken, 'D8-Ar1-1');
+Say(JMM, 'D8-JMM-1');
+SayRadio(Vervecken, 'D8-Ar1-2');
+Say(JMM, 'D8-JMM-2');
+SayRadio(Vervecken, 'D8-Ar1-3');
+Say(JMM, 'D8-JMM-3');
+SayRadio(Vervecken, 'D8-Ar1-4');
+Say(JMM, 'D8-JMM-4');
+SayRadio(Vervecken, 'D8-Ar1-5');
+Say(JMM, 'D8-JMM-5');
+SayRadio(Vervecken, 'D8-Ar1-6');
+SayRadio(Gali, 'D8-Ar2-6');
+Say(JMM, 'D8-JMM-6');
+SayRadio(Gali, 'D8-Ar2-7');
+
+// query
+// Arabscy najemnicy zbuduj¹ Ci koszary dla celowniczych moŸdzierzy w zamian za dwa baki paliwa. Co zrobisz?
+case Query('QBarracks') of
+1: begin // zgoda
+   Say(JMM, 'D8a-JMM-1');
+   SayRadio(Vervecken, 'D8a-Ar1-1');
+   player_want_mortar := true;
+   end;
+
+2: begin // odmów, za ma³o surki
+   Say(JMM, 'D8b-JMM-1');
+   SayRadio(Vervecken, 'D8b-Ar1-1');
+
+   // query 2x
+   // Arabscy najemnicy oferuj¹ cenne informacje i prosz¹ o pomoc. Co zrobisz?
+   case Query('QInfo') of
+   1: begin // zgoda
+      Say(JMM, 'D8b1-JMM-1');
+      SayRadio(Vervecken, 'D8b1-Ar1-1');
+      player_want_info := 2;
+      end;
+
+   2: begin // spadówa
+      Say(JMM, 'D8b2-JMM-1');
+      SayRadio(Vervecken, 'D8b2-Ar1-1');
+      end;
+   end;
+
+   end;
+
+3: begin // odmów, niech spadaj¹ na bambus
+   Say(JMM, 'D8c-JMM-1');
+   SayRadio(Vervecken, 'D8c-Ar1-1');
+   end;
+
+end;
+
+DialogueOff;
+
+dep := FilterUnitsInArea(ovsyenkoArea, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+
+if dep then
+   dep := dep[1];
+
+if not dep then
+   begin
+   case Query('QInfoNothing') of
+   1:;
+   end;
+
+   player_want_info := false;
+   player_want_mortar := false;
+   end;
+
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]);
+time := 1$35;
+no_oil_gain := false;
+first_warn := false;
+
+
+if player_want_mortar or player_want_info then
+   begin
+   ComPlaceRemoteCharge(UnitFilter(ar_force, [f_class, 1]), GetX(dep), GetY(dep), dep);
+   AddComMoveXY(UnitFilter(ar_force, [f_class, 1]), 86, 121);
+   AddComHold(UnitFilter(ar_force, [f_class, 1]));
+   end;
+
+if player_attacked_ar then
+   exit;
+
+if player_want_mortar then
+   begin
+   ComMoveXY(Gali, GetX(dep)+1, GetY(dep)+1);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Gali, dep) < 4;
+
+   for i = 1 to 6 do
+       begin
+
+       if player_attacked_ar then
+          exit;
+
+       if GetResourceType(GetBase(dep), mat_oil) < 10 and not first_warn then
+          begin
+          first_warn := true;
+          DialogueOn;
+          Say(Bogdanovic, 'D9a-FAr1-1');
+          Say(JMM, 'D9a-JMM-1');
+          Say(Vervecken, 'D9a2-Ar1-1');
+          DialogueOff;
+          
+          wait(time);
+          end;
+
+       if GetResourceType(GetBase(dep), mat_oil) < 10 then
+          begin
+          Say(Vervecken, 'D9a3-Ar1-1');
+          no_oil_gain := true;
+          break;
+          end
+         else
+          begin
+          AddComTransport(Gali, dep, mat_oil);
+          AddComRefuel(Gali, tmp[i mod 3 + 1]);
+          end;
+       end;
+
+   if not no_oil_gain then // Gali build barracks
+      begin
+
+      repeat
+       wait(0$01);
+
+       if player_attacked_ar then
+          exit;
+
+      until (GetFuel(tmp[1]) > 80 and GetFuel(tmp[2]) > 80 and GetFuel(tmp[3]) > 80);
+
+      ComMoveXY(Gali, 105, 127);
+      AddComMoveToArea(Gali, mortarArea);
+      AddComHold(Gali);
+
+      repeat
+       wait(0$01);
+
+       if player_attacked_ar then
+          exit;
+
+      until GetDistUnitXY(Gali, 105, 127) < 4;
+
+      if GetResourceType(GetBase(dep), mat_cans) < 50 then // no crates
+         begin
+         case GetResourceType(GetBase(dep), mat_cans) of
+              0..24: Say(Gali, 'D9b-Ar2-1');
+              25..49: Say(Gali, 'D9b-Ar2-1a');
+         end;
+
+         Say(JMM, 'D9b-JMM-1');
+
+         x := 0$0;
+
+         repeat
+          wait(0$1);
+          x := x + 0$1;
+
+          if player_attacked_ar then
+             exit;
+
+         until x >= time;
+
+         if GetResourceType(GetBase(dep), mat_cans) < 50 then
+            begin
+            DialogueOn;
+            Say(Vervecken, 'D9c-Ar1-1');
+            Say(JMM, 'D9c-JMM-1');
+            Say(Vervecken, 'D9c-Ar1-2');
+            Say(Bogdanovic, 'D9c-FAr1-2');
+            Say(Vervecken, 'D9c-Ar1-3');
+            
+
+            // Arabscy najemnicy oferuj¹ cenne informacje i prosz¹ o pomoc. Co zrobisz?
+            case Query('QInfo') of
+            1: begin // zgoda
+               Say(JMM, 'D8b1-JMM-1');
+               player_want_info := 2;
+               end;
+
+            2: begin // spadówa
+               Say(Vervecken, 'D8b2-Ar1-1');
+               end;
+            end;
+
+            DialogueOff; 
+            end;
+
+        end
+       else
+        begin // build barracks
+        RemoveEnvironmentArea(mortarArea);
+
+        wait(1);
+
+        InGameOn;
+        CenterNowOnUnits(Gali);
+
+        SetSide(Gali, 1);
+        ComBuild(Gali, b_armoury, 107, 131, 0);
+
+        repeat
+         wait(1);
+        until FilterAllUnits([[f_btype, b_armoury], [f_nation, nation_arabian]]);
+
+        SetSide(Gali, 2);
+        InGameOff;
+
+        b := FilterAllUnits([[f_btype, b_armoury], [f_nation, nation_arabian]])[1];
+
+        repeat
+         wait(0$01);
+
+         if player_attacked_ar then
+            exit;
+
+        until BuildingStatus(b) <> bs_build;
+
+        if IsOk(b) and GetResourceType(GetBase(dep), mat_cans) >= 25 then
+           begin
+           ComUpgrade(b);
+           SetTaskList(Gali, [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+
+           repeat
+            wait(0$01);
+
+            if player_attacked_ar then
+               exit;
+
+           until BuildingStatus(b) <> bs_build;
+           end;
+
+        if b then
+           CenterNowOnUnits(b);
+
+        DialogueOn;
+
+        Say(Gali, 'D9d-Ar2-1');
+        Say(Vervecken, 'D9d-Ar1-1');
+        Say(JMM, 'D9d-JMM-1');
+        Say(Vervecken, 'D9d-Ar1-2');
+
+        DialogueOff;
+
+        i := [];
+
+        if GetResourceType(GetBase(dep), mat_siberit) >= 20 then
+           i := i ^ [1];
+        if GetResourceType(GetBase(dep), mat_cans) >= 50 then
+           i := i ^ [2];
+        if GetResourceType(GetBase(dep), mat_oil) >= 80 then
+           i := i ^ [3];
+
+        i := i diff 0;
+
+        if i then
+           begin
+           i := i ^ [4];
+
+           case Query('QInfo2') of
+           1: player_want_info := 3; // 20 syba (bur¿uj option)
+           2: player_want_info := 1; // 50 skrzynek (frajer option)
+           3: player_want_info := 2; // 80 ropy (normal option)
+           4: player_want_info := 0; // won
+           end;
+
+           end
+          else
+           case Query('QInfoNothing') of
+           1: player_want_info := 0;
+           end;
+
+        end; 
+
+      end;
+
+   end;
+
+if player_want_info then
+   begin
+   tmp := UnitFilter(tmp, [f_weapon, ar_cargo_bay]);
+
+   if player_want_mortar then
+      begin
+
+      case player_want_info of
+      1: x := 5;
+      2: x := 8;
+      3: x := 2;
+      end;
+
+      repeat
+       wait(0$1);
+      until not HasTask(Gali);
+
+      for i = 1 to x do
+          begin
+          AddComTransport(Gali, dep, player_want_info);
+          AddComMoveUnit(Gali, tmp[1]);
+          AddComHold(Gali);
+
+          repeat
+           wait(3);
+
+           if player_attacked_ar then
+              exit;
+
+          until GetDistUnits(Gali, tmp[1]) < 4 and GetCargo(Gali, player_want_info);
+
+          SetCargo(tmp[1], player_want_info, GetCargo(tmp[1], player_want_info)+10);
+          SetCargo(Gali, player_want_info, 0);
+          end;
+
+      repeat
+       wait(0$1);
+
+       if player_attacked_ar then
+          exit;
+
+      until GetCargo(tmp[1], player_want_info) = x * 10;
+
+      no_oil_gain := false;
+      end
+     else
+      begin
+      tmp := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]);
+
+      ComMoveXY(Gali, GetX(dep)+1, GetY(dep)+1);
+
+      repeat
+       wait(0$1);
+      until GetDistUnits(Gali, dep) < 4;
+
+      for i = 1 to 6 do
+          begin
+
+          if player_attacked_ar then
+             exit;
+
+          if GetResourceType(GetBase(dep), mat_oil) < 10 and not first_warn then
+             begin
+             first_warn := true;
+             DialogueOn;
+             Say(Bogdanovic, 'D9a-FAr1-1');
+             Say(JMM, 'D9a-JMM-1');
+             Say(Vervecken, 'D9a2-Ar1-1');
+             DialogueOff;
+
+             wait(time);
+             end;
+
+          if GetResourceType(GetBase(dep), mat_oil) < 10 then
+             begin
+             Say(Vervecken, 'D9a3-Ar1-1');
+             no_oil_gain := true;
+             break;
+             end
+            else
+             begin
+             AddComTransport(Gali, dep, mat_oil);
+             AddComRefuel(Gali, tmp[i mod 3 + 1]);
+             end;
+
+          end;
+
+          repeat
+           wait(0$1);
+
+           if player_attacked_ar then
+              exit;
+
+           for i in tmp do
+               if GetFuel(i) < 100 then
+                  begin
+                  x := i;
+                  break;
+                  end;
+
+           if not HasTask(Gali) and not Carry(Gali) then
+              begin
+              ComTransport(Gali, dep, mat_oil);
+              AddComRefuel(Gali, x);
+              end;
+
+          until (GetFuel(tmp[1]) > 80 and GetFuel(tmp[2]) > 80 and GetFuel(tmp[3]) > 80);
+
+
+      end;
+
+   ComHold(Gali);
+
+   // player get info here
+   if not no_oil_gain then
+      begin
+      DialogueOn;
+
+      CenterNowOnUnits(Vervecken);
+
+      if player_want_mortar then
+         begin
+         Say(Vervecken, 'D9e-Ar1-1');
+         Say(JMM, 'D10a-JMM-1');
+         end;
+       
+      Say(Vervecken, 'D10a-Ar1-1');
+      Say(Gali, 'D10a-Ar2-1');
+      Say(Bogdanovic, 'D10a-FAr1-1');
+      Say(Gali, 'D10a-Ar2-2');
+      Say(Bogdanovic, 'D10a-FAr1-2');
+      Say(Vervecken, 'D10a-Ar1-2');
+      Say(JMM, 'D10a-JMM-2');
+      Say(Vervecken, 'D10a-Ar1-3');
+      Say(JMM, 'D10a-JMM-3');
+
+      player_get_info := true; // important!
+
+      DialogueOff;
+      end;
+   end;
+
+if player_attacked_ar then
+   exit;
+
+if player_want_mortar or player_want_info then
+   Say(Vervecken, 'D9f-Ar1-1');
+
+// go to powell..
+repeat
+
+ ComMoveXY(FilterAllUnits([f_side, 2]), 51, 99);
+ wait(0$1);
+
+ if FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) then
+    for i in FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) do
+        RemoveUnit(i);
+
+until FilterAllUnits([f_side, 2]) = 0;
+
+End;
+
+// player attack arabians
+Every 0$1 trigger player_attacked_ar do
+var i, tmp, mine_launched, x;
+begin
+ru_can_attack := true;
+mine_launched := false;
+
+ComMoveXY(FilterAllUnits([f_side, 2]), 51, 99);
+
+if IsOk(Vervecken) then
+   Say(Vervecken, 'D11a-Ar1-1');
+
+tmp := UnitFilter(ar_force, [f_class, 1]);
+
+for i in tmp do
+    if MineOfUnit(i) then
+       begin
+       x := MineOfUnit(i);
+       mine_launched := true;
+       LaunchMineAtPos(x[1], x[2], 2);
+       end;
+
+if mine_launched and IsOk(Vervecken) then
+   Say(Vervecken, 'D11b-Ar1-1');
+
+
+repeat
+
+ ComMoveXY(FilterAllUnits([f_side, 2]), 51, 99);
+ wait(0$1);
+
+ if FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) then
+    for i in FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) do
+        RemoveUnit(i);
+
+until FilterAllUnits([f_side, 2]) = 0;
+
+End;
+
+// something blocked ar (zabezpieczenie przed bugerami ralfami)
+Every 0$1 trigger ar_can_arrive do
+var i;
+begin
+Wait(10$00);
+
+if FilterAllUnits([f_side, 2]) then
+   begin
+
+    repeat
+
+     ComAgressiveMove(FilterAllUnits([f_side, 2]), 51, 99);
+     wait(0$1);
+
+     if FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) then
+        for i in FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) do
+            RemoveUnit(i);
+
+     until FilterAllUnits([f_side, 2]) = 0;
+   end;
+
+End;
+
+// end ar section
+
+// END MISSION
+Every 0$1 trigger jmm_in_ovsyenko do
+var i, tmp, sib;
+begin
+Wait(game_time); // MISSION TIME
+
+repeat
+ wait(0$1);
+until (not ru_can_attack);
+
+Wait(0$35);
+
+DialogueOn;
+InGameOn;
+SayRadio(Powell, 'D12-Pow-1');
+InGameOff;
+DialogueOff;
+
+ChangeMissionObjectives('M4');
+
+SetAreaMapShow(endMissionArea, 1);
+
+can_end := true;
+
+repeat
+ wait(0$1);
+until GetTerminalCargo >= 20 and FilterAllUnits([[f_side, 1], [f_type, unit_human]]) <= FilterUnitsInArea(endMissionArea, [[f_side, 1], [f_type, unit_human]]) + FilterAllUnits([[f_side, 1], [f_driving]]);
+
+
+if not player_get_info then
+   player_get_info := -1;
+
+AddMedal('Information', player_get_info);
+
+
+tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, 2], [f_class, 16], [f_weapon, us_cargo_bay]]]);
+
+sib := GetTerminalCargo; // sib from terminal
+sib := sib + GetResourceArea(terminalArea, mat_siberit); // sib nearby terminal
+sib := sib + GetCargo(tmp, mat_siberit);
+
+if sib < (2+Difficulty)*50 then
+   AddMedal('MuchSiberite', -2 * Difficulty + 1)
+  else
+   AddMedal('MuchSiberite', 1);
+
+GiveMedals('MAIN');
+RewardPeople(FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 8]]]));
+
+// change mortar class
+tmp := FilterAllUnits([[f_side, 1], [f_class, 8]]);
+
+if tmp then
+   for i in tmp do
+       SetClass(i, 1);
+
+// Save Variable IMPORTANT!
+SaveVariable(sib, '09_sibRes');
+SaveVariable(player_get_info, '09_arInfo');
+
+// Save here
+SaveCharacters(JMM, mission_prefix&'JMM');
+
+if IsLive(Gary) then
+   SaveCharacters(Gary, mission_prefix&'Gary');
+
+if IsLive(Bobby) then
+   SaveCharacters(Bobby, mission_prefix&'Bobby');
+
+if IsLive(Cyrus) then
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+
+if IsLive(Houten) then
+   SaveCharacters(Houten, mission_prefix&'Houten');
+
+tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Cyrus, Bobby, Houten, Gary];
+
+if tmp then
+   SaveCharacters(tmp, mission_prefix&'others');
+
+tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, class_apeman], [f_class, class_apeman_engineer]]]);
+
+if tmp then
+   SaveCharacters(tmp, mission_prefix&'apes');
+
+YouWin;
+End;

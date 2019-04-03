@@ -1,0 +1,185 @@
+// Cornel AI module
+Every 0$01 trigger cornel_active do
+var i, has_eng, filter, dep, blist, crates, cargo, sol;
+begin
+ComMoveXY(Cornel^Bierezov^cornel_units, 250, 120);
+
+has_eng := UnitFilter(cornel_units, [f_class, 2]) diff [Bierezov];
+filter := UnitFilter(cornel_units, [f_type, unit_human]);
+
+if not has_eng then
+   begin
+   uc_side := 4;
+   uc_nation := 1;
+   bc_type := b_depot;
+   bc_level := 2;
+   dep := CreateAndPlaceBuildingXYD(264, 120, 4);
+   PlaceSeeing(264, 120, 4, -10);
+   RemoveSeeing(264, 120, 4);
+   end;
+
+repeat
+ wait(0$01);
+until IsInArea(Cornel, cornelBaseArea);
+
+if has_eng and not dep then
+   begin
+   ComBuild(has_eng, b_depot, 264, 120, 4);
+
+   repeat
+    wait(0$01);
+   until FilterAllUnits([[f_side, 4], [f_btype, b_depot]]);
+
+   ComMoveXY(filter, 264, 120);
+
+   repeat
+    wait(0$01);
+   until FilterAllUnits([[f_side, 4], [f_btype, b_depot], [f_not, [f_constructed]]]);
+
+   ComMoveXY(filter, 247, 113);
+   Wait(0$2);
+   end
+  else
+   begin
+   SetSide(dep, 4);
+   end;
+
+dep := FilterAllUnits([[f_side, 4], [f_btype, b_depot]])[1];
+
+for i = 1 to 3-has_eng do
+    begin
+
+    if GetClass(filter[i]) = 2 then
+       continue;
+
+    ComEnterUnit(filter[i], dep);
+    AddComChangeProfession(filter[i], 2);
+    AddComExitBuilding(filter[i]);
+    end;
+
+   repeat
+    wait(0$01);
+   until UnitFilter(filter, [f_class, 2]) = 3;
+
+if IsInUnit(Cornel) then
+   begin
+   cargo := IsInUnit(Cornel);
+
+   if GetCargo(cargo, mat_cans) then
+      ComGive(Cornel, dep);
+
+   AddComMoveXY(Cornel, 235, 122);
+   AddComExitVehicle(Cornel);
+   AddComEnterUnit(Cornel, dep);
+   end;
+
+if Bierezov then
+   ComEnterUnit(Bierezov, dep);
+
+has_eng := UnitFilter(cornel_units, [f_class, 2]);
+
+repeat
+ wait(0$01);
+ crates := GetListOfCratesInArea(cornelBaseArea);
+
+ if crates then
+    ComCollect(has_eng, crates[1], crates[2]);
+until GetResourceType(GetBase(dep), mat_cans) >= 40;
+
+blist := [ [b_armoury, 256, 111, 2],
+           [b_breastwork, 243, 112, 2] ];
+
+
+for i in blist do
+    AddComBuild(has_eng, i[1], i[2], i[3], i[4]);
+
+repeat
+ wait(0$01);
+until FilterAllUnits([[f_side, 4], [f_btype, b_armoury], [f_not, [f_constructed]]]);
+
+AddComEnterUnit(filter diff has_eng, FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]);
+AddComChangeProfession(filter diff has_eng, 1);
+
+repeat
+ wait(0$01);
+until FilterAllUnits([[f_side, 4], [f_btype, b_breastwork], [f_not, [f_constructed]]]);
+
+sol := UnitFilter(cornel_units, [f_class, 1]);
+
+ComExitBuilding(sol[1]);
+AddComEnterUnit(sol[1], FilterAllUnits([[f_side, 4], [f_btype, b_breastwork]])[1]);
+
+ComMoveUnit(has_eng, dep);
+
+repeat
+ wait(0$01);
+
+ filter := FilterAllUnits([[f_side, 4], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+
+ if filter and has_eng then
+    begin
+    for i in has_eng do
+        begin
+        if IsInUnit(i) then
+           ComExitBuilding(i);
+
+        Wait(3);
+        ComRepairBuilding(i, filter[1]);
+        end;
+    end
+   else
+    if has_eng and UnitFilter(has_eng, [f_outside]) then
+       for i in has_eng do
+           ComEnterUnit(i, dep);
+
+until cornel_prepared;
+End;
+
+Every 0$03 trigger cornel_prepared do
+var i, arm, filter;
+begin
+arm := FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1];
+
+ComExitBuilding(cornel_units);
+
+Wait(0$03);
+
+for i in cornel_units do
+    begin
+
+    if GetClass(i) in [2,3] then
+       begin
+       ComEnterUnit(i, arm);
+       AddComChangeProfession(i, 1);
+       AddComExitBuilding(i);
+       end;
+
+    AddComMoveXY(i, 257, 121);
+    end;
+
+Wait(1$00);
+
+filter := Cornel^Bierezov^cornel_units diff UnitFilter(cornel_units, [f_type, unit_vehicle]);
+
+ComMoveXY(filter, 248, 85);
+AddComHold(filter);
+
+repeat
+ wait(0$01);
+until cornel_attack;
+
+ComAgressiveMove(filter, 209, 63);
+
+if Bierezov then
+   begin
+   filter := filter diff Bierezov;
+   SetSide(Bierezov, 6);
+   ComMoveXY(Bierezov, 235, 60);
+   AddComHold(Bierezov);
+   AddComWait(Bierezov, 0$10);
+   AddComMoveXY(Bierezov, 198, 28);
+   AddComHold(Bierezov);
+   end;
+
+End;
+

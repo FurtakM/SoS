@@ -1,0 +1,384 @@
+Export Yakotich;
+Export ru_force, ru_rebuild, ru_produce_list;
+Export Function PrepareRussian;
+var i, un, tmp, skill, lab, dep;
+begin
+InitHc;
+
+uc_side := 3;
+uc_nation := 3;
+
+skill := [5, 6, 7][Difficulty];
+
+ru_force := [];
+ru_rebuild := [];
+ru_produce_list := [];
+
+lab := FilterAllUnits([[f_side, 3], [f_btype, b_lab_full]])[1];
+tmp := [ru_gatling_gun, ru_heavy_gun, ru_rocket_launcher];
+dep := FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1];
+
+SetResourceType(GetBase(dep), mat_cans, 5000);
+SetResourceType(GetBase(dep), mat_oil, 1000);
+SetResourceType(GetBase(dep), mat_siberit, 30);
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_turret]]) do
+    begin
+    PlaceWeaponTurret(i, tmp[i mod 3 + 1]);
+    end;
+
+for i = 1 to 4 do
+    begin
+    PrepareHuman(false, class_bazooker, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 3], [f_btype, b_barracks]])[1]);
+    end;
+
+for i = 1 to 5 do
+    begin
+    PrepareHuman(false, class_mechanic, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1]);
+    end;
+
+for i = 1 to 4 do
+    begin
+    PrepareHuman(false, class_engineer, skill);
+    PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1]);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, class_scientistic, skill);
+    PlaceHumanInUnit(CreateHuman, lab);
+    end;
+
+Yakotich := PrepareUnit('Yakotich', (not debug), '');
+PlaceHumanInUnit(Yakotich,ru_dep);
+
+AddComResearch(lab, tech_tech2);
+AddComResearch(lab, tech_tech3);
+AddComResearch(lab, tech_weap1);
+AddComResearch(lab, tech_weap2);
+AddComResearch(lab, tech_gatling);
+AddComResearch(lab, tech_gun);
+AddComResearch(lab, tech_advmet);
+AddComResearch(lab, tech_rocket);
+AddComResearch(lab, tech_comp1);
+
+if Difficulty > 1 then
+   AddComResearch(lab, tech_comp2);
+End;
+
+Every 3$30 trigger ListEnvironmentArea(cutTreeArea) > 3 and not FilterAllUnits([[f_side, 3], [f_weapon, ru_bulldozer]]) do
+begin
+enable;
+ru_produce_list := ru_produce_list ^ [ru_heavy_tracked, engine_combustion, control_computer, ru_bulldozer];
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_building]]) do
+var un, i, tmp, engs, dep, to_heal, sci, lab;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+engs := FilterAllUnits([[f_side, 3], [f_class, 2]]);
+dep := FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1];
+lab := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])[1];
+
+if not engs then
+   exit;
+
+to_heal := UnitFilter(engs, [f_not, [f_lives, 600]]);
+sci := FilterAllUnits([[f_side, 3], [f_class, 4]]);
+
+if not tmp and not ru_rebuild then
+   begin
+
+   if UnitFilter(engs, [f_not, [f_inside]]) then
+      ComEnterUnit(UnitFilter(engs, [f_not, [f_inside]]), dep);
+
+   exit;
+   end;
+
+if UnitFilter(engs, [f_inside]) then
+   ComExitBuilding(UnitFilter(engs, [f_inside]));
+
+if not tmp then
+   begin
+
+   if not FilterAllUnits([[f_enemy, 3], [f_distxy, 147, 212, 30]]) then
+      begin
+
+      if not HasTask(engs[1]) then
+         begin
+         i := ComBuild(engs, ru_rebuild[1], ru_rebuild[2], ru_rebuild[3], ru_rebuild[4]);
+
+         if GetBType(i) = b_armoury then
+            AddComUpgrade(i);
+         end;
+
+      end;
+
+   end;
+
+for i in engs do
+    begin
+
+    if i in to_heal and sci then
+       begin
+
+       if GetDistUnitXY(i, 149, 220) < 5 then
+          continue;
+
+       ComMoveXY(i, 149, 220);
+       AddComHold(i);
+       end
+      else
+       if not HasTask(i) or WantsToAttack(i) then
+          ComRepairBuilding(i, NearestUnitToUnit(tmp, i));
+    end;
+
+if to_heal and sci then
+   begin
+
+   if UnitFilter(sci, [f_inside]) then
+      ComExitBuilding(UnitFilter(sci, [f_inside]))
+     else
+      ComHeal(sci, to_heal[1]);
+   end
+  else
+   if UnitFilter(sci, [f_outside]) and lab then
+      ComEnterUnit(UnitFilter(sci, [f_outside]), lab);
+End;
+
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) and ru_produce_list do
+var i, tmp, fac;
+begin
+enable;
+
+fac := FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1];
+
+if UnitsInside(fac) = 0 then
+   exit;
+
+if BuildingStatus(fac) = bs_idle then
+   ComConstruct(fac, ru_produce_list[1], ru_produce_list[2], ru_produce_list[3], ru_produce_list[4]);
+
+End;
+
+Export Function PrepareAttack(wave);
+var i, un, tmp, fac;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+ru_can_attack := false;
+
+fac := FilterAllUnits([[f_side, 3], [f_btype, b_factory]]);
+
+if fac then
+   begin  
+   ru_produce_list := [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun];
+
+   if wave > 1 then
+      for i = 1 to Difficulty do
+          ru_produce_list := ru_produce_list ^ [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket_launcher];
+
+   repeat
+    wait(0$1);
+   until ru_produce_list < 4 or UnitsInside(fac[1]) = 0 or BuildingStatus(fac[1]) in [bs_need_extension, bs_need_people, bs_need_power];
+
+   end;
+
+case wave of
+1: begin
+   for i = 1 to [4, 5, 6][Difficulty] do
+       Sold;
+
+   for i = 1 to [2, 3, 3][Difficulty] do
+       Tank;
+   end;
+
+2..9: begin
+      for i = 1 to [4, 5, 6][Difficulty]+(wave div 2) do
+          Sold;
+
+      for i = 1 to [3, 4, 4][Difficulty]+(wave div 2) do
+          Tank;
+      end;
+
+10: begin
+    for i = 1 to [10, 12, 14][Difficulty] do
+        Sold;
+
+    for i = 1 to [11, 13, 15][Difficulty] do
+        Tank;
+    end;
+
+end;
+
+ru_can_attack := true;
+End;
+
+Function Sold();
+var un, skill;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+InitHc;
+
+skill := [6, 7, 7][Difficulty];
+
+PrepareHuman(false, [class_soldier, class_bazooker][rand(1,2)], skill);
+un := CreateHuman;
+PlaceUnitArea(un, ruForestSpawn, false);
+
+ru_force := ru_force ^ un;
+End;
+
+Function Tank();
+var un, chassis, weapon, skill;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+InitHc;
+
+skill := [5, 6, 7][Difficulty];
+chassis := [ru_medium_tracked, ru_heavy_tracked][rand(1,2)];
+
+if chassis = ru_medium_tracked then
+   weapon := [ru_rocket_launcher, ru_gatling_gun, ru_gun][rand(1,3)]
+  else
+   weapon := [ru_heavy_gun, ru_gun, ru_rocket_launcher][rand(1,3)];
+
+un := PrepareTank(3, 3, chassis, engine_combustion, [control_computer, control_computer, control_computer, control_manual][rand(1,4)], weapon, 99);
+
+if GetControl(un) = control_manual then
+   begin
+   PrepareHuman(false, 3, skill);
+   PlaceHumanInUnit(CreateHuman, un);
+   end;
+
+PlaceUnitArea(un, ruRoadSpawn, false);
+ru_force := ru_force ^ un;
+
+ComMoveXY(un, 126, 158);
+Wait(0$3);
+ComStop(un);
+End;
+
+// Trigger ru attacks
+Every 0$1 do
+var i, time, wave;
+begin
+time := [12$00, 11$30, 11$00][Difficulty];
+
+wait(time);
+
+time := [7$30, 7$10, 6$50][Difficulty];
+wave := 0;
+
+while true do
+begin
+wave := wave + 1;
+
+if FilterAllUnits([f_side, 2]) then
+   repeat
+    wait(0$1);
+   until FilterAllUnits([f_side, 2]) = 0;
+
+if ru_force < 20 then
+   PrepareAttack(wave);
+
+ru_can_attack := true;
+wait(time);
+end;
+
+End;
+
+// Attack script
+Every 0$1 trigger ru_can_attack and ru_force do
+var i, tmp, un, points1, points2, pointsr, x, dist, xy;
+begin
+enable;
+
+points1 := [107, 123]; // ovsyenko
+points2 := [55, 42]; // terminal
+pointsr := [[102, 140], [105,142], [129,131]];
+
+for i in ru_force do
+    begin
+    un := NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i);
+
+    if GetDistUnits(i, un) < 12 then
+       begin
+       if GetType(i) = unit_human and GetClass(i) = 1 and un in FilterAllUnits([[f_type, unit_vehicle], [f_empty]]) then
+          ComEnterUnit(i, un)
+         else
+          if not un in FilterAllUnits([[f_type, unit_vehicle], [f_empty]]) then
+             ComAttackUnit(i, un)
+            else
+             ComAttackUnit(i, JMM);
+       end
+      else
+       begin
+       if (GetDistUnitXY(i, points1[1], points1[2]) > GetDistUnitXY(i, points2[1], points2[2]) and ru_can_attack_terminal) or FilterUnitsInArea(ovsyenkoArea, [f_enemy, 3]) = 0 then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
+         else
+          begin
+          if GetWeapon(i) = ru_rocket_launcher and UnitFilter(ru_force, [f_not, [f_weapon, ru_rocket_launcher]]) > 6 then
+             begin
+             dist := 9999;
+             xy := 0;
+
+             for x in pointsr do
+                 begin
+                 if GetDistUnitXY(i, x[1], x[2]) < dist then
+                    begin
+                    dist := GetDistUnitXY(i, x[1], x[2]);
+                    xy := x;
+                    end;
+
+                 if xy and GetDistUnitXY(i, xy[1], xy[2]) > 9 then
+                    ComAgressiveMove(i, xy[1], xy[2]);
+                 end;
+
+             end
+            else
+             begin
+             un := NearestUnitToUnit(all_units diff i, i);
+
+             if not Attacks(i) and (un in FilterAllUnits([[f_type, unit_vehicle], [f_control, control_manual], [f_empty]]) or un in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_lives, 249]]])) then
+                ComAttackUnit(i, un)
+               else
+                ComAttackUnit(i, NearestUnitToUnit(FilterUnitsInArea(ovsyenkoArea, [f_enemy, 3]), i));
+             end;
+
+          end;
+       end;
+
+    end;
+
+End;
+
+// Oil
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]);
+
+for i in tmp do
+    if GetFuel(i) < 12 then
+       SetFuel(i, 12);
+End;
+
+
+Every 0$1 trigger can_end do
+begin
+Wait(1$35);
+PrepareAttack(10);
+End;

@@ -1,0 +1,253 @@
+// Prepare Hero for use
+// ident - ident from start.txt - 'JMM' for example
+// exist_mode
+//   - false if unit not exist in save
+//   - true if unit already exist in save
+// example: JMM := PrepareUnit('JMM', false);
+Export Function PrepareUnit(ident, exist_mode);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(mission_prev_prefix&ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+// example: PrepareTank(1, 1, us_medium_wheeled, engine_combustion, control_manual, us_machine_gun, 80);
+Export Function PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
+begin
+uc_side := side;
+uc_nation := nation;
+
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+vc_fuel_battery := fuel;
+
+result := CreateVehicle;
+End;
+
+Export Function GetRandom(sex);
+var i, filter;
+begin
+filter := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Khatam];
+
+if not filter then
+   exit;
+
+result := UnitFilter(filter, [f_sex, sex]);
+End;
+
+Export Function SayX(units, ident);
+var i;
+begin
+result := false;
+
+if not units then
+   exit;
+
+for i in units do
+    if IsOk(i) then
+       begin
+       Say(i, ident);
+       result := i;
+       break;
+       end;
+End;
+
+Export Function GoToAnotherTower(un, b, x, y);
+var i, filter, t, side;
+begin
+if not un or not IsOk(un) then
+   exit;
+
+side := GetSide(un);
+
+filter := FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_ok], [f_empty]]) diff b;
+
+if not filter then
+   begin
+   filter := FilterAllUnits([[f_side, side], [f_btype, b_barracks]]);
+
+   if debug then
+      display_strings := [filter, '1'];
+
+   if not filter then
+      begin
+      ComMoveXY(un, x, y); 
+      exit;
+      end;
+
+   repeat
+     t := NearestUnitToUnit(filter, un);
+
+     if UnitsInside(t) = 6 then
+        filter := filter diff t
+       else
+        break;
+   until UnitsInside(t) < 6 or not filter;
+
+   display_strings := [filter, t];
+
+   if not filter then
+      ComMoveXY(un, x, y) // ?
+     else
+      ComEnterUnit(un, t);
+   end
+  else
+   begin
+
+   repeat
+    t := NearestUnitToUnit(filter, un);
+
+    if (GetTag(t) = 7) then
+        filter := filter diff t;
+    until GetTag(t) <> 7 or not filter;
+
+    if GetTag(t) <> 7 then
+       begin
+       SetTag(t, 7);
+       ComEnterUnit(un, t);
+       end
+      else
+       ComMoveXY(un, x, y);
+    end;
+End;
+
+// Return true if base don't have enough energy
+// param: base
+Export Function BaseNeedEnergy(base);
+var i, tmp;
+begin
+if not base then
+   exit;
+
+// [need, need_max, prod, max_prod]
+tmp := GetEnergy(GetBase(base));
+
+if tmp[1] > tmp[4] then
+   result := true
+  else
+   result := false;
+End;
+
+Export Function FilterPeople(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_type, unit_human]]);
+End;
+
+Export Function FilterDrivers(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_not, [f_outside]]]);
+End;
+
+Export Function FilterPeopleArea(side, area);
+begin
+result := FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_human]]);
+End;
+
+Export Function FilterDriversArea(side, area);
+var i, tmp;
+begin
+tmp := FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_vehicle], [f_not, [f_empty]]]);
+
+result := [];
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    result := result ^ IsDrivenBy(i);
+
+result := result diff 0;
+End;
+
+Export Function FilterBuildings(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_type, unit_building]]);
+End;
+
+// animals
+Export Function PrepareNature;
+var i, animal, nat_area;
+begin
+
+     uc_side = 0;
+     uc_nation = 0;
+
+     nat_area := wildArea;
+
+     InitHc;
+
+     // birds
+     for i = 1 to 4 do
+     begin
+     hc_class = 18;
+     hc_gallery = '';
+     hc_face_number = 1;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // tigers
+     for i = 1 to 6 do
+     begin
+     hc_class = class_tiger;
+     hc_gallery = '';
+     hc_agressivity = Rand(0, 10);
+     hc_face_number = 3;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // horses
+     for i = 1 to 2 do
+     begin
+     hc_class = 21;
+     hc_gallery = '';
+     hc_agressivity = 0;
+     hc_face_number = 5;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+
+     // enhidna
+     for i = 1 to 6 do
+     begin
+     hc_class = 13;
+     hc_gallery = '';
+     hc_face_number = 4;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // fish
+     for i = 1 to 2 do
+     begin
+     hc_class = 20;
+     hc_gallery = '';
+     hc_face_number = 2;
+
+     animal := CreateHuman;
+     PlaceUnitXYR(animal, 101, 37, 3, false);
+     end;
+
+     // mastodonts
+     for i = 1 to 1 do
+     begin
+     vc_chassis := 31;
+     vc_control := control_rider;
+     animal := CreateVehicle;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+End;

@@ -1,0 +1,105 @@
+// Start mission
+Every 1 do
+var i, j, tmp;
+begin
+    InGameOn;
+    CenterNowOnUnits(lab[1]);
+
+    If IsOK(Denis) then
+    begin
+     SetTech(tech_radar, 1, state_researched);
+     SetRestrict(b_ext_radar, 1, true);
+    end;
+
+
+    CenterNowOnUnits(JMM);
+    ComTurnUnit(JMM, DeltaDoctor);
+
+    repeat
+    wait(0$1);
+    ComMoveUnit(DeltaDoctor, JMM);
+    until GetDistUnits(JMM, DeltaDoctor) < 5;
+
+    ComTurnUnit(DeltaDoctor, JMM);
+    Say(JMM, 'D1-JMM-1');
+    Say(DeltaDoctor, 'D1-Sci-1');
+    ComEnterUnit([JMM, DeltaDoctor, Denis], lab[1]);
+end;
+
+Every 0$2 trigger IsInUnit(JMM) = lab[1] and IsInUnit(DeltaDoctor) = lab[1] do
+var i, j, tmp;
+begin
+    CenterNowOnUnits(lab[1]);
+    Say(JMM, 'D1-JMM-2');
+    Say(DeltaDoctor, 'D1-Sci-2');
+    Say(JMM, 'D1-JMM-3');
+    If IsOK(Denis) then Say(DeltaDoctor, 'D1-Sci-3')
+    else Say(DeltaDoctor, 'D1-Sci-3a');
+    Say(JMM, 'D1-JMM-4');
+
+    tmp = FilterAllUnits([[f_side, 1], [f_class, 4], [f_not, [f_inside]]]);
+
+    for i in FilterAllUnits([f_side, 0]) do
+        for j in tmp do AddComTameXY(j, GetX(i), GetY(i));
+
+    Say(DeltaDoctor, 'D1-Sci-4');
+    Say(JMM, 'D1-JMM-5');
+    Say(DeltaDoctor, 'D1-Sci-5');
+    Say(JMM, 'D1-JMM-6');
+    SayRadio(Harisson, 'D1-Har-6');
+    Say(JMM, 'D1-JMM-7');
+    SayRadio(Harisson, 'D1-Har-7');
+    If IsOK(Denis) then Say(JMM, 'D1-JMM-8');
+    Say(JMM, 'D1-JMM-8a');
+    SayRadio(Harisson, 'D1-Har-8');
+    Say(JMM, 'D1-JMM-9');
+    SayRadio(Harisson, 'D1-Har-9');
+    Say(JMM, 'D1-JMM-10');
+    If IsOK(Denis) then Say(JMM, 'D1-JMM-10a');
+
+    SelectAndSaveCharacters;
+
+    SetResourceType(GetBase(lab[1]), 1, 250);
+    If FilterAllUnits([[f_side, 1], [f_btype, b_oil_mine]]) > 0 then SetResourceType(GetBase(lab[1]), 2, 300);
+
+    InGameOff;
+    Query('Q1');
+    SetAreaMapShow(ExitArea, 1);
+
+    if IsInUnit(JMM) then
+       ComExitBuilding(JMM);
+
+end;
+
+Every 0$1 trigger FilterUnitsExceptArea(ExitArea, [[f_side, 1], [f_type, unit_human]]) = 0 do 
+var i, cargoType;
+begin
+
+    if FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) > 0 then
+    begin
+        for i in FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) do
+        begin
+            cargoType = GetCargoType(i);
+            if GetWeapon(i) = us_cargo_bay then
+            begin
+                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), cargoType, GetCargo(i, cargoType) ] ];
+            end else 
+            begin
+                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)] ];
+            end;
+        end;  
+
+        SaveVariable(yourVehicles, '06_VehiclesIn06_1');
+        
+    end;
+    SaveCargos;
+    ChangeMap(6, '%_cont');
+end;
+
+
+Export function SaveCargos;
+var i;
+begin
+   for i in FilterUnitsInArea(ExitArea,[[f_side, 1], [f_weapon, us_cargo_bay]]) do resources = resources ^ [GetMultiCargo(i)];
+   SaveVariable(resources, '06_ResourcesInCargo06_1');
+end;

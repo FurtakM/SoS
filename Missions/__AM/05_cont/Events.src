@@ -1,0 +1,63 @@
+// Events module
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+if un = Delta then
+   begin
+   Delta := 0;
+   SetRestrict(b_depot, 1, true);
+   end;
+if un in ar_forces then
+   ar_forces := ar_forces diff un;
+if un in ap_killers then
+   ap_killers := ap_killers diff un;
+End;
+
+// Arab Spotted
+On Contact(s1, s2) do
+if s1 = 1 and s2 = 2 and not arab_spotted then
+   arab_spotted := true;
+
+// User want to end this crappy mission
+On EndTheMissionRaised(p) do
+begin
+end_the_mission_allowed := false;
+end_mission := true;
+End;
+
+// First Apeman Tamed
+On ApemanTamed(apeman, sci) do
+begin
+if GetSide(sci) = 1 then
+   apeman_counter := apeman_counter + 1;
+
+if not first_apeman_tamed then
+   begin
+   first_apeman_tamed := true;
+
+   if sci = Gladstone then
+      Say(Gladstone, 'D7b-Glad-1');
+
+   if sci = Denis then
+      Say(Denis, 'D7a-Den-1');
+
+   if not sci in [JMM, Gladstone, Denis, Lisa, Frank, Bobby, Cyrus, Donaldson] then
+      begin
+
+      if GetSex(sci) = sex_male then
+         Say(sci, 'D7c-Sci1-1')
+        else
+         Say(sci, 'D7c-FSci1-1');
+
+      end;
+
+   if not sci = Gladstone then
+      Say(Gladstone, 'D7c-Glad-1');
+
+   if Lisa then
+      Say(Lisa, 'D8-Lisa-1');
+   end;
+
+End;

@@ -1,0 +1,152 @@
+Export russian_troops_1, russian_troops_2, russian_patrol_tanks, russian_meta_guards,
+       russian_patrol_forest;
+Export Pokryshkin;
+
+Export Function InitRussian;
+var skill, i, un;
+begin
+skill := [1, 2, 3][Difficulty];
+
+uc_side := 3;
+uc_nation := 3;
+
+Pokryshkin := PrepareUnit('Pokryshkin', false);
+PlaceUnitXY(Pokryshkin, 44, 5, false);
+
+hc_importance := 0;
+hc_gallery := '';
+hc_name := '';
+
+// guard north / south
+PrepareHuman(sex_male, 1, skill);
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 69;
+hc_sex := sex_male;
+hc_name := 'Ilja Ivanov';
+
+un := CreateHuman;
+russian_troops_1 := Insert(russian_troops_1, 1, un);
+PlaceUnitArea(un, guard_north, false);
+
+PrepareHuman(sex_male, 1, skill);
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 70;
+hc_name := 'Pavel Starczy';
+
+un := CreateHuman;
+russian_troops_1 := Insert(russian_troops_1, 2, un);
+PlaceUnitArea(un, guard_north, false);
+
+InitHc;
+
+for i = 1 to 7 do
+    begin
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+
+    if i mod 2 = 0 then
+       begin
+       russian_troops_1 := Insert(russian_troops_1, russian_troops_1+1, un);
+       PlaceUnitArea(un, guard_north, false);
+       ComHold(un);
+       end
+      else
+       begin
+       russian_troops_2 := Insert(russian_troops_2, russian_troops_2+1, un);
+       PlaceUnitArea(un, guard_south, false);
+       ComHold(un);
+       end;
+    end;
+
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]]) do
+    PrepareSolBun(skill, i);
+
+for i = 1 to 2 do
+    begin
+    un := PrepareTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, ru_heavy_machine_gun, 100);
+    PrepareHuman(false, 3, skill);
+    PlaceHumanInUnit(CreateHuman, un);
+    PlaceUnitXY(un, [23, 131][i], [14, 87][i], false);
+    russian_patrol_tanks := Insert(russian_patrol_tanks, 1, un);
+    end;
+
+for i = 1 to [2, 2, 3][Difficulty] do
+    begin
+    PrepareHuman([sex_female, sex_male, sex_male][i], 1, 1);
+    un := CreateHuman;
+    russian_meta_guards := Insert(russian_meta_guards, 1, un);
+    PlaceUnitArea(un, exitArea, false);
+    ComHold(un);
+    end;
+
+if Difficulty < 3 then
+   exit;
+
+PrepareHuman(false, 1, skill);
+russian_patrol_forest := CreateHuman;
+PlaceUnitXY(russian_patrol_forest, 82, 2, false);
+End;
+
+
+Every 0$01 trigger active_road_patrol do
+ComPatrol(russian_patrol_tanks[1], 'road', 0$02, [131, 87, 107, 75, 107, 66, 114, 61, 107, 34]);
+
+Every 0$01 trigger active_road_patrol do
+ComPatrol(russian_patrol_tanks[2], 'road', 0$02, [21, 12, 37, 30, 65, 62, 107, 76]);
+
+Every 0$01 trigger IsOk(russian_patrol_forest) do
+ComPatrol(russian_patrol_forest, 'forest', 0$01, [52, 15, 81, 9, 120, 52, 135, 80, 122, 95]);
+
+Every 0$01 trigger macmilan_use_radio do
+begin
+active_road_patrol := false;
+
+ComStop(russian_patrol_tanks);
+AddComAgressiveMove(russian_patrol_tanks, 72, 41);
+
+ComExitBuilding(russian_troops_2);
+AddComAgressiveMove(russian_troops_2, 72, 41);
+End;
+
+// Def East
+Every 0$03 trigger FilterUnitsInArea(def_south, [f_side, 1]) do
+var un;
+begin
+enable;
+
+un := FilterUnitsInArea(def_south, [f_side, 1])[1];
+
+ComExitBuilding(russian_troops_2);
+AddComAgressiveMove(russian_troops_2, GetX(un), GetY(un));
+End;
+
+Every 0$01 trigger (GetLives(russian_patrol_tanks[1]) < 999 or GetLives(russian_patrol_tanks[2]) < 999)
+               and See(3, JMM) do
+begin
+active_road_patrol := false;
+ComAttackUnit(russian_patrol_tanks, JMM);
+End;
+
+// Macmilan in trap
+Every 0$01 trigger macmilan_in_trap do
+begin
+ComExitBuilding(russian_troops_2);
+ComAttackUnit(russian_troops_1 ^ russian_troops_2 ^ Pokryshkin ^ russian_patrol_tanks, JMM);
+End;
+
+// Meta action
+Every 0$01 trigger meta_action do
+begin
+active_road_patrol := false;
+
+ComAgressiveMove(russian_troops_1 ^ russian_troops_2 ^ Pokryshkin ^ russian_patrol_tanks, 93, 1);
+End;
+
+Every 0$20 trigger send_troops_to_forest do
+begin
+if not IsOk(russian_patrol_forest) then
+   exit;
+
+ComAgressiveMove(russian_troops_1 ^ Pokryshkin, GetRememberedX(russian_patrol_forest), GetRememberedY(russian_patrol_forest));
+End;

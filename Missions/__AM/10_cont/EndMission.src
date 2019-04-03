@@ -1,0 +1,104 @@
+Every 0$1 trigger GetTech(54, 1) = state_researched and GetTech(55, 1) = state_researched and GetTech(21, 1) = state_researched and GetTech(22, 1) = state_researched and [GetTech(tech_LasSight, 1) = state_enabled or GetTech(tech_AI, 1) = state_enabled] and arabianDefeated = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do 
+begin
+    case query('QEndMission') of
+        1: begin   
+            end_the_mission_allowed = true;
+        end;
+        2:begin
+            fastEnd = 1;
+            FinishMission;
+        end;
+    end;
+end;
+
+Every 0$1 trigger GetTech(54, 1) = state_researched and GetTech(55, 1) = state_researched and GetTech(21, 1) = state_researched and GetTech(22, 1) = state_researched and GetTech(tech_LasSight, 1) = state_researched and GetTech(tech_AI, 1) = state_researched and fastEnd = 0 and arabianDefeated = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do 
+    FinishMission;
+
+Export function FinishMission;
+begin
+
+    SaveVariable(KhatamStatus, '10_KhatamStatus_1');
+    SaveVariable(GensherStatus, '10_GensherEscape_1');
+
+    if GetTech(tech_LasSight, 1) = state_researched then
+    begin
+        AddMedal('sights', 1);
+    end
+    else
+    begin
+        AddMedal('sights', -1);
+    end;
+
+    if GetTech(tech_AI, 1) = state_researched then
+    begin
+        AddMedal('computers', 1);
+    end
+    else
+    begin
+        AddMedal('computers', -1);
+    end;
+
+    if arabianEscape = 0 then
+    begin
+        AddMedal('renegades', 2);
+        SaveVariable(0, '10_ScientistsEscape_1');
+    end
+    else 
+    begin
+        AddMedal('renegades', -1);
+    end;
+
+    SaveEpsilonBase;
+
+    Query('kaj');
+    GiveMedals('Main');
+    RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]));
+
+    SaveCharacters(JMM, mission_prefix&'JMM');
+    EnchancedSaveCharacters(Brown, mission_prefix&'Brown');
+    EnchancedSaveCharacters(Donaldson, mission_prefix&'Donaldson');
+    EnchancedSaveCharacters(Bobby, mission_prefix&'Bobby');
+    EnchancedSaveCharacters(Cyrus, mission_prefix&'Cyrus');
+    EnchancedSaveCharacters(Lisa, mission_prefix&'Lisa');
+    EnchancedSaveCharacters(Frank, mission_prefix&'Frank');
+    EnchancedSaveCharacters(Kikuchi, mission_prefix&'Kikuchi');
+    EnchancedSaveCharacters(Houten, mission_prefix&'Houten');
+    EnchancedSaveCharacters(Gary, mission_prefix&'Gary');
+    EnchancedSaveCharacters(Cornell, mission_prefix&'Cornell');
+
+    EnchancedSaveCharacters(Simms, mission_prefix&'Simms');
+    EnchancedSaveCharacters(Denis, mission_prefix&'Denis');
+    EnchancedSaveCharacters(Joan, mission_prefix&'Joan');
+    EnchancedSaveCharacters(Gladstone, mission_prefix&'Gladstone');
+    EnchancedSaveCharacters(DeltaDoctor, mission_prefix&'DeltaDoctor');
+
+    SaveCharacters(others09, '10c_lock');
+
+    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Denis, Joan, Houten, Simms, Gary, DeltaDoctor, Cornell],'10_other_survivors');
+    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human], [f_or, [f_class, 16], [f_class, 12]]]),'10_ape');
+
+    YouWin;
+end;
+
+Export function SaveEpsilonBase;
+var epsilonBase, buildings, i;
+begin
+    epsilonBase = [];
+    buildings = FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_ok]]);
+
+    for i in buildings do
+    begin
+        if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
+            epsilonBase = epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+        else
+        if GetBType(i) = b_bunker then
+            epsilonBase = epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+        else
+        if GetBType(i) = b_factory then
+            epsilonBase = Insert(epsilonBase, 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)])
+        else
+           epsilonBase = epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+    end;
+
+    SaveVariable(epsilonBase,'10_EpsilonBase');
+end;

@@ -1,0 +1,111 @@
+Export Function Action;
+begin
+InGameOn;
+
+CenterNowOnUnits(main_base);
+
+Say(legion_commander, 'DL-1');
+Say(l1, 'DA-1');
+Say(l2, 'DA-2');
+Say(legion_commander, 'DL-2');
+Say(l2, 'DA-3');
+Say(legion_commander, 'DL-3');
+Say(l1, 'DA-4');
+
+if not dialogue_skipped then
+   begin
+   Wait(0$01);
+
+   ComExitBuilding([l1, l2]);
+
+   AddComMoveXY(l1, 107, 53);
+   AddComMoveXY(l2, 108, 53);
+
+   AddComTurnUnit(l1, potter);
+   AddComTurnUnit(l2, potter);
+   end;
+
+Repeat
+ Wait(0$01);
+Until IsAt(l1, 107, 53) or dialogue_skipped;
+
+if not dialogue_skipped then
+   begin
+   ComTurnUnit(potter, l1);
+   Wait(0$0.3);
+   TeleportUnit(potter, 108, 1, 0, false);
+   Wait(0$01);
+   RemoveUnit(potter);
+
+   Say(l1, 'DA-5');
+   Say(l2, 'DA-6');
+
+   Wait(0$02);
+
+   CenterOnXY(25, 19);
+   end;
+
+SpawnPotter(30, north_west_1);
+
+SayRadio(al_commander,'DLa-1');
+Say(legion_commander, 'DL-5');
+
+CenterNowOnUnits(main_base);
+
+InGameOff;
+
+ChangeMissionObjectives('C1');
+
+alert := true;
+
+ComExitBuilding(al_commander);
+AddComMoveToArea(al_commander, guard_hill);
+
+Wait(0$30);
+
+SpawnPotter(20, north_4);
+
+Wait(0$35);
+
+SpawnPotter(20, east_5);
+
+Wait(0$03);
+
+Game;
+End;
+
+// Radio #1
+Every 0$10 trigger FilterAllUnits([f_side, 7]) = 0 and points >= 500 do
+var tmp, i;
+begin
+DialogueOn;
+SayRadio(Vervecken, 'DVr-1');
+DialogueOff;
+
+Case Query('QBonusInfo') of
+1: bonus_active := true;
+end;
+
+bonus_num := 4;
+SetArtifactUse(your_side, art_exp_mid, art_instant, main_base);
+
+tmp := [500, 3500, 5750, 10000];
+
+repeat
+ wait(5$00);
+
+ for i = 1 to tmp do
+     if points >= tmp[i] then
+        bonus_num := i;
+
+ Case Query('QBonusInfo') of
+ 1: SetArtifactUse(your_side, art_exp_mid, art_instant, main_base);
+ end;
+
+until points >= 15000;
+
+End;
+
+
+
+

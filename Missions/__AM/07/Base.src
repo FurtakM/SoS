@@ -1,0 +1,329 @@
+// Prepare base
+Export JMM, Gladstone, Frank, Lisa, Cyrus, Bobby, Donaldson, Brown, Houten, Khatam, Harisson;
+Export gamma_commander;
+
+Export Function PrepareAmerican;
+var others, others_delta, others4, veh, team, dep, bar, lab, fac, bun, filter, i, j;
+begin
+PrepareBase;
+
+uc_side := 1;
+uc_nation := 1;
+
+team := [];
+
+
+JMM := PrepareUnit('JMM', (not debug), '06c_');
+
+if GetClass(JMM) = 2 then
+   SetClass(JMM, 1);
+
+gamma_commander := LoadVariable('GammaCommander', 3);
+
+
+if gamma_commander = 1 then // Donaldson is commander
+   begin
+   Donaldson := PrepareUnit('Donaldson', (not debug), '04_');
+   end
+  else
+   begin
+   if LoadVariable('DonaldsonIn06', 0) then
+      Donaldson := PrepareUnit('Donaldson', (not debug), '06c_')
+     else
+      {if LoadVariable('DonaldsonInDelta', 0) then
+         Donaldson := PrepareUnit('Donaldson', (not debug), '05_')
+        else}
+        if not LoadVariable('DonaldsonStayInDelta', 0) then
+           Donaldson := PrepareUnit('Donaldson', (not debug), '04_');
+   end;
+
+if Donaldson then
+   team := team ^ Donaldson;
+
+
+if gamma_commander = 2 then // Brown is commander
+   begin
+   Brown := PrepareUnit('Brown', (not debug), '04_');
+   end
+  else
+   begin
+   if LoadVariable('BrownIn06', 0) then
+      Brown := PrepareUnit('Brown', (not debug), '06c_')
+     else
+      {if LoadVariable('BrownInDelta', 0) then
+         Brown := PrepareUnit('Brown', (not debug), '05_')
+        else}
+        if not LoadVariable('BrownStayInDelta', 0) then
+           Brown := PrepareUnit('Brown', (not debug), '04_');
+   end;
+
+if Brown then
+   team := team ^ Brown;
+
+
+if gamma_commander = 3 then
+   begin
+   Houten := PrepareUnit('VanHouten', false, '');
+   team := team ^ Houten;
+   end;
+
+if LoadVariable('GladstoneIn06', 0) then
+   Gladstone := PrepareUnit('Gladstone', (not debug), '06c_')
+  else
+   if LoadVariable('GladstoneStayInDelta', 0) then
+      Gladstone := PrepareUnit('Gladstone', (not debug), '06_');
+
+if Gladstone then
+   team := team ^ Gladstone;
+
+Khatam := PrepareUnit('Khatam', (not debug), '03_');
+
+if Khatam then
+   team := team ^ Khatam;
+{
+if LoadVariable('FrankIn06', 0) then
+   Frank := PrepareUnit('Frank', (not debug), '06c_')
+  else
+   if LoadVariable('FrankInDelta', 0) then
+      Frank := PrepareUnit('Frank', (not debug), '05_')
+     else
+      Frank := PrepareUnit('Frank', (not debug), '04_');
+                                                     
+if Frank then
+   team := team  ^ Frank;}
+
+if LoadVariable('LisaIn06', 0) then
+   Lisa := PrepareUnit('Lisa', (not debug), '06c_')
+  else
+   {if LoadVariable('LisaInDelta', 0) then
+      Lisa := PrepareUnit('Lisa', (not debug), '05_')
+     else}
+     if not LoadVariable('LisaStayInDelta', 0) then
+        Lisa := PrepareUnit('Lisa', (not debug), '04_');
+
+if Lisa then
+   team := team ^ Lisa;
+
+if not Lisa then
+   begin
+   if LoadVariable('CyrusIn06', 0) then
+      Cyrus := PrepareUnit('Cyrus', (not debug), '06c_')
+     else
+      {if LoadVariable('CyrusInDelta', 0) then
+         Cyrus := PrepareUnit('Cyrus', (not debug), '05_')
+        else}
+        if not LoadVariable('CyrusStayInDelta', 0) then
+           begin
+           Cyrus := PrepareUnit('Cyrus', (not debug), '04_');
+
+           if not Cyrus then
+              Cyrus := PrepareUnit('Cyrus', (not debug), '03_');
+           end;
+
+   if Cyrus then
+      team := team ^ Cyrus;
+
+   if not Cyrus then
+      begin
+
+      if LoadVariable('BobbyIn06', 0) then
+         Bobby := PrepareUnit('Bobby', (not debug), '06c_')
+        else
+         {if LoadVariable('BobbyInDelta', 0) then
+            Bobby := PrepareUnit('Bobby', (not debug), '05_')
+           else}
+           if not LoadVariable('BobbyStayInDelta', 0) then
+              begin
+              Bobby := PrepareUnit('Bobby', (not debug), '04_');
+
+              if not Bobby then
+                 Bobby := PrepareUnit('Bobby', (not debug), '03_');
+              end;
+
+         if Bobby then
+            team := team ^ Bobby;
+      end;
+
+   end;
+
+
+//others_delta := CreateCharacterSet('05_other_survivors');
+others4 := CreateCharacterSet('othersGamma');
+others := CreateCharacterSet('06_other_survivors');
+
+others := others union others4;
+//others := others diff others_delta;
+team := team ^ others;
+
+if team < 10 then
+   repeat
+    wait(0$01);
+    PrepareHuman(false, rand(1,4), 5);
+    team := team ^ CreateHuman;
+   until team < 10;
+
+for i in others do
+    begin
+    if GetClass(i) = 2 then
+       SetClass(i, 1);
+
+    for j = 1 to 4 do
+        AddExperience(i, j, 3000);
+    end;
+
+// place units in base
+dep := FilterAllUnits([f_btype, b_depot]);
+bar := FilterAllUnits([f_btype, b_armoury]);
+lab := FilterAllUnits([f_or, [f_btype, b_lab_half], [f_btype, b_lab]]);
+fac := FilterAllUnits([f_btype, b_factory]);
+bun := FilterAllUnits([f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]);
+
+SetBName(dep, 'Gamma');
+
+SetResourceType(GetBase(dep), mat_oil, 10000);
+SetResourceType(GetBase(dep), mat_cans, 10000);
+
+if dep then
+   begin
+   PlaceHumanInUnit(JMM, dep[1]);
+
+   if Brown then
+      begin
+      PlaceHumanInUnit(Brown, dep[1]);
+      team := team diff Brown;
+      end;
+
+   if Donaldson then
+      begin
+      PlaceHumanInUnit(Donaldson, dep[1]);
+      team := team diff Donaldson;
+      end;
+
+   end;
+
+if bun and UnitFilter(team, [f_class, 1]) then
+   begin
+   filter := UnitFilter(team, [f_class, 1]);
+
+   for i in bun do
+       begin
+       if not filter then
+          break;
+
+       PlaceHumanInUnit(filter[1], i);
+       team := team diff filter[1];
+       filter := Delete(filter, 1);
+       end;
+   end;
+
+if bar and UnitFilter(team, [f_class, 1]) then
+   begin
+   filter := UnitFilter(team, [f_class, 1]);
+
+   for i = 1 to filter do
+       begin
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], bar[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if lab and UnitFilter(team, [f_class, 4]) then
+   begin
+   filter := UnitFilter(team, [f_class, 4]);
+
+   for i = 1 to filter do
+       begin
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], lab[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if fac and UnitFilter(team, [f_class, 3]) then
+   begin
+   filter := UnitFilter(team, [f_class, 3]);
+
+   for i = 1 to filter do
+       begin
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], fac[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if team then
+   for i in team do
+       begin
+       PlaceUnitArea(i, gammaBaseArea, false);
+       ComHold(i);
+       end;
+
+
+if fac then
+   if UnitsInside(fac[1]) then
+      SetSpecResearch(fac[1], 10, false);
+
+if lab then
+   if UnitsInside(lab[1]) then
+      SetSpecResearch(lab[1], 10, false);
+
+
+uc_side := 4;
+
+Harisson := PrepareUnit('Harisson', false, '');
+// prepare vehicles
+veh := PrepareTank(4, 1, us_light_wheeled, engine_combustion, control_manual, us_machine_gun, 100);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 21, 8, false);
+PlaceHumanInUnit(Harisson, veh);
+End;
+
+Function PrepareBase;
+var blist, i, b;
+begin
+SetResourceVisibility(71, 5, 1);
+
+// [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+blist := LoadVariable('GammaBase', []);
+
+if not blist and debug then
+   blist := [ [b_depot, 51, 10, 3, 3, 0, 0] ];
+
+if not blist then
+   exit;
+
+uc_side := 1;
+uc_nation := 1;
+
+for i in blist do
+    begin
+    bc_type := i[1];
+    bc_level := i[5];
+
+    if i[1] in [b_lab_half, b_lab_full] then
+       begin
+       bc_kind1 := i[7];
+       bc_kind2 := i[8];
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if GetBType(b) = b_bunker then
+       begin
+       PlaceWeaponTurret(b, i[7]);
+       end;
+
+    end;
+
+
+End;

@@ -1,0 +1,161 @@
+Export Function Action;
+var x, y, i, tmp, t, engs, un, speaker;
+begin
+ingame_video=true;
+interface_hidden=true;
+
+x := 101;
+y := 116;
+
+
+PlaceSeeing(x, y, 1, -30);
+CenterNowOnXY(x, y);
+
+tmp := FilterAllUnits([[f_side, 4], [f_type, unit_human]]) diff Sikorski;
+
+AddComTurnXY(tmp, 111, 125);
+
+wait(0$02);
+AddComMoveXY(Sikorski, 105, 111);
+
+ComAgressiveMove(tmp, 108, 117);
+Say(Sikorski, 'D1-Sik-2');
+music_class:=1;
+
+repeat
+ wait(0$01);
+until See(3, Sikorski);
+
+un := UnitsInside(NearestUnitToUnit(FilterAllUnits([f_btype, b_breastwork]), Sikorski))[1];
+
+//ComExitBuilding(un);
+AddComAttackUnit(un, Sikorski);
+wait(0$4);
+MineExplosion(111, 116, 1);
+repeat
+ wait(0$01);
+until IsDying(un);
+
+DoNotAttack(3,Sikorski);
+
+ComExitBuilding(rusole);
+AddComAgressiveMove(rusole,106,114);
+
+Say(Yakotich, 'D1-Rus1-1');
+AddComMoveXY(Sikorski, 110, 120);
+
+ComMoveXY(tmp, 109, 119);
+AddComTurnXY(tmp, 111, 125);
+
+ComExitBuilding(Yakotich);
+AddComAttackUnit(Yakotich, Sikorski);
+Say(Sikorski, 'D1-Sik-1');
+SayEffect('D1-smrtsikora');
+KillUnit(Sikorski);
+wait(0$1);
+
+engs := FilterAllUnits([f_class, 2]);
+
+ComExitBuilding(engs);
+
+for i = 1 to engs do
+    AddComEnterUnit(engs[i], FilterAllUnits([f_weapon, ru_cargo_bay])[i]);
+
+AddComMoveXY(engs, 148, 208);
+AddComMoveXY(Yakotich, 148, 208);
+SetLives(Yakotich, 1000);
+
+un := FilterAllUnits([[f_side, 3], [f_class, 1]]);
+
+ComExitBuilding(un);
+AddComMoveXY(un, 148, 208);
+
+Wait(5);
+
+Say(FilterAllUnits([[f_side, 4], [f_sex, sex_female]])[1], 'D1-FSol-1');
+
+//ComMoveXY(Sikorski, 111, 122);
+
+//repeat
+// wait(0$01);
+//until GetDistUnitXY(Sikorski, 111, 122) < 3 or GetLives(Sikorski) < 250;
+
+//ComMoveXY(Sikorski, 114, 136);
+ComMoveXY(tmp, 106, 112);
+AddComTurnXY(tmp, 111, 125);
+wait(0$7);
+
+t := [   [104,117],
+         [115,123],
+         [114,126],
+         [111,122],
+         [112,126],
+         [117,130],
+         [106,127],
+         [111,117],
+         [98, 119],
+         [116,131],
+         [109,129],
+         [100,113]
+     ];
+
+for i in t do
+    begin
+    wait(0$0.3);
+    MineExplosion(i[1], i[2], 1);
+    end;
+
+//MineExplosion(GetX(Sikorski), GetY(Sikorski), 4);
+//KillUnit(Sikorski);
+
+ComMoveXY(tmp, 109, 124);
+music_class:=0;
+
+wait(0$4);
+speaker = FilterAllUnits([[f_side, 4], [f_sex, sex_male]]) diff [Gary, Bobby, Cyrus];
+Say(speaker[1], 'D1-Sol-1');
+wait(0$2);
+
+PlaceSeeing(148, 208, 1, -30);
+//CenterOnUnits(Yakotich);
+wait(0$1);
+Say(Yakotich,'D1a-Rus1-1');
+RusPosily;
+ComMoveXY(posily, 148, 208);
+ComBuild(robotniki, b_depot, 144, 207, 2);
+CenterOnXY(148, 208);
+SayRadio(Platonov,'D1a-Pla-1');
+SayRadio(Platonov,'D1a-Pla-1a');
+SayRadio(Platonov,'D1a-Pla-1b');
+Say(Yakotich,'D1a-Rus1-2');
+wait(0$1);
+
+SaveCharacters(tmp diff [Gary, Bobby, Cyrus], '09_prev_squad');
+
+tmp := [];
+
+for i in FilterAllUnits([f_type, unit_building]) do
+    tmp := Insert(tmp, 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
+
+SaveVariable(tmp diff 0, '09_ovsyenko_base');
+
+ChangeMap(1, '__am/09_cont');
+
+ingame_video=false;
+interface_hidden=false;
+End;
+
+Every 0$1 do
+var i, filter;
+begin
+enable;
+
+filter := Yakotich ^ FilterAllUnits([f_side, 4]) diff Sikorski;
+
+for i in filter do
+    if GetLives(i) < 1000 then
+       SetLives(i, 1000);
+End;
+
+
+

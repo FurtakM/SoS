@@ -1,0 +1,140 @@
+On Contact(side1, side2) Do
+begin
+    if side1 = 1 and side2 = 3 then contactWithRussian = 1;
+end;
+
+On BuildingComplete(building) Do
+begin
+    if GetBType(building) = 36 and GetSide(building) = 1 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) = 0 and firstTower = 0 then
+    begin
+        firstTower = 1;
+        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, 1]]) diff [JMM], 'D3b-Mech1-1', 'D3b-Mech1-1');
+    end;
+
+    if GetBType(building) = 0 and GetSide(building) = 1 then SetBName(building, 'theta');
+
+    if GetSide(building) = 3 then
+    begin
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1); 
+    end;
+
+    if GetSide(building) = 3 and [GetBType(building) = 0 or GetBType(building) = 2 or GetBType(building) = 4] then ComUpgrade(building);
+    if GetSide(building) = 3 and GetBType(building) = b_bunker then
+    begin
+        AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
+    end;
+end;
+
+On UnitDestroyed(unit) do 
+begin
+    if GetSide(unit) = 1 and GetType(unit) = unit_human then
+    begin
+     if GetClass(unit) = 1 OR GetClass(unit) = 2 OR GetClass(unit) = 3 OR GetClass(unit) = 4 then unitLost = unitLost + 1;
+    end; 
+
+    if GetSide(unit) = 3 and GetType(unit) = unit_building then
+    begin
+        
+        if GetBType(unit) = 31 or  GetBType(unit) = 32 or  GetBType(unit) = 36 or  GetBType(unit) = 0 or  GetBType(unit) = 24 or  GetBType(unit) = 17 or  GetBType(unit) = 25 or  GetBType(unit) = 19 or  GetBType(unit) = 20 or  GetBType(unit) = 18 or  GetBType(unit) = 21 or  GetBType(unit) = 23 or  GetBType(unit) = 16  or  GetBType(unit) = 6 or  GetBType(unit) = 29 or  GetBType(unit) = 26 or  GetBType(unit) = 30 or  GetBType(unit) = 28 or  GetBType(unit) = 27 or  GetBType(unit) = 33 or  GetBType(unit) = 2 or GetBType(unit) = 4 then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetBType(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 1  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  0;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 3  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  2;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 5  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  4;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+    end;
+
+        if GetClass(unit) = 3 and GetSide(unit) = 3 and IsOK(rufab) and GetSide(rufab) = 3 then
+        begin
+              uc_side = 3;
+              uc_nation = 3;
+
+              hc_gallery := '';
+              hc_name := '';
+
+              PrepareMechanic(false, rand(RuSolMinLevel, RuSolMaxLevel));
+              PlaceHumanInUnit(CreateHuman, rufab);
+        end;
+
+end;
+
+On VehicleConstructed(vehicle, building) Do
+var i, un, crates;
+begin
+
+    if GetWeapon(vehicle) = 51 and GetSide(vehicle) = 3 then
+    begin
+        crates = GetResourceType(GetBase(rudepo), 1);
+        SetResourceType(GetBase(rudepo), 1, crates - 100);
+        AddCargo(vehicle, 1, 100);
+    end;
+
+    if building = rufabsupp then SetSide(vehicle, 6);
+
+end; 
+
+On ApemanTamed(apeman, human) Do
+begin
+
+    if GetSide(apeman) = 3 then tamedApemans = tamedApemans + 1;
+end;
+
+On UnitGoesToRed(unit) Do
+var i, tmpMeh;
+begin
+    if GetSide(unit) = 3 and GetType(unit) = unit_vehicle then
+      if GetWeapon(unit) = 42 OR GetWeapon(unit) = 43 OR GetWeapon(unit) = 44 or GetWeapon(unit) = 46 then
+        AddComConstruct(rufab, GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit));
+end;
+
+On LeaveVehicle(vehicle, human) Do
+begin
+    If GetSide(vehicle) = 3 and GetSide(human) = 3 and IsOk(vehicle) then
+    begin
+        ComRepairVehicle(human, vehicle);
+        AddComEnterUnit(human, vehicle);
+        SetFuel(vehicle, 100);
+    end;
+
+    If GetSide(vehicle) = 3 and GetSide(human) = 3 and IsOK(rufab) and NOT IsOk(vehicle) then
+       ComEnterUnit(human, rufab);
+
+end;
+
+On EnterBuilding(building, human) Do
+begin
+     if building = rufab and GetSide(human) = 3 then SetLives(human, 1000);
+end;
+
+On CrateSpawn(id, x, y, amount, mode) do
+begin
+if not firstCrateSpawn then
+   firstCrateSpawn := true;
+End;

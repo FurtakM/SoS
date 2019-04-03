@@ -1,0 +1,116 @@
+export off2;
+export engi1,engi2,truckdriver,tankdriver,snip1,snip2,sol1,sol2,sol3,pat1,pat2;
+export patrol, allmen;
+
+export function CreateOfficer2;
+begin
+    uc_side:=4;
+
+    uc_nation:=nation_american;
+    hc_importance=50;
+    hc_sex=sex_male;
+    hc_class=1;
+    hc_basic_skills=[7,3,2,2];
+    hc_skills=[7,3,2,2];
+    hc_attr=[11,11];
+    hc_name:='Officer2';
+    hc_gallery := 'AmGalRemake';
+    hc_face_number := 3;
+
+    off2:=CreateHuman;
+end;
+
+export function CreatePersonnel;
+begin
+    uc_side:=4;
+
+    uc_nation:=nation_american;
+    hc_importance=10;
+    hc_name:='';
+    hc_gallery := '';
+    PrepareEngineer(1,-2);
+    engi1:=CreateHuman;
+    PrepareEngineer(1,-2);
+    engi2:=CreateHuman;
+    PlaceHumanInUnit(engi1,depot2);
+    PlaceHumanInUnit(engi2,depot2);
+    PrepareMechanic(1,-1);
+    truckdriver:=CreateHuman;
+    PlaceHumanInUnit(truckdriver,truck);
+    SetCargo(truck,mat_cans,100);
+    PrepareMechanic(1,-3);
+    tankdriver:=CreateHuman;
+    PlaceHumanInUnit(tankdriver,tank1);
+    PrepareSoldier(1,3);
+    hc_class=class_sniper;
+    snip1:=CreateHuman;
+    PrepareSoldier(2,3);
+    hc_class=class_sniper;
+    snip2:=CreateHuman;
+    PlaceUnitXY(snip1,47,17,false);
+    PlaceUnitXY(snip2,29,31,false);
+    ComHold([snip1,snip2]);
+
+    PrepareSoldier(1,3);
+    sol1:=CreateHuman;
+    SetDir(sol1, 2);
+    PlaceHumanInUnit(sol1,bunker1);
+    PrepareSoldier(1,3);
+    sol2:=CreateHuman;
+    PrepareSoldier(1,3);
+    sol3:=CreateHuman;
+    PlaceUnitXY(sol2,40,42,false);
+    PlaceUnitXY(sol3,53,34,false);
+    PrepareSoldier(1,3);
+    pat1:=CreateHuman;
+    PrepareSoldier(1,3);
+    pat2:=CreateHuman;
+    PlaceUnitXY(pat1,29,6,false);
+    PlaceUnitXY(pat2,30,7,false);
+    patrol=[pat1,pat2];
+    allmen=[engi1,engi2,sol1,sol2,sol3,snip1,snip2,patrol,tank1,truckdriver];
+end;
+
+every 0$1 do
+begin
+    AddComMoveXY(patrol,64,22);
+    wait(0$25);
+    AddComMoveXY(patrol,30,8);
+    wait(0$25);
+    enable;
+end;
+
+every 0$1 do
+begin
+    SetLives(truck,550);
+    ComMoveXY(truck,42,35);
+    AddComUnload(truck);
+    Wait(0$8);
+    ComMoveXY([engi1,engi2],45,36);
+    ComExitVehicle(truckdriver);
+    AddComMoveXY(truckdriver,40,33);
+    AddComRepairVehicle(truckdriver,truck);
+    Wait(0$15);
+    SetLives(truck,1000);
+    ComEnterUnit([engi1,engi2],depot2);
+    ComEnterUnit(truckdriver,truck);
+    AddComMoveXY(truckdriver,74,52);
+    AddComMoveXY(truckdriver,90,58);
+    AddComMoveXY(truckdriver,98,61);
+end;
+
+every 0$1 trigger FilterUnitsInArea(ExitArea, [f_side, 4]) do
+var i;
+begin
+enable;
+for i in FilterUnitsInArea(ExitArea, [f_side, 4]) do RemoveUnit(i);
+end;
+
+Every 0$1 trigger GetDistUnits(truck, tank1) < 5 do
+begin
+  AddComMoveXY(tank1, 79, 53);
+  AddComMoveXY(tank1, 87, 57);
+  AddComMoveXY(tank1, 95, 60);
+  AddComMoveXY(tank1, 96, 60);
+end;
+

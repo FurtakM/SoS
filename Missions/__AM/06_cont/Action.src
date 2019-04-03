@@ -1,0 +1,350 @@
+// Start mission
+Every 0$01 do
+begin
+
+     If FilterAllUnits([[f_side, 1], [f_class, 2]]) = 0 then SetClass(JMM, 2);
+
+    ChangeMissionObjectives('M1');
+
+    case difficulty of
+        1: ChangeMissionObjectives('M1-1');
+        2: ChangeMissionObjectives('M1-2');
+        3: ChangeMissionObjectives('M1-3');
+    end;
+
+    ChangeMissionObjectives('M1cont');
+
+    SaveForQuickRestart;
+
+    Wait(Rand(0$10,0$25));
+
+    CreateCratesArea(5, FirstCrate, true);
+end;
+
+// First crate spawn
+Every 0$15 trigger firstCrateSpawn do
+begin
+
+    if IsOk(Lisa) then
+       Say(Lisa, 'DR0-Lisa-1')
+     else
+       DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Brown, Donaldson], 'DR0-Sol1-1', 'DR0-Sol1-1');
+
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson], 'DR0-Sol2-1', 'DR0-Sol2-1');
+    if IsOk(Cyrus) then
+       Say(Cyrus, 'DR0-Cyrus-1');
+
+    Say(JMM, 'DR0-JMM-1');
+
+End;
+
+
+// Frank dialog
+Every 5$0 trigger IsOk(Frank) and FilterAllUnits([[f_side, 1], [f_class, 16]]) > 0 do
+begin
+    DialogueOn;
+    Say(Frank, 'D10-Frank-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human],[f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank, Lisa], 'D10-Sol1-1', 'D10-FSol1-1');
+    Say(Frank, 'D10-Frank-2');
+    if IsOK(Lisa) then
+    begin
+        Say(Lisa, 'D10-Lisa-2');
+    end
+    else
+    begin
+        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank], 'D10-Sol1-2', 'D10-FSol1-2');
+    end;
+    DialogueOff;
+
+end;
+
+// Harrison support and dialog with him
+Every 10$30 do
+begin
+    HarrisonSupport;
+    CenterNowOnUnits(IsInUnit(HarrSupp1));
+    Say(HarrSupp1, 'DEng-Eng1-1');
+
+    wait(1$0);
+    DialogueOn;
+    SayRadio(Harisson, 'DRem-Har-1');
+    if contactWithRussian = 1 then begin Say(JMM, 'DRem-JMM-1');
+    end else begin Say(JMM, 'DRem-JMM-1a'); end;
+    SayRadio(Harisson, 'DRem-Har-2');  
+    if LoadVariable('DenisInDelta', 0) = 1 then begin Say(JMM, 'DRem-JMM-2');
+    end else begin Say(JMM, 'DRem-JMM-2a'); end;  
+    SayRadio(Harisson, 'DRem-Har-3'); 
+    Say(JMM, 'DRem-JMM-3');  
+    SayRadio(Harisson, 'DRem-Har-4'); 
+
+    if LoadVariable('DenisInDelta', 0) = 1 then
+    begin
+        Say(JMM, 'DRem-JMM-4');  
+        SayRadio(Harisson, 'DRem-Har-5');
+    end else
+    begin
+        SetRestrict(36, 1, true);
+        SetTech(15, 1, state_enabled);
+        ChangeMissionObjectives('MR');
+    end;
+
+    DialogueOff;
+end;
+
+// Denis spawn
+Every 15$0 trigger LoadVariable('DenisInDelta', 0) = 1  do
+begin
+    PrepareDenis;
+    CenterNowOnUnits(Denis);
+    DialogueOn;
+    Say(Denis, 'DDen-Den-1');
+    Say(JMM, 'DDen-JMM-1');
+    Say(Denis, 'DDen-Den-2');
+    Say(JMM, 'DDen-JMM-2');
+    Say(Denis, 'DDen-Den-3');
+    Say(JMM, 'DDen-JMM-3');
+    DialogueOff;
+    SetRestrict(36, 1, true);
+    SetTech(15, 1, state_enabled);
+    ChangeMissionObjectives('MR');
+end;
+
+// Build opto lab
+Every 0$6 trigger CheckOptoLab and IsOk(Denis) do 
+begin
+    Say(Denis, 'DR1-Den-1');
+    Say(JMM, 'DR1-JMM-1');
+end;
+
+Function CheckOptoLab;
+var i;
+begin
+    result = false;
+
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype,b_lab_half],[f_btype,b_lab_full]]]) do
+    begin     
+        if (GetLabKind(i, 1) = b_lab_opto) or (GetLabKind(i, 2) = b_lab_opto) then
+        begin
+            result = true;
+            break;
+        end;
+    break;
+    end;
+end;
+
+// Research remote control
+Every 0$1 trigger GetTech(15, 1) = state_researched and IsOK(Denis) do
+begin
+    DialogueOn;
+
+    if IsOK(Denis) then
+    begin
+        Say(Denis, 'DR2-Den-1');
+    end
+    else
+    begin
+         DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 4]]) diff [JMM], 'DR2-Sci1-1', 'DR2-FSci1-1');
+    end;
+    Say(JMM, 'DR2-JMM-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Denis, Gladstone], 'DR2-Sol1-1', 'DR2-Sol1-11');
+    Say(JMM, 'DR2-JMM-2');
+    DialogueOff;
+end;
+
+// Build first remote vehicle without tower control
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, 36]]) = 0 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) > 0 and firstTower = 0 do 
+begin
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3]]) diff [JMM, Brown, Donaldson, Denis, Joan, Bobby, Cyrus, Lisa, Frank, Gladstone], 'D3a-Mech1-1', 'D3a-Mech1-1');
+    firstTower = 2;
+end;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 do
+var i;
+begin
+     for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
+         AddExperience(i, 1, 10000);
+
+end;
+
+// All ready to test remote veh
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, 36]]) > 0 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) > 0 and CheckMehInside do 
+var i, j,  tmpControlTowers, tmpRemoteVehs, tmpMechanicInside;
+begin
+
+    tmpControlTowers = FilterAllUnits([[f_side, 1], [f_btype, 36]]);
+    tmpRemoteVehs = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]);
+    tmpMechanicInside = [];
+
+    for i in tmpControlTowers do
+    begin
+
+        if IsInUnit(JMM) = i and GetClass(JMM) = 3 then
+        begin
+            InGameOn;
+            CenterNowOnUnits(tmpRemoteVehs[1]);
+            Say(JMM, 'D4a-JMM-1');
+            LinkVehicleToHuman(tmpRemoteVehs[1], JMM);
+            wait(0$1);
+            ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
+            wait(0$2);
+            Say(JMM, 'D4b-JMM-1');
+            InGameOff;
+        end else
+        begin
+
+            InGameOn;
+            for j in UnitsInside(i) do
+                if GetClass(j) = 3 then tmpMechanicInside = tmpMechanicInside ^ j;
+
+            if GetSex(tmpMechanicInside[1]) = 1 then Say(tmpMechanicInside[1], 'D4a-Mech1-1');
+            if GetSex(tmpMechanicInside[1]) = 2 then Say(tmpMechanicInside[1], 'D4a-FMech1-1');
+
+            CenterNowOnUnits(tmpRemoteVehs[1]);
+            LinkVehicleToHuman(tmpRemoteVehs[1], tmpMechanicInside[1]);
+            wait(0$1);
+            ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
+            wait(0$2);
+            if GetSex(tmpMechanicInside[1]) = 1 then Say(tmpMechanicInside[1], 'D4b-Mech1-1');
+            if GetSex(tmpMechanicInside[1]) = 2 then Say(tmpMechanicInside[1], 'D4b-FMech1-1');
+            InGameOff;
+
+        end;
+    end;
+end;
+
+function CheckMehInside;
+var i, j;
+begin
+    result = false;
+
+    for i in FilterAllUnits([[f_side, 1], [f_btype, 36]]) do 
+    begin
+        for j in UnitsInside(i) do 
+        begin
+            if GetClass(j) = 3 then
+            begin
+                result = true;
+                break;
+            end;
+                
+        end;
+    end;
+    
+end;
+
+// Spawn Kurt + dialog
+Every 25$0 do 
+begin
+    PrepareKurt;
+end;
+
+
+// Spawn Joan + dialog
+Every 35$0 do
+begin
+    PrepareJoan;
+
+    wait(1$0);
+    If IsOK(Lisa) then
+    begin
+        DialogueOn;
+        Say(Lisa, 'D7-Lisa-1');
+        Say(JMM, 'D7-JMM-1');
+        Say(Lisa, 'D7-Lisa-2');
+        Say(JMM, 'D7-JMM-2');
+        Say(Lisa, 'D7-Lisa-3');
+        Say(JMM, 'D7-JMM-3');
+        Say(Lisa, 'D7-Lisa-4');
+        Say(JMM, 'D7-JMM-4');
+        Say(JMM, 'D7-JMM-4a');
+        Say(Lisa, 'D7-Lisa-5');
+        DialogueOff;
+    end;
+end;
+
+// Charles dialog near Americans
+Every 0$1 do
+var i, others;
+begin
+     others = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [tempCharles];
+
+     for i in others do
+     begin
+          if GetDistUnits(tempCharles, i) < 6 then begin Disable; Say(tempCharles, 'D5-Sol1-1'); end;
+     end;
+end;
+
+// Remote vehicles
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_control, control_remote]]) >= 2 do
+begin
+    ChangeMissionObjectives('MRa');
+    remoteVehiclesBuild = 1;
+end; 
+
+// Spawn randoms
+Every 4$0 do PrepareRandoms(1);
+Every 10$0 do PrepareRandoms(2);
+Every 28$0 do PrepareRandoms(4);
+Every 32$0 do PrepareRandoms(5);
+Every 35$30 do PrepareRandoms(6);
+Every 37$20 do PrepareRandoms(7);
+
+// Dialogs from Delta base
+
+Every 5$20 do
+begin
+    DialogueOn;
+    SayRadio(DeltaDoctor, 'D12a-Sci-1');
+    Say(JMM, 'D12a-JMM-1');
+    DialogueOff;
+    cratesStatus = 1;
+end; 
+
+Every 13$0 do 
+begin
+    DialogueOn;
+    SayRadio(DeltaDoctor, 'D12b-Sci-1');
+    DialogueOff;
+    cratesStatus = 2;
+end;
+
+Every 32$0 do 
+begin
+    DialogueOn;
+    SayRadio(DeltaDoctor, 'D12c-Sci-1');
+    DialogueOff;
+    wait(3$0);
+    DialogueOn;
+    SayRadio(DeltaDoctor, 'D12d-Sci-1');
+    DialogueOff;
+    cratesStatus = 1;
+end;
+
+Every 42$0 do 
+begin
+    DialogueOn;
+    SayRadio(DeltaDoctor, 'D12e-Sci-1');
+    Say(JMM, 'D12e-JMM-1');
+    DialogueOff;
+    cratesStatus = 2;
+end;
+
+// Send russian convoy
+Every 0$1 trigger FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_weapon, 51]]) > 0 do 
+var i;
+begin
+    enable;
+    for i in FilterAllUnits([[f_side, 6], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do ComAgressiveMove(i, 138, 168);
+end;
+
+// Remove russian convoy
+Every 0$1 do
+var i;
+begin
+    enable;
+    for i in FilterUnitsInArea(ConvoyEscape, [[f_or, [f_side, 3], [f_side, 6]]]) do
+    begin
+        if FilterUnitsInArea(ConvoyEscape, [[f_side, 6], [f_weapon, 51]]) > 0 then sendedConvoys = sendedConvoys + 1;
+        RemoveUnit(i);
+    end;
+end;

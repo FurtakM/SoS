@@ -1,0 +1,441 @@
+Export Function Action;
+begin
+// game start here
+InGameOn;
+CenterOnXY(79, 76);
+
+Wait(0$0.3);
+
+PlaceUnitXY(JMM, 80, 79, true);
+
+Wait(0$03);
+
+ComMoveXY(JMM, 80, 76);
+Say(JMM, 'D1-JMM-1');
+
+Wait(0$0.3);
+
+ComMoveXY(JMM, 76, 76);
+Say(JMM, 'D1-JMM-1a');
+
+Wait(0$0.3);
+
+ComTurnXY(JMM, 83, 66);
+Say(JMM, 'D1-JMM-1b');
+
+Wait(0$0.5);
+
+Say(JMM, 'D1-JMM-1c');
+
+Wait(0$0.2);
+
+SayRadio(Powell, 'D1-Pow-1');
+Say(JMM, 'D1-JMM-2');
+SayRadio(Powell, 'D1-Pow-2');
+Say(JMM, 'D1-JMM-3');
+SayRadio(Powell, 'D1-Pow-3');
+Say(JMM, 'D1-JMM-4');
+
+ComFree(JMM);
+
+Wait(0$0.3);
+
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+active_russian_dialog := true;
+active_road_patrol := true;
+
+PlaceUnitXY(Bobby, 41, 71, false);
+ComHold(Bobby);
+PlaceUnitXY(Cyrus, 90, 42, false);
+ComMoveXY(Cyrus, 79, 34);
+ComCrawl(Cyrus);
+
+SaveForQuickRestart;
+End;
+
+
+Every 0$01 trigger active_russian_dialog do
+var wait_points;
+begin
+wait_points := 0;
+
+Wait(0$02);
+
+ComAgressiveMove(russian_troops_1, 79, 83);
+
+Say(russian_troops_1[2], 'D1R-Rus1-1');
+Say(russian_troops_1[1], 'D1R-Rus2-1');
+
+ComAgressiveMove(russian_troops_2, 79, 83);
+
+repeat
+ wait(0$01);
+until GetDistUnitXY(russian_troops_1[1], 79, 82) < 5;
+
+if not IsInArea(JMM, jmm_spot) then // macmilan escaped
+   Say(russian_troops_1[1], 'D1Ra-Rus2-1')
+  else
+   begin  // macmilan spotted
+   Say(russian_troops_1[2], 'D1Rb-Rus1-1');
+   Say(russian_troops_1[1], 'D1Rb-Rus2-1');
+
+   ComAgressiveMove(russian_troops_1 ^ russian_troops_2, GetX(JMM), GetY(JMM));
+
+   repeat
+    wait(0$01);
+   until not IsInArea(JMM, jmm_spot) and not See(3, jmm);
+
+   // macmilan espaced once more
+   Say(russian_troops_1[2], 'D1Rc-Rus1-1');
+   Say(russian_troops_1[1], 'D1Ra-Rus2-1a');
+   end;
+
+wait_points := 10;
+
+if Difficulty > 1 then
+   begin
+   ComAgressiveMove(russian_troops_1, 78, 95);
+   wait_points := wait_points + 15;
+   end;
+
+repeat
+ wait(0$01);
+ wait_points := wait_points - 1;
+
+ if See(3, JMM) then
+    begin
+    Say(russian_troops_1[2], 'D1Rb-Rus1-1');
+    ComAgressiveMove(russian_troops_1, GetX(JMM), GetY(JMM));
+    Wait(0$03);
+    end;
+
+until wait_points = 0;
+
+ComAgressiveMove(russian_troops_1, 45, 5);
+ComEnterUnit(russian_troops_2, rbar1);
+
+repeat
+ wait(0$01);
+
+ if See(3, JMM) then
+    begin
+    Say(russian_troops_1[2], 'D1Rb-Rus1-1');
+    ComAgressiveMove(russian_troops_1, GetX(JMM), GetY(JMM));
+    Wait(0$50);
+    end
+   else
+    ComAgressiveMove(russian_troops_1, 45, 5);
+
+until GetDistUnitXY(russian_troops_1[1], 45, 5) < 10;
+
+End;
+
+// Macmilan spot Bobby
+Every 0$02 trigger GetDistUnits(JMM, Bobby) < 9 do
+begin
+ComWalk(Bobby);
+ComMoveXY(Bobby, GetX(JMM), GetY(JMM));
+
+repeat
+ wait(0$01);
+until See(4, JMM);
+
+InGameOn;
+
+ComTurnUnit(JMM, Bobby);
+
+if cyrus_in_squad and IsOk(Cyrus) and GetDistUnits(JMM, Cyrus) < 10 then
+   begin
+   ComMoveXY(Cyrus, GetX(JMM), GetY(JMM));
+   AddComTurnUnit(Cyrus, Bobby);
+   end;
+
+Say(JMM, 'D2-JMM-1');
+
+Wait(0$0.3);
+
+ComTurnUnit(Bobby, JMM);
+Say(Bobby, 'D2-Bobby-1');
+Say(JMM, 'D2-JMM-2');
+
+ComMoveXY(Bobby, GetX(JMM), GetY(JMM));
+
+Say(Bobby, 'D2-Bobby-2');
+Say(JMM, 'D2-JMM-3');
+
+ComTurnUnit(Bobby, JMM);
+
+Say(Bobby, 'D2-Bobby-3');
+Say(JMM, 'D2-JMM-4');
+Say(Bobby, 'D2-Bobby-4');
+Say(JMM, 'D2-JMM-5');
+Say(Bobby, 'D2-Bobby-5');
+Say(JMM, 'D2-JMM-6');
+
+if not powell_contact then
+   begin
+   Say(Bobby, 'D2-Bobby-6');
+   Say(JMM, 'D2-JMM-7');
+   end;
+
+InGameOff;
+
+SetSide(Bobby, 1);
+ComFree([JMM, Bobby]);
+
+bobby_in_squad := true;
+
+if powell_contact and not cyrus_in_squad then
+   ChangeMissionObjectives('M2b');
+End;
+
+// Bobby move
+Every 0$45 trigger active_russian_dialog and not bobby_in_squad do
+ComMoveXY(Bobby, 75, 83);
+
+// Bobby move v2
+Every 0$10 trigger cyrus_in_squad and not bobby_in_squad do
+begin
+ComMoveXY(Bobby, 105, 97);
+AddComCrawl(Bobby);
+End;
+
+// Obstacle area
+Every 0$01 trigger IsInArea(JMM, obstacle_area) and GetDistUnits(JMM, Bobby) < 7 and bobby_in_squad do
+begin
+ComHold([JMM, Bobby]);
+Say(JMM, 'D2a-JMM-1');
+Say(Bobby, 'D2a-Bobby-1');
+End;
+
+// Powell Radio v2
+Every 0$50 trigger active_russian_dialog and not See(3, JMM) do
+begin
+Wait(rand(0$10, 0$20));
+
+InGameOn;
+DialogueOn;
+SayRadio(Powell, 'D3-Pow-1');
+Say(JMM, 'D3-JMM-1');
+SayRadio(Powell ,'D3-Pow-2');
+Say(JMM, 'D3-JMM-2');
+SayRadio(Powell ,'D3-Pow-3');
+DialogueOff;
+InGameOff;
+
+powell_contact := true;
+SetAreaMapShow(exitArea, 1);
+
+uc_side := 4;
+uc_nation := 1;
+Powell := PrepareUnit('Powell', false);
+
+ChangeMissionObjectives('M2');
+
+if not bobby_in_squad then
+   ChangeMissionObjectives('M2a')
+  else
+   ChangeMissionObjectives('M2b');
+End;
+
+// Pokryshkin radio contact
+Every 0$01 trigger IsInArea(JMM, fakeArea) do
+begin
+DialogueOn;
+SayRadio(fakePokryshkin, 'D4-Rus3-1');
+DialogueOff;
+
+ChangeMissionObjectives('M3a');
+
+SetAreaMapShow(fakeEnd, 1);
+
+Wait(0$02);
+
+DialogueOn;
+SayRadio(Powell, 'D4-Pow-1');
+DialogueOff;
+
+ChangeMissionObjectives('M3b');
+
+
+Case Query('Q1') of
+1: begin
+   macmilan_use_radio := true;
+
+   DialogueOn;
+   Say(JMM, 'D4a-JMM-1');
+   DialogueOff;
+   end;
+2: ;
+end;
+
+End;
+
+// Cyrus spotted
+Every 0$02 trigger GetDistUnits(JMM, Cyrus) < 8 do
+begin
+InGameOn;
+
+ComMoveXY(JMM, GetX(Cyrus), GetY(Cyrus));
+
+if IsOk(Bobby) and bobby_in_squad then
+   ComMoveXY(Bobby, GetX(JMM), GetY(JMM));
+
+Say(JMM, 'D5-JMM-1');
+
+Wait(0$0.3);
+
+ComTurnUnit(JMM, Cyrus);
+ComWalk(Cyrus);
+ComTurnUnit(Cyrus, JMM);
+
+Say(Cyrus, 'D5-Cyrus-1');
+
+if IsOk(Bobby) and bobby_in_squad then
+   begin
+   ComTurnUnit(Bobby, Cyrus);
+   Say(Bobby, 'D5-Bobby-1');
+   Say(JMM, 'D5-JMM-2');
+   end;
+
+InGameOff;
+
+cyrus_in_squad := true;
+
+SetSide(Cyrus, 1);
+
+if powell_contact and not bobby_in_squad then
+   ChangeMissionObjectives('M2b');
+End;
+
+Every 0$01 trigger bobby_in_squad and cyrus_in_squad do
+ChangeMissionObjectives('M2c');
+
+// Macmilan in trap
+Every 0$01 trigger IsInArea(JMM, trap) do
+begin
+macmilan_in_trap := true;
+
+Wait(0$01);
+DialogueOn;
+Say(Pokryshkin, 'D5-Pok-1');
+DialogueOff;
+Say(JMM, 'D4b-JMM-1');
+End;
+
+// Macmilan see meta guards
+Every 0$01 trigger GetDistUnits(JMM, russian_meta_guards[russian_meta_guards]) < 12 or GetLives(russian_meta_guards[russian_meta_guards]) < 999 do
+var i, hp;
+begin
+
+hp := [200, 150, 100][Difficulty];
+
+for i in russian_meta_guards do
+    if IsOk(i) then
+       SetLives(i, GetLives(i)-hp);
+
+DialogueOn;
+Say(russian_meta_guards[russian_meta_guards], 'D6-FRus1-1');
+Say(JMM, 'D6-JMM-1');
+
+if IsOk(Cyrus) and cyrus_in_squad then
+   Say(Cyrus, 'D6-Cyrus-1');
+
+if IsOk(Bobby) and bobby_in_squad then
+   Say(Bobby, 'D6-Bobby-1');
+
+DialogueOff;
+
+Wait([0$04, 0$03, 0$02][Difficulty]);
+meta_action := true;
+                                       
+ComAgressiveMove(russian_meta_guards, 94, 8);
+End;
+
+Every 0$01 trigger GetDistUnitXY(JMM, 93, 1) < 5 and FilterAllUnits([f_side, 1]) > 1 do
+Say(JMM, 'D6a-JMM-1');
+
+// Macmilan is dead
+Every 0$01 trigger IsDying(JMM) do
+YouLost('JMM');
+
+
+Every 0$01 trigger IsInArea(Bobby, exitArea) do
+begin
+bobby_saved := true;
+SaveVariable(GetLives(Bobby), '01_BobbyLifePoints_1');
+RemoveUnit(Bobby);
+
+AddMedal('Bobby', 1);
+End;
+
+Every 0$01 trigger IsInArea(Cyrus, exitArea) do
+begin
+cyrus_saved := true;
+SaveVariable(GetLives(Cyrus), '01_CyrusLifePoints_1');
+RemoveUnit(Cyrus);
+
+AddMedal('Cyrus', 1);
+End;
+
+// Save JMM and end mission
+Every 0$01 trigger IsInArea(JMM, exitArea) do
+var i, to_reward, wait_for_them;
+begin
+
+     if (not cyrus_saved and cyrus_in_squad and IsOk(Cyrus))
+     or (not bobby_saved and bobby_in_squad and IsOk(Bobby)) then
+     case Query('Q2') of
+     1: wait_for_them := true;
+     2: ;
+     end;
+
+     if wait_for_them then
+        repeat
+         wait(0$01);
+        until (cyrus_saved and bobby_saved)
+        or (cyrus_saved and (not bobby_in_squad or IsDying(Bobby) or IsDead(Bobby)))
+        or (bobby_saved and (not cyrus_in_squad or IsDying(Cyrus) or IsDead(Cyrus)))
+        or (IsDead(Bobby) and IsDead(Cyrus));
+
+     SaveVariable(GetLives(JMM), '01_JMMLifePoints_1');
+     RemoveUnit(JMM);
+
+     to_reward := [JMM];
+
+     if bobby_saved then
+        to_reward := to_reward ^ Bobby;
+
+     if cyrus_saved then
+        to_reward := to_reward ^ Cyrus;
+
+     AddMedal('JMM', 1);
+
+     if not bobby_in_squad then
+        AddMedal('Bobby', -1);
+
+     if not bobby_saved and (IsDying(Bobby) or IsDead(Bobby)) then
+        AddMedal('Bobby', -2);
+
+     if not cyrus_in_squad then
+        AddMedal('Cyrus', -1);
+
+     if not cyrus_saved and (IsDying(Cyrus) or IsDead(Cyrus)) then
+        AddMedal('Cyrus', -2);
+
+     GiveMedals('MAIN');
+     RewardPeople(to_reward);
+
+     if bobby_saved then
+        SaveCharacters(Bobby, mission_prefix&'Bobby');
+
+     if cyrus_saved then
+        SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+
+     SaveCharacters(JMM, mission_prefix&'JMM');
+
+     YouWin;
+End;

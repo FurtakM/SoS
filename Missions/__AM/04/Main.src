@@ -1,0 +1,121 @@
+{
+Map scripts: Nefarem
+
+Global variables:
+
+Save all buildings in Gamma base near depot + second oil mine on east.
+SaveVariable(gammaBase,'GammaBase');
+
+Labolatories:
+gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+
+Turrets:
+gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+
+Normal buildings:
+gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+}
+
+Export JMM, Bobby, Cyrus, Lisa, Frank; // heroes from before missions
+Export RandomBeforeMission; // random from before missions
+Export Brown, Dickens, Woodruff, Knight, Claptopn, Campell, Donaldson; // heroes mission 04
+Export Harisson;
+Export Stolypin; // russian commander
+
+Export ruSoldMinLevel, ruSoldMaxLevel;
+Export russianTanks, russianDamageTanks;
+
+Export baseReadyToBuild;
+Export ruPDepot, ruPLab;
+
+Export firstRussianAttack;
+Export saveDonaldson;
+Export frankScoutBase;
+Export harrAnswer;
+
+Export timeToDestroyRuBase, timeToSupport, timerStatus, startTimer;
+
+Export factoryDialog, bunkerDialog, energyVDialog;
+
+Export buildOil, buildPower;
+
+Export supply;
+Export AIEnable;
+
+Export lostCounter;
+Export honor;
+Export escapeAvalaible;
+
+Export donaldsonCoopAttack;
+
+Export bonusAvalaible;
+Export debugMode;
+
+Export mission_prefix, mission_prefix_prev;
+
+Starting
+begin
+    Resetfog;
+    InGameOn;
+    RandomizeAll;
+
+    // Variables
+    mission_prefix := '04_';
+    mission_prefix_prev := '03_';
+
+    ruSoldMinLevel = 0; // Minimum russian soldiers level
+    ruSoldMaxLevel = 0; // Maximum russian soldiers level
+
+    baseReadyToBuild = 0; // 0 - Depot no build, 1 - depot build, 2 - base finish
+
+    debugMode = 0; // 0 - Off (normal players) , 1 - ON (developers)
+
+    bonusAvalaible = 0; // avalaible to get bonus
+    firstRussianAttack = 0; // first attack and dialog
+    saveDonaldson = 0; // 0 - no save, 1 - save
+    frankScoutBase = 0; // 0 - Frank die in before missions, 1 - if you save Donaldson, Frank show you russian base
+
+    harrAnswer = 0; // 1 - good answer, 2 - support, 3 - bad answer
+
+    timeToDestroyRuBase = 0; // if you choose "good answer" you have 15 min + [5, 4, 3][Difficulty] , "need support" 13 min + [4, 4, 3][Difficulty], "bad ansewer" 10 min + [4, 3, 2][Difficulty] 
+    timeToSupport = 9$00; // when support arrive
+    timerStatus = 0; // 1 - timer 1st support, 2 - 2nd support, 3 - destory base
+    startTimer = 0; // start timer
+
+    factoryDialog = 0; // var to block event
+    bunkerDialog = 0; // var to block event
+    energyVDialog = 0; // var to block event
+
+    buildOil = 0; // 0 - player dont build second oil drilling mine , 1 - build
+    buildPower = 0; // 0 - player dont build second oil power , 1 - build
+
+    supply = [14, 12, 11][Difficulty]; // how many crates will spawn
+    AIEnable = 1; // active/deactive red AI
+
+    donaldsonCoopAttack = 0; // donaldson ask you about coop attack within magenta base
+
+    lostCounter = 0; // you lost
+    honor = 1;  // when you don't destroy ru base before time set 0
+
+    escapeAvalaible = 0; // delete units from map
+
+    PrepareDifficulty;
+    PrepareRussianBase;
+    PrepareRussianCommander;
+
+    PrepareHeroes;
+
+    SetBName(ambdept0, 'gamma');
+    SetBName(rubware0, 'fyodor');
+end;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    SetResourceType(GetBase(ambdept0), 1, 9999);        
+    SetResourceType(GetBase(ambdept0), 2, 9999);
+
+end;

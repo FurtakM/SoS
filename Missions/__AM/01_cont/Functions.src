@@ -1,0 +1,109 @@
+// Functions Module by Serpent
+// Prepare Hero for use
+// ident - ident from start.txt - 'JMM' for example
+// exist_mode
+//   - false if unit not exist in save 
+//   - true if unit already exist in save
+// example: JMM := PrepareUnit('JMM', false);
+Export Function PrepareUnit(ident, exist_mode);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+// example: PrepareSolBun(3, rb1);
+Export Function PrepareSolBun(skill, b);
+var un, dir;
+begin
+uc_side := GetSide(b);
+uc_nation := GetNation(b);
+
+PrepareHuman(false, 1, skill);
+
+dir := GetDir(b) - 3;
+
+if dir < 0 then
+   dir := 6 + dir;
+
+un := CreateHuman;
+SetDir(un, dir);
+PlaceHumanInUnit(un, b);
+End;
+
+// example: PrepareTank(1, 1, us_medium_wheeled, engine_combustion, control_manual, us_machine_gun, 80);
+Export Function PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
+begin
+uc_side := side;
+uc_nation := nation;
+
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+vc_fuel_battery := fuel;
+
+result := CreateVehicle;
+End;
+
+Export Function ComPatrol(unit, mode, pause, coords);
+var i;
+begin
+while(active_road_patrol) do
+begin
+Wait(0$01);
+
+if not unit then
+   exit;
+
+if mode = 'road' then
+   if GetFuel(unit) < 50 and not See(1, unit) and not HasTask(unit) then
+      SetFuel(unit, 100);
+
+if mode = 'forest' then
+   if GetLives(unit) < 600 then
+      begin
+      ComMoveXY(unit, 42, 3);
+      SetRememberedX(unit, GetX(unit));
+      SetRememberedY(unit, GetY(unit));
+      send_troops_to_forest := true;
+      break;
+      end;
+
+if not HasTask(unit) then
+   begin
+   for i = 1 to coords do
+       begin
+       AddComAgressiveMove(unit, coords[i], coords[i+1]);
+       AddComWait(unit, pause);
+       i := i + 1;
+       end;
+
+   for i = coords downto 1 do
+       begin
+       AddComAgressiveMove(unit, coords[i-1], coords[i]);
+       AddComWait(unit, pause);
+       i := i - 1;
+       end;
+   end;
+end;
+End;
+
+Export Function DebugSay(dialog);
+var speaker;
+begin
+uc_nation := 1;
+uc_side := 0;
+
+PrepareHuman(false, 1, 0);
+hc_name := 'speaker';
+hc_gallery := '';
+
+speaker := CreateHuman;
+Say(speaker, dialog);
+End;

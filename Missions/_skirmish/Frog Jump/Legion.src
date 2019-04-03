@@ -16,6 +16,17 @@ SetResourceType(GetBase(dep), mat_siberit, 10000);
 TeleportExit(legion_telep, 224, 5);
 
 
+PrepareHuman(sex_male, 1, 6);
+hc_name := 'Nicolas Vervecken';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 3;
+hc_attr := [11, 10];
+
+Vervecken := CreateHuman;
+PlaceHumanInUnit(Vervecken, dep);
+
+InitHc;
+
 // bazooka
 for i = 1 to 4 do
     begin
@@ -45,6 +56,11 @@ for i in FilterAllUnits([[f_side, 8], [f_btype, b_bunker]]) do
     PrepareHuman(false, class_apeman_soldier, skill+1);
     PlaceHumanInUnit(CreateHuman, i);
     end;
+
+PrepareHuman(false, class_sniper, 10);
+un := CreateHuman;
+PlaceUnitXY(un, 175, 128, false);
+ComEnterUnit(un, ar_ibun);
 
 
 for i = 1 to 2 do
@@ -107,15 +123,6 @@ for i = 1 to n2 do
 ComBrutalAttack(legion_force, 6);
 End;
 
-
-Every 1$00 trigger FilterAllUnits([[f_side, 6], [f_type, unit_building]]) > 1 do
-begin
-wait(3$00);
-
-PrepareAttack(4, 2);
-End;
-
-
 // ct control
 Every 0$01 trigger FilterAllUnits([[f_side, 8], [f_control, control_remote]]) do
 var i, j, cts, vehs, best, best_mechanic, p;
@@ -144,4 +151,46 @@ if vehs then
    end;
 
 
+End;
+
+
+// legion attacks
+Every 5$00 trigger legion_attacks_active do
+begin
+enable;
+Wait([2$30, 1$00, 0$30][Difficulty]);
+PrepareAttack((legion_attack_strenght - 2 + Difficulty), 2);
+End;
+
+Every 0$01 trigger FilterUnitsInArea(islandArea, [[f_side, 8], [f_class, 17]]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(islandArea, [[f_side, 8], [f_class, 17]]) do
+    ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 6]), i));
+End;
+
+
+Every 6$00 trigger legion_telep do
+var k, xy, i;
+begin
+enable;
+
+xy := [[224, 5], [160,4], [228,56], [271,87]];
+
+for i = 1 to 3 do
+    EraseResourceArea(telArea, i);
+
+for i = xy downto 1 do
+    begin
+    k := rand(1, xy);
+
+    if HexInfo(xy[k][1], xy[k][2]) then
+       xy := Delete(xy, k)
+      else
+       break;
+    end;
+
+TeleportExit(legion_telep, xy[k][1], xy[k][2]);
 End;

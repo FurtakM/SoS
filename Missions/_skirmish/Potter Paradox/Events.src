@@ -1,0 +1,143 @@
+On UnitDestroyed(un) do
+begin
+if un in [legion_commander, main_base] then
+   game_over := true;
+
+if un = al_commander then
+   ChangeSide();
+
+if GetSide(un) = 7 then
+   begin
+   if GetClass(un) = class_apeman then
+      points := points + 6;
+   if GetClass(un) = class_apeman_kamikaze then
+      points := points + 11;
+   if GetClass(un) = class_apeman_soldier then
+      points := points + 14;
+   if GetType(un) = unit_vehicle then
+      points := points + 50;
+   end;
+End;
+
+Every 0$01 trigger GetLives(al_commander) < 1000 do
+if GetSide(UnitShoot(al_commander)) = 8 then
+YouLost('');
+
+On EnterBuilding(b, un) do
+begin
+if GetBType(b) in [b_depot, b_warehouse] and
+   GetClass(un) in [class_apeman, class_apeman_soldier, class_apeman_kamikaze] then
+   begin
+   wait(0$0.3);
+   SetClass(un, class_apeman_engineer);
+   end;
+End;
+
+On DialogueSkipped(value) do
+var i;
+begin
+RemoveUnit(potter);
+
+ComExitBuilding([l1, l2]);
+
+Wait(1);
+
+TeleportUnit(l1, 107, 53, 0, false);
+TeleportUnit(l2, 108, 53, 0, false);
+
+Wait(1);
+
+ComTurnXY([l1, l2], 108, 1);
+End;
+
+On ArtifactUsed(side, button, p3, p4) do
+var bonus, off, units, crates, tmp, i;
+begin
+uc_side := 8;
+uc_nation := 2;
+
+bonus := 'QBonus'&bonus_num;
+off := true;
+units := [];
+crates := 0;
+
+SayRadio(Vervecken, 'DVr-2');
+
+Wait(0$0.3);
+
+case Query(bonus) of
+1: begin
+   tmp := [1, 2, 5, 8][bonus_num];
+
+   for i = 1 to tmp do
+       begin
+       PrepareHuman(false, class_apeman_soldier, tmp);
+       units := units ^ CreateHuman;
+       end;
+   end;
+2: begin
+   crates := [100, 150, 350, 500][bonus_num];
+   end;
+3: begin
+   if bonus_num = 1 then
+      ignore_wave := true;
+   if bonus_num = 2 then
+      begin
+      for i = 1 to 2 do
+          begin
+          uc_nation := nation_arabian;
+
+          vc_chassis := ar_half_tracked;
+          vc_engine := engine_siberite;
+          vc_control := [control_remote, control_apeman][rand(1,2)];
+          vc_weapon := [ar_rocket_launcher, ar_gun, ar_gatling_gun][rand(1,3)];
+
+          units := units ^ CreateVehicle;
+          end;
+      end;
+   if bonus_num = 3 then
+      begin
+      for i = 1 to 4 do
+          begin
+          uc_nation := nation_arabian;
+
+          vc_chassis := ar_half_tracked;
+          vc_engine := engine_siberite;
+          vc_control := [control_remote, control_apeman][rand(1,2)];
+          vc_weapon := [ar_rocket_launcher, ar_gun, ar_rocket_launcher, ar_gatling_gun][rand(1,4)];
+
+          units := units ^ CreateVehicle;
+          end;
+      end;
+   if bonus_num = 4 then
+      for i = 1 to 3 do
+          begin
+          PrepareHuman(false, 3, 8);
+          units := units ^ CreateHuman;
+          end;
+   end;
+4: off := false;
+end;
+
+if not off then
+   exit
+  else
+   begin
+   SetArtifactUse(your_side, art_exp_mid, art_no, main_base);
+   SayRadio(Vervecken, ['DVr-3', 'DVr-3a', 'DVr-3b'][rand(1,3)]);
+   end;
+
+if units then
+   for i in units do
+       begin
+       PlaceUnitXYR(i, 92, 49, 20, false);
+       EffectTeleport(GetX(i), GetY(i));
+       end;
+
+if crates then
+   for i = 1 to (crates div 50) do
+       begin
+       CreateCratesXYR(5, 92, 49, 30, true);
+       wait(0$02);
+       end;
+End;

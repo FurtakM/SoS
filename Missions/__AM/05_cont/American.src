@@ -1,0 +1,98 @@
+Export JMM, Gladstone, Harrison, Denis, Brown, Donaldson, Lisa, Frank, Bobby, Cyrus;
+Export others;
+
+Export Function PrepareAmericans;
+var i, points, veh, tmp;
+begin
+uc_nation := 1; 
+uc_side := 4;
+
+// Denis 
+Denis := PrepareUnit('Denis', false);
+// Harrison
+Harrison := PrepareUnit('Harisson', false);
+
+
+uc_side := 1;
+
+// JMM
+JMM := PrepareUnit('JMM', (not debug)); 
+// Gladstone
+Gladstone := PrepareUnit('Gladstone', false);
+// Brown
+if LoadVariable('BrownInDelta', debug) then
+   begin
+   Brown := PrepareUnit('Brown', (not debug));
+   tmp := tmp ^ Brown;
+   end;
+// Donaldson
+if LoadVariable('DonaldsonInDelta', debug) then
+   begin
+   Donaldson := PrepareUnit('Donaldson', (not debug));
+   tmp := tmp ^ Donaldson;
+   end;
+// Lisa
+if LoadVariable('LisaInDelta', debug) then
+   begin
+   Lisa := PrepareUnit('Lisa', (not debug));
+   tmp := tmp ^ Lisa;
+   end;
+// Frank
+if LoadVariable('FrankInDelta', debug) then
+   begin
+   Frank := PrepareUnit('Frank', (not debug));
+   tmp := tmp ^ Frank;
+   end;
+// Bobby
+if LoadVariable('BobbyInDelta', 0) then
+   begin
+   Bobby := PrepareUnit('Bobby', (not debug));
+   tmp := tmp ^ Bobby;
+   end;
+// Cyrus
+if LoadVariable('CyrusInDelta', 0) then
+   begin
+   Cyrus := PrepareUnit('Cyrus', (not debug));
+   tmp := tmp ^ Cyrus;
+   end;
+
+// others
+others := CreateCharacterSet('othersDelta');
+
+if not others and debug then
+   begin
+   InitHc;
+
+   for i = 1 to 2 do
+       begin
+       PrepareHuman(false, i mod 4 + 1, 3);
+       others := others ^ CreateHuman;
+       end;
+   end;
+
+if others then
+   tmp := tmp ^ others;
+
+// prepare vehicles
+points := [ [28,49], [33,54], [38,56] ];
+
+// PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
+veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_cargo_bay, 80);
+SetDir(veh, 1);
+PlaceUnitXY(veh, points[1][1], points[1][2], false);
+SetCargo(veh, mat_cans, 100);
+PlaceHumanInUnit(others[1], veh);
+
+veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_machine_gun, 80);
+SetDir(veh, 1);                                                          
+PlaceUnitXY(veh, points[2][1], points[2][2], false);
+PlaceHumanInUnit(Gladstone, veh);
+
+veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_light_gun, 80);
+SetDir(veh, 1);
+PlaceUnitXY(veh, points[3][1], points[3][2], false);
+PlaceHumanInUnit(JMM, veh);
+
+for i in tmp diff others[1] do
+    PlaceUnitArea(i, startArea, false);
+End;

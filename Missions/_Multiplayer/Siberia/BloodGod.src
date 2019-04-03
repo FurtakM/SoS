@@ -1,0 +1,94 @@
+var BloodGods, BloodGods_LastKills, BloodGods_CurrentKills, BloodGods_Positions;
+
+every 0$3 marked 200 do
+var x;
+begin
+  enable;
+
+  for x := 1 to 8 do
+    if (BloodGods_CurrentKills[x] > 5) and (BloodGods[x] = -1) then
+    begin
+      BloodGods_LastKills := Replace(BloodGods_LastKills,x,BloodGods_LastKills[x]+6);
+      AwakenBloodGod(x,False);
+    end;
+end;
+
+every 0$1 marked 200 do
+var BGL, x;
+begin
+  enable;
+
+  for x := 1 to 8 do
+    if (BloodGods[x] > -1) and IsLive(BloodGods[x]) then
+    begin
+      BGL := GetLives(BloodGods[x]);
+      if (BGL < 1000) and (BGL > 100) then
+      begin
+        BGL := BGL + 10;
+        If BGL > 1000 then
+        BGL := 1000;
+        SetLives(BloodGods[x],BGL);
+      end;
+    end;
+end;
+
+every 0$1 marked 200 do
+begin
+  DisplayTimeWithKills;
+  enable;
+end;
+
+function AwakenBloodGod(side, NoDialog);
+begin
+  uc_direction := Rand(0,5);
+
+  PrepareHuman(1, class_soldier, 15);
+  hc_importance := 106;
+
+  hc_name := 'Blood God of ' & mp_sides_players_names[side];
+
+  uc_nation := Side_Nations[side];
+  uc_side := side;
+
+  hc_noskilllimit := true;
+  hc_agressivity := 50;
+
+  BloodGods := Replace(BloodGods, Side, CreateHuman);
+
+  PlaceUnitXYR(BloodGods[side], BloodGods_Positions[Side_Positions[side]][1], BloodGods_Positions[Side_Positions[side]][2], 10, false);
+
+  SetAttr(BloodGods[side], attr_stamina, 300);
+
+  if not NoDialog then
+    SayRadio(BloodGods[side], 'DLAwaken');
+end;
+
+function DisplayTimeWithKills;
+var x;
+begin
+  ExtraStrings:= '';
+  for x=1 to Side_Positions do
+    if Side_Positions[x] then
+    begin
+      BloodGods_CurrentKills := Replace(BloodGods_CurrentKills,x,GetHumansKilled(x)-BloodGods_LastKills[x]);
+
+      if (BloodGods[x] > -1) and (IsLive(BloodGods[x])) then
+        ExtraStrings = ExtraStrings ^ ['#godawoken', x, x]
+      else
+      if (BloodGods[x] > -1) and (IsDead(BloodGods[x])) then
+        ExtraStrings = ExtraStrings ^ ['#goddied', x, x]
+      else
+        ExtraStrings = ExtraStrings ^ ['#godssacrifise', x, x, BloodGods_CurrentKills[x], 6]
+    end;
+end;
+
+export function InitBloodGods;
+begin
+  BloodGods = [-1, -1, -1, -1, -1, -1, -1, -1];
+  BloodGods_LastKills = [0, 0, 0, 0, 0, 0, 0, 0];
+  BloodGods_CurrentKills = [0, 0, 0, 0, 0, 0, 0, 0];
+  BloodGods_Positions = [[60, 47], [82, 26], [124, 45], [147, 90], [126, 112], [84, 92], [106, 73], [106, 73]];
+  ClearHumansKilled;
+
+  enable(200);
+end;

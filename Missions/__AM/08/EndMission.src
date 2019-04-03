@@ -1,0 +1,94 @@
+Every 0$1 trigger IsDead(Borodin) do
+var i;
+begin
+    russianAI = 0;
+    escapeAvalaible = 1;
+    InGameOn;
+    SetAttitude(3, 1, att_friend, false);
+    SetAttitude(6, 1, att_friend, false);
+    ChangeSideFog(3, 1);
+    CenterOnXY(97, 91);
+
+    ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+    wait(0$01);
+    ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 124, 98);
+    ComExitVehicle(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
+    wait(0$01);
+    ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 124, 98);
+    ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 124, 98);
+    wait(0$4);
+    CenterOnXY(124, 98);
+
+    if SikorskyStatus = 1 then
+    begin
+        Say(Sikorski, 'D9-Sik-1');
+    end;
+
+    if SikorskyStatus = 2 then
+    begin
+        SayRadio(Powell, 'D8b-Pow-1');
+        YouLost('Dismissed');
+    end;
+
+end;
+
+Every 0$1 trigger FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 do FinishMission;
+
+// Finish mission
+Export function FinishMission;
+var tmp;
+begin
+
+    AddMedal('med1', 1);
+    AddMedal('med2', 1);
+    AddMedal('perfect', 1);
+
+    GiveMedals('Main');
+
+    RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]));
+
+    SaveCharacters(JMM, mission_prefix&'JMM');
+    EnchancedSaveCharacters(Brown, mission_prefix&'Brown');
+    EnchancedSaveCharacters(Donaldson, mission_prefix&'Donaldson');
+    EnchancedSaveCharacters(Bobby, mission_prefix&'Bobby');
+    EnchancedSaveCharacters(Cyrus, mission_prefix&'Cyrus');
+    EnchancedSaveCharacters(Lisa, mission_prefix&'Lisa');
+    EnchancedSaveCharacters(Frank, mission_prefix&'Frank');
+    EnchancedSaveCharacters(Gladstone, mission_prefix&'Gladstone');
+    EnchancedSaveCharacters(Kikuchi, mission_prefix&'Kikuchi');
+    EnchancedSaveCharacters(Denis, mission_prefix&'Denis');
+    EnchancedSaveCharacters(Joan, mission_prefix&'Joan');
+    EnchancedSaveCharacters(Khatam, mission_prefix&'Khatam');
+    EnchancedSaveCharacters(Houten, mission_prefix&'Houten');
+
+    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Denis, Joan, Houten, Khatam],'08_other_survivors');
+    SaveBase(GammaBaseArea);
+
+    YouWin;
+
+end;
+
+Export function SaveBase(area);
+var i, gammaBase, buildings;
+begin
+
+    gammaBase = [];
+    buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building], [f_ok]]);
+
+    for i in buildings do
+    begin
+        if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
+            gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+        else
+        if GetBType(i) = b_bunker then
+            gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+        else
+        if GetBType(i) = b_factory then
+            gammaBase = Insert(gammaBase, 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)])
+        else
+           gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+    end;
+
+    SaveVariable(gammaBase,'08_GammaBase');
+
+end;

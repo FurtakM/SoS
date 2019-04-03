@@ -1,0 +1,107 @@
+Export Vervecken, Gali, Bogdanovic, Kantor, Herczeg, Ronn, Mia;
+Export ar_force;
+Export Function PrepareArabian;
+var veh, tmp, i, x, y;
+begin
+x := 76;
+y := 147;
+
+uc_side := 2;
+uc_nation := 2;
+
+InitHc;
+
+PrepareHuman(sex_male, 1, 6);
+hc_name := 'Nicolas Vervecken';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 3;
+hc_attr := [11, 10];
+
+Vervecken := CreateHuman;
+ar_force := Vervecken;
+
+PrepareHuman(sex_male, 2, 6);
+hc_name := 'Louis Gali';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 2;
+hc_attr := [10, 11];
+
+Gali := CreateHuman;
+ar_force := ar_force ^ Gali;
+
+PrepareHuman(sex_female, 1, 6);
+hc_name := 'Maria Bogdanovic';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 14;
+hc_attr := [12, 9];
+
+Bogdanovic := CreateHuman;
+ar_force := ar_force ^ Bogdanovic;
+
+
+PrepareHuman(sex_male, 3, 6);
+hc_name  = 'Kántor Radomér';
+hc_gallery = 'sandar';
+hc_face_number = 12;
+hc_attr = [9, 9];
+
+Kantor = CreateHuman;
+ar_force := ar_force ^ Kantor;
+
+
+PrepareHuman(sex_male, 3, 6);
+hc_name  = 'Herczeg Farkas';
+hc_gallery = 'sandar';
+hc_face_number = 28;
+hc_attr = [10, 9];
+
+Herczeg = CreateHuman;
+ar_force := ar_force ^ Herczeg;
+
+PrepareHuman(sex_male, 1, 6);
+hc_name  = 'Ronn Horntvedt';
+hc_gallery = 'sandar';
+hc_face_number = 29;
+hc_attr = [11, 11];
+
+Ronn = CreateHuman;
+ar_force := ar_force ^ Ronn;
+
+PrepareHuman(sex_female, 3, 6);
+hc_name  = 'Mia D. Mathiasen';
+hc_gallery = 'sandar';
+hc_face_number = 31;
+hc_attr = [10, 10];
+
+Mia = CreateHuman;
+ar_force := ar_force ^ Mia;
+
+// vehicles
+// 2 cargo, 1 flamethrower
+for i = 1 to 2 do
+    tmp := tmp ^ PrepareTank(2, 2, ar_half_tracked, engine_combustion, control_manual, ar_cargo_bay, 30);
+
+tmp := tmp ^ PrepareTank(2, 2, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 33);
+tmp := tmp diff 0;
+
+
+for i in ar_force do
+    begin
+    if GetClass(i) = 3 then
+       begin
+       SetDir(tmp[1], 1);
+       PlaceUnitXY(tmp[1], x, y, false);
+
+       PlaceHumanInUnit(i, tmp[1]);
+       tmp := Delete(tmp, 1);
+       end
+      else
+       PlaceUnitXY(i, x, y, false);
+
+       ComMoveXY(i, 86, 121);
+       wait(0$2);
+    end;
+
+ar_force := ar_force ^ tmp;
+ar_spawned := true;
+End;

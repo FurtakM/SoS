@@ -1,0 +1,227 @@
+Export Function PreparePeople();
+var i, j, un, to_copy, x, y, c, d;
+begin
+to_copy := [];
+
+for i = 1 to 8 do
+    begin
+    if Side_Positions[i] then
+       begin
+       uc_side   := i;
+       uc_nation := Side_Nations[i];
+
+       x := Side_Start[Side_Positions[i]][1];
+       y := Side_Start[Side_Positions[i]][2];
+
+       hc_importance := 100;
+
+       // commander
+       if Multiplayer then
+          begin
+          hc_name := mp_sides_players_names[uc_side];
+          hc_gallery := 'MULTIAVATARS';
+          hc_face_number := Multiplayer_GetPlayerSideNum(uc_side);
+          hc_sex := Multiplayer_GetPlayerSex(uc_side);
+          end
+           else
+            begin
+            hc_name := '';
+            hc_gallery := '';
+            hc_sex := Rand(1, 2);
+            end;
+
+       PrepareHuman(hc_sex, 1, skill_level);
+       un := CreateHuman;
+
+       if not to_copy then
+          to_copy := Replace(to_copy, 1, un)
+           else
+            begin
+            CopySkills(to_copy[1], un);
+            SetAttr(un, attr_speed, GetAttr(to_copy[1], attr_speed));
+            SetAttr(un, attr_stamina, GetAttr(to_copy[1], attr_stamina));
+            end;
+
+       PlaceUnitXYR(un, x, y, 10, false);
+       // <--- end commander
+
+       hc_importance := 0;
+       hc_name := '';
+       hc_gallery := '';
+
+       d := (number_of_people-1)/4;
+       c := 1;
+
+       for j = 2 to number_of_people do  // 8 / 4 = 2
+           begin
+           PrepareHuman(false, c, skill_level);
+
+           if (j-1) mod d = 0 then
+              c := c + 1;
+
+           un := CreateHuman;
+
+           if to_copy < j then
+              to_copy := Replace(to_copy, j, un)
+               else
+                begin
+                CopySkills(to_copy[j], un);
+                SetAttr(un, attr_speed, GetAttr(to_copy[j], attr_speed));
+                SetAttr(un, attr_stamina, GetAttr(to_copy[j], attr_stamina));
+                end;
+
+           PlaceUnitXYR(un, x, y, 10, false);
+
+           if GetClass(un) = 3 and handicap < 2 then
+              SetClass(un, 1);
+           end;
+
+       // handicap
+          if handicap then
+             begin
+             // rforce
+             for j = 1 to 2 do
+                 begin
+                 vc_chassis := us_medium_wheeled;
+                 vc_engine  := engine_siberite;
+                 vc_control := control_computer;
+                 vc_weapon  := us_rocket_launcher;
+                 un := CreateVehicle;
+
+                 rforce := Insert(rforce, 1, [un, x, y]);
+                 end;
+
+                 vc_chassis := us_medium_wheeled;
+                 vc_engine  := engine_siberite;
+                 vc_control := control_computer;
+                 vc_weapon  := us_cargo_bay;
+                 un := CreateVehicle;
+
+                 rforce := Insert(rforce, 1, [un, x, y]);
+             //
+
+             // rforce2
+             for j = 1 to 3 do
+                 begin
+                 vc_chassis := us_heavy_tracked;
+                 vc_engine  := engine_siberite;
+                 vc_control := control_computer;
+                 vc_weapon  := [us_heavy_gun, us_heavy_gun, us_laser][j];
+                 un := CreateVehicle;
+
+                 rforce2 := Insert(rforce2, 1, [un, x, y]);
+                 end;
+             //
+
+             // radar
+             if handicap = 1 then
+                begin
+                vc_chassis := us_medium_tracked;
+                vc_engine  := engine_solar;
+                vc_control := control_computer;
+                vc_weapon  := us_radar;
+                PlaceUnitXYR(CreateVehicle, x, y, 13, false);
+                end;
+
+             if handicap = 2 then
+                begin
+                for j = 1 to 2 do
+                    begin
+                    vc_chassis := us_medium_tracked;
+                    vc_engine  := engine_siberite;
+                    vc_control := control_manual;
+                    vc_weapon  := [us_gatling_gun, us_double_gun][j];
+                    PlaceUnitXYR(CreateVehicle, x, y, 13, false);
+                    end;
+
+                vc_chassis := us_medium_tracked;
+                vc_engine  := engine_solar;
+                vc_control := control_computer;
+                vc_weapon  := us_radar;
+                PlaceUnitXYR(CreateVehicle, x, y, 13, false);
+                end;
+             end;
+       end;
+    end;
+End;
+
+Export Function AddApeman(area);
+begin
+uc_nation := 0;
+uc_side := 0;
+
+hc_agressivity := rand(-10, 15);
+
+PrepareHuman(false, class_apeman, 0);
+
+hc_attr := [10, 12];
+
+PlaceUnitArea(CreateHuman, area, false);
+End;
+
+
+Export Function PlaceMines(area, n);
+var i, r, x;
+begin
+r := 100;
+x := 0;
+
+while(x < n) do
+for i = 1 to AreaToList(area, 0)[1] do
+    begin
+    if r > 50 then
+       begin
+       if not MineAtPos(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i]) then
+          begin
+          PlaceMine(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i], bot_side, 0);
+
+          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[1][i]);
+          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[2][i]);
+
+          r := 0;
+          x := x + 1;
+          end
+           else
+            r := r + 35;
+       end
+        else
+         r := r + rand(10, 25);
+    end;
+End;
+
+Export Function GetDriver(veh);
+var i, filter;
+begin
+if not GetControl(veh) = control_manual then
+   result := false
+    else
+     if veh in FilterAllUnits([f_empty]) then
+        result := false
+         else
+          begin
+          filter := FilterAllUnits([[f_side, GetSide(veh)], [f_driving]]);
+
+          if not filter then
+             result := false
+              else
+               for i = 1 to filter do
+                   if IsDriver(filter[i]) = veh then
+                      begin
+                      result := filter[i];
+                      break;
+                      end;
+         end;
+End;
+
+Export Function IsDriver(unit);
+begin
+if unit in FilterAllUnits([f_driving]) then
+   result := IsInUnit(unit)
+    else
+     result := false;
+End;
+
+
+
+
+

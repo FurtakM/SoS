@@ -1,0 +1,235 @@
+// Prepare base
+Export JMM, Gladstone, Frank, Lisa, Cyrus, Bobby, Donaldson, Brown;
+
+Export Function PrepareAmerican;
+var others3, others4, veh, team, dep, bar, lab, fac, bun, filter, i, tmp;
+begin
+PrepareBase;
+
+uc_side := 1;
+uc_nation := 1;
+
+team := [];
+
+JMM := PrepareUnit('JMM', (not debug));
+Gladstone := PrepareUnit('Gladstone', false);
+
+Frank := PrepareUnit('Frank', (not debug));
+
+if Frank then
+   team := team  ^ Frank;
+
+Lisa := PrepareUnit('Lisa', (not debug));
+
+if Lisa then
+   team := team ^ Lisa;
+
+Donaldson := PrepareUnit('Donaldson', (not debug));
+
+if Donaldson then
+   team := team ^ Donaldson;
+
+Brown := PrepareUnit('Brown', (not debug));
+
+if Brown then
+   team := team ^ Brown;
+
+others4 := CreateCharacterSet('04_other_survivors');   
+
+if not Lisa then
+   begin
+   Cyrus := PrepareUnit('Cyrus', (not debug));
+
+   if Cyrus then
+      team := team ^ Cyrus;
+
+   if not Cyrus then
+      begin
+      Bobby := PrepareUnit('Bobby', (not debug));
+
+      if Bobby then
+         team := team ^ Bobby;
+
+      if not Bobby then
+         begin
+         others3 := CreateCharacterSet('03_others'); // others[1]
+         end;
+
+      end;
+
+   end;
+
+if others4 then
+   team := team ^ others4;
+
+if others3 then
+   team := team ^ others3;
+
+
+if team < 9 then
+   repeat
+   PrepareHuman(false, rand(1,4), 4);
+   team := team ^ CreateHuman;
+   until team = 9;
+
+// place units in base
+dep := FilterAllUnits([f_btype, b_depot])[1];
+bar := FilterAllUnits([f_btype, b_armoury]);
+lab := FilterAllUnits([f_or, [f_btype, b_lab_half], [f_btype, b_lab]]);
+fac := FilterAllUnits([f_btype, b_factory]);
+bun := FilterAllUnits([f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]);
+
+SetBName(dep, 'Gamma');
+
+SetResourceType(GetBase(dep), mat_oil, 10000);
+SetResourceType(GetBase(dep), mat_cans, 10000);
+
+if dep then
+   begin
+
+   if Brown then
+      begin
+      PlaceHumanInUnit(Brown, dep[1]);
+      team := team diff Brown;
+      end;
+
+   if Donaldson then
+      begin
+      PlaceHumanInUnit(Donaldson, dep[1]);
+      team := team diff Donaldson;
+      end;
+
+   end;
+
+if bun and UnitFilter(team, [f_class, 1]) then
+   begin
+   filter := UnitFilter(team, [f_class, 1]);
+
+   for i in bun do
+       begin
+       if not filter then
+          break;
+
+       PlaceHumanInUnit(filter[1], i);
+       team := team diff filter[1];
+       filter := Delete(filter, 1);
+       end;
+
+   end;
+
+if bar and UnitFilter(team, [f_class, 1]) then
+   begin
+   filter := UnitFilter(team, [f_class, 1]);
+
+   for i = 1 to filter do
+       begin     
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], bar[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if lab and UnitFilter(team, [f_class, 4]) then
+   begin
+   filter := UnitFilter(team, [f_class, 4]);
+
+   for i = 1 to filter do
+       begin
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], lab[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if fac and UnitFilter(team, [f_class, 3]) then
+   begin
+   filter := UnitFilter(team, [f_class, 3]);
+
+   for i = 1 to filter do
+       begin
+       if (i <= 6) then
+          PlaceHumanInUnit(filter[i], fac[1])
+         else
+          PlaceUnitArea(filter[i], gammaBaseArea, false);
+       end;
+
+   team := team diff filter;
+   end;
+
+if team then
+   for i in team do
+       begin
+       PlaceUnitArea(i, gammaBaseArea, false);
+       ComHold(i);
+       end;
+
+
+if fac then
+   if UnitsInside(fac[1]) then
+      SetSpecResearch(fac[1], 10, false);
+
+if lab then
+   if UnitsInside(lab[1]) then
+      SetSpecResearch(lab[1], 10, false);
+
+// prepare vehicles
+veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_light_gun, 100);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 21, 8, false);
+PlaceHumanInUnit(JMM, veh);
+
+veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_machine_gun, 100);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 16, 3, false);
+PlaceHumanInUnit(Gladstone, veh);
+
+veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_cargo_bay, 100);
+SetDir(veh, rand(0,5));
+PlaceUnitArea(veh, gammaBaseArea, false);
+End;
+
+Function PrepareBase;
+var blist, i, b;
+begin
+SetResourceVisibility(71, 5, 1);
+
+// [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+blist := LoadVariable('GammaBase', []);
+
+if not blist and debug then
+   blist := [ [b_depot, 51, 10, 3, 3, 0, 0] ];
+
+if not blist then
+   exit;
+
+uc_side := 1;
+uc_nation := 1;
+
+for i in blist do
+    begin
+    bc_type := i[1];
+    bc_level := i[5];
+
+    if i[1] in [b_lab_half, b_lab_full] then
+       begin
+       bc_kind1 := i[7];
+       bc_kind2 := i[8];
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if GetBType(b) = b_bunker then
+       begin
+       PlaceWeaponTurret(b, i[7]);
+       end;
+
+    end;
+
+
+End;

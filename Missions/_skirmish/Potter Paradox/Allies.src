@@ -1,0 +1,102 @@
+Export Function PrepareAllies;
+var i, un, b, list;
+begin
+uc_side := 5;
+uc_nation := nation_arabian;
+
+
+b := FilterAllUnits([[f_side, uc_side], [f_btype, b_barracks]]);
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, 2, 6);
+    PlaceUnitXYR(CreateHuman, 27, 22, 5, false);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, 1, 6);
+    PlaceHumanInUnit(CreateHuman, b[1]);
+    end;
+
+for i in FilterAllUnits([[f_side, uc_side], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]) do
+    begin
+    PrepareHuman(false, 1, 6);
+    PlaceHumanInBunker(CreateHuman, i);
+
+    if GetBType(i) = b_bunker then
+       PlaceWeaponTurret(i, [ar_gun, ar_gatling_gun, ar_double_machine_gun, ar_rocket_launcher][i mod 4 + 1]);
+    end;
+
+for i = 1 to 3 do
+    begin
+    vc_chassis := ar_half_tracked;
+    vc_engine := engine_solar;
+    vc_control := control_manual;
+    vc_weapon := [ar_gatling_gun, ar_gun, ar_flame_thrower][i];
+
+    un := CreateVehicle;
+    SetDir(un, 5);
+    PlaceUnitArea(un, parking_2, false);
+
+    PrepareHuman(false, 3, 7);
+    PlaceHumanInUnit(CreateHuman, un);
+    end;
+
+
+PrepareHuman(sex_male, 1, 6);
+al_commander := CreateHuman;
+PlaceHumanInUnit(al_commander, FilterAllUnits([[f_side, uc_side], [f_btype, b_depot]])[1]);
+
+InitHc();
+End;
+
+Export Function ChangeSide();
+var i;
+begin
+for i in FilterAllUnits([f_side, 5]) do
+    SetSide(i, 8);
+End;
+
+Every 0$01 trigger FilterAllUnits([f_side, 5]) do
+var i, list, d, j, b, m;
+begin
+enable;
+
+list := FilterAllUnits([[f_side, 5], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]);
+b := FilterAllUnits([[f_side, 5], [f_btype, b_bunker], [f_not, [f_lives, 1000]]]);
+m := UnitFilter(list, [[f_not, [f_inside]], [f_class, 3]]);
+
+if not list then
+   exit;
+
+for i in list do
+    begin
+
+    if b then
+       for j in UnitFilter(list, [f_class, 2]) do
+           if not HasTask(j) and GetTag(i) <> 7 then
+              ComRepairBuilding(j, b[1]);
+
+    if GetLives(i) < 500 and not GetTag(i) = 7 then
+       begin
+       ComMoveToArea(i, guard_hill);
+       SetTag(i, 7);
+
+       if GetType(i) = unit_vehicle then
+          begin
+          AddComExitVehicle(i);
+          end;
+       end;
+
+    if GetLives(i) = 1000 and GetTag(i) = 7 and not IsInUnit(i) and m then
+       begin
+       SetTag(i, 0);
+       ComEnterUnit(m, i);
+       end;
+
+    if GetType(i) = unit_vehicle and GetTag(i) <> 7 and not HasTask(i) then
+       if FilterAllUnits([f_side, 7]) then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 7]), i));
+    end;
+End;

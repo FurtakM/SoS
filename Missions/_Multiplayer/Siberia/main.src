@@ -1,0 +1,579 @@
+// Positions on the map
+// 2   4
+//   3 5
+// 1   6
+
+// Types of used games
+// 1 - Kill 'em all
+// 2 - Team war
+// 3 - Mine the siberit
+// 4 - Blood Wars
+// 5 - Survival
+// 10, 11 - Clanbase
+// 12 - Arabian Wars
+
+
+// Map by Serpent, Gogeta103, Ralf32
+// original-war.net
+
+EXPORT
+  def_amount_of_siberit,   // (15)
+  def_public_score;        // (16)
+
+EXPORT
+  is_depot,
+  number_of_breastworks,
+  number_of_people,
+  skill_level,
+  starting_crates,
+  starting_resources,
+  shipments_density,
+  morale_decreasing_time,
+  amount_of_apemen,
+  amount_of_siberit,
+  respawning_time_min,
+  respawning_time_max;
+
+export  Side_Teams, Teams;
+export  Side_Positions, Side_Nations, Team_Game;
+
+export  Position_Sides;
+
+export  depot_def, breastworks_def, start_def,
+        normal_oil_deposits_locations,
+        extra_oil_deposits_locations,
+        normal_sib_deposits_locations,
+        extra_sib_deposits_locations,
+        battle_flags_id,
+        sheik,
+        mastodont;
+
+var commander;
+
+var global_units,
+    global_defined,
+    soldiers_created;
+
+var neng,
+    nsci,
+    nmech,
+    nsol;
+
+function read_multiplayer_and_game_parameters;
+var i;
+begin
+  if Multiplayer then
+    begin
+      Game_Type:=      mp_game_type;
+
+      Your_Side:=      mp_player_side;
+
+      Side_Positions:= mp_sides_positions;
+      Side_Teams:=     mp_sides_teams;
+      Side_Nations:=   mp_sides_nations;
+
+      Teams:=          mp_teams;
+    end
+  else
+    begin
+      Game_Type:=      1;
+
+      Your_Side:=      3;
+
+      Side_Positions:= [1,2,3,4,5,6,0,0];
+      Side_Teams:=     [1,2,3,4,5,6,0,0];
+      Side_Nations:=   [1,2,3,1,2,3,0,0];
+
+      Teams:=          [[1],[2],[3],[4],[5],[6]];
+    end;
+
+  for i:= 1 to 8 do
+    if Multiplayer_GetPlayerIsSpec(i) then
+    begin
+      Side_Positions:= Replace(Side_Positions, i, 0);
+      Teams:= Replace(Teams, Side_Teams[i], Teams[Side_Teams[i]] diff i);
+    end;
+
+  Position_Sides:= [0,0,0,0,0,0];
+
+  for i:= 1 to 8 do
+    if Side_Positions[i] then
+      Position_Sides:= Replace(Position_Sides, Side_Positions[i], i);
+
+  Team_Game:= Side_Teams[your_side];
+
+  if Multiplayer then
+    begin
+      def_base_level:=         GetMultiplayerSetting(0);
+      def_amount_of_people:=   GetMultiplayerSetting(1);
+      def_skill_level:=        GetMultiplayerSetting(2);
+      def_starting_resources:= GetMultiplayerSetting(3);
+      def_shipments_density:=  GetMultiplayerSetting(4);
+      def_extra_oil_deposits:= GetMultiplayerSetting(5);
+      def_extra_sib_deposits:= GetMultiplayerSetting(6);
+      def_shared_vision:=      GetMultiplayerSetting(10);
+      def_morale_flags:=       GetMultiplayerSetting(11);
+      def_siberite_detection:= GetMultiplayerSetting(12);
+      def_people_respawning:=  GetMultiplayerSetting(13);
+      def_amount_of_apemen:=   GetMultiplayerSetting(14);
+      def_amount_of_siberit:=  GetMultiplayerSetting(15);
+      def_public_score:=       GetMultiplayerSetting(16);
+      def_siberite_bomb:=      GetMultiplayerSetting(17);
+      def_builduptime:=        GetMultiplayerSetting(20);
+      def_game_rules:=         0; // <---- game_rules off
+      def_sheik:=              GetMultiplayerSetting(22);
+      def_mastodont:=          GetMultiplayerSetting(23);
+    end
+  else
+    begin
+      Randomize;
+
+      def_base_level:=         1;
+      def_amount_of_people:=   0;
+      def_skill_level:=        1;
+      def_starting_resources:= 2;
+      def_shipments_density:=  1;
+      def_extra_oil_deposits:= 1;
+      def_extra_sib_deposits:= 2;
+      def_shared_vision:=      1;
+      def_morale_flags:=       1;
+      def_siberite_detection:= 1;
+      def_people_respawning:=  2;
+      def_amount_of_apemen:=   3;
+      def_amount_of_siberit:=  0;
+      def_public_score:=       0;
+      def_siberite_bomb:=      0;
+      def_builduptime:=        0;
+      def_game_rules:=         0;
+      def_sheik:=              0;
+      def_mastodont:=          0;
+    end;
+
+  InitGameRules;
+
+  if (Game_Type = 5) then
+    begin
+      def_base_level:=         1;
+      def_extra_oil_deposits:= 0;
+      def_extra_sib_deposits:= 0;
+      disable(10);
+    end;
+
+  is_depot                    := [0,1,1] [def_base_level+1];
+  number_of_breastworks       := [0,0,2] [def_base_level+1];
+  number_of_people            := [9,12,15,24] [def_amount_of_people+1];
+  skill_level                 := [2,3,4,5,8] [def_skill_level+1];
+  if (Game_Type = 5) then
+    begin
+      starting_resources          := [[1000,100,100], [2000,200,200], [5000,500,500], [10000,1000,1000], [25000,2500,2500], [50000,5000,5000]] [def_starting_resources+1];
+      starting_crates             := [];
+    end
+  else
+    begin
+      starting_resources          := [[0,0,0], [30,0,0], [50,20,0], [80,40,20]] [def_starting_resources+1];
+      starting_crates             := [[10], [7,14], [6,12,18], [5,10,15,20]] [def_starting_resources+1];
+    end;
+  shipments_density           := [150, 125, 100, 50] [def_shipments_density+1];
+  respawning_time_min         := [0$0, 5$00, 3$0] [def_people_respawning+1];
+  respawning_time_max         := [0$0, 15$00, 5$0] [def_people_respawning+1];
+  amount_of_apemen            := [0, 3, 6, 9] [def_amount_of_apemen+1];
+  amount_of_siberit           := [30, 50, 80, 100, 130, 150, 200] [def_amount_of_siberit+1];
+  morale_decreasing_time      := [ -1, 0$10, 0$20, 0$40, 0$0 ] [def_morale_flags+1];
+  battle_flags_id             := [];
+
+  if (Game_Type = 12) then
+      begin
+      sheik                   := [0, 1][def_sheik+1];
+      mastodont               := [0, 1, 2][def_mastodont+1]
+      end
+       else
+        begin
+        sheik                 := 0;
+        mastodont             := 0;
+        end;
+
+  BuildUpAreas:= [BuildUp1, BuildUp2, BuildUp3, BuildUp4, BuildUp5, BuildUp6];
+end;
+
+function init_map;
+var i,j;
+begin
+  normal_oil_deposits_locations:=[ [90, 175], [17, 10], [87, 72], [146, 19], [183, 90], [215, 163] ];
+
+  extra_oil_deposits_locations :=[ [ [90, 175],   [82, 158]   ],
+                                   [ [17, 10],    [15, 21]    ],
+                                   [ [87, 72],  [85, 63]  ],
+                                   [ [146, 19],  [123, 3] ],
+                                   [ [183, 90], [181, 76] ],
+                                   [ [215, 163],  [231, 174]   ]];
+
+  normal_sib_deposits_locations:=[ [87, 169], [21, 29], [100, 64], [151, 13], [184, 70], [219, 165] ];
+
+  extra_sib_deposits_locations :=[ [ [87, 169],   [123, 184]   ],
+                                   [ [21, 29],    [33, 18]    ],
+                                   [ [100, 64],  [100, 85]  ],
+                                   [ [151, 13], [125, 13]  ],
+                                   [ [184, 70], [176, 81] ],
+                                   [ [239, 189],  [233, 154]   ]];
+
+  depot_def:=[ [100,179,0], [21,18,2], [94,71,2], [132,11,1], [191,86,2], [230,164,4] ];
+  //start_def:=[ [42,35], [74,9], [135,35], [167,102], [137,132], [77,105] ];
+
+  for i in depot_def do
+    start_def:=start_def^[[ShiftX(i[1], i[3], 10), ShiftY(i[2], i[3], 10)]];
+
+  breastworks_def:=[ [ [93,156,3],   [105,167,4]   ],
+                     [ [27,32,5],    [36,30,4]   ],
+                     [ [93,61,3],  [111,88,5]  ],
+                     [ [139,18,0],  [130,7,1]  ],
+                     [ [185,92,0], [201,94,5] ],
+                     [ [213,163,1],   [224,156,2]   ]
+                   ];
+
+  for i in (Side_Positions diff [0]) do
+    if def_extra_oil_deposits then
+      for j in extra_oil_deposits_locations[i] do
+        CreateDepositXY(j[1],j[2],mat_oil)
+    else
+      CreateDepositXY(normal_oil_deposits_locations[i][1],normal_oil_deposits_locations[i][2],mat_oil);
+
+  if def_extra_sib_deposits then
+    for i in (Side_Positions diff [0]) do
+      if def_extra_sib_deposits=2 then
+        for j in extra_sib_deposits_locations[i] do
+          CreateDepositXY(j[1],j[2],mat_siberit)
+      else
+        CreateDepositXY(normal_sib_deposits_locations[i][1],normal_sib_deposits_locations[i][2],mat_siberit);
+end;
+
+function set_shared_visions_and_alliances;
+var i, j;
+begin
+  if not Team_Game then
+    begin
+      for i=1 to 8 do
+        for j=1 to 8 do
+          if i<>j then
+            SetAttitude(i,j,att_neutral,true)
+          else
+            SetAttitude(i,j,att_friend,true);
+    end
+  else
+    begin
+      if def_shared_vision then
+        begin
+          for i in Teams do
+            for j=2 to i do
+              ChangeSideFog( i[j], i[1] );
+        end;
+
+      for i=1 to 8 do
+        for j=1 to 8 do
+          if Side_Teams[i]=Side_Teams[j] then
+            SetAttitude(i,j,att_friend,true)
+          else
+            SetAttitude(i,j,att_enemy,true);
+    end;
+end;
+
+function prepare_people(count,cl,x,y,r,building);
+var i,j,un;
+begin
+  result:=[];
+  for i:=1 to count do
+    begin
+      uc_direction:=Rand(0,5);
+      if commander then
+        begin
+          hc_name := mp_sides_players_names[uc_side];
+          PrepareHuman(Rand(1,2),cl,skill_level+2);
+          hc_importance:=105;
+          commander:=false;
+          If Multiplayer then
+            begin                
+              if sheik then
+                 begin
+                 uc_nation := 2;
+                 hc_gallery := '';
+                 hc_class := class_desert_warior;
+                 hc_sex := sex_male;
+                 end
+                else
+                 begin
+                 hc_gallery:= 'MULTIAVATARS';
+                 hc_face_number:=Multiplayer_GetPlayerSideNum(uc_side);
+                 hc_sex := Multiplayer_GetPlayerSex(uc_side);
+                 end;
+            end;
+        end
+      else
+        begin
+          hc_name := '';
+          PrepareHuman(rand(1,2),cl,skill_level);
+          hc_importance:=0;
+          If Multiplayer then
+            begin
+              hc_gallery:= '';
+              hc_face_number:=0;
+            end;
+        end;
+
+      un:=CreateHuman;
+
+      if global_defined then
+        begin
+          if (cl = class_soldier) then
+            j:= i + soldiers_created
+          else
+            j:= i;
+          CopySkills(global_units[cl][j],un);
+          SetAttr(un, attr_speed,   GetAttr( global_units[cl][j], attr_speed)   );
+          SetAttr(un, attr_stamina, GetAttr( global_units[cl][j], attr_stamina) );
+        end;
+
+      if building then
+        PlaceHumanInUnit(un, building)
+      else
+        PlaceUnitXYR(un, x, y, r, false);
+
+      result:=result ^ [un];
+    end;
+
+  if not global_defined then
+    if (global_units >= cl) then
+      global_units:= Replace(global_units, cl, global_units[cl] ^ result)
+    else
+      global_units:= Replace(global_units, cl, result);
+end;
+
+function prepare_mastodonts(n);
+var i;
+begin
+uc_side := 0;
+uc_nation := 0;
+
+vc_chassis := 31;
+vc_control := control_rider;
+
+for i = 1 to n do
+PlaceUnitArea(CreateVehicle, MastodontSpawn, false);
+end;
+
+function prepare_side(side);
+var pos,x,y,dir,i,r,br,dep;
+begin
+  pos:=Side_Positions[side];
+
+  uc_nation:=Side_Nations[side];
+  uc_side:=side;
+
+  x:=depot_def[pos][1];
+  y:=depot_def[pos][2];
+  dir:=depot_def[pos][3];
+
+  if is_depot then
+    begin
+      bc_type=b_depot;
+      dep:=CreateAndPlaceBuildingXYD(x,y,dir);
+      SetBName(dep,'@' & side);
+
+      SetResourceType(GetBase(dep),mat_cans,starting_resources[mat_cans]);
+      SetResourceType(GetBase(dep),mat_oil,starting_resources[mat_oil]);
+      SetResourceType(GetBase(dep),mat_siberit,starting_resources[mat_siberit]);
+    end
+  else
+    begin
+      for i:=1 to 3 do
+        begin
+          r:=starting_resources[i];
+          while r>=10 do
+            if r>50 then
+              begin
+                CreateResourcesXYR(i,5,x,y,4,false);
+                r:=r-50;
+              end
+            else
+              begin
+                CreateResourcesXYR(i,r div 10,x,y,4,false);
+                r:=0;
+              end;
+         end;
+    end;
+
+  for r in starting_crates do
+    CreateResourcesXYR(mat_cans,5,x,y,r,false);
+
+  if def_morale_flags then
+    begin
+      x:=start_def[pos][1];
+      y:=start_def[pos][2];
+      PlaceEnvironment(x,y,12,2);
+      battle_flags_id:=battle_flags_id ^ SetBattleFlag(side,x,y,
+                                                       [ [bfo_defend_bonus_human,100],
+                                                         [bfo_defend_bonus_vehicle,50],
+                                                         [bfo_defend_bonus_building,20],
+                                                         [bfo_height,100] ]);
+    end;
+
+  commander:=true;
+
+  soldiers_created:=0;
+  for i:=1 to number_of_breastworks do
+    begin
+      x:=breastworks_def[pos][i][1];
+      y:=breastworks_def[pos][i][2];
+      dir:=breastworks_def[pos][i][3];
+
+      bc_type:=b_breastwork;
+      br:=CreateAndPlaceBuildingXYD(x,y,dir);
+
+      prepare_people(1,class_soldier,0,0,0,br);
+      soldiers_created:=soldiers_created+1;
+    end;
+
+  x:=start_def[pos][1];
+  y:=start_def[pos][2];
+
+  prepare_people(nsol-number_of_breastworks,class_soldier,x,y,5,0);
+  prepare_people(neng,class_engineer,x,y,5,0);
+  prepare_people(nmech,class_mechanic,x,y,5,0);
+  prepare_people(nsci,class_scientistic,x,y,5,0);
+
+  if def_siberite_detection then
+    SetTech(tech_SibDet,side,state_researched);
+
+  if def_siberite_bomb <> 1 then
+    SetTech(tech_SibFiss,side,state_disabled);
+
+  global_defined:= true;
+end;
+
+function EnableSibFiss;
+var i;
+begin
+  for i:=1 to 8 do
+    if Side_Positions[i] then
+      SetTech(tech_SibFiss,i,state_enabled);
+end;
+
+every 30$0 do
+  if (def_siberite_bomb = 2) then
+    EnableSibFiss;
+
+every 60$0 do
+  if (def_siberite_bomb = 3) then
+    EnableSibFiss;
+
+every 90$0 do
+  if (def_siberite_bomb = 4) then
+    EnableSibFiss;
+
+every 120$0 do
+  if (def_siberite_bomb = 5) then
+    EnableSibFiss;
+
+function prepare_sides;
+var i;
+begin
+  global_units:=   [];
+  global_defined:= False;
+
+  CountClassMembers;
+
+  for i := 1 to 8 do
+      if Side_Positions[i] then
+         begin
+         prepare_side(i);
+
+         if (Game_Type = 12) and mastodont > 0 then // AW
+             prepare_mastodonts(mastodont);
+         end;
+end;
+
+function CountClassMembers;
+var Mode;
+begin
+  if No_Mechs then
+    Mode:= 2
+  else
+    Mode:= 1;
+
+  neng:= number_of_people;
+  nsol:= neng div [4, 3] [Mode];
+
+  if (nsol < number_of_breastworks) then
+    nsol:= number_of_breastworks;
+
+  neng:= neng - nsol;
+
+  nsci:= neng div [3, 2] [Mode];
+
+  if (nsci < 1) then
+    nsci:= 1;
+
+  neng:= neng - nsci;
+
+  nmech:= [neng div 2, 0] [Mode];
+
+  neng:= neng - nmech;
+
+  if (neng < 1) then
+    neng:= 1;
+end;
+
+function Init_Win_Condition;
+begin
+  if Team_Game then
+    Enable(98)
+  else
+    Enable(99);
+  case Game_Type of
+    3: Enable(100);
+  end;
+end;
+
+starting
+begin
+  Disable(98);  // YouWin (Team war)
+  Disable(99);  // YouWin (Kill 'em all)
+  Disable(100); // YouWin (Mine the siberit)
+
+  Disable(200); // BloodGods
+
+  Disable(400); // SuddenLost
+  Disable(401); // SuddenWin
+
+  Disable(600); // Build-up
+
+  mp_selectmsg := true;
+
+  read_multiplayer_and_game_parameters;
+  init_map;
+  init_respawning;
+  set_shared_visions_and_alliances;
+  prepare_sides;
+
+  InitLimits;
+  ShowTimer;
+
+  if (Game_Type = 4) then
+    InitBloodGods;
+
+  music_nat:=Side_Nations[your_side];
+
+  if IAmSpec then
+    begin
+      PlaceSeeing(0, 0, Your_Side, -32767);
+      CenterNowOnXY(104, 69);
+      Enable(400);
+    end
+  else
+    begin
+      ResetFog;
+      CenterNowOnXY(start_def[Side_Positions[your_side]][1],start_def[Side_Positions[your_side]][2]);
+      Init_Win_Condition;
+    end;
+
+  if def_builduptime then
+     BeginBuildUp;
+end;

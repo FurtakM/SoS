@@ -1,0 +1,41 @@
+//
+On UnitDestroyed(un) do
+begin
+
+if un = JMM then
+   YouLost('JMM');
+
+if GetType(un) = unit_building then
+   buildings_counter := buildings_counter + 1;
+
+if un in FilterUnitsInArea(baseArea, [f_or, [f_btype, b_turret], [f_btype, b_bunker]]) then
+   ru_rebuild_list := ru_rebuild_list ^ [GetBType(un), GetX(un), GetY(un), GetDir(un)];
+
+if un = ru_dep_main then
+   ChangeMissionObjectives('M1a');
+
+End;
+
+On BuildingStarted(b, builder) do
+var i;
+begin
+if GetSide(b) = 3 then
+   for i = 1 to 4 do
+       ru_rebuild_list := Delete(ru_rebuild_list, 1);
+End;
+
+On BuildingComplete(b) do
+if GetBType(b) in [b_bunker, b_turret] then
+   ComPlaceWeapon(b, ru_gatling_gun);
+
+On LeaveBuilding(b, un) do
+begin
+if b in FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]) then
+   GoToAnotherTower(un, b, 143, 143);  // koordy wpisane na sztywno!
+End;
+
+On EnterBuilding(b, un) do
+begin
+if b in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) then
+   SetTag(b, 0);
+End;

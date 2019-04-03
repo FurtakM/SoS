@@ -1,0 +1,258 @@
+Every 1 do 
+var i;
+begin
+    InGameOn;
+
+    CenterOnXY(53, 40);
+
+    wait(0$5);
+
+    if gammaCommander = 1 then CenterNowOnUnits(Donaldson);
+    if gammaCommander = 2 then CenterNowOnUnits(Brown);
+    if gammaCommander = 3 then CenterNowOnUnits(Houten);
+
+    if gammaCommander = 1 then Say(Donaldson, 'D1-Don-1');
+    if gammaCommander = 2 then Say(Brown, 'D1-Brown-1');
+    if gammaCommander = 3 then Say(Houten, 'D1-VanH-1');
+    SayRadio(Harisson, 'D1-Har-1');
+    CenterOnXY(53, 40);
+    if gammaCommander = 1 then Say(Donaldson, 'D1-Don-2');
+    if gammaCommander = 2 then Say(Brown, 'D1-Brown-2');
+    if gammaCommander = 3 then Say(Houten, 'D1-VanH-2');
+    SayRadio(Harisson, 'D1-Har-2');
+
+
+    if FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_linked]]) then
+       for i in FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_linked]]) do
+           ComAgressiveMove(i, 70, 41);
+
+    repeat
+        wait(0$1);
+        for i in FilterAllUnits([[f_side, 6]]) do ComAgressiveMove(i, 54, 20);
+        for i in FilterAllUnits([[f_side, 1], [f_class, 1], [f_not, [f_inside]]]) do 
+        begin
+            AddComAgressiveMove(i, 70, 41);
+            AddComAgressiveMove(i, 46, 39);
+        end;
+
+        for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 500]]]) do
+            ComMoveXY(i, GetX(amDepot), GetY(amDepot));
+
+    until FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_lives, 250]]) < 6;
+
+    InGameOff;
+
+    ChangeMissionObjectives('M1');
+    SaveForQuickRestart;
+
+    startCutscene = 0;
+end;
+
+// Arrive two soldiers from Delta base
+Every 1$0 do 
+begin
+    PrepareSupportFromDelta;
+    firstAttack = 1;
+
+    if IsOk(Gladstone) then
+    begin
+        Say(Gladstone, 'D2-Glad-1');
+    end else
+    begin
+        DialogRandom(FilterUnitsInArea(GammaSupport, [[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [Joan], 'D2-Sol1-1', 'D2-FSol1-1');
+    end;
+
+    If IsOK(Donaldson) and gammaCommander = 1 then Say(Donaldson, 'D2-Don-1');
+    If IsOK(Brown) and gammaCommander = 2 then Say(Brown, 'D2-Brown-1');
+    If IsOK(Houten) and gammaCommander = 3 then Say(Houten, 'D2-VanH-1');
+end;
+
+// Spawn John
+Every 0$1 do
+begin
+    wait(LoadVariable('07_time', 6$00) div 3);
+    PrepareMacmillanSquad;
+    CenterNowOnUnits(JMM);
+    Say(JMM, 'D3-JMM-1');
+    JMMArrive = 1;
+
+    If IsOK(Donaldson) and gammaCommander = 1 then
+    begin
+        Say(Donaldson, 'D3-Don-1');
+    end else
+    begin
+        if gammaCommander = 1 then
+        begin 
+            DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3-Sol1-1', 'D3-Sol1-1');
+            Say(JMM, 'D3-JMM-2');
+        end;
+    end; 
+
+    If IsOK(Brown) and gammaCommander = 2 then
+    begin
+        Say(Brown, 'D3-Brown-1');
+    end else
+    begin
+        if gammaCommander = 2 then
+        begin
+            DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3-Sol1-1a', 'D3-Sol1-1a');
+            Say(JMM, 'D3-JMM-2');
+        end;
+    end; 
+
+    If IsOK(Houten) and gammaCommander = 3 then
+    begin
+        Say(Houten, 'D3-VanH-1');
+    end else
+    begin
+        if gammaCommander = 3 then
+        begin
+            DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3-Sol1-1b', 'D3-Sol1-1b');
+            Say(JMM, 'D3-JMM-2');
+        end;
+    end; 
+
+    If IsOK(Joan) then
+    begin
+        Say(Joan, 'D3a-Joan-1');
+        Say(JMM, 'D3a-JMM-1');
+    end else if LoadVariable('06_JoanStatus_1', 0) = 1 then
+    begin
+
+        Say(JMM, 'D3b-JMM-1');
+
+        if gammaCommander = 1 then
+           if IsOK(Donaldson) then
+              Say(Donaldson, 'D3b-Don-1')
+             else
+              DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3b-Sol1-1', 'D3b-Sol1-1');
+
+        if gammaCommander = 2 then
+           if IsOk(Brown) then
+              Say(Brown, 'D3b-Brown-1')
+             else
+              DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3b-Sol1-1', 'D3b-Sol1-1');
+        
+        if gammaCommander = 3 then
+           if IsOk(Houten) then
+              Say(Houten, 'D3b-VanH-1')
+             else
+              DialogRandom(UnitFilter(others_gamma, [f_sex, 1]), 'D3b-Sol1-1', 'D3b-Sol1-1');
+
+        if UnitFilter(others_gamma, [f_sex, 1]) or (gammaCommander = 1 and IsOk(Donaldson)) or (gammaCommander = 2 and IsOk(Brown)) or (gammaCommander = 3 and IsOk(Houten)) then
+           Say(JMM, 'D3b-JMM-2');
+
+        if IsOK(Lisa) then
+           Say(Lisa, 'D3b-Lisa-2');
+    end;
+
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM], 'DCa-Sol1-1', 'DCa-Sol1-1');
+    Say(JMM, 'DCb-JMM-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM], 'DCb-Sol1-1', 'DCb-Sol1-1');
+    Say(JMM, 'DCb-JMM-2');
+
+    secondAttack = 1;
+
+end;
+
+// Dialog with Powell about Harrison
+Every 0$01 trigger JMMArrive = 1  do 
+begin
+    wait(3$0);
+    DialogueOn;
+    SayRadio(Powell, 'D4-Pow-1');
+    Say(JMM, 'D4-JMM-1');
+    SayRadio(Powell, 'D4-Pow-2');
+    Say(JMM, 'D4-JMM-2');
+    SayRadio(Powell, 'D4-Pow-3');
+    DialogueOff;
+end;
+
+// Dialog about support
+Every 0$01 trigger JMMArrive = 1 do
+begin
+    wait(8$0);
+    DialogueOn;
+    SayRadio(Powell, 'D4a-Pow-1');
+    DialogueOff;
+end;
+
+// Sikorsky spawn
+Every 0$01 trigger JMMArrive = 1 do
+begin
+    wait([10$00, 12$00, 15$00][Difficulty]);
+    PrepareSikorsky;
+    SikorskyArrive = 1;
+    PrepareSikorskyArmy;
+end;
+
+// Sikorsky arrive
+Every 0$1 trigger IsInArea(SikorskyTank, GammaSpawn) do 
+begin
+    CenterNowOnUnits(SikorskyTank);
+    DialogueOn;
+    Say(Sikorski, 'D5-Sik-1');
+    Say(JMM, 'D5-JMM-1a');
+    Say(Sikorski, 'D5-Sik-2');
+
+    case query('QSikorski') of
+        1: begin
+            Say(Sikorski, 'D5a-Sik-1');
+            SikorskyTimer = 1$00;
+        end;
+
+        2:begin
+            Say(Sikorski, 'D5b-Sik-1');
+            SikorskyTimer = 5$00;
+        end;
+
+        3:begin
+            Say(Sikorski, 'D5c-Sik-1');
+            Say(JMM, 'D5c-JMM-1');
+            Say(Sikorski, 'D5c-Sik-2');
+            SikorskyTimer = 5$00;
+        end;
+    end;
+
+    DialogueOff;
+    timerStatus = 1;
+end;
+
+// Sikorsky attack
+Every 0$1 trigger SikorskyTimer < 0$1 do 
+begin
+    timerStatus = 0;
+    DialogueOn;
+    Say(Sikorski, 'D6-Sik-1');
+    DialogueOff;
+    SikorskyAI = 1;
+    ChangeMissionObjectives('M2');
+end;
+
+// Sikorsky dialog about attack with JMM
+Every 0$1 trigger IsInArea(SikorskyTank, PrepareToBattle) do 
+begin
+    Say(Sikorski, 'D7-Sik-1');
+    if IsInArea(JMM, RussianBaseTerritory) or IsInUnit(JMM) then
+    begin
+        Say(Sikorski, 'D7a-Sik-1');
+        SikorskyStatus = 1;
+    end else
+    begin
+        Say(Sikorski, 'D7b-Sik-1');
+        SikorskyStatus = 2;
+    end;
+end;
+
+// Remove units from map
+Every 0$01 trigger escapeAvalaible = 1 do
+var i; 
+begin
+    enable;
+
+    for i in FilterAllUnits([f_side, 3]) do
+        If IsInArea(i, RussianEscape) then RemoveUnit(i);
+
+    for i in FilterAllUnits([f_side, 6]) do
+        If IsInArea(i, RussianEscape) then RemoveUnit(i);
+end;

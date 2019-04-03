@@ -1,0 +1,129 @@
+// Prepare Hero for use
+// ident - ident from start.txt - 'JMM' for example
+// exist_mode
+//   - false if unit not exist in save
+//   - true if unit already exist in save
+// example: JMM := PrepareUnit('JMM', false);
+Export Function PrepareUnit(ident, exist_mode, mission_prefix_prev);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(mission_prefix_prev&ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+// example: PrepareTank(1, 1, us_medium_wheeled, engine_combustion, control_manual, us_machine_gun, 80);
+Export Function PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
+begin
+uc_side := side;
+uc_nation := nation;
+
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+vc_fuel_battery := fuel;
+
+result := CreateVehicle;
+End;
+
+Export Function PrepareNature;
+var i, animal, nat_area;
+begin
+
+     uc_side = 0;
+     uc_nation = 0;
+
+     nat_area := natureArea;
+
+     InitHc;
+
+     // birds
+     for i = 1 to 4 do
+     begin
+     hc_class = 18;
+     hc_gallery = '';
+     hc_face_number = 1;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // tigers
+     for i = 1 to 4 do
+     begin
+     hc_class = class_tiger;
+     hc_gallery = '';
+     hc_agressivity = Rand(-5, 5);
+     hc_face_number = 3;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // apeman
+     for i = 1 to 8 do
+     begin
+     hc_class = class_apeman;
+     hc_gallery = '';
+     hc_agressivity = rand(-2, 2);
+     hc_skills := [rand(1, 3), rand(1, 3), 0, 0];
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+
+     // enhidna
+     for i = 1 to 6 do
+     begin
+     hc_class = 13;
+     hc_gallery = '';
+     hc_face_number = 4;
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // mastodonts
+     vc_chassis := 31;
+     vc_control := control_rider;
+     animal := CreateVehicle;
+     PlaceUnitXY(animal, 21, 22, false);
+
+End;
+
+Export Function GetTerminalCargo;
+begin
+result := GetResourceType(GetBase(terminal), mat_siberit);
+End;
+
+Export Function GetPlayerSib(side);
+var i, tmp;
+begin
+result := 0;
+
+tmp := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    result := result + GetResourceType(GetBase(i), mat_siberit);
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+   for i = area downto 1 do
+       if IsEnvironment(area[i][1], area[i][2]) then
+          if not HasTask(bulldozer) then
+             AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;

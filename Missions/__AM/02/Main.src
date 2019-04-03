@@ -1,0 +1,90 @@
+{
+   General information:
+Map scripts: Nefarem
+
+Status: 100%
+
+Global Variables:
+SaveVariable(mikhailStatus,'02_mikhailStatus_1'); << If value = 1 will be in thrid mission else no
+
+// [Chassis, Engine, Control, Weapon, HP]  ; )
+SaveVariable([GetChassis(vehicle1),GetEngine(vehicle1),GetControl(vehicle1),GetWeapon(vehicle1), GetLive(vehicle1)], '02_tank1_2');
+SaveVariable([GetChassis(vehicle2),GetEngine(vehicle2),GetControl(vehicle2),GetWeapon(vehicle2), GetLive(vehicle2)], '02_tank1_3');
+
+// If >= 100 - Cornell first , <= 200 - JMM and Cornell get resorces
+SaveVariable(GetResourceType(GetBase (depo0), 1), '02_resources_4');
+}
+
+Export JMM, Bobby, Cyrus;                         // Heroes from mission 01
+Export Lisa, Khatam, Brian, Jerry, Mikhail;       // Heroes from mission 02
+Export Powell;                                    // Other heroes
+Export hpJMM, hpBobby, hpCyrus;
+Export RuSoldMinLevel, RuSoldMaxLevel;
+
+Export cargo1, cargo2;
+Export driver1, driver2;
+Export Natasza; // Ru Commander
+
+Export cargoEscape;
+Export mikhailStatus, mikhailInBase, mikhailDepot;
+Export northBaseDefenders, southBaseDefenders, attackGroup;
+
+Export lastBattle;
+Export cargoRespawn, cargoSee;
+Export tigersRespawn;
+
+Export deadsCounter;
+
+Export spotCorpses;
+
+Export mission_prefix;
+
+Starting
+begin
+     // Variable
+     mission_prefix := '02_';
+
+     RuSoldMinLevel = 0; // Minimum russian soldiers level
+     RuSoldMaxLevel = 0; // Maximum russian soldiers level
+
+     hpJMM = 0; // JMM's HP from before mission
+     hpBobby = 0; // Bobby's HP from before mission
+     hpCyrus = 0; // Cyrus's HP from before mission
+
+     cargoEscape = 0; // If one cargo escape, will be russian attack
+
+     mikhailStatus = 0; // 0 - n, 1 - capture, 2 - killed durring escape, 3 - escape, 
+     mikhailInBase = 0; // Check Mikhail status in base 1 - in depo, 2 - in patrol, 3 - free/kill, 4 - outside not busy
+     mikhailDepot = 0; // Depot where is Mikhail
+
+     tigersRespawn = 0;
+     cargoRespawn = 0;
+     cargoSee = 0;
+     lastBattle = 0; // 1 - ready to end mission if you defeat enemy attack
+
+     deadsCounter = 0; // How much people you lost
+
+     spotCorpses = 0; // 0 - disable, 1 - set alltime 250hp
+
+     southBaseDefenders = []; // Group soldiers in barrack who will attack you
+     northBaseDefenders = []; // Same
+     attackGroup = []; // Group who attack you at end mission
+     
+     // Other
+     RandomizeAll;
+     InGameOn;
+     Resetfog;
+
+     // Execude functions
+     PrepareDifficulty;
+
+     PrepareRussianCommander;
+     PrepareSouthBase;
+     PrepareNorthBase;
+     PrepareOtherRussians;
+
+     PrepareHeroes;
+     PrepareLisSquad;
+     PrepareOtherAmericans;
+
+end;

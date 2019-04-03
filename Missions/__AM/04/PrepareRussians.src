@@ -1,0 +1,106 @@
+Export function PrepareRussianCommander;
+begin
+     uc_side = 3;
+     uc_nation = 3;
+
+     Stolypin = NewCharacter('Stolypin');
+     PlaceHumanInUnit(Stolypin, rubware0);
+end;
+
+Export function PrepareRussianBase;
+var i;
+begin
+    RespawnInside(3, 3, rubarmr0, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, 2);
+    RespawnInside(3, 3, rubware0, rand(RuSoldMinLevel, RuSoldMaxLevel), 2, 3);
+    RespawnInside(3, 3, rubbrid0, rand(RuSoldMinLevel, RuSoldMaxLevel), 4, 2);
+    RespawnInside(3, 3, rubfact0, rand(RuSoldMinLevel, RuSoldMaxLevel), 3, 6);
+    for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do RespawnInside(3, 3, i, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, 1);
+    for i in FilterAllUnits([[f_side, 3], [f_btype, 31]]) do PrepareSolBun(rand(RuSoldMinLevel, RuSoldMaxLevel), i);
+end;
+
+Export function PrepareRussianConvoy;
+var i, veh, un;
+begin
+        uc_side = 6;
+        uc_nation = 3;
+
+        for i := 1 to [1, 2, rand(1, 2)][Difficulty] do
+        begin
+                vc_engine = 1;
+                vc_control = 1;
+                vc_weapon = [42, 42, 43][Difficulty];
+                vc_chassis = [21, 22, 22][Difficulty];
+
+                veh = CreateVehicle;     
+                PlaceUnitArea(veh, RussianConvoy, false);
+
+                hc_gallery = '';
+                hc_name = '';
+                PrepareHuman(false, 3, rand(RuSoldMinLevel,RuSoldMaxLevel));
+
+                un = CreateHuman;
+                PlaceHumanInUnit(un, veh);
+        end;
+
+        PrepareHuman(false, 2, rand(RuSoldMinLevel,RuSoldMaxLevel) + 2);
+        un = CreateHuman;
+        PlaceUnitArea(un, RussianConvoy, false);
+
+        PrepareHuman(false, 4, rand(RuSoldMinLevel,RuSoldMaxLevel) + 2);
+        un = CreateHuman;
+        PlaceUnitArea(un, RussianConvoy, false);
+
+        for i := 1 to [2, 3, 3][Difficulty] + rand(1, 3) do
+        begin
+
+            hc_gallery = '';
+            hc_name = '';
+            PrepareHuman(false, 1, rand(RuSoldMinLevel,RuSoldMaxLevel));
+
+            un = CreateHuman;
+            PlaceUnitArea(un, RussianConvoy, false);
+        end;
+
+        vc_engine = 1;
+        vc_control = 1;
+        vc_weapon = 51;
+        vc_chassis = 22;
+
+        veh = CreateVehicle;     
+        PlaceUnitArea(veh, RussianConvoy, false);
+        SetCargo(veh, 1, 100);
+
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 3, rand(RuSoldMinLevel,RuSoldMaxLevel));
+
+        un = CreateHuman;
+        PlaceHumanInUnit(un, veh);
+
+        for i in FilterAllUnits([[f_side, 6], [f_and, [f_not, [f_class, 2]], [f_not,[f_class, 4]]]]) do ComAgressiveMove(i, 45, 46);
+        for i in FilterAllUnits([[f_side, 6], [f_class, 2]]) do ruPDepot = ComBuild(i, b_depot, 48, 55, 5);
+        for i in FilterAllUnits([[f_side, 6], [f_class, 4]]) do ComMoveXY(i, 39, 55);
+end;
+
+// Attacks
+Export function PrepareFirstAttack;
+var i, un;
+begin
+        uc_side = 5;
+        uc_nation = 3;
+
+        for i := 1 to 4 do
+        begin
+
+            hc_gallery = '';
+            hc_name = '';
+            PrepareHuman(false, 1, rand(RuSoldMinLevel,RuSoldMaxLevel));
+
+            un = CreateHuman;
+            PlaceUnitArea(un, RussianAttack, false);
+            ComAgressiveMove(un, 48, 14);
+            
+        end;
+
+        firstRussianAttack = 1;
+end;

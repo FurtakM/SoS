@@ -1,0 +1,122 @@
+{
+Map scripts: Nefarem
+
+    Status: 100%
+
+    Global variables:
+
+    '06_crates_1',  = 0 - low start resources in mission 09.
+    '06_crates_1',  = 1 - many start resources in mission 09.
+
+    '06_remoteVehs_1', = 0 - no additional remote vehicles in mission 08.
+    '06_remoteVehs_1', = 1 - additional remote vehicles in mission 08.
+
+    '06_KurtStatus_1', = 0 - probably killed, bad and expensive mercenariues in mission 12.
+    '06_KurtStatus_1', = 1 - escape with friendly attitude, better and cheaper mercenaries in mission 12.
+    '06_KurtStatus_1', = 2 - escape with enemy attitude, cheaper mercanries in mission 12.
+
+    '06_JoanStatus_1', = 0 - Joan die in this mission.
+    '06_JoanStatus_1', = 1 - Joan survive this mission.
+}
+
+Export JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone, Denis, DeltaDoctor;
+Export others, ape, tempCharles;
+Export Harisson, Joan, JoanStatus;
+Export HarrSupp1, HarrSupp2;
+Export Kurt, KurtStatus, readyToEscape;
+
+Export contactWithRussian;
+Export firstTower;
+
+Export timerStatus;
+Export needCrates, timeToEnd, strings;
+Export remoteVehiclesBuild;
+Export blockSpawn;
+
+Export unitLost;
+Export ruDestroyedBuildings;
+Export tamedApemans;
+Export disableHealAI;
+
+Export RuSolMinLevel, RuSolMaxLevel;  
+Export russianTanks, russianDamageTanks;
+
+Export cratesStatus;
+Export sendedConvoys;
+
+Export resources, firstCrateSpawn;
+
+Export debugMode;
+
+Export mission_prefix, mission_prefix_prev;
+
+Starting
+begin
+    Resetfog;
+    RandomizeAll;
+
+    SetBName(rudepo, 'sverdlov');
+
+    // Variables
+
+    debugMode = 0; // 0 - for player, 1 - for developers
+
+    mission_prefix := '06c_';
+    mission_prefix_prev := '06_';
+
+    contactWithRussian = 0; // 0 - dont contact, 1 - contact
+    firstTower = 0; // var block event after build control tower 0 - no build, 1 - build, 2 - remote veh first
+
+    resources = []; // resources on cargos from Delta
+
+    firstCrateSpawn := false; // first crate spawn
+
+    blockSpawn = 0; // 0 - new people can spawn, 1 - stop spawn new people because is cutscene in background
+
+    KurtStatus = 0; // 0 - no spawn, killed, 1 - escape with friendly attitude, 2 - escape with enemy attitude
+    readyToEscape = 0; // 0 - can't escape, 1  - can escape from map
+
+    JoanStatus = 0; // 0 - no spawn, die , 1 - survive
+
+    cratesStatus = 2; // 1 - many crates, 2 - rare crates
+
+    timerStatus = 1; // 0 - off, 1 - on
+    needCrates = [350, 500, 700][Difficulty]; // crates need to win
+    timeToEnd = 50$0; // time to end mission
+    remoteVehiclesBuild = 0; // 0 - no build, 1 - build
+
+    sendedConvoys = 0; // how many convoys escape map
+
+    tamedApemans = 0; // how many russian scientist tamed apemans
+
+    unitLost = 0;
+    ruDestroyedBuildings = [];
+    russianTanks = [];
+    russianDamageTanks = [];
+    disableHealAI = 0; 
+
+    strings = []; // table with strings to show
+
+
+    PrepareDifficulty;
+    PrepareNature;
+    PrepareRussian;
+    
+    PrepareVehicles;
+    PrepareHeroes;
+    PrepareOthers;
+    PreparePlayerApemans;
+
+end;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    for i in FilterAllUnits([[f_side, 1], [f_btype, b_depot]]) do SetResourceType(GetBase(i), 1, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_btype, b_depot]]) do SetResourceType(GetBase(i), 2, 9999);
+    If IsSelected(rudepo) then your_side = 3;
+    If IsSelected(JMM) then your_side = 1;
+end;

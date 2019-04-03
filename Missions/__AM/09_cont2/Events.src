@@ -1,0 +1,77 @@
+On BuildingStarted(b, eng) do
+begin
+if GetBType(b) = b_depot and not terminal then
+   begin
+   terminal := b;
+   SetBName(terminal, 'terminal');
+   end;
+End;
+
+On BuildingComplete(b) do
+var i;
+begin
+if GetSide(b) = 3 then
+   for i = 1 to 4 do
+       ru_rebuild := Delete(ru_rebuild, 1);
+End;
+
+On VehicleConstructed(veh, fac) do
+var i;
+begin
+if GetSide(veh) = 3 then
+   begin
+
+   if not GetWeapon(veh) in [ru_bulldozer, ru_crane, ru_cargo_bay] then
+      ru_force := ru_force ^ veh;
+
+   for i = 1 to 4 do
+       ru_produce_list := Delete(ru_produce_list, 1);
+
+   if GetWeapon(veh) = ru_bulldozer then
+      begin
+      CutTreeInArea(veh, cutTreeArea);
+      AddComMoveXY(veh, 170, 235);
+      end;
+
+   end;
+
+End;
+
+
+On Contact(s1, s2) do
+begin
+if (s1 = 1 and s2 = 2) or (s1 = 2 and s2 = 1) then
+   player_attacked_ar := true;
+if (s1 = 1 and s2 = 4) or (s1 = 4 and s2 = 1) then
+   YouLost('Traitor');
+End;
+
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+
+if un = terminal then
+   YouLost('Terminal');
+
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) then
+   begin
+
+   if GetBType(un) in [b_turret, b_oil_power] then
+      ru_rebuild := ru_rebuild ^ [GetBType(un), GetX(un), GetY(un), GetDir(un)];
+
+   if GetBType(un) = b_barracks then
+      ru_rebuild := ru_rebuild ^ [b_armoury, GetX(un), GetY(un), GetDir(un)];
+
+   end;
+
+if un in ru_force then
+   begin
+   ru_force := ru_force diff un;
+
+   if ru_force = 0 then
+      ru_can_attack := false;
+   end;
+
+End;

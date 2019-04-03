@@ -1,0 +1,473 @@
+// Start mission
+Every 1 do
+var i, gammaSquad, startX, startY;
+begin
+
+    gammaSquad = [Dickens, Woodruff, Knight, Claptopn, Campell];
+    startX = [46, 45, 44, 43, 42];
+    startY = [14, 12, 10, 8, 6];
+
+    CenterNowOnUnits(amvj);
+    ComMoveXY(amvj, 51, 26);
+    AddComMoveXY(amvj, 53, 23);
+    AddComMoveXY(amvj, 52, 19);
+
+    repeat
+        wait(0$1);
+        CenterNowOnUnits(amvj);
+    until GetX(amvj) = 52 AND GetY(amvj) = 19;
+
+    ComExitVehicle(JMM);
+    ComTurnUnit(Brown, JMM);
+    wait(0$01);
+    ComMoveXY(JMM, 46, 10);
+    AddComTurnUnit(JMM, Brown);
+    wait(0$4);
+    Say(JMM, 'D1-JMM-1');
+
+    if not dialogue_skipped then
+       begin
+
+       for i := 1 to gammaSquad do
+           begin
+           ComMoveXY(gammaSquad[i], startX[i], startY[i]);
+           AddComTurnUnit(gammaSquad[i], JMM);
+           end;
+
+       ComMoveXY(Lisa, 41, 4);
+       AddComTurnUnit(Lisa, JMM);
+
+       if Lisa = false and Bobby then
+          begin
+          ComMoveXY(Bobby, 41, 4);
+          AddComTurnUnit(Bobby, JMM);
+          end;
+
+       if Lisa = false and Bobby = false and Cyrus then
+          begin
+          ComMoveXY(Cyrus, 41, 4);
+          AddComTurnUnit(Cyrus, JMM);
+          end;
+
+       if Lisa = false and Bobby = false and Cyrus = false then
+          begin
+          ComMoveXY(RandomBeforeMission, 41, 4);
+          AddComTurnUnit(RandomBeforeMission, JMM);
+          end;
+
+       Say(Brown, 'D1-Brown-1');
+
+       Say(JMM, 'D1-JMM-2');
+       Say(Brown, 'D1-Brown-2');
+
+       ComTurnUnit(JMM, Woodruff);
+       Say(Woodruff, 'D1-FSol1-2');
+
+       ComTurnUnit(JMM, Dickens);
+       Say(Dickens, 'D1-Sol2-2');
+
+       if Lisa then
+          begin
+          ComTurnUnit(JMM, Lisa);
+          Say(Lisa, 'D1-Lisa-2');
+          Say(JMM, 'D1-JMM-3');
+          end;
+
+       if Bobby then
+          begin
+          ComTurnUnit(JMM, Bobby);
+          Say(Bobby, 'D1-Bobby-2');
+          Say(JMM, 'D1-JMM-3');
+          end;
+
+       if Cyrus then
+          begin
+          ComTurnUnit(JMM, Cyrus);
+          Say(Cyrus, 'D1-Cyrus-2');
+          Say(JMM, 'D1-JMM-3');
+          end;
+  
+       ComTurnUnit(JMM, Brown);
+       Say(JMM, 'D1-JMM-3a');
+
+       ComMoveXY(Brown, 38, 5);
+       AddComTurnUnit(Brown, JMM);
+       ComMoveXY(JMM, 40, 7);
+       AddComTurnUnit(JMM, Brown);
+
+       Say(Brown, 'D1-Brown-3');
+       SayRadio(Harisson, 'D1-Har-3');
+       Say(JMM, 'D1-JMM-4');
+       
+       SayRadio(Harisson, 'D1-Har-4');
+       Say(JMM, 'D1-JMM-5');
+       SayRadio(Harisson, 'D1-Har-5');
+       Say(JMM, 'D1-JMM-6');        
+       end;
+
+    InGameOff;
+
+    PrepareRussianConvoy;
+
+    ChangeMissionObjectives('M1');
+    SaveForQuickRestart;
+
+    timerStatus = 1;
+    startTimer = 1;
+    bonusAvalaible = 1;
+
+    wait(0$3);
+
+    DialogueOn;
+    Say(Campell, 'D9-Mech1-1');
+    Say(JMM, 'D9-JMM-1');
+    DialogueOff;
+
+end;
+
+// Factory + researcherd oil engine
+Every 0$1 trigger GetTech(47, 1) = state_researched and FilterAllUnits ([[f_side, 1], [f_type, unit_building], [f_btype, b_factory]]) > 0 do
+begin
+    if IsOk(Campell) then
+    begin
+        Say(Campell, 'D10-Mech1-1');
+    end
+    else
+    begin 
+        if FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, 1]]) diff [JMM] > 0 then
+        begin
+            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, 1]]) diff [JMM], 'D10-Mech1-1', 'D10-Mech1-1');
+        end
+        else
+        begin
+            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1]][1]) diff [JMM], 'D10-Mech1-1', 'D10-Mech1-1');
+        end;
+    end; 
+end;
+
+// Start upgrade bunker
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) > 0 and bunkerDialog = 0 do
+begin
+    if IsOK(Claptopn) then
+    begin
+        Say(Claptopn, 'D9b-Eng1-1');
+    end else
+    begin;
+        if FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, 1]]) diff [JMM] > 0 then
+        begin
+            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 2], [f_sex, 1]]) diff [JMM], 'D9b-Eng1-1', 'D9b-Eng1-11');
+        end else
+        begin
+            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1]]) diff [JMM], 'D9b-Eng1-1', 'D9b-Eng1-1');
+        end;
+    end;
+    if energyVDialog = 0 then EnergyDialog;
+end;
+
+// Delete mission objective about build oil mine and power
+Every 0$1 trigger buildOil = 1 and buildPower = 1 do ChangeMissionObjectives('M1a');
+
+// Spawn first attack
+Every 3$0 do
+begin
+    PrepareFirstAttack;
+end;
+
+// Fallback first attack
+Every 0$2 trigger FilterAllUnits([[f_side, 5], [f_type, unit_human], [f_not, [f_lives, 250]]]) > 0 and firstRussianAttack = 1 do
+var i;
+begin
+    firstRussianAttack = 2;
+
+    ComMoveXY(FilterAllUnits([[f_side, 5], [f_type, unit_human]]), 125, 98);
+    
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM, Brown, Lisa], 'DAtt1-Sol1-1', 'DAtt1-FSol1-1');
+    Say(JMM, 'DAtt1-JMM-1');
+
+    if Lisa then
+    begin
+        Say(Lisa, 'DAtt1a-Lisa-1');
+    end else
+    begin
+        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1]]) diff [JMM, Brown, Lisa], 'DAtt1a-Sol1-1', 'DAtt1-FSol1-1');
+    end;
+
+    Say(JMM, 'DAtt1a-JMM-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1]]) diff [JMM, Brown, Lisa], 'DAtt1b-Sol1-1', 'DAtt1a-Sol1-1');
+
+end;
+
+// Remove units from first attack
+Every 0$1 trigger firstRussianAttack = 2 do 
+var i;
+begin
+    enable;
+    for i in FilterUnitsInArea(RussianEscape, [[f_side, 5], [f_type, unit_human]]) do RemoveUnit(i);
+end;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 5]]) = 0 and firstRussianAttack = 2 do firstRussianAttack = 3;
+
+// Donaldson dialog
+Every 0$01 trigger timeToSupport = 0$00 do 
+begin
+    timerStatus = 4;
+    DialogueOn;
+    SayRadio(Donaldson, 'D2-Don-1');
+    Say(JMM, 'D2-JMM-1');
+    SayRadio(Donaldson, 'D2-Don-2');
+    Say(JMM, 'D2-JMM-2');
+    SayRadio(Donaldson, 'D2-Don-3');
+    DialogueOff;
+end;
+
+// Spawn Donaldson, Frank and squad
+Every 12$0 do
+var tmp; 
+begin
+    PrepareDonaldsonArmy;
+    CenterNowOnUnits(Donaldson);
+    
+    tmp = FilterAllUnits([[f_side, 4], [f_type, unit_human], [f_sex, 1], [f_class, 1]]) diff [Frank];
+
+    DialogueOn;
+    DialogRandom(tmp, 'D3-Sol1-1', 'D3-Sol1-1');
+    DialogRandom(FilterAllUnits([[f_side, 4], [f_type, unit_human], [f_sex, 1], [f_class, 3]]), 'D3-Sol2-1', 'D3-Sol2-1');
+    if Frank then Say(Frank, 'D3-Frank-1');
+
+    Say(Donaldson, 'D3-Don-1');
+    SayRadio(Donaldson, 'D3-Don-1a');
+    Say(JMM, 'D3-JMM-1');
+    SayRadio(Donaldson, 'D3-Don-2');
+    if FilterAllUnits([[f_side, 6], [f_type, unit_human]]) > 0 then
+    begin
+        Say(JMM, 'D3-JMM-2'); 
+        SayRadio(Donaldson, 'D3-Don-3');   
+        Say(JMM, 'D3-JMM-3'); 
+        if IsOK(Frank) then Say(Frank, 'D3-Frank-3');
+        DialogueOff;
+
+        if IsOK(Frank) then
+        begin
+            SetSide(Frank, 0);
+            ComMoveToArea(Frank, FrankSpot);
+            SaveCharacters(Frank, 'Frank');
+            Wait(0$3);
+            frankScoutBase = 1;
+            RemoveUnit(Frank);
+        end;
+
+    end else
+    begin
+        Say(JMM, 'D3-JMM-4');
+        DialogueOff;
+
+        if IsOK(Frank) then
+        begin
+            SetSide(Frank, 0);
+            ComMoveToArea(Frank, FrankSpot);
+            SaveCharacters(Frank, 'Frank');
+            Wait(0$3);
+            frankScoutBase = 1;
+            RemoveUnit(Frank);
+        end;
+
+    end;  
+end;
+
+// Coop attack with Donaldson
+Every 7$0 trigger GetSide(Donaldson) = 4 and IsOK(Donaldson) do
+begin
+     SayRadio(Donaldson, 'D3b-Don-1');
+     donaldsonCoopAttack = 1;
+end;
+
+// Save Donaldson
+Every 0$1 trigger saveDonaldson = 0 do
+var i, j;
+begin
+    enable;
+
+     for i in FilterAllUnits([[f_side, 4], [f_type, unit_human]]) do
+     begin
+          for j in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+          begin
+               If GetDistUnits(i, j) < 7 then
+               begin
+               
+                    saveDonaldson = 1;
+                    SetSide(FilterAllUnits([[f_side, 4], [f_type, unit_human]]), 1);
+
+               end;
+          end;
+     end;
+
+end;
+
+// Frank incomming
+Every 2$0 trigger saveDonaldson = 1 do 
+begin
+    uc_side = 4;
+    uc_nation = 1;
+
+    Frank = CreateCharacter('Frank');
+    PlaceUnitArea(Frank, FrankSpawn, false);
+
+    repeat
+        wait(0$1);
+
+        if not IsInUnit(JMM) and GetDistUnits(JMM, ambdept0) < 20 then
+           ComMoveXY(Frank, GetX(JMM), GetY(JMM))
+          else
+           ComMoveXY(Frank, 51, 15);
+    until GetDistUnits(Frank, JMM) < 10;
+
+    CenterNowOnUnits([JMM, Frank]);
+    DialogueOn;
+        Say(Frank, 'D3a-Frank-1');
+        if Lisa then
+        begin
+            Say(Lisa, 'D3a-Lisa-1');
+            Say(Frank, 'D3a-Frank-2');
+            Say(Lisa, 'D3a-Lisa-2');
+            Say(Frank, 'D3a-Frank-3');
+        end;
+        Say(JMM, 'D3a-JMM-3');
+    DialogueOff;
+    SetSide(Frank, 1);
+    InGameOn;
+    RevealFogArea(1, RussianBase);
+    CenterOnXY(93, 91);
+    wait(0$5);
+    InGameOff;
+end;
+
+// Russian build buldozer
+Every 12$0 trigger Difficulty = 2 or Difficulty = 3 do ComConstruct(rubfact0, 24, 1, 1, 53);
+
+// Ron ask
+Every 18$0 do 
+begin
+    SayRadio(Harisson, 'D4-Har-1');
+    Say(JMM, 'D4-JMM-1');
+    SayRadio(Harisson, 'D4-Har-2');
+
+    case query('Q1') of
+
+        1:begin
+            Say(JMM, 'D5-JMM-1');
+            SayRadio(Harisson, 'D5-Har-1');
+
+            timeToSupport = 10$0;
+            timerStatus = 2;
+            startTimer = 1;
+            harrAnswer = 1;
+        end;
+
+        2:begin
+            Say(JMM, 'D5-JMM-2');
+            SayRadio(Harisson, 'D5-Har-2');
+            
+            timeToSupport = 5$0;
+            timerStatus = 2;
+            startTimer = 1;
+            harrAnswer = 2;
+        end;
+
+        3:begin
+            Say(JMM, 'D5-JMM-3');
+            SayRadio(Harisson, 'D5-Har-3');
+
+            timeToSupport = 5$0;
+            timerStatus = 2;
+            startTimer = 1;
+            harrAnswer = 3;
+        end;
+
+    end;
+end;
+
+Every 0$01 trigger timerStatus = 2 and timeToSupport = 0$00 do 
+begin
+
+    timerStatus = 4;
+
+    if harrAnswer = 1 then
+    begin
+        PrepareHarrisonSupport(3);
+        wait(1$0);
+        SayRadio(Harisson, 'D7-Har-1');
+        ChangeMissionObjectives('M2');
+        timeToDestroyRuBase = 15$0 + [5$0, 4$0, 3$0][Difficulty];
+        startTimer = 1;
+        timerStatus = 3;
+    end;
+
+    if harrAnswer = 2 then
+    begin
+        PrepareHarrisonSupport(4);
+        wait(1$0);
+        SayRadio(Harisson, 'D7-Har-1');
+        ChangeMissionObjectives('M2');
+        timeToDestroyRuBase = 13$0 + [4$0, 4$0, 3$0][Difficulty];
+        startTimer = 1;
+        timerStatus = 3;
+    end;
+
+    if harrAnswer = 3 then
+    begin
+        PrepareHarrisonSupport(5);
+        wait(1$0);
+        SayRadio(Harisson, 'D7-Har-1');
+        ChangeMissionObjectives('M2');
+        timeToDestroyRuBase = 10$0 + [4$0, 3$0, 2$0][Difficulty];
+        startTimer = 1;
+        timerStatus = 3;
+    end;
+end;
+
+// Harrison rage
+Every 0$1 trigger timeToDestroyRuBase <= 4$00 and timerStatus = 3  do 
+begin
+    DialogueOn;
+    SayRadio(Harisson, 'D7a-Har-1');
+    DialogueOff;
+
+    ChangeMissionObjectives('M2a');
+end;
+
+// Lost command
+Every 0$1 trigger timeToDestroyRuBase <= 0$00 and timerStatus = 3 do 
+var tmp;
+begin
+    tmp = FilterAllUnits([f_side, 1]) diff [JMM];
+
+    saveDonaldson = 2;
+
+    DialogueOn;
+    if IsOK(Donaldson) then
+    begin
+        SayRadio(Harisson, 'D8-Har-1');
+    end else
+    begin
+        SayRadio(Harisson, 'D8-Har-1a');
+    end;
+    DialogueOff;
+
+    SetSide(tmp, 4);
+    ComAgressiveMove(tmp, 88, 89);
+    honor = 0;
+
+    wait(0$10);
+    YouLost('LostCommand');
+end;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 6], [f_type, unit_human]]) = 0 and baseReadyToBuild = 0 and bonusAvalaible = 1 do
+var i, tmp;
+begin
+    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, 1]]);
+
+    for i in tmp do 
+    begin
+        AddExperience(i, rand(1,4), 500);
+    end;
+end;

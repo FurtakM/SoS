@@ -1,0 +1,49 @@
+// MC_Log System
+// Created: 12-03-2018
+// Last update: 13-03-2018
+Export lines_counter, lines_break_limit, lines_break_type, show_line_index, tick_log;
+Export Function LogInit();
+begin
+enable_addtolog := isTest;
+lines_break_limit := 5;
+lines_break_type:= '---';
+lines_counter := 0;
+show_line_index := true;
+tick_log := true;
+
+AddToLog('----------SAND OF SIBERIA LOG----------');
+AddToLog('Map Name: ' & mission_name);
+AddToLog('Map Number: ' & mission_number);
+AddToLog('Difficulty: ' & Difficulty);
+AddToLog('---------------------------------------');
+End;
+
+Function Log(text);
+begin
+if show_line_index then
+   result := lines_counter;
+
+if tick_log then
+   result := result & ' T: ' & tick & ' ';
+
+AddToLog(result & text);
+lines_counter := lines_counter + 1;
+
+if lines_counter mod lines_break_limit = 0 then
+   AddToLog(lines_break_type);
+End;
+
+Export Function LogHuman(id);
+begin
+Log('Human Created. id: ' & id & '; side: ' & GetSide(id) & '; class: ' & GetClass(id) & '; ');
+End;
+
+Export Function LogVeh(id);
+begin
+Log('Vehicle Created. id: ' & id & '; side: ' & GetSide(id) & '; nation: ' & GetNation(id) & '; weapon: ' & GetWeapon(id) & '; ');
+End;
+
+Export Function LogEvent(event);
+begin
+Log('Event Executed. id: ' & event);
+End;

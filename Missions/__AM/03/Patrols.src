@@ -1,0 +1,164 @@
+// Patrol module
+Every 0$01 trigger ru_patrol and not prepare_siege and not send_attack_on_cornel do
+var un, i, j, enemy;
+begin
+enable;
+
+enemy := FilterAllUnits([f_enemy, 3]);
+
+for i = 1 to ru_patrol do
+    begin
+    un := ru_patrol[i];
+
+    if IsInArea(un, retreatArea) then
+       begin
+       if not ru_alert then
+          ru_alert := true;
+
+       if not See(1, un) then
+          SetLives(un, 1000);
+
+       ru_patrol := ru_patrol diff un;
+
+       ComEnterUnit(un, FindFreePlace(FilterAllUnits([[f_side, 3], [f_btype, b_armoury]])));
+       continue;
+       end;
+
+    if IsOk(un) and not HasTask(un) then
+       begin
+       for j = 1 to ru_firepoints_south[i] do
+           begin
+           AddComAgressiveMove(un, ru_firepoints_south[i][j][1], ru_firepoints_south[i][j][2]);
+           AddComWait(un, 0$02);
+           end;
+       end;
+
+    if GetLives(un) < 700 and not IsInArea(un, retreatArea) then
+       begin
+       ComMoveToArea(un, retreatArea);
+
+       if not ru_alert_xy then
+          ru_alert_xy := [GetX(un), GetY(un)];
+       end
+      else
+       if GetDistUnits(un, NearestUnitToUnit(enemy, un)) < 9 and GetLives(un) > 500 then
+          ComAttackUnit(un, NearestUnitToUnit(enemy, un));
+    end;
+
+End;
+
+// Alert!
+Every 0$01 trigger ru_alert and ru_alert_xy and not prepare_siege and not send_attack_on_cornel do
+var i, enemy;
+begin
+enable;
+
+if not ru_vehicles then
+   exit;
+
+enemy := FilterAllUnits([f_enemy, 3]);
+
+if ru_vehicles then
+   begin
+   for i in ru_vehicles do
+       begin
+       if IsOk(i) and GetDistUnits(i, NearestUnitToUnit(enemy, i)) < 9 then
+          ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+       if not HasTask(i) and IsOk(i) and GetDistUnitXY(i, ru_alert_xy[1], ru_alert_xy[2]) > 10 then
+          ComAgressiveMove(i, ru_alert_xy[1], ru_alert_xy[2]);
+       end;
+   end;
+
+End;
+
+// Reset Alert Coords
+Every 3$00 trigger ru_alert_xy and ru_alert and not InBattle(3) and not prepare_siege and not send_attack_on_cornel do
+var i;
+begin
+enable;
+ru_alert_xy := false;
+ru_alert := false;
+
+if ru_vehicles then
+   for i in ru_vehicles do
+       if IsOk(i) and GetDistUnitXY(i, 89, 36) > 10 then
+          ComMoveXY(i, 89, 36);
+End;
+
+// Forest
+Every 0$01 trigger ru_forest and not prepare_siege and not send_attack_on_cornel do
+var i, un, enemy;
+begin
+enable;
+
+enemy := FilterAllUnits([f_enemy, 3]);
+
+for i = 1 to ru_forest do
+    begin
+    un := ru_forest[i];
+
+    if IsInArea(un, retreatArea) then
+       begin
+
+       if not See(1, un) then
+          SetLives(un, 1000);
+
+       ru_forest := ru_forest diff un;
+
+       ComEnterUnit(un, FindFreePlace(FilterAllUnits([[f_side, 3], [f_btype, b_armoury]])));
+       continue;
+       end;
+
+    if GetLives(un) < 700 and not IsInArea(un, retreatArea) then
+       ComMoveToArea(un, retreatArea)
+      else
+       if GetDistUnits(un, NearestUnitToUnit(enemy, un)) < 9 and GetLives(un) > 500 then
+          ComAttackUnit(un, NearestUnitToUnit(enemy, un));
+    end;
+
+End;
+
+Every 0$10 trigger not send_attack_on_cornel do
+var i, filter;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+if filter then
+   for i in filter do
+       if GetLives(i) < 990 then
+          begin
+          ru_alert := true;
+          ru_alert_xy := [GetX(i), GetY(i)];
+          break;
+          end;
+End;
+
+// attack west base
+Every 0$30 trigger prepare_siege do
+var i, un, enemy, filter;
+begin
+filter := ru_vehicles ^ ru_forest ^ ru_patrol;
+enemy := FilterUnitsInArea(westBaseArea, [f_enemy, 3]);
+
+if filter and enemy then
+   repeat
+    wait(0$01);
+
+    for i in filter do
+        begin
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+        end;
+   until FilterUnitsInArea(westBaseArea, [f_enemy, 3]) = 0 or filter = 0;
+End;
+
+Every 0$03 trigger send_attack_on_cornel_base and FilterAllUnits([[f_side, 4], [f_btype, b_armoury]]) do
+var i;
+begin
+if not ru_cornel_attack then
+   exit;
+
+for i in ru_cornel_attack do
+    ComAgressiveMove(i, 258, 119);
+End;

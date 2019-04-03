@@ -1,0 +1,108 @@
+Every 0$1 trigger IsDead(Stolypin) do
+var i;
+begin
+     AIEnable = 0;
+     escapeAvalaible = 1;
+     InGameOn;
+     SetAttitude(3, 1, att_friend, false);
+     SetAttitude(6, 1, att_friend, false);
+     SetAttitude(5, 1, att_friend, false);
+     ChangeSideFog(3, 1);
+     CenterOnXY(97, 91);
+
+     ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+     wait(0$01);
+     ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 124, 98);
+     ComExitVehicle(FilterAllUnits([[f_side, 5], [f_type, unit_human]]));
+     wait(0$01);
+     ComMoveXY(FilterAllUnits([[f_side, 5], [f_type, unit_human]]), 124, 98);
+     ComExitVehicle(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
+     wait(0$01);
+     ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 124, 98);
+     ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 124, 98);
+
+     CenterOnXY(124, 98);
+
+end;
+
+Every 0$1 trigger FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 do FinishMission;
+
+Every 0$01 trigger escapeAvalaible = 1 do
+var i; 
+begin
+    enable;
+
+    for i in FilterAllUnits([f_side, 3]) do
+        If IsInArea(i, RussianEscape) then RemoveUnit(i);
+
+    for i in FilterAllUnits([f_side, 5]) do
+        If IsInArea(i, RussianEscape) then RemoveUnit(i);
+
+    for i in FilterAllUnits([f_side, 6]) do
+        If IsInArea(i, RussianEscape) then RemoveUnit(i);
+end;
+
+
+// Finish mission
+
+Export function FinishMission;
+var tmp;
+begin
+        SaveVariable(GetTech(tech_gatling, 1), 'GatlingInGamma');
+
+        if buildOil = 1 and buildPower = 1 then
+        begin
+                AddMedal('oil', 1);
+        end else
+        begin
+                if buildOil = 1 and buildPower = 0 then AddMedal('oil', -1);
+                if buildOil = 0 and buildPower = 1 then AddMedal('oil', -2);
+                if buildOil = 0 and buildPower = 0 then AddMedal('oil', -3);
+        end;
+
+        if lostCounter > 3 then begin AddMedal('deaths', -1);
+        end else begin AddMedal('deaths', 1); end;
+
+        if honor = 1 then begin AddMedal('honour', 1);
+        end else begin AddMedal('honour', -1); end;
+
+        GiveMedals('Main');
+
+        RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]));
+
+        SaveCharacters(JMM, mission_prefix&'JMM');
+        If IsOK(Bobby) then SaveCharacters(Bobby, mission_prefix&'Bobby');
+        If IsOK(Cyrus) then SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+        If IsOK(Lisa) then SaveCharacters(Lisa, mission_prefix&'Lisa');
+        If IsOK(Brown) then SaveCharacters(Brown, mission_prefix&'Brown');
+        If IsOK(Donaldson) then SaveCharacters(Donaldson, mission_prefix&'Donaldson');
+        If IsOK(Frank) then SaveCharacters(Frank, mission_prefix&'Frank');
+
+        SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Brown, Donaldson, Frank],'04_other_survivors');
+        SaveBase(GammBaseArea);
+
+        YouWin;
+
+end;
+
+Export function SaveBase(area);
+var i, gammaBase, buildings;
+begin
+
+    gammaBase = [];
+    buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building], [f_ok]]);
+
+    for i in buildings do
+    begin
+                if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
+                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                else
+                if GetBType(i) in [b_bunker] then
+                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+                else
+                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+    end;
+
+        SaveVariable(gammaBase,'GammaBase');
+
+end;

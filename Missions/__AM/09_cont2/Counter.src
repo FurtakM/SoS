@@ -1,0 +1,47 @@
+Every 0$01 trigger powell_want_sib and powell_want_sib_counter do
+var sib;
+begin
+enable;
+
+sib := 60-GetTerminalCargo();
+
+if sib < 0 then
+   sib := 0;
+
+display_strings := ['#Am09-1', sib, powell_want_sib_counter];
+powell_want_sib_counter := powell_want_sib_counter - 0$01;
+End;
+
+Every 0$1 trigger powell_want_sib_counter = 0$00 do
+display_strings := [];
+
+
+Every 0$01 trigger ru_force and debug do
+begin
+enable;
+display_strings := ru_force;
+End;
+
+// Crates
+Every 1$35 do
+var i, tmp;
+begin
+tmp := [0$33, 0$35, 0$41][Difficulty];
+i := 0;
+
+repeat
+ CreateCratesXYR(rand(1, 5), 75, 75, 20, true);
+ wait(tmp);
+ tmp := tmp + rand(0$3, 0$9);
+ i := i + 1;
+
+ if i mod 3 = 0 and jmm_in_ovsyenko then
+    begin
+    CreateCratesArea(rand(2, 5), cratesArea, true);
+    wait(rand(0$19, 0$21));
+    end;
+
+until tick > game_time;
+
+End;
+

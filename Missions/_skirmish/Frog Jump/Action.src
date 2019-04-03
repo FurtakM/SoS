@@ -11,29 +11,29 @@ case query('textdiff') of
 3: Difficulty := 3;
 end;
 
-case query('info') of
+case query('finfo') of
 1:;
 end;
 
 PrepareRussian;
 
-dial := FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Davidov;
+dial := FilterAllUnits([[f_side, 6], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff Davidov;
 
 ComMoveXY(dial[1], 202, 40);
 
 Wait(0$03);
 
-Say(Davidov, 'DD1');
+Say(Davidov, 'DDav-1');
 
 ComTurnUnit(dial[1], Davidov);
 ComTurnUnit(Davidov, dial[1]);
 
 CenterOnXY(202, 40);
 
-Say(dial[1], 'DV1');
-Say(Davidov, 'DD2');
-Say(dial[1], 'DV2');
-Say(Davidov, 'DD3');
+Say(dial[1], 'DRus-1');
+Say(Davidov, 'DDav-2');
+Say(dial[1], 'DRus-2');
+Say(Davidov, 'DDav-3');
 
 InGameOff;
 
@@ -42,23 +42,105 @@ Wait(0$0.3);
 ChangeMissionObjectives('C1');
 End;
 
+// player build lab
 Every 0$30 trigger FilterAllUnits([[f_side, 6], [f_btype, b_lab]]) do
 begin
-Say(Davidov, 'DD4');
+Say(Davidov, 'DDav-4');
+
+Wait(0$40);
+
+DialogueOn;
+SayRadio(Vervecken, 'Dver-Meet-1');
+Say(Davidov, 'DDav-Meet-1');
+SayRadio(Vervecken, 'Dver-Meet-2');
+DialogueOff;
+
+Wait([9$20, 7$20, 6$20][Difficulty]);
+legion_attacks_active := true;
 End;
 
-Every 0$02 trigger FilterAllUnits([[f_side, 6], [f_btype, b_lab_siberium]]) do
+// player build fac
+Every 0$02 trigger FilterAllUnits([[f_side, 6], [f_btype, b_factory]]) or tick > 10$00 do
 var dial;
 begin
-dial := FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Davidov;
+dial := FilterAllUnits([[f_side, 6], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff Davidov;
 
-Say(dial[1], 'DV3');
-Say(Davidov, 'DD5');
+Say(dial[1], 'DRus-3');
+Say(Davidov, 'DDav-5');
+Say(dial[1], 'DRus-4');
+Say(Davidov, 'DDav-6');
 
 ChangeMissionObjectives('C2');
+
+Wait(5$00);
+
+DialogueOn;
+
+SayRadio(Bagins, 'DBag-1');
+Say(Davidov, 'DDavB-1');
+SayRadio(Bagins, 'DBag-2');
+Say(Davidov, 'DDavB-2');
+SayRadio(Bagins, 'DBag-3');
+
+DialogueOff;
+
+alliance_attack_active := true;
+End;
+
+Every 0$1 trigger alliance_used_artifact_1 do
+begin
+DialogueOn;
+
+CenterNowOnXY(alliance_used_artifact_1[1], alliance_used_artifact_1[2]);
+Say(Davidov, 'DDav-Artifact1-1');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger alliance_used_artifact_2 do
+begin
+DialogueOn;
+
+CenterNowOnXY(alliance_used_artifact_2[1], alliance_used_artifact_2[2]);
+Say(Davidov, 'DDav-Artifact2-1');
+
+DialogueOff;
 End;
 
 
+// player destroyed artifact
+Every 0$01 trigger artifact_destroyed or (not FindArtifact(6) and not player_artifact_loaded) do
+YouLost('artifact_destroyed');
+
+Every 0$01 trigger IsDead(Davidov) do
+YouLost('dead');
+
+
+// WIN
+Every 0$3 trigger FilterAllUnits([f_side, 7]) = 0 do
+begin
+DialogueOn;
+
+if tick < [120$00, 100$00, 90$00][Difficulty] then
+   AddMedal('med1', 1)
+  else
+   AddMedal('med1', -1);
+
+if FilterAllUnits([f_side, 8]) then
+   AddMedal('med2', -1)
+  else
+   AddMedal('med2', 1);
+
+if player_used_sib_bomb then
+   AddMedal('med3', -1)
+  else
+   AddMedal('med3', 1);
+
+GiveMedals('MAIN');
+YouWin;
+
+DialogueOff;
+End;
 
 
 

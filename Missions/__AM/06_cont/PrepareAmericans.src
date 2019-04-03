@@ -1,0 +1,464 @@
+Export function PrepareHeroes;
+var veh;
+begin
+
+    uc_side = 1;
+    uc_nation = 1;
+    
+    JMM = PrepareUnit('JMM', true);
+    Harisson = PrepareUnit('Harisson', false);
+    DeltaDoctor = CreateCharacter('DeltaDoctor');
+
+    veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);
+
+    if veh > 0 then begin PlaceHumanInUnit(JMM, veh[1]);
+    end else begin PlaceUnitArea(JMM, PlayerSpawn, false); end;
+
+    if LoadVariable('LisaIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Lisa = PrepareUnit('Lisa', true);
+
+        if veh > 0 then begin PlaceHumanInUnit(Lisa, veh[1]);
+        end else begin PlaceUnitArea(Lisa, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('BobbyIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Bobby = PrepareUnit('Bobby', true);
+        
+        if veh > 0 then begin PlaceHumanInUnit(Bobby, veh[1]);
+        end else begin PlaceUnitArea(Bobby, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('CyrusIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Cyrus = PrepareUnit('Cyrus', true);
+        
+        if veh > 0 then begin PlaceHumanInUnit(Cyrus, veh[1]);
+        end else begin PlaceUnitArea(Cyrus, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('FrankIn06', 0) = 1 then
+    begin
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);
+        Frank = PrepareUnit('Frank', true);
+
+        if veh > 0 then begin PlaceHumanInUnit(Frank, veh[1]);
+        end else begin PlaceUnitArea(Frank, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('BrownIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Brown = PrepareUnit('Brown', true);
+        
+        if veh > 0 then begin PlaceHumanInUnit(Brown, veh[1]);
+        end else begin PlaceUnitArea(Brown, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('DonaldsonIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Donaldson = PrepareUnit('Donaldson', true);
+        
+        if veh > 0 then begin PlaceHumanInUnit(Donaldson, veh[1]);
+        end else begin PlaceUnitArea(Donaldson, PlayerSpawn, false); end;
+    end;
+
+    if LoadVariable('GladstoneIn06', 0) = 1 then
+    begin  
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        Gladstone = PrepareUnit('Gladstone', true);
+        
+        if veh > 0 then begin PlaceHumanInUnit(Gladstone, veh[1]);
+        end else begin PlaceUnitArea(Gladstone, PlayerSpawn, false); end;
+    end;
+
+end;
+
+Export function PrepareVehicles;
+var i, j, veh, vehicles, cargoList;
+begin
+    vehicles = LoadVariable('06_VehiclesIn06_1', []);
+    resources = LoadVariable('06_ResourcesInCargo06_1', []);
+    cargoList = [];
+
+    uc_side = 1;
+
+    if vehicles > 0 then
+    begin
+
+        for i := 1 to vehicles do
+        begin
+            uc_nation = vehicles[i][1];
+            vc_chassis = vehicles[i][2];
+            vc_engine = vehicles[i][3];
+            vc_control = vehicles[i][4];
+            vc_weapon = vehicles[i][5];
+            vc_fuel_battery = 40;
+
+            veh = CreateVehicle;
+            SetDir(veh, 3);
+            PlaceUnitArea(veh, PlayerSpawn, false);
+        end;
+
+        cargoList = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_weapon, us_cargo_bay]]);
+
+        if cargoList > 0 then
+          for i = 1 to cargoList do
+          begin
+             if resources > 0 then
+             begin
+                   AddCargo(cargoList[i], 1, resources[i][1]);
+                   AddCargo(cargoList[i], 2, resources[i][2]);
+                   AddCargo(cargoList[i], 3, resources[i][3]);
+             end;
+          end;
+
+    end;
+
+end;
+
+Export function PrepareOthers;
+var i, veh;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    others = CreateCharacterSet('OthersIn06');
+
+    for i in others do 
+    begin
+        veh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]); 
+
+        if veh > 0 then begin PlaceHumanInUnit(i, veh[1]);
+        end else begin PlaceUnitArea(i, PlayerSpawn, false); end;
+    end;
+
+end; 
+
+Export function PreparePlayerApemans;
+var i, veh;
+begin
+    uc_side = 1;
+    uc_nation = 0;
+
+    ape = CreateCharacterSet('ApeIn06');
+
+    for i in ape do PlaceUnitArea(i, PlayerSpawn, false);
+
+end; 
+
+Export function PrepareDenis;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    Denis = PrepareUnit('Denis', true);
+    PlaceUnitArea(Denis, DenisSpawn, false);
+    SetClass(Denis, 4);
+    SetLives(Denis, 750);
+end;
+
+
+Export function HarrisonSupport;
+var un, veh;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    vc_engine = 1;
+    vc_control = 1;
+    vc_weapon = [4, 4, 2][Difficulty];
+    vc_chassis = 2;
+
+    veh = CreateVehicle;
+    SetDir(veh, 2);
+    PlaceUnitArea(veh, HarrisonSupportArea, false);
+    SetFuel(veh, 50);
+
+    hc_class := 2;
+    hc_sex := sex_male;
+    hc_gallery := 'SecondCharsGal';
+    hc_face_number := 52;
+    hc_name := 'Craig Brown';
+    hc_attr := [10, 10];
+    hc_basic_skills := [0, 2, 0, 0];
+    hc_skills := [2, 3, 0, 0];
+
+    HarrSupp1 = CreateHuman;
+    PlaceHumanInUnit(HarrSupp1, veh);
+
+    vc_engine = 1;
+    vc_control = 1;
+    vc_weapon = [4, 2, 2][Difficulty];
+    vc_chassis = 2;
+
+    veh = CreateVehicle;
+    SetDir(veh, 2);
+    PlaceUnitArea(veh, HarrisonSupportArea, false);
+    SetFuel(veh, 50);
+
+    hc_class := 1;
+    hc_sex := sex_female;
+    hc_gallery := 'SecondCharsGal';
+    hc_face_number := 45;
+    hc_attr := [11, 10];
+    hc_name := 'Ingrid Jonsson';
+    hc_basic_skills := [1, 1, 0, 0];
+    hc_skills := [3, 1, 1, 0];
+
+    HarrSupp2 = CreateHuman;
+    PlaceHumanInUnit(HarrSupp2, veh);
+
+end;
+
+Export function PrepareJoan;
+var i, j, tmp, rnd;
+begin
+    j = 0;
+
+    repeat
+        wait(0$1);
+        for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
+        begin
+            if NOT FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building], [f_occupied]], [f_dist, i, 25]]) AND GetDistUnits(i, JMM) < 15 then
+            begin
+                tmp = i;
+                j = 1;
+            end;
+        end;
+
+    until j = 1;
+    
+    blockSpawn = 1;
+    uc_side = 4;
+
+    Joan = PrepareUnit('Joan', false);
+    PlaceUnitXYR(Joan, GetX(tmp), GetY(tmp), 5, true);
+    SetLives(Joan, 250);
+
+    InGameOn;
+    CenterNowOnUnits(Joan);
+    wait(0$2);
+    ComExitVehicle(tmp);
+    ComExitBuilding(tmp);
+    wait(0$1);
+    ComMoveUnit(tmp, Joan);
+    wait(0$2);
+    DialogueOn;
+
+    if tmp = JMM then
+    begin
+        ComTurnUnit(JMM, Joan);
+        Say(JMM, 'D5b-JMM-1');
+        DialogueOff;
+        SetLives(Joan, 500);
+        ComTurnUnit(Joan, JMM);
+        ComTurnUnit(JMM, Joan);
+        wait(0$1);
+        DialogueOn;
+        Say(Joan, 'D5b-Joan-1');
+        Say(JMM, 'D5b-JMM-2');
+        Say(Joan, 'D5b-Joan-2');
+        Say(JMM, 'D5b-JMM-3');
+        Say(Joan, 'D5b-Joan-3');
+        DialogueOff;
+    end else
+    begin
+        ComTurnUnit(tmp, Joan);
+        Say(tmp, 'D5a-Sol1-1');
+        DialogueOff;
+        SetLives(Joan, 500);
+        ComTurnUnit(Joan, tmp);
+        ComTurnUnit(tmp, Joan);
+        wait(0$1);
+        DialogueOn;
+        Say(Joan, 'D5a-Joan-1');
+        Say(tmp, 'D5a-Sol1-2');
+        Say(Joan, 'D5a-Joan-2');
+        Say(tmp, 'D5a-Sol1-3');
+        Say(Joan, 'D5a-Joan-3');
+        Say(tmp, 'D5a-Sol1-4');
+        DialogueOff;
+
+        ComExitVehicle(JMM);
+        ComExitBuilding(JMM);
+        wait(0$1);
+        repeat
+            wait(0$1);
+            ComMoveUnit([Joan, tmp], JMM);
+        until GetDistUnits(Joan, JMM) < 5;
+
+        ComTurnUnit(Joan, JMM);
+        ComTurnUnit(JMM, Joan);
+        wait(0$1);
+        DialogueOn;
+        Say(Joan, 'D5a-Joan-4');
+        Say(JMM, 'D5a-JMM-4');
+        Say(Joan, 'D5a-Joan-5');
+        Say(JMM, 'D5a-JMM-5');
+        Say(Joan, 'D5a-Joan-6');
+        DialogueOff;
+    end;
+
+    DialogueOn;
+    Say(JMM, 'D6-JMM-1');
+    Say(Joan, 'D6-Joan-1');
+    Say(JMM, 'D6-JMM-2');
+    Say(Joan, 'D6-Joan-2');
+    Say(JMM, 'D6-JMM-3');
+    Say(Joan, 'D6-Joan-3');
+    Say(JMM, 'D6-JMM-4');
+
+    DialogueOff;
+    InGameOff;
+    SetSide(Joan, 1);
+
+    ChangeMissionObjectives('MJ');
+    JoanStatus = 1;
+    blockSpawn = 0;
+
+end;
+
+Export function PrepareRandoms(number);
+var un;
+begin
+
+    repeat
+        wait(0$7);
+    until blockSpawn = 0;
+
+    uc_side = 1;
+    uc_nation = 1;
+
+    InitHc;
+
+    if number = 1 then
+    begin
+        hc_class := 1;
+        hc_sex := sex_male;
+        hc_gallery := 'AmGalRemake';
+        hc_face_number := 7;
+        hc_name := 'Bobby Jordan';
+        hc_attr := [9, 11];
+        hc_basic_skills := [1, 0, 0, 1];
+        hc_skills := [2, 1, 1, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        wait(0$1);
+        CenterNowOnUnits(un);
+        DialogueOn;
+        Say(un, 'D11b-Sol3-1');
+        Say(JMM, 'D11b-JMM-1');
+        DialogueOff;
+    end;
+
+    if number = 2 then
+    begin
+        hc_class := 3;
+        hc_sex := sex_male;
+        hc_gallery := 'SecondCharsGal';
+        hc_face_number := 55;
+        hc_name := 'George McCarthy';
+        hc_attr := [11, 10];
+        hc_basic_skills := [0, 0, 2, 0];
+        hc_skills := [1, 2, 3, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        CenterNowOnUnits(un);
+        wait(0$1);
+        DialogueOn;
+        Say(un, 'D11d-Sol4-1');
+        Say(JMM, 'D11d-JMM-1');
+        DialogueOff;
+    end;
+
+    if number = 4 then
+    begin
+        hc_class := 3;
+        hc_sex := sex_female;
+        hc_gallery := 'SecondCharsGal';
+        hc_face_number := 46;
+        hc_name := 'Sylvia Creak';
+        hc_attr := [10, 9];
+        hc_basic_skills := [0, 1, 1, 1];
+        hc_skills := [1, 3, 1, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        CenterNowOnUnits(un);
+        wait(0$1);
+        DialogueOn;
+        Say(un, 'D11e-FSol4-1');
+        DialogueOff;
+    end;
+
+    if number = 5 then
+    begin
+        hc_class := 1;
+        hc_sex := sex_female;
+        hc_gallery := 'SecondCharsGal';
+        hc_face_number := 37;
+        hc_name := 'Margherite Simpson';
+        hc_attr := [11, 10];
+        hc_basic_skills := [1, 1, 0, 0];
+        hc_skills := [1, 1, 1, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        CenterNowOnUnits(un);
+        wait(0$1);
+        DialogueOn;
+        Say(un, 'D11c-FSol3-1');
+        Say(JMM, 'D11c-JMM-1');
+        DialogueOff;
+    end;
+ 
+    if number = 6 then
+    begin
+        hc_class := 1;
+        hc_sex := sex_male;
+        hc_gallery := 'AmGalRemake';
+        hc_face_number := 1;
+        hc_name := 'Charles Brown';
+        hc_attr := [12, 11];
+        hc_basic_skills := [2, 0, 0, 0];
+        hc_skills := [3, 0, 1, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        CenterNowOnUnits(un);
+        wait(0$1);
+        DialogueOn;
+        Say(un, 'D4-Sol1-5');
+        DialogueOff;
+        tempCharles = un;
+    end;
+
+    if number = 7 then
+    begin
+        hc_class := 1;
+        hc_sex := sex_female;
+        hc_gallery := 'AmGalRemake';
+        hc_face_number := 2;
+        hc_name := 'Johanna Holland';
+        hc_attr := [10, 10];
+        hc_basic_skills := [1, 0, 0, 1];
+        hc_skills := [1, 0, 0, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn, true);
+        CenterNowOnUnits(un);
+        wait(0$1);
+        DialogueOn;
+        Say(un, 'D11a-FSol2-1');
+        DialogueOff;
+    end;
+
+end;

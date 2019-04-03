@@ -1,0 +1,175 @@
+Export Function PrepareArabianTroops(amount, skill, area);
+var i, un, tmp;
+begin
+InitHc;
+InitUc;
+
+uc_side := 2;
+uc_nation := 2;
+
+if not amount then
+   exit;
+
+for i = 1 to amount do
+    begin
+    PrepareHuman(false, 1, skill);
+    un := CreateHuman;
+    tmp := Insert(tmp, 1, un);
+    PlaceUnitArea(un, area, false);
+
+    if i mod 2 = 0 then
+       SetTag(un, 11);
+    end;
+
+result := tmp;
+End;
+
+Export ar_forces, ap_killers;
+// allow arabs attack
+Every 0$1 trigger Delta do
+var i, timer, more_troops, skill, eng, un, veh, force;
+begin
+more_troops := false;
+skill := [3, 4, 5][Difficulty];
+timer := [5$00, 4$00, 3$00][Difficulty];
+force := [];
+ar_forces := []; // global array force lol
+ap_killers := []; // gelwe & owchyba
+
+Wait(timer);
+
+if Denis and GetSide(Denis) = 4 then
+   Wait(0$45);
+
+// add more time
+if FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]) then
+   begin
+   Wait(1$25); // we need more troops
+   more_troops := true;
+   end;
+
+if more_troops then
+   begin
+   force := PrepareArabianTroops([4, 5, 6][Difficulty], skill, arArea2);
+
+   // add russian tank
+   veh := PrepareTank(2, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_heavy_machine_gun, ru_gatling_gun][Difficulty], 90);
+   SetDir(veh, 4);
+   PlaceUnitArea(veh, arArea1, false);
+
+   uc_side := 2;
+   uc_nation := 2;
+
+   PrepareHuman(false, 1, skill);
+   un := CreateHuman;
+   PlaceHumanInUnit(un, veh);
+
+   force := force ^ un;
+   end
+  else
+   begin
+   force := PrepareArabianTroops([3, 4, 5][Difficulty], skill, arArea2);
+   end;
+
+if force then
+   ar_forces := force;
+
+repeat
+ wait(0$01);
+until FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0;
+
+Wait(timer);
+
+// more nazi terrorist from Sosnowiec
+force := PrepareArabianTroops([5, 6, 6][Difficulty], skill, [arArea1, arArea2][rand(1,2)]);
+
+// tricky eng
+if Difficulty > 1 and Delta then
+   begin
+   uc_side := 2;
+   uc_nation := 2;
+
+   PrepareHuman(false, 2, skill);
+   eng := CreateHuman;
+   PlaceUnitArea(eng, arArea1, false);
+
+   Wait(3);
+
+   AddComEnterUnit(eng, Delta);
+   end;
+
+if force then
+   ar_forces := force;
+
+repeat
+ wait(0$01);
+
+ if eng then
+    if GetSide(Delta) = 2 and IsOk(eng) and not IsInUnit(eng) then
+       ComEnterUnit(eng, Delta);
+
+until FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0;
+
+Wait(2$00);
+
+ap_killers := PrepareArabianTroops([1, 2, 2][Difficulty], skill, arArea1);
+
+Wait(timer*2);
+
+// last attack
+ar_forces := PrepareArabianTroops([5, 6, 7][Difficulty], skill, arArea1) ^ PrepareArabianTroops([3, 4, 4][Difficulty], skill, arArea2);
+End;
+
+
+Every 0$03 trigger ar_forces do
+var i, target;
+begin
+enable;
+
+if not ar_forces then
+   exit;
+
+if Delta then
+   target := Delta
+  else
+   target := JMM;
+
+for i in ar_forces do
+    begin
+    if GetDistUnits(i, target) > 30 then
+       ComAgressiveMove(i, GetX(target), GetY(target))
+      else
+       Attack(i, FilterAllUnits([f_enemy, 2]));
+    end;
+End;
+
+// apeman killers
+Every 0$01 trigger ap_killers do
+var filter, i, target;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 0], [f_class, class_apeman]]);
+
+if not filter then
+   begin
+   ar_forces := ar_forces ^ ap_killers;
+   ap_killers := [];
+   exit;
+   end;
+
+for i in ap_killers do
+    begin
+
+    if not IsOk(i) then
+       continue;
+
+    if not HasTask(i) then
+       target := NearestUnitToUnit(filter, i);
+
+    if target then
+       ComAttackUnit(i, target);
+
+    end;
+
+End;

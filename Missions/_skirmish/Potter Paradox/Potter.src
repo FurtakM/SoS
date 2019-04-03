@@ -1,0 +1,142 @@
+Export Function Game;
+var i, val, areas, wave;
+begin
+
+areas := [north_west_1, west_2, south_west_3, north_4, east_5, south_east_6];
+val := [10, 20, 30][Difficulty];
+wave := 1;
+
+while (game_over = false) do
+ begin
+
+ repeat
+  begin
+  Wait(0$01);
+  wave_time := wave_time + 0$01;
+  end
+ until FilterAllUnits([f_side, 7]) < 10 or wave_time >= 10$00;
+
+ wave_time := 0$00;
+ Wait(2$30);
+
+ if not ignore_wave then
+    begin
+
+    for i = 1 to wave do
+        begin
+        SpawnPotter(val*i, areas[i mod 6 + 1]);
+        Wait(0$10);
+        end;
+
+    wave := wave + 1;
+    end
+   else
+    ignore_wave := false;
+ end;
+
+End;
+
+Export Function SpawnPotter(val, area);
+var i, un, class;
+begin
+uc_side := 7;
+uc_nation := 2;
+
+InitHc();
+
+hc_gallery := '';
+//hc_gallery := 'potter';
+//hc_face_number := 2;
+hc_importance := 0;
+//hc_name := 'George Potter';
+hc_name := '';
+hc_attr := [10+(tick div 10$00), 10+(tick div 10$00)];
+
+for i = 1 to val do
+    begin
+
+    if i mod 9 = 0 then
+       class := class_apeman_kamikaze
+    else
+     if i mod 4 = 0 then
+        class := class_apeman_soldier
+       else
+        class := class_apeman;
+
+    if i mod 33 = 0 then
+       begin
+       vc_chassis := ar_half_tracked;
+       vc_control := control_apeman;
+       vc_engine := engine_combustion;
+       vc_weapon := [ar_rocket_launcher, ar_gun, ar_selfpropelled_bomb][rand(1,2)];
+       un := CreateVehicle;
+       end
+      else
+       begin
+       PrepareHuman(sex_male, class, 10);
+       un := CreateHuman;
+       end;
+
+    PlaceUnitArea(un, area, false);
+    EffectTeleport(GetX(un), GetY(un));
+    end;
+End;
+
+// Attack script
+Every 0$0.3 trigger alert and not game_over do
+var i, list, enemy;
+begin
+enable;
+
+list := FilterAllUnits([f_side, 7]);
+
+if not list then
+   exit;
+
+for i in list do
+    begin
+    enemy := FilterAllUnits([[f_enemy, 7], [f_distxy, GetX(i), GetY(i), 15]]);
+
+    if not enemy then
+       enemy := FilterAllUnits([[f_enemy, 7], [f_distxy, GetX(i), GetY(i), 30]]);
+
+    if not enemy then
+       enemy := FilterAllUnits([[f_enemy, 7], [f_distxy, GetX(i), GetY(i), 50]]);
+
+    if not enemy then
+       enemy := FilterAllUnits([f_enemy, 7]);
+
+    if enemy then
+       Attack(i, enemy);
+    end;
+End;
+
+Function Attack(unit, enemy_list);
+var target, targets_list;
+begin
+if not unit then
+   exit;
+
+targets_list := [];
+
+{
+target := UnitFilter(enemy_list, [[f_lives, 250], [f_type, unit_vehicle], [f_empty]]);
+
+if target and not IsInUnit(unit) then
+   begin
+   ComEnterUnit(unit, NearestUnitToUnit(target, unit));
+   exit;
+   end;}
+
+targets_list := [UnitFilter(enemy_list, [[f_type, unit_human], [f_not, [f_inside]]]),
+                 UnitFilter(enemy_list, [f_type, unit_vehicle]),
+                 UnitFilter(enemy_list, [[f_type, unit_building], [f_not, [f_empty]]]),
+                 enemy_list
+                 ];
+
+for target in targets_list do
+    begin
+    if target then
+       ComAttackUnit(unit, NearestUnitToUnit(target, unit));
+    end;
+End;

@@ -1,0 +1,390 @@
+Export ar1, ar2, ar_force;
+Export Jan, Huan;
+Export function PrepareArabian;
+var un, i;
+begin
+
+i = 0;
+ar1 = 2;
+ar2 = 5;
+
+
+// --------------------------- //
+
+uc_side = 5; // arabian (5)
+uc_nation = 2; // nat_arabian
+
+// Jan von Schekendeck
+hc_skills = [4, 5, 2, 3];
+hc_sex = sex_male;
+hc_gallery = 'sandar';
+hc_face_number = 22;
+hc_class = 1;
+hc_name = 'Jan von Schekendeck';
+
+Jan = CreateHuman;
+PlaceHumanInUnit(Jan, ar_deps); // south
+
+// Huan Job
+hc_skills = [1, 5, 3, 5];
+hc_sex = sex_male;
+hc_gallery = '';
+hc_class = 2;
+hc_name = 'Huan Job';
+
+Huan = CreateHuman;
+PlaceUnitXY(Huan, 108, 170, false);
+
+ar_force = [];
+
+Repeat
+begin
+hc_class = 2;
+hc_name = '';
+hc_gallery = '';
+hc_sex = Rand(sex_male, sex_female);
+hc_skills = [Rand(1,3), Rand(3,5), Rand(0,3), Rand(1,3)];
+
+un = CreateHuman;
+PlaceHumanInUnit(un, ar_deps);
+
+ar_force = ar_force ^ un;
+i = i + 1;
+end until i = 3;
+
+
+for i = 1 to 3 do
+begin
+hc_class := 1;
+un := CreateHuman;
+PlaceHumanInUnit(un, ar_bar1);
+end;
+
+for i = 1 to 2 do
+begin
+hc_class := 1;
+PlaceHumanInUnit(CreateHuman, FilterAllUnits([[f_side, 5], [f_btype, b_bunker]])[i]);
+end;
+
+End;
+
+Export Collecter;
+Export function PrepareEng;
+begin
+uc_side = 5;
+uc_nation = 2;
+
+hc_class = 2;
+hc_name = '';
+hc_gallery = '';
+
+Collecter = CreateHuman;
+PlaceUnitXY(Collecter, 87, 150, false);
+end;
+
+Every 0$02 trigger Collecter do
+var skr, p;
+begin
+
+     enable;
+
+     skr = GetListOfCratesInArea(crat_coll);
+
+     p = 1;
+
+     while p < skr do
+     begin
+     AddComCollect(collecter, skr[p], skr[p+1]);
+     p = p + 2;
+     end;
+
+
+
+end;
+
+
+
+
+Export function SetArabianAI;
+var engs;
+begin
+
+engs := FilterAllUnits([[f_side, 5], [f_class, 2]]);
+
+ComExitBuilding(engs);
+AddComBuild(engs, b_armoury, 91, 132, 2);
+End;
+
+
+{Function HuanWork;
+var hex, k, turn;
+begin
+hex = [108,170, 110,168, 113,166, 117,170, 117,174, 113,173];
+turn = [108,166, 113,164, 119,170, 119,175, 112,175];
+
+k = 1;
+
+repeat
+begin
+ComMoveXY(huan, hex[k], hex[k+1]);
+Wait(0$03);
+AddComTurnXY(huan, turn[k], turn[k+1]);
+Wait(0$30);
+k = k + 2;
+If k >= 11 then
+k = 1;
+end until not IsOk(Huan);
+end; }
+
+Every 0$01 trigger CanRepair do
+var i, b, engs, un, ar_bul, hurts;
+begin
+enable;
+
+ar_bul = FilterAllUnits([[[f_side, ar2], [f_type, unit_building], [f_not,[f_lives, 1000]]]]);
+engs = UnitFilter(ar_force, [[f_side, 5],[f_lives, 1000], [f_class, 2]]);
+hurts = UnitFilter(ar_force, [[f_side, 5], [f_not, [f_lives, 1000]]]);
+
+for i = 1 to engs do
+    begin
+    if engs[i] in hurts then
+       begin
+       ComEnterUnit(engs[i], ar_deps);
+       end
+        else
+       if not HasTask(engs[i]) then
+          begin
+          if ar_bul = 0 then
+             begin
+             if not IsInUnit(engs[i]) then
+                ComEnterUnit(engs[i], ar_deps);
+             end
+              else
+               begin
+               if IsInUnit(engs[i]) then
+                  ComExitBuilding(engs[i])
+                   else
+                    ComRepairBuilding(engs[i], ar_bul[1]);
+               end;
+          end;
+    end;
+End;
+
+
+
+
+Export function CameraPlaced;
+begin
+PlaceSeeing(66, 122, 2, 8);
+PlaceSeeing(64, 99, 2, 8);
+PlaceSeeing(97, 111, 2, 8);
+PlaceSeeing(118, 113, 2, 8);
+PlaceSeeing(139, 157, 2, 8);
+PlaceSeeing(75, 86, 2, 8);
+PlaceSeeing(109, 143, 2, 10);
+end;
+
+
+
+
+
+// ---------------------------- //
+// ARABIAN 8 //
+Export Gali, Mike, Jenna, Hubert, apeman1;
+Export function PrepareArabianInNorth;
+var un, i;
+begin
+
+uc_side = 8;
+uc_nation = 2;
+
+// Louis Gali
+hc_name = 'Louis Gali';
+hc_attr = [10, 12];
+hc_basic_skills := [1, 2, 0, 0];
+hc_skills = [3, 5, 1, 0];
+hc_class = 2;
+hc_sex = sex_male;
+hc_gallery = 'sandar';
+hc_face_number = 7;
+
+Gali = CreateHuman;
+PlaceUnitXY(Gali, 139, 22, false);
+
+// Mike Turssen
+hc_name = 'Mike Turrsen';
+hc_attr = [9, 10];
+hc_basic_skills := [0, 1, 2, 0];
+hc_skills = [0, 1, 4, 2];
+hc_class = 3;
+hc_sex = sex_male;
+hc_gallery = 'sandar';
+hc_face_number = 23;
+
+Mike = CreateHuman;
+PlaceUnitXY(Mike, 142, 23, false);
+
+ComTurnUnit(Mike, Gali);
+ComTurnUnit(Gali, Mike);
+
+
+// Hubert Langer
+hc_name = 'Nicolas Vercken';
+hc_attr = [12, 10];
+hc_basic_skills := [1, 0, 0, 2];
+hc_skills = [4, 1, 1, 2];
+hc_class = 1;
+hc_sex = sex_male;
+hc_gallery = 'sandar';
+hc_face_number = 8;
+
+Hubert = CreateHuman;
+PlaceUnitXY(Hubert, 132, 27, false);
+ComTurnXY(Hubert, 132, 30);
+
+for i = 1 to 2 do
+begin
+hc_class = 2;
+hc_name = '';
+hc_gallery = '';
+hc_attr = [Rand(9,12), Rand(10,11)];
+hc_sex = Rand(sex_male, sex_female);
+hc_basic_skills := [0, 0, 0, 0];
+hc_skills = [Rand(0, 2), Rand(2, 3), Rand(0, 1), Rand(0, 2)];
+
+un = CreateHuman;
+PlaceHumanInUnit(un, ar_depe);
+end;
+
+// Jenna Matover
+hc_name = 'Jenna Matover';
+hc_attr = [10, 10];
+hc_basic_skills := [0, 1, 0, 2];
+hc_skills = [1, 3, 2, 5];
+hc_class = 4;
+hc_sex = sex_female;
+hc_gallery = 'sandar';
+hc_face_number = 24;
+
+Jenna = CreateHuman;
+PlaceHumanInUnit(Jenna, ar_lab1);
+
+// Apeman
+uc_nation = 0;
+uc_side = 8;
+
+hc_agressivity = Rand(0, 20);
+hc_gallery = '';
+hc_name = 'Bobo';
+hc_class = class_apeman;
+hc_attr = [Rand(11,13),Rand(10,11)];
+hc_sex = sex_male;
+hc_skills = [2,0,0,0];
+
+apeman1 = CreateHuman;
+PlaceHumanInUnit(apeman1, ar_lab1);
+end;
+
+
+
+Export Rick;
+Export function PrepareRick;
+begin
+uc_side = 8;
+uc_nation = 2;
+
+hc_gallery = 'sandar';
+hc_face_number = 11;
+hc_name = 'Rick Hoft';
+hc_basic_skills := [0, 2, 1, 3];
+hc_skills = [1, 3, 3, 6];
+hc_class = 4;
+hc_sex = sex_male;
+hc_attr = [10,11];
+
+Rick = CreateHuman;
+
+
+hc_basic_skills := [0,0,0,0];
+end;
+
+Export Shariff;
+Export function PrepareShariff;
+begin
+uc_side = 5;
+uc_nation = 2;
+
+   hc_class = 11;
+   hc_sex = sex_male;
+   hc_gallery = 'ru';
+   hc_face_number = 45;
+   hc_name = 'Abdul Shariff';
+
+   Shariff = CreateHuman;
+end;
+
+
+Export function PrepareHelp;
+var i, un, vehs, sol;
+begin
+
+uc_side = 2;
+uc_nation = 2;
+sol = [];
+
+for i = 1 to [4,3,2][Difficulty] do
+begin
+hc_gallery = '';
+hc_name = '';
+hc_class = 1;
+hc_skills = [Rand(0,4), Rand(0,2), Rand(0,2), Rand(0,2)];
+hc_sex = sex_male;
+
+un = CreateHuman;
+sol = sol ^ un;
+PlaceUnitArea(un, SpawnArea, false);
+end;
+
+
+uc_nation = 3;
+
+vc_chassis = ru_medium_wheeled;
+vc_engine = engine_combustion;
+vc_control = control_manual;
+vc_weapon = [ru_gatling_gun, ru_gatling_gun, ru_heavy_machine_gun][Difficulty];
+
+vehs = CreateVehicle;
+PlaceUnitArea(vehs, SpawnArea, false);
+SetLives(vehs, 510);
+
+uc_nation = 2;
+
+hc_class = 3;
+un = CreateHuman;
+PlaceHumanInUnit(un, vehs);
+
+DialogueOn;
+CenterNowOnUnits(sol[1]);
+DWait(0$0.2);
+SayRadio(sol[1], 'DArr1');
+DialogueOff;
+end;
+
+
+Every 0$03 trigger Jana = false do
+begin
+SayRadio(Jan, 'JanHelp');
+ChangeMissionObjectives('HelpJ');
+end;
+
+
+
+
+
+
+
+
+
+
+
+

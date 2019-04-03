@@ -1,0 +1,32 @@
+var strength,
+    lastxwin,lastywin,
+    lastxlost,lastylost;
+
+
+function Update_Flags;
+var un;
+begin
+  for un in battle_flags_id do
+    ChangeBattleFlagOptions(un,[ [bfo_defend_bonus_human,strength],
+                                 [bfo_defend_bonus_vehicle,strength div 2],
+                                 [bfo_defend_bonus_building,strength div 5],
+                                 [bfo_height,strength] ]);
+end;
+
+every 1 do
+var un;
+begin
+  if not def_morale_flags then
+    exit;
+  if not morale_decreasing_time then
+    exit;
+  strength=100;
+  repeat
+    wait(morale_decreasing_time);
+    strength:=strength-1;
+    Update_Flags;
+  until not strength;
+
+  for un in battle_flags_id do
+    KillBattleFlag(un);
+end;

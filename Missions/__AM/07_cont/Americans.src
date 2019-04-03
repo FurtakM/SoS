@@ -1,0 +1,131 @@
+Export JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Khatam, Kikuchi, Harisson;
+
+Export Function PrepareAmericans;
+var i, team, others, veh, m;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+JMM := PrepareUnit('JMM', (not debug));
+
+team := [JMM];
+
+if LoadVariable('BrownIn07', debug) then
+   Brown := PrepareUnit('Brown', (not debug));
+
+if Brown then
+   team := team ^ Brown;
+
+if LoadVariable('DonaldsonIn07', debug) then
+   Donaldson := PrepareUnit('Donaldson', (not debug));
+
+if Donaldson then
+   team := team ^ Donaldson;
+
+if LoadVariable('BobbyIn07', debug) then
+   Bobby := PrepareUnit('Bobby', (not debug));
+
+if Bobby then
+   team := team ^ Bobby;
+
+if LoadVariable('CyrusIn07', debug) then
+   Cyrus := PrepareUnit('Cyrus', (not debug));
+
+if Cyrus then
+   team := team ^ Cyrus;
+
+if LoadVariable('LisaIn07', debug) then
+   Lisa := PrepareUnit('Lisa', (not debug));
+
+if Lisa then
+   team := team ^ Lisa;
+
+if LoadVariable('GladstoneIn07', debug) then
+   Gladstone := PrepareUnit('Gladstone', (not debug));
+
+if Gladstone then
+   team := team ^ Gladstone;
+
+if LoadVariable('KhatamIn07', debug) then
+   Khatam := PrepareUnit('Khatam', (not debug));
+
+if Khatam then
+   team := team ^ Khatam;
+
+others := CreateCharacterSet('07_others');
+
+if others then
+   team := team ^ others;
+
+if debug then
+   begin
+   InitHc;
+
+   for i = 1 to 4 do
+       begin
+       PrepareHuman(false, [1,3][Rand(1,2)], 4);
+       team := team ^ CreateHuman;
+       end;
+   end;
+
+
+m := 0;
+
+    for i in team do
+        if GetClass(i) = 3 then
+           begin
+           m := m + 1;
+           veh := PrepareTank(1, 1, [us_medium_wheeled, us_medium_tracked, us_medium_wheeled, us_light_wheeled][m mod 4 + 1], engine_solar, control_manual, [us_gatling_gun, us_double_gun, us_light_gun, us_radar][m mod 4 + 1], 60);
+           SetDir(veh, 2);
+           PlaceUnitArea(veh, startArea, false);
+           PlaceHumanInUnit(i, veh);
+           end
+          else
+           PlaceUnitArea(i, startArea, false);
+
+uc_side := 4;
+Harisson := PrepareUnit('Harisson', false);
+
+PrepareScout;
+End;
+
+Function PrepareScout; // prepare frank or kikuchi
+var ape;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+if LoadVariable('FrankIn06', 0) then
+   Frank := CreateCharacter('06c_Frank')
+  else
+   if LoadVariable('FrankInDelta', 0) then
+      Frank := CreateCharacter('05_Frank')
+     else
+      Frank := CreateCharacter('04_Frank');
+
+//if debug then
+//   Frank := NewCharacter('Frank');
+
+if Frank then
+   begin
+   PlaceUnitArea(Frank, scoutArea, false);
+
+   SetClass(Frank, 1);
+
+   uc_side := 0;
+   uc_nation := 0;
+
+   PrepareHuman(false, class_apeman, 0);
+   ape := CreateHuman;
+
+   PlaceUnitXYR(ape, GetX(Frank), GetY(Frank), 5, false);
+
+   ComTurnUnit(ape, Frank);
+   ComTurnUnit(Frank, ape);
+   exit;
+   end;
+
+Kikuchi := PrepareUnit('Yamoko', false);
+PlaceUnitArea(Kikuchi, scoutArea, false);
+ComHold(Kikuchi);
+End;

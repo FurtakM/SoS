@@ -1,0 +1,54 @@
+On VehicleConstructed(veh, fac) do
+begin
+if GetSide(veh) = 1 and not solar_builded then
+   solar_builded := true;
+
+if GetSide(veh) = 1 and time_to_prepare then
+   time_to_prepare := time_to_prepare + [0$50, 0$40, 0$35][Difficulty];
+
+if GetSide(veh) = 3 then
+   ru_vehicles := ru_vehicles ^ veh;
+End;
+
+On UnitDestroyed(un) do
+begin
+if un in ru_patrol then
+   ru_patrol := ru_patrol diff un;
+if un in ru_forest then
+   ru_forest := ru_forest diff un;
+if un in ru_vehicles then
+   begin
+   ru_vehicles := ru_vehicles diff un;
+   ru_produce_list := ru_produce_list ^ [GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un)];
+   end;
+if un = JMM then
+   YouLost('0');
+if un = us_dep_west then
+   YouLost('2');
+if GetSide(un) = 8 and not jmm_on_west then
+   YouLost('4');
+if un in jmm_units then
+   lose_counter := lose_counter + 1;
+End;
+
+On EvacuateVehicle(driver, vehicle, p1, p2) do
+var i, place;
+begin
+if GetSide(driver) = 3 then
+   begin
+   place := FindFreePlace(FilterAllUnits([[f_side, 3], [f_btype, b_factory]]));
+
+   if place then
+      ComEnterUnit(driver, place)
+     else
+      ComMoveXY(driver, 70, 22);
+   end;
+End;
+
+
+// lost if u lost too many heros ;d
+Every 0$01 trigger not game_end and (FilterAllUnits([[f_side, 1], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 8], [f_type, unit_human]])) < 5 do
+YouLost('1');
+
+Every 0$01 trigger GetSide(us_dep_west) = 3 do
+YouLost('3');

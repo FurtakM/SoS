@@ -1,0 +1,110 @@
+Export Function PrepareUnit(ident, exist_mode);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(mission_prefix_prev&ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+Export function SelectAndSaveCharacters;
+var i, yourPeople, selectedPeople, test, rnd;
+begin
+    rnd = [5, rand(4, 5), 4][Difficulty];
+    yourPeople = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, DeltaDoctor, Denis];
+
+    selectedPeople = CharacterSelection('text', [5, 4, 4][Difficulty], rnd,
+                                [sel_change_class, JMM,
+                                 sel_dont_change_class,
+                                 sel_not_hired,sel_changeable, sel_change_class]^yourPeople^
+                                [sel_dont_change_class, sel_not_changeable, Denis, DeltaDoctor],
+                                [class_soldier, class_mechanic, [class_engineer, 1], class_scientistic]);
+
+    SaveCharacters(JMM, mission_prefix&'JMM');
+    SaveCharacters(DeltaDoctor, 'DeltaDoctor');
+    SaveCharacters(Denis, mission_prefix&'Denis');
+
+    if Lisa in selectedPeople then
+    begin  
+        SaveCharacters(Lisa, mission_prefix&'Lisa');
+        SaveVariable(1, 'LisaIn06');
+    end
+     else
+      if IsOk(Lisa) then
+         SaveVariable(1, 'LisaStayInDelta');
+
+    if Bobby in selectedPeople then
+    begin
+        SaveCharacters(Bobby, mission_prefix&'Bobby');
+        SaveVariable(1, 'BobbyIn06');
+    end
+     else
+      if IsOk(Bobby) then
+         SaveVariable(1, 'BobbyStayInDelta');
+
+    if Cyrus in selectedPeople then
+    begin
+        SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+        SaveVariable(1, 'CyrusIn06');
+    end
+     else
+      if IsOk(Cyrus) then
+         SaveVariable(1, 'CyrusStayInDelta');
+
+    if Frank in selectedPeople then
+    begin
+        SaveCharacters(Frank, mission_prefix&'Frank');
+        SaveVariable(1, 'FrankIn06');
+    end
+     else
+      if IsOk(Frank) then
+         SaveVariable(1, 'FrankStayInDelta');
+
+    if Brown in selectedPeople then
+    begin
+        SaveCharacters(Brown, mission_prefix&'Brown');
+        SaveVariable(1, 'BrownIn06');
+    end
+     else
+      if IsOk(Brown) then
+         SaveVariable(1, 'BrownStayInDelta');
+
+    if Donaldson in selectedPeople then
+    begin
+        SaveCharacters(Donaldson, mission_prefix&'Donaldson');
+        SaveVariable(1, 'DonaldsonIn06');
+    end
+     else
+      if IsOk(Donaldson) then
+         SaveVariable(1, 'DonaldsonStayInDelta');
+
+    if Gladstone in selectedPeople then
+    begin
+        SaveCharacters(Gladstone, mission_prefix&'Gladstone');
+        SaveVariable(1, 'GladstoneIn06');
+    end
+     else
+      if IsOk(Gladstone) then
+         SaveVariable(1, 'GladstoneStayInDelta');
+
+    SetSide(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 4);
+    for i in selectedPeople do SetSide(i, 1);
+    for i in yourApemans do SetSide(i, 1);
+    SetSide(JMM, 1);
+
+    SetSkill(yourApemans, 2, 5);
+
+    SaveCharacters(yourApemans, 'ApeIn06');
+    SaveCharacters(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone], 'OthersIn06');
+    SaveCharacters(FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff randomsDelta^DeltaDoctor, 'OthersStayInDelta');
+
+end;
+
+Export Function GetMultiCargo(cargo_bay);
+var i;
+begin
+result := [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
+End;

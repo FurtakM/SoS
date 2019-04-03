@@ -74,7 +74,7 @@ if GetSide(un) = your_side then
 
 if GetType(un) = unit_vehicle then
    begin
-   SetSide(un, 0);
+   KillUnit(un);
 
    if GetNation(un) = nation_arabian or GetWeapon(un) in [ru_time_lapser] then
       ExplodeVehicle(un);
@@ -98,16 +98,22 @@ Every 0$01 trigger game_started and FilterAllUnits([[f_side, your_side], [f_type
 YouLost('die');
 
 
-Every 0$41 trigger tick <= 15$00 do
+Every 0$21 trigger tick <= 15$00 do
 begin
 enable;
 CreateCratesArea(Rand(1,5), cratesSpawn, true);
 End;
 
-Every 1$20 trigger tick > 15$00 do
+Every 0$51 trigger tick > 15$00 do
 begin
 enable;
 
 if FilterAllUnits([f_side, 7]) = 0 then
    CreateCratesArea(Rand(1,5), cratesSpawn, true);
+End;
+
+On BuildingStarted(building, builder) do
+begin
+if IsInArea(building, cratesSpawn) then
+   KillUnit(building);
 End;

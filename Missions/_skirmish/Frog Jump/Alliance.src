@@ -1,13 +1,30 @@
+Export al_force;
 Export Function PrepareAlliance;
 var i, un, skill;
 begin
 uc_side := 7;
+uc_nation := nation_american;
+
 skill := [7, 8, 9][Difficulty];
+al_force := [];
 
 
 SetResourceType(GetBase(al_dep), mat_cans, 999999);
 SetResourceType(GetBase(al_dep), mat_oil, 10000);
 SetResourceType(GetBase(al_dep), mat_siberit, 10000);
+
+
+hc_gallery := 'sandal';
+hc_face_number := 13;
+hc_class := 1;
+hc_name := 'Matthew Bagins';
+hc_skills := [10, 5, 8, 5];
+hc_attr := [11, 12];
+Bagins := CreateHuman;
+PlaceHumanInUnit(Bagins, al_dep);
+
+hc_gallery := '';
+hc_name := '';
 
 // engs
 for i = 1 to 6 do
@@ -59,4 +76,92 @@ for i in FilterAllUnits([[f_side, 7], [f_btype, b_turret]]) do
        AddComPlaceWeapon(i, us_double_laser)
         else
          AddComPlaceWeapon(i, [ru_rocket, ru_rocket_launcher][Rand(1,2)]);
+End;
+
+Export Function ConstructAlVeh(nation);
+var i, un, fac, chassis, engine, control, weapon;
+begin
+if nation = 2 then
+   exit;
+
+if nation = 1 then
+   if al_fac_us then
+      fac := al_fac_us
+     else
+      exit;
+
+if nation = 3 then
+   if al_fac_ru then
+      fac := al_fac_ru
+     else
+      exit;
+
+if nation = 1 then
+   chassis := us_morphling
+  else
+   chassis := ru_heavy_tracked;
+
+if nation = 1 then
+   engine := engine_combustion
+  else
+   engine := engine_siberite;
+
+control := control_computer;
+
+if nation = 3 then
+   weapon := [ru_rocket, ru_rocket_launcher, ru_gatling_gun]
+  else
+   weapon := [us_heavy_gun, us_laser, us_double_laser];
+
+weapon := weapon[rand(1, weapon)];
+
+AddComConstruct(fac, chassis, engine, control, weapon);
+End;
+
+// Teleport script
+Every 0$01 trigger FilterUnitsInArea(al_teleport_enter, [f_not, [f_type, unit_building]]) do
+begin
+enable;
+CheckBuildUpArea(al_teleport_enter, al_teleport_exit, FilterUnitsInArea(al_teleport_enter, [f_not, [f_type, unit_building]]));
+End;
+
+Every 12$00 trigger FilterAllUnits([f_side, 7]) and alliance_attack_active do
+var i;
+begin
+enable;
+
+alliance_attack_strength := alliance_attack_strength + 1;
+
+for i = 1 to ([4, 5, 6][Difficulty])+alliance_attack_strength do
+    begin
+    ConstructAlVeh([1,3][rand(1,2)]);
+    end;
+
+repeat
+ wait(0$01);
+until al_force >= ([4, 5, 6][Difficulty])+alliance_attack_strength;
+
+AddComMoveXY(al_force, 143, 178);
+End;
+
+Every 0$01 trigger FilterUnitsInArea(islandArea, [f_side, 7]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(islandArea, [f_side, 7]) do
+    ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i));
+End;
+
+Every 7$30 trigger alliance_attack_active do
+var reload_time;
+begin
+reload_time := [9$00, 8$40, 7$50][Difficulty];
+
+repeat
+ ActiveArtifact1();
+ wait(reload_time/2);
+ ActiveArtifact2();
+ wait(reload_time/2);
+until FilterAllUnits([[f_side, 7], [f_btype, b_lab_full]]);
 End;
