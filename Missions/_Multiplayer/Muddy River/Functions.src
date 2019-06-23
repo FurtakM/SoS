@@ -1,227 +1,1998 @@
-Export Function PreparePeople();
-var i, j, un, to_copy, x, y, c, d;
+// Return's tech list by nation
+// side
+// nation
+// state:
+//       state_enabled 1
+//       state_researched 2
+//       state_disabled 0
+//       all -1
+Export Function GetTechNation(side, nation, state);
+var i;
 begin
-to_copy := [];
+if not side or not nation then
+   exit;
 
-for i = 1 to 8 do
-    begin
-    if Side_Positions[i] then
+case nation of
+     nation_american: result := [35, 45, 46, 47, 1, 2, 6, 15, 16, 7, 12, 13, 10, 14, 20, 25, 36, 69, 39, 34, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 80];
+     nation_arabian: result := [35, 45, 46, 47, 70, 1, 11, 3, 4, 5, 6, 15, 18, 7, 17, 8, 20, 72, 26, 69, 39, 40, 41, 42, 43, 48, 49, 50, 51, 52, 53, 54, 55, 56, 60, 61, 62, 66, 67, 68];
+     nation_russian: result := [46, 47, 1, 2, 11, 9, 20, 19, 21, 24, 22, 25, 28, 29, 31, 37, 38, 32, 27, 33, 69, 39, 34, 40, 71, 23, 44, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65];
+end;
+
+if state > -1 and state < 3 then
+   for i in result do
+       if GetTech(i, side) <> state then
+          result := result diff i;
+End;
+
+Export Function ScanBase(side, base_area);
+begin
+result := FilterUnitsInArea(base_area, [f_enemy, side]);
+End;
+
+// base, defenders, enemy
+Export Function Defend(base, defenders, enemy);
+var i, j, x, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend;
+begin
+mechs := UnitFilter(mc_bases[base], [f_class, 3]);
+solds := UnitFilter(mc_bases[base], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
+
+if not defenders and not solds then
+   exit;
+
+depot_under_attack := false;
+sold_defenders := [];
+
+
+if mechs then
+   for i in defenders do
        begin
-       uc_side   := i;
-       uc_nation := Side_Nations[i];
+       SetTag(i, 20);
 
-       x := Side_Start[Side_Positions[i]][1];
-       y := Side_Start[Side_Positions[i]][2];
-
-       hc_importance := 100;
-
-       // commander
-       if Multiplayer then
+       if GetControl(i) = control_manual and not IsDrivenBy(i) and mechs then
           begin
-          hc_name := mp_sides_players_names[uc_side];
-          hc_gallery := 'MULTIAVATARS';
-          hc_face_number := Multiplayer_GetPlayerSideNum(uc_side);
-          hc_sex := Multiplayer_GetPlayerSex(uc_side);
-          end
-           else
-            begin
-            hc_name := '';
-            hc_gallery := '';
-            hc_sex := Rand(1, 2);
-            end;
-
-       PrepareHuman(hc_sex, 1, skill_level);
-       un := CreateHuman;
-
-       if not to_copy then
-          to_copy := Replace(to_copy, 1, un)
-           else
-            begin
-            CopySkills(to_copy[1], un);
-            SetAttr(un, attr_speed, GetAttr(to_copy[1], attr_speed));
-            SetAttr(un, attr_stamina, GetAttr(to_copy[1], attr_stamina));
-            end;
-
-       PlaceUnitXYR(un, x, y, 10, false);
-       // <--- end commander
-
-       hc_importance := 0;
-       hc_name := '';
-       hc_gallery := '';
-
-       d := (number_of_people-1)/4;
-       c := 1;
-
-       for j = 2 to number_of_people do  // 8 / 4 = 2
-           begin
-           PrepareHuman(false, c, skill_level);
-
-           if (j-1) mod d = 0 then
-              c := c + 1;
-
-           un := CreateHuman;
-
-           if to_copy < j then
-              to_copy := Replace(to_copy, j, un)
-               else
-                begin
-                CopySkills(to_copy[j], un);
-                SetAttr(un, attr_speed, GetAttr(to_copy[j], attr_speed));
-                SetAttr(un, attr_stamina, GetAttr(to_copy[j], attr_stamina));
-                end;
-
-           PlaceUnitXYR(un, x, y, 10, false);
-
-           if GetClass(un) = 3 and handicap < 2 then
-              SetClass(un, 1);
-           end;
-
-       // handicap
-          if handicap then
-             begin
-             // rforce               
-             for j = 1 to 2 do
-                 begin
-                 vc_chassis := us_medium_wheeled;
-                 vc_engine  := engine_siberite;
-                 vc_control := control_computer;
-                 vc_weapon  := us_rocket_launcher;
-                 un := CreateVehicle;
-
-                 rforce := Insert(rforce, 1, [un, x, y]);
-                 end;
-
-                 vc_chassis := us_medium_wheeled;
-                 vc_engine  := engine_siberite;
-                 vc_control := control_computer;
-                 vc_weapon  := us_cargo_bay;
-                 un := CreateVehicle;
-
-                 rforce := Insert(rforce, 1, [un, x, y]);
-             //
-
-             // rforce2
-             for j = 1 to 3 do
-                 begin
-                 vc_chassis := us_heavy_tracked;
-                 vc_engine  := engine_siberite;
-                 vc_control := control_computer;
-                 vc_weapon  := [us_heavy_gun, us_heavy_gun, us_laser][j];
-                 un := CreateVehicle;
-
-                 rforce2 := Insert(rforce2, 1, [un, x, y]);
-                 end;
-             //
-
-             // radar
-             if handicap = 1 then
-                begin
-                vc_chassis := us_medium_tracked;
-                vc_engine  := engine_solar;
-                vc_control := control_computer;
-                vc_weapon  := us_radar;
-                PlaceUnitXYR(CreateVehicle, x, y, 13, false);
-                end;
-
-             if handicap = 2 then
-                begin
-                for j = 1 to 2 do
-                    begin
-                    vc_chassis := us_medium_tracked;
-                    vc_engine  := engine_siberite;
-                    vc_control := control_manual;
-                    vc_weapon  := [us_gatling_gun, us_double_gun][j];
-                    PlaceUnitXYR(CreateVehicle, x, y, 13, false);
-                    end;
-
-                vc_chassis := us_medium_tracked;
-                vc_engine  := engine_solar;
-                vc_control := control_computer;
-                vc_weapon  := us_radar;
-                PlaceUnitXYR(CreateVehicle, x, y, 13, false);
-                end;
-             end;
+          un := mechs[1];
+          ComExitBuilding(un);
+          AddComEnterUnit(un, i);
+          SetTag(un, 19);
+          mechs := mechs diff un;
+          end;
        end;
-    end;
-End;
 
-Export Function AddApeman(area);
-begin
-uc_nation := 0;
-uc_side := 0;
-
-hc_agressivity := rand(-10, 15);
-
-PrepareHuman(false, class_apeman, 0);
-
-hc_attr := [10, 12];
-
-PlaceUnitArea(CreateHuman, area, false);
-End;
-
-
-Export Function PlaceMines(area, n);
-var i, r, x;
-begin
-r := 100;
-x := 0;
-
-while(x < n) do
-for i = 1 to AreaToList(area, 0)[1] do
-    begin
-    if r > 50 then
-       begin
-       if not MineAtPos(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i]) then
+if solds then
+   for i in solds do
+       if not GetTag(i) then
           begin
-          PlaceMine(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i], bot_side, 0);
+          defenders := defenders union i;
+          SetTag(i, 18);
+          end;
 
-          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[1][i]);
-          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[2][i]);
+repeat
+ wait(0$1);
+ enemy := mc_scan[base];
 
-          r := 0;
-          x := x + 1;
-          end
-           else
-            r := r + 35;
-       end
+ for i in defenders do
+     begin
+     e := NearestUnitToUnit(enemy, i);
+
+     depot_under_attack := (not UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) or GetLives(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]])) < 600);
+
+     case GetType(i) of
+          unit_vehicle:
+          begin
+
+          if GetLives(i) > 650 and GetDistUnits(i, e) < 40 then
+             ComAttackUnit(i, e)
+          else if (GetDistUnits(i, e) >= 30 or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
+             ComMoveToArea(i, mc_parking[base]);
+
+          if GetLives(i) < 998 and GetControl(i) = control_manual and IsDrivenBy(i) and IsInArea(i, mc_parking[base]) then
+             begin
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+             AddComEnterUnit(mech, i);
+             end;
+
+          end;
+
+          unit_human:
+          begin
+          b := IsInUnit(i);
+          can_defend := (not b or GetBType(b) in [b_bunker, b_breastwork]);
+
+          if (depot_under_attack or UnitFilter(defenders, [f_type, unit_vehicle]) <= 1) and can_defend and not i in sold_defenders then
+             begin
+
+             if b then
+                if GetDistUnits(b, NearestUnitToUnit(enemy, b)) < 10 and BuildingStatus(b) <> bs_need_power then
+                   continue;
+
+             sold_defenders := Replace(sold_defenders, sold_defenders+1, i);
+             ComExitBuilding(i);
+             end;
+
+          if sold_defenders then
+             if i in sold_defenders then
+                begin
+                if not HasTask(i) and GetDistUnits(i, e) < 30 then
+                   ComAttackUnit(i, e);
+                end;
+
+          end;
+
+     end;
+
+     if IsDead(i) then
+        defenders := defenders diff i;
+     end;
+until not enemy or not defenders;
+
+MC_Reset(base, 18);
+defenders := defenders diff UnitFilter(defenders, [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
+
+if not enemy and UnitFilter(defenders, [f_type, unit_vehicle]) then
+   begin
+   tmp := GetByTag(GetSide(defenders[1]), 19);
+
+   if tmp then
+      begin
+      tmp := UnitFilter(tmp, [f_class, 3]);
+
+      if tmp then
+         mc_repair_vehicle := Replace(mc_repair_vehicle, base, mc_repair_vehicle[base] union tmp);
+      end;
+
+   MC_Reset(base, 19);
+
+   repeat
+    wait(0$1);
+
+    for i in defenders do
+        begin
+        if not IsInArea(i, mc_parking[base]) then
+           ComMoveToArea(i, mc_parking[base])
         else
-         r := r + rand(10, 25);
+         if GetControl(i) = control_manual then
+            if IsDrivenBy(i) then
+               ComExitVehicle(IsDrivenBy(i));
+        end;
+   until UnitFilter(defenders, [f_inarea, mc_parking[base]]) = defenders or mc_scan[base];
+
+   end;
+
+mc_defender := Replace(mc_defender, base, mc_defender[base] union defenders);
+MC_Reset(base, 20);
+End;
+
+Export Function AllowSpecClass(unit);
+var side, nat, tech;
+begin
+result := false;
+side := GetSide(unit);
+nat := GetNation(unit);
+
+case nat of
+1: tech := tech_lassight;
+2: tech := tech_mortar;
+3: tech := tech_bazooka;
+end;
+
+if Researched(side, tech) then
+   result := [class_sniper, class_mortar, class_bazooker][nat];
+End;
+
+Export Function DetonateMines(side, mines);
+var i, tmp;
+begin
+if not mines then
+   exit;
+
+tmp := FilterAllUnits([[f_enemy, side], [f_not, [f_type, unit_building]]]);
+
+for i in mines do
+    begin
+
+    if not MineAtPos(i[1], i[2]) then
+       continue;
+
+    if HexInfo(i[1], i[2]) in tmp then
+       LaunchMineAtPos(i[1], i[2], side);
+    end;
+
+End;
+
+Export Function Count(array);
+var i;
+begin
+result := 0;
+
+for i in array do
+    if i then
+       result := result + 1;
+End;
+
+Export Function IsEmpty(building);
+begin
+if not building then
+   exit;
+
+result := building in FilterAllUnits([f_empty]);
+End;
+
+Export Function GetFacExt(factory);
+var tmp, i, list;
+begin
+tmp := [];
+list := [];
+
+for i = 16 to 25 do
+    tmp := tmp ^ FilterAllUnits([[[f_side, GetSide(factory)], [f_dist, factory, 6], [f_btype, i]]]);
+
+for i = 1 to tmp do
+    list := list ^ [[GetBType(tmp[i]), GetX(tmp[i]), GetY(tmp[i]), GetDir(tmp[i])]];
+
+result := list;
+End;
+
+Export Function Produce(factory, chassis, engine, control, weapon); 
+var i, tmp, _chassis, _weapon, _engine, _control;
+begin
+if not factory then
+   exit;
+
+if control = control_apeman then
+   begin
+   tmp := UnitsInside(factory);
+
+   if not UnitFilter(tmp, [f_class, class_apeman]) then
+      control := control_manual;
+
+   tmp := GetFacExt(factory);
+
+   if tmp then
+      begin
+      for i in tmp do
+          if i[1] = b_ext_radar then
+             begin
+             control := control_remote;
+             break;
+             end;
+      end;
+   end;
+
+if CanBeConstructed(factory, chassis, engine, control, weapon) then
+   begin
+   result := [chassis, engine, control, weapon];
+   exit;
+   end;
+
+_chassis := AvailableChassisList(factory);
+_engine := AvailableEngineList(factory);
+_control := AvailableControlList(factory);
+_weapon := AvailableWeaponList(factory);
+
+if not chassis in _chassis then
+   chassis := _chassis[rand(1, _chassis)];
+
+if not EngineCanBeMount(chassis, engine) then
+   repeat
+    engine := _engine[1];
+    _engine := Delete(_engine, 1);
+   until EngineCanBeMount(chassis, engine) or _engine = [];
+
+if not control in _control then
+   control := _control[rand(1, _control)];
+
+if not WeaponCanBeMount(chassis, weapon) then
+   repeat
+    weapon := _weapon[1];
+    _weapon := Delete(_weapon, 1);
+   until WeaponCanBeMount(chassis, weapon) or _weapon = [];
+
+if CanBeConstructed(factory, chassis, engine, control, weapon) then
+   result := [chassis, engine, control, weapon];
+
+End;
+
+Export Function EngineCanBeMount(chassis, engine);
+begin
+if not chassis or not engine then
+   exit;
+
+case engine of
+engine_solar:
+  result := [ar_hovercraft, ar_light_trike, ar_medium_trike,
+             ar_half_tracked, us_light_wheeled, us_medium_wheeled,
+             us_medium_tracked];
+engine_combustion:
+  result := [ar_hovercraft, ar_light_trike, ar_medium_trike,
+             ar_half_tracked, us_light_wheeled, us_medium_wheeled,
+             us_medium_tracked, us_heavy_tracked, us_morphling,
+             ru_medium_wheeled, ru_heavy_wheeled, ru_medium_tracked,
+             ru_heavy_tracked];
+engine_siberite:
+  result := [ar_medium_trike, ar_half_tracked, us_medium_wheeled,
+             us_medium_tracked, us_heavy_tracked, us_morphling,
+             ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled,
+             ru_heavy_tracked];
+end;
+
+result := (chassis in result);
+End;
+
+Export Function WeaponCanBeMount(chassis, weapon);
+begin
+if not chassis or not weapon then
+   exit;
+
+case weapon of
+us_machine_gun: result := [us_light_wheeled, us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_light_gun: result := [us_light_wheeled, us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_radar: result := [us_light_wheeled, us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_gatling_gun: result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_double_gun: result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_laser: result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_rocket_launcher:  result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_cargo_bay: result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_crane: result := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked, us_morphling];
+us_bulldozer: result := [us_heavy_tracked, us_morphling];
+us_heavy_gun: result := [us_heavy_tracked, us_morphling];
+us_double_laser: result := [us_heavy_tracked, us_morphling];
+ar_multimissile_ballista: result := [ar_hovercraft, ar_light_trike, ar_medium_trike, ar_half_tracked];
+ar_light_gun: result := [ar_hovercraft, ar_light_trike, ar_medium_trike, ar_half_tracked];
+ar_double_machine_gun: result := [ar_hovercraft, ar_light_trike, ar_medium_trike, ar_half_tracked];
+ar_radar: result := [ar_hovercraft, ar_light_trike, ar_medium_trike, ar_half_tracked];
+ar_gatling_gun: result := [ar_medium_trike, ar_half_tracked];
+ar_gun: result := [ar_medium_trike, ar_half_tracked];
+ar_rocket_launcher: result := [ar_medium_trike, ar_half_tracked];
+ar_selfpropelled_bomb: result := [ar_medium_trike, ar_half_tracked];
+ar_control_tower: result := [ar_medium_trike, ar_half_tracked];
+ar_flame_thrower: result := [ar_medium_trike, ar_half_tracked];
+ru_heavy_machine_gun: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_gatling_gun: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_gun: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_rocket_launcher: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_time_lapser: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_cargo_bay: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_crane: result := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked];
+ru_bulldozer: result := [ru_heavy_wheeled, ru_heavy_tracked];
+ru_heavy_gun: result := [ru_heavy_wheeled, ru_heavy_tracked];
+ru_rocket: result := [ru_heavy_wheeled, ru_heavy_tracked];
+end;
+
+result := (chassis in result);
+End;
+
+{
+    Reindex
+    * param array - array to reindex
+    * param i_from - index number where reindex start
+    * param i_to - index number where reindex stop
+    * param direction - false -> DESC, true -> ASC
+    * return array
+}
+Export Function Reindex(array, i_from, i_to, direction);
+var i, j, k, d, tmp, length;
+begin
+result := array;
+
+if not array or not i_from or not i_to or i_from > array or i_to > array then
+   exit;
+
+{
+    [1*, 2, 3, 4*, 5] -> [5, 1, 2, 3, 4] -> [4, 5, 1, 2, 3] -> [3, 4, 5, 1, 2]
+}
+
+
+// calculated length i_from to i_to
+if direction then // ASC
+   begin
+   d := 1;
+
+   if i_from > i_to then
+      length := (array - i_from) + i_to
+     else
+      length := i_to - i_from;
+
+   end
+  else // DESC
+   begin
+   d := -1;
+
+   if i_from > i_to then
+      length := i_from - i_to
+    else
+      length := (array - i_to) + i_from;
+
+   end;
+
+if not length then
+   exit;
+
+// SORT
+tmp := array;
+
+for i = 1 to length do
+    begin
+
+    for j = 1 to array do
+        begin
+        k := j+d;
+
+        if k > array then
+           k := 1;
+
+        if not k then
+           k := array;
+
+        tmp := Replace(tmp, k, array[j]);
+        end;
+
+    array := tmp;
+    end;
+
+result := array;
+End;
+
+Export Function GetElementIndex(array, value);
+var i;
+begin
+result := 0;
+
+if not array or not value in array then
+   exit;
+
+for i = 1 to array do
+    if value = array[i] then
+       begin
+       result := i;
+       exit;
+       end;
+End;
+
+Export Function PrepareVehicle(chassis, engine, control, weapon, fuel);
+begin
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+vc_fuel_battery := fuel;
+End;
+
+ 
+Export Function WantPlant(unit);
+var task;
+begin
+result := false;
+
+task := GetTaskList(unit);
+
+if task then
+   if task[1][1] = 'p' then
+      result := true;
+End;
+
+// arr - tablica
+// pos - tablica pozycji
+// value - nowa wartoœæ do wstawienia
+Export Function ReplaceIn(arr, pos, value);
+var i, tmp, s_arr;
+begin
+if pos < 1 then
+   exit;
+
+if pos = 1 then
+   result := Replace(arr, pos[1], value)
+    else
+     begin
+     tmp := arr;
+     s_arr := [tmp];
+
+     for i = 1 to pos-1 do
+         begin
+         tmp := tmp[pos[i]];
+         s_arr := s_arr ^ [tmp];
+         end;
+
+     tmp := Replace(tmp, pos[pos], value);
+     s_arr := Replace(s_arr, s_arr, tmp);
+
+     for i = s_arr downto 2 do
+         begin
+         tmp := Replace(s_arr[i-1], pos[i-1], s_arr[i]);
+         s_arr := Replace(s_arr, i-1, tmp);
+         end;
+
+     result := s_arr[1];
+     end;
+
+End;
+
+Export Function ReplaceWith(list, pos1, pos2);
+var i;
+begin
+if not list then
+   exit;
+
+i := list[pos1];
+
+if not i then
+   exit;
+
+list := Replace(list, pos1, list[pos2]);
+list := Replace(list, pos2, i);
+
+result := list;
+End;
+
+// alias for ReplaceIn
+Export Function Add(list, pos, val);
+begin
+result := ReplaceIn(list, pos, val)
+End;
+
+
+
+Export Function SortByDistanceUnit(unit, list, asc, mode);
+begin
+result := SortByDistanceXY(GetX(unit), GetY(unit), list, asc, mode);
+End;
+
+{
+SortByDistanceXY(x, y, list, asc)
+- Sortuje jednostki zadane tablic¹ wg. dystansu od zadanego koordynatu
+* x, y - koordynaty
+* list - tablica jednostek
+* asc - true -> rosn¹co | false -> malej¹co
+* mode - true -> zwraca tylko liste jednostek | false -> zwraca liste i odleglosci
+= array
+}
+Export Function SortByDistanceXY(x, y, list, asc, mode);
+var i, j, tmp;
+begin
+if not list then
+   exit;
+
+result := [];
+
+for i in list do
+    begin
+    tmp := GetDistUnitXY(i, x, y);
+
+    if not result then
+       result := [[i, tmp]]
+     else
+      begin
+       if result[result][2] < tmp then
+          result := Insert(result, result+1, [i, tmp])
+       else
+       for j = 1 to result do
+           begin
+           if tmp < result[j][2] then
+              begin
+              result := Insert(result, j, [i, tmp]);
+              break;
+              end;
+           end;
+      end;
+    end;
+
+if result and not asc then
+   begin
+   tmp := result;
+
+   for i = tmp downto 1 do
+       result := Replace(result, tmp - i + 1, tmp[i]);
+   end;
+
+tmp := [];
+
+if mode then
+   begin
+
+   for i = 1 to result do
+       tmp := Replace(tmp, i, result[i][1]);
+
+   result := tmp;
+   end;
+
+End;
+{
+    DangerAtRange(unit, range)
+    - Zwraca poziom 'niebezpieczeñstwa' dla jednostki w zadanym zasiêgu (domyœlnie: 10)
+    * unit
+    * range
+    = array (H, V, B, X)
+
+    amount: x              H      V     B       X
+    class: ape | ape_en [   5,     3,    2  ] * x
+    class: ape_kamikaze [ 100,    50,   75  ] * x
+    class: ape_soldier  [  10,     5,    3  ] * x
+    class: 2 | 3 | 4 -> [   3,     2,    1  ] * x
+    class: 1         -> [  10,     5,    3  ] * x
+    class: mortar    -> [  35,    35,   30  ] * x
+    class: bazoka    -> [  20,    55,   40  ] * x
+    class: sniper    -> [ 130,     5,    2  ] * x
+    machine_guns     -> [  25,     5,    3  ] * x
+    gatling_guns     -> [  40,    15,    5  ] * x
+    light_guns       -> [   7,    25,    8  ] * x
+    double_gun       -> [  14,    50,   16  ] * x
+    heavy_guns       -> [  32,   120,   70  ] * x
+    rockets          -> [  35.    20,   45  ] * x
+    large rocket     -> [  67,    45,   75  ] * x
+    flamethrower     -> [ 120,    30,   80  ] * x
+    balista          -> [  40,     1,    1  ] * x
+    self_pr_bomb     -> [  70,   200,  400  ] * x
+    bio_bomb         -> [ 100,    12,   15  ] * x
+    bulldozers       -> [  40,    10,   20  ] * x
+    laser            -> [   5,    70,   20  ] * x
+    db_laser         -> [  35,   110,   70  ] * x
+    behemoth         -> [  80,    65,  100  ] * x
+
+    + soldier_skill_bonus for human type units:
+      r = basic * (skill_level * 1.15)
+    + mechanic_skill_bonus for control_manual vehicles:
+      r = basic + (skill * 4)
+    + mechanic skill bonus for control_remote vehicles:
+      r = basic + (skill * 3) / linked_vehs
+    + computer upgrades bonus for control_computer vehicles:
+      r = basic + (5 * upgrade_level)
+    + remote upgrades bonus for control_remote vehicles:
+      r = basic + (3 * upgrade_level)
+    + bio upgrades bonus for control_apeman vehicles:
+      r = basic + (6 * upgrade_level)
+    + stimulant tech for human type units:
+      r = basic * 1.8
+    + weapon upgrade I for basic classes [1-4]:
+      r = basic * 1.2
+    + weapon upgrade II for special classes [5,7,9]:
+      r = basic * 1.5;
+    + weapon upgrade II for weapons [guns, rockets]:
+      r = basic * 1.2;
+    + weapon upgrade III for heavy weapons [heavy_gun, rockets, large_rockets, behemoths, self_pr_bombs]:
+      r = basic * 1.2;
+    + bio I upgrades bonus for human type units:
+      r = basic * 1.1; 
+}
+Export Function DangerAtRangeXY(side, x, y, range);
+var i, j, tmp, points, bpoints;
+begin
+result := [0, 0, 0, []];
+
+if not x or not y then
+   exit;
+
+if not range then
+   range := 10;
+
+// get enemy unit's in range
+tmp := FilterAllUnits([[f_enemy, side], [f_distxy, x, y, range], [f_not, [f_type, unit_building]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    points := [0, 0, 0];
+    bpoints := 1;
+
+    case GetType(i) of
+    unit_human: begin
+                // class soldier
+                if GetClass(i) = 1 then
+                   points := [10, 5, 3];
+                // class eng|mech|sci
+                if GetClass(i) in [2,3,4] then
+                   points := [3, 2, 1];
+                // class sniper
+                if GetClass(i) = 5 then
+                   points := [130, 5, 2];
+                // class mortar
+                if GetClass(i) = 8 then
+                   points := [35, 35, 30];
+                // class bazooka
+                if GetClass(i) = 9 then
+                   points := [20, 55, 40];
+                // class apeman
+                if GetClass(i) in [12, 16] then
+                   points := [5, 3, 2];
+                // class apeman_kamikaze
+                if GetClass(i) = 17 then
+                   points := [100, 50, 75];
+                // class apeman soldier
+                if GetClass(i) = 15 then
+                   points := [10, 5, 3];
+                // class tiger
+                if GetClass(i) = 14 then
+                   points := [10, 0, 0];
+                // class sheik
+                if GetClass(i) = 11 then
+                   points := [30, 10, 5];
+                   
+
+                // stimulat bonus
+                if GetTech(side, tech_stimdrugs) = state_researched then
+                   bpoints := bpoints * 1.8;
+                // bonus I weapon upgrade
+                if GetClass(i) in [1,2,3,4] and GetTech(side, tech_weap1) = state_researched then
+                   bpoints := bpoints * 1.2;
+                // bonus II weapon upgrade
+                if GetClass(i) in [5,7,9] and GetTech(side, tech_weap2) = state_researched then
+                   bpoints := bpoints * 1.5;
+                // bonus bio upgrade
+                if GetTech(side, tech_bio1) = state_researched then
+                   bpoints := bpoints * 1.1;
+                // skill level
+                   bpoints := bpoints * (GetSkill(i, 1) * 1.15);
+                end;
+    unit_vehicle: begin
+                  if GetWeapon(i) in [us_machine_gun, ru_heavy_machine_gun, ar_double_machine_gun] then
+                     points := [25, 5, 3];
+                  if GetWeapon(i) in [us_gatling_gun, ru_gatling_gun, ar_gatling_gun] then
+                     points := [40, 15, 5];
+                  if GetWeapon(i) in [us_light_gun, ar_light_gun] then
+                     points := [7, 25, 8];
+                  if GetWeapon(i) in [us_double_gun, ar_gun, ru_gun] then
+                     points := [14, 50, 16];
+                  if GetWeapon(i) in [us_heavy_gun, ru_heavy_gun] then
+                     points := [32, 120, 70];
+                  if GetWeapon(i) in [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher] then
+                     points := [35, 20, 45];
+                  if GetWeapon(i) in [ru_rocket] then
+                     points := [67, 45, 75];
+                  if GetWeapon(i) in [ar_flame_thrower] then
+                     points := [120, 30, 80];
+                  if GetWeapon(i) in [ar_multimissile_ballista] then
+                     points := [40, 1, 1];
+                  if GetWeapon(i) in [ar_selfpropelled_bomb] then
+                     points := [70, 200, 400];
+                  if GetWeapon(i) in [us_bulldozer, ru_bulldozer] then
+                     points := [40, 10, 20];
+                  if GetWeapon(i) in [us_laser] then
+                     points := [5, 70, 20];
+                  if GetWeapon(i) in [us_double_laser] then
+                     points := [35, 110, 70];
+                  if GetChassis(i) = 25 then
+                     points := [80, 65, 100];
+
+                  if GetControl(i) = control_manual then
+                     bpoints := bpoints * (GetSkill(IsDrivenBy(i), 3) * 4);
+                  if GetControl(i) = control_remote then
+                     begin
+                     j := IsControledBy(i);
+
+                     if j then
+                        bpoints := bpoints * (GetSkill(j, 3) * 3);
+                     end;
+                  if GetWeapon(i) in [us_double_gun, us_heavy_gun, ru_heavy_gun, ru_gun, ru_rocket, ru_rocket_launcher, ar_rocket_launcher, us_rocket_launcher, ar_gun, ar_selfpropelled_bomb] and GetTech(side, tech_weap2) = state_researched then
+                     bpoints := bpoints * 1.2;
+                  if GetWeapon(i) in [us_heavy_gun, ru_heavy_gun, ru_rocket] then
+                     bpoints := bpoints * 1.2;
+                     
+                  end;
+    unit_building: ;
+    end;
+
+
+    for j = 1 to 3 do
+        result := Replace(result, j, result[j] + (points[j] * bpoints));
+    end;
+
+result := Replace(result, 4, tmp);
+End;
+
+Export Function DangerAtRange(unit, range);
+begin
+result := DangerAtRangeXY(GetSide(unit), GetX(unit), GetY(unit), range);
+End;
+
+Export Function IsExtension(b);
+begin
+result := false;
+
+if GetBType(b) in [b_ext_stitch, b_ext_radar, b_ext_radio, b_ext_gun, b_ext_computer, b_ext_siberium, b_ext_noncombat, b_ext_track, b_ext_laser, b_ext_rocket] then
+   result := true;
+End;
+
+Export Function GetBaseBuildings(base);
+var tmp, i;
+begin
+result := [];
+tmp := FilterAllUnits([f_type, unit_building]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    if GetBase(i) = base then
+       result := result ^ i;
+End;
+
+Export Function ComComplete(unit, b);
+var i;
+begin
+if BuildingStatus(b) = bs_build then
+   SetTaskList(unit, [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+End;
+
+Export Function Connect(vehicle);
+var i, t, mech, tmp, j;
+begin
+if not vehicle or not GetControl(vehicle) = control_remote then
+   exit;
+
+tmp := FilterAllUnits([[f_side, GetSide(vehicle)], [f_or, [f_btype, b_control_tower], [f_weapon, ar_control_tower]]]);
+
+if not tmp then
+   exit;
+
+result := [];
+
+for i in tmp do
+    begin
+    t := UnitsInside(i);
+
+    if t then
+       for j in t do
+           result := Insert(result, result+1, j);
+    end;
+
+if not result then
+   exit;
+
+mech := result[1];
+
+if result > 1 then
+   for i = 2 to result do
+       begin
+       t := GetSkill(result[i], 3) - UnitsLinked(result[i]);
+
+       if t >= (GetSkill(mech, 3) - UnitsLinked(mech)) then
+          mech := result[i];
+       end;
+
+ComLinkTo(vehicle, mech);
+End;
+
+Export Function PrepareBase(base_dep, name, skill, sources, personel);
+var i, j, d, b, f, x, un, base, side, nation, buildings;
+begin
+result := [];
+
+if not GetBType(base_dep) in [b_depot, b_warehouse] then
+   exit;
+
+if name then
+   SetBName(base_dep, name);
+
+base := GetBase(base_dep);
+side := GetSide(base_dep);
+nation := GetNation(base_dep);
+
+if sources then
+   for i = 1 to 3 do
+       AddResourceType(base, i, sources[i]);
+
+buildings := GetBaseBuildings(base);
+
+InitHc;
+InitUc;
+
+uc_side := side;
+uc_nation := nation;
+
+if buildings then
+   begin
+
+   if UnitFilter(buildings, [f_or, [f_btype, b_bunker], [f_btype, b_turret]]) then
+      begin
+      for i in UnitFilter(buildings, [f_or, [f_btype, b_bunker], [f_btype, b_turret]]) do
+          begin
+          if not GetBWeapon(i) then
+             PlaceWeaponTurret(i, GetTurretWeapon(i));
+          end;
+      end;
+
+   for i = 1 to personel do
+       begin
+
+       if i > 4 then
+          break;
+
+       case i of
+       1: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+       2: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+       3: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+       4: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+       end;
+
+       if not f then
+          continue;
+
+       x := personel[i];
+
+       if x = -1 then
+          begin
+
+          for j in f do
+              repeat
+              InitHc;
+
+              if GetBType(j) = b_barracks then
+                 begin
+                 if UnitsInside(j) < 3 then
+                    PrepareHuman(false, [class_sniper, class_mortar, class_bazooker][nation], skill)
+                   else
+                    PrepareHuman(false, i, skill);
+                 end
+                  else
+                 PrepareHuman(false, i, skill);
+
+               un := CreateHuman;
+               result := Insert(result, 1, un);
+               PlaceHumanInUnit(un, j);
+              until UnitsInside(j) = 6 or GetBType(j) in [b_bunker, b_breastwork];
+
+          end
+         else
+          for j = 1 to x do
+              begin
+              InitHc;
+
+              if (UnitsInside(f[1]) and GetBType(f[1]) in [b_bunker, b_breastwork]) or
+                 (UnitsInside(f[1]) = 6) then
+                  f := Delete(f, 1);
+
+              if not f then
+                 break;
+
+              if GetBType(f[1]) = b_barracks then
+                 begin
+                 if UnitsInside(f[1]) < 3 then
+                    PrepareHuman(false, [class_sniper, class_mortar, class_bazooker][nation], skill)
+                   else
+                    PrepareHuman(false, i, skill);
+                 end
+                  else
+                 PrepareHuman(false, i, skill);
+
+              un := CreateHuman;
+              result := Insert(result, 1, un);
+              PlaceHumanInUnit(un, f[1]);
+              end;
+       end;
+
+    result := result ^ buildings;
+    end
+   else
+    begin
+
+    for i = 1 to personel do
+        begin
+
+        if i > 4 then
+           break;
+
+        x := personel[i];
+
+        if x = -1 then
+           continue;
+
+        PrepareHuman(false, i, skill);
+        un := CreateHuman;
+        PlaceUnitXYR(un, GetX(base_dep), GetY(base_dep), 10, false);
+        result := result ^ un;
+        end;
     end;
 End;
 
-Export Function GetDriver(veh);
-var i, filter;
+Export Function GetTurretWeapon(tower);
+var hex, list, factories, base, i, j, x, y, nat, h, tmp, height, side, fac_list, weapon;
 begin
-if not GetControl(veh) = control_manual then
-   result := false
-    else
-     if veh in FilterAllUnits([f_empty]) then
-        result := false
-         else
-          begin
-          filter := FilterAllUnits([[f_side, GetSide(veh)], [f_driving]]);
+result := false;
 
-          if not filter then
-             result := false
-              else
-               for i = 1 to filter do
-                   if IsDriver(filter[i]) = veh then
-                      begin
-                      result := filter[i];
-                      break;
-                      end;
-         end;
+if not tower or not GetBType(tower) in [b_bunker, b_turret] then
+   exit;
+
+nat := GetNation(tower);
+side := GetSide(tower);
+
+x := GetX(tower);
+y := GetY(tower);
+
+if not x or not y then
+   exit;
+
+weapon := 0;
+fac_list := [];
+factories := UnitFilter(GetBaseBuildings(GetBase(tower)), [f_btype, b_factory]);
+
+if not factories then
+   exit;
+
+for i in factories do
+    fac_list := fac_list union AvailableWeaponList(i);
+
+if not fac_list then
+   exit;
+
+list := [
+             [us_gatling_gun, us_double_gun, us_laser,
+              us_double_laser, us_heavy_gun, us_rocket_launcher, us_radar],
+             [ar_gun,
+              ar_rocket_launcher, ar_flame_thrower, ar_radar],
+             [ru_gatling_gun, ru_gun, ru_heavy_gun,
+              ru_rocket_launcher, ru_rocket, ru_time_lapser]
+        ][nat];
+
+// filter list
+for i in list do
+    if not i in fac_list then
+       list := list diff i;
+
+if not list then
+   exit;
+
+// time lapsers
+if nat = nation_russian and ru_time_lapser in list and GetTech(tech_lapser, side) = state_researched then
+   begin
+   if not FilterAllUnits([[f_side, side], [f_bweapon, ru_time_lapser], [f_dist, tower, 10]]) then
+      weapon := ru_time_lapser;
+   end;
+
+// radar
+if nat in [1,2] and (us_radar in list or ar_radar in list) and GetTech(tech_radar, side) = state_researched then
+   begin
+   if not FilterAllUnits([[f_side, side], [f_or, [f_bweapon, us_radar], [f_bweapon, ar_radar]], [f_dist, tower, 18]]) and
+      FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_dist, tower, 12]]]) > 2 then
+      weapon := [us_radar, ar_radar][nat];
+   end;
+
+// rocket_launcher
+if not weapon and GetTech(tech_rocket, side) = state_researched and
+   (us_rocket_launcher in list or ar_rocket_launcher in list or ru_rocket_launcher in list) then
+   begin
+   hex := GetHexInfo(x, y);
+
+   if hex[1] then
+      exit;
+
+   height := hex[2];
+   tmp := [0, 2, 3, 5];
+
+   for i in tmp do
+       begin
+       j := [ShiftX(x, i, 5), ShiftY(y, i, 5)];
+
+       if ValidHex(j[1], j[2]) then
+          begin
+          hex := GetHexInfo(j[1], j[2]);
+
+          if hex[1] then
+             continue;
+
+          h := hex[2];
+
+          if h+7 < height then
+             begin
+             weapon := [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nat];
+             break;
+             end;
+          end;
+       end;
+   end;  
+
+// group of weapons
+if not weapon then
+   begin
+   list := list diff [us_radar, ar_radar, ru_time_lapser];
+   weapon := list[rand(1, list)];
+   tmp := FilterAllUnits([[f_side, side], [f_not, [f_bweapon, 0]]]);
+
+   for i in tmp do
+       list := list diff GetBWeapon(i);
+
+   if list then
+      weapon := list[rand(1, list)];
+   end;
+
+if weapon then
+   begin
+   tmp := CostOfWeapon(weapon);
+   j := GetBase(tower);
+
+   if GetResourceType(j, mat_cans) >= tmp[1] and
+      GetResourceType(j, mat_oil) >= tmp[2] and
+      GetResourceType(j, mat_siberit) >= tmp[3] then
+      result := weapon;
+   end;
 End;
 
-Export Function IsDriver(unit);
+Export Function CompareArray(array1, array2);
+var i;
 begin
-if unit in FilterAllUnits([f_driving]) then
-   result := IsInUnit(unit)
+result := true;
+
+     if array1 = array2 then
+        begin
+        for i = 1 to array1 do
+            if array1[i] <> array2[i] then
+               begin
+               result := false;
+               break;
+               end;
+        end
+         else
+          result := false;
+End;
+
+Export Function VehicleCost(fac, list);
+var cost, pom;
+begin
+pom := GetBase(fac);
+cost := CostOfVehicle(list[1], list[2], list[3], list[4]);
+
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
     else
      result := false;
 End;
 
+Export Function CanBeBuilded(bdepot, btype, x, y, d);
+var i, j, pom, cost, hexes, height, dist, hex;
+begin
+result := false;
 
+if not bdepot or not GetBType(bdepot) in [b_depot, b_warehouse] or not btype or not d in [0, 1, 2, 3, 4, 5] or not ValidHex(x, y) then
+   exit;
+
+pom := GetBase(bdepot);
+cost := CostOfBuilding(btype, GetNation(bdepot));
+
+if not (GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3]) then
+   exit;
+
+//    MAX_DISTANCE 28 (26 in vanilla)
+//    MAX_DISTANCE_BONUS 8
+
+if GetBType(bdepot) = b_depot then
+   dist := 28
+  else
+   dist := 36;
+
+if GetDistUnitXY(bdepot, x, y) > dist then
+   exit;
+
+hexes := GetBuildingHexes(btype, x, y, d, GetNation(bdepot), 0);
+
+if not hexes then
+   exit;
+
+hex := GetHexInfo(x, y);
+
+if hex[1] then
+   exit;
+
+height := hex[2];
+
+for i = 1 to hexes do
+    begin
+
+    if not ValidHex(hexes[i][1], hexes[i][2]) then
+       continue;
+
+    j := GetHexInfo(hexes[i][1], hexes[i][2]);
+
+    if j[1] or j[2] > height+2 or j[2] < height-2 or
+       not j[3] in [0, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21] or
+       not j[5] or not j[6] in [1, 2, 7, 9, 10, 11] or
+       HexInfo(hexes[i][1], hexes[i][2]) > 0 or
+       IsEnvironment(hexes[i][1], hexes[i][2]) then
+       exit;
+
+    end;
+
+if DangerAtRangeXY(GetSide(bdepot), x, y, 20)[4] then
+   exit;
+
+result := true;
+End;
+
+{
+GetHexInfo usage:
+[istnieje, wysokoœæ, zbocze, woda (wysokosc?), typ, teren]
+
+Wysokoœæ - Wysokoœæ danego hexu.
+Zbocze - osobny numer dla ka¿dego kierunku i nachylenia
+bia³e:
+nachylenie 1 w kierunkach od 0 do 5:
+8, 9, 10, 11, 12, 13
+nachylenie 2 w kierunkach od 0 do 5:
+16, 17, 18, 19, 20, 21
+¿ó³te:
+nachylenie 3 w kierunkach od 0 do 5:
+24, 25, 26, 27, 28, 29
+nachylenie 4 w kierunkach od 0 do 5:
+32, 33, 34, 35, 36, 37
+czerwone:
+nachylenie 5 w kierunkach od 0 do 5:
+40, 41, 42, 43, 44, 45
+nachylenie 6 w kierunkach od 0 do 5:
+48, 49, 50, 51, 52, 53
+
+Woda - G³êbokoœæ, dla obu typów wód i bagna
+typ - 1 dla wody i bagna lub stoków (chyba chodzi o hexy przez które jednostki musz¹ zwalniaæ), 0 dla p³askich hexów
+Teren - w tej samej kolejnoœci co w edytorze:
+1: earth 2: needles 3: don't enter 4: don't enter water 5: water
+6: don't enter rock 7: rock 8: swamp 9: snee 10: road 11: bank
+}
+
+{
+   Function by 0dd1
+   Source: https://forum.original-war.net/viewtopic.php?f=42&t=5749
+}
+Export Function GetBuildingHexes(btype, x, y, dir, nation, mode);
+var i, temp_list, temp_list2;
+var DepotAm0, DepotAm1, DepotAm2, DepotAm3, DepotAm4, DepotAm5, DepotAr0, DepotAr1, DepotAr2, DepotAr3, DepotAr4, DepotAr5, DepotRu0, DepotRu1, DepotRu2, DepotRu3, DepotRu4, DepotRu5;
+var Factory0, Factory1, Factory2, Factory3, Factory4, Factory5, Ext0, Ext1, Ext2, Ext3, Ext4, Ext5;
+var Lab0, Lab1, Lab2, Lab3, Lab4, Lab5, ControlTower0, ControlTower1, ControlTower2, ControlTower3, ControlTower4, ControlTower5;
+var Barracks0, Barracks1, Barracks2, Barracks3, Barracks4, Barracks5, Bunker0, Bunker1, Bunker2, Bunker3, Bunker4, Bunker5;
+begin
+     result = [];
+     temp_list = [];
+
+     if not dir in [0,1,2,3,4,5] or (btype in [b_depot,b_warehouse] and not nation in [nation_american,nation_arabian,nation_russian]) then
+        exit;
+
+     if btype in [b_lab,b_lab_half,b_lab_full,b_lab_biological,b_lab_computer,b_lab_opto,b_lab_siberium,b_lab_spacetime,b_lab_weapon] then
+        btype = b_lab;
+
+     if not mode in [0,1,2] or (not btype in [b_depot,b_warehouse,b_workshop,b_factory,b_lab,b_control_tower,b_armoury,b_barracks,b_breastwork, b_bunker, b_turret] and mode = 1) or (not btype in [b_workshop,b_factory] and mode = 2) then
+        mode = 0;
+
+
+     case mode of
+          0: begin
+                  //Building Hexes
+                  DepotAm0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[1,2],[0,2],[-1,1],[1,3],[0,3],[-1,2]];
+                  DepotAm1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[-1,1],[-2,0],[-2,-1],[-2,1],[-3,0],[-3,-1]];
+                  DepotAm2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[2,1],[2,2],[1,2],[-2,-1],[-2,-2],[-2,-3],[-3,-2],[-3,-3]];
+                  DepotAm3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[1,2],[0,2],[-1,1],[-1,-3],[0,-3],[1,-2]];
+                  DepotAm4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[-1,1],[-2,0],[-2,-1],[2,-1],[3,0],[3,1]];
+                  DepotAm5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[2,1],[2,2],[1,2],[-2,-1],[-2,-2],[3,2],[3,3],[2,3]];
+
+                  DepotAr0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  DepotRu0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[1,-2],[2,-1]];
+                  DepotRu1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[1,-2],[2,-1],[3,1],[3,2]];
+                  DepotRu2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[3,1],[3,2],[2,3],[1,3]];
+                  DepotRu3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[2,3],[1,3],[-1,2],[-2,1]];
+                  DepotRu4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-1,2],[-2,1],[-3,-1],[-3,-2]];
+                  DepotRu5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[-3,-1],[-3,-2]];
+
+                  Factory0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+                  Factory2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+                  Factory4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+
+                  Ext0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[-2,-1]];
+                  Ext1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,2]];
+                  Ext2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+                  Ext3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[-2,-1]];
+                  Ext4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,2]];
+                  Ext5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+
+                  Lab0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,0],[3,1],[3,2],[3,3],[2,3],[-2,1],[-3,0],[-3,-1],[-3,-2],[-3,-3]];
+                  Lab1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[0,-3],[1,-2],[3,2],[3,3],[2,3],[1,3],[0,3],[-1,2],[-3,-2],[-3,-3]];
+                  Lab2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[0,-3],[1,-2],[2,-1],[3,0],[3,1],[1,3],[0,3],[-1,2],[-2,1],[-3,0],[-3,-1]];
+                  Lab3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,0],[3,1],[3,2],[3,3],[2,3],[-2,1],[-3,0],[-3,-1],[-3,-2],[-3,-3]];
+                  Lab4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[0,-3],[1,-2],[3,2],[3,3],[2,3],[1,3],[0,3],[-1,2],[-3,-2],[-3,-3]];
+                  Lab5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[0,-3],[1,-2],[2,-1],[3,0],[3,1],[1,3],[0,3],[-1,2],[-2,1],[-3,0],[-3,-1]];
+
+                  ControlTower0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[-2,-1],[-2,-2]];
+                  ControlTower1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1]];
+                  ControlTower2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[2,2],[1,2]];
+                  ControlTower3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1]];
+                  ControlTower4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1]];
+                  ControlTower5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  Barracks0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  Bunker0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+             end;
+
+          1: begin
+                  //Exits
+                  DepotAm0 = [[-1,-3],[0,-3],[1,-2]];
+                  DepotAm1 = [[2,-1],[3,0],[3,1]];
+                  DepotAm2 = [[3,2],[3,3],[2,3]];
+                  DepotAm3 = [[1,3],[0,3],[-1,2]];
+                  DepotAm4 = [[-2,1],[-3,0],[-3,-1]];
+                  DepotAm5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  DepotAr0 = [[-1,-3],[0,-3],[1,-2]];
+                  DepotAr1 = [[2,-1],[3,0],[3,1]];
+                  DepotAr2 = [[3,2],[3,3],[2,3]];
+                  DepotAr3 = [[1,3],[0,3],[-1,2]];
+                  DepotAr4 = [[-2,1],[-3,0],[-3,-1]];
+                  DepotAr5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  DepotRu0 = [[0,-3],[-1,-4],[1,-3]];
+                  DepotRu1 = [[3,0],[3,-1],[4,1]];
+                  DepotRu2 = [[3,3],[4,3],[3,4]];
+                  DepotRu3 = [[0,3],[1,4],[-1,3]];
+                  DepotRu4 = [[-3,0],[-3,1],[-4,-1]];
+                  DepotRu5 = [[-3,-3],[-3,-4],[-4,-3]];
+
+                  Factory0 = [[-1,-3],[0,-3],[1,-2],[-1,-4],[0,-4],[1,-3],[-1,-5],[0,-5],[1,-4],[-1,-6],[0,-6],[1,-5]];
+                  Factory1 = [[2,-1],[3,0],[3,1],[3,-1],[4,0],[4,1],[4,-1],[5,0],[5,1],[5,-1],[6,0],[6,1]];
+                  Factory2 = [[3,2],[3,3],[2,3],[4,3],[4,4],[3,4],[5,4],[5,5],[4,5],[6,5],[6,6],[5,6]];
+                  Factory3 = [[1,3],[0,3],[-1,2],[1,4],[0,4],[-1,3],[1,5],[0,5],[-1,4],[1,6],[0,6],[-1,5]];
+                  Factory4 = [[-2,1],[-3,0],[-3,-1],[-3,1],[-4,0],[-4,-1],[-4,1],[-5,0],[-5,-1],[-5,1],[-6,0],[-6,-1]];
+                  Factory5 = [[-2,-3],[-3,-2],[-3,-3],[-3,-4],[-4,-3],[-4,-4],[-4,-5],[-5,-4],[-5,-5],[-5,-6],[-6,-5],[-6,-6]];
+
+                  Lab0 = [[0,-2],[-1,-3],[1,-2]];
+                  Lab1 = [[2,0],[2,-1],[3,1]];
+                  Lab2 = [[2,2],[3,2],[2,3]];
+                  Lab3 = [[0,2],[1,3],[-1,2]];
+                  Lab4 = [[-2,0],[-2,1],[-3,-1]];
+                  Lab5 = [[-2,-2],[-2,-3],[-3,-2]];
+
+                  ControlTower0 = [[-2,-3],[-1,-3]];
+                  ControlTower1 = [[1,-2],[2,-1]];
+                  ControlTower2 = [[3,1],[3,2]];
+                  ControlTower3 = [[2,3],[1,3]];
+                  ControlTower4 = [[-1,2],[-2,1]];
+                  ControlTower5 = [[-3,-1],[-3,-2]];
+
+                  Barracks0 = [[-1,-3],[0,-3],[1,-2]];
+                  Barracks1 = [[2,-1],[3,0],[3,1]];
+                  Barracks2 = [[3,2],[3,3],[2,3]];
+                  Barracks3 = [[1,3],[0,3],[-1,2]];
+                  Barracks4 = [[-2,1],[-3,0],[-3,-1]];
+                  Barracks5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  Bunker0 = [[-1,-2],[0,-2],[1,-1]];
+                  Bunker1 = [[1,-1],[2,0],[2,1]];
+                  Bunker2 = [[2,1],[2,2],[1,2]];
+                  Bunker3 = [[1,2],[0,2],[-1,1]];
+                  Bunker4 = [[-1,1],[-2,0],[-2,-1]];
+                  Bunker5 = [[-1,-2],[-2,-1],[-2,-2]];
+             end;
+
+          2: begin
+                  //Extensions
+                  Factory0 = [[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2],[3,3],[3,2],[4,3],[4,4],[3,4],[2,3],[2,2],[4,2],[2,4],[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3],[-3,0],[-3,-1],[-2,0],[-2,1],[-3,1],[-4,0],[-4,-1],[-4,-2],[-2,2],[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3]];
+                  Factory1 = [[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5],[0,3],[0,2],[1,3],[1,4],[0,4],[-1,3],[-1,2],[2,4],[-2,2],[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2],[-3,-3],[-3,-4],[-2,-3],[-2,-2],[-3,-2],[-4,-3],[-4,-4],[-2,-4],[-4,-2],[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5]];
+                  Factory2 = [[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3],[-3,0],[-3,-1],[-2,0],[-2,1],[-3,1],[-4,0],[-4,-1],[-4,-2],[-2,2],[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3],[0,-3],[0,-4],[1,-3],[1,-2],[0,-2],[-1,-3],[-1,-4],[2,-2],[-2,-4],[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2]];
+                  Factory3 = [[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2],[-3,-3],[-3,-4],[-2,-3],[-2,-2],[-3,-2],[-4,-3],[-4,-4],[-2,-4],[-4,-2],[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5],[3,0],[3,-1],[4,0],[4,1],[3,1],[2,0],[2,-1],[2,-2],[4,2],[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5]];
+                  Factory4 = [[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3],[0,-3],[0,-4],[1,-3],[1,-2],[0,-2],[-1,-3],[-1,-4],[2,-2],[-2,-4],[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2],[3,3],[3,2],[4,3],[4,4],[3,4],[2,3],[2,2],[4,2],[2,4],[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3]];
+                  Factory5 = [[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5],[3,0],[3,-1],[4,0],[4,1],[3,1],[2,0],[2,-1],[2,-2],[4,2],[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5],[0,3],[0,2],[1,3],[1,4],[0,4],[-1,3],[-1,2],[2,4],[-2,2],[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2]];
+             end;
+     end;
+
+
+     case btype of
+          b_depot, b_warehouse: case nation of
+                                     nation_american: temp_list = [DepotAm0, DepotAm1, DepotAm2, DepotAm3, DepotAm4, DepotAm5][dir+1];
+                                     nation_arabian: temp_list = [DepotAr0, DepotAr1, DepotAr2, DepotAr3, DepotAr4, DepotAr5][dir+1];
+                                     nation_russian: temp_list = [DepotRu0, DepotRu1, DepotRu2, DepotRu3, DepotRu4, DepotRu5][dir+1];
+                                end;
+
+          b_workshop,b_factory: temp_list = [Factory0, Factory1, Factory2, Factory3, Factory4, Factory5][dir+1];
+
+          b_ext_track,b_ext_gun,b_ext_rocket,b_ext_noncombat,
+          b_ext_radar,b_ext_siberium,b_ext_stitch,b_ext_computer,b_ext_laser: temp_list = [Ext0, Ext1, Ext2, Ext3, Ext4, Ext5][dir+1];
+
+          b_lab, b_lab_half, b_lab_full,
+          b_lab_biological, b_lab_computer, b_lab_opto,
+          b_lab_siberium, b_lab_spacetime, b_lab_weapon: temp_list = [Lab0, Lab1, Lab2, Lab3, Lab4, Lab5][dir+1];
+
+          b_control_tower: temp_list = [ControlTower0, ControlTower1, ControlTower2, ControlTower3, ControlTower4, ControlTower5][dir+1];
+
+          b_armoury,b_barracks,
+          b_teleport, b_behemoth: temp_list = [Barracks0, Barracks1, Barracks2, Barracks3, Barracks4, Barracks5][dir+1];
+
+          b_breastwork, b_bunker, b_turret,
+          b_solar_power,b_oil_power,b_siberite_power,
+          b_oil_mine, b_siberite_mine: temp_list = [Bunker0, Bunker1, Bunker2, Bunker3, Bunker4, Bunker5][dir+1];
+     end;
+
+
+     temp_list2 = [];
+     for i in temp_list do
+         temp_list2 = temp_list2 ^ [[i[1] + x, i[2] + y]];
+
+     result = temp_list2;
+End;
+
+Export Function EnemyInRange(unit, dist);
+begin
+result := DangerAtRangeXY(GetSide(unit), GetX(unit), GetY(unit), dist)[4];
+End;
+
+// DEPRECATED IN MULTIPLAYER
+Export Function PlayerSeeMe(unit);
+begin
+result := See(your_side, unit);
+End;
+
+Export Function ReverseDir(unit);
+begin
+if not unit then
+   exit;
+
+result := [3, 4, 5, 0, 1, 2][GetDir(unit)+1];
+End;
+
+
+// hexes: [ [x1, y1], [x2, y2], ..]
+Export Function GetClosestHex(unit, hexes);
+var i, dist, tmp, hex;
+begin
+if not hexes then
+   exit;
+
+dist := 9999;
+
+for i = 1 to hexes do
+    begin
+    if GetDistUnitXY(unit, hexes[i][1], hexes[i][2]) < dist then
+       begin
+       hex := hexes[i];
+       dist := GetDistUnitXY(unit, hexes[i][1], hexes[i][2]);
+       end;
+    end;
+
+result := hex;
+End;
+
+Export Function ComAutodestruct(unit);
+var i;
+begin
+if not unit or not unit in FilterAllUnits([[f_type, unit_vehicle], [f_nation, 2]]) then
+   exit;
+
+for i = 1 to 3 do
+    MineExplosion(GetX(unit), GetY(unit), 1);
+End;
+
+Export Function AttackHovercraft(unit, enemy_unit);
+var i, j, tmp, x, y;
+begin
+if not unit or not enemy_unit or HasTask(unit) then
+   exit;
+
+x := GetX(enemy_unit);
+y := GetY(enemy_unit);
+
+if not x or not y then
+   exit;
+
+tmp := [ [ShiftX(x, 0, 4), ShiftY(y, 0, 4)],
+         [ShiftX(x, 1, 4), ShiftY(y, 1, 4)],
+         [ShiftX(x, 2, 4), ShiftY(y, 2, 4)],
+         [ShiftX(x, 3, 4), ShiftY(y, 3, 4)],
+         [ShiftX(x, 4, 4), ShiftY(y, 4, 4)],
+         [ShiftX(x, 5, 4), ShiftY(y, 5, 4)]];
+
+for i = tmp downto 1 do
+    if not ValidHex(tmp[i][1], tmp[i][2]) or HexInfo(tmp[i][1], tmp[i][2]) <> 0 then
+       tmp := Delete(tmp, i);
+
+j := GetClosestHex(unit, tmp);
+
+ComMoveXY(unit, j[1], j[2]);
+End;
+
+
+
+Export Function PrepareNature;
+var i, animal, nat_area;
+begin
+
+     uc_side = 0;
+     uc_nation = 0;
+
+     nat_area := natureArea;
+
+     InitHc;
+
+     // birds
+     for i = 1 to 4 do
+     begin
+     hc_class = 18;
+     hc_gallery = '';
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // tigers
+     for i = 1 to 3 do
+     begin
+     hc_class = class_tiger;
+     hc_gallery = '';
+     hc_agressivity = Rand(-5, 5);
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // apeman
+     for i = 1 to multi_ape_amount do
+     begin
+     hc_class = class_apeman;
+     hc_gallery = '';
+     hc_agressivity = rand(-2, 2);
+     hc_skills := [rand(1, 3), rand(1, 3), 0, 0];
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+
+     // enhidna
+     for i = 1 to 3 do
+     begin
+     hc_class = 13;
+     hc_gallery = '';
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, nat_area, false);
+     end;
+
+     // fish
+     for i = 1 to 7 do
+     begin
+     hc_class = 20;
+     hc_gallery = '';
+
+     animal := CreateHuman;
+     PlaceUnitArea(animal, waterArea, false);
+     end;
+
+End;
+
+
+
+
+// ATTACK
+{
+   * Wywo³anie odbywa siê w oddzielnej instacji RaiseSailEvent gdzie skrypt wykonywany jest w pêtli
+     do czasu a¿ zostanie wykonane zadanie lub wszystkie jednostki atakuj¹ce zgin¹
+   * Przy odpaleniu przekazujemy argumenty z mc_attack do lokalnego tmp i czyœcimy mc_attack
+   * Po odpaleniu funkcji zbierane s¹ wszystkie dostêpne jednostki z group
+   * Po zebraniu wymaganych jednostek nastêpuje pod¹¿anie po wyznaczonej trasie:
+     * Przejazd polega na pod¹zaniu z punktu A do punktu B
+     * Po dotarciu do punktu B nastêpuje skasowanie punktu A
+     * Nastêpuje przejazd z punktu B do C
+     * Ca³a operacja wykonywana jest oddzielnie dla ka¿dej z jednostek z group
+     * Po wykryciu wroga (SEE lub DIST < 10) przejazd jest anulowany, a jednostka atakuje
+       napotkanego wroga
+     * Atak nastêpuje po wykryciu wroga
+     * Podczas ataku uzglêdniane s¹ flagi ustawieñ:
+       * mc_ignore_area - stara siê unikaæ wjazdu na dany obszar => [x, y, range]
+       * mc_capture - okreœla czy jednostki atakuj¹ce mog¹ przejmowaæ wrogie pojazdy => [bool]
+       * mc_ignore_civ - stara siê unikaæ jednostki cywilne wroga (mechanicy, naukowcy, komory trans.) => [bool]
+       * mc_murder - okreœla czy jednostki wroga maj¹ byæ dobijane => [bool]
+       * mc_mines - okreœla czy jednostki mog¹ podk³adaæ ³adunki czasowe => [bool]
+       * mc_repair - okreœla czy jednostki mog¹ wycofywaæ siê i naprawiaæ (wymaga mechanikow w group) => [bool]
+       * mc_heal - okreœla czy jednostki mog¹ wycofywaæ siê i leczyæ (wymaga naukowców w group) => [bool]
+       * mc_spacetime - okreœla czy jednostki mog¹ korzystaæ z amunicji czasoprzestrznnej (wymaga bazookerow) => [bool]
+       * mc_attack_depot - okreœla czy celem priorytetowym ma byæ magazyn w bazie wroga => [bool]
+       * mc_crawl - okreœla czy ¿o³nierze mog¹ siê czo³gaæ => [bool]
+
+     ** Stara siê ignorowaæ -> Cel nie jest priorytetowy ale mo¿e staæ siê celem ataku!
+
+   Attack
+    list => [ [ [base, group, path, flags] ] ]
+}
+Export Function Attack(list);
+var base, group, path, flags, i, j, k, x, y, d, z, tmp, tmp2, units_path,
+    f_ignore_area, f_capture, f_ignore_civ, 
+    f_murder, f_mines, f_repair, f_heal, f_spacetime, f_attack_depot,
+    f_crawl,
+    mined, bombed, attacking;
+begin                
+if not list then
+   exit;
+
+base := list[1];
+group := list[2];
+path := list[3];
+flags := list[4];
+
+mined := [];
+bombed := [];
+
+if not group or not path then
+   exit;
+
+// prepare flags
+if flags then
+   begin
+   f_ignore_area := flags[1];
+   f_capture := flags[2];
+   f_ignore_civ := flags[3];  // not implement!
+   f_murder := flags[4];
+   f_mines := flags[5];
+   f_repair := flags[6]; // not implement!
+   f_heal := flags[7]; // not implement!
+   f_spacetime := flags[8]; // not implement!
+   f_attack_depot := flags[9];
+   f_crawl := flags[10];
+   end
+  else
+   begin
+   f_ignore_area := false;
+   f_capture := false;
+   f_ignore_civ := false;
+   f_murder := false;
+   f_mines := false;
+   f_repair := false;
+   f_heal := false;
+   f_spacetime := false;
+   f_attack_depot := false;
+   f_crawl := false;
+   end;
+
+// prepare path for every unit from group
+units_path := [];
+
+for i = 1 to group do
+    begin
+    units_path := Replace(units_path, i, path);
+    end;
+
+
+// main block 
+repeat
+ for i = group downto 1 do
+    begin
+    wait(0$1);
+
+    tmp := [];
+    attacking := false;
+
+    // remove dead unit from list
+    if IsDead(group[i]) or not group[i] then
+       begin
+       group := Delete(group, i);
+       units_path := Delete(units_path, i);
+       continue;
+       end;
+
+    // scan terrain
+    if not EnemyInRange(group[i], 10) and not units_path[i] = [] then
+       begin 
+
+       // little cheat ;) Refuel if player dont see me
+       if GetEngine(group[i]) in [engine_combustion, engine_solar] then
+          if GetFuel(group[i]) < 10 then
+             SetFuel(group[i], 12);
+
+       if units_path[i] then
+          begin
+          if GetDistUnitXY(group[i], units_path[i][1][1], units_path[i][1][2]) > 6 then
+             begin
+             if not HasTask(group[i]) then
+                ComAgressiveMove(group[i], units_path[i][1][1], units_path[i][1][2]);
+             end
+          else
+             begin
+             tmp2 := Delete(units_path[i], 1);
+             units_path := Replace(units_path, i, tmp2);
+             continue;
+             end;
+          end;
+       end
+      else // find some enemy
+       begin
+       tmp := FilterAllUnits([f_enemy, GetSide(group[i])]);
+                
+       if not tmp then
+          continue; // end here!
+
+       // f_ignore_area
+       // ignore units from flag area
+       if f_ignore_area then
+          begin
+          tmp2 := UnitFilter(tmp, [f_not, [f_distxy, f_ignore_area[1], f_ignore_area[2], f_ignore_area[3]]]);
+
+          if (tmp diff tmp2) then
+             tmp := tmp diff tmp2;
+          end;
+
+       // f_murder
+       // attack units on red hp
+       if not f_murder then
+          begin
+          tmp2 := UnitFilter(tmp, [f_not, [f_ok]]);
+
+          if (tmp diff tmp2) then
+             tmp := tmp diff tmp2;
+          end;
+
+       tmp := SortByDistanceUnit(group[i], tmp, true, true);
+
+       // check unit type
+       // soldier
+       if GetClass(group[i]) = 1 then
+          begin
+
+          if WantPlant(group[i]) then
+             continue;
+
+          if f_capture and not IsInUnit(group[i]) and tmp[1] in UnitFilter(tmp, [[f_type, unit_vehicle], [f_empty]]) then
+             begin
+             ComEnterUnit(group[i], tmp[1]);
+             attacking := true;
+             continue;
+             end;
+
+          if f_crawl and GetClass(group[i]) = 1 and GetLives(group[i]) < 800 and not Crawls(group[i]) then
+             ComCrawl(group[i]);
+                         
+          if f_mines then
+             begin
+             if GetType(tmp[1]) = unit_building and not tmp[1] in mined then
+                begin
+                x := GetX(tmp[1]);
+                y := GetY(tmp[1]);
+                d := ReverseDir(group[i]);
+
+                ComPlaceDelayedCharge(group[i], x, y, tmp[1]);
+                AddComMoveXY(group[i], ShiftX(x, d, 7), ShiftY(y, d, 7));
+                SetTag(group[i], 71);
+                mined := Replace(mined, mined+1, tmp[1]);
+                attacking := true;
+                continue;
+                end;
+             end;
+
+          end;
+                
+       // kamikaze
+       if GetClass(group[i]) = 17 and not GetTag(group[i]) = 71 then
+          begin
+          attacking := false;
+          k := 5;
+
+          if tmp < k then
+             k := tmp;
+
+          for j = 1 to k do
+              begin
+              if not tmp[j] in UnitFilter(tmp, [f_empty]) then
+                 begin
+                 ComAttackUnit(group[i], tmp[j]);
+                 attacking := true;
+                 SetTag(group[i], 71);
+                 continue;
+                 end;
+              end;
+          end;
+
+       // mortar or rockets
+       if GetClass(group[i]) = 8 or GetWeapon(group[i]) in [ar_rocket_launcher, ru_rocket_launcher, us_rocket_launcher, ru_rocket] then
+          begin
+          attacking := false;
+
+          if GetBType(tmp[1]) in [b_bunker, b_breastwork, b_turret, b_armoury, b_barracks] then
+             begin
+             k := GetBuildingHexes(GetBType(tmp[1]), GetX(tmp[1]), GetY(tmp[1]), GetDir(tmp[1]), GetNation(tmp[1]), 0);
+             j := GetClosestHex(group[i], k);
+
+             if j then
+                if ValidHex(j[1], j[2]) then
+                   begin
+                   ComAttackPlace(group[i], j[1], j[2]);
+                   attacking := true;
+                   continue;
+                   end;
+             end;
+          end;
+
+       // hovercraft
+       if GetChassis(group[i]) = ar_hovercraft then
+          begin      
+          k := 10;
+          x := 0;
+
+          if tmp < k then
+             k := tmp;
+
+          for j = k downto 1 do
+              begin
+              if GetType(tmp[j]) = unit_human then
+                 begin
+                 AttackHovercraft(group[i], tmp[j]);
+                 x := tmp[j];
+                 attacking := true;
+                 end;
+              end;  
+
+          if not x then
+             begin
+             attacking := true;
+
+             if GetHexInfo(GetX(group[i]), GetY(group[i]))[2] = GetHexInfo(GetX(tmp[1]), GetY(tmp[1]))[2] then
+                AttackHovercraft(group[i], tmp[1])
+               else
+                ComAttackUnit(group[i], tmp[1]);
+             end;
+          end;
+
+       // self propelled bomb
+       if GetWeapon(group[i]) = ar_selfpropelled_bomb then
+          begin
+
+          if WantsToAttack(group[i]) in bombed then
+             continue;
+
+          k := 8;
+          x := 0;
+
+          if tmp < k then
+             k := tmp;
+
+          for j = 1 to k do
+              begin
+              if GetType(tmp[j]) = unit_building then
+                 if not tmp[j] in bombed and UnitsInside(tmp[j]) then
+                    begin
+                    ComAttackUnit(group[i], tmp[j]);
+                    bombed := Replace(bombed, bombed+1, tmp[j]);
+                    attacking := true;
+                    break;
+                    end;
+              end;
+
+          if not attacking and f_attack_depot then
+             begin
+             z := UnitFilter(tmp, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+
+             if z then
+                begin
+                ComAttackUnit(group[i], NearestUnitToUnit(z, group[i]));
+                attacking := true;
+                end;
+             end;
+             
+
+          if GetLives(group[i]) < 500 then
+             ComAttackUnit(group[i], tmp[1]);
+          end;
+
+
+       // autodestruction
+       if GetLives(group[i]) < 250 and group[i] in FilterAllUnits([[f_type, unit_vehicle], [f_nation, 2]]) then
+          begin
+          k := NearestUnitToUnit(all_units diff group[i], group[i]);
+
+          if not k then
+             continue;
+
+          if k in FilterAllUnits([f_enemy, GetSide(group[i])]) and GetDistUnits(k, group[i]) < 5 then
+             ComAutodestruct(group[i]);
+          end; 
+          
+       if f_attack_depot then
+          begin
+          k := 6;
+
+          if tmp < k then
+             k := tmp;
+
+          for j = 1 to k do
+              if GetBType(j) in [b_depot, b_warehouse] then
+                 begin
+                 ComAttackUnit(group[i], tmp[j]);
+                 attacking := true;
+                 break;
+                 end;
+          end;
+
+       // others..
+       if IsOk(group[i]) and not attacking then
+          begin
+
+          if GetTag(group[i]) = 71 then
+             begin
+             if HasTask(group[i]) then
+                continue
+               else
+                SetTag(group[i], 0);
+             end;
+
+          k := 8;
+          x := 0;
+
+          if tmp < k then
+             k := tmp;
+
+          for j = 1 to k do
+              if GetType(tmp[j]) = unit_human and ((GetLives(tmp[j]) < 250 and f_murder) or (not f_murder and GetLives(tmp[j]) >= 250)) then
+                 begin
+                 x := tmp[j];
+                 break;
+                 end;
+
+          if x then
+             ComAttackUnit(group[i], x)
+            else
+             ComAttackUnit(group[i], tmp[1]);
+          end;
+    end;
+
+ end;
+
+ wait(0$1);
+until group = [];
+
+End;
+
+
+// DEPRECATED
+Export Function _ScanBase(base_units);
+var i, t, tmp;
+begin
+if not base_units then
+   exit;
+
+result := false;
+
+tmp := UnitFilter(base_units, [f_type, unit_building]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    result := EnemyInRange(i, 22);
+
+    if result then
+       exit;
+    end;
+End;
+
+Export Function GetByTag(side, tag);
+var i;
+begin
+result := FilterAllUnits([f_side, side]);
+
+for i in result do
+    if GetTag(i) <> tag then
+       result := result diff i;
+End;
+
+Export Function IsDriver(un);
+begin
+result := un in FilterAllUnits([f_driving]);
+End;
 
 
 

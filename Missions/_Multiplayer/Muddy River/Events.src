@@ -1,77 +1,361 @@
+On ArtifactLoaded(cargo, artifact) do
+var i, j;
+begin
+if artifact_get then
+   exit;
+
+MultiplayerEvent_ArtifactCaptured(GetSide(cargo));
+artifact_get := true;
+End;
+
 On UnitDestroyed(un) do
-var shooter, cl, s, n;
+var i, j, btype, pos, side, tmp, fac, components;
 begin
-if un in FilterAllUnits([f_weapon, 91]) then
-   begin
-   ArtContamination(GetX(un), GetY(un), 10);
-   end;
-   
-if un in attackers then
-   attackers := attackers diff un;
 
-if GetSide(un) <> bot_side and GetSide(un) > 0 and un in FilterAllUnits([f_type, unit_human]) then
-   begin
-   if respawning_time_min > 0$00 then
-      begin
-      s := GetSide(un);
-      n := GetNation(un);
-      cl := GetClass(un);
+   side := GetSide(un);
 
-      wait(respawning_time_min);
+   if side <> side_bot and multi_sides[side] then
+      if GetType(un) = unit_human then
+         MultiplayerEvent_HumanLost(side);
 
-      wait(respawning_time_max - (0$10 * tick mod 10 + 1));
+   if side = side_bot then
+      if un <> Gensher then
+         MultiplayerEvent_UnitKilled(un, false)
+        else
+         MultiplayerEvent_UnitKilled(un, Multiplayer_GetCondition(5));
 
-      uc_side := s;
-      uc_nation := n;
-      PrepareHuman(false, cl, skill_level-2);
-      PlaceUnitArea(CreateHuman, [cr1, cr3, cr2, cr3][(cl mod 4) + 1], true);
-      end;
-   end;
+   if multi_commanders and multi_custom_commanders then
+      if un in multi_commanders then
+         begin
+         multi_loosers := Replace(multi_loosers, side, 1);
+         multi_commanders := multi_commanders diff un;
+         Multiplayer_Reside(side);
+         end;
+
+   if not mc_bases then
+      exit;
+
+   for i = 1 to mc_bases do
+       if un in mc_bases[i] or un in mc_construct_list[i] or un in mc_vehicles[i] then
+          begin
+
+          if GetType(un) = unit_vehicle and GetTag(un) = 20 then
+             begin
+             fac := MC_GetBuilding(i, b_factory);
+
+             if fac then
+                begin
+                components := Produce(fac, GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un));
+
+                if components then
+                   MC_InsertProduceList(i, components);
+
+                break;
+                end;
+             end;
+
+          if GetType(un) = unit_building then
+             begin
+             btype := GetBType(un);
+
+             if btype = b_warehouse then
+                begin
+                btype := b_depot;
+                pos := 1;
+                end;
+
+             if btype = b_factory then
+                begin
+                btype := b_workshop;
+                pos := 1;
+                end;
+
+             if btype in [b_lab_half, b_lab_full] then
+                btype := b_lab;
+
+             mc_build_list := Add(mc_build_list, [i, mc_build_list[i]+1], [btype, GetX(un), GetY(un), GetDir(un)]);
+
+             if pos = 1 then
+                begin
+                tmp := mc_build_list[i];
+
+                if UnitFilter(tmp, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) then
+                   pos := 2;
+
+                tmp := ReplaceWith(tmp, pos, tmp);
+                mc_build_list := Replace(mc_build_list, i, tmp);
+                end;
+             end;
+
+          if un in mc_bases[i] then
+             begin
+             tmp := mc_bases[i] diff un;
+             mc_bases := Replace(mc_bases, i, tmp);
+             end;
+
+          if un in mc_construct_list[i] then
+             begin
+             tmp := mc_construct_list[i] diff un;
+             mc_construct_list := Replace(mc_construct_list, i, tmp);
+             end;
+
+          if un in mc_vehicles[i] then
+             begin
+             mc_vehicles := Replace(mc_vehicles, i, mc_vehicles[i] diff un);
+             end;
+
+          if un in mc_empty_turret_list[i] then
+             begin
+             mc_empty_turret_list := Replace(mc_empty_turret_list, i, mc_empty_turret_list[i] diff un);
+             end;
+
+          if un in mc_turret_list[i] then
+             begin
+             mc_turret_list := Replace(mc_turret_list, i, mc_turret_list[i] diff un);
+             end;
+
+          break;
+          end;
 End;
 
-On UnitGoesToRed(un) do
-var tmp, i;
+On BuildingStarted(building, builder) do
+var i, j, btype, x, y, d;
 begin
-if un in FilterAllUnits([[f_side, bot_side], [f_btype, b_lab_full]]) and GetLives(ar_lab_main) > 500 then
-   begin
-   Wait(0$02);
+if not mc_bases then
+   exit;
 
-   for i in FilterAllUnits([[[f_side, bot_side], [f_class, 4], [f_not, [f_inside]]]]) do
-       ComEnterUnit(i, ar_lab_main);
+btype := GetBType(building);
+    x := GetX(building);
+    y := GetY(building);
+    d := GetDir(building);
+
+for i = 1 to mc_bases do
+    begin
+
+    if not mc_build_list[i] then
+       continue;
+
+    if CompareArray([btype, x, y, d], mc_build_list[i][1]) then
+       begin
+       mc_build_list := Replace(mc_build_list, i, Delete(mc_build_list[i], 1));
+       mc_construct_list := Add(mc_construct_list, [i, mc_construct_list[i]+1], building);
+       exit;
+       end;
+
+    end;
+End;
+
+On BuildingComplete(building) do
+var i, j;
+begin
+
+if GetSide(building) <> side_bot then
+   MultiplayerEvent_BuildingCompleted(GetSide(building), GetBType(building));
+
+if GetBType(building) = b_depot and GetSide(building) <> side_bot and base_names then
+   begin
+   SetBName(building, base_names[1]);
+   base_names := Delete(base_names, 1);
    end;
 
-if GetSide(un) = bot_side and un in FilterAllUnits([[f_control, control_remote], [f_type, unit_vehicle]]) then
-   if GetSide(NearestUnitToUnit(all_units diff un, un)) <> bot_side then
-      begin
-      Wait(0$1.3);
-      MineExplosion(GetX(un), GetY(un), 1);
-      MineExplosion(GetX(un), GetY(un), 1);
-      MineExplosion(GetX(un), GetY(un), 1);
-      end;
+if not mc_bases then
+   exit;
 
-if GetControl(un) = control_remote then
-   ComUnlink(un);
+for i = 1 to mc_bases do
+    begin
+
+    if building in mc_construct_list[i] then
+       begin
+       mc_construct_list := Replace(mc_construct_list, i, mc_construct_list[i] diff building);
+       mc_bases := Add(mc_bases, [i, mc_bases[i]+1], building);
+
+       if GetBType(building) in [b_bunker, b_turret] then
+          begin
+          mc_turret_list := Add(mc_turret_list, [i, mc_turret_list[i]+1], building);
+          mc_empty_turret_list := Add(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
+          end;
+
+       exit;
+       end;
+
+    end;
 End;
 
-On VehicleConstructed(veh, b) do
+On ResearchComplete(tech, lab) do
+var side;
 begin
-if GetSide(veh) = bot_side then
-   attackers := Insert(attackers, attackers+1, veh);
+side := GetSide(lab);
+
+if not side in mc_sides or not mc_tech then
+   exit;
+
+mc_tech := Replace(mc_tech, side, mc_tech[side] diff tech);
 End;
 
-On LeaveBuilding(b, un) do
-var i, arm, tmp;
+On CrateSpawn(id, x, y, amount, mode) do
+var i, depot;
 begin
-if GetSide(b) = bot_side and GetBType(b) = b_bunker then
-   begin
-   arm := FilterAllUnits([[f_side, bot_side], [f_btype, b_barracks]]);
-   tmp := NearestUnitToUnit(arm, un);
+if not mc_bases then
+   exit;
 
-   if tmp then
-      begin
-      ComEnterUnit(un, tmp);
-      AddComChangeProfession(un, class_mortar);
-      end;
-   end;
+repeat
+ wait(0$1);
+until GetResourceAmountXY(x, y);
+
+if GetResourceTypeXY(x, y) = mat_artefact then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    depot := UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+
+    if not depot then
+       continue;
+
+    if GetDistUnitXY(depot[1], x, y) < 30 then
+       begin
+       mc_crates := Add(mc_crates, [i, mc_crates[i]+1], [amount, x, y]);
+       break;
+       end;
+    end;
+
 End;
 
+On VehicleConstructed(vehicle, factory) do
+var i, side, tmp;
+begin
+side := GetSide(vehicle);
+
+if side <> side_bot and multi_sides[side] then
+   MultiplayerEvent_Produced(side);
+
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    if factory in mc_bases[i] then
+       begin
+       if mc_defender[i] < mc_defender_limit[i] then
+          begin
+          mc_defender := Replace(mc_defender, i, mc_defender[i]^vehicle);
+
+          if not mc_scan[i] then
+             begin
+             if GetControl(vehicle) = control_remote then
+                repeat
+                 wait(0$1);
+                until IsControledBy(vehicle);
+
+             ComMoveToArea(vehicle, mc_parking[i]);
+
+             if GetControl(vehicle) <> control_manual then
+                break;
+
+             repeat
+              wait(0$1);
+             until IsInArea(vehicle, mc_parking[i]);
+
+             ComExitVehicle(IsDrivenBy(vehicle));
+             exit;
+             end;
+          end
+         else
+          mc_vehicles := Add(mc_vehicles, [i, mc_vehicles[i]+1], vehicle);
+       end;
+    end;
+End;
+
+On VehicleCaptured(new, old, side, capturing_unit) do
+var i, tmp;
+begin
+if side <> side_bot then
+   exit;
+
+for i = 1 to mc_vehicles do
+    if old in mc_vehicles[i] or new in mc_vehicles[i] then
+       begin
+       tmp := mc_vehicles[i] diff old;
+       tmp := tmp diff new;
+       mc_vehicles := Replace(mc_vehicles, i, tmp);
+       break;
+       end;
+End;
+
+On BuildingCaptured(building, side, capturning_unit) do
+var i, tmp;
+begin
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    if building in mc_bases[i] then
+       begin
+       tmp := mc_bases[i] diff building;
+       mc_bases := Replace(mc_bases, i, tmp);
+
+       if building in mc_turret_list[i] then
+          mc_turret_list := Replace(mc_turret_list, i, mc_turret_list[i] diff building);
+
+       if building in mc_empty_turret_list[i] then
+          mc_empty_turret_list := Replace(mc_empty_turret_list, i, mc_empty_turret_list[i] diff building);
+
+       break;
+       end;
+End;
+
+On EnterBuilding(building, unit) do
+var i, tmp;
+begin
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    if building in mc_busy_turret_list[i] then
+       begin
+       tmp := mc_busy_turret_list[i] diff building;
+       mc_busy_turret_list := Replace(mc_busy_turret_list, i, tmp);
+       break;
+       end;
+    end; 
+End;
+
+On LeaveBuilding(building, unit) do
+var i, tmp;
+begin
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    if building in mc_turret_list[i] and not building in mc_empty_turret_list[i] then
+       begin
+       mc_empty_turret_list := Add(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
+       break;
+       end;
+    end;
+
+if GetClass(building) in mc_sides and GetBType(building) = b_barracks and GetTag(unit) <> 18 then
+   if GetClass(unit) in [5, 8, 9] then
+      SetClass(unit, 1);
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+var i;
+begin
+if not mc_bases then
+   exit;
+
+if GetLives(abandoned_vehicle) > 250 then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    if driver in mc_bases[i] then
+       begin
+       ComMoveUnit(driver, UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]])[1]);
+       break;
+       end;
+    end;
+End;

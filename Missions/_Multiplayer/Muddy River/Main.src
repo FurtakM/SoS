@@ -1,239 +1,65 @@
-// Muddy River by Serpent
-// SoS Coop
-
+// Muddy River v2 by Serpent
+// 04-04-2019
 Starting
+var tab;
 begin
-Game_Start := false;
-Randomize;
+ResetFog;    
+RandomizeAll;
 
-Init();
-InitBot();
+InitHc;
+InitUc;
+InitBc;
 
-Game_Start := true;
+InitVariables;
+InitMultiplayer;
+InitMacro;
+
+if debug then
+   FogOff(1);
+
+PrepareNature;
+PrepareArabian(Multiplayer_SetBotSide(2));
+Multiplayer_Start;
+
+RunMacro;
+
+Multiplayer_End;
 End;
 
-Every 0$01 trigger game_start and FilterAllUnits([f_side, bot_side]) = 0 do
-YouWinInMultiplayer;
-
-Every 0$01 trigger game_start and FilterAllUnits([f_side, your_side]) = 0 do
-begin
-Multiplayer_Loose_Message;
-Wait(0$03);
-YouLostInMultiplayer;
+Export debug, game, side_bot, artifact_get, base_names;
+Function InitVariables;
+begin   
+debug := 1;
+side_bot := 2;
+artifact_get := false;
+base_names := ['base_a', 'base_b', 'base_c', 'base_d', 'base_e', 'base_f',
+               'base_g', 'base_h', 'base_i', 'base_j', 'base_k', 'base_l',
+               'base_m', 'base_n', 'base_o', 'base_p', 'base_r', 'base_s',
+               'base_t', 'base_u', 'base_w', 'base_x', 'base_y', 'base_z'];
 End;
 
-Export Game_Type, Side_Positions, Side_Teams, Side_Nations, Teams;
-Export Team_Game, Side_Start, Bot_Side, Game_Start;
-Export number_of_people, skill_level, crates_spawn, respawning_time_min, respawning_time_max, amount_of_apeman;
-Export definitions, mines_list, apeman_areas, patrols, attackers, to_produce, veh_counter, queue_codes, rng, target, handicap, rforce, rforce2, att_counter;
-Export Function Init();
-var i, j;
+Every 0$01 trigger game and not debug_strings do
 begin
-definitions := [];
-rforce := [];
-rforce2 := [];
+enable;
 
- if Multiplayer then
-    begin
-    Game_Type      := mp_game_type;
-    Your_Side      := mp_player_side;
-    Side_Positions := mp_sides_positions;
-    Side_Teams     := mp_sides_teams;
-    Side_Nations   := mp_sides_nations;
-    Teams          := mp_teams;
-
-    for i = 0 to 6 do
-        definitions := Insert(definitions, definitions+1, GetMultiplayerSetting(i)+1);
-    end
-  else
-    begin
-    Game_Type      := 1; 
-    Your_Side      := 1;
-    Side_Positions := [1, 0, 0, 2, 0, 0, 0, 0];
-    Side_Teams     := [1, 0, 0, 1, 0, 0, 0, 0];
-    Side_Nations   := [1, 0, 0, 1, 0, 0, 0, 0];
-    Teams          := [[1, 4]];
-    end;
-
-  // positions
-  Side_Start := [[83, 148], [187, 144], [], [], [], [], [], []];
-
-  // side for bot
-  Bot_Side := 2;
-
-  for i = 1 to 8 do
-      begin
-      if Multiplayer_GetPlayerIsSpec(i) or Multiplayer_GetPlayerIsComp(i) then
-         begin
-         Side_Positions := Replace(Side_Positions, i, 0);
-         Teams := Replace(Teams, Side_Teams[i], Teams[Side_Teams[i]] diff i);
-         end;
-
-      if Side_Nations[i] and Side_Nations <> 1 then
-         Side_Nations := Replace(Side_Nations, i, 1);
-      end;
-
-  if 2 = bot_side and Side_Positions[2] then
-     bot_side := 5;
-
-  if 5 = bot_side and Side_Positions[5] then
-     bot_side := 8;
-
-
-  Team_Game := false;
-
-  for i = 1 to 8 do
-      if Side_Teams[i] then
-         begin
-         Team_Game := true;
-         break;
-         end;
-
-
-  // share vision
-  for i in Teams do
-      for j = 2 to i do
-          begin
-          ChangeSideFog(i[j], i[1]);
-          SetAttitude(i[j], i[1], att_friend, true);
-          end;
-
-
-  if not Multiplayer then
-     definitions := [1, 1, 1, 1, 2, 3, 3];
-
-  number_of_people     := [5, 9, 12, 15][definitions[1]];
-  skill_level          := [2, 4, 6, 8][definitions[2]];
-  crates_spawn         := [0$55, 0$45, 0$31, 0$21][definitions[3]];
-  respawning_time_min  := [0$0][1];
-  respawning_time_max  := [0$0][1];
-  amount_of_apeman     := [0, 3, 5, 7][definitions[4]];
-  difficulty           := [1, 2, 3][definitions[5]];
-  handicap             := [0, 1, 2][definitions[6]];
-
-
-  // queue codes
-     queue_codes := [11353, 12644, 44646, 12345, 43411, 14652, 23441];
-     rng := Rand(1, 7);
-
-  // bot settings
-  if bot_side <> 2 then
-     for i in FilterAllUnits([f_side, 2]) do
-         SetSide(i, bot_side);
-
-
-  ResetFog;
-
-  // create people
-  PreparePeople();
-
-  apeman_areas := [ape1, ape2, ape3];
-
-  if amount_of_apeman then
-     for j in apeman_areas do
-         for i = 1 to amount_of_apeman do
-             AddApeman(j);
-
-  CenterNowOnUnits(FilterAllUnits([f_side, your_side])[1]);
-
-  Disable(17); // ar attacks
-
+display_strings := Multiplayer_DisplayStrings();
 End;
 
-Every 0$03 trigger GetSide(ar_base_sout) <> bot_side or IsDead(ar_base_sout) do
+Function Debuger;
 var i;
-begin
-for i = 1 to rforce do
+begin 
+if not debug then
+   exit;
+
+game_speed := 5;
+
+uc_side := 1;
+uc_nation := 1;
+
+for i = 1 to 10 do
     begin
-    PlaceUnitXYR(rforce[i][1], rforce[i][2], rforce[i][3], 6, false);
-
-    if GetWeapon(rforce[i][1]) = us_cargo_bay then
-       SetCargo(rforce[i][1], mat_cans, 100);
+    PrepareHuman(false, 1, 10);
+    PlaceUnitArea(CreateHuman, player_1_hum, false);
     end;
-End;
-
-Every 0$03 trigger (GetSide(ar_base_sout) <> bot_side or IsDead(ar_base_sout)) and tick > 42000 do
-var i;
-begin
-for i = 1 to rforce2 do
-    begin
-    PlaceUnitXYR(rforce2[i][1], rforce2[i][2], rforce2[i][3], 6, false);
-    end;
-End;
-
-
-// crates
-Every 0$01+0$30 trigger game_start do
-var cr, cr_queue, time;
-begin
-cr := 1;
-cr_queue := [rand(1,3), rand(2,4), rand(3,5), rand(3,5), rand(2,5), rand(1,5)];
-time := crates_spawn;
-
-     while(true) do
-     begin
-     Wait(time);
-
-     if (tick / 35 * 60) mod 30 = 0 then
-        time := crates_spawn
-         else
-        time := time + crates_spawn;
-
-     if cr mod 3 = 0 then
-        begin
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr1, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr2, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr3, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr1, true);
-        end;
-
-     if cr mod 3 = 1 then
-        begin
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr2, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr1, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr3, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr2, true);
-        end;
-
-     if cr mod 3 = 2 then
-        begin
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr3, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr2, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr1, true);
-
-        Wait(crates_spawn);
-
-        CreateCratesArea(cr_queue[cr mod cr_queue + 1], cr3, true);
-        end;
-
-     cr := cr + 1;
-
-     if cr > 110 then
-        cr := 43;
-     end;
 End;
 
