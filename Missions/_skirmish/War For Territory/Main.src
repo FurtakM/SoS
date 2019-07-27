@@ -1,41 +1,62 @@
-// War for Siberite
-// by Serpent
+// War for Territory
 // 29-01-2016
-// ---
+// by Serpent
 
 Starting
 begin
 ResetFog;
-RandomizeAll;
 
-InitGlobalVar;
-InitGame;
-Debug(1);
+InitVariables;
+
+if debug then
+   FogOff(1);
+
+PrepareNature(0, 0, 5, 0, 0, 0, 0, gensher_ape, 0);
+PrepareNature(0, 0, 5, 0, 0, 0, 0, powell_ape, 0);
+
+PrepareGensher;
+PreparePowell;
+
+MC_Start();
 End;
 
-
-Function InitGame;
+Export debug, game;
+Function InitVariables;
 begin
-Difficulty := 2;
-
-PrepareSquad(4, 1, powell_base, 'powell', 4, 15);
-Resources(3, 3, 3, powell_base);
-PrepareSquad(2, 2, gensher_base, 'gensher', 4, 15);
-Resources(3, 3, 3, gensher_base);
+debug := 1;//true;
+game := true;
 End;
 
 
-Export ar_crane, ru_big_cargo_bay;
-Function InitGlobalVar;
+Export Function CustomInitMacro;
 begin
-ar_crane := 88;
-ru_big_cargo_bay := 89;
+InitMC_Gensher();
+InitMC_Powell();
 End;
 
 
-Function Debug(s);
+// Crates
+Every 0$10 do
+var cr, time, i;
 begin
-TurnFogOff();
-Your_Side := s;
-CenterNowOnUnits(FilterAllUnits([f_side, s])[1]);
+time := 0$30;
+
+repeat
+ wait(time);
+ cr := rand(1, 5);
+
+ for i in [powell_crates, gensher_crates] do // todo
+     begin
+     CreateCratesArea(cr, i, true);
+     wait(0$5);
+     end;
+
+ time := time + 0$2;
+
+ if time > 1$00 then
+    time := 0$25;
+
+until not game;
 End;
+
+
