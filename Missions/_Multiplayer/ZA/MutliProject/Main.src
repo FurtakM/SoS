@@ -1,0 +1,104 @@
+// Multiplayer Code by Serpent 2015
+// Sand of Siberia
+
+
+// Includes:
+// Main Settings [mp_settings_X];
+// Game Modes System [gametype_X][1 - 20];
+// Spawn Units System [spawn_X];
+// Timer [timer];
+// Co-op system [cp_X];
+
+{
+MAIN mp_settings:
+1 - [nonbase, depot, fort+]
+2 - human amount  [6, 9, 12, 15, 18, 21]
+3 - skill  [2, 4, 5, 6, 8]
+4 - source [crates, oil-sib deposits] [1-3]
+5 - crates spawn [0, 1, 2, 3, 4, 5]
+6 - apemans [0, 2, 3, 5+]
+7 - reinforce [0, 1, 2, 3]
+}
+
+
+
+Export game_type, mp_settings, max_settings, player_side, players_pos,
+       players_nat, players_team, position_sides, team_game,
+       teams, timer, vision;
+Export Function CheckMultiSettings();
+var i, tmp;
+begin
+
+     // if game is real multiplayer
+        if Multiplayer then
+           begin
+           game_type := mp_game_type;
+           your_side := mp_player_side;
+
+           players_pos  := mp_sides_positions;
+           players_team := mp_sides_teams;
+           players_nat  := mp_sides_nations;
+
+           teams := mp_teams;
+           end
+            else
+             begin // test mode
+             game_type := 1;
+             // your_side := 1;
+
+             players_pos  := [1, 0, 0, 1, 0, 0, 0, 0];
+             players_team := [1, 2, 3, 4, 5, 6, 7, 8];
+             players_nat  := [1, 2, 3, 1, 2, 3, 1, 2];
+
+             teams := [[1], [2], [3], [4], [5], [6], [7], [8]];
+             end;
+
+
+        if Multiplayer then
+           begin
+
+                case game_type of
+                1: max_settings := 9;
+                2: max_settings := 9;
+                // ...
+                end;
+
+                for i = 1 to max_settings do
+                    mp_settings := mp_settings ^ GetMultiplayerSetting(i-1);
+
+           end
+            else
+             begin // test
+             max_settings := 9;
+             mp_settings := [4, 3, 1, 1, 1, 1, 1, 1, 1];
+             end;
+
+
+End;
+
+
+
+
+// Let's start!
+Starting
+begin
+ResetFog;
+RandomizeAll;
+
+CheckMultiSettings();
+SetDiplomatic();
+LoadGame();
+LoadSpec();
+
+if not Multiplayer then
+   begin
+   timer := false;
+   display_strings := RandPointsFromArea(1,1, 21,12, 12);
+   end
+    else display_strings := game_type;
+
+Disable(01);
+Disable(02);
+
+FogOff(your_side);
+End;

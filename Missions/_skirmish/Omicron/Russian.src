@@ -233,7 +233,10 @@ enable;
                if filter = 0 then
                   ComExitBuilding(ru_sold[Rand(1, ru_sold)]);
 
-               ComEnterUnit(filter[1], UnitFilter(ru_tw, [f_empty])[1]);
+               filter := UnitFilter(ru_sold, [f_not, [f_inside]]);
+
+               if filter then
+                  ComEnterUnit(filter[1], UnitFilter(ru_tw, [f_empty])[1]);
                end;
 
             if UnitFilter(ru_tw, [f_empty]) = 0 then // nie ma pustych wie¿
@@ -390,24 +393,30 @@ Enable;
      While c < skr do
      begin
 
-     if cargo > 0 then
-        for i = 1 to cargo do
+     if cargo then
+        for i in cargo do
         begin
 
-        if GetFuel(cargo[i]) > 40 and GetDistUnitXY(cargo[i], skr[c], skr[c+1]) < 51 then
-        ComCollect(cargo[i], skr[c], skr[c+1]);
+        if not IsOk(i) or not skr then
+           continue;
 
-        if GetFuel(cargo[i]) <= 40 then
+        if c > skr then
+           continue;
+
+        if GetFuel(i) > 40 and GetDistUnitXY(i, skr[c], skr[c+1]) < 51 then
+           ComCollect(i, skr[c], skr[c+1]);
+
+        if GetFuel(i) <= 40 then
            begin
 
           Repeat
            begin
-           ComMoveXY(cargo[i], GetX(dep[i]), GetY(dep[1]));
+           ComMoveXY(i, GetX(NearestUnitToUnit(dep, i)), GetY(NearestUnitToUnit(dep, i)));
            Wait(0$01);
            end
-          Until GetDistUnits(cargo[i], dep[i]) < 7;
+          Until GetDistUnits(i, NearestUnitToUnit(dep, i)) < 5;
 
-          SetFuel(cargo[i], 100);
+          SetFuel(i, 100);
           end;
 
          c = c + 2;
@@ -484,9 +493,14 @@ enable;
                if filter = 0 then
                   ComExitBuilding(ru2_sold[Rand(1, ru2_sold)]);
 
-               if filter > 0 then
-                  for i = 1 to UnitFilter(ru2_tw, [f_empty]) do
-                      ComEnterUnit(filter[i], UnitFilter(ru2_tw, [f_empty])[i]);  //  ComEnterUnit(filter[1], UnitFilter(ru2_tw, [f_empty])[1]);
+               if UnitFilter(filter, [f_not, [f_hastask]]) then
+                  for i in UnitFilter(ru2_tw, [f_empty]) do
+                      begin
+                      ComEnterUnit(UnitFilter(filter, [f_not, [f_hastask]])[1], i);
+
+                      if not UnitFilter(filter, [f_not, [f_hastask]]) then
+                         break;
+                      end;
                end;
 
             if UnitFilter(ru2_tw, [f_empty]) = 0 then // nie ma pustych wie¿
