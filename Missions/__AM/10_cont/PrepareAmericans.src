@@ -128,9 +128,14 @@ begin
     Joan = PrepareUnit('08_Joan', true);
     if TestCharacters('08_Khatam') then Khatam = PrepareUnit('08_Khatam', true)
     else if TestCharacters('03_Khatam') then Khatam = PrepareUnit('03_Khatam', true);
-    Gladstone = PrepareUnit('Gladstone', true);
+    Gladstone = PrepareUnit('08_Gladstone', true);
     DeltaDoctor = PrepareUnit('DeltaDoctor', true);
-    if TestCharacters('08_Frank') = 1 then Kikuchi = PrepareUnit('Yamoko', true);
+
+    if TestCharacters('08_Frank') = 1 then
+       Kikuchi = PrepareUnit('Yamoko', true);
+
+    if TestCharacters('08_Kikuchi') then
+       Kikuchi = PrepareUnit('08_Kikuchi', true);
 
     others09 = CreateCharacterSet('09_others');
     ape09 = CreateCharacterSet('09_apes');
@@ -168,20 +173,19 @@ begin
         tmp = FilterAllUnits([[f_side, 4], [f_class, 2]]) diff [Simms, Khatam, Denis, Gladstone, DeltaDoctor, Joan];
 
         if not tmp then
-           begin
-           if Denis then
-              SetClass(Denis, 2);
-           exit;
-           end;
+        begin
+             if Denis then SetClass(Denis, 2)
+             else SetClass(DeltaDoctor, 2);
+        end else
+        begin
+             SetClass(tmp[1], 2);
+        end;
 
-        SetClass(tmp[1], 2);
     end;
 
     for i in ape09 do PlaceUnitArea(i, CathyTeamSpawn, false);
 
-    AddComBuild(FilterAllUnits([[f_side, 4], [f_class, 2]]), b_depot, 101, 30, 2);
-
-    uc_side = 1;
+    uc_side = 4;
 
     hc_class := 1;
     hc_sex := sex_female;
@@ -202,6 +206,10 @@ begin
     uc_nation = 1;
 
     Cornell = PrepareUnit('03_Cornel', true);
+
+    if not Cornell then
+       exit;
+
     PlaceUnitArea(Cornell, CornellSpawn, false);
 
     SetLives(Cornell, 350);

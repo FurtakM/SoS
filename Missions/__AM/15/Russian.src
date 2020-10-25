@@ -1,0 +1,408 @@
+Export Platonov, Kovalyuk, Bystrov, Yakotich, Gleb, Bierezov;
+Export Vsevolod, sewiVeh;
+Export behemoths, behemothBuilders;
+Export Function PrepareRussian;
+var i, j, base, tmp, side, xy, b, teleport;
+begin
+side := 3;
+
+uc_side := side;
+uc_nation := 3;
+
+for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
+    SetBLevel(i, 10);
+
+teleport := FilterAllUnits([[f_side, side], [f_btype, b_teleport]]);
+
+if teleport then
+   TeleportExit(teleport[1], 123, 122);
+
+Platonov := NewCharacter('Platonov');
+Kovalyuk := NewCharacter('Kovalyuk');
+Yakotich := NewCharacter('Yakotich');
+Bystrov := NewCharacter('Bystrov');
+Gleb := NewCharacter('Gleb');
+
+if TestCharacters('03_Cornel') then
+   begin
+   Bierezov := NewCharacter('Mikhail');
+   PlaceUnitXYR(Bierezov, 197, 111, 9, false);
+   SetClass(Bierezov, 3);
+   end;
+
+PlaceHumanInUnit(Platonov, ru_depot);
+PlaceHumanInUnit(Kovalyuk, ru_fac1);
+
+PlaceUnitXYR(Yakotich, 197, 111, 9, false);
+PlaceUnitXYR(Bystrov, 197, 111, 9, false);
+PlaceUnitXYR(Gleb, 197, 111, 9, false);
+
+// PrepareBase(base_dep, area, name, skill, sources, personel);
+tmp := PrepareBase(ru_depot, russianBaseArea, 'zhukov', [9, 10, 10][Difficulty], [99999, 1000, 300], [12, 8, 13, 8]);
+
+base := GetBase(ru_depot2);
+
+SetResourceType(base, mat_cans, 5000);
+SetResourceType(base, mat_oil, 200);
+SetResourceType(base, mat_siberit, 200);
+
+mc_bases := Replace(mc_bases, 2, tmp union FilterAllUnits([[f_side, side], [f_not, [f_type, unit_vehicle]]]) diff Platonov);
+
+// behemoths
+behemoths := [];
+behemothBuilders := [];
+
+if Kovalyuk then
+   behemothBuilders := Join(behemothBuilders, Kovalyuk);
+
+j := 3;
+
+for i in FilterAllUnits([[f_side, 3], [f_class, 3]]) diff Kovalyuk do
+    begin
+    behemothBuilders := Join(behemothBuilders, i);
+    j := j - 1;
+
+    if j = 0 then
+       break;
+    end;
+End;
+
+Export Function BuildBehemoths;
+var i, j, xy, tmp;
+begin
+xy := [ [209,149], [219,154], [223,149], [232,155] ];
+
+if not behemothBuilders then
+   exit;
+
+j := 1;
+
+for i in behemothBuilders do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComBuildBehemoth(i, b_behemoth, xy[j][1], xy[j][2], 0);
+    j := j + 1;
+    end;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(behemothParking, [f_btype, b_behemoth]) do
+behemothUnderConstruct := true;
+
+// Send behemoth attack
+Every 0$3 trigger GetBehemoths(3) and not FilterAllUnits([[f_side, 3], [f_btype, b_behemoth]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := GetBehemoths(3);
+
+for i in tmp do
+    begin
+    if IsInArea(i, powellBase) and not GetTag(i) = 2 then
+       SetTag(i, 2);
+
+    if not FilterAllUnits([[f_enemy, 3], [f_dist, i, 12]]) and not GetTag(i) = 2 then
+       ComAgressiveMove(i, 64, 93)
+    else
+       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+    end;
+End;
+
+Export Function PrepareRussianAttack(strength);
+var i, j;
+begin
+result := [];
+
+uc_side := 6;
+uc_nation := 3;
+
+case strength of
+1: begin
+   for i = 1 to [4, 5, 6][Difficulty] do
+       begin
+       PrepareVehicle([ru_medium_tracked, ru_heavy_tracked][i mod 2 + 1],
+                      [engine_combustion, engine_siberite][rand(1,2)],
+                      control_computer,
+                      [ru_gatling_gun, ru_gun, ru_rocket_launcher][rand(1,3)],
+                      80
+                     );
+       result := result union CreateVehicle;
+       end;
+   end;
+2: begin
+   for i = 1 to [6, 6, 7][Difficulty] do
+       begin
+       PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
+                      [engine_combustion, engine_siberite][rand(1,2)],
+                      control_computer,
+                      [ru_gatling_gun, ru_gun, ru_rocket_launcher,
+                       ru_gun, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                      80
+                     );
+       result := result union CreateVehicle;
+       end;
+   end;
+3: begin
+   for i = 1 to [6, 7, 8][Difficulty] do
+       begin
+       PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
+                      [engine_combustion, engine_siberite][rand(1,2)],
+                      control_computer,
+                      [ru_gatling_gun, ru_rocket, ru_rocket_launcher,
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                      80
+                     );
+       result := result union CreateVehicle;
+       end;
+   end;
+4: begin
+   uc_nation := 3;
+
+   for i = 1 to [7, 8, 9][Difficulty] do
+       begin
+       PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
+                      [engine_combustion, engine_siberite][rand(1,2)],
+                      control_computer,
+                      [ru_rocket_launcher, ru_rocket, ru_rocket,
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                      80
+                     );
+       result := result union CreateVehicle;
+       end;
+
+   if not KappaStatus then
+      begin
+      uc_nation := 1;
+
+      for i = 1 to 3 do
+          begin
+          j := rand(0,1);
+          PrepareVehicle([us_medium_tracked, us_morphling, us_morphling, us_heavy_tracked][j + rand(1,3)],
+                         [engine_combustion, engine_siberite][rand(1,2)],
+                         control_computer,
+                         [us_laser, us_rocket_launcher, us_heavy_gun][j + rand(1,2)],
+                         85
+                        );
+          result := result union CreateVehicle;
+          end;
+
+      if vsevolodFirstAttack then
+         begin
+         vsevolodFirstAttack := false;
+
+         PrepareVehicle(us_morphling, engine_siberite, control_manual, us_heavy_gun, 100);
+         sewiVeh := CreateVehicle;
+         SetMark(sewiVeh, 1);
+
+         result := result union sewiVeh;
+         end;
+      end
+   else
+      if vsevolodFirstAttack then
+         begin
+         vsevolodFirstAttack := false;
+
+         uc_nation := 3;
+
+         for i = 1 to 3 do
+             begin
+             PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
+                            [engine_combustion, engine_siberite][rand(1,2)],
+                            control_computer,
+                            [ru_rocket_launcher, ru_rocket, ru_rocket][i mod 3 + 1],
+                            80
+                           );
+             result := result union CreateVehicle;
+             end;
+
+         PrepareVehicle(ru_heavy_tracked, engine_siberite, control_manual, ru_rocket, 100);
+         sewiVeh := CreateVehicle;
+         SetMark(sewiVeh, 1);
+
+         result := result union sewiVeh;
+         end;
+   end;
+end;
+
+End;
+
+// Purple attacks
+Every 0$30 trigger activeAttacks do
+var i, tmp, time, areas, strength, xy;
+begin
+areas := [southSpawn, southWestSpawn];
+time := [4$00, 3$30, 3$10][Difficulty];
+xy := [ [70, 118], [78, 31] ];
+
+repeat
+ if missionStage = 2 then
+    wait(1$30)
+ else
+    wait(time);
+
+ if missionStage = 6 then
+    begin
+    SetTech(tech_weap1, 6, state_researched);
+    SetTech(tech_comp1, 6, state_researched);
+    end;
+
+ if missionStage = 8 then
+    begin
+    SetTech(tech_weap2, 6, state_researched);
+    SetTech(tech_comp2, 6, state_researched);
+    end;
+
+ if missionStage = 10 then
+    begin
+    SetTech(tech_weap3, 6, state_researched);
+    SetTech(tech_comp3, 6, state_researched);
+    end;
+
+ if activeAttacks then
+    begin
+
+    if missionStage = 2 then
+       strength := 1;
+
+    if missionStage > 2 then
+       strength := 2;
+
+    if missionStage > 6 then
+       strength := 3;
+
+    if missionStage > 10 then
+       strength := 4;
+
+    tmp := PrepareRussianAttack(strength);
+
+    for i in tmp do
+        begin
+        PlaceUnitArea(i, areas[rand(1,2)], false);
+
+        if i = sewiVeh then
+           begin
+           Vsevolod = PrepareUnit('Vsevolod', false, '');
+           PlaceHumanInUnit(Vsevolod, i);
+           end;
+
+        ComMoveXY(i, 111, 197);
+        wait(0$2);
+        end;
+
+    repeat
+     wait(0$1);
+
+     for i in tmp do
+         begin
+         if FilterAllUnits([[f_enemy, 6], [f_dist, i, 12]]) then
+            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([[f_enemy, 6], [f_distxy, i, 12]]), i))
+         else if FilterUnitsInArea(powellBase, [f_enemy, 6]) then
+           begin
+              if GetDistUnitXY(i, xy[1][1], xy[1][2]) > 10 and not IsInArea(i, powellBase) then
+                 ComAgressiveMove(i, xy[1][1], xy[1][2])
+              else
+                 ComAttackUnit(i, NearestUnitToUnit(FilterUnitsInArea(powellBase, [f_enemy, 6]), i));
+           end
+         else
+              ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 6]), i));
+         end;
+    until not FilterAllUnits([f_side, 6]);
+    end;
+until russianDestroyed;
+End;
+
+// Platonov attacks
+Every 7$30 trigger not russianDestroyed and missionStage >= 6 and not MC_GetVehicles(2, true) do
+var i, tmp, target, teleport;
+begin
+enable;
+
+if not FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) then
+   exit;
+
+teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(2, [
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(2, [
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end;
+
+if Difficulty > 1 then
+   MC_InsertProduceList(2, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(2, true) >= [6, 7, 7][Difficulty];
+
+wait(0$30);
+
+tmp := MC_GetVehicles(2, true);
+mc_vehicles := Replace(mc_vehicles, 2, mc_vehicles[2] diff tmp);
+
+target := rand(0, 1);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 139, 89) > 9 then
+           ComMoveXY(i, 139, 89);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 139, 89, 9]) >= (tmp-1);
+   end
+else
+   begin
+   ComEnterUnit(tmp, teleport[1]);
+
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 124, 139) > 9 then
+           ComMoveXY(i, 124, 139);
+           
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 124, 139, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        begin
+        if GetWeapon(i) = ru_time_lapser then
+           ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_or, [f_side, 1], [f_side, 8]]), i))
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_or, [f_side, 1], [f_side, 8]]), i));
+        end
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;

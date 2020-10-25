@@ -1,0 +1,64 @@
+Export JMM, Burlak, Joan, RuSci;
+Export Function PrepareAlliance;
+var tmp, i, JMMVeh, BurlakVeh, VarJMMVeh, VarBurlakVeh;
+begin
+uc_side := 7;
+
+JMM := PrepareUnit('JMM', (not debug), '14a_');
+Burlak := PrepareUnit('Burlak', (not debug), '14a_');
+Joan := PrepareUnit('Joan', (not debug), '13a_');
+
+if not Joan then
+   begin
+   tmp := CreateCharacterSet('13a_others');
+
+   if tmp then
+      begin
+      for i in tmp do
+          if GetClass(i) = 4 and GetSex(i) = sex_male and GetNation(i) = nation_russian then
+             begin
+             RuSci := i;
+             break;
+             end;
+      end;
+
+   if not RuSci then
+      begin
+      uc_nation := 3;
+      PrepareHuman(sex_male, 4, 10);
+      RuSci := CreateHuman;
+      end;
+   end;
+
+VarJMMVeh := LoadVariable('14a_JMMVeh', [us_morphling, engine_siberite, control_manual, us_rocket_launcher, 0, 1]);
+VarBurlakVeh := LoadVariable('14a_BurlakVeh', [ru_medium_tracked, engine_siberite, control_manual, ru_cargo_bay, 0, 3]);
+
+uc_direction := 4;
+
+uc_nation := VarJMMVeh[6];
+PrepareVehicle(VarJMMVeh[1], VarJMMVeh[2], VarJMMVeh[3], VarJMMVeh[4], rand(60, 80));
+JMMVeh := CreateVehicle;
+PlaceUnitInArea(JMMVeh, startArea, false);
+
+if VarJMMVeh[5] <> 0 then
+   SetMark(JMMVeh, VarJMMVeh[5]);
+
+PlaceHumanInUnit(JMM, JMMVeh);
+
+uc_nation := VarBurlakVeh[6];
+PrepareVehicle(VarBurlakVeh[1], VarBurlakVeh[2], VarBurlakVeh[3], VarBurlakVeh[4], rand(60, 80));
+BurlakVeh := CreateVehicle;
+
+if not PlaceUnitInArea(BurlakVeh, startArea, false) then
+   PlaceUnitXY(BurlakVeh, 233, 85, false);
+
+if VarBurlakVeh[5] <> 0 then
+   SetMark(BurlakVeh, VarBurlakVeh[5]);
+
+PlaceHumanInUnit(Burlak, BurlakVeh);
+
+
+// spawn artifact
+tmp := [ [178, 91], [137, 83], [157, 75] ][Difficulty];
+CreateResourcesXY(mat_artifact, 4, tmp[1], tmp[2], false);
+End;

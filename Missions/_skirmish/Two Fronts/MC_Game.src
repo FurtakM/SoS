@@ -1,0 +1,775 @@
+Export mc_game_live, mc_crates_list;
+
+Every 0$01 trigger mc_game_live do
+var i;
+begin
+enable;
+// crates spawn
+   for i = 1 to mc_crates_list do
+       MCT_Crates(mc_crates_list[i], 5, 50, 0$20, 20);
+       // (area, amount, percent, interval, limit)
+                                                   
+// game
+MC_Game();
+End;
+
+Export Function MC_Game({int});
+var i, side, un;
+begin
+
+
+          if not isTest then
+             MC_Show(['#tick', tick])
+              else
+               MC_Show(debug_string);
+
+
+       // instructions for every side
+          for side = 1 to 8 do
+              begin
+              // check_side
+                 if MREG_SidesList[side] = 0 or MCF_All(side, []) = 0 then
+                    continue;
+
+
+              // operations
+                 MC_ClassManager(side, MCT_EnemyNearBase(side));
+
+              // attackers
+                 if MREG_Attackers[side][1] > 0 and MREG_ToAttack[side][1] = 0 and not MCF_Tag(side, 7, []) then
+                    begin
+
+                    if side = 1 then
+                       RaiseSailEvent(101);
+                    if side = 4 then
+                       RaiseSailEvent(102);
+
+                    for i in MREG_Attackers[side] do
+                        SetTag(i, 7);
+                    end;
+
+                 if MCF_Tag(side, 7, []) then
+                    begin
+                    MC_Attack(side, MCF_Tag(side, 7, []));
+                    end;
+
+              // research
+                 if MCL_GetTechList(side) and MCF_Lab(side) then
+                    MCL_Start(side);
+
+              // healing
+                 MREG_Heal := Replace(MREG_Heal, side, MCP_Filter(side));
+
+              // check buildings
+                 MREG_ToRepair = Replace(MREG_ToRepair, side, MCB_FilterHLevel(side));
+
+              // check vehicles
+                 if MCF_Get(side, [f_type, unit_vehicle]) then
+                    MCV_CheckStatus(side);
+
+              // change_class
+                 if MREG_ForSide(side, MREG_ToChangeClass) then
+                    begin
+                    for i = MREG_ToChangeClass downto 1 do
+                        begin
+                        if MREG_ToChangeClass[i][1] = side then
+                           begin
+                           MCH_ChangeClass(side, MREG_ToChangeClass[i][2], MREG_ToChangeClass[i][3]);
+                           end;
+                        end;
+                    end;
+
+              // change ape class
+                 if 1 in MREG_ApeOptions[side] then
+                    begin
+                    MCN_TrainApe(side);
+                    end;
+
+              // factory tasks
+                 if MCF_Get(side, [f_btype, b_factory]) then
+                    begin
+                    // recycle
+                    if MCF_Tag(side, 10, []) then
+                       begin
+                       ComRecycle(MCF_Tag(side, 10, []), MCF_Get(side, [f_btype, b_factory])[1]);
+                       end
+                        else
+                         // construct_vehicle
+                         if MREG_ToConstruct[side] then
+                            begin
+                            MCV_Produce(side, MCF_Get(side, [f_btype, b_factory])[1], [MREG_ToConstruct[side][1], MREG_ToConstruct[side][2], MREG_ToConstruct[side][3], MREG_ToConstruct[side][4]]);
+                            end;
+                    end;
+
+                 if MCF_Get(side, [f_btype, b_factory]) and MREG_ForSide(side, MREG_TurretWeapon) and FilterAllUnits([[f_side, side], [f_or, [f_btype, b_turret], [f_btype, b_bunker]], [f_bweapon, 0]]) then
+                    MCV_Turret(side);
+
+              // cut tree
+                 if MREG_Bulldozer[side] > 1 and MCT_EnemyNearBase(side) = 0 then
+                    begin
+                    if ListEnvironmentArea(MREG_Bulldozer[side][1]) then
+                       CutTreeInArea(MREG_Bulldozer[side][2], MREG_Bulldozer[side][1])
+                        else
+                         if MCF_Get(side, [f_btype, b_factory]) then
+                            if BuildingStatus(MCF_Get(side, [f_btype, b_factory])[1]) = bs_idle then
+                               begin
+                               SetTag(MREG_Bulldozer[side][2], 10); // vehicle to recycle
+                               MREG_Bulldozer := Replace(MREG_Bulldozer, side, [0]);
+                               end;
+                                 
+                    end;
+
+              // remote control
+                 if MCF_Get(side, [f_control, control_remote]) then
+                    MCV_RemoteControl(side, GetNation(MCF_Get(side, [f_control, control_remote])[1]));
+
+
+              // repair building
+                 if MREG_ToRepair[side] then
+                    begin
+                    MCB_Repair(side);
+                    end
+              else
+              // lab_upgrade
+                 if MREG_ForSide(side, MREG_ToUpLab) and MREG_ForSide(side, MREG_LabList) then
+                    begin
+                    for i = 1 to MREG_ToUpLab do
+                        if MREG_ToUpLab[i][1] = side then
+                           begin
+                           if MREG_ToUpLab[i][2] and MREG_ToUpLab[i][3] then
+                              if (MCB_UpgradeLab(side, MREG_ToUpLab[i][2], MREG_ToUpLab[i][3])) then
+                                 begin
+                                 MREG_ToUpLab := MC_RegistryDelete(MREG_ToUpLab, side, MREG_ToUpLab[i][2], MREG_ToUpLab[i][3]);
+                                 MREG_LabList := MC_RegistryDelete(MREG_LabList, side, MREG_LabList[1][2], []);
+                                 end;
+                           break;
+                           end;
+                    end
+              else
+              // upgrade others
+                 if MREG_ForSide(side, MREG_ToUpdate) then
+                    begin
+                    for i = 1 to MREG_ToUpdate do
+                        if MREG_ToUpdate[i][1] = side then
+                           begin
+                           MCB_Upgrade(side, MREG_ToUpdate[i][2]);                            
+                           break;
+                           end;
+                    end
+              else
+              // unfinished buildings  
+                 if MCF_Get(side, [f_constructed]) then
+                    MCB_Complete(side, MCF_Get(side, [f_constructed])[1])
+              else
+              // to build
+                 if MREG_ForSide(side, MREG_ToBuild) and not BuildingsInProgress(side) and MCT_EnemyNearBase(side) = 0 then
+                    begin
+                    for i = 1 to MREG_ToBuild do
+                        if MREG_ToBuild[i][1] = side then
+                           begin
+                           // remove building marker
+                           if isEditor and IsEnvironment(MREG_ToBuild[i][3][1], MREG_ToBuild[i][3][2]) then
+                              MCT_RemovePlace(MREG_ToBuild[i][3][1], MREG_ToBuild[i][3][2]);
+
+                           if MREG_ToBuild[i][2] = b_depot then
+                              MCB_Depot(side, MREG_ToBuild[i][3][1], MREG_ToBuild[i][3][2], MREG_ToBuild[i][3][3])
+                               else
+                           if MREG_ToBuild[i][2] = b_lab then
+                              MCB_Lab(side, MREG_ToBuild[i][3][1], MREG_ToBuild[i][3][2], MREG_ToBuild[i][3][3])
+                               else
+                                MCB_Build(side, MREG_ToBuild[i][2], MREG_ToBuild[i][3][1], MREG_ToBuild[i][3][2], MREG_ToBuild[i][3][3]);
+                           break;
+                           end;
+                    end
+              else
+              // to dismantle
+                 if MREG_ForSide(side, MREG_ToDismantle) and MCT_EnemyNearBase(side) = 0 then
+                    begin
+                    for i = 1 to MREG_ToDismantle do
+                        if MREG_ToDismantle[i][1] = side then
+                           begin
+                           MCB_Dismantle(side, MREG_ToDismantle[i][2]);
+                           end;
+                    end;
+             
+              // collect crates
+                 if MCF_Get(side, [f_btype, b_warehouse]) and MCT_EnemyNearBase(side) = 0 then
+                    MCT_CollectCrates(side);
+
+              end;
+     //End;
+
+End;
+
+{
+  Menadzer Klas
+  - Dwa tryby [normalny i wojskowy]
+    - Tryb normalny [eng, mech, sci]
+      - Obsluga laba [badania, oswajanie]
+      - Obsluga magazynu [skrzynki, budowa itp]
+      - Obsluga fabryki [obsluga ct, budowa pojazdow]
+    - Tryb wojskowy [sold, mech, sci(2)]
+      - Obsluga wiez
+      - Obsluga koszar
+      - Obsluga pojazdow
+  - Czynnosci globalne (bez wzgledu na tryb)
+    - Leczenie
+    - Naprawa pojazdow
+    - Naprawa budynkow
+    - Sterowanie zdalne (Us, Ar)
+
+}
+Export Function MC_ClassManager(side, mode);
+var i, j, x, y, k, un, ct, b, tmp, sol, eng, mech, sci, all;
+begin
+all := MCF_All(side, []);
+sol := MCF_Class(side, 1, []);
+eng := MCF_Class(side, 2, []);
+mech:= MCF_Class(side, 3, []);
+sci := MCF_Class(side, 4, []);
+
+if mech then
+   mech := MCF_SortListDesc(mech);
+
+  // zmiana klasy
+     if not MREG_ToArm[side] = '' then
+        begin
+        if GetClass(MREG_ToArm[side][1]) = class_soldier then
+           MCF_RemoveFromClass(side, 'ToArm', MREG_ToArm[side][1]);
+        end
+         else
+          MREG_ToArm := Replace2(MREG_ToArm, side, 1, 0);
+
+     if not MREG_ToDep[side] = '' then
+        begin
+        if GetClass(MREG_ToDep[side][1]) = class_engineer then
+           MCF_RemoveFromClass(side, 'ToDep', MREG_ToDep[side][1]);
+        end
+         else
+          MREG_ToDep := Replace2(MREG_ToDep, side, 1, 0);
+
+     if not MREG_ToFac[side] = '' then
+        begin
+        if GetClass(MREG_ToFac[side][1]) = class_mechanic then
+           MCF_RemoveFromClass(side, 'ToFac', MREG_ToFac[side][1]);
+        end
+         else
+          MREG_ToFac := Replace2(MREG_ToFac, side, 1, 0);
+
+     if not MREG_ToLab[side] = '' then
+        begin
+        if GetClass(MREG_ToLab[side][1]) = class_scientistic then
+           MCF_RemoveFromClass(side, 'ToLab', MREG_ToLab[side][1]);
+        end
+         else
+          MREG_ToLab := Replace2(MREG_ToLab, side, 1, 0);
+
+                   if mode = 0 then
+                      begin
+                       // people roles
+                          // priority
+                             
+                             // only depot
+                                if MCF_Get(side, [f_btype, b_warehouse]) and
+                                   MCF_Get(side, [f_type, unit_building]) = 1 then
+                                   begin
+                                   if all then
+                                      for i in (all diff eng) do
+                                          if GetTag(i) = 0 then
+                                             MCH_ChangeClass(side, i, 2);
+                                   end
+                                    else
+                                     if (sol + MREG_ToArm[side]) < FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) then
+                                        begin                                         
+                                        MCH_ChangeClass(side, eng[1], 1);
+                                        end
+                                         else
+                                          if sci < 6 and MCF_Lab(side) then
+                                             begin
+                                             if MREG_ToBunker[side] then
+                                                tmp := sol diff MREG_ToBunker[side]
+                                                 else
+                                                  tmp := sol;
+
+                                             if tmp then
+                                                for i in tmp do
+                                                    if GetTag(i) = 0 then
+                                                       MCH_ChangeClass(side, i, 4);
+                                             end
+                                              else
+                                               if MCF_Get(side, [f_btype, b_warehouse]) then
+                                                  begin
+                                                  if MREG_ToBunker[side] then
+                                                     tmp := sol diff MREG_ToBunker[side]
+                                                      else
+                                                       tmp := sol;
+
+                                                  if tmp then
+                                                     for i in tmp do
+                                                         if GetTag(i) = 0 then
+                                                            MCH_ChangeClass(side, i, 2);
+                                                  end;
+
+                             // lab is ready
+                                if MCF_Lab(side) then
+                                   begin
+
+                                   // there is some tech
+                                      if MCL_GetTechList(side) then
+                                         begin
+                                         if MREG_ToLab[side] then
+                                            k := MREG_ToLab[side]
+                                             else
+                                              k := 0;
+
+                                         if sci+k <= 6 and all > 6 then
+                                            MCH_TrainScientist(side, 1)
+                                             else
+                                              if all < 6 then
+                                                 if sci+k < all/2 then
+                                                    MCH_TrainScientist(side, 1);
+                                         end
+                                          else
+                                           // not tech here
+                                           begin
+                                           if sci > 2 then
+                                              for i = sci downto 2 do
+                                                  if GetTag(sci[i]) = 0 then
+                                                     MCH_ChangeClass(side, sci[i], 2);
+                                           end;
+
+                                   if MCL_GetTechList(side) and MCF_Lab(side) and not MREG_Heal[side] then
+                                      begin
+                                      for j = 1 to MCF_Lab(side) do
+                                          if BuildingStatus(MCF_Lab(side)[j]) in [bs_working, bs_need_people] then
+                                             begin
+                                             b := MCF_Lab(side)[j];
+                                             break;
+                                             end;
+
+                                   // idlers sci
+                                      if MCF_Class(side, 4, []) then
+                                         for j in MCF_Class(side, 4, []) do
+                                             begin
+                                             if GetTag(j) = 0 then
+                                                begin
+                                                // research
+                                                   if IsInUnit(j) and b then
+                                                      if BuildingStatus(IsInUnit(j)) = bs_idle and
+                                                         IsInUnit(j) <> b then
+                                                         ComExitBuilding(j);
+
+                                                      if not IsInUnit(j) then
+                                                         ComEnterUnit(j, b);
+                                                end;
+                           
+                                          // tame
+                                             if GetTech(tech_apelang, GetSide(j)) = state_researched and MCT_EnemyNearBase(GetSide(j)) = 0 then
+                                                MCN_Tame(GetSide(j), j);
+                                             end;
+                                      end;   
+
+                                   end;
+
+                             // fac
+                                if MCF_Get(side, [f_btype, b_factory]) then
+                                   begin
+                                   b := MCF_Get(side, [f_btype, b_factory])[1];
+                                   tmp := MCF_Tag(side, 0, [f_class, 3]);
+
+                                   for i = 1 to tmp do
+                                       if not IsInUnit(tmp[i]) and not HasTask(tmp[i]) then
+                                          ComEnterUnit(tmp[i], b);
+
+                                   if MREG_ToFac[side] then
+                                      k := MREG_ToFac[side]
+                                       else
+                                        k := 0;
+
+                                   if mech+k <= 6 and all > 6 then
+                                      MCH_TrainMechanic(side, 1)
+                                       else
+                                        if all < 6 then
+                                           if mech+k < all/2 then
+                                              MCH_TrainMechanic(side, 1);
+                                   end;
+                                         
+
+                          // !--end prior
+                          // rest
+                             // ct
+                                ct := MCF_Get(side, [f_btype, b_control_tower]);
+
+                                if ct and mech and MCF_Class(side, 3, []) then
+                                   if MCF_Tag(side, 9, []) < 3 then
+                                      begin
+
+                                      if mech < 3 then
+                                         k := mech
+                                           else
+                                            k := 3;
+
+                                      for j = 1 to k do
+                                          if GetClass(mech[j]) = 3 then
+                                             begin
+                                             SetTag(mech[j], 9);
+                                             ComExitBuilding(mech[j]);
+                                             end;
+
+                                      if mech < 6+k then
+                                         MCH_TrainMechanic(side, k);
+                                      end;
+
+                                   if MCF_Tag(side, 9, []) then
+                                      for j in MCF_Tag(side, 9, []) do
+                                          if not IsInUnit(j) and not IsDriver(j) then
+                                             if ct then
+                                                ComEnterUnit(j, ct[1])
+                                                 else
+                                                  SetTag(j, 0);
+                             // !--end ct
+                          //
+                       // tame
+                          if GetTech(tech_apelang, side) = state_researched and not MREG_Heal[side] and MCF_Class(side, 4, []) then
+                             for j in MCF_Class(side, 4, []) do
+                                 MCN_Tame(GetSide(j), j);
+
+                       // back to parking
+                          if MREG_DefVeh[side] then
+                             begin
+                             for i in MREG_DefVeh[side] do
+                                 begin
+                                 SetTag(i, 0);
+
+                                 if not IsInArea(i, MREG_DefArea[side]) then
+                                    MCV_Parking(side, i);
+                                 end;
+
+                             if MCF_Tag(side, 36, []) then
+                                for i in MCF_Tag(side, 36, []) do
+                                    SetTag(i, 0);
+
+                             if MREG_DefMobActive[side] then
+                                MREG_DefMobActive := Replace(MREG_DefMobActive, side, false);
+                             end;
+                       end;
+
+                   // Zagrozenie
+                   // 2 naukowcow jezeli lab istnieje
+                   // 1 inzynier
+                   //
+                   // reszta zolnierze
+                   if mode > 0 then
+                      begin
+
+                       // antyrush tactic
+                          if tick <= 15$00 then
+                             begin
+                             if sol > 4 and MCT_EnemyNearBase(side) < 4 then
+                                for i in sol do
+                                    begin
+                                    k := NearestUnitToUnit(MCT_EnemyNearBase(side), i);
+
+                                    if IsInUnit(i) then
+                                       ComExitBuilding(i);
+
+                                    if not HasTask(i) and k then
+                                       ComAgressiveMove(i, GetX(k), GetY(k));
+                                    end;
+
+                             if MCF_Get(side, [f_btype, b_barracks]) then
+                                begin
+                                b := MCF_Get(side, [f_btype, b_barracks])[1];
+
+                                if mech then
+                                   for i in mech do
+                                       MCH_ChangeClass(side, i, 1);
+
+                                if eng > 1 then
+                                   for i = eng downto 2 do
+                                       MCH_ChangeClass(side, eng[i], 1);
+
+                                if UnitsInside(b) = 6 then
+                                   begin
+                                   un := UnitsInside(b)[1];
+                                   ComExitBuilding(un);
+
+                                   if MCF_Get(side, [f_btype, b_barracks]) > 1 and MCT_EnemyNearBase(side) >= 4 then
+                                      begin
+                                      k := MCF_Get(side, [f_btype, b_barracks])[2];
+                                      if UnitsInside(k) < 6 then
+                                         AddComEnterUnit(un, k);
+                                      end;
+                                   end;
+                                end;
+                             end
+                          else
+                            begin
+                            // dont_leave_area                             
+                            if GetUnitsOutOfArea(side, unit_human, MREG_DefDontLeave[side][1]) then
+                               begin
+                               tmp := MCF_Get(side, [f_type, unit_human]);
+                               b := MCF_Get(side, [f_btype, b_warehouse]);
+
+                               if b then
+                                  for i in tmp do
+                                      if not IsInArea(i, MREG_DefDontLeave[side][1]) then
+                                         ComMoveXY(i, GetX(b[1]), GetY(b[1]));
+                               end;
+                            
+                            // vehs def
+                            if MREG_DefVeh[side] then
+                               begin
+                               tmp := [];
+
+                               if MREG_DefMobActive[side] = false then
+                               begin
+                               k := MCF_Tag(side, 0, [f_class, 3]);
+                              
+
+                               if k > MREG_DefVeh[side] then
+                                  begin
+                                  for i = 1 to MREG_DefVeh[side] do
+                                      tmp := Insert(tmp, 1, k[i]);
+                                  end
+                                   else
+                                      tmp := k;
+
+                               MREG_DefMobActive := Replace(MREG_DefMobActive, side, true);
+                               end;
+
+                               for i in MREG_DefVeh[side] do
+                                   begin
+                                   // not driver inside
+                                      if not GetDriver(i) then
+                                         begin
+                                         if tmp then // TAG 36 - mechanik w pojezdzie obronnym
+                                            begin                                             
+                                            ComExitBuilding(tmp[1]);
+                                            AddComEnterUnit(tmp[1], i);
+                                            SetTag(tmp[1], 36);
+                                            tmp := Delete(tmp, 1);
+                                            end;
+                                         end
+                                          else
+                                           begin                                          
+                                           // TAG 31 - pojazd broniacy
+                                           if GetTag(i) = 0 then
+                                              SetTag(i, 31)
+                                               else
+                                                if GetTag(i) = 31 then
+                                                   begin
+                                                   if GetFuel(i) < 20 then
+                                                      begin
+                                                      SetTag(i, 21);
+                                                      MCV_Refuel(i);
+                                                      continue;
+                                                      end;
+
+                                                   if GetLives(i) < 700 then
+                                                      begin
+                                                      if not IsInArea(i, MREG_Parking[side]) then
+                                                         ComMoveToArea(i, MREG_Parking[side])
+                                                          else
+                                                           if GetDriver(i) then
+                                                              begin
+                                                              k := GetDriver(i);
+                                                              ComExitVehicle(k);
+                                                              AddComRepairVehicle(k, i);
+                                                              AddComEnterUnit(k, i);
+                                                              end;
+                                                      end
+                                                       else
+                                                        begin
+                                                        k := NearestUnitToUnit(MCT_EnemyNearBase(side), i);
+
+                                                        if k then
+                                                           ComAttackUnit(i, k)
+                                                            else
+                                                              if not IsInArea(i, MREG_Parking[side]) then
+                                                                 ComMoveToArea(i, MREG_Parking[side]);
+                                                        end;
+                                                   end;
+                                           end;
+                                   end;
+                               end;
+
+
+                            //
+                            if MCF_Get(side, [f_btype, b_barracks]) then
+                               begin
+                               b := MCF_Get(side, [f_btype, b_barracks])[1];
+                               
+
+                               if eng > 1 then
+                                  for i = eng downto 2 do
+                                      MCH_ChangeClass(side, eng[i], 1);
+                               if sci > 1 then
+                                  for i = sci downto 2 do
+                                      MCH_ChangeClass(side, sci[i], 1);
+                               
+
+                               if sol then
+                                  begin
+                                  if sol diff MREG_ToBunker[side] and (FilterAllUnits([[f_side, side], [f_empty], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) = 0) then
+                                     begin
+                                     tmp := sol diff MREG_ToBunker[side];
+
+                                     if MCF_Get(side, [f_btype, b_barracks]) > 1 then
+                                        k := MCF_Get(side, [f_btype, b_barracks])[2];
+
+                                     for j in tmp do
+                                         begin
+                                         if j in UnitsInside(b) and UnitsInside(b) = 6 and k and UnitsInside(k) < 6 then
+                                            begin
+                                            ComExitBuilding(j);
+                                            AddComEnterunit(j, k);
+                                            continue;
+                                            end;
+
+                                         if not HasTask(j) and GetTag(j) = 0 and not IsInUnit(j) then
+                                            begin
+                                            if k then
+                                               begin
+                                               if UnitsInside(k) < UnitsInside(b) then
+                                                  ComEnterUnit(j, k)
+                                                   else
+                                                    if UnitsInside(b) < 6 then
+                                                       ComEnterUnit(j, b);
+                                               end
+                                                else
+                                                 if UnitsInside(b) < 6 then
+                                                    ComEnterUnit(j, b);
+                                            end;
+
+                                         if j in MCF_Get(side, [f_inside]) and GetClass(j) = 1 then
+                                            begin
+                                            if MREG_AllowClass[side][1] and GetTech(12, side) = state_researched then
+                                               if MCF_Class(side, class_sniper, []) < MREG_AllowClass[side][1] then
+                                                  begin
+                                                  SetClass(j, class_sniper);
+                                                  continue;
+                                                  end;
+
+                                            if MREG_AllowClass[side][2] and GetTech(41, side) = state_researched then
+                                               if MCF_Class(side, class_mortar, []) < MREG_AllowClass[side][2] then
+                                                  begin
+                                                  SetClass(j, class_mortar);
+                                                  continue;
+                                                  end;
+
+                                            if MREG_AllowClass[side][3] and GetTech(44, side) = state_researched then
+                                               if MCF_Class(side, class_bazooker, []) < MREG_AllowClass[side][3] then
+                                                  begin
+                                                  SetClass(j, class_bazooker);
+                                                  continue;
+                                                  end;
+                                            end;
+
+                                         end;
+                                     end;
+
+                                  end;
+
+                               end;
+                            end;
+                       end;
+
+        // GLOBAL
+        // obsada wiez
+        if FilterAllUnits([[f_side, side], [f_empty], [f_btype, b_bunker]]) then
+           begin
+           tmp := FilterAllUnits([[f_side, side], [f_empty], [f_btype, b_bunker]]);
+           k := sol diff MREG_ToBunker[side];
+
+           if BuildingStatus(tmp[1]) = bs_idle and (not tmp[1] in MREG_ToBunker[side]) and k then
+              begin
+              ComExitBuilding(k[1]); 
+              AddComEnterUnit(k[1], tmp[1]);
+              // MREG
+              end;
+
+           end;
+        // heal
+           if MREG_Heal[side] then
+              begin
+              if MCF_Class(side, 4, []) then
+              for j in MCF_Class(side, 4, []) do
+                  begin
+                  if not GetTag(j) = 4 then
+                     begin
+                     SetTag(j, 4);
+
+                     if IsInUnit(j) then
+                        ComExitBuilding(j);
+                     end
+                      else
+                        if not WantHeal(j, MREG_Heal[side][1]) then
+                           MCP_Heal(j, MREG_Heal[side][1]);
+                  end;
+              end
+               else
+                begin
+                if MCF_Class(side, 4, []) and MCF_Tag(side, 4, []) then
+                   for j in MCF_Class(side, 4, []) do
+                       begin
+                       if GetTag(j) = 4 then
+                          begin
+                          SetTag(j, 0);
+
+                          if MCF_Lab(side) and not MCL_GetTechList(side) then
+                             ComEnterUnit(j, MCF_Lab(side)[1]);
+                          if not MCF_Lab(side) and MCF_Get(side, [f_btype, b_warehouse]) then
+                             ComMoveXY(j, GetX(MCF_Get(side, [f_btype, b_warehouse])[1]), GetY(MCF_Get(side, [f_btype, b_warehouse])[1]));
+                          end;
+                       end;
+                end;  
+
+             // repair veh
+                if MCF_Class(side, 3, []) and MREG_Parking[side] and MCF_Tag(side, 6, []) then
+                   begin
+                   x := AreaToList(MREG_Parking[side], 0)[1][1];
+                   y := AreaToList(MREG_Parking[side], 0)[2][1];
+
+                   if MCF_Tag(side, 6, []) then
+                      begin
+
+                      for k in MCF_Tag(side, 6, []) do
+                          if GetLives(k) = 1000 then
+                             SetTag(k, 0);
+
+                      if MCF_Tag(side, 0, [f_class, 3]) then
+                         begin
+                         for k in MCF_Tag(i, 0, [f_class, 3]) do
+                             if GetTag(k) = 0 then
+                                begin
+                                SetTag(k, 8);
+                                end;
+                         end;
+
+                      if MCF_Tag(side, 6, [f_distxy, x, y, 10]) then
+                         for j in MCF_Tag(i, 6, [f_distxy, x, y, 10]) do
+                             begin
+                             if not HasTask(j) and GetDriver(j) then
+                                begin
+                                ComExitVehicle(GetDriver(j));
+                                AddComRepairVehicle(GetDriver(j), j);
+                                AddComEnterUnit(GetDriver(j), j);
+                                end;
+                             end;
+
+                      if MCF_Tag(side, 6, [f_distxy, x, y, 10]) and MCF_Tag(side, 8, []) then
+                         for j in MCF_Tag(side, 8, []) do
+                             begin
+                             if IsInUnit(j) then
+                                ComExitBuilding(j)
+                                 else
+                                  ComRepairVehicle(j, MCF_Tag(side, 6, [f_distxy, x, y, 10])[1]);
+                             end;
+                      end;
+                   end
+                    else
+                        if MCF_Tag(side, 8, []) then
+                           for k in MCF_Tag(side, 8, []) do
+                               SetTag(k, 0);
+End;

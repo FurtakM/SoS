@@ -1,0 +1,119 @@
+VAR konec;
+VAR J,P;
+VAR You;
+VAR testslez;
+
+Export debug;
+
+starting
+begin
+  debug := false;
+
+  if debug then
+     ChangeMap(1, '%_cont');
+
+  RevealFogArea(You,FOGAR);
+  You=1;
+  konec=false;
+  testslez=false;
+// nacteni JMM a Powella
+  J=nacti_osobu('JMM');
+  P=NewCharacter('Powell');
+
+  InGameOn;
+  PlaceHumanInUnit(J,auto4);
+  PlaceHumanInUnit(P,auto2);
+  wait(0$1);
+  CenterOnXY(42,40);
+  wait(0$1);
+  ComMoveXY(auto3,33,31);
+  ComMoveXY(auto1,35,33);
+  ComMoveXY(auto2,36,35);
+  ComMoveXY(auto4,39,40);
+  ComMoveXY(auto5,42,43);
+  AddComExitVehicle(auto4);
+  AddComExitVehicle(auto2);
+end;
+
+EVERY 0$1 TRIGGER FilterUnitsInArea(STOP,[[f_side,You]])>0 DO
+begin
+  CenterOnXY(38,37);
+end;
+
+
+EVERY 0$1 TRIGGER FilterUnitsInArea(STOP,[[f_side,You]])=7 DO
+begin
+  ComMoveXY(J,67,55);
+  ComMoveXY(P,67,56);
+  AddComTurnUnit(J,P);
+  AddComTurnUnit(P,J);
+  testslez=true;
+end;
+
+EVERY 0$0.5 TRIGGER FilterUnitsInArea(kecy,[[f_side,You]])=2 DO
+begin
+  CenterNowOnUnits(J);
+  Say(P,'D1-Pow-1');
+  Say(J,'D1-JMM-1');
+  Say(P,'D1-Pow-2');
+  Say(J,'D1-JMM-2');
+  Say(P,'D1-Pow-3');
+  Say(J,'D1-JMM-3');
+  Say(P,'D1-Pow-4');
+  Say(J,'D1-JMM-4');
+  Say(P,'D1-Pow-5');
+  Say(J,'D1-JMM-5');
+  Say(P,'D1-Pow-6');
+  Say(J,'D1-JMM-6');
+  Say(P,'D1-Pow-7');
+  Say(J,'D1-JMM-7');
+  Say(P,'D1-Pow-8');
+  wait(0$0.5);
+  Query('QLetter');
+  Say(P,'D1aa-Pow-1');
+  Say(J,'D1aa-JMM-1');
+  Say(P,'D1aa-Pow-2');
+  Say(J,'D1aa-JMM-2');
+  Say(P,'D1aa-Pow-3');
+  Say(J,'D1aa-JMM-3');
+  Say(P,'D1aa-Pow-4');
+  Say(J,'D1aa-JMM-4');
+  Say(P,'D1aa-Pow-5');
+  Say(J,'D1aa-JMM-5');
+  Say(P,'D1aa-Pow-6');
+  wait(0$1);
+  ComFree([P,J]);
+  ComEnterUnit(J,auto4);
+  ComEnterUnit(P,auto2);
+  testslez=true;
+  konec=true;
+end;
+
+EVERY 0$1 TRIGGER konec and IsDrivenBy(auto4)=J and IsDrivenBy(auto2)=P DO
+VAR i;
+begin
+  CenterOnUnits(auto2);
+  for i in [auto3,auto1,auto2,auto4,auto5] do
+    begin
+      ComMoveXY([auto1,auto3,auto5,auto2,auto4],31,27);
+      AddComMoveXY([auto1,auto3,auto5,auto2,auto4],26,21);
+      AddComMoveXY([auto1,auto3,auto5,auto2,auto4],12,18);
+      wait(0$0.3);
+    end;
+  wait(0$2);
+  ChangeMap('1','%_cont');
+end;
+
+// nacteni osoby ze savu z predesle mise
+function nacti_osobu(ident);
+begin
+  if CheckCharacterSet(ident) then result:=CreateCharacter(ident)
+                              else result:=0;
+end;
+                                                                 
+EVERY 0$0.1 TRIGGER testslez and FilterUnitsInArea(slez,[[f_side,You]])>1 DO
+begin
+  CenterOnXY(54,44);
+  testslez=false;
+  enable;
+end;

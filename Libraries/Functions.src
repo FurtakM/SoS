@@ -1,3 +1,5 @@
+// Functions.src from Sand of Siberia
+
 Export Function PrepareUnit(ident, exist_mode, prefix);
 var unit;
 begin
@@ -26,9 +28,9 @@ if not side or not nation then
    exit;
 
 case nation of
-     nation_american: result := [35, 45, 46, 47, 1, 2, 6, 15, 16, 7, 12, 13, 10, 14, 20, 25, 32, 27, 36, 69, 39, 34, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 80];
-     nation_arabian: result := [35, 45, 46, 47, 70, 1, 11, 3, 4, 5, 6, 15, 18, 7, 17, 8, 20, 72, 26, 69, 39, 40, 41, 42, 43, 48, 49, 50, 51, 52, 53, 54, 55, 56, 60, 61, 62, 66, 67, 68];
-     nation_russian: result := [46, 47, 1, 2, 11, 9, 20, 19, 21, 24, 22, 25, 28, 29, 31, 37, 38, 32, 27, 33, 69, 39, 34, 40, 71, 23, 44, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65];
+     nation_american: result := [35, 45, 46, 47, 1, 2, 6, 15, 16, 7, 12, 13, 10, 14, 20, 21, 22, 25, 32, 27, 36, 69, 39, 34, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62];
+     nation_arabian: result := [35, 45, 46, 47, 70, 1, 11, 3, 4, 5, 6, 15, 18, 7, 17, 8, 20, 21, 22, 72, 26, 69, 39, 40, 41, 42, 43, 48, 49, 50, 51, 52, 53, 54, 55, 56, 60, 61, 62, 66, 67, 68];
+     nation_russian: result := [46, 47, 1, 2, 11, 9, 20, 19, 21, 24, 22, 25, 28, 29, 30, 31, 37, 38, 32, 27, 33, 69, 39, 34, 40, 71, 23, 44, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 63, 64, 65];
 end;
 
 if state > -1 and state < 3 then
@@ -133,7 +135,10 @@ for i = 0 to 5 do
     _x := ShiftX(x, i, 3);
     _y := ShiftY(y, i, 3);
 
-    if HexInfo(_x, _y) = 0 and ValidHex(_x, _y) then
+    if not ValidHex(_x, _y) then
+       continue;
+
+    if HexInfo(_x, _y) = 0 then
        begin
        ComMoveXY(unit, _x, _y);
        exit;
@@ -144,6 +149,60 @@ End;
 Export Function ScanBase(side, base_area);
 begin
 result := FilterUnitsInArea(base_area, [f_enemy, side]);
+End;
+
+Export Function BasicDefend(base, solds, area);
+var enemy, side, i, hex;
+begin
+if not base or not mc_bases[base] or not solds or not area then
+   exit;
+
+side := mc_sides[base];
+
+if not side then
+   exit;
+
+for i in solds do
+    if GetBType(IsInUnit(i)) in [b_bunker, b_breastwork] then
+       solds := solds diff i
+    else
+       SetTag(i, 18);
+
+if not solds then
+   exit;
+
+repeat
+ wait(0$1);
+ enemy := ScanBase(side, area);
+
+ if not enemy or enemy > 3 or mc_defender[base] then
+    begin
+    for i in solds do
+        if HasTask(i) then
+           ComStop(i);
+    break;
+    end;
+
+ for i in solds do
+     begin
+     if IsInUnit(i) then
+        ComExitBuilding(i);
+
+     if GetLives(i) > 333 then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     else
+        begin
+        hex :=  NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i);
+        ComMoveXY(i, ShiftX(GetX(hex), 3, 5), ShiftY(GetY(hex), 3, 5));
+        SetTag(i, 0);
+        solds := solds diff i;
+        continue;
+        end;
+     end;
+
+until solds;
+
+MC_Reset(base, 18);
 End;
 
 // base, defenders, enemy
@@ -336,6 +395,14 @@ if not building then
 result := building in FilterAllUnits([[f_side, GetSide(building)], [f_empty]]);
 End;
 
+Export Function IsNotFull(building);
+begin
+if not building then
+   exit;
+
+result := UnitsInside(building) < 6;
+End;
+
 Export Function GetFacExt(factory);
 var tmp, i, list;
 begin
@@ -351,7 +418,7 @@ for i = 1 to tmp do
 result := list;
 End;
 
-Export Function Produce(factory, chassis, engine, control, weapon); 
+Export Function Produce(factory, chassis, engine, control, weapon);
 var i, tmp, _chassis, _weapon, _engine, _control;
 begin
 if not factory then
@@ -576,7 +643,7 @@ vc_weapon := weapon;
 vc_fuel_battery := fuel;
 End;
 
- 
+
 Export Function WantPlant(unit);
 var task;
 begin
@@ -641,14 +708,6 @@ list := Replace(list, pos2, i);
 
 result := list;
 End;
-
-// alias for ReplaceIn
-Export Function Add(list, pos, val);
-begin
-result := ReplaceIn(list, pos, val)
-End;
-
-
 
 Export Function SortByDistanceUnit(unit, list, asc, mode);
 begin
@@ -769,7 +828,7 @@ End;
     + weapon upgrade III for heavy weapons [heavy_gun, rockets, large_rockets, behemoths, self_pr_bombs]:
       r = basic * 1.2;
     + bio I upgrades bonus for human type units:
-      r = basic * 1.1; 
+      r = basic * 1.1;
 }
 Export Function DangerAtRangeXY(side, x, y, range);
 var i, j, tmp, points, bpoints;
@@ -825,7 +884,7 @@ for i in tmp do
                 // class sheik
                 if GetClass(i) = 11 then
                    points := [30, 10, 5];
-                   
+
 
                 // stimulat bonus
                 if GetTech(side, tech_stimdrugs) = state_researched then
@@ -885,7 +944,7 @@ for i in tmp do
                      bpoints := bpoints * 1.2;
                   if GetWeapon(i) in [us_heavy_gun, ru_heavy_gun, ru_rocket] then
                      bpoints := bpoints * 1.2;
-                     
+
                   end;
     unit_building: ;
     end;
@@ -903,23 +962,30 @@ begin
 result := DangerAtRangeXY(GetSide(unit), GetX(unit), GetY(unit), range);
 End;
 
-Export Function IsExtension(b);
+Export Function DangerInArea(side, area);
 begin
-result := GetBType(b) in [b_ext_stitch, b_ext_radar, b_ext_radio, b_ext_gun, b_ext_computer, b_ext_siberium, b_ext_noncombat, b_ext_track, b_ext_laser, b_ext_rocket];
+result := FilterUnitsInArea(area, [f_enemy, side]);
 End;
 
-Export Function GetBaseBuildings(base);
+Export Function IsExtension(b);
+begin
+result := b in [b_ext_stitch, b_ext_radar, b_ext_radio, b_ext_gun, b_ext_computer, b_ext_siberium, b_ext_noncombat, b_ext_track, b_ext_laser, b_ext_rocket];
+End;
+
+Export Function GetBaseBuildings(base, area);
 var tmp, i;
 begin
 result := [];
-tmp := FilterAllUnits([f_type, unit_building]);
+tmp := FilterUnitsInArea(area, [f_type, unit_building]);
 
 if not tmp then
    exit;
 
 for i in tmp do
-    if GetBase(i) = base then
-       result := result ^ i;
+    if GetBase(i) <> base then
+       ComLinkToBase(base, i);
+
+result := tmp;
 End;
 
 Export Function ComComplete(unit, b);
@@ -968,8 +1034,8 @@ if result > 1 then
 ComLinkTo(vehicle, mech);
 End;
 
-Export Function PrepareBase(base_dep, name, skill, sources, personel);
-var i, j, d, b, f, x, un, base, side, nation, buildings;
+Export Function PrepareBase(base_dep, area, name, skill, sources, personel);
+var i, j, d, b, f, x, un, base, side, nation, buildings, tmp;
 begin
 result := [];
 
@@ -987,7 +1053,7 @@ if sources then
    for i = 1 to 3 do
        AddResourceType(base, i, sources[i]);
 
-buildings := GetBaseBuildings(base);
+buildings := GetBaseBuildings(base, area);
 
 InitHc;
 InitUc;
@@ -995,15 +1061,21 @@ InitUc;
 uc_side := side;
 uc_nation := nation;
 
+
 if buildings then
    begin
+   tmp := UnitFilter(buildings, [f_or, [f_btype, b_oil_mine], [f_btype, b_siberite_mine]]);
+
+   if tmp then
+      for i in tmp do
+          SetResourceVisibility(GetX(i), GetY(i), side);
 
    if UnitFilter(buildings, [f_or, [f_btype, b_bunker], [f_btype, b_turret]]) then
       begin
       for i in UnitFilter(buildings, [f_or, [f_btype, b_bunker], [f_btype, b_turret]]) do
           begin
           if not GetBWeapon(i) then
-             PlaceWeaponTurret(i, GetTurretWeapon(i));
+             PlaceWeaponTurret(i, GetTurretWeapon(i, area));
           end;
       end;
 
@@ -1014,11 +1086,26 @@ if buildings then
           break;
 
        case i of
-       1: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+       1: f := UnitFilter(buildings, [[f_side, side], [f_empty], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks]]]);
        2: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
        3: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
        4: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
        end;
+
+       // sort buildings - towers first
+       if i = 1 then
+          begin
+          tmp := [];
+
+          for j in f do
+              if GetBType(j) = b_bunker then
+                 tmp := Insert(tmp, 1, j)
+              else
+                 tmp := Insert(tmp, tmp+1, j);
+
+          if tmp then
+             f := tmp;
+          end;
 
        x := personel[i];
 
@@ -1110,7 +1197,7 @@ if buildings then
     end;
 End;
 
-Export Function GetTurretWeapon(tower);
+Export Function GetTurretWeapon(tower, area);
 var hex, list, factories, base, i, j, x, y, nat, h, tmp, height, side, fac_list, weapon;
 begin
 result := false;
@@ -1129,7 +1216,7 @@ if not x or not y then
 
 weapon := 0;
 fac_list := [];
-factories := UnitFilter(GetBaseBuildings(GetBase(tower)), [f_btype, b_factory]);
+factories := UnitFilter(GetBaseBuildings(GetBase(tower), area), [f_btype, b_factory]);
 
 if not factories then
    exit;
@@ -1204,7 +1291,7 @@ if not weapon and GetTech(tech_rocket, side) = state_researched and
              end;
           end;
        end;
-   end;  
+   end;
 
 // group of weapons
 if not weapon then
@@ -1324,7 +1411,10 @@ for i = 1 to hexes do
     begin
     tmp := HexInfo(hexes[i][1], hexes[i][2]);
 
-    if not tmp or GetType(tmp) = unit_building then
+    if IsEnvironment(hexes[i][1], hexes[i][2]) or not ValidHex(hexes[i][1], hexes[i][2]) or GetType(tmp) = unit_building then
+       exit;
+
+    if not tmp then
        continue;
 
     result := true;
@@ -1332,7 +1422,7 @@ for i = 1 to hexes do
     dep := FilterAllUnits([[f_side, GetSide(tmp)], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
     if dep then
-       begin                      
+       begin
        xy := [ShiftX(GetX(dep[1]), GetDir(dep[1]), 5), ShiftY(GetY(dep[1]), GetDir(dep[1]), 5)];
 
        if ValidHex(xy[1], xy[2]) then
@@ -1367,16 +1457,16 @@ End;
   0: Can't be build
   1: Can be build
 }
-Export Function CanBeBuilded(bdepot, btype, x, y, d);
-var i, j, pom, cost, hexes, height, dist, hex;
+Export Function CanBeBuilt(depot, btype, x, y, d);
+var i, j, side, pom, cost, hexes, height, dist, hex;
 begin
 result := false;
 
-if not bdepot or not GetBType(bdepot) in [b_depot, b_warehouse] or not btype or not d in [0, 1, 2, 3, 4, 5] or not ValidHex(x, y) then
+if not depot or not GetBType(depot) in [b_depot, b_warehouse] or not btype or not d in [0, 1, 2, 3, 4, 5] or not ValidHex(x, y) then
    exit;
 
-pom := GetBase(bdepot);
-cost := CostOfBuilding(btype, GetNation(bdepot));
+pom := GetBase(depot);
+cost := CostOfBuilding(btype, GetNation(depot));
 
 if not (GetResourceType(pom, mat_cans) >= cost[1] and
    GetResourceType(pom, mat_oil) >= cost[2] and
@@ -1384,17 +1474,17 @@ if not (GetResourceType(pom, mat_cans) >= cost[1] and
    exit;
 
 //    MAX_DISTANCE 28 (26 in vanilla)
-//    MAX_DISTANCE_BONUS 8
+//    MAX_DISTANCE_BONUS 12
 
-if GetBType(bdepot) = b_depot then
+if GetBType(depot) = b_depot then
    dist := 28
   else
    dist := 36;
 
-if GetDistUnitXY(bdepot, x, y) > dist then
+if GetDistUnitXY(depot, x, y) > dist then
    exit;
 
-hexes := GetBuildingHexes(btype, x, y, d, GetNation(bdepot), 0);
+hexes := GetBuildingHexes(btype, x, y, d, GetNation(depot), 0);
 
 if not hexes then
    exit;
@@ -1409,24 +1499,26 @@ height := hex[2];
 for i = 1 to hexes do
     begin
 
-    if not ValidHex(hexes[i][1], hexes[i][2]) then
-       continue;
+    if not ValidHex(hexes[i][1], hexes[i][2]) or
+       HexInfo(hexes[i][1], hexes[i][2]) > 0 or
+       IsEnvironment(hexes[i][1], hexes[i][2]) then
+       exit;
 
     j := GetHexInfo(hexes[i][1], hexes[i][2]);
 
     if j[1] or j[2] > height+2 or j[2] < height-2 or
        not j[3] in [0, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21] or
-       not j[5] or not j[6] in [1, 2, 7, 9, 10, 11] or
-       HexInfo(hexes[i][1], hexes[i][2]) > 0 or
-       IsEnvironment(hexes[i][1], hexes[i][2]) then
+       not j[5] or not j[6] in [1, 2, 7, 9, 10, 11] then
        exit;
 
     end;
 
-if DangerAtRangeXY(GetSide(bdepot), x, y, 20)[4] then
+side := GetSide(depot);
+
+if DangerAtRangeXY(side, x, y, 20)[4] then
    exit;
 
-if btype in [b_oil_mine, b_siberite_mine] and not GetResourceVisibility(x, y, GetSide(bdepot)) then
+if btype in [b_oil_mine, b_siberite_mine] and not GetResourceVisibility(x, y, side) then
    exit;
 
 result := true;
@@ -1752,7 +1844,7 @@ if mastodonts then
        vc_chassis := 31;
        vc_control := control_rider;
        animal := CreateVehicle;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
 if horses then
@@ -1762,7 +1854,7 @@ if horses then
        hc_gallery := '';
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
 if birds then
@@ -1772,7 +1864,7 @@ if birds then
        hc_gallery = '';
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
 if tigers then
@@ -1783,7 +1875,7 @@ if tigers then
        hc_agressivity = Rand(-7, 7);
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
 if apemans then
@@ -1795,7 +1887,7 @@ if apemans then
        hc_skills := [rand(1, 3), rand(1, 3), 0, 0];
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
 
@@ -1806,11 +1898,9 @@ if enchidnas then
        hc_gallery = '';
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, nat_area, false);
+       PlaceUnitInArea(animal, nat_area, false);
        end;
 
-if not wat_area then
-   exit;
 
 if fishes then
    for i = 1 to fishes do
@@ -1819,12 +1909,35 @@ if fishes then
        hc_gallery = '';
 
        animal := CreateHuman;
-       PlaceUnitArea(animal, wat_area, false);
+       PlaceUnitInArea(animal, wat_area, false);
        end;
 
 End;
 
+Export Function WantHeal(sci, unit);
+begin
+if GetTaskList(sci) > 0 then
+   begin
+   if GetTaskList(sci)[1][1] = 'l' and GetTaskList(sci)[1][4] = unit then
+      result := true
+       else
+        result := false;
+   end
+    else
+     result := false;
+End;
 
+Export Function HealTarget(sci);
+begin
+if not sci then
+   exit;
+
+result := 0;
+
+if GetTaskList(sci) then
+   if GetTaskList(sci)[1][1] = 'l' then
+      result := GetTaskList(sci)[1][4];
+End;
 
 
 // ATTACK
@@ -1860,11 +1973,10 @@ End;
 }
 Export Function Attack(list);
 var base, group, path, flags, i, j, k, x, y, d, z, tmp, tmp2, units_path,
-    f_ignore_area, f_capture, f_ignore_civ, 
-    f_murder, f_mines, f_repair, f_heal, f_spacetime, f_attack_depot,
-    f_crawl,
-    mined, bombed, attacking;
-begin                
+    f_ignore_area, f_capture, f_ignore_civ,
+    f_murder, f_mines, f_repair, f_heal, f_spacetime, f_attack_depot, f_crawl,
+    mined, bombed, attacking, to_heal, healers, to_repair, repairs, empty_vehs, side;
+begin
 if not list then
    exit;
 
@@ -1876,8 +1988,16 @@ flags := list[4];
 mined := [];
 bombed := [];
 
+healers := [];
+to_heal := [];
+
+repairs := [];
+to_repair := [];
+
 if not group or not path then
    exit;
+
+side := GetSide(group[1]);
 
 // prepare flags
 if flags then
@@ -1887,8 +2007,8 @@ if flags then
    f_ignore_civ := flags[3];  // not implement!
    f_murder := flags[4];
    f_mines := flags[5];
-   f_repair := flags[6]; // not implement!
-   f_heal := flags[7]; // not implement!
+   f_repair := flags[6];
+   f_heal := flags[7];
    f_spacetime := flags[8]; // not implement!
    f_attack_depot := flags[9];
    f_crawl := flags[10];
@@ -1907,20 +2027,24 @@ if flags then
    f_crawl := false;
    end;
 
+if f_heal then
+   healers := UnitFilter(group, [f_class, 4]);
+
+if f_repair then
+   repairs := UnitFilter(group, [f_class, 3]);
+
 // prepare path for every unit from group
 units_path := [];
 
 for i = 1 to group do
-    begin
     units_path := Replace(units_path, i, path);
-    end;
 
 
-// main block 
+// main block
 repeat
  for i = group downto 1 do
     begin
-    wait(0$1);
+    wait(5);
 
     tmp := [];
     attacking := false;
@@ -1928,14 +2052,115 @@ repeat
     // remove dead unit from list
     if IsDead(group[i]) or not group[i] then
        begin
+       if GetType(group[i]) = unit_human then
+          begin
+          to_heal := to_heal diff group[i];
+          healers := healers diff group[i];
+          end;
+
        group := Delete(group, i);
        units_path := Delete(units_path, i);
        continue;
        end;
 
+    // filter vehicles by health
+    if f_repair then
+       begin
+       if GetType(group[i]) = unit_vehicle then
+          begin
+          if GetLives(group[i]) < 700 and not group[i] in to_repair then
+             to_repair := to_repair union group[i];
+
+          if GetLives(group[i]) = 1000 and group[i] in to_repair then
+             to_repair := to_repair diff group[i];
+
+          if group[i] in to_repair then
+             begin
+             if not IsInArea(group[i], f_repair) then
+                ComMoveToArea(group[i], f_repair);
+
+             continue;     
+             end;
+          end
+       else
+        if group[i] in repairs then
+           begin
+           if IsInUnit(group[i]) then
+              begin
+              z := IsInUnit(group[i]);
+
+              if z in to_repair and IsInArea(z, f_repair) then
+                 ComExitVehicle(group[i]);
+              end
+           else
+              begin
+              z := UnitFilter(group, [[f_inarea, f_repair], [f_empty]]);
+
+              if not HasTask(group[i]) then
+                 begin
+                 x := NearestUnitToUnit(z, group[i]);
+
+                 if not x then
+                    continue;
+
+                 if GetLives(x) < 1000 then
+                    ComRepairVehicle(group[i], x)
+                 else
+                    if not (f_heal and GetLives(group[i]) < 1000) then
+                       ComEnterUnit(group[i], x);
+                 end;
+
+              continue;
+              end;
+           end;
+       end;
+
+    // filter units by health
+    if f_heal and GetType(group[i]) = unit_human then
+       begin
+       if group[i] in healers then
+          begin
+          if not IsInArea(group[i], f_heal) and not HasTask(group[i]) then
+             ComMoveToArea(group[i], f_heal)
+          else if GetLives(HealTarget(group[i])) = 1000 then
+               ComStop(group[i])
+          else if not HasTask(group[i]) and to_heal then
+               begin
+               z := NearestUnitToUnit(UnitFilter(to_heal, [f_not, [f_inside]]), group[i]);
+
+               if z then
+                  if FilterAllUnits([[f_dist, z, 10], [f_enemy, GetSide(z)]]) = 0 then
+                     ComHeal(group[i], z)
+               else
+                  ComMoveToArea(group[i], f_heal);
+               end;
+
+          continue;
+          end;
+
+       if GetLives(group[i]) < 700 and not group[i] in to_heal then
+          to_heal := to_heal union group[i];
+
+       if group[i] in to_heal then
+          begin
+          if GetLives(group[i]) = 1000 then
+             to_heal := to_heal diff group[i]
+          else
+             begin
+             if not IsInArea(group[i], to_heal) then
+                ComMoveToArea(group[i], f_heal)
+             else
+                ComHold(group[i]);
+
+             continue;
+             end;
+          end;
+
+       end;
+
     // scan terrain
     if not EnemyInRange(group[i], 10) and not units_path[i] = [] then
-       begin 
+       begin
 
        // little cheat ;) Refuel if player dont see me
        if GetEngine(group[i]) in [engine_combustion, engine_solar] then
@@ -1960,7 +2185,7 @@ repeat
       else // find some enemy
        begin
        tmp := FilterAllUnits([f_enemy, GetSide(group[i])]);
-                
+
        if not tmp then
           continue; // end here!
 
@@ -2003,7 +2228,7 @@ repeat
 
           if f_crawl and GetClass(group[i]) = 1 and GetLives(group[i]) < 800 and not Crawls(group[i]) then
              ComCrawl(group[i]);
-                         
+
           if f_mines then
              begin
              if GetType(tmp[1]) = unit_building and not tmp[1] in mined then
@@ -2022,7 +2247,7 @@ repeat
              end;
 
           end;
-                
+
        // kamikaze
        if GetClass(group[i]) = 17 and not GetTag(group[i]) = 71 then
           begin
@@ -2066,7 +2291,7 @@ repeat
 
        // hovercraft
        if GetChassis(group[i]) = ar_hovercraft then
-          begin      
+          begin
           k := 10;
           x := 0;
 
@@ -2081,7 +2306,7 @@ repeat
                  x := tmp[j];
                  attacking := true;
                  end;
-              end;  
+              end;
 
           if not x then
              begin
@@ -2129,10 +2354,23 @@ repeat
                 attacking := true;
                 end;
              end;
-             
+
 
           if GetLives(group[i]) < 500 then
              ComAttackUnit(group[i], tmp[1]);
+          end;
+
+       // time lapsers
+       if GetWeapon(group[i]) = ru_time_lapser then
+          begin
+          if not HasTask(group[i]) then
+             begin
+             k := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(group[i])]), group[i]);
+
+             if k then
+                if GetDistUnits(group[i], k) > 10 then
+                   ComMoveUnit(group[i], k);
+             end;
           end;
 
 
@@ -2146,8 +2384,8 @@ repeat
 
           if k in FilterAllUnits([f_enemy, GetSide(group[i])]) and GetDistUnits(k, group[i]) < 5 then
              ComAutodestruct(group[i]);
-          end; 
-          
+          end;
+
        if f_attack_depot then
           begin
           k := 6;
@@ -2203,7 +2441,7 @@ repeat
  end;
 
  wait(0$1);
-until group = [];
+until group = [] or not FilterAllUnits([f_enemy, side]);
 
 End;
 
@@ -2276,6 +2514,228 @@ list := [];
      End;
 
 result := list;
+End;
+
+Export Function SortBySkill(units, class);
+var i, tmp;
+begin
+if not units or not class in [1, 2, 3, 4] then
+   exit;
+
+tmp := [];
+
+for i in units do
+    tmp := Insert(tmp, tmp+1, GetSkill(i, class));
+
+if not tmp then
+   exit;
+
+result := SortListByListDesc(units, tmp);
+End;
+
+Export Function UnitGoingToBuilding(unit, building);
+var x, y;
+begin
+x := GetX(building);
+y := GetY(building);
+
+     if GetTaskList(unit) then
+        begin
+        if 'e' = GetTaskList(unit)[1][1] and
+             x = GetTaskList(unit)[1][2] and
+             y = GetTaskList(unit)[1][3] then
+          result := true
+           else
+            result := false;
+        end
+         else
+          result := false;
+End;
+
+Export Function PlaceUnitInArea(unit, area, mode);
+var i, tmp, hex;
+begin
+if not unit or not area then
+   exit;
+
+tmp := AreaToList(area, i);
+
+for i = 1 to tmp[1] do
+    begin
+    hex := [tmp[1][i], tmp[2][i]];
+
+    if HexInfo(hex[1], hex[2]) = 0 then
+       begin
+       PlaceUnitXY(unit, hex[1], hex[2], mode);
+       result := IsPlaced(unit);
+       exit;
+       end;
+    end;
+End;
+
+Export Function BuildingsListDump(side);
+var i, tmp;
+begin
+if not side or side > 8 then
+   exit;
+
+tmp := FilterAllUnits([[f_side, side], [f_type, unit_building]]);
+
+if not tmp then
+   exit;
+
+
+enable_addtolog := true;
+
+AddToLog('[');
+
+for i in tmp do
+    begin
+    AddToLog('[' & GetBType(i) & ', ' & GetX(i) & ', ' & GetY(i) & ', ' & GetDir(i) & ', ' & GetLabKind(i, 1) & ', ' & GetLabKind(i, 2) & '],');
+    end;
+
+AddToLog('];');
+End;
+
+Export Function Crates(area, rate, min, max);
+var i, r, time, amount;
+begin
+if not area or not rate or not max then
+   exit;
+
+while 1 do
+   begin
+   amount := GetResourceArea(area, mat_cans) * 10;
+   r := rate / 10;
+   time := 1$00;
+
+   if amount < min then
+      r := r * 2
+   else if amount > max then
+      r := r / 2;
+
+   time := time / r;
+
+   if time < 0 then
+      time := time * -1;
+
+   wait(time);
+   wait(rand(0$01, 0$25));
+
+   CreateCratesArea(rand(1, 5), area, true);
+   end;
+End;
+
+Export Function UpgradeTurretsWeapon(turrets, factories);
+var i, j, k, nat, weapon, weapons, list;
+begin
+if not turrets or not factories then
+   exit;
+
+list := [
+            [
+                [us_double_gun, us_heavy_gun],
+                [us_machine_gun, us_gatling_gun],
+                [us_light_gun, us_double_gun]
+            ],
+            [
+                [ar_double_machine_gun, ar_gatling_gun],
+                [ar_light_gun, ar_gun]
+            ],
+            [
+                [ru_heavy_machine_gun, ru_gatling_gun],
+                [ru_gun, ru_heavy_gun],
+                [ru_rocket_launcher, ru_rocket]
+            ],
+        ];
+
+result := [];
+
+for i in turrets do
+    begin
+    nat := GetNation(i);
+    weapon := 0;
+
+    if not nat then
+       continue;
+
+    for j in list[nat] do
+        if GetBWeapon(i) = j[1] then
+           begin
+           weapon := j[2];
+           break;
+           end;
+
+    if not weapon then
+       continue;
+
+    for k in factories do
+        begin
+        weapons := AvailableWeaponList(k);
+
+        if not weapons then
+           continue;
+
+        if weapon in weapons then
+           begin
+           result := [i, weapon];
+           exit;
+           end;
+        end;
+
+    end;
+
+End;
+
+Export Function RevealMapOnXY(x, y, side, range);
+begin
+if not side or side > 8 then
+   exit;
+
+if not range then
+   range := -12;
+
+PlaceSeeing(x, y, side, range);
+RemoveSeeing(x, y, side);
+End;
+
+Export function Video(mode);
+begin
+ingame_video = mode;
+interface_hidden = mode;
+End;
+
+Export Function Join(array, element);
+begin
+result := array ^ element;
+End;
+
+Export Function JoinUnion(array, element);
+begin
+result := array union element;
+End;
+
+Export Function GetBehemoths(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_chassis, 25]]);
+End;
+
+Export Function Shuffle(array);
+var i, index;
+begin
+result := [];
+
+if not array then
+   exit;
+
+Randomize;
+
+for i = array downto 1 do
+    begin
+    index := rand(1, array);
+    result := Insert(result, result + 1, array[index]);
+    array := Delete(array, index);
+    end;
 End;
 
 

@@ -34,9 +34,7 @@ Export function EnchancedSaveCharacters(charactersList, ident);
 var i;
 begin
     for i in charactersList do
-    begin
-         if IsOk(i) then SaveCharacters(i, ident);
-    end;
+        SaveCharacters(i, ident);
 end;
 
 Export function PrepareDifficulty;
@@ -81,10 +79,15 @@ end;
 // AI functions
 
 Export function BuildRussianBase(position);
-var i, engineers, buildingsTab, area;
+var i, engineers, buildingsTab, area, sources;
 begin
 
 // 1 - west , 2 - middle, 3 - east
+
+   sources := [ [43,68], [43,79], [99,114], [103,114], [156,92], [152,85] ];
+
+   for i in sources do
+       SetResourceVisibility(i[1], i[2], 3);
 
    case position of
    1: area := westConv;
@@ -235,7 +238,7 @@ begin
     engineers = FilterAllUnits([[f_side, 2], [f_class, 2]]);
     AddComBuild(engineers, b_depot, 71, 15, 3);
 
-    buildingsTab = [
+buildingsTab = [
     [b_lab, 77, 18, 3],
     [b_armoury, 77, 26, 0],
     [b_breastwork, 82, 28, 0],
@@ -247,7 +250,6 @@ begin
 
 for i := 1 to buildingsTab do
     AddComBuild(engineers, buildingsTab[i][1], buildingsTab[i][2], buildingsTab[i][3], buildingsTab[i][4]);
-
 end;
 
 Export Function IntBazooka(side, targetSide);
@@ -766,27 +768,47 @@ END;
 
 // Tame apemans
 Export function TameApemans;
-var i, j;
+var i, j, b, arm, dep, tmp;
 begin
 
 repeat
-    wait(0$1);
-    for i in FilterAllUnits([[f_side, 2], [f_class, 4]]) do
-    begin
-        for j in FilterUnitsInArea(NatureArea1, [[f_side, 0], [f_class, 12]]) do 
-        begin
-            AddComTameXY(i, GetX(j), GetY(j));
-        end;
-    end;
+ wait(0$1);
 
-until FilterAllUnits([[f_side, 2], [f_class, 4]]) = 0  or FilterUnitsInArea(NatureArea1, [[f_side, 0], [f_class, 12]]) = 0;
-wait(0$30);
+ tmp := FilterAllUnits([[f_side, 2], [f_class, 4], [f_not, [f_hastask]]]);
+
+ if not tmp then
+    continue;
+
+ for j in FilterUnitsInArea(NatureArea1, [[f_side, 0], [f_class, 12]]) do
+     ComTameXY(tmp, GetX(j), GetY(j));
+
+until FilterAllUnits([[f_side, 2], [f_class, 4]]) = 0 or FilterUnitsInArea(NatureArea1, [[f_side, 0], [f_class, 12]]) < 2 or tick >= 3$20;
+
+repeat
+ wait(0$1);
+ arm := FilterAllUnits([[f_side, 2], [f_btype, b_barracks]]);
+until arm;
+
+wait(0$25);
+
+dep := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+j := 0;
+
 for i in FilterAllUnits([[f_side, 2], [f_class, 12]]) do
 begin
-    ComMoveXY(i, GetX(arDepot), GetY(arDepot));
-    SetClass(i, [16, 15][Rand(1,2)]);
-end; 
-for i in FilterAllUnits([[f_side, 2], [f_class, 4]]) do ComEnterUnit(i, FilterAllUnits([[f_side, 2], [f_btype, b_lab_full]])[1]);
+ComMoveXY(i, 63, 16);
+j := j + 1;
+
+if j < 5 then
+   b := arm[1]
+else
+   b := dep[1];
+
+AddComEnterUnit(i, b);
+end;
+
+for i in FilterAllUnits([[f_side, 2], [f_class, 4]]) do
+    ComEnterUnit(i, FilterAllUnits([[f_side, 2], [f_btype, b_lab_full]])[1]);
 
 end;
 

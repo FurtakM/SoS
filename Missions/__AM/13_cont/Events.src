@@ -1,0 +1,107 @@
+On VehicleConstructionStarted(building, chasis, engine, control, weapon) Do
+begin
+    if weapon = 8 and eventVar1 = 0 then
+    begin
+        eventVar1 = 1;
+
+        DialogueOn;
+        Say(JMM, 'D6a-JMM-1');
+        SayRadio(Powell, 'D6a-Pow-1');
+        DialogueOff;
+        wait(3$0);
+        PowellSupport;
+    end;
+end;
+
+On VehicleConstructed(vehicle, building) Do
+begin
+    if GetWeapon(vehicle) = 8 and eventVar2 = 0 then
+    begin
+        eventVar2 = 1;
+
+        DialogueOn;
+        Say(JMM, 'D6b-JMM-1');
+        SayRadio(Powell, 'D6b-Pow-1');
+        DialogueOff;
+
+        SetAreaMapShow(TestArea, 1);
+        SetAreaMapShow(RadarArea, 1);
+
+        ChangeMissionObjectives('M3');
+    end;
+end;
+
+On SiberiteRocketExploded(nn, x, y) Do
+begin
+    if InArea(x, y, TestArea) and eventVar3 = 0 then
+    begin
+        eventVar3 = 1;
+        wait(0$5);
+        if FilterUnitsInArea(RadarArea, [[f_side, 1], [f_type, unit_vehicle], [f_weapon, 11]]) > 0 then
+        begin
+            radarOnSpot = 1;
+            ChangeMissionObjectives('M3a');
+        end else begin
+            ChangeMissionObjectives('M3b');
+        end;
+
+        DialogueOn;    
+        Say(Stevens, 'D8-Huck-1');
+        Say(JMM, 'D8-JMM-1');
+        Say(Stevens, 'D8-Huck-2');
+        Say(JMM, 'D8-JMM-2');
+        Say(Stevens, 'D8-Huck-3');
+        Say(JMM, 'D8-JMM-3');
+        Say(Stevens, 'D8-Huck-4');
+        DialogueOff;
+
+        SetAreaMapShow(TestArea, 0);
+        SetAreaMapShow(RadarArea, 0);
+        SetAreaMapShow(SibRadiationArea, 1);
+
+        ChangeMissionObjectives('M5');
+    end;
+end;
+
+On EnterBuilding(building, human) Do
+begin
+    if IsOk(AmSciSib) and human = AmSciSib and eventVar4 = 0 and eventVar3 = 1 then
+      if GetLabKind(building, 1) = b_lab_siberium or GetLabKind(building, 2) = b_lab_siberium then
+          eventVar4 = 1;
+end;
+
+On SibDepositContaminated(unit, x, y) Do //[ [91, 111],[23, 37] ]
+var i, tmp;
+begin
+    if GetNation(unit) = 2 then
+    begin
+        sibDestroyedCounter = sibDestroyedCounter + 1;
+
+        for i := 1 to sibDeposits do
+            if sibDeposits[i][1] = x and sibDeposits[i][2] = y then
+            begin
+               sibDeposits = Delete(sibDeposits, [i][1]);
+               sibDeposits = Delete(sibDeposits, [i][2]);
+            end;
+
+        if eventVar5 = 0 then
+        begin
+            eventVar5 = 1;
+            DialogueOn;
+            Say(Stevens, 'D4-Sci1-1');
+            Say(JMM, 'D4-JMM-1');
+            Say(Stevens, 'D4-Sci1-2');
+            Say(JMM, 'D4-JMM-2');
+            Say(Stevens, 'D4-Sci1-3');
+            Say(JMM, 'D4-JMM-3');
+            Say(JMM, 'D4-JMM-3a');
+            DialogueOff;
+        end;
+
+    end;
+end;
+
+On BuildingStarted(building, unit) Do
+begin
+    If GetSide(building) = 1 and GetBType(building) = 0 and FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_or, [f_btype, 0], [f_btype, 1]]]) = 1 then SetBName(building, 'omega');
+end;

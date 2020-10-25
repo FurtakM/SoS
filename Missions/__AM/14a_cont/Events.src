@@ -1,0 +1,43 @@
+On SiberiteRocketExploded(sibRocket, x, y) do
+OnBombExploded(sibRocket, x, y);
+
+On UnitGoesToRed(un) do
+begin
+if GetClass(JMM) = 4 or GetClass(Burlak) = 4 then
+   exit;
+
+if un = JMM then
+   YouLost('JMM');
+if un = Burlak then
+   YouLost('Burlak');
+End;
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+if un = Burlak then
+   YouLost('Burlak');
+End;
+
+On ArtifactLoaded(cargo, artifact) do
+begin
+if GetSide(cargo) = 7 then
+   artifactPickedUp := true;
+End;
+
+On ArtifactUnloaded(cargo, artifact) do
+artifactPickedUp := false;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+if GetSide(vehicle) <> 1 then
+   exit;
+
+wait(0$5);
+
+if GetControl(vehicle) = control_remote then
+   Connect(vehicle);
+
+vehGuard := vehGuard ^ vehicle;
+End;

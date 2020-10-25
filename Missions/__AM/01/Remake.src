@@ -38,9 +38,9 @@ begin
     truckdriver:=CreateHuman;
     PlaceHumanInUnit(truckdriver,truck);
     SetCargo(truck,mat_cans,100);
-    PrepareMechanic(1,-3);
-    tankdriver:=CreateHuman;
-    PlaceHumanInUnit(tankdriver,tank1);
+    //PrepareMechanic(1,-3);
+    //tankdriver:=CreateHuman;
+    //PlaceHumanInUnit(tankdriver,tank1);
     PrepareSoldier(1,3);
     hc_class=class_sniper;
     snip1:=CreateHuman;
@@ -68,7 +68,7 @@ begin
     PlaceUnitXY(pat1,29,6,false);
     PlaceUnitXY(pat2,30,7,false);
     patrol=[pat1,pat2];
-    allmen=[engi1,engi2,sol1,sol2,sol3,snip1,snip2,patrol,tank1,truckdriver];
+    allmen=[engi1,engi2,sol1,sol2,sol3,snip1,snip2,patrol,truckdriver];
 end;
 
 every 0$1 do
@@ -89,10 +89,18 @@ begin
     ComMoveXY([engi1,engi2],45,36);
     ComExitVehicle(truckdriver);
     AddComMoveXY(truckdriver,40,33);
-    AddComRepairVehicle(truckdriver,truck);
-    Wait(0$15);
-    SetLives(truck,1000);
+
+    repeat
+     wait(0$1);
+     ComRepairVehicle(truckdriver,truck);
+    until GetLives(truck) = 1000;
+
     ComEnterUnit([engi1,engi2],depot2);
+
+    repeat
+     wait(0$1);
+    until not IsDrivenBy(truck);
+
     ComEnterUnit(truckdriver,truck);
     AddComMoveXY(truckdriver,74,52);
     AddComMoveXY(truckdriver,90,58);
@@ -106,11 +114,5 @@ enable;
 for i in FilterUnitsInArea(ExitArea, [f_side, 4]) do RemoveUnit(i);
 end;
 
-Every 0$1 trigger GetDistUnits(truck, tank1) < 5 do
-begin
-  AddComMoveXY(tank1, 79, 53);
-  AddComMoveXY(tank1, 87, 57);
-  AddComMoveXY(tank1, 95, 60);
-  AddComMoveXY(tank1, 96, 60);
-end;
+
 

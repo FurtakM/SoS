@@ -1,0 +1,76 @@
+Export russian_force, russian_guard, ru_attackers;
+Export Function PrepareRussian;
+var i, veh, tmp;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+russian_force := PrepareBase(ru_depot, area_base_russian, '', [7, 8, 9][Difficulty], [10000, 3000, 300], [9, 5, 6, 6]);
+mc_bases := Replace(mc_bases, 2, russian_force);
+
+tmp := [];
+
+for i = 1 to 4 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, [ru_gatling_gun, ru_rocket_launcher, ru_rocket_launcher, ru_gun][i mod 4 + 1], 100);
+
+    veh := CreateVehicle;
+    tmp := tmp ^ veh;
+
+    PlaceUnitArea(veh, parking_russian, false);
+    end;
+
+russian_guard := tmp;
+End;
+
+
+Every 9$00+2$00 trigger IsOk(ru_depot) and player_spotted do
+var i, base, tmp, flags, _target, attackers;
+begin
+enable;
+
+base := 2;
+flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+tmp := [ [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+         [ru_medium_wheeled, engine_combustion, control_computer, ru_rocket_launcher],
+         [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+         [ru_heavy_wheeled, engine_combustion, control_computer, ru_heavy_gun]
+       ];
+
+for i = 1 to Difficulty+tick div 10$00 do
+    tmp := Insert(tmp, tmp+1, [[ru_heavy_wheeled, ru_heavy_tracked][rand(1,2)], engine_combustion, control_computer, [ru_heavy_gun, ru_rocket, ru_rocket_launcher][rand(1,3)]]);
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until mc_vehicles[base] > 6;
+
+wait(0$20);
+
+_target := [[71,19], [91,67], [52,44], [68,48]];
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ru_crane]]);
+
+if not attackers then
+   exit;
+
+ru_attackers := attackers;
+
+for i = 1 to attackers do
+    begin
+         case i mod 3 of
+         0:;
+         1: ComAgressiveMove(i, 32, 49);
+         2: ComAgressiveMove(i, 117, 107);
+         end;
+    end;
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+MC_PrepareAttack(base, attackers, _target, flags);
+
+if not first_attack then
+   first_attack := true;
+End;

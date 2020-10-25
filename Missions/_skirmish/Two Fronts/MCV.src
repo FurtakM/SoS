@@ -1,0 +1,267 @@
+// MCV_Cost(factory, [components_list])
+Export Function MCV_Cost(fac, list);
+var cost, pom;
+begin
+pom := GetBase(fac);
+cost := CostOfVehicle(list[1], list[2], list[3], list[4]);
+ 
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
+    else
+     result := false;
+End;
+
+// MCV_InQueue(side, component)
+Export Function MCV_InQueue(side, component);
+var tmp, i;
+begin
+result := false;
+tmp := MREG_ToConstruct[side];
+
+if tmp then
+for i = 1 to tmp do
+    if component = tmp[i] then
+       begin
+       result := true;
+       break;
+       end;
+End;
+
+// MCV_Produce(side, factory, [components_list]);
+Export Function MCV_Produce(side, fac, list);
+var i, tab;
+begin
+if fac then
+   begin
+   if MCV_Cost(fac, list) and BuildingStatus(fac) = bs_idle and CanBeConstructed(fac, list[1], list[2], list[3], list[4]) then
+      begin
+      ComConstruct(fac, list[1], list[2], list[3], list[4]);
+
+      tab := MREG_ToConstruct[side];
+
+      for i = 4 downto 1 do
+          tab := Remove(tab, list[i], true);
+
+      MREG_ToConstruct := Replace(MREG_ToConstruct, side, tab);
+      result := true;
+      end
+       else
+        result := false;
+   end
+    else
+     result := false;
+End;
+
+// MCV_Parking
+Export Function MCV_Parking(side, veh);
+var i;
+begin
+if not veh then
+   exit;
+
+if MREG_Parking[side] then
+   if not IsInArea(veh, MREG_Parking[side]) then
+      begin       
+      ComMoveToArea(veh, MREG_Parking[side]);
+      
+      if GetControl(veh) = control_manual then
+         begin
+         i := GetDriver(veh);
+
+         Repeat
+          Wait(0$01);
+         Until IsInArea(veh, MREG_Parking[side]) or IsDead(veh);
+
+         ComExitVehicle(i);
+         Wait(1);
+         AddComEnterUnit(i, MCF_Get(side, [f_btype, b_factory])[1]);
+         end;    
+      end;
+End;
+
+Export Function MCV_Turret(side);
+var i, turret, weapon, x, y;
+begin    
+if MCF_Get(side, [f_btype, b_factory]) then
+   if BuildingStatus(MCF_Get(side, [f_btype, b_factory])[1]) = bs_idle then
+      begin
+
+         for i = 1 to MREG_TurretWeapon do
+             if MREG_TurretWeapon[i][1] = side then
+                begin
+                weapon := MREG_TurretWeapon[i][2];
+                x := MREG_TurretWeapon[i][3][1];
+                y := MREG_TurretWeapon[i][3][2];
+                turret := HexInfo(x, y);
+
+                ComPlaceWeapon(turret, weapon);
+                break;
+                end;
+      end;
+End;
+
+Export Function MCV_CheckFuel(side);
+var i, tmp, t;
+begin
+tmp := MCF_Get(side, [f_engine, engine_combustion]);
+
+if not tmp then
+   exit
+    else
+     begin
+     for i = 1 to tmp do
+         if GetFuel(tmp[i]) < 20 and GetTag(tmp[i]) = 0 then
+            begin
+            SetTag(tmp[i], 21);
+            end;
+     end;
+End;
+
+Export Function MCV_Refuel(unit);
+var side, i, b, c;
+begin
+if not unit then
+   exit;
+
+side := GetSide(unit);
+b := MCF_Get(side, [f_or, [f_btype, b_warehouse], [f_btype, b_factory], [f_btype, b_oil_mine]]);
+
+if not b then
+   exit;
+
+     if GetTag(unit) = 21 then
+        begin
+        c := NearestUnitToUnit(b, unit);
+
+        if GetDistUnitXY(unit, GetX(c), GetY(c)) > 6 then
+           ComMoveUnit(unit, c)
+            else
+             begin
+             SetFuel(unit, 100);
+             SetTag(unit, 0);
+             end;
+        end;
+End;
+
+Export Function MCV_RemoteControl(side, nation);
+var i, ct, oper, vehs, tmp;
+begin
+vehs := MCF_Get(side, [[f_control, control_remote], [f_not, [f_linked]]]);
+
+if not vehs then
+   exit;
+
+if nation = 1 {US} then
+   begin
+    if not MCF_Get(side, [f_btype, b_control_tower]) then
+       exit
+        else
+         begin
+         ct := MCF_Get(side, [f_btype, b_control_tower]);
+         oper := UnitsInside(ct[1]);
+
+         for i = vehs downto 1 do
+             begin
+             if not IsControledBy(vehs[i]) then
+                begin
+                tmp := MCV_RemoteDriver(oper);
+                // MC_Show(tmp);
+
+                if not tmp then
+                   exit
+                    else
+                     ComLinkTo(vehs[i], tmp[1][1]);
+                end;
+             end;
+         end;
+   end
+    else // AR
+     begin
+      if not MCF_Get(side, [f_weapon, ar_control_tower]) then
+         exit
+          else
+           begin
+           ct := MCF_Get(side, [f_weapon, ar_control_tower]);
+           oper := [];
+
+           for i = 1 to ct do
+               oper := oper ^ GetDriver(ct[i]);
+           end;
+     end;
+End;
+                        
+Export Function MCV_RemoteDriver(drivers);
+var i, j, linked, m, l;
+begin
+if not drivers then
+   exit
+    else
+     begin
+     linked := [];
+
+     for i = 1 to drivers do
+         begin
+         if CanControl(drivers[i]) then
+            if i > 1 then
+               begin
+               m := false;
+               l := UnitsLinked(drivers[i]);
+
+               for j = 1 to linked do
+                   begin 
+                   if l < linked[j][2] then
+                      begin
+                      linked := Insert(linked, 1, [drivers[i], l]);
+                      m := true;
+                      break;
+                      end;
+                   end;
+
+                   if not m then
+                      linked := linked ^ [[drivers[i], UnitsLinked(drivers[i])]];
+               end
+                else
+                 linked := [[drivers[i], UnitsLinked(drivers[i])]];
+         end;
+
+     result := linked;
+     end;
+End;
+
+Export Function MCV_ToRepair(unit);
+begin
+if not unit then
+   exit
+    else
+     begin
+     SetTag(unit, 6);
+     MCV_Parking(GetSide(unit), unit);
+     end;
+End;
+
+Export Function MCV_CheckStatus(side);
+var i;
+begin
+if MCF_Tag(side, 6, []) then
+   begin
+   for i = MCF_Tag(side, 6, []) downto 1 do
+       if GetLives(MCF_Tag(side, 6, [])[i]) = 1000 then
+          SetTag(MCF_Tag(side, 6, [])[i], 0);
+   end;
+
+if MCF_Tag(side, 10, []) then
+   begin
+   for i = MCF_Tag(side, 10, []) downto 1 do
+       if not IsOk(MCF_Tag(side, 10, [])[i]) or IsDead(MCF_Tag(side, 10, [])[i]) then
+          SetTag(MCF_Tag(side, 10, [])[i], 0);
+   end;
+
+for i in MCF_Vehicle(side, []) diff MCF_Tag(side, 7, []) do
+    if GetLives(i) < 650 and not GetTag(i) = 6 then
+       MCV_ToRepair(i);
+End;
+
+
+

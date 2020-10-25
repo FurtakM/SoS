@@ -19,13 +19,30 @@ begin
     if Lisa = false and Bobby = false and Cyrus = false then
     begin        
          tmp = CreateCharacterSet('03_others');
-         for i = 1 to tmp do RandomBeforeMission = tmp[Rand(1, tmp)];
-         
+
+         if tmp then
+            begin
+            RandomBeforeMission = tmp[1];
+            DeleteCharacters('03_others');
+
+            if tmp > 1 then
+               SaveCharacters(tmp diff tmp[1], '03_others');
+            end
+           else
+            begin
+            PrepareHuman(false, 1, 3);
+            RandomBeforeMission := CreateHuman;
+            end;
     end;
             
     uc_side = 4;
     Donaldson = PrepareUnit('Donaldson', false);
-    Frank = PrepareUnit('Frank', true);
+
+    if TestCharacters('03_Frank') = true then
+    begin
+       Frank = PrepareUnit('03_Frank', true);
+       if Frank = 0 then Frank = PrepareUnit('Frank', false);
+    end;
 
     PlaceHumanInUnit(JMM, amvj);
 
@@ -49,7 +66,9 @@ Export function PrepareDonaldsonArmy;
 var i, un;
 begin
         PlaceUnitArea(Donaldson, DonaldsonArea, false);
-        PlaceUnitArea(Frank, DonaldsonArea, false);
+
+        if Frank then
+           PlaceUnitArea(Frank, DonaldsonArea, false);
 
         uc_nation = 1;
         uc_side = 4;
@@ -93,7 +112,7 @@ begin
         hc_class := 3;
         hc_sex := sex_female;
         hc_gallery := 'AmGalRemake';
-        hc_face_number := 4;
+        hc_face_number := 8;
         hc_name := 'Elizabeth Whitney';
         hc_attr := [9, 11];
         hc_basic_skills := [0, 0, 2, 0];
@@ -106,10 +125,24 @@ begin
 end;
 
 Export function PrepareHarrisonSupport(count);
-var i, un;
+var i, un, veh;
 begin
         uc_nation = 1;
         uc_side = 1;
+
+        vc_chassis := us_medium_wheeled;
+        vc_engine := engine_combustion;
+        vc_control := control_manual;
+        vc_fuel_battery := 65;
+        vc_weapon := [us_double_gun, us_light_gun, us_gatling_gun][Difficulty];
+        veh := CreateVehicle;
+
+        if HexInfo(17, 4) = 0 then
+           PlaceUnitXY(veh, 17, 4, false)
+        else
+           PlaceUnitXY(veh, 23, 10, false);
+
+        SetDir(veh, 2);
 
         hc_class := 1;
         hc_sex := sex_male;
@@ -145,7 +178,7 @@ begin
         hc_skills := [0, 1, 3, 0];
 
         un = CreateHuman;
-        PlaceUnitArea(un, AmericansHelpArea2, false);
+        PlaceHumanInUnit(un, veh);
 
 
         if count = 4 then

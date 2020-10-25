@@ -1,0 +1,200 @@
+// Rejestr MC
+Export MREG_Game,
+       MREG_Crates,
+       MREG_Heal,
+       MREG_TamedApe,
+       MREG_Tame,
+       MREG_ApeOptions,
+       MREG_SidesList,
+       MREG_LabList,
+       MREG_Cargo,  
+       MREG_Bulldozer,
+       MREG_TurretWeapon,
+       MREG_VehicleWeapon,     
+       MREG_Status,
+       MREG_ToBuild,
+       MREG_ToRepair,
+       MREG_ToUpdate,
+       MREG_ToUpLab,
+       MREG_ToRes,
+       MREG_ToConstruct,
+       MREG_ToDismantle,
+       MREG_ToChangeClass,
+       MREG_ToLab,
+       MREG_ToFac,
+       MREG_ToArm,
+       MREG_ToDep,
+       MREG_Parking,
+       MREG_VCombat,
+       MREG_Collect,
+       MREG_Deposit,
+       MREG_AllowClass,
+       MREG_DefPoints,
+       MREG_DefArea,
+       MREG_DefDontLeave,
+       MREG_DefSquad,
+       MREG_DefVeh,
+       MREG_ToBunker,
+       MREG_ToAttack,
+       MREG_DefMobActive,
+       MREG_Attackers,
+       MREG_ResourcesBonus;
+
+Export Function MC_Registry();
+begin
+MREG_Game:= [];
+MREG_Crates:= [];
+MREG_Heal:= [];
+MREG_Tame:= [];
+MREG_ApeOptions:= [];
+MREG_SidesList:= [];
+MREG_LabList:= [];
+MREG_Cargo:= [];  
+MREG_Bulldozer:= [];
+MREG_TurretWeapon:= [];
+MREG_VehicleWeapon:= [];
+MREG_Status:= [];
+MREG_ToBuild:= [];
+MREG_ToRepair:= [];
+MREG_ToUpdate:= [];
+MREG_ToUpLab:= [];
+MREG_ToRes:= [];
+MREG_ToConstruct:= [];
+MREG_ToDismantle:= [];
+MREG_ToChangeClass:= [];
+MREG_ToLab:= [];
+MREG_ToFac:= [];
+MREG_ToArm:= [];
+MREG_ToDep:= [];
+MREG_Deposit:= [];
+MREG_AllowClass:= [];
+MREG_Parking:= [];
+MREG_VCombat:= [];
+MREG_DefPoints:= [];
+MREG_DefArea:= [];
+MREG_DefDontLeave:= [];
+MREG_DefVeh:= [];
+MREG_ToBunker:= [];
+MREG_ToAttack:= [];
+MREG_Attackers:= [];
+MREG_DefMobActive:= [];
+MREG_ResourcesBonus:= [300, 100, 25]; // default value
+End;
+
+Export Function MC_RegistryUpdate(mreg_list, side, unit, mreg);
+begin
+if [side, unit, mreg] in mreg_list then
+   result := mreg_list
+    else
+      mreg_list := mreg_list ^ [[side, unit, mreg]];
+
+result := mreg_list;
+End;
+
+
+Export Function MC_RegistryDelete(mreg_list, side, unit, mreg);
+begin
+if [side, unit, mreg] in mreg_list then
+   result := mreg_list diff [[side, unit, mreg]]
+    else
+     result := mreg_list;
+End;
+
+Export Function MC_RegistryInit();
+var i, j;
+begin
+for j = 1 to 8 do
+    begin
+    if MCF_Get(j, [f_alive]) and not your_side = j then
+       MREG_SidesList := MREG_SidesList ^ 1
+        else
+         MREG_SidesList := MREG_SidesList ^ 0;
+
+    if MCF_Vehicle(j, [[f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) then
+       for i in MCF_Vehicle(j, [f_or, [[f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) do
+           MREG_Cargo := MC_RegistryUpdate(MREG_Cargo, j, i, GetWeapon(i));
+
+    if MCF_Class(j, 4, []) then
+       MREG_ToLab := MREG_ToLab ^ [MCF_Class(j, 4, [])]
+        else
+         MREG_ToLab := MREG_ToLab ^ [0];
+
+    if MCF_Class(j, 3, []) then
+       MREG_ToFac := MREG_ToFac ^ [MCF_Class(j, 3, [])]
+        else
+         MREG_ToFac := MREG_ToFac ^ [0];
+
+    if MCF_Class(j, 1, []) then
+       MREG_ToArm := MREG_ToArm ^ [MCF_Class(j, 1, [])]
+        else
+         MREG_ToArm := MREG_ToArm ^ [0];
+
+    if MCF_Class(j, 2, []) then
+       MREG_ToDep := MREG_ToDep ^ [MCF_Class(j, 2, [])]
+        else
+         MREG_ToDep := MREG_ToDep ^ [0];
+
+       MREG_ToRepair := MREG_ToRepair ^ [0];
+       MREG_Heal := MREG_Heal ^ [0];
+       MREG_Tame := MREG_Tame ^ [0];
+       MREG_Parking := MREG_Parking ^ [0];        
+       MREG_VCombat := MREG_VCombat ^ [0];
+       MREG_ToConstruct := MREG_ToConstruct ^ [0];
+       MREG_ApeOptions := MREG_ApeOptions ^ [[0, 0, 0, 0]];
+       MREG_Collect := MREG_Collect ^ [[0, []]];
+       MREG_Deposit := MREG_Deposit ^ [[0]];
+       MREG_Bulldozer := MREG_Bulldozer ^ [0];
+       MREG_DefPoints := MREG_DefPoints ^ [0];
+       MREG_DefArea := MREG_DefArea ^ [0];
+       MREG_DefDontLeave := MREG_DefDontLeave ^ [0];
+       MREG_DefSquad := MREG_DefSquad ^ [0];
+       MREG_DefVeh := MREG_DefVeh ^ [0];
+       MREG_ToBunker := MREG_ToBunker ^ [0];
+       MREG_ToAttack := MREG_ToAttack ^ [0];
+       MREG_Attackers := MREG_Attackers ^ [0];
+       MREG_DefMobActive := MREG_DefMobActive ^ 0;
+       MREG_AllowClass := MREG_AllowClass ^ [0, 0, 0]; // sniper, mortar, bazooker
+    end;
+
+End;
+
+Export Function MREG_ForSide(side, mreg);
+var i, m;
+begin
+m := false;
+
+for i = 1 to mreg do
+    if mreg[i][1] = side then
+       begin
+       m := true;
+       break;
+       end;
+
+result := m;
+End;
+
+Export Function MREG_ForSideCount(side, mreg);
+var i, m;
+begin
+m := 0;
+
+for i = 1 to mreg do
+    if mreg[i][1] = side then
+       begin
+       m := m + 1;
+       end;
+
+result := m;
+End;
+
+Export Function MREG_CheckChangeClass(side, class);
+var i;
+begin
+result := 0;
+
+for i = 1 to MREG_ToChangeClass do
+    if MREG_ToChangeClass[i][1] = side and MREG_ToChangeClass[i][2] = class then
+       begin
+       result := result + 1;
+       end;
+End;

@@ -1,0 +1,99 @@
+{
+Map scripts: Nefarem
+
+ Ob's sturmt oder schneit,
+ Ob die Sonne uns lacht,
+ Der Tag gluhend heiss Oder eiskalt die Nacht.
+
+ Bestaubt sind die Gesichter,
+ Doch froh ist unser Sinn,
+ Ja unser Sinn;
+ Es braust unser Panzer Im Sturmwind dahin.
+
+  Global Variables:
+  13_BurlakStatus_1 = 0 - Burlak die
+  13_BurlakStatus_1 = 1 - Burlak escape
+
+  13_StevensStatus_1 = 0 - Stevens die
+  13_StevensStatus_1 = 1 - Stevens live
+
+  13_Gnyevko_1
+  13_Titov_1
+  13_Xavier_1
+  13_Belkov_1
+  13_Lipshchin_1
+}
+
+Export JMM, Stevens,  Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi; // Am heroes
+Export Powell; // Am commander
+Export others13; // Others selected
+Export Burlak, Masha; // Ru hero
+Export Gnyevko, Titov, Xavier, Belkov, Lipshchin; // Burlak's friends
+Export resources, vehicles;
+
+Export AmSciSib;
+
+Export spawnBurlak, burlakStatus;
+Export radationResearched;
+Export radarOnSpot;
+
+Export sibDeposits;
+Export sibDestroyedCounter;
+
+export arabianAttacksCounter;
+
+Export mission_prefix;
+
+Export eventVar1, eventVar2, eventVar3, eventVar4, eventVar5;
+
+Export debugMode;
+
+
+Starting
+begin
+    Resetfog;
+    RandomizeAll;
+
+    spawnBurlak = 0;
+    burlakStatus = 0; // 0 = escaped, 1 - killed
+
+    radarOnSpot = 0; // 0 - no, 1 - yes
+
+    radationResearched = 0; // 0 - no or sci dead, 1 - yes
+
+    sibDestroyedCounter = 0; // how many Siberite deposit was destroyed
+
+    sibDeposits = [ [91, 111], [23, 37] ]; // location sib deposits in map
+
+    arabianAttacksCounter = 0;
+
+    resources = [];
+    vehicles = [];
+
+    eventVar1 = 0;
+    eventVar2 = 0;
+    eventVar3 = 0;
+    eventVar4 = 0;
+    eventVar5 = 0;
+
+    mission_prefix = '13f_';
+
+    debugMode = 0;
+    
+    PrepareVehicles;
+    PrepareHeroes;
+    PrepareAmericansRandom;
+
+    PrepareDifficulty;
+end;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
+end;

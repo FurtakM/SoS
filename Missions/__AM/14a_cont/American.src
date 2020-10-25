@@ -1,0 +1,246 @@
+Export Stevens, Powell, baseGuards, sibBomb, guards, vehGuard;
+Export Function PrepareAmerican;
+var i, un, tmp;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+SetResourceType(GetBase(us_depot2), mat_cans, 500);
+SetResourceType(GetBase(us_depot2), mat_siberit, 20);
+
+Stevens := NewCharacter('Stevens');
+Powell := NewCharacter('Powell');
+
+PlaceHumanInUnit(Stevens, us_lab);
+
+vehGuard := [];
+
+// bomb
+PrepareVehicle(us_heavy_tracked, engine_siberite, control_computer, us_siberium_rocket, 100);
+sibBomb := CreateVehicle;
+SetDir(sibBomb, 1);
+PlaceUnitXY(sibBomb, 93, 74, false);
+
+guards := [];
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, class_soldier, [8, 9, 10][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitArea(un, [patrol1, patrol2, patrol3][i], false);
+    guards := guards ^ un;
+    end;
+
+baseGuards := [];
+
+for i = 1 to [5, 6, 7][Difficulty] do
+    begin
+    PrepareSoldier(false, [8, 9, 10][Difficulty]);
+    un := CreateHuman;
+    baseGuards := baseGuards ^ un;
+
+    tmp := FilterAllUnits([[f_side, 1], [f_empty], [f_btype, b_bunker]]);
+
+    if tmp then
+       PlaceHumanInUnit(un, tmp[rand(1, tmp)])
+    else
+       PlaceHumanInUnit(un, us_bar);
+    end;
+
+// sniper
+if Difficulty > 1 then
+   begin
+   PrepareHuman(false, class_sniper, [9, 10][Difficulty-1]);
+   PlaceHumanInUnit(CreateHuman, us_bun1);
+   end;
+
+// mechanics
+for i = 1 to 3 do
+    begin
+    PrepareMechanic(false, 9);
+    PlaceHumanInUnit(CreateHuman, us_fac);
+    end;
+
+PlaceHumanInUnit(CreateHuman, us_ct);
+
+// engs
+for i = 1 to 1+Difficulty do
+    begin
+    PrepareEngineer(false, [8, 9, 10][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, us_depot);
+    end;
+
+// sci
+for i = 1 to 3 do
+    begin
+    PrepareScientist(false, 10);
+    PlaceHumanInUnit(CreateHuman, us_lab);
+    end;
+End;
+
+// Patrols
+Every 0$2 trigger guards and not activeBombTest do
+var i, j, points;
+begin
+enable;
+
+points := [ [204,30], [165,24], [195,6], [223,54], [214,84], [206,71] ];
+
+for i in guards do
+    begin
+    if HasTask(i) then
+       continue
+    else
+       begin
+       j := rand(1, 6);
+
+       if not See(7, i) then
+          ComAgressiveMove(i, points[j][1], points[j][2]);
+       end;
+    end;
+End;
+
+Every 0$1 trigger vehGuard and not planCaptured do
+var i;
+begin
+enable;
+
+for i in vehGuard do
+    if IsOk(vehGuard) then
+       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 7]), i));
+End;
+
+Every 9$00 trigger bombExploded and IsOk(us_fac) and not planCaptured do
+begin
+enable;
+ComConstruct(us_fac, us_morphling, engine_siberite, control_remote, [us_rocket_launcher, us_rocket_launcher, us_laser][rand(1,3)]);
+End;
+
+Every 1$45 trigger FilterAllUnits([[f_side, 1], [f_class, class_sniper], [f_ok]]) and not planCaptured do
+var tmp, b;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_class, class_sniper], [f_ok]]);
+
+if not tmp then
+   exit;
+
+b := IsInUnit(tmp[1]);
+
+if not b or HasTask(tmp[1]) then
+   exit;
+
+if b = us_bun1 then
+   begin
+   ComExitBuilding(tmp[1]);
+   AddComAgressiveMove(tmp[1], 27, 44);
+
+   if IsOk(us_bun2) then
+      AddComEnterUnit(tmp[1], us_bun2);
+   end
+else
+   begin
+   ComExitBuilding(tmp[1]);
+   AddComAgressiveMove(tmp[1], 92, 51);
+
+   if IsOk(us_bun1) then
+      AddComEnterUnit(tmp[1], us_bun1);
+   end;
+End;
+
+// repair buildings
+Every 0$1 trigger not planCaptured and FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_building], [f_not, [f_lives, 1000]]]) do
+var i, tmp, tmp2, b;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_class, 2], [f_lives, 1000]]);
+tmp2 := FilterAllUnits([[f_side, 1], [f_class, 2], [f_not, [f_lives, 750]]]); 
+b := FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_building], [f_not, [f_lives, 1000]]]) diff us_lab;
+
+if not tmp and not tmp2 then
+   exit;
+
+
+if tmp and b then
+   for i in tmp do
+       begin
+       if GetTag(i) = 1 and GetLives(i) < 1000 then
+          continue
+       else
+          if GetTag(i) = 1 then
+             SetTag(i, 0);
+
+       if IsInUnit(i) then
+          ComExitBuilding(i);
+
+       if not HasTask(i) then
+          AddComRepairBuilding(i, b[1]);
+       end;
+
+if tmp2 then
+   for i in tmp2 do
+       begin
+       if not GetTag(i) = 1 then
+          SetTag(i, 1);
+
+       if GetDistUnitXY(i, 88, 75) > 6 then
+          ComMoveXY(i, 88, 75); 
+       end;
+End;
+
+Every 0$1 trigger not planCaptured and stevensTimer and FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]]]) do
+var i, sci, tmp;
+begin
+enable;
+
+sci := FilterAllUnits([[f_side, 1], [f_class, 4]]);
+tmp := FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]]]);
+
+if not sci or not tmp then
+   exit;
+
+for i in sci do
+    if IsInUnit(i) then
+       ComExitBuilding(i)
+    else
+       ComHeal(i, tmp[1]);
+End;
+
+Every 0$1 trigger not planCaptured and stevensTimer and IsOk(us_lab) and not FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]]]) and FilterAllUnits([[f_side, 1], [f_class, 4], [f_outside]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 1], [f_class, 4], [f_outside]]) do
+    if not GetTag(i) and not HasTask(i) then
+       ComEnterUnit(i, us_lab);
+End;
+
+Every 0$1 trigger not planCaptured and not FilterUnitsInArea(usBase, [[f_side, 1], [f_type, unit_building], [f_not, [f_lives, 1000]]]) and FilterAllUnits([[f_side, 1], [f_class, 2], [f_outside]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 1], [f_class, 2], [f_outside]]) do
+    if not HasTask(i) and not GetTag(i) then
+       ComEnterUnit(i, us_depot);
+End;
+
+Every 0$1 trigger (stevensTimer <= 0$00 or IsDead(Stevens)) and FilterAllUnits([[f_side, 1], [f_class, 4]]) do
+ComDismantle(FilterAllUnits([[f_side, 1], [f_class, 4]]), us_lab);
+
+Every 0$4 trigger not planCaptured and FilterUnitsInArea(usBaseCriticalArea, [f_side, 7]) do
+var i;
+begin
+wait(0$2);
+
+for i in FilterAllUnits([[f_side, 1], [f_class, 1]]) do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComAgressiveMove(i, 92, 78);
+    end;                           
+End;

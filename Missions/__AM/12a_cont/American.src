@@ -1,0 +1,243 @@
+Export Powell, mobile_patrol, mobile_points, powell_guards, defenders,
+       defcon, defcon_wave;
+Export Function PrepareAmerican;
+var i, j, b, un;
+begin
+defcon := 0;
+defcon_wave := 0;
+defenders := [];
+
+SetBName(alfa, 'alpha');
+
+uc_side := 1;
+uc_nation := 1;
+
+Powell := NewCharacter('Powell');
+PlaceUnitXY(Powell, 110, 26, false);
+
+ComHold(Powell);
+
+for i = 1 to 5 do
+    begin
+    PrepareHuman(false, 1, 10);
+    powell_guards := Insert(powell_guards, 1, CreateHuman);
+    PlaceHumanInUnit(powell_guards[1], ambar0);
+    end;
+
+if Difficulty > 2 then
+   begin
+   bc_type := b_turret;
+   bc_level := 7;
+   b := CreateAndPlaceBuildingXYD(107, 55, 5);
+   PlaceWeaponTurret(b, us_rocket_launcher);
+   end;
+
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_factory]])^FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) do
+    for j = 1 to 3 do
+        begin
+        PrepareHuman(false, 3, 6);
+        PlaceHumanInUnit(CreateHuman, i);
+        end;
+End;
+
+Export Function PreparePatrol;
+var i, un;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+mobile_points := [ [ [99,55], [113,67], [129,68], [135,62], [103,41] ],
+                   [ [27,49], [46,49], [87,70], [99,79], [118,111], [99,79], [87,70], [46,49] ],
+                   [ [200,88], [175,80], [135,62], [117,53], [103,41], [99,24], [85,3], [99,24], [103,41], [98,47], [99,56], [96,66], [99,56], [112,66], [129,68], [135,62], [156,71], [168,76], [168,61], [168,75], [185,85] ]
+                 ];
+mobile_patrol := [];
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_gatling_gun, 100);
+mobile_patrol := Insert(mobile_patrol, 1, CreateVehicle);
+PlaceUnitXY(mobile_patrol[1], 99, 55, false);
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_computer, us_gatling_gun, 100);
+mobile_patrol := Insert(mobile_patrol, 2, CreateVehicle);
+PlaceUnitXY(mobile_patrol[2], 27, 49, false);
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_rocket_launcher, 100);
+mobile_patrol := Insert(mobile_patrol, 3, CreateVehicle);
+PlaceUnitXY(mobile_patrol[3], 200, 88, false);
+
+for i = mobile_patrol downto 1 do
+    RaiseSailEvent(1);
+End;
+
+Export Function SpawnCargo();
+var i, c, k, areas, road, tmp, veh;
+begin
+areas := [ [road_east, 4], [road_south, 5], [road_west, 1] ];
+road := [ [176,81, 135,62, 114,67, 93,71, 76,67], [107,92, 92,72, 77,68], [45,49, 67,59, 77,68] ];
+
+k := rand(1, areas);
+c := rand(1, 2);
+
+uc_side := 1;
+uc_nation := 1;
+
+PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_cargo_bay, 100);
+veh := CreateVehicle;
+
+SetDir(veh, areas[k][2]);
+
+PlaceUnitArea(veh, areas[k][1], false);
+SetCargo(veh, [mat_cans, mat_siberit][c], 100);
+
+tmp := road[k];
+
+for i = 1 to tmp div 2 do
+    AddComMoveXY(veh, tmp[i*2-1], tmp[i*2]);
+
+AddComGive(veh, alfa);
+AddComWait(veh, 0$2);
+
+for i = tmp div 2 downto 1 do
+    AddComMoveXY(veh, tmp[i*2-1], tmp[i*2]);
+
+AddComMoveToArea(veh, areas[k][1]);
+
+repeat
+ wait(0$1);
+until IsInArea(veh, areas[k][1]) and GetCargo(veh, c) = 0;
+
+RemoveUnit(veh);
+End;
+
+// Spawn Cargo and transport materials into main depot
+Every 3$00 do
+begin
+enable;
+SpawnCargo;
+End;
+
+Export Function PrepareDefenders;
+var i, tmp;
+begin
+if defenders then
+   exit;
+
+for i = 1 to [4, 5, 6][Difficulty] do
+    begin
+    tmp := Produce(amfac2, [us_medium_wheeled, us_medium_tracked][rand(1,2)], [engine_combustion, engine_siberite][rand(1,2)], control_remote, [us_gatling_gun, us_double_gun, us_laser][rand(1,3)]);
+
+    if tmp then
+       AddComConstruct(amfac2, tmp[1], tmp[2], tmp[3], tmp[4]);
+    end;
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 1], [f_control, control_remote]]) >= [4, 5, 6][Difficulty];
+
+defenders := FilterAllUnits([[f_side, 1], [f_control, control_remote]]);
+End;
+
+Export Function Defend;
+var i, un, veh, tmp;
+begin
+defcon_wave := defcon_wave + 1;
+
+if not defenders then
+   PrepareDefenders;
+
+if defcon_wave > 1 then
+   begin
+   for i = 1 to defcon_wave + 2 do
+       begin
+       PrepareVehicle(us_heavy_tracked, engine_siberite, control_manual, [us_gatling_gun, us_heavy_gun, us_rocket_launcher][rand(1,3)], 100);
+       veh := CreateVehicle;
+       SetDir(veh, 1);
+       defenders := defenders ^ veh;
+
+       PrepareHuman(false, 3, 9);
+       PlaceHumanInUnit(CreateHuman, veh);
+       PlaceUnitArea(veh, west_spawn, false);
+       end;
+
+   for i = 1 to defcon_wave do
+       begin
+       PrepareHuman(false, 5, 9);
+       un := CreateHuman;
+       PlaceUnitArea(un, west_spawn, false);
+       defenders := defenders ^ un;
+       end;
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in defenders do
+     begin
+
+     if defcon and GetDistUnitXY(i, defcon[1], defcon[2]) > 10 and not HasTask(i) then
+        ComAgressiveMove(i, defcon[1], defcon[2]);
+
+     end;
+
+until not defenders;
+End;
+
+Every 0$1 do
+var radar, i;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+PrepareVehicle(us_light_wheeled, engine_solar, control_computer, us_radar, 100);
+radar := CreateVehicle;
+SetDir(radar, 4);
+PlaceUnitXY(radar, 51, 45, false);
+
+repeat
+ AddComWait(radar, 0$20);
+ AddComMoveXY(radar, 65, 75);
+ AddComWait(radar, 0$10);
+ AddComMoveXY(radar, 83, 87);
+ AddComWait(radar, 0$15);
+ AddComMoveXY(radar, 94, 81);
+ AddComWait(radar, 0$10);
+ AddComMoveXY(radar, 55, 48);
+
+ wait(1$00);
+until not IsOk(radar);
+End;
+
+// Extra patrol
+Every 7$30 trigger Difficulty > 1 and extra_patrol do
+var un;
+begin
+enable;
+
+uc_side := 1;
+uc_nation := 1;
+
+PrepareVehicle(us_morphling, engine_siberite, control_computer, us_gatling_gun, 100);
+un := CreateVehicle;
+SetDir(un, 3);
+PlaceUnitXY(un, 155, 2, false);
+
+ComAgressiveMove(un, 169, 77);
+AddComWait(un, 0$2);
+AddComAgressiveMove(un, 134, 62);
+AddComAgressiveMove(un, 103, 42);
+AddComWait(un, 0$2);
+AddComAgressiveMove(un, 84, 2);
+
+repeat
+ wait(0$1);
+
+ if IsDead(un) then
+    begin
+    extra_patrol := false;
+    exit;
+    end;
+
+until IsAt(un, 84, 2);
+
+RemoveUnit(un);
+End;
+

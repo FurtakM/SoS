@@ -1,6 +1,6 @@
 // Action module
 Export Function Action;
-var points, i, sol, team, filter;
+var points, i, sol, time, team, filter;
 begin
 InGameOn;
 
@@ -18,18 +18,20 @@ if sol then
    end;
 
 for i in points do
-    AddComMoveXY(Harisson, i[1], i[2]);
+    AddComMoveXY([Harisson, RandGuy], i[1], i[2]);
 
 
-AddComExitVehicle(Harisson);
+AddComExitVehicle([Harisson, RandGuy]);
+AddComTurnUnit([Harisson, RandGuy], sol);
+
+time := 0$20;
 
 repeat
- wait(3);
-until not IsInUnit(Harisson);
+ wait(0$0.3);
+ time := time - 0$0.3;
+until not IsInUnit(Harisson) or time <= 0$00;
 
 Say(sol, 'D1-Sol1-1');
-
-ComTurnUnit(Harisson, sol);
 
 Say(Harisson, 'D1-Har-1');
 
@@ -40,11 +42,14 @@ ComMoveXY(sol, 35, 21);
 ComExitBuilding(JMM);
 AddComMoveUnit(JMM, Harisson);
 
-ComTurnUnit(Harisson, JMM);
+ComTurnUnit([Harisson, RandGuy], JMM);
+
+time := 0$3;
 
 repeat
- wait(3);
-until GetDistUnits(JMM, Harisson) < 4;
+ wait(0$1);
+ time := time - 0$1;
+until GetDistUnits(JMM, Harisson) < 4 or time = 0$00;
 
 ComTurnUnit(JMM, Harisson);
 
@@ -75,10 +80,14 @@ end;
 
 all := FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM, commander];
 
+if UnitFilter(all, [f_class, 2]) then
+   for i in UnitFilter(all, [f_class, 2]) do
+       SetClass(i, 2);
+
 save_group := CharacterSelection('1', 10, 10,
                                 [sel_change_class, JMM,
                                  sel_not_hired, sel_changeable, sel_change_class]^all^
-                                [sel_dont_change_class, sel_not_changeable, [commander, Harisson]],
+                                [sel_dont_change_class, sel_not_changeable]^[commander, Harisson],
                                 [[class_soldier, 3], [class_mechanic, 3, 6], [class_scientistic, 1]]);
 
 SaveCharacters(all diff [JMM, Gladstone, Lisa, Cyrus, Bobby, Frank, Donaldson, Brown, Houten, Harisson, Khatam]^save_group, '07_othersGamma');
@@ -141,6 +150,9 @@ if Khatam then
    if Khatam in save_group then
       SaveVariable(true, 'KhatamIn07');
    end;
+
+if debug then
+   InGameOff;
 
 ChangeMap(1, '%_cont');
 End;

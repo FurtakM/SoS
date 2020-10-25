@@ -1,0 +1,223 @@
+Export Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
+       Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
+       Simms, Joan, DeltaDoctor;
+Export Function PrepareFriends;
+var i, tmp, buildings, areas, bunkers, cl;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+DeltaDoctor := PrepareUnit('DeltaDoctor', (not debug), '10c_');
+
+Joan := PrepareUnit('Joan', (not debug), '10c_');
+
+if Joan then
+   friends := Insert(friends, friends+1, Joan);
+
+Simms := PrepareUnit('Simms', (not debug), '10c_');
+
+Kikuchi := PrepareUnit('Kikuchi', (not debug), '11_');
+
+if Kikuchi then
+   friends := Insert(friends, friends+1, Kikuchi);
+
+Frank := PrepareUnit('Frank', (not debug), '11_');
+
+if Frank then
+   friends := Insert(friends, friends+1, Frank);
+
+Gary := PrepareUnit('Gary', (not debug), '11_');
+
+if Gary then
+   friends := Insert(friends, friends+1, Gary);
+
+Cornel := PrepareUnit('Cornell', (not debug), '11_');
+
+if Cornel then
+   friends := Insert(friends, friends+1, Cornel);
+
+Houten := PrepareUnit('Houten', (not debug), '11_');
+
+if Houten then
+   friends := Insert(friends, friends+1, Houten);
+
+Gladstone := PrepareUnit('Gladstone', (not debug), '11_');
+
+if Gladstone then
+   friends := Insert(friends, friends+1, Gladstone);
+
+Lisa := PrepareUnit('Lisa', (not debug), '11_');
+
+if Lisa then
+   friends := Insert(friends, 1, Lisa);
+
+Donaldson := PrepareUnit('Donaldson', (not debug), '11_');
+
+if Donaldson then
+   friends := Insert(friends, friends+1, Donaldson);
+
+Bobby := PrepareUnit('Bobby', (not debug), '11_');
+
+if Bobby then
+   friends := Insert(friends, friends+1, Bobby);
+
+Cyrus := PrepareUnit('Cyrus', (not debug), '11_');
+
+if Cyrus then
+   friends := Insert(friends, friends+1, Cyrus);
+
+Denis := PrepareUnit('Denis', (not debug), '11_');
+
+Brown := PrepareUnit('Brown', (not debug), '11_');
+
+if Brown then
+   friends := Insert(friends, friends+1, Brown);
+
+friends := friends ^ CreateCharacterSet('11c_others') ^ CreateCharacterSet('11_others');
+
+if friends < 18 then
+   for i = 1 to 18 do
+       begin
+       PrepareHuman(false, rand(1, 4), 7);
+       friends := Insert(friends, friends+1, CreateHuman);
+       end;
+
+
+// robimy machlojki przed anszlusem
+for i in friends do
+    if GetSkill(i, 1) >= GetSkill(i, 4) then
+       SetClass(i, class_soldier)
+      else
+       SetClass(i, class_scientistic);
+
+if Frank then
+   SetClass(Frank, class_sniper);
+
+SetClass([Joan, Denis, DeltaDoctor, Simms], class_scientistic);
+
+selected = CharacterSelection('', 7, 7,
+                             [sel_dont_change_class, JMM, Roth, Simms, Denis, DeltaDoctor,
+                              sel_not_hired, sel_changeable, sel_change_class]^friends,
+                             [class_soldier, [class_scientistic, 2], [class_sniper, 0, 3]]);
+
+if Simms then
+   selected := selected ^ Simms;
+
+if Denis then
+   selected := selected ^ Denis;
+
+if DeltaDoctor then
+   selected := selected ^ DeltaDoctor;
+
+friends := friends diff selected;
+
+// buildings
+buildings := [ [ambar1, ambar2, ambar3], [amlab2, amlab3, amlab4] ];
+// areas
+areas := [friends_spawn_1, friends_spawn_2, friends_spawn_3, friends_spawn_4, friends_spawn_5, friends_spawn_6];
+
+for i in buildings do
+    SetSide(i, 4);
+
+for i in selected do
+    begin
+    if GetClass(i) in [1,5] then
+       begin
+       if buildings[1] then
+          begin
+          PlaceHumanInUnit(i, buildings[1][1]);
+          buildings := Replace(buildings, 1, Delete(buildings[1], 1));
+          end
+        else
+          begin
+          PlaceUnitArea(i, areas[1], false);
+          ComHold(i);
+          areas := Delete(areas, 1);
+          end;
+       end
+      else
+       begin
+       if buildings[2] then
+          begin
+          PlaceHumanInUnit(i, buildings[2][1]);
+          buildings := Replace(buildings, 2, Delete(buildings[2], 1));
+          end
+        else
+          begin
+          PlaceUnitArea(i, areas[1], false);
+          ComHold(i);
+          areas := Delete(areas, 1);
+          end;
+       end;
+    end;
+
+// @see Friends module
+bunkers := FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]);
+
+for i = bunkers - friends downto 1 do
+    begin
+    PrepareHuman(false, 1, [7, 8, 9][Difficulty]);
+    friends := Insert(friends, friends+1, CreateHuman);
+    end;
+
+if friends then
+   begin
+   tmp := friends;
+
+   for i = 1 to bunkers do
+       begin
+       SetSide(tmp[tmp], 1);
+       SetClass(tmp[tmp], 1);
+       PlaceHumanInUnit(tmp[tmp], bunkers[i]);
+       tmp := Delete(tmp, tmp);
+       end;
+   end;
+
+areas := areas union [guard_spawn_1, guard_spawn_2, guard_spawn_3,
+                      guard_spawn_4, guard_spawn_5, guard_spawn_6,
+                      guard_spawn_7, guard_spawn_8, guard_spawn_9,
+                      guard_spawn_10, guard_spawn_11, guard_spawn_12,
+                      guard_spawn_13, guard_spawn_14, guard_spawn_15,
+                      guard_spawn_16, guard_spawn_17, guard_spawn_18,
+                      guard_spawn_19, guard_spawn_20];
+
+for i in friends do
+    begin
+    SetTag(i, 2);
+
+    if GetClass(i) = 1 and buildings[1] then
+       begin       
+       PlaceHumanInUnit(i, buildings[1][1]);
+       buildings := Replace(buildings, 1, Delete(buildings[1], 1));
+       continue;
+       end;
+
+    if GetClass(i) = 4 and buildings[2] then
+       begin
+       PlaceHumanInUnit(i, buildings[2][1]);
+       buildings := Replace(buildings, 2, Delete(buildings[2], 1));
+       continue;
+       end;
+
+    PlaceUnitArea(i, areas[1], false);
+    areas := Delete(areas, 1);
+
+    if GetClass(i) <> 1 then
+       SetClass(i, 1);
+
+    ComHold(i);
+
+    if not areas then
+       break;
+    end;
+
+if UnitFilter(friends, [f_not, [f_placed]]) then
+   for i in UnitFilter(friends, [f_not, [f_placed]]) do
+       begin
+       PlaceUnitXYR(i, 65, 58, 7, false);
+       ComHold(i);
+       end;
+
+if Frank then
+   SetClass(Frank, class_sniper);
+End;

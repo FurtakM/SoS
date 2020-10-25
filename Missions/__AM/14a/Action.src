@@ -1,0 +1,52 @@
+Export Function Action;
+begin
+InGameOn;
+CenterNowOnUnits(JMM);
+
+Say(JMM,'D1-JMM-1');
+Say(Burlak,'D1-Bur-1');
+Say(JMM,'D1-JMM-2');
+Say(Burlak,'D1-Bur-2');
+Say(JMM,'D1-JMM-3');
+Say(Burlak,'D1-Bur-3');
+Say(JMM,'D1-JMM-4');
+Say(Burlak,'D1-Bur-4');
+Say(JMM,'D1-JMM-5');
+Say(Burlak,'D1-Bur-5');
+Say(JMM,'D1-JMM-6');
+Say(Burlak,'D1-Bur-6');
+Say(JMM,'D1-JMM-7');
+
+wait(20);
+
+Query('QTruck');
+
+InGameOff;
+
+ChangeMissionObjectives('MArtPickup');
+SetAreaMapShow(escape_area, 1);
+End;
+
+Every 0$3 trigger FilterUnitsInArea(escape_area, [[f_type, unit_vehicle], [f_control, control_manual], [f_not, [f_empty]]]) = 2 and IsInUnit(JMM) and IsInUnit(Burlak) and (GetWeapon(IsInUnit(JMM)) in [ru_cargo_bay, us_cargo_bay, ru_big_cargo_bay, ar_cargo_bay] or GetWeapon(IsInUnit(Burlak)) in [ru_cargo_bay, us_cargo_bay, ru_big_cargo_bay, ar_cargo_bay]) do
+var i, macmilanVeh, burlakVeh;
+begin
+macmilanVeh := IsInUnit(JMM);
+burlakVeh := IsInUnit(Burlak);
+
+SaveVariable([GetChassis(macmilanVeh), GetEngine(macmilanVeh), control_manual, GetWeapon(macmilanVeh), GetMark(macmilanVeh), GetNation(macmilanVeh)], '14a_JMMVeh');
+SaveVariable([GetChassis(burlakVeh), GetEngine(burlakVeh), control_manual, GetWeapon(burlakVeh), GetMark(burlakVeh), GetNation(burlakVeh)], '14a_BurlakVeh');
+
+SaveCharacters(JMM, '14a_JMM');
+SaveCharacters(Burlak, '14a_Burlak');
+
+ChangeMap(1, '%_cont');
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 4], [f_not, [f_lives, 950]]]) do
+YouLost('FriendlyFire');
+
+Every 0$1 trigger IsDead(Burlak) do
+YouLost('Burlak');
+
+Every 0$1 trigger IsDead(JMM) do
+YouLost('JMM');

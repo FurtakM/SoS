@@ -51,8 +51,8 @@ for i in dep_list do
 
 InitHc;
 
-// soldiers in towers [50%, 70%, 85%]
-tmp := bunker_list * [50, 70, 85][Difficulty] div 100;
+// soldiers in towers [45%, 60%, 75%]
+tmp := bunker_list * [45, 60, 75][Difficulty] div 100;
 personel_counter := Replace(personel_counter, 1, tmp);
 
 // sort
@@ -68,21 +68,7 @@ bunker_list := tmp;
 
 // place weapon on turrets
 for i in bunker_list^turret_list do
-    begin
-    tmp := rand(0, 100);
-    r := 0;
-
-    for j in weapons_list do
-        begin
-        r := r + j[2];
-
-        if r >= tmp then
-           begin
-           PlaceWeaponTurret(i, j[1]);
-           break;
-           end;
-        end;
-    end;
+    PlaceWeaponTurret(i, GetTurretWeapon(i));
 
 // place personel in base
 while (personel_counter[1]) do
@@ -158,23 +144,20 @@ End;
 //
 //
 // Dragon zapcha³ kibel i zrzuci³ na kolege
-Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_class, 2], [f_ok]]) do
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_class, 2]]) do
 var i, filter, tmp, engs, enemy;
 begin
 enable;
 
 filter := FilterUnitsInArea(baseArea, [[f_not, [f_lives, 1000]], [f_type, unit_building]]);
-engs := FilterAllUnits([[f_side, 3], [f_class, 2], [f_lives, 650]]);
+engs := FilterAllUnits([[f_side, 3], [f_class, 2]]);
 
 if not filter and not ru_rebuild_list then
    begin
-   if not IsInUnit(engs[1]) then
-      ComEnterUnit(engs, ru_dep_main);
-   exit;
+   for i in engs do
+       if GetLives(i) = 1000 and not HasTask(i) and not IsInUnit(i) then
+          ComEnterUnit(i, ru_dep_main);
    end;
-
-if debug then
-   display_strings := [engs, filter];
 
 if UnitFilter(engs, [f_not, [f_lives, 650]]) then
    begin
@@ -187,6 +170,11 @@ if UnitFilter(engs, [f_not, [f_lives, 650]]) then
           AddComWait(i, 0$30);
           end;
    end;
+
+engs := UnitFilter(engs, [f_lives, 650]);
+
+if not engs then
+   exit;
 
 if filter then
    begin
@@ -278,13 +266,24 @@ ComHeal(doc, tmp[1]);
 End;
 
 Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_class, 3]]) and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) do
-var i, tmp, areas, area;
+var i, tmp, attacking, areas, area;
 begin
 enable;
 
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]);
 areas := [sectorAlpha, sectorBeta, sectorDelta, mainBaseArea];
 area := 0;
+attacking := false;
+
+for i in tmp do
+    if GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i)) < 10 then
+       begin
+       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+       attacking := true;
+       end;
+
+if attacking then
+   exit;
 
 for i in areas do
     if FilterUnitsInArea(i, [f_side, 1]) then
@@ -300,6 +299,9 @@ if area then
        if GetFuel(i) < 33 then
           SetFuel(i, 33);
 
+       if GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i)) < 10 then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i))
+       else
        if not IsInArea(i, area) then
           ComMoveToArea(i, area);
        end;
@@ -312,8 +314,8 @@ begin
 uc_side := 3;
 uc_nation := 3;
 
-time := [6$00, 5$00, 4$00][Difficulty];
-count := [3, 4, 5][Difficulty];
+time := [8$00, 7$00, 6$00][Difficulty];
+count := [2, 2, 3][Difficulty];
 
 for i = 1 to count do
     begin
@@ -328,24 +330,12 @@ for i = 1 to count do
         wait(0$01);
         ComMoveXY(veh, 143, 143);
         end;  
-
-    if count < 3 then
-       continue;
-
-    for j = 1 to 1+Difficulty do
-        begin
-        PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
-        un := CreateHuman;
-        PlaceUnitArea(un, southArea, false);
-        ComMoveXY(un, 143, 143);
-        wait(0$01);
-        end;
     end;
 
 End;
 
 // Kill Frank Patrol
-Every 4$00 do
+Every 8$00 do
 var i, un, time;
 begin
 time := [2$00, 1$00, 0$30];

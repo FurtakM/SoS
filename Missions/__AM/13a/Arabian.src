@@ -1,0 +1,257 @@
+Export arabian_force, arabian_guard, Abdul, mastodont;
+Export Function PrepareArabian;
+var i, veh, tmp, xy, un, un2;
+begin
+uc_side := 2;
+uc_nation := 2;
+
+Abdul := NewCharacter('Abdul');
+SetClass(Abdul, class_desert_warior);
+PlaceHumanInUnit(Abdul, ar_depot);
+
+vc_chassis := 31;
+vc_control := control_rider;
+mastodont := CreateVehicle;
+PlaceUnitXY(mastodont, 153, 71, false);
+
+InitVc;
+
+arabian_force := PrepareBase(ar_depot, area_base_arabian, '', [7, 8, 9][Difficulty], [5000, 1000, 300], [22, 5, 6, 9]); // 41
+mc_bases := Replace(mc_bases, 1, arabian_force);
+
+tmp := [];
+
+vc_chassis := ar_half_tracked;
+vc_engine := engine_siberite;
+vc_control := control_manual;
+vc_weapon := ar_control_tower;
+
+for i = 1 to 3 do
+    begin
+    xy := [[153,71], [155,81]][i mod 2 + 1];
+    PrepareHuman(false, class_mechanic, [7, 8, 9][Difficulty]);
+
+    un := CreateVehicle;
+
+    SetDir(un, rand(0, 5));
+    PlaceUnitXYR(un, xy[1], xy[2], 6, false);
+
+    un2 := CreateHuman;
+
+    PlaceHumanInUnit(un2, un);
+
+    mc_bases := ReplaceIn(mc_bases, [1, mc_bases[1]+1], un);
+    mc_bases := ReplaceIn(mc_bases, [1, mc_bases[1]+1], un2);
+    end;
+
+for i = 1 to 5 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, [ar_gatling_gun, ar_rocket_launcher, ar_rocket_launcher, ar_flame_thrower][i mod 4 + 1], 100);
+
+    veh := CreateVehicle;
+    tmp := tmp ^ veh;
+
+    PlaceUnitArea(veh, parking_arabian, false);
+    end;
+
+arabian_guard := tmp;
+End;
+
+// Shariff the great escape
+Every 0$1 trigger FilterAllUnits([[f_side, 7], [f_dist, ar_depot, 12]]) or GetLives(Mastodont) < 990 or GetLives(Abdul) < 990 do
+begin
+if IsInUnit(Abdul) then
+   ComExitBuilding(Abdul);
+
+if Mastodont then
+   ComMoveXY(Mastodont, 205, 132);
+
+AddComMoveXY(Abdul, 205, 132);
+
+repeat
+ wait(0$1);
+until IsInArea(Abdul, escape_area);
+
+RemoveUnit(Abdul);
+
+repeat
+ wait(0$1);
+until IsInArea(Mastodont, escape_area) or IsDead(Mastodont);
+
+if IsOk(Mastodont) then
+   RemoveUnit(Mastodont);
+End;
+
+// Others arabs escape
+Every 0$5 trigger IsDead(Abdul) or FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 8]]]) < [16, 19, 22][Difficulty] do
+var tmp_vehs, tmp, tmp_ape, tmp_empty, i, veh;
+begin
+MC_Kill(1); // destory mc here
+
+tmp := FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 8]]]);
+
+for i in tmp do
+    SetTag(i, 10);
+
+tmp_ape := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff tmp;
+tmp_vehs := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_lives, 300]]);
+tmp_empty := UnitFilter(tmp_vehs, [[f_control, control_manual], [f_empty]]);
+
+for i in tmp do
+    begin
+    if i in FilterAllUnits([f_driving]) then
+       begin
+       AddComMoveXY(i, 209, 132);
+       continue;
+       end;
+
+    if IsInUnit(i) then
+       begin
+       ComExitBuilding(i);
+       wait(3);
+       end;
+
+    if tmp_empty then
+       if GetDistUnits(i, NearestUnitToUnit(tmp_empty, i)) < 25 then
+          begin
+          veh := NearestUnitToUnit(tmp_empty, i);
+          AddComEnterUnit(i, veh);
+          AddComMoveXY(i, 209, 132);
+
+          tmp_empty := tmp_empty diff veh;
+          continue;
+          end;
+
+    AddComMoveXY(i, 201, 132);
+    end;
+
+for i in tmp_ape do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveXY(i, 201, 132);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp union tmp_ape union tmp_vehs do
+     if not HasTask(i) then
+        ComMoveXY(i, 201, 132);
+
+ if FilterUnitsInArea(escape_area, [f_side, 2]) then
+    for i in FilterUnitsInArea(escape_area, [f_side, 2]) do
+        RemoveUnit(i);
+
+until not FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]);
+
+End;
+
+// Contaminate 92 40
+Every 12$00 trigger ar_active_attack and GetBType(HexInfo(92, 40)) = b_siberite_mine do
+var sci;
+begin
+sci := UnitFilter(mc_bases[1], [f_class, 4]);
+
+if not sci then
+   exit;
+
+mc_bases := Replace(mc_bases, 1, mc_bases[1] diff sci[1]);
+
+if IsInUnit(sci[1]) then
+   ComExitBuilding(sci[1]);
+
+if DangerAtRangeXY(2, 105, 14, 20)[4] < 10 then
+   AddComMoveXY(sci[1], 105, 14)
+else
+   AddComMoveXY(sci[1], 118, 77);
+
+AddComContaminate(sci[1], 92, 40);
+End;
+                     
+Every 14$00 trigger IsOk(ar_depot) and ar_active_attack do
+var i, base, tmp, flags, _target, attackers;
+begin
+enable;
+
+base := 1;
+flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+
+tmp := [ [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower],
+         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+         [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
+       ];
+
+for i = 1 to Difficulty+tick div 10$00 do
+    tmp := Insert(tmp, tmp+1, [[ar_medium_trike, ar_half_tracked][rand(1,2)], engine_combustion, control_remote, [ar_rocket_launcher, ar_selfpropelled_bomb, ar_gatling_gun, ar_flame_thrower][rand(1,4)]]);
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until mc_vehicles[base] > 6;
+
+wait(0$20);
+
+_target := [[124,85], [90,61], [69,48], [68,48]];
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_weapon, ar_cargo_bay]);
+
+if not attackers then
+   exit;
+
+ar_attackers := attackers;
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+MC_PrepareAttack(base, attackers, _target, flags);
+End;
+
+Every 11$00 trigger IsOk(ar_depot) and ar_active_attack and IsInArea(masha, masha_area) and MC_GetProduceList(1) = 0 and not ar_attackers do
+var i, base, tmp, flags, _target, attackers, un;
+begin
+base := 1;
+flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+
+tmp := [ [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+         [ar_medium_trike, engine_combustion, control_remote, ar_gun],
+         [ar_medium_trike, engine_combustion, control_remote, ar_gatling_gun],
+         [ar_hovercraft, engine_solar, control_remote, ar_double_machine_gun],
+         [ar_hovercraft, engine_solar, control_remote, ar_double_machine_gun]
+       ];
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until mc_vehicles[base] >= 6;
+
+wait(0$20);
+
+_target := [[119,9]];
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_weapon, ar_cargo_bay]);
+
+if not attackers then
+   exit;
+
+uc_side := 2;
+uc_nation := 2;
+
+InitHc;
+
+for i = 1 to [4, 5, 6][Difficulty] do
+    begin
+    PrepareHuman(false, [class_apeman_soldier, class_apeman_kamikaze][rand(1,2)], 8);
+    un := CreateHuman;
+    PlaceUnitArea(un, east_spawn, false);
+    attackers := attackers union un;
+    end;
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+MC_PrepareAttack(base, attackers, _target, flags);
+End;

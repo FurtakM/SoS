@@ -6,19 +6,22 @@ begin
 
     if gammaCommander = 1 then begin
         Donaldson = PrepareUnit('04_Donaldson', true);
-        PlaceUnitArea(Donaldson, GammaSpawn, false); 
+        PlaceUnitXYR(Donaldson, 54, 25, 8, false);
+        ComHold(Donaldson);
     end; 
 
     if gammaCommander = 2 then
     begin
         Brown = PrepareUnit('04_Brown', true);
-        PlaceUnitArea(Brown, GammaSpawn, false); 
+        PlaceUnitXYR(Brown, 54, 25, 8, false);
+        ComHold(Brown);
     end; 
 
     if gammaCommander = 3 then 
     begin
         Houten = PrepareUnit('VanHouten', true);
-        PlaceUnitArea(Houten, GammaSpawn, false);
+        PlaceUnitXYR(Houten, 54, 25, 8, false);
+        ComHold(Houten);
     end; 
         
     Harisson = PrepareUnit('Harisson', false);
@@ -35,34 +38,70 @@ begin
        begin
        Lisa := PrepareUnit('04_Lisa', true);
        tmp2 := tmp2 ^ Lisa;
-       end;
+       end
+     else
+       if not Lisa and not LoadVariable('LisaIn07', false) then
+          begin
+          Lisa := PrepareUnit('07_Lisa', true);
+          tmp2 := tmp2 ^ Lisa;
+          end;
 
     if TestCharacters(['04_Bobby']) and not LoadVariable('BobbyInDelta', 0) and
        not TestCharacters(['07_Bobby']) then
        begin
        Bobby := PrepareUnit('04_Bobby', true);
        tmp2 := tmp2 ^ Bobby;
-       end;
+       end
+     else
+       if not Bobby and not LoadVariable('BobbyIn07', false) then
+          begin
+          Bobby := PrepareUnit('07_Bobby', true);
+          tmp2 := tmp2 ^ Bobby;
+          end;
 
     if TestCharacters(['04_Cyrus']) and not LoadVariable('CyrusInDelta', 0) and
        not TestCharacters(['07_Cyrus']) then
        begin
        Cyrus := PrepareUnit('04_Cyrus', true);
        tmp2 := tmp2 ^ Cyrus;
-       end;
+       end
+     else
+       if not Cyrus and not LoadVariable('CyrusIn07', false) then
+          begin
+          Cyrus := PrepareUnit('07_Cyrus', true);
+          tmp2 := tmp2 ^ Cyrus;
+          end;
 
     if TestCharacters(['04_Brown']) and not LoadVariable('BrownInDelta', 0) and
        not TestCharacters(['07_Brown']) and gammaCommander <> 2 {not Brown} then
        begin
        Brown := PrepareUnit('04_Brown', true);
        tmp2 := tmp2 ^ Brown;
-       end;
+       end
+     else
+       if not Brown and not LoadVariable('BrownIn07', false) and gammaCommander <> 2 then
+          begin
+          Brown := PrepareUnit('07_Brown', true);
+          tmp2 := tmp2 ^ Brown;
+          end;
 
     if TestCharacters(['04_Donaldson']) and not LoadVariable('DonaldsonInDelta', 0) and
        not TestCharacters(['07_Donaldson']) and gammaCommander <> 1 {not Donaldson} then
        begin
        Donaldson := PrepareUnit('04_Donaldson', true);
        tmp2 := tmp2 ^ Donaldson;
+       end
+     else
+       if not Donaldson and not LoadVariable('DonaldsonIn07', false) and gammaCommander <> 1 then
+          begin
+          Donaldson := PrepareUnit('07_Donaldson', true);
+          tmp2 := tmp2 ^ Donaldson;
+          end;
+
+    if not LoadVariable('KhatamIn07', false) then
+       begin
+       Khatam := PrepareUnit('07_Khatam', true);
+       tmp2 := tmp2 ^ Khatam;
        end;
 
     others_gamma = CreateCharacterSet('07_othersGamma');
@@ -130,6 +169,13 @@ begin
               end;
            end;
 
+        if GetClass(i) = 2 then
+           begin
+           PlaceUnitXYR(i, 52, 20, 6, false);
+           placed := true;
+           continue;
+           end;
+
         if GetClass(i) = 3 then
            if fac then
               begin
@@ -173,11 +219,12 @@ begin
 
         end;
 
-    if ct and UnitsInside(ct[1]) then
-       begin
-       for i in FilterAllUnits([[f_side, 1], [f_control, control_remote]]) do
-           ComLinkTo(i, UnitsInside(ct[1])[rand(1, UnitsInside(ct[1]))]);
-       end;
+    if ct then
+       if UnitsInside(ct[1]) then
+          begin
+          for i in FilterAllUnits([[f_side, 1], [f_control, control_remote]]) do
+              ComLinkTo(i, UnitsInside(ct[1])[rand(1, UnitsInside(ct[1]))]);
+          end;
 
 end;
 
@@ -188,46 +235,67 @@ begin
 
     blist := LoadVariable('GammaBase', []);
 
+    if not blist then
+       blist := [ [b_warehouse, 52, 12, 3, 3, 0, 0] ];
+
     uc_side := 1;
     uc_nation := 1;
 
+    bc_kind1 := -1;
+    bc_kind2 := -1;
+
     for i in blist do
-    begin
+        begin
         bc_type := i[1];
         bc_level := i[5];
 
-        if i[1] in [b_lab_half, b_lab_full] then
-        begin
-            bc_kind1 := i[7];
-            if LoadVariable('06_remoteVehs_1', 0) = 1 then begin  bc_kind2 := 15;
-            end else begin bc_kind2 := i[8]; end;
-        end;
+        if bc_type in [b_lab, b_lab_half] then
+           begin
+           bc_type := b_lab_half;
+
+           if LoadVariable('06_remoteVehs_1', 0) then
+              begin
+              if i[7] > 9 then
+                 begin
+                 bc_type := b_lab_full;
+                 bc_kind1 := 10;
+                 bc_kind2 := 15;
+                 end
+              else
+                 bc_kind1 := 15;
+              end;
+           end;
+
+        if bc_type = b_workshop then
+           bc_type := b_factory;
       
         if bc_type = b_depot then 
-        begin
-            bc_type := b_warehouse;
-            amDepot := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
-            SetBName(amDepot, 'gamma');
-            SetResourceType(GetBase(amDepot), 1, [400, 350, 250][Difficulty]);
-            SetResourceType(GetBase(amDepot), 2, 200);
-        end else
-        begin
-            if bc_type = 4 then
-            begin
-                bc_type = 5;
-                b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]); 
-            end
-            else
-            begin
-                bc_type := i[1];
-                if LoadVariable('06_remoteVehs_1', 0) = 1 and bc_type = b_lab_half then bc_type := b_lab_full;
-                b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]); 
-            end;
+           begin
+           bc_type := b_warehouse;
+           amDepot := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+           continue;
+           end;
+
+         if bc_type = b_armoury then
+            bc_type = b_barracks;
+
+        b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]); 
+
+        if GetBType(b) = b_bunker then
+           PlaceWeaponTurret(b, i[7]);
         end;
 
-        if GetBType(b) = b_bunker then PlaceWeaponTurret(b, i[7]);
+    if not amDepot then
+       begin
+       bc_type := b_warehouse;
+       bc_level := 6;
 
-    end;
+       amDepot := CreateAndPlaceBuildingXYD(52, 12, 3);
+       end;
+
+    SetBName(amDepot, 'gamma');
+    SetResourceType(GetBase(amDepot), 1, [500, 420, 350][Difficulty]);
+    SetResourceType(GetBase(amDepot), 2, 200);
 
     // fac extension's
     if FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) then
@@ -251,11 +319,22 @@ begin
               end;
        end;
 
-    if LoadVariable('06_remoteVehs_1', 0) = 1 then
-    begin
+    if LoadVariable('06_remoteVehs_1', 0) then
+       begin
         bc_type = 36;
         bc_level = 4;
-        CreateAndPlaceBuildingXYD(62, 12, 3); 
+
+        if CanBeBuilded(amDepot, b_control_tower, 62, 12, 3, false) and not FilterAllUnits([f_distxy, 62, 12, 3]) then
+           CreateAndPlaceBuildingXYD(62, 12, 3)
+        else if CanBeBuilded(amDepot, b_control_tower, 37, 18, 2, false) and not FilterAllUnits([f_distxy, 37, 18, 3]) then
+           CreateAndPlaceBuildingXYD(37, 18, 2)
+        else if CanBeBuilded(amDepot, b_control_tower, 66, 14, 4, false) and not FilterAllUnits([f_distxy, 66, 14, 3]) then
+           CreateAndPlaceBuildingXYD(66, 14, 4)
+        else if CanBeBuilded(amDepot, b_control_tower, 74, 26, 4, false) then
+           CreateAndPlaceBuildingXYD(74, 26, 4);
+
+        if not FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) then
+           exit;
 
         for i := 1 to [3, 2, 2][Difficulty] do
         begin
@@ -264,7 +343,8 @@ begin
             vc_control = 2;
             vc_weapon = [3, 4, 5][Rand(1,3)];
             veh = CreateVehicle;
-            PlaceUnitXYR(veh, GetX(amDepot), GetY(amDepot), 7, false);
+            SetDir(veh, 4);
+            PlaceUnitXYR(veh, 56, 17, 9, false);
         end;
     end;
 
@@ -323,11 +403,15 @@ begin
        PlaceUnitArea(Donaldson, GammaSupport, false);
        end;
 
-    other = CreateCharacterSet('OtherStayInDelta');
+    other = CreateCharacterSet('OthersStayInDelta');
 
-    if other then
-       for j = 1 to other do
-           PlaceUnitArea(other[j], GammaSupport, false);
+    if other > 2 then
+    begin
+       for j = 1 to 2 do PlaceUnitArea(other[j], GammaSupport, false);
+    end else
+    begin
+      for j = 1 to other do PlaceUnitArea(other[j], GammaSupport, false);
+    end;
 
     other = CreateCharacterSet('06_other_apemans');
 
@@ -344,7 +428,149 @@ begin
     firstAttack = 1;
 end;
 
-Export function PrepareMacmillanSquad;
+Export Function PrepareMacmillanSquad;
+var i, k, un, others, tmp, tmp_vehs, vehicles, veh;
+begin
+vehicles := LoadVariable('07_vehicles', []);
+macmilan_squad := [];
+tmp_vehs := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+if vehicles then
+   begin
+   k := 1;
+
+        for i = 1 to vehicles div 4 do
+            begin
+            vc_chassis = vehicles[k];
+            vc_engine = vehicles[k+1];
+            vc_control = vehicles[k+2];
+            vc_weapon = vehicles[k+3];
+            k := k + 4;
+
+            veh := CreateVehicle;
+            tmp_vehs := Insert(tmp_vehs, 1, veh);
+            end;
+
+   end;
+
+JMM = PrepareUnit(mission_prefix_prev&'JMM', true);
+
+if (gammaCommander = 1 or gammaCommander = 3) and not Brown then
+   begin
+   Brown = PrepareUnit(mission_prefix_prev&'Brown', true);
+
+   if Brown then
+      tmp := Insert(tmp, 1, Brown);
+   end;
+
+if (gammaCommander = 2 or gammaCommander = 3) and not Donaldson then
+   begin
+   Donaldson = PrepareUnit(mission_prefix_prev&'Donaldson', true);
+
+   if Donaldson then
+      tmp := Insert(tmp, 1, Donaldson);
+   end;
+
+if not Bobby then
+   begin
+   Bobby = PrepareUnit(mission_prefix_prev&'Bobby', true);
+
+   if Bobby then
+      tmp := Insert(tmp, 1, Bobby);
+   end;
+
+if not Cyrus then
+   begin
+   Cyrus = PrepareUnit(mission_prefix_prev&'Cyrus', true);
+
+   if Cyrus then
+      tmp := Insert(tmp, 1, Cyrus);
+   end;
+
+if not Lisa then
+   begin
+   Lisa = PrepareUnit(mission_prefix_prev&'Lisa', true);
+
+   if Lisa then
+      tmp := Insert(tmp, 1, Lisa);
+   end;
+
+if not Frank then
+   begin
+   Frank = PrepareUnit(mission_prefix_prev&'Frank', true);
+
+   if Frank then
+      tmp := Insert(tmp, 1, Frank);
+   end;
+
+if not Kikuchi then
+   begin
+   Kikuchi = PrepareUnit(mission_prefix_prev&'Kikuchi', true);
+
+   if Kikuchi then
+      tmp := Insert(tmp, 1, Kikuchi);
+   end;
+
+if not Gladstone then
+   begin
+   Gladstone = PrepareUnit(mission_prefix_prev&'Gladstone', true);
+
+   if Gladstone then
+      tmp := Insert(tmp, 1, Gladstone);
+   end;
+
+if not Khatam then
+   begin
+   Khatam = PrepareUnit(mission_prefix_prev&'Khatam', true);
+
+   if Khatam then
+      tmp := Insert(tmp, 1, Khatam);
+   end;
+
+others := CreateCharacterSet('07c_others');
+macmilan_squad := others;
+
+if others then
+   for i in others do
+       if GetClass(i) = 3 then
+          tmp := Insert(tmp, 1, i)
+       else
+          tmp := Insert(tmp, tmp+1, i);
+
+wait(0$1);
+
+for i in tmp do
+    begin
+    SetDir(i, 3);
+
+    if tmp_vehs then
+       begin
+       SetDir(tmp_vehs[1], 3);
+       PlaceUnitArea(tmp_vehs[1], GammaSupport, false);
+       PlaceHumanInUnit(i, tmp_vehs[1]);
+       tmp_vehs := Delete(tmp_vehs, 1);
+       end
+    else
+       PlaceUnitArea(i, GammaSupport, false);
+
+    ComMoveXY(i, 77, 16);
+
+    repeat
+     wait(0$1);
+    until not FilterUnitsInArea(GammaSupport, [f_side, 1]);
+    end;
+
+
+// Spawn JMM
+PlaceUnitArea(JMM, GammaSupport, false);
+
+ComMoveXY(JMM, 77, 16);
+End;
+
+{Export function PrepareMacmillanSquad;
 var i, other, vehicles, veh;
 begin
 
@@ -383,6 +609,24 @@ begin
 
     veh = FilterUnitsInArea(GammaSupport, [[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
     JMM = PrepareUnit(mission_prefix_prev&'JMM', true);
+
+   other = CreateCharacterSet('07c_others');
+
+    for i in other do 
+    begin
+        veh = FilterUnitsInArea(GammaSupport, [[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        if veh > 0 and GetClass(i) = 3 then begin PlaceHumanInUnit(i, veh[1]);
+        end else begin PlaceUnitArea(i, GammaSupport, false); end;
+        other = other diff i;
+    end; 
+
+    for i in other do 
+    begin
+        veh = FilterUnitsInArea(GammaSupport, [[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
+        if veh > 0 then begin PlaceHumanInUnit(i, veh[1]);
+        end else begin PlaceUnitArea(i, GammaSupport, false); end;
+    end; 
+
     if veh > 0 then begin PlaceHumanInUnit(JMM, veh[1]);
     end else begin PlaceUnitArea(JMM, GammaSupport, false); end;
 
@@ -456,16 +700,8 @@ begin
        end else begin PlaceUnitArea(Khatam, GammaSupport, false); end;
        end;
 
-    other = CreateCharacterSet('07c_others');
-    for i in other do 
-    begin
-        veh = FilterUnitsInArea(GammaSupport, [[f_side, 1], [f_type, unit_vehicle], [f_empty]]);  
-        if veh > 0 then begin PlaceHumanInUnit(i, veh[1]);
-        end else begin PlaceUnitArea(i, GammaSupport, false); end;
-    end; 
-
     ComMoveXY(FilterUnitsInArea(GammaSupport,[[f_side, 1]]), 53, 19);
-end;
+end;}
 
 Export function PrepareSikorsky;
 begin
@@ -480,8 +716,13 @@ begin
     vc_chassis = 4;
 
     SikorskyTank = CreateVehicle;
+    SetDir(SikorskyTank, 3);
 
-    PlaceUnitArea(SikorskyTank, SikorskySpawn, false);
+    repeat
+     wait(0$1);
+     PlaceUnitXY(SikorskyTank, 18, 5, false);
+    until IsPlaced(SikorskyTank);
+
     PlaceHumanInUnit(Sikorski, SikorskyTank);
     ComMoveToArea(SikorskyTank, GammaSpawn);
 end;
@@ -500,8 +741,11 @@ begin
         PrepareHuman(false, 1, Rand(5, 8));
 
         un = CreateHuman;
+        SetDir(un, 3);
         PlaceUnitArea(un, SikorskySpawn, false);
         ComMoveXY(un, 53, 23);
+
+        wait(0$1);
     end;
 
     for i = 1 to 3 do
@@ -514,8 +758,11 @@ begin
         PrepareHuman(false, 4, Rand(5, 8));
 
         un = CreateHuman;
+        SetDir(un, 3);
         PlaceUnitArea(un, SikorskySpawn, false);
         ComMoveXY(un, 53, 23);
+
+        wait(0$1);
     end;
 
     for i = 1 to [9, 8, 7][Difficulty] do
@@ -530,6 +777,7 @@ begin
         vc_chassis = 4;
 
         veh = CreateVehicle;
+        SetDir(veh, 3);
 
         PlaceUnitArea(veh, SikorskySpawn, false);
 

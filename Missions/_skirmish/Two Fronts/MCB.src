@@ -1,0 +1,239 @@
+Export Function MCB_Depot(side, x, y, d);
+var i, dep, plist;
+begin
+plist := MCF_Class(side, 2, []);
+
+if plist and HexInfo(x, y) = 0 then
+   for i = 1 to plist do
+       if NotTask(plist[i]) then
+          begin
+          ComBuild(plist[i], b_depot, x, y, d);
+          end;
+End;
+
+Export Function MCB_Lab(side, x, y, d);
+begin
+MCB_Build(side, b_lab, x, y, d);
+End;
+
+Export Function MCB_Upgrade(side, b);
+var dep;
+begin
+dep := NearestUnitToXY(FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]]), GetX(b), GetY(b));
+
+if MCB_Cost(dep, b) then
+   begin
+   ComUpgrade(MCF_Get(side, [f_btype, b])[1]);
+   MREG_ToUpdate := MC_RegistryDelete(MREG_ToUpdate, side, b, []);
+   end;
+
+End;
+
+Export Function MCB_UpgradeLab(side, lab_kind1, lab_kind2);
+var i, j, lab, costs, dep;
+begin
+result := false;
+
+if MREG_ForSide(side, MREG_LabList) then
+   for i = 1 to MREG_LabList do
+       begin
+       if MREG_LabList[i][1] = side then
+          begin
+          lab := MREG_LabList[i][2];
+          dep := NearestUnitToXY(FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]]), GetX(lab), GetY(lab));
+
+          if dep then
+             begin
+             if MCB_LabCost(dep, lab_kind1, lab_kind2) then
+                begin
+                AddComUpgradeLab(lab, lab_kind1);
+                AddComUpgradeLab(lab, lab_kind2);
+                result := true;                 
+                end;
+             end;
+
+          break;
+          end;
+       end;
+End;
+
+Export Function MCB_Factory(side, x, y, d, ext_list);
+var ext, i;
+begin
+ext := MCB_Extension(x, y, d);
+MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b_workshop, [x, y, d]);
+
+if ext_list then
+   for i = 1 to ext_list do
+       MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, ext_list[i], [ext[i][1], ext[i][2], ext[i][3]]);
+End;
+
+Export Function MCB_Extension(x, y, d);
+var list;
+begin
+list := [];
+
+     Case d of
+     0: begin
+        list := [[x-4, y-4, 2], [x-3, y, 1], [x+4, y, 4], [x+3, y+3, 5], [x, y+4, 0]];
+        end;
+     1: begin
+        list := [[x, y-4, 3], [x-3, y-3, 2], [x-4, y, 1], [x, y+3, 0], [x+4, y+4, 5]];
+        end;
+     2: begin
+        list := [[x, y-3, 3], [x+4, y, 4], [x, y+4, 0], [x-3, y, 1], [x-4, y-4, 2]];
+        end;
+     3: begin
+        list := [[x+3, y, 4], [x+4, y+4, 5], [x-4, y, 1], [x, y-4, 3], [x-3, y-3, 2]];
+        end;
+     4: begin
+        list := [[x, y+4, 0], [x+3, y+3, 5], [x+3, y, 4], [x, y-3, 3], [x-4, y-4, 2]];
+        end;
+     5: begin
+        list := [[x-4, y, 1], [x, y-4, 3], [x+4, y+4, 5], [x+3, y, 4], [x, y+3, 0]];
+        end;
+     End;
+
+result := list;
+End;
+
+Export Function MCB_Build(side, btype, x, y, d);
+var i, costs, dep, plist;
+begin
+plist := MCF_Class(side, 2, []);
+dep := NearestUnitToXY(FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]]), x, y);
+costs := MCB_Cost(dep, btype);
+
+if plist and costs and GetDistUnitXY(dep, x, y) <= 26 and HexInfo(x, y) = 0 then
+   for i = 1 to plist do
+       if IsInUnit(plist[i]) then
+          ComExitBuilding(plist[i])
+           else
+            if NotTask(plist[i]) then
+               begin
+               ComBuild(plist[i], btype, x, y, d);
+               end;
+End;
+
+
+Export Function MCB_Cost(bdepot, btype);
+var pom, cost;
+begin
+pom := GetBase(bdepot);
+cost:= CostOfBuilding(btype, GetNation(bdepot));
+
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function MCB_LabCost(bdepot, blab1, blab2);
+var pom, cost1, cost2, cost;
+begin
+pom := GetBase(bdepot);
+cost := [];
+cost1 := CostOfBuilding(blab1, GetNation(bdepot));
+cost2 := CostOfBuilding(blab2, GetNation(bdepot));
+
+cost := Replace(cost, 1, cost1[1]+cost2[1]);
+cost := Replace(cost, 2, cost1[2]+cost2[2]);
+cost := Replace(cost, 3, cost1[3]+cost2[3]);
+
+if GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_siberit) >= cost[3] then
+   result := true
+    else
+     result := false;
+End;
+
+
+Export Function MCB_Dismantle(side, unit);
+var i, plist;
+begin
+plist := MCF_Class(side, 2, []);
+
+if unit and plist then
+   for i = 1 to plist do
+       if NotTask(plist[i]) then
+          ComDismantle(plist[i], unit);
+
+result := true;
+End;
+
+Export Function MCB_Complete(side, unit);
+var i, plist;
+begin
+plist := MCF_Class(side, 2, []);
+
+if unit and plist then
+   for i = 1 to plist do
+       if NotTask(plist[i]) then
+          ComComplete(plist[i], unit);
+
+result := true;
+End;
+
+Export Function MCB_FilterHLevel(side);
+var i, j, tmp, r, m;
+begin
+tmp := FilterAllUnits([[f_side, side], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+r := [];
+
+if not tmp then
+   exit
+    else
+     begin
+      r := [tmp[1]];
+
+      for i = 2 to tmp do
+          begin
+          m := false;
+
+          for j = 1 to r do
+              if GetLives(tmp[i]) < r[j] then
+                 begin
+                 r := Insert(r, j, tmp[i]);
+                 m := true;
+                 break;
+                 end;
+
+          if not m then
+             r := r ^ tmp[i];
+          end;
+     end;
+
+if r then
+   result := r
+    else
+     exit;
+End;
+
+Export Function MCB_Repair(side);
+var i, p, repairs;
+begin
+repairs := FilterAllUnits([[f_side, side], [f_or, [f_class, class_engineer],
+                                           [f_class, class_apeman_engineer],
+                                           [f_weapon, us_crane],
+                                           [f_weapon, ru_crane]],
+                                           [f_lives, 650]]);
+p := 1;
+
+for i = 1 to repairs do
+    begin
+     if IsInUnit(repairs[i]) then
+        ComExitBuilding(repairs[i])
+         else
+          if not HasTask(repairs[i]) then
+             begin
+             ComRepairBuilding(repairs[i], MREG_ToRepair[side][p]);
+
+             if i mod 3 = 0 then
+                p := p + 1;
+
+             if MREG_ToRepair[side] < p then
+                break;
+             end;
+    end;
+End;

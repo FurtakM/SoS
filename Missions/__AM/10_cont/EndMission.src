@@ -11,8 +11,8 @@ begin
     end;
 end;
 
-Every 0$1 trigger GetTech(54, 1) = state_researched and GetTech(55, 1) = state_researched and GetTech(21, 1) = state_researched and GetTech(22, 1) = state_researched and GetTech(tech_LasSight, 1) = state_researched and GetTech(tech_AI, 1) = state_researched and fastEnd = 0 and arabianDefeated = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do 
-    FinishMission;
+{Every 0$1 trigger GetTech(54, 1) = state_researched and GetTech(55, 1) = state_researched and GetTech(21, 1) = state_researched and GetTech(22, 1) = state_researched and GetTech(tech_LasSight, 1) = state_researched and GetTech(tech_AI, 1) = state_researched and fastEnd = 0 and arabianDefeated = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+    FinishMission;}
 
 Export function FinishMission;
 begin
@@ -50,7 +50,6 @@ begin
 
     SaveEpsilonBase;
 
-    Query('kaj');
     GiveMedals('Main');
     RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]));
 
@@ -84,14 +83,14 @@ Export function SaveEpsilonBase;
 var epsilonBase, buildings, i;
 begin
     epsilonBase = [];
-    buildings = FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_ok]]);
+    buildings = FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_building], [f_ok]]);
 
     for i in buildings do
     begin
         if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
             epsilonBase = epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
         else
-        if GetBType(i) = b_bunker then
+        if GetBType(i) = b_bunker or GetBType(i) = b_turret then
             epsilonBase = epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
         else
         if GetBType(i) = b_factory then

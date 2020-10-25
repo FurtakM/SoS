@@ -1,0 +1,215 @@
+// 16-04-2020 v2
+// Nefarem & Serpent
+Starting
+begin
+ResetFog;
+
+InitVariables;
+InitMacro;
+InitNature;
+
+if debug then
+   FogOff(1);
+
+PrepareAlliance;
+PrepareRussian;
+PrepareLegion;
+PreparePowell;
+PrepareAmerican;
+
+Action;
+
+MC_Start();
+End;
+
+{
+  Bazy MC:
+  1 - Przymierze
+  2 - Rosjanie
+  3 - Legion
+  4 - Powell
+
+  Rozdzia³y:
+  1. Scena pocz¹tkowa
+  2. Przygotowania Powell'a do ataku
+  3. Pierwszy atak Powell'a
+  4. Przygotowania Powell'a do ataku (2)
+  5. Drugi atak Powell'a
+  6. Przejêcie bazy  - czas start
+  7. Posi³ki z Kappy* - 15:00
+  8. Posi³ki od Hugh Stevens - 30:00
+  9. Legion ma bombê - 50:00+ - [Cel: US lub RU]
+  10. Rosjanie przygotowywuj¹ siê do budowy Behemotha - 55:00
+  11. Roth mówi o z³o¿u - 1:00:00 - pocz¹tek ataków Przymierza + porywanie ludzi
+  12. Rosjanie maj¹ bombê syberytow¹ - 1:00:00+
+  13. Pojawienie siê Sewiego - 1:20:00+
+  14. Przybycie Arabów na wschodzie [buduj¹ ma³¹ baze] - 1:30:00
+
+  Zdarzenia:
+  - Naruszono przestrzeñ bazy Powell'a lub opuszczono wyznaczon¹ strefê
+  - Zniszczenie Legionu
+  - Zniszczenie Przymierza
+  - Zniszczenie Rosjan
+  - Zniszczenie Arabów
+  - Pojawienie siê Arabów po wejœciu Amerykanów na g³ówne z³o¿e i skutecznym os³abieniu Rosjan
+  - Ska¿enie z³o¿a
+  - Porwanie Macmilana przez Przymierze
+
+  Mechanika:
+  - Rosjanie atakuj¹ za pomoc¹ pojazdów
+  - Rosjanie atakuj¹ za pomoc¹ Behemothów
+  - Rosjanie atakuj¹ za pomoc¹ rakiet syberytowych
+  - Rosjanie atakuj¹ Amerykanów, Legion
+  - Legion atakuje za pomoc¹ pojazdów
+  - Legion atakuje za pomoc¹ rakiet syberytowych
+  - Legion atakuje Amerykanów, Rosjan
+  - Przymierze atakuje za pomoc¹ pojazdów
+  - Przymierze atakuje za pomoc¹ artefaktów
+  - Przymierze porywa ludzi (tylko Amerykanów)
+  - Przymierze atakuje Amerykanów, Rosjan, Legion
+  - Arabowie atakuj¹ g³ówne z³o¿e (tylko raz)
+
+  Strony:
+  1 - Gracz
+  2 - Arabowie (si³y Heike)
+  3 - Rosjanie (si³y P³atonowa)
+  4 - Amerykanie (si³y Powella)
+  5 - Arabowie (si³y Omara)
+  6 - Rosjanie (dodatkowe si³y)
+  7 - Przymierze
+  8 - Legion
+}
+
+Export debug;
+Export KappaStatus, KurtStatus, JMMVeh, JMMGirlVeh, JMMGirlStatus, JMMGirl,
+       KhatamStatus, BurlakStatus, StevensStatus, FastEnd, FakeInfo;
+Export missionStart, missionTime, missionStage, activeAttacks, powellAnger,
+       powellSquadAttack, powellAllowRetreat, powellCenterCameraMode,
+       russianDestroyed, legionDestroyed, allianceDestroyed, vsevolodFirstAttack,
+       allowBehemothConstruct, behemothUnderConstruct, behemothDestroyedBeforeFinish,
+       behemothDone, seeBehemoth, platonovHasBomb, allianceActive, lostCounter, rothCaptured,
+       capturedUnit, trueAmericans;
+Export Function InitVariables;
+begin
+debug := false;
+missionStart := false;
+missionTime := 0$00;
+missionStage := 1;
+activeAttacks := false;
+powellAnger := 0;
+powellAllowRetreat := true;
+powellCenterCameraMode := false;
+powellSquadAttack := [ [], [] ];
+russianDestroyed := false;
+legionDestroyed := false;
+allianceDestroyed := false;
+KappaStatus := LoadVariable('14_KappaStatus_1', 0); // 0 - destroyed, 1 - survived
+KurtStatus := LoadVariable('06_KurtStatus_1', 0); // 1 - Kurt alive (friendly), 2 - Kurt alive (enemy)
+JMMVeh = LoadVariable('14_JMMVeh_1', 0);
+JMMGirlVeh = LoadVariable('14_JMMGirlVeh_1', 0);
+JMMGirl = LoadVariable('14_JMMGirl_1', 0);  // 0 - non, 1 - Joan, 2 - Lisa, 3 - Connie
+JMMGirlStatus = LoadVariable('14_JMMGirlStatus_1', 0); // 0 - dead, 1 - alive
+KhatamStatus = LoadVariable('10_KhatamStatus_1', 0); // 0 - dead, 1 - alive
+BurlakStatus = LoadVariable('13_BurlakStatus_1', 0); // 0 - alive, 1 - killed by jmm
+StevensStatus = LoadVariable('13_StevensStatus_1', 0); // 0 - dead, 1 - alive
+FastEnd := LoadVariable('14_FastEnd_1', 0); // 0 - normal end, 1 - fast end
+FakeInfo := LoadVariable('12_MainDepositFake_1', 0); // 1 - fake info in 12
+vsevolodFirstAttack := true;
+behemothUnderConstruct := false;
+behemothDestroyedBeforeFinish := false;
+behemothDone := false;
+allowBehemothConstruct := false;
+seeBehemoth := false;
+platonovHasBomb := false;
+allianceActive := false;
+rothCaptured := false;
+lostCounter := 0;
+capturedUnit := [];
+trueAmericans := [];
+End;
+
+Export Function CustomInitMacro();
+begin
+mc_parking := [ allianceParkingArea, russianParkingArea, legionParkingArea, powellParking ];
+mc_scan_area := [ allianceBaseArea, russianBaseArea, legionBaseArea, powellBase ];
+
+MC_SetLabKind(1, [b_lab_weapon, b_lab_siberium, b_lab_computer]);
+MC_SetCratesArea(1, [allianceCratesArea]);
+MC_SetDefenderLimit(1, 5);
+MC_SetProduceList(1, [
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_manual, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_manual, ru_rocket]
+]);
+
+MC_SetLabKind(2, [b_lab_weapon, b_lab_siberium, b_lab_computer, b_lab_spacetime]);
+MC_SetCratesArea(2, [russianCratesArea]);
+MC_SetProduceList(2, [
+   [ru_medium_wheeled, engine_siberite, control_computer, ru_cargo_bay],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]
+]);
+MC_SetDefenderLimit(2, 5);
+MC_SetUpgradeBuilding(2, b_depot);
+
+MC_SetMinesField(3, [10, 12, 15][Difficulty], legionMinefield);
+MC_SetLabKind(3, [b_lab_weapon, b_lab_siberium, b_lab_biological, b_lab_opto]);
+MC_SetCratesArea(3, [legionCratesArea]);
+mc_ape := Replace(mc_ape, 3, FilterAllUnits([[f_side, 8], [f_class, class_apeman_soldier]]));
+MC_SetProduceList(3, [
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_siberite, control_remote, ar_cargo_bay]
+]);
+
+MC_SetLabKind(4, [b_lab_weapon, b_lab_computer]);
+MC_SetCratesArea(4, [powellBase]);
+MC_SetBuildingList(4, [
+   [b_oil_power, 74, 107, 0],
+   [b_bunker, 77, 101, 4],
+   [b_bunker, 69, 86, 4],
+   [b_solar_power, 77, 110, 3],
+   [b_solar_power, 42, 79, 5],
+   [b_oil_mine, 86, 105, 2],
+   [b_siberite_mine, 40, 75, 1],
+   [b_bunker, 80, 106, 4],
+   [b_bunker, 75, 114, 5],
+   [b_bunker, 82, 110, 5],
+   [b_bunker, 62, 78, 4],
+   [b_armoury, 39, 61, 3]
+]);
+MC_SetAllowedTurretWeapons(4, [us_double_gun, us_heavy_gun, us_rocket_launcher, us_laser]);
+MC_SetDepositsXY(4, [
+                      [40, 75, 1],
+                      [86,105, 0]
+                    ]);
+MC_SetUpgradeBuilding(4, b_workshop);
+MC_SetUpgradeBuilding(4, b_depot);
+MC_SetFactoryExtension(4, 54, 85, 2, [b_ext_noncombat, b_ext_track, b_ext_gun, b_ext_rocket]);
+MC_SetProduceList(4, [
+   [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
+   [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun],
+   [us_heavy_tracked, engine_combustion, control_manual, us_rocket_launcher],
+   [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
+]);
+MC_SetTame(4, powellApe);
+End;
+
+// debug only
+Every 0$1 trigger debug do
+var i, tmp;
+begin
+enable;  
+tmp := FilterAllUnits([[f_side, 1], [f_not, [f_type, unit_building]], [f_not, [f_lives, 999]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    SetLives(i, 1000);
+End;

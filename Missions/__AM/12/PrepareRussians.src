@@ -1,0 +1,112 @@
+Export function PrepareRussianCommander;
+begin
+    uc_side = 3;
+    Davidov = PrepareUnit('Davidov', false);
+    PlaceHumanInUnit(Davidov, ruheadlab);
+    RuScientists = RuScientists ^ Davidov;
+    SetClass(RuScientists, 4);
+end;
+
+Export function PrepareEastBase;
+var i, un;
+begin
+    RespawnInside(3, 3, rubar2, rand(RuSolMinlevel, RuSolMaxLevel), 1, 3);
+    RespawnInside(3, 3, rubar2, rand(RuSolMinlevel, RuSolMaxLevel), 9, 3);
+    RespawnInside(3, 3, rueastdepot, rand(RuSolMinlevel, RuSolMaxLevel), 2, 6);
+    RespawnInside(3, 3, rufab2, rand(RuSolMinlevel, RuSolMaxLevel), 3, 6);
+    RespawnInside(3, 3, rulab2, rand(RuSolMinlevel, RuSolMaxLevel), 4, 6);
+    RespawnInside(3, 3, rulab3, rand(RuSolMinlevel, RuSolMaxLevel), 4, 6);
+    RespawnInside(3, 3, rulab4, rand(RuSolMinlevel, RuSolMaxLevel), 4, 6);
+
+    for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do RespawnInside(3, 3, i, rand(RuSolMinlevel, RuSolMaxLevel), 1, 1);
+
+    
+   for i = 1 to 5 do
+   begin
+
+        uc_side = 3;
+        uc_nation = 3;
+
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 4, rand(RuSolMinlevel, RuSolMaxLevel));
+
+        un = CreateHuman;
+        PlaceHumanInUnit(un, ruheadlab);
+
+        RuScientists = RuScientists ^ un;
+
+   end;
+
+end;
+
+Export function PrepareWestBase;
+var i, un;
+begin
+    RespawnInside(3, 3, ruwestdepot, rand(RuSolMinlevel, RuSolMaxLevel), 2, 3);
+    RespawnInside(3, 3, rulab1, rand(RuSolMinlevel, RuSolMaxLevel), 4, 3);
+    RespawnInside(3, 3, ru_fact, rand(RuSolMinlevel, RuSolMaxLevel), 3, 6);
+end;
+
+Export function PrepareOtherRussians;
+var i, un, veh;
+begin
+    uc_side = 3;
+    uc_nation = 3;
+
+    for i = 1 to 5 do
+    begin
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 9, rand(RuSolMinlevel, RuSolMaxLevel));
+
+        un = CreateHuman;
+        PlaceUnitArea(un, RussianBazookersSpawn, false);
+    end;
+
+    for i = 1 to [2, 3, 4][Difficulty] do
+    begin
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 4, rand(RuSolMinlevel, RuSolMaxLevel));
+
+        un = CreateHuman;
+        PlaceUnitArea(un, RussianBazookersSpawn, false);
+    end;
+
+    for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+        vc_engine = 3;
+        vc_control = 1;
+        vc_weapon = [42, 43, 44, 45, 46][Rand(1, 5)];
+        if vc_weapon = ru_heavy_gun then vc_chassis = ru_heavy_tracked
+        else vc_chassis = [ru_medium_tracked, ru_medium_wheeled][Rand(1,2)];
+        
+        veh = CreateVehicle;
+        SetDir(veh, 3);
+        PlaceUnitArea(veh, RussianTanksWestHill, false);
+
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 3, 10);
+
+        un = CreateHuman;
+        PlaceHumanInUnit(un, veh);
+    end;
+
+    for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+        vc_engine = 3;
+        vc_control = 3;
+        vc_weapon = [42, 43, 44, 45, 46, 49][Rand(1, 5)];
+        if vc_weapon = ru_heavy_gun then vc_chassis = ru_heavy_tracked
+        else vc_chassis = [ru_medium_tracked, ru_medium_wheeled][Rand(1,2)];
+        
+        veh = CreateVehicle;
+        SetDir(veh, 3);
+        PlaceUnitArea(veh, RussianTanksEastHill, false);
+    end;
+
+
+end;
+

@@ -1,0 +1,381 @@
+Export Function Replace2(tab, j, k, value);
+var i, tmp;
+begin
+tmp := Replace(tab[j], k, value);
+tab := Replace(tab, j, tmp);
+
+result := tab;
+End;
+
+Export Function Delete2(tab, pos);
+var i, list;
+begin
+list := Delete(tab[pos[1]], pos[2]);
+tab := Replace(tab, pos[1], list);
+result := tab;
+End;
+
+Export Function Remove(tab, value, mode);
+var i, j, tmp;
+begin
+i := 1;
+
+     while(i <= tab) do
+       begin
+       if not tab[i] then
+          break;
+
+       if value in tab then
+          begin
+          if not mode then
+             tab := tab diff value
+              else
+               for j = 1 to tab do
+                   if tab[j] = value then
+                      begin
+                      tab := Delete(tab, j);
+                      break;
+                      end;
+
+          i := i - 1;
+
+          if mode then
+             break;
+          end
+           else
+            if tab[i] and value in tab[i] then
+               begin
+               if not mode then
+                  tmp := tab[i] diff value
+                   else
+                    for j = 1 to tab[i] do
+                        if value = tab[i][j] then
+                           begin
+                           tmp := Delete(tab[i], j);
+                           break;
+                           end;
+
+               if tmp = [] then
+                  begin
+                  tab := Delete(tab, i);
+                  end
+                   else
+                    tab := Replace(tab, i, tmp);
+
+               i := i - 1;
+
+               if mode then
+                  break;
+               end;
+
+       i := i + 1;
+       end;
+
+result := tab;
+End;
+
+Export Function RemoveAll(tab, values);
+var i;
+begin
+for i = 1 to values do
+    tab := Remove(tab, values[i], false);
+result := tab;
+End;
+
+Export Function IsDriver(unit);
+begin
+if unit in FilterAllUnits([f_driving]) then
+   result := IsInUnit(unit)
+    else
+     result := false;
+End;
+
+Export Function GetDriver(veh);
+var i, filter;
+begin
+if not GetControl(veh) = control_manual then
+   result := false
+    else
+     if veh in FilterAllUnits([f_empty]) then
+        result := false
+         else
+          begin
+          filter := FilterAllUnits([[f_side, GetSide(veh)], [f_driving]]);
+
+          if not filter then
+             result := false
+              else
+               for i = 1 to filter do
+                   if IsDriver(filter[i]) = veh then
+                      begin
+                      result := filter[i];
+                      break;
+                      end;
+         end;
+End;
+
+Export Function ComComplete(unit, b);
+var i;
+begin
+if BuildingStatus(b) = bs_build then
+   SetTaskList(unit, [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+End;
+
+Export Function Compare(val1, val2);
+begin
+if val1 = val2 then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function CompareArray(array1, array2);
+var i;
+begin
+result := true;
+
+     if array1 = array2 then
+        begin
+        for i = 1 to array1 do
+            if not Compare(array1[i], array2[i]) then
+               begin
+               result := false;
+               break;
+               end;
+        end
+         else
+          result := false;
+End;
+
+Export Function Compare3(e1, e2);
+var j;
+begin
+result := false;
+    for j = 1 to e2 do
+        if Compare(e1, e2[j]) then
+           result := true;
+End;
+
+Export Function ComTake(unit, x, y, dep);
+var t;
+begin
+SetTaskList(unit, [['C', x, y, 0, 0, 0, 0],
+                   ['v', GetX(dep), GetY(dep), dep, 0, 0, 0]]);
+End;
+
+Export Function CanControl(unit);
+var sk, linked;
+begin
+linked := UnitsLinked(unit);
+sk := GetSkill(unit, 3);
+
+if sk > linked then
+   result := true
+    else
+     result := false;
+End;
+
+Export Function NotTask(unit);
+begin
+result := true;
+
+if GetTaskList(unit) or HasTask(unit) then
+   result := false;
+End;
+
+Export Function WantHeal(sci, unit);
+begin
+if GetTaskList(sci) > 0 then
+   begin
+   if GetTaskList(sci)[1][1] = 'l' and GetTaskList(sci)[1][4] = unit then
+      result := true
+       else
+        result := false;
+   end
+    else
+     result := false;
+End;
+
+// get nearest unit (and dist) from units1 to unit from units2
+Export Function NearestUnit(units1, units2);
+var i, j, un, dist;
+begin
+dist := 99999;
+un := -1;
+
+if units1 and units2 then
+   for i in units1 do
+       for j in units2 do
+           if GetDistUnits(i, j) < dist then
+              begin
+              un := i;
+              dist := GetDistUnits(i, j);
+              end;
+
+result := [un, dist];
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i, list, tmp, hex;
+begin
+if not bulldozer or GetLives(bulldozer) < 250 or (HasTask(bulldozer) and GetFuel(bulldozer) > 20) then
+   exit;
+
+if GetFuel(bulldozer) < 20 and not GetTag(bulldozer) = 21 then
+   begin
+   ComStop(bulldozer);
+   SetTag(bulldozer, 21);
+   MCV_Refuel(bulldozer);
+   exit;
+   end
+    else
+     if GetFuel(bulldozer) > 20 then
+        SetTag(bulldozer, 0);
+
+list := ListEnvironmentArea(area);
+tmp := [];
+
+for i = 1 to list do
+    if IsEnvironmentDestroyable(list[i][1], list[i][2]) then
+       begin
+       tmp := Replace(tmp, tmp+1, [list[i][1], list[i][2]]);
+       end;
+
+
+ComStop(bulldozer);
+
+hex := [GetX(bulldozer), GetY(bulldozer)];
+
+for i = tmp downto 1 do
+    begin
+    hex := GetClosestPoint(hex[1], hex[2], tmp);
+    AddComCutTreeOnHex(bulldozer, hex[1], hex[2]);
+    tmp := Delete(tmp, hex[3]);
+    end;
+End;
+
+Export Function AddComCutTreeOnHex(bulldozer, x, y);
+begin
+if IsEnvironment(x, y) and IsEnvironmentDestroyable(x, y) and ValidHex(x, y) and HexInfo(x, y) = -1 then
+   AddComMoveXY(bulldozer, x, y); {
+if IsEnvironment(x-1, y-1) and IsEnvironmentDestroyable(x-1, y-1) and ValidHex(x-1, y-1) and HexInfo(x-1, y-1) = -1 then
+   AddComMoveXY(bulldozer, x-1, y-1);
+if IsEnvironment(x, y-1) and IsEnvironmentDestroyable(x, y-1) and ValidHex(x, y-1) and HexInfo(x, y-1) = -1 then
+   AddComMoveXY(bulldozer, x, y-1);
+if IsEnvironment(x+1, y-1) and IsEnvironmentDestroyable(x+1, y) and ValidHex(x+1, y) and HexInfo(x+1, y) = -1 then
+   AddComMoveXY(bulldozer, x+1, y);
+if IsEnvironment(x+1, y+1) and IsEnvironmentDestroyable(x+1, y+1) and ValidHex(x+1, y+1) and HexInfo(x+1, y+1) = -1 then
+   AddComMoveXY(bulldozer, x+1, y+1);
+if IsEnvironment(x, y+1) and IsEnvironmentDestroyable(x, y+1) and ValidHex(x, y+1) and HexInfo(x, y+1) = -1 then
+   AddComMoveXY(bulldozer, x, y+1);
+if IsEnvironment(x-1, y) and IsEnvironmentDestroyable(x-1, y) and ValidHex(x-1, y) and HexInfo(x-1, y) = -1 then
+   AddComMoveXY(bulldozer, x-1, y);}
+End;
+
+Export Function GetClosestPoint(x, y, list);
+var i, dist, d, _x, _y, _i;
+begin
+
+dist := 99999;
+
+for i = 1 to list do
+    begin
+    d := GetDistXY(x, y, list[i][1], list[i][2]);
+
+    if d = 0 then
+       continue;
+
+    if d < dist then
+       begin
+       _x := list[i][1];
+       _y := list[i][2];
+       _i := i;
+       dist := d;
+       end;
+    end;
+
+result := [_x, _y, _i, dist];
+End;
+
+Export Function SortListByDistance(list, x, y); // sort coord list by distance, [x,y] - start points
+var i, j, _x, _y;
+begin
+
+for i = 1 to list do
+    begin
+    for j = list downto 2 do
+        begin
+        if (GetDistXY(x, y, list[j][1], list[j][2]) < GetDistXY(x, y, list[j-1][1], list[j-1][2])) then
+           begin
+           _x := list[j][1];
+           _y := list[j][2];
+           list := Replace2(list, j, 1, list[j-1][1]);
+           list := Replace2(list, j, 2, list[j-1][2]);
+           list := Replace2(list, j-1, 1, _x);
+           list := Replace2(list, j-1, 2, _y);
+           end;
+        end;
+    end;
+
+result := list;
+End;
+
+Export Function CompareHexHeight(x1, y1, x2, y2);
+begin
+result := GetHexInfo(x1, y1)[2] - GetHexInfo(x2, y2)[2];
+
+if result < 0 then
+   result := result * -1;
+End;
+
+Export Function _CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+   for i = area downto 1 do
+       if IsEnvironment(area[i][1], area[i][2]) then
+          if not HasTask(bulldozer) then
+             AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;
+
+
+Export Function GetUnitsOutOfArea(side, type, area);
+var i, tmp, pom;
+begin
+tmp := FilterAllUnits([[f_side, side], [f_type, type]]);
+pom := FilterUnitsInArea(area, [[f_side, side], [f_type, type]]);
+
+if tmp and pom then
+   result := tmp diff pom
+    else
+     result := false;
+End;
+
+Export Function SavePosition(unit);
+begin
+SetRememberedX(unit, GetX(unit));
+SetRememberedY(unit, GetY(unit));
+End;
+
+Export Function GetPosition(unit);
+begin
+result := [GetRememberedX(unit), GetRememberedY(unit)];
+End;
+
+Export Function DestinationReachable(unit, x, y);
+begin
+if unit in unreachableList then
+   unreachableList := unreachableList diff unit;
+
+   if ValidHex(x, y) then
+      ComAttackUnit(unit, HexInfo(x, y));
+
+   Wait(3);
+
+if unit in unreachableList then
+   result := false
+    else
+     result := true;
+End;

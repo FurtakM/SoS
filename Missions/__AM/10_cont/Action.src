@@ -8,16 +8,7 @@ begin
 
     CenterNowOnUnits(Simms);
 
-    if FilterAllUnits([[f_side, 4], [f_class, 2]]) then
-       begin
-       repeat
-        wait(0$1);
-       until FilterAllUnits([[f_side, 4], [f_btype, b_depot]]);
-
-       Wait(0$1);
-       end
-      else
-       Wait(0$3);
+    wait(0$3);
 
     CenterOnUnits(IsInUnit(JMM));
 
@@ -78,7 +69,7 @@ begin
     end;
 
     
-    if IsOK(Kikuchi) then
+    if IsOK(Kikuchi) and not TestCharacters('08_Kikuchi') then
     begin
         repeat
             wait(0$1);
@@ -222,7 +213,7 @@ begin
 end;
 
 // Dialog about Arabians and trait
-Every 0$30 trigger GetTech(54, 1) = state_researched or GetTech(21, 1) = state_researched or GetTech(22, 1) = state_researched do
+Every 0$40 trigger GetTech(54, 1) = state_researched or GetTech(21, 1) = state_researched or GetTech(22, 1) = state_researched do
 var i, tmp;
 begin
 
@@ -271,11 +262,11 @@ begin
 end;
 
 Export function PrepareArabianTrait;
-var i, tmp, un;
+var i, tmp, un, arSoldiers, arCivilian;
 begin
 
-    for i in FilterAllUnits([[f_side, 2], [f_class, 4]]) do ComExitBuilding(i);
-    for i in FilterAllUnits([[f_side, 2], [f_class, 3]]) do ComExitVehicle(i);
+    ComExitBuilding(FilterAllUnits([[f_side, 2], [f_class, 4]]));
+    ComExitVehicle(FilterAllUnits([[f_side, 2], [f_class, 3]]));
     SetClass(Dietrich, 8);
     wait(0$3);
     CenterOnXY(76, 19);
@@ -290,42 +281,50 @@ begin
     SetAttitude(1, 2, att_enemy, true);
     SetAttitude(3, 2, att_friend, true);
 
+    SetClass(Dietrich, 1);
+
     ChangeMissionObjectives('M4');
 
-    for i in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) do
-    begin
-        ComExitBuilding(i);
-        wait(0$1);
-        AddComAgressiveMove(i, 77, 10);
-        AddComAgressiveMove(i, 82, 5);
-        AddComAgressiveMove(i, 95, 12);
-        AddComAgressiveMove(i, 102, 11);
-        AddComAgressiveMove(i, 116, 15);
-        AddComAgressiveMove(i, 140, 25);
-        AddComAgressiveMove(i, 160, 56);
-        AddComAgressiveMove(i, 189, 79);
-    end; 
+    arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
 
-    for i in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 16]]]) do
-    begin
-        ComExitBuilding(i);
-        wait(0$1);
-        AddComMoveXY(i, 77, 10);
-        AddComMoveXY(i, 82, 5);
-        AddComMoveXY(i, 95, 12);
-        AddComMoveXY(i, 102, 11);
-        AddComMoveXY(i, 116, 15);
-        AddComMoveXY(i, 140, 25);
-        AddComMoveXY(i, 160, 56);
-        AddComMoveXY(i, 189, 79);
-    end; 
+    if IsLive(Khatam) then
+       DoNotAttack(2, Khatam);
+
+    ComExitBuilding(arSoldiers);
+    wait(0$1);
+    AddComAgressiveMove(arSoldiers, 84, 22);
+    AddComAgressiveMove(arSoldiers, 82, 5);
+    AddComAgressiveMove(arSoldiers, 95, 12);
+    AddComAgressiveMove(arSoldiers, 102, 11);
+    AddComAgressiveMove(arSoldiers, 116, 15);
+    AddComAgressiveMove(arSoldiers, 140, 25);
+    AddComAgressiveMove(arSoldiers, 160, 56);
+    AddComAgressiveMove(arSoldiers, 189, 79);
+
+
+    arCivilian = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 12], [f_class, 16]]]);
+    arCivilian = arCivilian ^ Dietrich;
+
+    wait(0$10);
+
+    ComExitBuilding(arCivilian);
+    wait(0$1);
+    AddComMoveXY(arCivilian, 81, 5);
+    AddComMoveXY(arCivilian, 82, 5);
+    AddComMoveXY(arCivilian, 95, 12);
+    AddComMoveXY(arCivilian, 102, 11);
+    AddComMoveXY(arCivilian, 116, 15);
+    AddComMoveXY(arCivilian, 140, 25);
+    AddComMoveXY(arCivilian, 160, 56);
+    AddComMoveXY(arCivilian, 189, 79);
 
     arabianAttackersAI = 1;
 
     wait(0$10);
     If IsOk(Gary) then Say(Gary, 'D8a-Gary-1');
     wait(0$5);
-    If IsOK(Khatam) then
+ 
+    if IsOK(Khatam) then
     begin
         tmp = FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary, Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, Cornell, Powell];
 
@@ -356,7 +355,7 @@ begin
 end;
 
 // Escape Arabian traitors
-Every 0$1 do
+Every 0$1 trigger FilterUnitsInArea(ArabianSpawn2, [f_side, 2]) > 0 or IsInArea(Khatam, ArabianSpawn2) do
 var i;
 begin
     enable;
@@ -364,7 +363,7 @@ begin
     begin
         if GetClass(i) = 4 then SaveVariable(1, '10_ScientistsEscape_1');
         if i = Dietrich then GensherStatus = 1;
-        arabianEscape = 1;
+        if GetClass(i) = 1 or GetClass(i) = 2 or GetClass(i) = 3 or GetClass(i) = 4 or GetClass(i) = 8 then arabianEscape = 1;
         RemoveUnit(i);
 
     end; 
@@ -374,9 +373,6 @@ begin
         RemoveUnit(Khatam);
     end;
 end;
-
-// Khatam dead
-Every 0$1 trigger IsDead(Khatam) do KhatamStatus = 0;
 
 // Change variable value
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 and FilterAllUnits([[f_side, 4], [f_type, unit_human]]) = 0  do
@@ -390,7 +386,7 @@ begin
 end;
 
 // Spawn Cornell
-Every 6$30 trigger joinEpsilon and LoadVariable('02_mikhailStatus_1', 0) = 1 and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([f_side, 2]) = 0 or arabianTrait = 0) do
+Every 6$30 trigger joinEpsilon and LoadVariable('02_mikhailStatus_1', 0) = 1 and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 or arabianTrait = 0) do
 PrepareCornell;
 
 // Cornell dialog 1
@@ -413,7 +409,7 @@ begin
 end;
 
 // Cornell dialog 2
-Every 0$15 trigger GetSide(Cornell) = 1 and GetLives(Cornell) > 251 do
+Every 0$05 trigger GetSide(Cornell) = 1 and GetLives(Cornell) > 350 do
 begin
     DialogueOn;
     Say(JMM, 'D7a-JMM-1');

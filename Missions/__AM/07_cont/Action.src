@@ -30,7 +30,7 @@ if Khatam then
 End;
 
 // Frank spotted
-Every 0$1 trigger Frank and GetDistUnits(JMM, Frank) < 5 and not InBattle(1) do
+Every 0$1 trigger Frank and not Kikuchi and FilterAllUnits([[f_side, 1], [f_distxy, GetX(Frank), GetY(Frank), 7]]) and not InBattle(1) do
 var i, ape;
 begin
 InGameOn;
@@ -109,7 +109,7 @@ InGameOff;
 End;
 
 // Yamoko spotted
-Every 0$1 trigger Kikuchi and GetDistUnits(JMM, Kikuchi) < 5 and not InBattle(1) do
+Every 0$1 trigger Kikuchi and not Frank and FilterAllUnits([[f_side, 1], [f_distxy, GetX(Kikuchi), GetY(Kikuchi), 7]]) and not InBattle(1) do
 begin
 InGameOn;
 
@@ -145,13 +145,23 @@ InGameOff;
 End;
 
 Every 0$1 trigger FilterUnitsInArea(massDamageArea, [[f_side, 1], [f_not, [f_lives, 1000]]]) do
-var un, x, i;
+var un, x, tw, i;
 begin
-un := FilterUnitsInArea(massDamageArea, [[f_side, 1], [f_not, [f_lives, 1000]]])[1];
+
+repeat
+ wait(0$1);
+ un := FilterUnitsInArea(massDamageArea, [[f_side, 1], [f_not, [f_lives, 1000]]]);
+
+ if not un then
+    continue;
+
+ tw := NearbyTowerHasEnergy(un[1]);
+
+until tw;
 
 DialogueOn;
 
-CenterNowOnUnits(un);
+CenterNowOnUnits(tw);
 
 if Lisa then
    begin
@@ -323,7 +333,7 @@ if tmp >= 35 then
 
 GiveMedals('MAIN');
 
-tmp := FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea);
+tmp := FilterPeopleArea(1, endArea) union FilterDriversArea(1, endArea);
 
 RewardPeople(tmp);
 
@@ -355,7 +365,7 @@ SaveVariable(tick, '07_time');
 
 tmp := [];
 
-for i in FilterAllUnits([[[f_side, 1], [f_nation, 1], [f_type, unit_vehicle]]]) do
+for i in FilterUnitsInArea(endArea, [[[f_side, 1], [f_nation, 1], [f_type, unit_vehicle]]]) do
     tmp := tmp ^ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)];
 
 SaveVariable(tmp, '07_vehicles');

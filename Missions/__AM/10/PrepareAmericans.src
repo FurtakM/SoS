@@ -1,5 +1,5 @@
 Export function PrepareHeroes;
-var i;
+var i, un;
 begin
     uc_side = 1;
     uc_nation = 1;
@@ -236,6 +236,18 @@ begin
                 SaveCharacters(Houten, '10_Houten');
             end; 
         end;
+      //randoms =5
+     for i = 1 to 5 - coreHeroesTab do
+     begin
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(4, 6));
+
+        un = CreateHuman;
+        coreHeroesTab = coreHeroesTab ^ un;
+        PlaceUnitArea(un, CoreHeroes,  false);
+        ComTurnXY(un, 42, 35);
+     end;
 
     siberite = LoadVariable('09_SibRes', 0);
     others08 = CreateCharacterSet('08_other_survivors');
@@ -340,19 +352,76 @@ begin
                 addHeroesTab = addHeroesTab ^ others08[1];
                 others08 := Delete(others08, 1);
             end;
+     // randoms
+     for i = 1 to 2 - addHeroesTab do
+     begin
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(4, 6));
+
+        un = CreateHuman;
+        addHeroesTab = addHeroesTab ^ un;
+        PlaceUnitArea(un, addHeroes,  false);
+        ComTurnXY(un, 42, 35);
+     end;
 
     end;
 
     if siberite > 200 then
     begin
-        for i := 1 to (siberite-200) / 100 do
-        begin
-            PlaceUnitArea(others08[i], addHeroes, false);
-            ComTurnXY(others08[i], 42, 35);
-            addHeroesTab = addHeroesTab ^ others08[i];
-            others08 := Delete(others08, 1);
-        end;
-    end;
+
+
+            if others08 > 0 then
+            begin
+              if others08 >=(siberite-200) / 100 then
+              begin
+
+                  for i := 1 to (siberite-200) / 100 do
+                  begin
+                     PlaceUnitArea(others08[1], addHeroes, false);
+                     ComTurnXY(others08[1], 42, 35);
+                     addHeroesTab = addHeroesTab ^ others08[i];
+                     others08 := Delete(others08, 1);
+                  end;
+
+              end else
+              begin
+                       for i := 1 to others08 do
+                       begin
+                            PlaceUnitArea(others08[1], addHeroes, false);
+                            ComTurnXY(others08[1], 42, 35);
+                            addHeroesTab = addHeroesTab ^ others08[i];
+                            others08 := Delete(others08, 1);
+                       end;
+
+                       for i = 1 to (siberite-200) / 100 - others08 do
+                       begin
+                          hc_gallery = '';
+                          hc_name = '';
+                          PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(4, 6));
+
+                          un = CreateHuman;
+                          addHeroesTab = addHeroesTab ^ un;
+                          PlaceUnitArea(un, addHeroes,  false);
+                          ComTurnXY(un, 42, 35);
+                       end;
+            end;
+
+            end else
+            begin
+                       for i = 1 to (siberite-200) / 100 - others08 do
+                       begin
+                          hc_gallery = '';
+                          hc_name = '';
+                          PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(4, 6));
+
+                          un = CreateHuman;
+                          addHeroesTab = addHeroesTab ^ un;
+                          PlaceUnitArea(un, addHeroes,  false);
+                          ComTurnXY(un, 42, 35);
+                       end;
+            end;
+       end;
 
 
     PlaceHumanInUnit(JMM, car);
@@ -406,16 +475,11 @@ begin
         PlaceHumanInUnit(un, veh);
     end;
 
-    ComMoveXY(convoy[1], 39, 38);
-    AddComMoveXY(convoy[1], 41, 50);
+    AddComMoveXY(convoy[1], 67, 56);
+    AddComMoveXY(convoy[2], 63, 52);
+    AddComMoveXY(convoy[3], 59, 50);
 
-    ComMoveXY(convoy[2], 39, 38);
-    AddComMoveXY(convoy[2], 41, 47);
-
-    ComMoveXY(convoy[3], 39, 38);
-    AddComMoveXY(convoy[3], 41, 44);
-
-    wait(0$4);
+    wait(0$2);
     ComMoveXY(convoy[4], 47, 49);
     ComMoveXY(convoy[5], 47, 49);
     ComMoveXY(convoy[6], 47, 49);

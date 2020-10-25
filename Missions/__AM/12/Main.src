@@ -1,0 +1,117 @@
+{
+    Map scripts: Nefarem
+
+    Global Variables:
+    12_MainDepositFake_1 = 0  - Player didin't talked about localisation Siberite main deposit.
+    12_MainDepositFake_1 = 1 - Player  talked about fake localisation  Siberite main deposit.
+
+
+    12_SciDed_1 = 0 - Enable ru rockets in am 14
+    12_SciDed_1 = 1 - DIsable ru rockets in am 14
+
+
+}
+Export JMM, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi; // Heroes with JMM
+Export others11; // Others from 11 mission
+Export amCargo1, amCargo2; // First support
+Export amCargo3, amCargo4, amCargo5; // Second support
+Export amCargo6, amCargo7; // Third support
+Export Powell; // Am commander
+Export Davidov; // Ru commander
+Export Kurt; // Ar heroes
+
+Export KurtVeh;
+Export kurtStatus; // 0 - die, 1 - friend,  2 - enemy
+
+Export secondPass;
+
+Export vehicleTeleported, tpCounter;
+Export warWithLegion;
+Export fakeInfo;
+Export askSiberite;
+Export teleportExplored;
+
+Export RuScientists, sciCounter;
+Export RuSolMinLevel, RuSolMaxLevel;
+Export ruDestroyedBuildings;
+Export russianTanks, russianTimeLapsers;
+Export ruAI;
+Export ruEscape;
+Export attackTactic;
+
+Export arabianMines;
+
+Export cratesSpawned;
+
+Export mission_prefix;
+
+Export eventVar1;
+
+Export debugMode;
+
+Starting
+begin
+    Resetfog;
+    RandomizeAll;
+
+    SetBName(rueastdepot, 'ryutin');
+    SetBName(ruwestdepot, 'yegorov');
+
+    RuScientists = [];
+    sciCounter = 0; // How many scientists from head lab player killed. 
+
+    ruDestroyedBuildings = [];
+    russianTanks = [];
+    russianTimeLapsers = [];
+
+    arabianMines = [];
+
+    kurtStatus = LoadVariable('06_KurtStatus_1', 0);
+
+    secondPass = 0; // 0 - off,  2 - durring query you select option 1 or 2, 1 - option 3
+
+    teleportExplored = 0; // 0 - no  explored, 1 - explored
+    attackTactic = 0; // after second TP, rand between TP or attack from river  1 - tp , 2 - river
+
+    tpCounter = 0; // counter teleported units
+
+    askSiberite = 0; // 0 - legion didin't ask about Siberite, 1 - asked
+    warWithLegion = 0; // 0 - neutral, 1 - enemy
+    fakeInfo = 0;
+
+    cratesSpawned = 0; // How many crates spawned
+
+    ruAI = 0;
+    ruEscape = 0;
+
+    eventVar1 = 0; // block event
+
+    mission_prefix = '12_';
+
+    debugMode = 0; // 0 - players, 1 - developers
+
+    PrepareNature;
+
+    PrepareDifficulty;
+    
+    PrepareVehicles;
+    PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    PrepareAmericanHeroes;
+
+    PrepareRussianCommander;
+    PrepareWestBase;
+    PrepareEastBase;
+    PrepareOtherRussians;
+
+end;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
+end;

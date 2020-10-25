@@ -1,0 +1,84 @@
+On BuildingComplete(building) Do
+begin
+    if GetSide(building) = 3 then
+    begin
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
+        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1); 
+    end;
+
+    if GetSide(building) = 3 and [GetBType(building) = 0 or GetBType(building) = 2 or GetBType(building) = 4] then ComUpgrade(building);
+    if GetSide(building) = 3 and GetBType(building) = b_bunker then AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
+    if GetSide(building) = 3 and GetBType(building) = b_turret then AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
+end;
+
+On UnitDestroyed(unit) do 
+begin
+    if GetSide(unit) = 3 and GetType(unit) = unit_building then
+    begin
+        
+        if GetBType(unit) = 31 or  GetBType(unit) = 32 or  GetBType(unit) = 36 or  GetBType(unit) = 0 or  GetBType(unit) = 24 or  GetBType(unit) = 17 or  GetBType(unit) = 25 or  GetBType(unit) = 19 or  GetBType(unit) = 20 or  GetBType(unit) = 18 or  GetBType(unit) = 21 or  GetBType(unit) = 23 or  GetBType(unit) = 16  or  GetBType(unit) = 6 or  GetBType(unit) = 29 or  GetBType(unit) = 26 or  GetBType(unit) = 30 or  GetBType(unit) = 28 or  GetBType(unit) = 27 or  GetBType(unit) = 33 or  GetBType(unit) = 2 or GetBType(unit) = 4 then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetBType(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 1  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  0;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 3  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  2;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+
+        if GetBType(unit) = 5  then
+        begin
+            ruDestroyedBuildings = ruDestroyedBuildings ^  4;
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
+            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
+        end;
+    end;
+
+end;
+
+On VehicleConstructed(vehicle, factory) Do
+begin
+    if factory = ru_fact1 or factory = ru_fact2 then
+        if GetSide(vehicle) = 3 then
+        begin
+            if GetWeapon(vehicle) = 47 or GetWeapon(vehicle) = 46 or GetWeapon(vehicle) = 45 or GetWeapon(vehicle) = 44 then russianTanks = russianTanks ^ vehicle;
+
+            if GetWeapon(vehicle) = 49 then russianTimeLapsers = russianTimeLapsers ^ vehicle;;
+
+        end;
+
+        if GetSide(vehicle) = 1 and GetWeapon(vehicle) = 10 then amLaserCounter = amLaserCounter + 1;
+end;
+
+
+On UnitGoesToRed(unit) Do
+var i;
+begin
+    if GetSide(unit) = 3 and GetType(unit) = unit_vehicle then
+    begin
+        if russianTanks > 0 then
+            for i in russianTanks do
+                if i = unit then russianTanks = russianTanks diff [unit];
+
+        if russianTimeLapsers > 0 then
+            for i in russianTimeLapsers do
+                if i = unit then russianTimeLapsers = russianTimeLapsers diff [unit];
+    end;
+end;

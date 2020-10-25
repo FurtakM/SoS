@@ -1,0 +1,599 @@
+Export Function Action;
+begin
+InGameOn;
+
+CenterNowOnUnits(JMM);
+
+
+Say(JMM, 'D1-JMM-1');
+Say(Roth, 'D1-Roth-1');
+Say(JMM, 'D1-JMM-2');
+Say(Roth, 'D1-Roth-2');
+Say(JMM, 'D1-JMM-3');
+Say(Roth, 'D1-Roth-3');
+
+ComInvisible(Roth);
+
+wait(0$1.3);
+
+Say(JMM, 'D1-JMM-4');
+
+wait(0$0.3);
+
+ComTurnUnit(Roth, JMM);
+
+Say(JMM, 'D1-JMM-4a');
+Say(Roth, 'D1-Roth-4');
+Say(JMM, 'D1-JMM-5');
+Say(Roth, 'D1-Roth-5');
+Say(JMM, 'D1-JMM-6');
+Say(Roth, 'D1-Roth-6');
+Say(JMM, 'D1-JMM-7');
+
+ComMoveXY(Powell, GetX(JMM), GetY(JMM));
+
+Say(Roth, 'D1-Roth-7');
+
+repeat
+ wait(0$0.3);
+until GetDistUnits(Powell, JMM) < 6;
+
+ComTurnUnit(Powell, JMM);
+
+Say(Powell, 'D1-Pow-7');
+
+ComTurnUnit(JMM, Powell);
+ComTurnUnit(Roth, Powell);
+
+Say(JMM, 'D1-JMM-8');
+Say(Powell, 'D1-Pow-8');   
+Say(JMM, 'D1-JMM-9');
+
+ComMoveXY(Powell, 124, 61);
+
+repeat
+ wait(0$1);
+until GetDistUnits(JMM, Powell) > 6;
+
+SayRadio(Powell, 'D1-Pow-9');
+RemoveUnit(Powell);
+
+PlaceHumanInUnit(Powell, ambar0);
+
+if Joan and not Joan in selected then
+   SayRadio(Joan, 'D1-Joan-9');
+
+ComTurnUnit(Roth, JMM);
+ComTurnUnit(JMM, Roth);
+
+Say(Roth, 'D1-Roth-9');
+Say(JMM, 'D1-JMM-10');
+
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+if Difficulty < 3 then
+   ChangeSideFog(4, 7);
+
+SaveForQuickRestart;
+
+SetAttitude(7, 1, att_enemy, true);
+
+wait(0$3);
+
+ComMoveXY(Roth, 124, 18);
+AddComInvisible(Roth);
+
+wait(0$30);
+
+AddComWait(Roth, 1$00);
+AddComMoveXY(Roth, 156, 20);
+AddComMoveXY(Roth, 178, 42);
+AddComInvisible(Roth);
+End;
+
+// Spotted
+// selected - units which players get
+// tag(2) - others
+// See Friend
+Every 0$1 do
+var i, tmp;
+begin
+tmp := selected union friends;
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if CanSpot(JMM, i) then
+        begin
+        tmp := tmp diff i;
+        Spot(i);
+        end;
+
+until not tmp;
+
+End;
+
+Export Function Spot(unit);
+var building, side, joined;
+begin
+if not unit or GetSide(unit) <> 4 or IsSleeping(unit) or not IsOk(unit) then
+   exit;
+
+InGameOn;
+
+side := GetSide(JMM);
+joined := false;
+
+building := IsInUnit(unit);
+
+if building then
+   begin
+   SetSide(JMM, GetSide(unit));
+   ComEnterUnit(JMM, building);
+
+   repeat
+    wait(3);
+   until IsInUnit(JMM);
+
+   DialogueOn;
+   end
+  else
+   begin
+   ComTurnUnit(JMM, unit);
+   ComTurnUnit(unit, JMM);
+   DialogueOn;
+   end;
+
+if unit = Joan then
+   begin
+   joined := true;
+
+   if Joan in selected then
+      begin
+      Say(Joan, 'D3-Joan-Joan-1');
+      Say(JMM, 'D3-Joan-JMM-1');
+      end
+   else
+      begin
+      Say(Joan, 'D4-Joan-Joan-1');
+      Say(JMM, 'D4-Joan-JMM-1');
+      Say(Joan, 'D4-Joan-Joan-2');
+      Say(JMM, 'D4-Joan-JMM-2');
+      Say(Joan, 'D4-Joan-Joan-3');
+      end;
+   end
+else if unit = Lisa then
+   begin
+   if Lisa in selected then
+      begin
+      if GetSide(Joan) = 7 then
+         begin
+         Say(Lisa, 'D3-LisaJ-Lisa-1');
+         Say(JMM, 'D3-LisaJ-JMM-1');
+         Say(Lisa, 'D3-LisaJ-Lisa-2');
+         Say(JMM, 'D3-LisaJ-JMM-2');
+         Say(Lisa, 'D3-LisaJ-Lisa-3');
+         end
+      else
+         begin
+         Say(Lisa, 'D3-LisaL-Lisa-1');
+         Say(JMM, 'D3-LisaL-JMM-1');
+         joined := true;
+         end;
+      end
+   else
+      begin
+      if GetSide(Joan) = 7 then
+         begin
+         Say(Lisa, 'D4-LisaJ-Lisa-1');
+         Say(JMM, 'D4-LisaJ-JMM-1');
+         Say(Lisa, 'D4-LisaJ-Lisa-2');
+         end
+      else
+         begin
+         Say(Lisa, 'D4-LisaL-Lisa-1');
+         end;
+      end;
+   end
+else if unit = Frank then
+   begin
+   joined := true;
+
+   if Frank in selected then
+      begin
+      Say(Frank, 'D3-Frank-Frank-1');
+      Say(JMM, 'D3-Frank-JMM-1');
+      Say(Frank, 'D3-Frank-Frank-2');
+
+      if reached_lab then
+         begin
+         Say(JMM, 'D3-Frank-JMM-2');
+         Say(Frank, 'D3-Frank-Frank-3');
+         end;
+      end
+   else
+      begin
+      Say(Frank, 'D4-Frank-Frank-1');
+      Say(JMM, 'D4-Frank-JMM-1');
+      Say(Frank, 'D4-Frank-Frank-2');
+      Say(JMM, 'D4-Frank-JMM-2');
+      end;
+   end
+else if unit = Brown then
+   begin
+   if Brown in selected or gamma_commander = 2 then
+      begin
+      Say(Brown, 'D3-Soldier1-Sol1-1');
+      Say(JMM, 'D3-Soldier1-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(Brown, 'D4-Soldier2-Sol1-1');
+      Say(JMM, 'D4-Soldier1-JMM-1');
+      Say(Brown, 'D4-Soldier2-Sol1-2');
+      end;
+   end
+else if unit = Donaldson then
+   begin
+   if Donaldson in selected or gamma_commander = 1 then
+      begin
+      Say(Donaldson, 'D3-Soldier2-FSol2-1');
+      Say(JMM, 'D3-Soldier2-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(unit, 'D4-Soldier1-FSol1-1');
+      Say(JMM, 'D4-Soldier1-JMM-1');
+      Say(unit, 'D4-Soldier1-FSol1-2');
+      end;
+   end
+else if unit = Cyrus then
+   begin
+   if Cyrus in selected then
+      begin
+      Say(Cyrus, 'D3-Cyrus-Cyrus-1');
+      Say(JMM, 'D3-Cyrus-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(Cyrus, 'D4-Cyrus-Cyrus-1');
+      Say(JMM, 'D4-Cyrus-JMM-1');
+      end;
+   end
+else if unit = Bobby then
+   begin
+   if Bobby in selected then
+      begin
+      Say(Bobby, 'D3-Bobby-Bobby-1');
+      Say(JMM, 'D3-Bobby-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(Bobby, 'D4-Bobby-Bobby-1');
+      Say(JMM, 'D4-Bobby-JMM-1');
+      Say(Bobby, 'D4-Bobby-Bobby-2');
+      end;
+   end
+else if unit = Cornel then
+   begin
+   if Cornel in selected then
+      begin
+      Say(Cornel, 'D3-Mark-Corn-1');
+      Say(JMM, 'D3-Mark-JMM-1');
+      Say(Cornel, 'D3-Mark-Corn-2');
+      joined := true;
+      end
+   else
+      begin
+      Say(Cornel, 'D4-Mark-Corn-1');
+      Say(JMM, 'D3-Joan-JMM-1');
+      Say(Cornel, 'D4-Mark-Corn-2');
+      end;
+   end
+else if unit = Gary then
+   begin
+   if Gary in selected then
+      begin
+      Say(Gary, 'D3-Gary-Gary-1');
+      Say(JMM, 'D3-Gary-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(Gary, 'D4-Gary-Gary-1');
+      SetSide(Gary, 1);
+
+      DialogueOff;
+      InGameOff;
+      exit;
+      end;
+   end
+else if unit = Kikuchi then
+   begin
+   if Kikuchi in selected then
+      begin
+      Say(Kikuchi, 'D3-Yamako-Yam-1');
+      Say(JMM, 'D3-Soldier2-JMM-1');
+      joined := true;
+      end
+   else
+      begin
+      Say(Kikuchi, 'D4-Yamako-Yam-1');
+      SetSide(Kikuchi, 1);
+
+      DialogueOff;
+      InGameOff;
+      exit;
+      end;
+   end
+else if unit = Gladstone then
+   begin
+   if Gladstone in selected then
+      begin
+      joined := true;
+
+      Say(JMM, 'D3-Tim-JMM-1');
+      Say(Gladstone, 'D3-Tim-Glad-1');
+      end
+   else
+      begin
+      Say(JMM, 'D4-Tim-JMM-1');
+      Say(Gladstone, 'D4-Tim-Glad-1');
+      end;
+   end
+else if unit = Denis then
+   begin
+   joined := true;
+
+   Say(Denis, 'D3-Denis-Den-1');
+   Say(JMM, 'D3-Denis-JMM-1');
+   end
+else if unit = Simms then
+   begin
+   joined := true;
+
+   Say(Simms, 'D3-Simms-Sim-1');
+   Say(JMM, 'D3-Simms-JMM-1');
+   end
+else if unit = DeltaDoctor then
+   begin
+   joined := true;
+
+   Say(DeltaDoctor, 'D3-Soldier1-Sol1-1');
+   Say(JMM, 'D3-Soldier1-JMM-1');
+   end
+else // if random guy
+   begin
+   joined := unit in selected;
+
+   if joined then
+      begin
+      if GetSex(unit) = sex_male then
+         begin
+         Say(unit, 'D3-Soldier1-Sol1-1');
+         Say(JMM, 'D3-Soldier1-JMM-1');
+         end
+      else
+         begin
+         Say(unit, 'D3-Soldier2-FSol2-1');
+         Say(JMM, 'D3-Soldier2-JMM-1');
+         end;
+      end
+   else
+      begin
+      if GetSex(unit) = sex_male then
+         begin
+         Say(unit, 'D4-Soldier2-Sol1-1');
+         Say(JMM, 'D4-Soldier2-JMM-1');
+         Say(unit, 'D4-Soldier2-Sol2-1');
+         end
+      else
+         begin
+         Say(unit, 'D4-Soldier1-FSol1-1');
+         Say(JMM, 'D4-Soldier1-JMM-1');
+         Say(unit, 'D4-Soldier1-FSol1-2');
+         end;
+      end;
+   end;
+
+DialogueOff;
+InGameOff;
+
+if building then
+   begin
+   SetSide(JMM, side);
+   ComExitBuilding(JMM);
+
+   if joined then
+      begin
+      SetSide(unit, side);
+      SetSide(building, 1);
+
+      ComExitBuilding(unit);
+      end
+     else
+      begin
+      wait(0$10);
+
+      SetSide(unit, 1);
+      SetSide(building, 1);
+      end;
+   end
+else
+   begin
+   ComStop([JMM, unit]);
+
+   if joined then
+      SetSide(unit, side)
+    else
+      begin
+
+      repeat
+       wait(0$1);
+      until GetDistUnits(JMM, unit) > 11;
+
+      SetSide(unit, 1);
+      end;
+   end;
+
+End;
+
+// JMM reached Roth's lab
+Every 0$01 trigger IsInUnit(JMM) = amlab do
+begin
+ChangeMissionObjectives('M1a');
+
+SetTech(tech_Soporific, 7, state_researched);
+SetTech(tech_SpacAnom, 7, state_researched);
+SetClass(JMM, class_bazooker);
+
+can_escape := true;
+SetAreaMapShow(escape_area, 1);
+End;
+
+Every 0$01 trigger FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) do
+    if GetDistUnits(i, JMM) < 6 then
+       SetSide(i, 7);
+End;
+
+Every 0$01 trigger can_escape and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5) do
+var all_taken, tmp;
+begin
+all_taken := (UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0);
+
+if not all_taken then
+   case query('Q1') of
+   1: begin
+      repeat
+       wait(0$1);
+      until UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0 and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5);
+
+      all_taken := true;
+      end;
+   2:;
+   end;
+
+if team_kill_counter then
+   Say(JMM, 'D5-JMM-1')
+else
+   Say(JMM, 'D5-JMM-1a');
+
+if all_taken then
+   AddMedal('All', 1)
+else
+   AddMedal('All', -1);
+
+if team_kill_counter then
+   AddMedal('Save', -1)
+else
+   AddMedal('Save', 1);
+
+if friends_kill_counter >= [2, 1, 1][Difficulty] then
+   AddMedal('Friendship', -1)
+else
+   AddMedal('Friendship', 1);
+
+GiveMedals('MAIN');
+tmp := FilterAllUnits([[[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9]]]]);
+
+RewardPeople(tmp ^ Roth);
+
+// Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
+// Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
+// Simms, Joan, DeltaDoctor
+SaveCharacters(JMM, '12a_JMM');
+
+if IsLive(Roth) then
+   SaveCharacters(Roth, '12a_Roth');
+
+if Lisa in tmp then
+   SaveCharacters(Lisa, '12a_Lisa')
+else if Lisa then
+   SaveCharacters(Lisa, '12p_Lisa');
+
+if Donaldson in tmp then
+   SaveCharacters(Donaldson, '12a_Donaldson')
+else if Donaldson then
+   SaveCharacters(Donaldson, '12p_Donaldson');
+
+if Bobby in tmp then
+   SaveCharacters(Bobby, '12a_Bobby')
+else if Bobby then
+   SaveCharacters(Bobby, '12p_Bobby');
+
+if Cyrus in tmp then
+   SaveCharacters(Cyrus, '12a_Cyrus')
+else if Cyrus then
+   SaveCharacters(Cyrus, '12p_Cyrus');
+
+if Denis in tmp then
+   SaveCharacters(Denis, '12a_Denis');
+
+if Brown in tmp then
+   SaveCharacters(Brown, '12a_Brown')
+else if Brown in tmp then
+   SaveCharacters(Brown, '12p_Brown');
+
+if Gladstone in tmp then
+   SaveCharacters(Gladstone, '12a_Gladstone')
+else if Gladstone then
+   SaveCharacters(Gladstone, '12p_Gladstone');
+
+if Houten in tmp then
+   SaveCharacters(Houten, '12a_Houten')
+else if Houten then
+   SaveCharacters(Houten, '12p_Houten');
+
+if Cornel in tmp then
+   SaveCharacters(Cornel, '12a_Cornell')
+else if Cornel then
+   SaveCharacters(Cornel, '12p_Cornell');
+
+if Gary in tmp then
+   SaveCharacters(Gary, '12a_Gary')
+else if Gary then
+   SaveCharacters(Gary, '12p_Gary');
+
+if Frank in tmp then
+   SaveCharacters(Frank, '12a_Frank');
+
+if Kikuchi in tmp then
+   SaveCharacters(Kikuchi, '12a_Kikuchi')
+else if Kikuchi then
+   SaveCharacters(Kikuchi, '12p_Kikuchi');
+
+if Simms in tmp then
+   SaveCharacters(Simms, '12a_Simms');
+
+if Joan in tmp then
+   SaveCharacters(Joan, '12a_Joan');
+
+if DeltaDoctor in tmp then
+   SaveCharacters(DeltaDoctor, '12a_DeltaDoctor');
+
+tmp := tmp diff [JMM, Roth, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
+                 Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
+                 Simms, Joan, DeltaDoctor];
+
+if tmp then
+   SaveCharacters(tmp, '12a_others');
+
+SaveCharacters(friends diff tmp, '12p_others');
+
+YouWin;
+End;

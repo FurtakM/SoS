@@ -1,0 +1,75 @@
+// MC_MOVE(unit, [coords], mode);
+// Poruszanie, [mode]= 0(normal), 1(force)   // TODO
+Export Function MC_Move(unit, coords, mode);
+var i, x, y, x2, y2, d, r;
+begin
+
+if unit then
+   begin
+
+        if mode = 0 then
+           begin
+           if coords then
+           while(coords > 1) do
+              if not HasTask(unit) then
+                 begin
+                 ComMoveXY(unit, coords[1], coords[2]);
+
+                 Repeat
+                  Wait(0$01);
+                 Until GetX(unit) = coords[1] and GetY(unit) = coords[2];
+
+                 for i = 1 to 2 do
+                     coords := Delete(coords, 1);
+                 end;
+           end
+            else
+             begin
+             if coords then
+                begin
+                x := GetX(unit);
+                y := GetY(unit);
+
+                while(coords > 1) do
+                 begin
+                 Wait(0$0.3);
+
+                 if MCT_Enemy(GetSide(unit), GetX(unit), GetY(unit), 14) then
+                    begin
+                    ComMoveXY(unit, x, y);
+                    result := false;
+                    end
+                     else
+                      if not HasTask(unit) then
+                         ComMoveXY(unit, coords[1], coords[2]);
+
+                 if (GetX(unit) = coords[1] and GetY(unit) = coords[2]) then
+                    for i = 1 to 2 do
+                        coords := Delete(coords, 1);
+                 end;
+                 end;
+             end;
+   end;
+
+result := true;
+End;
+
+
+Export Function MC_Attack(side, units);
+var i, enemy;
+begin
+enemy := FilterAllUnits([f_enemy, side]);
+
+for i in units do
+    begin
+    ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+    end;
+End;
+
+
+
+// Wyúwietla zadany ciπg bπdü zmiennπ
+Export Function MC_Show(string);
+begin
+display_strings := string;
+End;

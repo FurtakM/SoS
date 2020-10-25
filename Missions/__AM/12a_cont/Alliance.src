@@ -1,0 +1,58 @@
+Export JMM, Roth;
+
+Export Function PrepareAlliance;
+var cargo;
+begin
+uc_side := 7;
+uc_nation := 1;
+
+JMM := PrepareUnit('JMM', (not debug), '11_');
+
+uc_side := 4;
+
+Roth := NewCharacter('Roth');
+
+SetDir(JMM, 1);
+SetClass(JMM, 1);
+PlaceUnitXY(JMM, 105, 10, false);
+
+SetDir(Roth, 4);
+PlaceUnitXY(Roth, 109, 10, false);
+
+ComTurnUnit(JMM, Roth);
+ComTurnUnit(Roth, JMM);
+
+PrepareVehicle(us_medium_tracked, engine_siberite, control_computer, us_cargo_bay, 100);
+cargo := CreateVehicle;
+
+SetDir(cargo, 1);
+PlaceUnitXY(cargo, 179, 45, false);
+
+SetCargo(cargo, mat_artifact, 30);
+
+if LoadVariable('11_artifact_captured', 0) then
+   begin
+   cargo := CreateVehicle;
+
+   SetDir(cargo, 0);
+   PlaceUnitXY(cargo, 171, 85, false);
+   SetCargo(cargo, mat_artifact, 50);
+   end;
+
+SetSide(amlab, 7);
+DoNotAttack(1, amlab);
+End;
+
+Every 0$1 trigger FilterUnitsInArea(hill, [f_side, 7]) and not on_hill do
+begin
+enable;
+on_hill := true;
+PlaceSeeing(126, 13, 7, -90);
+End;
+
+Every 0$1 trigger not FilterUnitsInArea(hill, [f_side, 7]) and on_hill do
+begin
+enable;
+on_hill := false;
+RemoveSeeing(126, 13, 7);
+End;

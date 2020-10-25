@@ -1,6 +1,7 @@
 // Prepare base
 Export JMM, Gladstone, Frank, Lisa, Cyrus, Bobby, Donaldson, Brown, Houten, Khatam, Harisson;
 Export gamma_commander;
+Export RandGuy;
 
 Export Function PrepareAmerican;
 var others, others_delta, others4, veh, team, dep, bar, lab, fac, bun, filter, i, j;
@@ -155,12 +156,13 @@ others := others union others4;
 //others := others diff others_delta;
 team := team ^ others;
 
-if team < 10 then
+InitHc;
+
+if team <= 12 then
    repeat
-    wait(0$01);
     PrepareHuman(false, rand(1,4), 5);
     team := team ^ CreateHuman;
-   until team < 10;
+   until team > 12;
 
 for i in others do
     begin
@@ -170,6 +172,10 @@ for i in others do
     for j = 1 to 4 do
         AddExperience(i, j, 3000);
     end;
+
+if UnitFilter(team, [f_class, 2]) then
+   for i in UnitFilter(team, [f_class, 2]) do
+       SetClass(i, 1);
 
 // place units in base
 dep := FilterAllUnits([f_btype, b_depot]);
@@ -199,6 +205,22 @@ if dep then
       team := team diff Donaldson;
       end;
 
+   end
+else
+   begin
+   PlaceUnitXYR(JMM, 52, 16, 10, false);
+
+   if Brown then
+      begin
+      PlaceUnitXYR(Brown, 52, 16, 10, false);
+      team := team diff Brown;
+      end;
+
+   if Donaldson then
+      begin
+      PlaceUnitXYR(Donaldson, 52, 16, 10, false);
+      team := team diff Donaldson;
+      end;
    end;
 
 if bun and UnitFilter(team, [f_class, 1]) then
@@ -282,10 +304,18 @@ uc_side := 4;
 
 Harisson := PrepareUnit('Harisson', false, '');
 // prepare vehicles
-veh := PrepareTank(4, 1, us_light_wheeled, engine_combustion, control_manual, us_machine_gun, 100);
+veh := PrepareTank(4, 1, us_medium_wheeled, engine_combustion, control_manual, us_double_gun, 100);
 SetDir(veh, 2);
-PlaceUnitXY(veh, 21, 8, false);
+PlaceUnitXY(veh, 22, 9, false);
 PlaceHumanInUnit(Harisson, veh);
+
+PrepareHuman(false, 1, 0);
+RandGuy := CreateHuman;
+
+veh := PrepareTank(4, 1, us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun, 100);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 17, 4, false);
+PlaceHumanInUnit(RandGuy, veh);
 End;
 
 Function PrepareBase;
@@ -296,14 +326,14 @@ SetResourceVisibility(71, 5, 1);
 // [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
 blist := LoadVariable('GammaBase', []);
 
-if not blist and debug then
-   blist := [ [b_depot, 51, 10, 3, 3, 0, 0] ];
-
 if not blist then
-   exit;
+   blist := [ [b_depot, 52, 12, 3, 3, 0, 0] ];
 
 uc_side := 1;
 uc_nation := 1;
+
+bc_kind1 := -1;
+bc_kind2 := -1;
 
 for i in blist do
     begin
@@ -324,6 +354,14 @@ for i in blist do
        end;
 
     end;
+
+if not FilterAllUnits([f_btype, b_depot]) then
+   begin
+   bc_type := b_depot;
+   bc_level := 6;
+
+   b := CreateAndPlaceBuildingXYD(52, 12, 3);
+   end;
 
 
 End;

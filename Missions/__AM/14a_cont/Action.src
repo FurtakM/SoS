@@ -1,0 +1,340 @@
+Export Function Action;
+begin
+InGameOn;
+
+CenterNowOnXY(221, 80);
+
+ComMoveXY([JMM, Burlak], 217, 79);
+wait(0$7);
+ComExitVehicle([JMM, Burlak]);
+
+Say(Burlak, 'D2-Bur-1');
+Say(JMM, 'D2-JMM-1');
+
+wait(0$0.5);
+
+ComTurnUnit(Burlak, JMM);
+
+Say(Burlak, 'D2-Bur-2');
+
+ComEnterUnit(Burlak, NearestUnitToUnit(FilterAllUnits([f_type, unit_vehicle]), Burlak));
+ComEnterUnit(JMM, NearestUnitToUnit(FilterAllUnits([f_type, unit_vehicle]), JMM));
+
+wait(0$1);
+
+InGameOff;
+
+ChangeMissionObjectives('MArtPickup');
+End;
+
+// see patrol
+Every 0$1 trigger UnitFilter(guards, [f_see, 7]) do
+begin
+Say(Burlak, 'D3-Bur-1');
+Say(JMM, 'D3-JMM-1');
+End;
+
+// see test base
+Every 0$2 trigger FilterUnitsInArea(usTestBase, [f_side, 7]) do
+begin
+wait(0$3);
+
+DialogueOn;
+
+CenterNowOnUnits(JMM);
+
+Say(JMM, 'D3a-JMM-1');
+Say(Burlak, 'D3a-Bur-1');
+Say(JMM, 'D3a-JMM-2');
+
+if Joan then
+   SayRadio(Joan, 'D3a-Joan-2')
+else
+   SayRadio(RuSci, 'D3a-RSci1-2');
+
+SayRadio(Stevens, 'D3a-Huck-2');
+SayRadio(Powell, 'D3a-Pow-2');
+SayRadio(Stevens, 'D3a-Huck-3');
+SayRadio(Powell, 'D3a-Pow-3');
+SayRadio(Stevens, 'D3a-Huck-4');
+
+Say(JMM, 'D3a-JMM-4');
+Say(Burlak, 'D3a-Bur-4');
+
+if Joan then
+   SayRadio(Joan, 'D3a-Joan-4')
+else
+   SayRadio(RuSci, 'D3a-RSci1-4');
+
+PlaceSeeing(133, 43, 7, -10);
+RemoveSeeing(133, 43, 7);
+
+CenterNowOnXY(133, 43);
+
+dwait(0$0.3);
+
+Say(JMM, 'D3a-JMM-5');
+Say(Burlak, 'D3a-Bur-5');
+
+DialogueOff;
+
+seenBase := true;
+
+wait([0$15, 0$12, 0$9][Difficulty]);
+                             
+ComAttackPlace(sibBomb, 142, 52);
+End;
+
+// player idle
+Every 5$00 trigger not seenBase and not bombExploded do
+ComAttackPlace(sibBomb, 142, 52);
+
+// bomb exploded
+Export Function OnBombExploded(bomb, x, y);
+var art;
+begin
+contaminateTime := tick;
+
+wait(0$5);
+
+art := FindArtifact(4);
+
+if art then
+   if art[1] = 157 and art[2] = 75 then
+      begin
+      YouLost('Artefact');
+      exit;
+      end;
+
+if IsOK(JMM) and IsOk(Burlak) then
+   begin
+   DialogueOn; 
+   Say(JMM, 'D6a-JMM-1');
+   Say(Burlak, 'D6a-Bur-1');
+
+   Say(JMM, 'D6c-JMM-1');
+   Say(Burlak, 'D6c-Bur-1');
+   Say(JMM, 'D6c-JMM-2');
+
+   ChangeMissionObjectives('MBase'); 
+   DialogueOff;
+   end;
+
+bombExploded := true;
+
+wait([3$00, 2$30, 2$00][Difficulty]);
+
+if IsOk(JMM) then
+   Say(JMM, 'D8-JMM-1');
+End;
+
+Every 0$1 trigger stevensTimer and bombExploded do
+begin
+enable;
+
+if FilterUnitsInArea(usBase, [f_side, 7]) then
+   stevensTimer := stevensTimer - 0$30
+else
+   stevensTimer := stevensTimer - 0$1;
+End;
+
+Every 0$1 trigger stevensTimer <= 0$00 do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 1], [f_class, 4]]);
+
+for i in tmp do
+    begin
+    ComExitBuilding(i);
+    AddComMoveXY(i, 29, 56);
+    end;
+
+repeat
+ wait(0$1);
+until FilterUnitsInArea(stevensEscapeArea, [[f_side, 1], [f_class, 4]]);
+
+YouLost('Time');
+End;
+
+// see contamin area
+Every 0$1 trigger FilterAllUnits([[f_side, 7], [f_distxy, 142, 52, 27]]) and contaminateTime + 6000 > tick and bombExploded do
+begin
+CenterOnUnits([JMM, Burlak]);
+
+DialogueOn;
+Say(JMM, 'D6b-JMM-1');
+Say(Burlak, 'D6b-Bur-1');
+DialogueOff;
+End;
+
+// burlak in contamin area
+Every 0$1 trigger (GetDistUnitXY(Burlak, 142, 52) < 25 or GetDistUnitXY(IsInUnit(Burlak), 142, 52) < 25) and GetLives(Burlak) < 1000 and contaminateTime + 6000 > tick and bombExploded do
+begin
+DialogueOn;
+Say(Burlak, 'D7-Bur-1');
+enteredContaminatedArea := true;
+DialogueOff;
+End;
+
+// jmm in contamin area
+Every 0$1 trigger (GetDistUnitXY(JMM, 142, 52) < 25 or GetDistUnitXY(IsInUnit(JMM), 142, 52) < 25) and GetLives(JMM) < 1000 and contaminateTime + 6000 > tick and bombExploded do
+begin
+DialogueOn;
+Say(JMM, 'D7-JMM-1');
+enteredContaminatedArea := true;
+DialogueOff;
+End;
+
+// picked up artifact
+Every 0$1 trigger artifactPickedUp and IsOk(JMM) and IsOk(Burlak) do
+begin
+DialogueOn;
+
+CenterNowOnUnits([JMM, Burlak]);
+
+Say(JMM, 'D4-JMM-1');
+
+if not bombExploded then
+   Say(Burlak, 'D4-Bur-1');
+
+DialogueOff;
+
+ChangeMissionObjectives('MReturn');
+End;
+
+// see empty base
+Every 0$2 trigger not planCaptured and FilterAllUnits([[f_side, 7], [f_dist, us_dep_north, 6]]) do
+begin
+DialogueOn;
+
+PlaceSeeing(55, 11, 7, -6);
+RemoveSeeing(55, 11, 7);
+
+Say(Burlak, 'D9-Bur-1');
+Say(JMM, 'D9-JMM-1');
+
+DialogueOff;
+
+SetSide(us_dep_north, 7);
+End;
+
+// in stevens base
+Every 0$1 trigger FilterUnitsInArea(usBase, [f_side, 7]) do
+begin
+wait(0$07);
+
+Say(JMM, 'D10b-JMM-1');
+Say(Burlak, 'D10b-Bur-1');
+End;
+
+Every 0$1 trigger stevensTimer and FilterAllUnits([[f_side, 1], [f_class, 4], [f_sex, sex_male]]) and (GetSide(us_depot) = 7 or FilterAllUnits([[f_side, 1], [f_class, 1]]) = 0) do
+var i;
+begin
+Case Query('QKill') of
+1: begin
+   DialogueOn;
+
+   Say(JMM, 'D10a-JMM-1');
+   Say(Burlak, 'D10a-Bur-1');
+   Say(JMM, 'D10a-JMM-2');
+
+   if IsOk(Stevens) then
+      Say(Stevens, 'D10a-Huck-2')
+   else
+      Say(FilterAllUnits([[f_side, 1], [f_class, 4], [f_sex, sex_male]])[1], 'D10a-ASci1-3');
+
+   Say(JMM, 'D10a-JMM-4');
+
+   if IsOk(Stevens) then
+      Say(Stevens, 'D10a-Huck-3');
+
+   DialogueOff;
+
+   SetAttitude(1, 7, att_friend, true);
+
+   planCaptured := true;
+   ChangeMissionObjectives('MEnd');
+   canEnd := true;
+   missionTime := tick;
+
+   repeat
+    wait(0$2);
+
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+        begin
+        if IsInArea(i, stevensEscapeArea) then
+           begin
+           RemoveUnit(i);
+           continue;
+           end;
+
+        if IsInUnit(i) then
+           ComExitBuilding(i);
+         
+        AddComMoveXY(i, 28, 55);
+        end;
+   until not FilterAllUnits([[f_side, 1], [f_type, unit_human]]);
+   end;
+2: ;
+end;
+
+End;
+
+// capture lab
+Every 0$1 trigger GetSide(us_lab) = 7 and not planCaptured do
+begin
+planCaptured := true;
+ChangeMissionObjectives('MEnd');
+canEnd := true;
+missionTime := tick;
+End;
+
+Every 0$1 trigger canEnd do
+var un;
+begin
+SetAreaMapShow(endMissionArea, 1);
+
+if Difficulty < 2 then
+   exit;
+
+uc_side := 8;
+uc_nation := 2;
+
+InitHc;
+
+PrepareHuman(false, class_sniper, 10);
+un := CreateHuman;
+PlaceUnitXY(un, 227, 87, false);
+
+ComHold(un);
+End;
+
+Every 0$1 trigger not planCaptured and IsDead(us_lab) do
+YouLost('Lab');
+
+
+// End mission
+Every 0$1 trigger FilterUnitsInArea(endMissionArea, [f_side, 7]) >= 2 and FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]) and canEnd and planCaptured and artifactPickedUp do
+begin
+AddMedal('Explosion', 1);
+
+if enteredContaminatedArea then
+   AddMedal('BioHazard', 1)
+else
+   AddMedal('BioHazard', -1);
+
+if missionTime <= [20$00, 15$00, 12$00][Difficulty] then
+   AddMedal('Speed', 1)
+else
+   AddMedal('Speed', -1);
+
+GiveMedals('Main');
+
+RewardPeople([JMM, Burlak]);
+
+SaveCharacters(JMM, '14a_JMM');
+SaveCharacters(Burlak, '14a_Burlak');
+
+YouWin;
+End;
+

@@ -1,0 +1,165 @@
+Export Function PrepareUnit(ident, exist_mode, prefix);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(prefix&ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+Export Function PrepareVehicle(chassis, engine, control, weapon, fuel);
+begin
+vc_chassis := chassis;
+vc_engine := engine;
+vc_control := control;
+vc_weapon := weapon;
+vc_fuel_battery := fuel;
+End;
+
+Export Function PrepareNature(birds, tigers, apemans, enchidnas, horses, mastodonts, fishes, nat_area, wat_area);
+var i, animal;
+begin
+uc_side = 0;
+uc_nation = 0;
+
+InitHc;
+InitVc;
+
+if mastodonts then
+   for i = 1 to mastodonts do
+       begin
+       vc_chassis := 31;
+       vc_control := control_rider;
+       animal := CreateVehicle;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+if horses then
+   for i = 1 to horses do
+       begin
+       hc_class := 21;
+       hc_gallery := '';
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+if birds then
+   for i = 1 to birds do
+       begin
+       hc_class = 18;
+       hc_gallery = '';
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+if tigers then
+   for i = 1 to tigers do
+       begin
+       hc_class = class_tiger;
+       hc_gallery = '';
+       hc_agressivity = Rand(-7, 7);
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+if apemans then
+   for i = 1 to apemans do
+       begin
+       hc_class = class_apeman;
+       hc_gallery = '';
+       hc_agressivity = rand(-5, 5);
+       hc_skills := [rand(1, 3), rand(1, 3), 0, 0];
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+
+if enchidnas then
+   for i = 1 to enchidnas do
+       begin
+       hc_class = 13;
+       hc_gallery = '';
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, nat_area, false);
+       end;
+
+
+if fishes then
+   for i = 1 to fishes do
+       begin
+       hc_class = 20;
+       hc_gallery = '';
+
+       animal := CreateHuman;
+       PlaceUnitInArea(animal, wat_area, false);
+       end;
+
+End;
+
+Export Function PlaceUnitInArea(unit, area, mode);
+var i, tmp, hex;
+begin
+if not unit or not area then
+   exit;
+
+tmp := AreaToList(area, i);
+
+for i = 1 to tmp[1] do
+    begin
+    hex := [tmp[1][i], tmp[2][i]];
+
+    if HexInfo(hex[1], hex[2]) = 0 then
+       begin
+       PlaceUnitXY(unit, hex[1], hex[2], mode);
+       result := IsPlaced(unit);
+       exit;
+       end;
+    end;
+End;
+
+Export Function Connect(vehicle);
+var i, t, mech, tmp, j;
+begin
+if not vehicle or not GetControl(vehicle) = control_remote then
+   exit;
+
+tmp := FilterAllUnits([[f_side, GetSide(vehicle)], [f_or, [f_btype, b_control_tower], [f_weapon, ar_control_tower]]]);
+
+if not tmp then
+   exit;
+
+result := [];
+
+for i in tmp do
+    begin
+    t := UnitsInside(i);
+
+    if t then
+       for j in t do
+           result := Insert(result, result+1, j);
+    end;
+
+if not result then
+   exit;
+
+mech := result[1];
+
+if result > 1 then
+   for i = 2 to result do
+       begin
+       t := GetSkill(result[i], 3) - UnitsLinked(result[i]);
+
+       if t >= (GetSkill(mech, 3) - UnitsLinked(mech)) then
+          mech := result[i];
+       end;
+
+ComLinkTo(vehicle, mech);
+End;

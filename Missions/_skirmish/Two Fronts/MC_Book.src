@@ -1,0 +1,278 @@
+{ MC_AI 1.7.3
+  by Serpent
+  LAST UPDATE: 03-15-18
+  // camp_names:array[0..4]of string=('Mp','Am','Ar','Ru','Ap');
+
+  Register: MREG_TAB[[side,value], [side,value]]
+  - MREG_Game [ ]
+  - MREG_Heal  [side, [unit]]
+  - MREG_Tame [side]
+  - MREG_SidesList [side]
+  - MREG_LabList [side]
+  - MREG_Cargo [side, unit, type]
+  - MREG_Crane  [side, unit, type]
+  - MREG_Bulldozer [side, unit, type]
+  - MREG_TurretWeapon [side, weapon]
+  - MREG_VehicleWeapon [side, weapon, [x, y]]
+  - MREG_Status [side, unit, [status {string}]]
+  - MREG_ToBuild [side, building]
+  - MREG_ToRepair; [side, unit, hp]
+  - MREG_ToUpdate [side, building]
+  - MREG_ToUpLab [side, [lab_list]]
+  - MREG_ToRes [side, tech]
+  - MREG_ToConstruct [[v_chassis, v_engine, v_control, v_weapon][side]]
+  - MREG_ToDismantle [side, unit, []]
+  - MREG_ToChagneClass [side, unit, class]
+  - MREG_ToLab
+  - MREG_ToFac
+  - MREG_ToArm
+  - MREG_ToDep
+  - MREG_Parking [[parking][side]]
+  - MREG_VCombat [[vehs][side]]
+  - MREG_Collect [[mode, [areas]][side]] {mode -> off = 0, on = 1}
+  - MREG_Crates [ [x, y, amount] ]      // global array for crates
+  - MREG_Deposit [side, [x, y, t]]
+  - MREG_ResourcesBonus [crates, oil, sib]
+  - MREG_DefArea [side, area]
+  - MREG_DefPoints [side, points]
+  - MREG_DefSquad [side, squad[] ]
+  - MREG_DefVeh [side, vehicles]
+
+
+  MREG_Fun:
+  - MREG_ForSide(side, mreg);
+  - MREG_ForSideCount(side, mreg);
+
+  Filter:
+  - MCF_Get(side, filter {f_array});
+  - MCF_Class(side {int}, class {int}, filter {f_array});
+  - MCF_All(side, filter {f_array});
+  - MCF_Dist(side, point[x][y][d], filter);
+  - MCF_Vehicle(side {int}, filter {f_array});
+  - MCF_Cargo(side {int} );
+  - MCF_Tag(side {int}, tag {int}, filter {f_array});
+  - MCF_SetTag(side {int}, [plist] {array}, tag {int});
+  - MCF_ClearTag(side {int}, tag {int});
+  - MCF_SortListAsc(list {array});
+  - MCF_SortListDesc(list {array});
+  - MCF_SortLevelAsc(side {int}, [plist] {array}, skill {int});
+  - MCF_SortLevelDesc(side {int}, [plist] {array}, skill {int});
+  - MCF_Clear(side {int});
+  - MCF_NoClass([plist] {array}, n {int});
+  - MCF_HasClass(unit);
+  - MCF_RemoveClass(side {int}, mreg, n {int});
+  - MCF_Ape(side);
+  - MCF_ApeSpec(side, type);
+  - MCF_UnfinishedBuilding(side);
+  - MCF_ScanTeren(side, dist)
+  - MCF_Info(); // display_info
+
+  Function's:
+  - MC_Attack(side, [x1, y1], [x2, y2], [x3, y3]);
+  - MC_Base(side, [ ]);
+  - MC_Defend(side, task_force_list, [x1, y1, x2, y2, x3, y3], [repair_x, repair_y]);
+  - MC_Skrimish([enemy_list], [neutral_list], [friend_list]);
+  - MC_Strategy(side, strategy_type);
+  - MC_Move(unit, [coords], mode);
+  - MC_Patrol([unit_list], [patrol_points_list]);
+  - MC_Registry();
+  - MC_RegistryUpdate(mreg_list, side, unit, mreg);
+  - MC_RegistryDelete(mreg_list, side, unit, mreg);
+  - MC_RegistryInit();
+  - MC_Info(); // display_info
+  - MC_Show(string {all});
+  -----------
+  - MC_GetStatus(side, unit); // show unit status
+  - MC_SetStatus(side, unit, status); // set new status for unit
+  - MC_FilterStatus(side, status); // return amount of status
+  - MC_FilterNonStatus(side, tmp);
+  - MC_CleanFilter(side); // delete status from all units
+  -----------
+
+
+  Spec Funtion's:
+  - MCS_AddFortification(side, type, [coord_list], [weapon_list]);
+  - MCS_ChangeFortification(side, [coord_list], [weapon_list]);
+  - MCS_RemoveFortification(side, [coord_list]);
+  - MCS_AddVehicle(side, [vehicle_list], [vehicles_list]);
+  - MCS_GetVehicleList(side);
+  - MCS_ChangeVehicle(side, [vehicles_list]);
+  - MCS_RemoveVehicle(side, vehicle, [vehicle_list]);
+  - MCS_SetParking(side, area);
+  - MCS_Barracks(side, [coord_list]);
+  - MCS_Depot(side, [coord_list]);
+  - MCS_Lab(side, [coord_list], [lab_kind]);
+  - MCS_Factory(side, [coord_list], [ext_list]);
+  - MCS_PowerPlants(side, [coord_list], [type_list]);
+  - MCS_WeaponTurret(side);
+  - MCS_ApeLimit(side, limit);
+  - MCS_ApeOptions(side, [options]); {allow_apesold, allow_apeeng, allow_apekamikaze, allow_apedriver}
+  - MCS_ControlTower(side, nation, coord_list);
+  - MCS_CreateDeposits(side, list);
+  - MCS_Mine(side);
+  - MCS_SibBomb(side, nat);
+  - MCS_Info(); // display_info
+
+  Build Function's:
+  - MCB_Depot(side, x, y, d);
+  - MCB_Lab(side, x, y, d, [lab_list]); 
+  - MCB_Factory(side, x, y, d, [ext_list]);
+  - MCB_GetFactoryExt(x, y, d);
+  - MCB_FactoryExt(x, y, d);
+  - MCB_Build(side, btype, x, y, d);
+  - MCB_Dismantle(side, unit);
+  - MCB_Cost(bdepot, btype);
+  - MCB_LabCost(bdepot, blab1, blab2);
+  - MCB_Complete(side, unit);
+  - MCB_FilterHLevel(side);
+  - MCB_Info(); // display_info
+
+  Terrain Function's:
+  - MCT_MarkPlace(x, y, color);
+  - MCT_RemovePlace(x, y);
+  - MCT_ScanArea(area);
+  - MCT_Enemy(side, x, y, dist);
+  - MCT_Retreat(un);
+  - MCT_FindNewPath(un);
+  - MCT_Hex(x, y);
+  - MCT_ScanDist(x, y, dist);
+  - MCT_Crates(area, amount, percent, interval, limit);
+  - MCT_UpdateCratesList();
+  - MCT_CreateDepositXYT(x, y, type); {type: 2 - oil, 3 - sib}
+  - MCT_Collect(unit, x, y);
+  - MCT_Info();
+
+  Lab Function's:
+  - MCL_Research(side, tech);
+  - MCL_LabReq(lab, tech);
+  - MCL_GetTechList(side);
+  - MCL_SetTechList(side, [tech_list]);
+  - MCL_ClearTechList(side);
+  - MCL_CheckTechProgress(side, tech);
+  - MCL_Require(tech);
+  - MCL_Start(side);
+  - MCL_HasNext(side);
+  - MCL_Kind(lab);
+  - MCL_Info();
+
+  Vehicle Function's:
+  - MCV_Produce(side, factory, [components_list]);
+  - MCV_Cost(factory, [components_list]);
+  - MCV_Rebuild(side, factory, vehicle, [components_list]);
+  - MCV_Parking(side, [x1, y1, x2, y2]);
+  - MCV_Return(side, vehicle);
+  - MCV_CheckFuel(side);
+  - MCV_Refuel(unit);
+  - MCV_RemoteControl(side, nation);
+  - MCV_RemoteDriver(drivers);
+  - MCV_CheckStatus(side);
+  - MCV_ToRepair(unit);
+  - MCV_Info();
+
+  Human Function's:
+  - MCH_ChangeClass(side, unit, class);
+  - MCH_TrainSoldier(side, number);
+  - MCH_TrainEngineer(side, number);
+  - MCH_TrainMechanic(side, number);
+  - MCH_TrainScientist(side, number);
+  - MCH_TrainSpec(side, number, special_class);
+  - MCH_ChangeClass(side, unit, class);
+  - MCH_Tame(side, unit);
+
+  Purge Function's:
+  - MCP_Heal(unit, target);
+  - MCP_Init();
+
+  Natural Function's:
+  - MCN_AddApes(area, n, agressivity);
+  - MCN_Tame(side, unit);
+  - MCN_TrainApe(side);
+
+}
+
+
+{ TAGI:
+0  - null
+1  - zolnierz w bunkrze/wiezy
+4  - naukowiec leczy
+5  - powaznie ranny
+6  - pojazdy do naprawy
+7  - pojazd wykluczony z naprawy
+8  - mechanik naprawiajacy pojazd
+9  - mechanik w wiezy kontrolnej
+16 - naukowiec oczekuje poza labem
+17 - oswajanie ma³p
+21 - pojazd potrzebuje paliwa
+31 - pojazd broniacy
+36 - mechanik w pojezdzie obronnym
+171- malpa badawcza
+172- malpa kamikadze (trening)
+
+
+EVENTY:
+- 101 - Dwa Fronty (atak z polnocy)
+- 102 - Dwa Fronty (atak z poludnia)
+- 104 - Dwa Fronty (Popov)
+
+}
+
+{
+  LOG SYSTEM [12-03-18]
+}
+
+{ STAN PRAC [03-02-17]:
+- Dzia³a skrypt badañ i przesy³ania personelu pomiêdzy labami [03-02-17]
+- Dzia³a skrypt na wyjscie z laba i oswajanie ma³p, nastêpnie powrót do laba [03-02-17]
+- Oswajanie ma³p i szkolenie  [03-02-17]
+[System zmiany badania psychologi/agresywnosci malpoludow]
+[Po oswojeniu pierwszej malpy za pomoca eventu ApemanTamed wysylamy go do laba]
+[Inicujujemy badanie psychologi/agresywnosci malpoludow]
+[Po zbadaniu wysylamy wszystkie oswajane malpy do magazynu na zmiane klasy (uzyj SetClass!)]
+[Malpy inzynierowie: do zbierania skrzyn]
+[Malpy zolnierze (AR, RU): do wiezyczek, koszar, atakow]
+[Malpy kamikadze (AR): do atakow]
+[Malpy sterowanie (AR): do pojazdow]
+- Respawn skrzyñ [05-02-17]
+- Zbieranie skrzyñ [05-02-17]
+[Inzynier]
+[Malpa-Eng]
+[Komora]
+- Tankowanie pojazdów  [10-02-17]
+[Pojazd potrzebuje paliwa -> TAG[21]]
+[Tankowanie je¿eli w pobli¿u magazynu, fabryki, szybu]
+- Sterowanie zdalne [12-02-17]
+[Buduj wie¿e kontrolne (USA, AR)]
+[Wyœlij najlepszych mechaników]
+[System ³¹czenia pojazdów]
+- Buduj wieze kontrolna
+[ Przypadek 1 -> US]
+- Buduj rozbudowe radarowa
+[ Przypadek 2 - AR]
+- Buduj wieze kontrolna = mechanik
+[Pod³¹cz kazdy niepod³¹czony pojazd z hp >= 250]
+[W przeciwnym razie od³¹cz]
+- Naprawa budynków [14-02-17]
+[Wybierz inzynierow, malpy-inz, dzwigi do naprawy]
+[System oceny uszkodzen i lista priorytetow]
+[System bezpiecznej naprawy]
+- Leczenie ludzi [15-02-17]
+- Szukanie z³ó¿ i budowanie kopalni ropy/syberytu [18-02-17]
+- Naprawa pojazdow [24-03-17]
+- Budowa bomby syberytowej [20-02-17]
+- Buldo¿er i wycinka lasu [30-03-17]
+- Obrona [2-04-17]
+[Wykrycie zagro¿enia]
+[Powo³anie personelu defensywnego i obsada fortyfikacji]
+[Po udanej obronie powrót do innych obowi¹zków] [05-04-17]
+[System mobilnego reagowania w przypadku posiadania pojazdów obrony] [05-04-17]
+- Atak [06-04-17]
+[Wybierz przeciwnika]
+[Przygotuj si³y do ataku]
+[Wyœlij atak na przeciwnika]
+
+
+TODO:
+[System stawiania min* (AR)  * - w przypadku braku zagro¿enia ustaw miny]
+
+}
+

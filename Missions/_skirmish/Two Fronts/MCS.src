@@ -1,0 +1,246 @@
+Export Function MCS_SourceDepot(bdepot);
+var pom, sor;
+begin
+pom := GetBase(bdepot);
+sor := [];
+
+sor := sor ^ GetResourceType(pom, mat_cans);
+sor := sor ^ GetResourceType(pom, mat_oil);
+sor := sor ^ GetResourceType(pom, mat_siberit);
+
+result := sor;
+End;
+
+Export Function MCS_AddFortification(side, type, coord_list, weapon_list);
+var i;
+begin
+
+     while (coord_list) do
+     begin
+     MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, type, [coord_list[1], coord_list[2], coord_list[3]]);
+
+     if weapon_list then
+        begin
+        MREG_TurretWeapon := MC_RegistryUpdate(MREG_TurretWeapon, side, weapon_list[1], [coord_list[1], coord_list[2]]);
+        weapon_list := Delete(weapon_list, 1);
+        end;
+
+     for i = 1 to 3 do
+         coord_list := Delete(coord_list, 1);
+     end;
+
+result := true;
+End;
+
+
+Export Function MCS_ChangeFortification(side, coord_list, weapon_list);
+var i;
+begin
+
+     if not weapon_list then exit;
+
+     while (coord_list) do
+     begin
+     MREG_TurretWeapon := MC_RegistryUpdate(MREG_TurretWeapon, side, weapon_list[1], [coord_list[1], coord_list[2]]);
+     weapon_list := Delete(weapon_list, 1);
+
+     for i = 1 to 2 do
+         coord_list := Delete(coord_list, 1);
+     end;
+End;
+
+Export Function MCS_DeleteFortification(side, coord_list);
+var i;
+begin
+
+     while (coord_list) do
+     begin
+     if HexInfo(coord_list[1], coord_list[2]) then
+        if GetBType(HexInfo(coord_list[1], coord_list[2])) in [b_breastwork, b_bunker, b_turret] then
+           MREG_ToDismantle := MC_RegistryUpdate(MREG_ToDismantle, side, HexInfo(coord_list[1], coord_list[2]), []);
+
+     for i = 1 to 3 do
+         coord_list := Delete(coord_list, 1);
+     end;
+
+result := true;
+End;
+
+Export Function MCS_Depot(side, coord_list);
+begin
+MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b_depot, coord_list);
+End;
+
+Export Function MCS_Lab(side, coord_list, lab_kind);
+begin
+MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b_lab, coord_list);
+MREG_ToUpLab := MC_RegistryUpdate(MREG_ToUpLab, side, lab_kind[1], lab_kind[2]);
+End;
+
+Export Function MCS_Factory(side, coord_list, ext_list);
+var i;
+begin
+if ext_list > 5 then
+   for i = 6 to ext_list do
+       ext_list := Delete(ext_list, ext_list);
+
+MCB_Factory(side, coord_list[1], coord_list[2], coord_list[3], ext_list);
+End;
+
+Export Function MCS_PowerPlants(side, coord_list, type_list);
+var i, p;
+begin
+p := 1;
+
+if type_list = [] then
+   type_list := b_oil_power;
+
+for i = 1 to (coord_list/3) do
+    begin
+    MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, type_list[Rand(1, type_list)], [coord_list[p], coord_list[p+1], coord_list[p+2]]);
+    p := p + 3;
+    end;
+End;
+
+Export Function MCS_Mine(side);
+var i, p, b;
+begin
+if not MREG_Deposit[side] then
+   exit;
+
+p := 1;
+
+for i = 1 to MREG_Deposit[side]/3 do
+    begin
+    if MREG_Deposit[side][p+2] = 2 then
+       b := b_oil_mine
+        else
+         b := b_siberite_mine;
+
+    MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b, [MREG_Deposit[side][p], MREG_Deposit[side][p+1], Rand(0,5)]);
+    p := p + 3;
+    end;
+End;
+
+Export Function MCS_Barracks(side, coord_list);
+begin
+MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b_armoury, coord_list);
+End;
+
+Export Function MCS_ControlTower(side, nation, coord_list);
+begin
+case nation of
+1, 'us': MREG_ToBuild := MC_RegistryUpdate(MREG_ToBuild, side, b_control_tower, coord_list);
+2, 'ar': MREG_ToBuild := MCS_AddVehicle(side, [ar_half_tracked, engine_solar, control_manual, ar_control_tower]);
+end;
+End;
+
+Export Function MCS_AddVehicle(side, list);
+var i;
+begin
+for i = 1 to list do
+    MREG_ToConstruct := Replace2(MREG_ToConstruct, side, MREG_ToConstruct[side]+1, list[i]);
+End;
+
+Export Function MCS_GetVehicleList(side);
+begin
+result := MREG_ToConstruct[side];
+End;
+
+Export Function MCS_SetParking(side, area);
+var i;
+begin
+MREG_Parking := Replace(MREG_Parking, side, area);
+End;
+
+Export Function MCS_ApeLimit(side, limit);
+begin
+MREG_Tame := Replace(MREG_Tame, side, limit);
+End;
+
+Export Function MCS_ApeOptions(side, options);
+begin
+MREG_ApeOptions := Replace(MREG_ApeOptions, side, options);
+End;
+
+Export Function MCS_Collector(side, mode, areas);
+begin
+MREG_Collect := Replace2(MREG_Collect, side, 1, mode);
+MREG_Collect := Replace2(MREG_Collect, side, 2, areas);
+End;
+
+Export Function MCS_SetResourcesBonus(crates, oil, sib);
+begin
+MREG_ResourcesBonus := Replace(MREG_ResourcesBonus, 1, crates);
+MREG_ResourcesBonus := Replace(MREG_ResourcesBonus, 2, oil);
+MREG_ResourcesBonus := Replace(MREG_ResourcesBonus, 3, sib);
+End;
+
+Export Function MCS_CreateDeposits(side, list);
+var i, p;
+begin
+if not side or not list then
+   exit;
+
+SetTech(20, side, state_researched);
+MREG_Deposit := Insert(MREG_Deposit, side, list);
+p := 1;
+
+for i = 1 to list/3 do
+    begin
+    MCT_CreateDepositXYT(list[p], list[p+1], list[p+2]);
+    SetResourceVisibility(list[p], list[p+1], side);
+    p := p + 3;
+    end;
+End;
+
+Export Function MCS_SibBomb(side, nat);
+var list;
+begin
+if nat = nation_arabian then
+   exit
+    else
+     if nat = nation_american then
+        list := [us_heavy_tracked, engine_siberite, control_manual, us_siberium_rocket]
+         else
+          list := [ru_heavy_tracked, engine_siberite, control_manual, ru_siberium_rocket];
+
+MCS_AddVehicle(side, list);
+End;
+
+Export Function MCS_SetDefence(side, area, dont_leave_area, points, squad);
+var i;
+begin
+MREG_DefPoints := Replace2(MREG_DefPoints, side, 1, points);
+MREG_DefArea := Replace2(MREG_DefArea, side, 1, area);
+MREG_DefDontLeave := Replace2(MREG_DefDontLeave, side, 1, dont_leave_area);
+MREG_DefSquad := Replace2(MREG_DefSquad, side, 1, squad);
+
+while squad do
+      begin
+      MCS_AddVehicle(side, [squad[1], squad[2], squad[3], squad[4]]);
+      for i = 1 to 4 do
+          squad := Delete(squad, 1);
+      end;
+End;
+
+Export Function MCS_PrepareAttack(side, squad);
+var i;
+begin
+for i = 1 to squad do
+    MREG_ToAttack := Replace2(MREG_ToAttack, side, MREG_ToAttack[side]+1, squad[i]);
+
+while squad do
+      begin
+      MCS_AddVehicle(side, [squad[1], squad[2], squad[3], squad[4]]);
+      for i = 1 to 4 do
+          squad := Delete(squad, 1);
+      end;
+End;
+
+Export Function MCS_SetSpecClass(side, sniper_class, mortar_class, bazooker_class);
+begin
+MREG_AllowClass := Replace2(MREG_AllowClass, side, 1, sniper_class);
+MREG_AllowClass := Replace2(MREG_AllowClass, side, 2, mortar_class);
+MREG_AllowClass := Replace2(MREG_AllowClass, side, 3, bazooker_class);
+End;

@@ -77,6 +77,8 @@ begin
         end else begin PlaceUnitArea(Gladstone, PlayerSpawn, false); end;
     end;
 
+    CenterNowOnXY(66, 4);
+
 end;
 
 Export function PrepareVehicles;
@@ -153,31 +155,52 @@ begin
 end; 
 
 Export function PrepareDenis;
+var xy, i;
 begin
-    uc_side = 1;
+    uc_side = 4;
     uc_nation = 1;
 
+    xy := [ [63,1], [70,1], [83,1], [16,1], [27,1], [38,1], [5,1], [54,1] ];
+
     Denis = PrepareUnit('Denis', true);
-    PlaceUnitArea(Denis, DenisSpawn, false);
+
+    for i = 1 to xy do
+        if HexInfo(xy[i][1], xy[i][2]) = 0 then
+           begin
+           PlaceUnitXY(Denis, xy[i][1], xy[i][2], false);
+
+           if IsPlaced(Denis) then
+              break;
+           end;
+
     SetClass(Denis, 4);
     SetLives(Denis, 750);
 end;
 
 
 Export function HarrisonSupport;
-var un, veh;
+var un, veh, area, dir;
 begin
+    area := HarrisonSupportArea;
+    dir := 2;
+
+    if FilterUnitsInArea(area, [f_type, unit_building]) then
+       begin
+       area := HarrisonSupportArea2;
+       dir := 1;
+       end;
+
     uc_side = 1;
     uc_nation = 1;
 
     vc_engine = 1;
     vc_control = 1;
-    vc_weapon = [4, 4, 2][Difficulty];
+    vc_weapon = [us_gatling_gun, us_gatling_gun, us_machine_gun][Difficulty];
     vc_chassis = 2;
 
     veh = CreateVehicle;
-    SetDir(veh, 2);
-    PlaceUnitArea(veh, HarrisonSupportArea, false);
+    SetDir(veh, dir);
+    PlaceUnitArea(veh, area, false);
     SetFuel(veh, 50);
 
     hc_class := 2;
@@ -194,12 +217,12 @@ begin
 
     vc_engine = 1;
     vc_control = 1;
-    vc_weapon = [4, 2, 2][Difficulty];
+    vc_weapon = us_light_gun;
     vc_chassis = 2;
 
     veh = CreateVehicle;
-    SetDir(veh, 2);
-    PlaceUnitArea(veh, HarrisonSupportArea, false);
+    SetDir(veh, dir);
+    PlaceUnitArea(veh, area, false);
     SetFuel(veh, 50);
 
     hc_class := 1;
@@ -339,27 +362,6 @@ begin
 
     if number = 1 then
     begin
-        hc_class := 1;
-        hc_sex := sex_male;
-        hc_gallery := 'AmGalRemake';
-        hc_face_number := 7;
-        hc_name := 'Bobby Jordan';
-        hc_attr := [9, 11];
-        hc_basic_skills := [1, 0, 0, 1];
-        hc_skills := [2, 1, 1, 1];
-
-        un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
-        wait(0$1);
-        CenterNowOnUnits(un);
-        DialogueOn;
-        Say(un, 'D11b-Sol3-1');
-        Say(JMM, 'D11b-JMM-1');
-        DialogueOff;
-    end;
-
-    if number = 2 then
-    begin
         hc_class := 3;
         hc_sex := sex_male;
         hc_gallery := 'SecondCharsGal';
@@ -370,7 +372,7 @@ begin
         hc_skills := [1, 2, 3, 1];
 
         un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
+        PlaceUnitArea(un, NewPeopleSpawn1, true);
         CenterNowOnUnits(un);
         wait(0$1);
         DialogueOn;
@@ -378,6 +380,49 @@ begin
         Say(JMM, 'D11d-JMM-1');
         DialogueOff;
     end;
+
+    if number = 2 then
+    begin
+        hc_class := 1;
+        hc_sex := sex_male;
+        hc_gallery := 'AmGalRemake';
+        hc_face_number := 7;
+        hc_name := 'Bobby Jordan';
+        hc_attr := [9, 11];
+        hc_basic_skills := [1, 0, 0, 1];
+        hc_skills := [2, 1, 1, 1];
+
+        un = CreateHuman;
+        PlaceUnitArea(un, NewPeopleSpawn2, true);
+        wait(0$1);
+        CenterNowOnUnits(un);
+        DialogueOn;
+        Say(un, 'D11b-Sol3-1');
+        Say(JMM, 'D11b-JMM-1');
+        DialogueOff;
+    end;
+
+    if number = 3 then
+       begin
+       hc_class := 1;
+       hc_sex := sex_male;
+       hc_gallery := 'DJ';
+       hc_face_number := 1;
+       hc_name := 'Darius Dajay';
+       hc_attr := [11, 11];
+       hc_basic_skills := [2, 0, 0, 0];
+       hc_skills := [4, 0, 1, 0];
+
+       un = CreateHuman;
+       PlaceUnitArea(un, NewPeopleSpawn3, true);
+       CenterNowOnUnits(un);
+       wait(0$1);
+
+       DialogueOn;
+       Say(un, 'D11f-Sol5-1');
+       DialogueOff;
+       end;
+
 
     if number = 4 then
     begin
@@ -391,7 +436,7 @@ begin
         hc_skills := [1, 3, 1, 1];
 
         un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
+        PlaceUnitArea(un, NewPeopleSpawn4, true);
         CenterNowOnUnits(un);
         wait(0$1);
         DialogueOn;
@@ -411,7 +456,7 @@ begin
         hc_skills := [1, 1, 1, 1];
 
         un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
+        PlaceUnitArea(un, NewPeopleSpawn5, true);
         CenterNowOnUnits(un);
         wait(0$1);
         DialogueOn;
@@ -432,7 +477,7 @@ begin
         hc_skills := [3, 0, 1, 1];
 
         un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
+        PlaceUnitArea(un, NewPeopleSpawn6, true);
         CenterNowOnUnits(un);
         wait(0$1);
         DialogueOn;
@@ -447,18 +492,46 @@ begin
         hc_sex := sex_female;
         hc_gallery := 'AmGalRemake';
         hc_face_number := 2;
-        hc_name := 'Johanna Holland';
+        hc_name := 'Rebecca Macdonald';
         hc_attr := [10, 10];
         hc_basic_skills := [1, 0, 0, 1];
         hc_skills := [1, 0, 0, 1];
 
         un = CreateHuman;
-        PlaceUnitArea(un, NewPeopleSpawn, true);
+        PlaceUnitArea(un, NewPeopleSpawn7, true);
         CenterNowOnUnits(un);
         wait(0$1);
-        DialogueOn;
-        Say(un, 'D11a-FSol2-1');
-        DialogueOff;
+
+        if FilterUnitsInArea(NewPeopleSpawn7Spot, [f_side, 3]) then
+           begin
+           DialogueOn;
+
+           PlaceSeeing(GetX(un), GetY(un), 1, -15);
+           RemoveSeeing(GetX(un), GetY(un), 1);
+
+           Say(un, 'D11a-FSol2-1');
+           ComCrawl(un);
+           DialogueOff;
+           end;
     end;
 
+    ignoreTarget := ignoreTarget union un;
+    arrivals := arrivals union un;
+
 end;
+
+Every 0$1 do
+var i;
+begin
+enable;
+
+if not ignoreTarget then
+   exit;
+
+for i in ignoreTarget do
+    if (FilterAllUnits([[f_side, 1], [f_dist, i, 10]]) diff ignoreTarget) > 1 then
+       begin
+       ignoreTarget := ignoreTarget diff i;
+       break;
+       end;
+End;

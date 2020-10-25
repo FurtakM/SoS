@@ -1,0 +1,492 @@
+
+// MCF_Get(side, filter);
+// Filtr
+Export Function MCF_Get(side, filter);
+begin
+result := FilterAllUnits([[f_side, side], filter]);
+End;
+
+// MCF_Lab(side);
+Export Function MCF_Lab(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_btype, b_lab_full]]);
+End;
+
+// MCF_Class(side, class, filter);
+// Wybiera jednostki o danej klasie   
+Export Function MCF_Class(side, class, filter);
+begin
+result := FilterAllUnits([[f_side, side], [f_class, class], filter]);
+End;
+
+// MCF_All(side, filter);
+// Wybiera wszystkie jednostki z z klasami 1-4
+Export Function MCF_All(side, filter);
+begin
+result := FilterAllUnits([[f_side, side], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], filter]);
+End;
+
+// MCF_Dist(side, point[x][y][d], filter)
+Export Function MCF_Dist(side, point, filter);
+begin
+result := FilterAllUnits([[f_side, side], [f_distxy, point[1], point[2], point[3]], filter]);
+End;
+
+// MCF_Vehicle(side, filter);
+Export Function MCF_Vehicle(side, filter);
+begin
+result := FilterAllUnits([[f_side, side], [f_type, unit_vehicle], filter]);
+End;
+
+// MCF_Cargo(side)
+Export Function MCF_Cargo(side);
+begin
+result := MCF_Vehicle(side, [f_or, [f_weapon, us_cargo_bay],
+                                   [f_weapon, ar_cargo_bay],
+                                   [f_weapon, ru_cargo_bay]]);
+End;
+
+// MCF_
+Export Function MCF_Ape(side);
+begin
+result := FilterAllUnits([[f_side, side], [f_or, [f_class, class_apeman],
+                    [f_class, class_apeman_soldier], [f_class, class_apeman_engineer],
+                    [f_class, class_apeman_kamikaze]]]);
+End;
+
+Export Function MCF_ApeSpec(side, type);
+var tmp, cl, i;
+begin
+result := [];
+tmp := MCF_Ape(side);
+
+case type of
+0, 'normal': cl := class_apeman;
+1, 'soldier': cl := class_apeman_soldier;
+2, 'engineer': cl := class_apeman_engineer;
+3, 'kamikaze': cl := class_apeman_kamikaze;
+end;
+
+for i = 1 to tmp do
+    if GetClass(tmp[i]) = cl then
+       result := result ^ tmp[i];
+End;
+
+// MCF_Tag(side, tag);
+// Wybiera jednostki o danym tag'u
+
+Export Function MCF_Tag(side, tag, filter);
+var tmp, r, i;
+begin
+tmp := FilterAllUnits([[f_side, side], filter]);
+r := [];
+
+if tmp then
+   for i = 1 to tmp do
+       if GetTag(tmp[i]) = tag then
+          r := r ^ tmp[i];
+
+result := r;
+End;
+
+// MCF_SetTag(side, [plist], tag);
+// Nadaje dany tag jednostkom z listy
+
+Export Function MCF_SetTag(side, plist, tag);
+var tmp, i;
+begin
+tmp := plist;
+
+if tmp then
+   begin
+   for i = 1 to tmp do
+       if GetTag(tmp[i]) <> tag then
+          SetTag(tmp[i], tag);
+
+   result := true;
+   end
+    else
+     result := false;
+End;
+
+// MCF_ClearTag(side, tag);
+// Kasuje dany tag
+
+Export Function MCF_ClearTag(side, tag);
+var tmp, i;
+begin
+tmp := MCF_Tag(side, tag, []);
+
+if tmp then
+   begin
+   for i = 1 to tmp do
+       SetTag(tmp[i], 0);
+
+   result := true;
+   end
+    else
+     result := false;
+End;
+
+// MCF_SortListAsc(list);
+// Sortuje listê rosn¹co
+
+Export Function MCF_SortListAsc(list);
+var i, j, sort_list, add;
+begin
+sort_list := [];
+
+for i = 1 to list do
+    begin
+    if i = 1 then
+       sort_list := sort_list ^ list[i]
+    else
+     begin
+     for j = 1 to sort_list do
+         begin
+         add := false;
+
+         if list[i] < sort_list[j] then
+            begin
+            sort_list := Insert(sort_list, j, list[i]);
+            add := true;
+            break;
+            end;
+         end;
+
+     if not add then
+        sort_list := sort_list ^ list[i];
+
+     end;
+    end;
+
+result := sort_list;
+End;
+
+// MCF_SortListDesc(list);
+// Sortuje listê malej¹co
+
+Export Function MCF_SortListDesc(list);
+var i, j, sort_list, add;
+begin
+sort_list := [];
+
+for i = 1 to list do
+    begin
+    if i = 1 then
+       sort_list := sort_list ^ list[i]
+    else
+     begin
+     for j = 1 to sort_list do
+         begin
+         add := false;
+
+         if list[i] > sort_list[j] then
+            begin
+            sort_list := Insert(sort_list, j, list[i]);
+            add := true;
+            break;
+            end;
+         end;
+
+     if not add then
+        sort_list := sort_list ^ list[i];
+
+     end;
+    end;
+
+result := sort_list;
+End;
+
+// MCF_SortLevelAsc(side, [plist]);
+// Sortuje ludzi wg. poziomu rosn¹co
+
+Export Function MCF_SortLevelAsc(side, plist, skill);
+var i, j, r, tmp, add;
+begin
+tmp := [];
+r := [];
+add := false;
+
+if plist then
+   begin
+   for i = 1 to plist do
+       begin
+       tmp := tmp ^ [[plist[i], GetSkill(plist[i], skill)]];
+       end;
+   end
+    else
+     result := false;
+
+if tmp then
+   begin
+   r := r ^ [tmp[1]];
+   
+   for i = 2 to tmp do
+       begin
+       for j = 1 to r do
+           begin
+           if tmp[i][2] < r[j][2] then
+              begin
+              r := Insert(r, j, tmp[i]);
+              add := true;
+              break;
+              end;
+           end;
+       if not add then
+          r := r ^ [tmp[i]];
+       end;   
+   end;
+
+result := r;
+End;
+
+// MCF_SortLevelDesc(side, [plist]);
+// Sortuje ludzi wg. poziomu malej¹co
+
+Export Function MCF_SortLevelDesc(side, plist, skill);
+var i, j, r, tmp, add;
+begin
+tmp := [];    
+r := [];
+add := false;
+
+if plist then
+   begin
+   for i = 1 to plist do
+       begin
+       tmp := tmp ^ [[plist[i], GetSkill(plist[i], skill)]];
+       end;
+   end
+    else
+     result := false;
+
+if tmp then
+   begin
+   r := r ^ [tmp[1]];
+
+   for i = 2 to tmp do
+       begin
+       for j = 1 to r do
+           begin
+           if tmp[i][2] > r[j][2] then
+              begin
+              r := Insert(r, j, tmp[i]);
+              add := true;
+              break;
+              end;
+           end;
+       if not add then
+          r := r ^ [tmp[i]];
+       end;
+   end;
+
+result := r;
+End;
+
+
+// MCF_Clear();
+// Niszczy wszytkie tagi
+Export Function MCF_Clear(side);
+var i;
+begin
+for i = 1 to 100 do
+    if MCF_Tag(side, i, []) then
+       MCF_ClearTag(side, i);
+
+result := true;
+End;
+
+Export Function MCF_NoClass(plist, n);
+var i, tmp;
+begin
+for i = 1 to plist do
+    if MCF_HasClass(plist[i]) = n then
+       tmp := tmp ^ plist[i];
+
+result := tmp;
+End;
+
+Export Function MCF_RemoveClass(side, mreg, n);
+var i, tmp;
+begin
+if mreg = 'ToArm' then
+   begin
+   tmp := MREG_ToArm[side];
+
+   if tmp = 0 then
+      exit
+       else
+        begin
+        for i = MREG_ToArm[side] downto n do
+            tmp := Delete(tmp, 1);
+
+        MREG_ToArm := Replace(MREG_ToArm, side, tmp);
+        end;
+   end;
+
+if mreg = 'ToDep' then
+   begin
+   tmp := MREG_ToDep[side];
+
+   if tmp = 0 then
+      exit
+       else
+        begin
+        for i = MREG_ToDep[side] downto n do
+            tmp := Delete(tmp, 1);
+
+        MREG_ToDep := Replace(MREG_ToDep, side, tmp);
+        end;
+   end;
+
+if mreg = 'ToFac' then
+   begin
+   tmp := MREG_ToFac[side];
+
+   if tmp = 0 then
+      exit
+       else
+        begin
+        for i = MREG_ToFac[side] downto n do
+            tmp := Delete(tmp, 1);
+
+        MREG_ToFac := Replace(MREG_ToFac, side, tmp);
+        end;
+   end;
+
+if mreg = 'ToLab' then
+   begin
+   tmp := MREG_ToLab[side];
+
+   if tmp = 0 then
+      exit
+       else
+        begin
+        for i = MREG_ToLab[side] downto n do
+            tmp := Delete(tmp, 1);
+
+        MREG_ToLab := Replace(MREG_ToLab, side, tmp);
+        end;
+   end;
+
+result := true;
+End;
+
+Export Function MCF_HasClass(unit);
+var tmp, side;
+begin
+side := GetSide(unit);
+tmp := 0;
+
+     if unit in MREG_ToArm[side] then
+        tmp := 1;
+     if unit in MREG_ToDep[side] then
+        tmp := 2;
+     if unit in MREG_ToFac[side] then
+        tmp := 3;
+     if unit in MREG_ToLab[side] then
+        tmp := 4;
+     if unit in MREG_ToBunker[side] then
+        tmp := 5;
+
+result := tmp;
+End;
+
+Export Function MCF_RemoveFromClass(side, mreg, unit);
+var i;
+begin
+if mreg = 'ToArm' then
+   for i = MREG_ToArm[side] downto 1 do
+       if MREG_ToArm[side][i] = unit then
+          begin
+          MREG_ToArm := Remove(MREG_ToArm, MREG_ToArm[side][i], true);
+          end;
+
+if mreg = 'ToDep' then
+   for i = MREG_ToDep[side] downto 1 do
+       if MREG_ToDep[side][i] = unit then
+          begin
+          MREG_ToDep := Remove(MREG_ToDep, MREG_ToDep[side][i], true);
+          end;
+
+if mreg = 'ToFac' then
+   for i = MREG_ToFac[side] downto 1 do
+       if MREG_ToFac[side][i] = unit then
+          begin
+          MREG_ToFac := Remove(MREG_ToFac, MREG_ToFac[side][i], true);
+          end;
+
+if mreg = 'ToLab' then
+   for i = MREG_ToLab[side] downto 1 do
+       if MREG_ToLab[side][i] = unit then
+          begin
+          MREG_ToLab := Remove(MREG_ToLab, MREG_ToLab[side][i], true);
+          end;
+End;
+
+Export Function MCF_UnfinishedBuilding(side);
+var i;
+begin
+result := false;
+
+     for i = 1 to MREG_ToBuild do
+         if MREG_ToBuild[i][1] = side then
+            begin
+            if MREG_ToBuild[i][1] then
+               begin
+               result := MREG_ToBuild[i][1];
+               break;
+               end;
+            end;
+
+     for i = 1 to MREG_ToRepair do
+         if MREG_ToRepair[i][1] = side then
+            begin
+            if MREG_ToRepair[i][1] then
+               begin
+               result := MREG_ToRepair[i][1];
+               break;
+               end;
+            end;
+
+     if MCF_Get(side, [f_constructed]) then
+        result := MCF_Get(side, [f_constructed])[1];
+End;
+
+// MCF_ScanTeren(side, dist)
+Export Function MCF_ScanTeren(side, dist);
+var i, scan, b, enemy;
+begin
+b := MCF_Get(side, [f_type, unit_building]);
+enemy := MCF_Get(side, [f_enemy, side]);
+
+if not enemy then
+   result := false
+    else
+     begin
+     scan := NearestUnit(b, enemy);
+
+     if scan[2] < dist then
+        result := true
+         else
+          result := false;
+     end;
+End;
+
+// MCF_Info();
+// INFO
+Export Function MCF_Info();
+begin
+MC_Show('MCF to zbiór funkcji s³u¿¹cych do operacji na listach i filtrach:'
+         ^ '- MCF_Class -> Wyœwietla dan¹ klasê [mo¿liwe do³¹czenie dodatkowych filtrów]'
+         ^ '- MCF_Tag -> Wyœwietla wszystkie jednostki z danymi tagiem [mo¿liwe do³¹czenie dodatkowych filtrów]'
+         ^ '- MCF_SetTag -> Umo¿liwia nadanie tagu danej grupie jednostek'
+         ^ '- MCF_ClearTag -> Kasuje dany tag'
+         ^ '- MCF_SortListAsc -> Sortujê listê rosn¹co'
+         ^ '- MCF_SortListDesc -> Sortujê listê malej¹co'
+         ^ '- MCF_SortLevelAsc -> Sortujê dan¹ grupê jednnostek wg. danej umiejetnoœci wg. poziomu rosn¹co'
+         ^ '- MCF_SortLevelDesc -> Sortujê dan¹ grupê jednostek wg. danej umiejetnoœci wg. poziomu malej¹co'
+         ^ '- MCF_Clear -> Kasuje wszystkie tagi'
+         );
+End;

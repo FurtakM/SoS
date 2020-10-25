@@ -1,0 +1,739 @@
+Export Function Action;
+var tmp, i, un;
+begin
+CenterNowOnXY(68, 39);
+tmp := FilterAllUnits([f_side, 7]);
+
+InGameOn;
+
+ComMoveXY(tmp, 71, 49);
+
+repeat
+ wait(0$1);
+until SeeXY(7, 71, 51);
+
+DialogueOn;
+
+Say(JMM, 'D1-JMM-1');
+
+if Joan then
+   Say(Joan, 'D1-Joan-1');
+
+if Lisa then
+   Say(Lisa, 'D1-Lisa-1');
+
+if Joan or Lisa then
+   Say(JMM, 'D1-JMM-2');
+
+DialogueOff;
+InGameOff;
+
+PlaceSeeing(71, 50, 7, -30);
+RemoveSeeing(71, 50, 7);
+
+ChangeMissionObjectives('M1');
+
+repeat
+ wait(0$1);
+until freedom;
+
+wait(rand(0$10, 0$20));
+
+PrepareGossudarov;
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 6], [f_not, [f_lives, 1000]]]) or See(7, Gossudarov);
+
+tmp := FilterAllUnits([f_side, 6]);
+
+for i in tmp do
+    SetSide(i, 7);
+
+DialogueOn;
+
+ComTurnUnit([JMM, Roth], Gossudarov);
+
+CenterNowOnUnits(Gossudarov);
+
+if not Roth then
+   begin
+   if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
+      Say(JMM, 'D2-JMM-1');
+   Say(JMM, 'D2-JMM-1b');
+   Say(Gossudarov, 'D2-Gos-1');
+   Say(JMM, 'D2-JMM-2');
+   Say(Gossudarov, 'D2-Gos-2');
+   end
+else
+   begin
+   if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
+      begin
+      Say(Roth, 'D2-Roth-2');
+      Say(JMM, 'D2-JMM-1a');
+      end;
+
+   Say(Roth, 'D2-Roth-2a');
+   Say(Roth, 'D2-Roth-2b');
+   Say(JMM, 'D2-JMM-3');
+
+   if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
+      begin
+      Say(Gossudarov, 'D2-Gos-3');
+      Say(JMM, 'D2-JMM-4');
+      Say(Gossudarov, 'D2-Gos-4');
+      end;
+   end;
+
+Say(JMM, 'D2-JMM-5');
+Say(Gossudarov, 'D2-Gos-5');
+Say(JMM, 'D2-JMM-6');
+
+DialogueOff;
+
+wait(0$2);
+
+if Kirilenkova then
+   Say(Kirilenkova, 'D3-Kir-1');
+
+gossudarov_arrive := true;
+
+Hint('CombinedForces');
+
+repeat
+ wait(0$1);
+until ru_lab_builded;
+
+if Kirilenkova then
+   Say(Kirilenkova, 'D3a-Kir-1')
+else
+ begin
+ un := SciRu;
+ Say(un, 'D3a-Sci1-1');
+ end;
+
+if Kirilenkova or un then
+   Say(JMM, 'D3a-JMM-1');
+End;
+
+// If player has less than 6 people
+Every 0$1 trigger gossudarov_arrive and FilterAllUnits([[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9]]]) < 7 do
+YouLost('TooMany');
+
+
+// First attempt
+Every 0$40 trigger GetSide(Gossudarov) = 7 do
+var i, tmp, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+PrepareVehicle(ru_medium_wheeled, engine_siberite, control_computer, ru_heavy_machine_gun, 100);
+un := CreateVehicle;
+PlaceUnitArea(un, south_west_spawn, false);
+
+ComMoveXY(un, 67, 45);
+AddComWait(un, 0$2);
+AddComMoveXY(un, 69, 18);
+AddComMoveXY(un, 60, 2);
+
+repeat
+ wait(0$1);
+until not IsOk(un) or IsInArea(un, north_spawn);
+
+if IsInArea(un, north_spawn) or IsAt(un, 60, 2) then
+   RemoveUnit(un);
+End;
+
+// Russian spot player base
+Every 0$2 do
+var i, un, tmp;
+begin
+repeat
+ wait(0$2);
+ tmp := FilterAllUnits([[f_side, 7], [f_see, 3]]);
+until tmp;
+
+un := NearestUnitToUnit(tmp, JMM);
+player_spotted := true;
+tmp := SciRu;
+
+if not tmp then
+   tmp := SolRu;
+
+DialogueOn;
+
+PlaceSeeing(GetX(un), GetY(un), 7, -8);
+CenterNowOnUnits(un);
+
+if tmp then
+   Say(tmp, 'D4-RSci1-1');
+
+if Gossudarov then
+   begin
+   Say(Gossudarov, 'D4-Gos-1');
+   Say(JMM, 'D4-JMM-1');
+   end;
+
+RemoveSeeing(GetX(un), GetY(un), 7);
+
+DialogueOff;
+
+ChangeMissionObjectives('M5');
+End;
+
+// Spawn Belkov
+Every 0$30+2$30 trigger player_spotted do
+var time, veh, vehSpawned;
+begin
+PrepareBelkov;
+
+ComMoveXY(Belkov, 118, 106);
+AddComHold(Belkov);
+
+repeat
+ wait(0$1);
+until IsAt(Belkov, 118, 106);
+
+ChangeSideFog(4, 7);
+
+if IsOk(Belkov) then
+   begin
+   InGameOn;
+   DialogueOn;
+
+   SayRadio(Belkov, 'D5-Bel-1');
+
+   if Gossudarov then
+      begin
+      Say(Gossudarov, 'D5-Gos-1');
+      Say(JMM, 'D5-JMM-1');
+      Say(Gossudarov, 'D5-Gos-2');
+      Say(JMM, 'D5-JMM-2');
+      end;
+
+   DialogueOff;
+   InGameOff;
+   end;
+
+case Query('QSaveBelkov') of
+1: begin
+   DialogueOn;
+   Say(JMM, 'D5a-JMM-1');
+   SayRadio(Belkov, 'D5a-Bel-1');
+   DialogueOff;
+
+   ComMoveXY(Belkov, 83, 49);
+   end;
+2: begin
+   Say(JMM, 'D5a-JMM-2');
+
+   ComHold(Belkov);
+   end;
+end;
+
+time := 0$00;
+vehSpawned := false;
+
+repeat
+ wait(0$1);
+
+ if time >= [0$10, 0$05, 0$02][Difficulty] and not vehSpawned then
+    begin
+    vehSpawned := true;
+
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun, 100);
+    veh := CreateVehicle;
+    PlaceUnitXY(veh, 130, 131, false);
+
+    ComAgressiveMove(veh, 100, 82);
+    end
+  else
+    time := time + 0$1;
+
+until (IsDead(Belkov) and GetSide(Belkov) = 4) or GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_side, 7]), Belkov), Belkov) < 10;
+
+if IsDead(Belkov) then
+   begin
+   CenterNowOnUnits(Belkov);
+   Say(JMM, 'D5a-JMM-2a');
+   exit;
+   end;
+
+if See(7, Belkov) then
+   SetSide(Belkov, 7);
+
+repeat
+ wait(0$1);
+until GetDistUnitXY(Belkov, 66, 45) < 30;
+
+Say(Belkov, 'D6-Bel-1');
+End;
+
+Every 0$1 trigger IsOk(Belkov) and UnitShoot(Belkov) in FilterAllUnits([f_or, [f_weapon, ru_rocket], [f_weapon, ru_rocket_launcher]]) do
+Say(Belkov, 'D7-Bel-1');
+
+
+// Ar base spotted without Burlak
+Every 0$2 trigger FilterAllUnits([[f_side, 7], [f_see, 2]]) and not ar_base_spotted and not IsPlaced(Burlak) do
+var tmp;
+begin
+ar_base_spotted := true;
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_building]]); 
+tmp := NearestUnitToUnit(tmp, JMM);
+
+RevealFogArea(7, area_base_arabian);
+
+DialogueOn;
+
+CenterNowOnXY(GetX(tmp), GetY(tmp));
+
+tmp := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_sex, sex_male]]) diff [JMM, Bobby, Cyrus, Frank, Roth, Cornel, Denis, Gladstone];
+
+if not tmp then
+   tmp := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_sex, sex_female]]) diff [Joan, Lisa, Kikuchi, Simms];
+
+if tmp then
+   case GetSex(tmp[1]) of
+   sex_male: Say(tmp[1], 'D9-Sol1-1');
+   sex_female: Say(tmp[1], 'D9-FSol1-1');
+   end;
+
+if Frank then
+   begin
+   PlaceSeeing(GetX(mastodont), GetY(mastodont), 7, 8);
+   CenterNowOnUnits(mastodont);
+
+   Say(Frank, 'D9-Frank-1');
+   Say(JMM, 'D9-JMM-1');
+   Say(Frank, 'D9-Frank-2');
+
+   RemoveSeeing(GetX(mastodont), GetY(mastodont), 7);
+   end;
+
+DialogueOff;
+End;
+
+// Spawn Burlak
+Every 0$20 trigger first_attack or tick >= 20$00 do
+var i, selected_option;
+begin
+selected_option := 1; // see Query QBaseAgain
+
+wait(5$00);
+
+repeat
+ wait(0$1);
+until not ru_attackers;
+
+PrepareBurlak;
+
+repeat
+ wait(0$2);
+until not HasTask(Burlak);
+
+InGameOn;
+DialogueOn;
+
+CenterNowOnUnits(Masha);
+
+SayRadio(Burlak, 'D10-Bur-1');
+
+if Belkov and GetSide(Belkov) = 7 then
+   Say(Belkov, 'D10-Bel-1');
+
+if Gossudarov then
+   Say(Gossudarov, 'D10-Gos-1');
+
+if Kirilenkova then
+   Say(Kirilenkova, 'D10-Kir-1');
+
+Say(SolRu, 'D10-RSol1-1');
+
+SayRadio(Burlak, 'D10-Bur-2');
+Say(JMM, 'D10-JMM-2');
+
+if Kirilenkova then
+   Say(Kirilenkova, 'D10-Kir-2')
+else
+   Say(SolRu, 'D10-RSol1-2');
+
+Say(JMM, 'D10-JMM-3');
+SayRadio(Burlak, 'D10-Bur-3');
+Say(JMM, 'D10-JMM-4');
+
+DialogueOff;
+InGameOff;
+
+ChangeMissionObjectives('M2');
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 7], [f_dist, Burlak, 8]]);
+
+for i in FilterAllUnits([f_side, 4]) do
+    SetSide(i, 7);
+
+ChangeMissionObjectives('M3');
+
+repeat
+ wait(0$1);
+until GetDistUnits(JMM, Burlak) < 8;
+
+ComTurnUnit(JMM, Burlak);
+ComTurnUnit(Burlak, JMM);
+
+wait(0$0.3);
+
+DialogueOn;
+
+Say(JMM, 'D11-JMM-1');
+Say(Burlak, 'D11-Bur-1');
+Say(JMM, 'D11-JMM-2');
+Say(Burlak, 'D11-Bur-2');
+Say(JMM, 'D11-JMM-3');
+Say(Burlak, 'D11-Bur-3');
+Say(JMM, 'D11-JMM-4');
+
+if ar_base_spotted then
+   Say(Burlak, 'D12-Bur-1')
+else
+   begin
+   RevealFogArea(7, area_base_arabian);
+   CenterNowOnXY(127, 45);
+
+   Say(Burlak, 'D12-Bur-1a');
+
+   dwait(0$2);
+   end;
+
+Say(Burlak, 'D12-Bur-1b');
+Say(JMM , 'D12-JMM-1');
+Say(Burlak, 'D12-Bur-2');
+
+if Roth then
+   Say(Roth, 'D12-Roth-2')
+else
+   Say(SciRu, 'D12-RSci1-2');
+
+Say(JMM , 'D12-JMM-2');
+Say(Burlak, 'D12-Bur-3');
+Say(JMM , 'D12-JMM-3');
+Say(Burlak, 'D12-Bur-4');
+
+case Query('QBase') of
+1: begin // zostaw w spokoju
+   Say(JMM , 'D13a-JMM-1');
+   Say(Burlak, 'D13a-Bur-1');
+
+   if Roth then
+      Say(Roth, 'D13a-Roth-1')
+   else
+      Say(SciRu, 'D13a-RSci1-1');
+
+   Say(JMM, 'D13a-JMM-2');
+
+   case Query('QBaseAgain') of
+        1: selected_option := 2;
+        2: selected_option := 3;
+   end;
+
+   end;
+2: selected_option := 2;
+3: selected_option := 3;
+end;
+
+if selected_option = 2 then // try contact
+   begin
+   Say(JMM, 'D13b-JMM-1');
+   Say(Burlak, 'D13b-Bur-1');
+   Say(JMM, 'D13b-JMM-2');
+   SayRadio(Abdul, 'D13b-Abd-2');
+   Say(JMM, 'D13b-JMM-3');
+   SayRadio(Abdul, 'D13b-Abd-3');
+   Say(JMM, 'D13b-JMM-4');
+
+   ar_active_attack := true;
+   end;
+
+if selected_option = 3 then // just attack them
+   begin
+   Say(JMM, 'D13c-JMM-1');
+   Say(Burlak, 'D13c-Bur-1');
+   end;
+
+DialogueOff;
+
+if not ar_active_attack then
+   begin
+   wait(6$00);
+   ar_active_attack := true;
+   end;
+
+End;
+
+// Spawn Gnyevko
+Every 0$1 trigger IsPlaced(Burlak) and GetSide(Burlak) = 7 do
+var time;
+begin
+wait(4$40);
+
+repeat
+ wait(0$1);
+until not ru_attackers;
+
+PrepareGnyevko;
+
+ComMoveXY(Gnyevko, 124, 118);
+AddComHold(Gnyevko);
+
+time := 0$00;
+
+repeat
+ wait(0$1);
+ time := time + 0$1;
+until IsAt(Gnyevko, 124, 118) or time >= 0$30;
+
+SayRadio(Gnyevko, 'DBelkov-Gny-1');
+Say(Burlak, 'DBelkov-Bur-1a');
+
+repeat
+ wait(0$1);
+until GetDistUnits(Gnyevko, NearestUnitToUnit(FilterAllUnits([f_side, 7]), Gnyevko)) < 8;
+
+SetSide(Gnyevko, 7);
+End;
+
+// Spawn american attack
+Every 12$00+1$30 trigger GetSide(Burlak) = 7 do
+begin
+enable;  
+PrepareAmericanAttack;
+End;
+
+// See american attack
+Every 0$2 trigger FilterAllUnits([f_side, 1]) do
+var i, tmp;
+begin
+while true do
+   begin
+   wait(0$1);
+
+   tmp := NearestUnitToUnit(FilterAllUnits([f_side, 1]), JMM);
+
+   if See(7, tmp) then
+      break;
+   end;
+
+DialogueOn;
+
+CenterNowOnUnits(tmp);
+
+PlaceSeeing(GetX(tmp), GetY(tmp), 7, 8);
+
+if Denis then
+   Say(Denis, 'DAmerAttack-Pet-1');
+
+Say(JMM, 'DAmerAttack-JMM-1');
+Say(Burlak, 'DStop-Bur-1');
+
+RemoveSeeing(GetX(tmp), GetY(tmp), 7);
+
+DialogueOff;
+End;
+
+// Russian base destroyed
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+ChangeMissionObjectives('M5a');
+
+Say(JMM, 'D8-JMM-1');
+
+if Gossudarov then
+   Say(Gossudarov, 'D8-Gos-1');
+End;
+
+
+// Arabian base destroyed
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 do
+begin
+ChangeMissionObjectives('M4c');
+
+if Roth then
+   Say(Roth, 'DStop-Roth-1')
+else if Gossudarov then
+   Say(Gossudarov, 'D8-Gos-1a');
+End;
+
+// All techs invented
+Every 0$01 trigger GetTechNation(7, 1, state_enabled) = 0 and
+                   GetTechNation(7, 3, state_enabled) = 0 do
+begin
+ChangeMissionObjectives('M1a');
+End;
+
+// END
+// Conditions:
+// - No us forces
+// - No ar forces
+// - No ru forces
+// - All techs invented
+Every 0$01 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 and
+                   FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and
+                   FilterAllUnits([f_side, 1]) = 0 and
+                   GetTechNation(7, 1, state_enabled) = 0 and
+                   GetTechNation(7, 3, state_enabled) = 0 do
+var i, tmp, tmp2;
+begin
+
+wait(0$3);
+
+if not IsDead(Masha) then
+   AddMedal('Masha', 1)
+else
+   AddMedal('Masha', -1);
+
+if abdul_escaped then
+   AddMedal('Abdul', -1)
+else
+   AddMedal('Abdul', 1);
+
+if loss_counter = 0 then
+   AddMedal('People', 2)
+else if loss_counter <= [3, 2, 2][Difficulty] then
+   AddMedal('People', 1)
+else
+   AddMedal('People', -1);
+
+GiveMedals('MAIN');
+
+tmp := FilterAllUnits([[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9]]]);
+
+RewardPeople(tmp);
+
+tmp2 := [JMM, Roth, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
+        Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
+        Simms, Joan, DeltaDoctor,
+        Gossudarov, Kirilenkova, Titov, Dolgov,
+        Petrosyan, Scholtze, Oblukov, Kapitsova,
+        Lipshchin, Petrovova, Kovalyuk, Kuzmov, Karamazov,
+        Burlak, Belkov, Gnyevko];
+
+if tmp diff tmp2 then
+   SaveCharacters(tmp diff tmp2, '13a_others');
+
+// JMM, Roth, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown
+// Gladstone, Houten, Cornel, Gary, Frank, Kikuchi
+// Simms, Joan, DeltaDoctor
+// Gossudarov, Kirilenkova, Titov, Dolgov
+// Petrosyan, Scholtze, Oblukov, Kapitsova
+// Lipshchin, Petrovova, Kovalyuk, Kuzmov, Karamazov
+// Burlak, Belkov, Gnyevko
+
+SaveCharacters(JMM, '13a_JMM');
+
+if Titov then
+   SaveCharacters(Titov, '13a_Titov');
+if Dolgov then
+   SaveCharacters(Dolgov, '13a_Dolgov');
+if Petrosyan then
+   SaveCharacters(Petrosyan, '13a_Petrosyan');
+if Scholtze then
+   SaveCharacters(Scholtze, '13a_Scholtze');
+if Oblukov then
+   SaveCharacters(Oblukov, '13a_Oblukov');
+if Kapitsova then
+   SaveCharacters(Kapitsova, '13a_Kapitsova');
+if Lipshchin then
+   SaveCharacters(Lipshchin, '13a_Lipshchin');
+if Petrovova then
+   SaveCharacters(Petrovova, '13a_Petrovova');
+if Kovalyuk then
+   SaveCharacters(Kovalyuk, '13a_Kovalyuk');
+if Kuzmov then
+   SaveCharacters(Kuzmov, '13a_Kuzmov');
+if Karamazov then
+   SaveCharacters(Karamazov, '13a_Karamazov');
+if Burlak then
+   SaveCharacters(Burlak, '13a_Burlak');
+if Belkov then
+   SaveCharacters(Belkov, '13a_Belkov');
+if Gnyevko then
+   SaveCharacters(Gnyevko, '13a_Gnyevko');
+if Lisa then
+   SaveCharacters(Lisa, '13a_Lisa');
+if Donaldson then
+   SaveCharacters(Donaldson, '13a_Donaldson');
+if Bobby then
+   SaveCharacters(Bobby, '13a_Bobby');
+if Cyrus then
+   SaveCharacters(Cyrus, '13a_Cyrus');
+if Denis then
+   SaveCharacters(Denis, '13a_Denis');
+if Brown then
+   SaveCharacters(Brown, '13a_Brown');
+if Gladstone then
+   SaveCharacters(Gladstone, '13a_Gladstone');
+if Houten then
+   SaveCharacters(Houten, '13a_Houten');
+if Cornel then
+   SaveCharacters(Cornel, '13a_Cornel');
+if Gary then
+   SaveCharacters(Gary, '13a_Gary');
+if Frank then
+   SaveCharacters(Frank, '13a_Frank');
+if Kikuchi then
+   SaveCharacters(Kikuchi, '13a_Kikuchi');
+if Simms then
+   SaveCharacters(Simms, '13a_Simms');
+if Joan then
+   SaveCharacters(Joan, '13a_Joan');
+if DeltaDoctor then
+   SaveCharacters(DeltaDoctor, '13a_DeltaDoctor');
+if Gossudarov then
+   SaveCharacters(Gossudarov, '13a_Gossudarov');
+if Kirilenkova then
+   SaveCharacters(Kirilenkova, '13a_Kirilenkova');
+
+// Save Variables
+if Masha then
+   SaveVariable([GetChassis(Masha), GetEngine(Masha), GetControl(Masha), GetWeapon(Masha)], '13a_Masha');
+
+tmp := FilterAllUnits([f_type, unit_building]);
+tmp2 := [];
+
+if tmp then
+   for i in tmp do
+       tmp2 := tmp2 ^ [[GetSide(i), GetNation(i), GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetLabKind(i, 1), GetLabKind(i, 2), GetBWeapon(i)]];
+
+if tmp2 then
+   SaveVariable(tmp2, '13a_buildings');
+
+YouWin;
+End;
+
+
+Export Function SciRu;
+var tmp, t;
+begin
+t := [Gossudarov, Burlak, Titov, Belkov, Gnyevko, Petrosyan, Scholtze, Dolgov];
+
+tmp := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_sex, sex_male]]) diff t;
+
+if tmp then
+   result := tmp[1];
+End;
+
+Export Function SolRu;
+var tmp, t;
+begin
+t := [Gossudarov, Burlak, Titov, Belkov, Gnyevko, Petrosyan, Scholtze, Dolgov];
+
+tmp := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 1], [f_sex, sex_male]]) diff t;
+
+if tmp then
+   result := tmp[1];
+End;

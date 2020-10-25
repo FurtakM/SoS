@@ -1,0 +1,183 @@
+Export JMM, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
+       Gladstone, Houten, Powell, Cornel, Gary, Frank, Kikuchi;
+
+{
+  W tym miejscu powinno wczytywaæ wszystkie postacie jakiekolwiek
+  wystapi³y do tej pory w kampanii. W kolejnych misjach u¿ywaæ
+  save'ów z tej misji!
+  - 11_others - postacie drugoplanowe nie wybrane do tej misji.
+  - 11c_others - postacie drugoplanowe wybrane do tej misji.
+  - 11_IdentPostaci - postacie pierwszoplanowe
+}
+
+Export Function PrepareAmerican;
+var i, k, un, tmp, vehs, veh, others;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+Powell := PrepareUnit('Powell', false, '');
+
+uc_side := 1;
+
+JMM := PrepareUnit('JMM', (not debug), mission_prefix_prev);
+
+if GetClass(JMM) > 4 then
+   SetClass(JMM, 1);
+
+Lisa := PrepareUnit('Lisa', (not debug), mission_prefix_prev);
+
+if not Lisa then
+   Lisa := CreateCharacter('10_Lisa');
+
+if not Lisa then
+   Lisa := CreateCharacter('09_Lisa');
+
+Cornel := PrepareUnit('Cornel', (not debug), mission_prefix_prev);
+
+Donaldson := PrepareUnit('Donaldson', (not debug), mission_prefix_prev);
+
+if not Donaldson then
+   Donaldson := CreateCharacter('10_Donaldson');
+
+if not Donaldson then
+   Donaldson := CreateCharacter('09_Donaldson');
+
+Bobby := PrepareUnit('Bobby', (not debug), mission_prefix_prev);
+
+if not Bobby then
+   Bobby := CreateCharacter('10_Bobby');
+
+if not Bobby then
+   Bobby := CreateCharacter('09_Bobby');
+
+Cyrus := PrepareUnit('Cyrus', (not debug), mission_prefix_prev);
+
+if not Cyrus then
+   Cyrus := CreateCharacter('10_Cyrus');
+
+if not Cyrus then
+   Cyrus := CreateCharacter('09_Cyrus');
+
+Denis := PrepareUnit('Denis', (not debug), mission_prefix_prev);
+Brown := PrepareUnit('Brown', (not debug), mission_prefix_prev);
+
+if not Brown then
+   Brown := CreateCharacter('10_Brown');
+
+if not Brown then
+   Brown := CreateCharacter('08_Brown');
+
+Gladstone := PrepareUnit('Gladstone', (not debug), mission_prefix_prev);
+
+if not Gladstone then
+   Gladstone := CreateCharacter('10_Gladstone');
+
+if not Gladstone then
+   Gladstone := CreateCharacter('08_Gladstone');
+
+Houten := PrepareUnit('Houten', (not debug), mission_prefix_prev);
+
+if not Houten then
+   Houten := CreateCharacter('10_Houten');
+
+if not Houten then
+   Houten := CreateCharacter('09_Houten');
+
+Cornel := PrepareUnit('Cornell', (not debug), mission_prefix_prev);
+Gary := PrepareUnit('Gary', (not debug), mission_prefix_prev);
+
+if not Gary then
+   Gary := CreateCharacter('10_Gary');
+
+Frank := PrepareUnit('Frank', (not debug), mission_prefix_prev);
+
+if not Frank then
+   Frank := CreateCharacter('08_Frank');
+
+Kikuchi := PrepareUnit('Kikuchi', (not debug), mission_prefix_prev);
+
+if not Kikuchi then
+   Kikuchi := CreateCharacter('08_Kikuchi');
+
+// basic squad
+tmp := [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
+tmp := tmp diff 0;
+
+// from 10th mission
+tmp := tmp union CreateCharacterSet('10_lock');
+tmp := tmp union CreateCharacterSet('10c_lock');
+
+DeleteCharacters('10_lock');
+DeleteCharacters('10c_lock');
+
+for i in tmp do
+    if GetClass(i) in [class_mortar, class_engineer] then
+       SetClass(i, class_soldier);
+
+if tmp < 12 then
+   begin
+   k := 16-tmp;
+
+   for i = 1 to k do
+       begin
+       PrepareHuman(false, [1, 1, 3, 4][rand(1,4)], 6);
+       tmp := tmp ^ CreateHuman;
+       end;
+   end;
+
+ 
+selected := CharacterSelection('1', 12, 12,
+                                [sel_change_class, JMM,
+                                 sel_not_hired,sel_changeable, sel_change_class]^tmp^
+                                [sel_dont_change_class, sel_not_changeable, Powell],
+                                [[class_soldier, 4], [class_mechanic, 0, 5], [class_scientistic, 0, 3], [class_sniper, 0, 2]]);
+
+// save others xd
+others := tmp diff selected;
+others := others diff [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
+
+if others then
+   SaveCharacters(others, '11_others');
+
+vehs := [ [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+          [us_medium_wheeled, engine_solar, control_manual, us_double_gun],
+          [us_heavy_tracked, engine_combustion, control_manual, us_double_gun],
+          [us_medium_wheeled, engine_combustion, control_manual, us_rocket_launcher],
+          [us_medium_tracked, engine_solar, control_manual, us_rocket_launcher]
+        ];
+
+
+for i in JMM^selected do
+    begin
+
+    if GetClass(i) = 3 then
+       begin
+       vc_chassis := vehs[1][1];
+       vc_engine := vehs[1][2];
+       vc_control := vehs[1][3];
+       vc_weapon := vehs[1][4];
+
+       vehs := Delete(vehs, 1);
+
+       veh := CreateVehicle;
+       PlaceUnitArea(veh, am_veh_start, false);
+       PlaceHumanInUnit(i, veh);
+
+       if i = JMM then
+          SetMark(veh, 1);
+       end
+      else
+       PlaceUnitArea(i, am_hum_start, false);
+
+    end;
+
+// radar
+vc_chassis := us_medium_tracked;
+vc_engine := engine_solar;
+vc_control := control_computer;
+vc_weapon := us_radar;
+
+veh := CreateVehicle;
+PlaceUnitXY(veh, 87, 142, false);
+End;

@@ -187,3 +187,35 @@ for i = 1 to 6 do
     Wait(0$02);
     end;
 End;
+
+
+Every 0$1 trigger prepare_siege and ru_vehicles do
+var i, enemy, tmp;
+begin
+
+wait(0$50);
+
+tmp := ru_vehicles;
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     enemy := NearestUnitToUnit([f_side, 1], i);
+
+     if GetDistUnits(i, enemy) > 10 then
+        ComAgressiveMove(i, 69, 101)
+       else
+        ComAttackUnit(i, enemy);
+
+     if GetLives(i) < 250 then
+        tmp := tmp diff i;
+     end;
+
+until not tmp;
+
+End;

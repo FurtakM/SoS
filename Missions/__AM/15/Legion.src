@@ -1,0 +1,277 @@
+Export Kurt, Kozlov, Friend;
+Export powellBomb;
+Export Function PrepareLegion;
+var i, side, un, tmp;
+begin
+side := 8;
+
+uc_side := side;
+uc_nation := 2;
+
+for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
+    SetBLevel(i, 10);
+
+if KurtStatus then
+   Kurt := PrepareUnit('Kurt', false, '')
+else
+   Kurt := PrepareUnit('AltKurt', (not debug), '');
+
+if not Kurt then
+   begin
+   InitHc;
+   PrepareSoldier(sex_male, 10);
+   Kurt := CreateHuman;
+   end;
+
+PlaceHumanInUnit(Kurt, ar_depot1);
+
+Kozlov := PrepareUnit('Kozlov', false, '');
+PlaceHumanInUnit(Kozlov, FilterAllUnits([[f_side, 8], [f_nation, 3], [f_btype, b_lab_full]])[1]);
+SetSkill(Kozlov, class_mechanic, 10);
+
+tmp := FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_empty]]);
+
+for i = 1 to 10 do
+    begin
+    uc_nation := nation_nature;
+    hc_class := class_apeman_soldier;
+    hc_gallery := '';
+    hc_name := '';
+
+    un := CreateHuman;
+    PlaceHumanInUnit(un, tmp[tmp-i]);
+    end;
+
+tmp := CreateCharacterSet('12_kurt_squad');
+
+if tmp then
+   for i in tmp do
+       PlaceUnitArea(i, legionBaseArea, false);
+
+// PrepareBase(base_dep, area, name, skill, sources, personel);
+PrepareBase(ar_depot1, legionBaseArea, '', [8, 9, 10][Difficulty], [3000, 500, 150], [16, 6, 6, 8]);
+
+mc_bases := Replace(mc_bases, 3, FilterAllUnits([[f_side, side], [f_nation, 2], [f_not, [f_type, unit_vehicle]]]) diff Kurt);
+
+// friend
+PrepareMechanic(sex_male, 7);
+Friend := CreateHuman;
+
+// bomb for Powell
+PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_selfpropelled_bomb, 100);
+powellBomb := CreateVehicle;
+PlaceUnitXY(powellBomb, 90, 51, false);
+End;
+
+Export Function RebuildKozlovFactory;
+var fac, lab;
+begin
+if IsLive(kozlov_fac) then
+   exit;
+
+ComExitBuilding(Kozlov);
+
+if GetClass(Kozlov) <> 2 then
+   begin
+   AddComEnterUnit(Kozlov, ar_depot1);
+   AddComChangeProfession(Kozlov, class_engineer);
+   AddComExitBuilding(Kozlov);
+   end;
+
+AddComBuild(Kozlov, b_workshop, 93, 32, 3);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 8], [f_btype, b_factory], [f_nation, 3], [f_constructed]]);
+
+fac := FilterAllUnits([[f_side, 8], [f_btype, b_factory], [f_nation, 3], [f_constructed]])[1];
+
+if not FilterAllUnits([[f_side, 8], [f_nation, 3], [f_btype, b_ext_siberium]]) then
+   begin
+   AddComBuild(Kozlov, b_ext_siberium, 97, 36, 5);
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 8], [f_nation, 3], [f_btype, b_ext_siberium], [f_constructed]]);
+   end;
+
+if not FilterAllUnits([[f_side, 8], [f_nation, 3], [f_btype, b_ext_rocket]]) then
+   begin
+   AddComBuild(Kozlov, b_ext_rocket, 89, 32, 1);
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 8], [f_nation, 3], [f_btype, b_ext_rocket], [f_constructed]]);
+   end;
+
+lab := kozlov_lab;
+
+if not lab then
+   exit; // wtf?
+
+AddComEnterUnit(Kozlov, lab[1]);
+AddComChangeProfession(Kozlov, 4);
+
+ComResearch(lab[1], tech_sibFiss);
+
+repeat
+ wait(0$1);
+until GetTech(tech_sibFiss, 8) = state_researched;
+
+ComExitBuilding(Kozlov);
+AddComEnterUnit(Kozlov, fac);
+AddComChangeProfession(Kozlov, 3);
+
+ComConstruct(fac, ru_heavy_wheeled, engine_siberite, control_manual, ru_siberium_rocket);
+End;
+
+// add defenders
+Every 0$10 trigger not legionDestroyed and missionStage >= 6 do
+begin
+MC_SetDefenderLimit(3, 3);
+MC_InsertProduceList(3, [
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher]
+]);
+End;
+
+
+// Legion attacks
+Every 7$30 trigger not legionDestroyed and missionStage >= 6 and not MC_GetVehicles(3, true) do
+var i, tmp, target;
+begin
+enable;
+
+if not FilterAllUnits([[f_side, 8], [f_nation, 2], [f_btype, b_factory]]) then
+   exit;
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(3, [
+      [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(3, [
+      [ar_half_tracked, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][Difficulty]],
+      [ar_half_tracked, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][Difficulty]],
+      [ar_half_tracked, engine_combustion, control_remote, [ar_flame_thrower, ar_flame_thrower, ar_selfpropelled_bomb][Difficulty]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_flame_thrower, ar_selfpropelled_bomb, ar_selfpropelled_bomb][Difficulty]],
+      [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
+      [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end;
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(3, true) >= 6;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(3, true);       
+mc_vehicles := Replace(mc_vehicles, 3, mc_vehicles[3] diff tmp);
+
+target := rand(0, 2);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 89, 71) > 9 then
+           ComMoveXY(i, 89, 71);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 89, 71, 9]) >= (tmp-1);
+   end
+else
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 125, 129) > 9 then
+           ComMoveXY(i, 125, 129);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 125, 129, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+
+// extra legion attack
+Every 20$00 trigger not legionDestroyed and missionStage >= 6 and Difficulty > 1 do
+var i, un, tmp;
+begin
+enable;
+
+tmp := [];
+
+for i = 1 to [4, 6, 7][Difficulty] do
+    begin
+    uc_side := 8;
+    uc_nation := 2;
+
+    PrepareVehicle([ar_medium_trike, ar_half_tracked][rand(1,2)], engine_combustion, control_apeman, [ar_gun, ar_rocket_launcher, ar_flame_thrower, ar_gatling_gun][rand(1,4)], 88);
+    un := CreateVehicle;
+    tmp := tmp ^ un;
+
+    SetDir(un, 3);
+    PlaceUnitArea(un, northSpawn, false);
+
+    ComMoveXY(un, 16, 11);
+    wait(0$2);
+    end;
+
+for i = 1 to Difficulty do
+    begin
+    uc_side := 8;
+    uc_nation := 2;
+
+    PrepareHuman(false, class_mortar, [8, 8, 9][Difficulty]);
+    un := CreateHuman;
+    tmp := tmp ^ un;
+
+    SetDir(un, 3);
+    PlaceUnitArea(un, northSpawn, false);
+
+    ComMoveXY(un, 16, 11);
+    wait(0$2);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 250 then
+        begin
+        if not FilterAllUnits([[f_enemy, 8], [f_dist, i, 10]]) then
+           ComAgressiveMove(i, 67, 110)
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i));
+        end
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;

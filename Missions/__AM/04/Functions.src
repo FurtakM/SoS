@@ -58,18 +58,16 @@ End;
 // Function is used to call the dialogue spoken by random male or female characters
 // Example: DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 'DAtt1-Sol1-1', 'DAtt1-FSol1-1');
 Export function DialogRandom(characters, dialogMID, dialogFID);
-var i, rnd;
+var i, speaker;
 begin
-    rnd = rand(1, characters);  
+speaker := characters[rand(1, characters)];
 
-    for i = 1 to characters do
-    begin
+if GetSex(speaker) = sex_male then
+   Say(speaker, dialogMID)
+else
+   Say(speaker, dialogFID);
 
-       if i = rnd AND GetSex(characters[i]) = 1 then Say(characters[i], dialogMID);
-       if i = rnd AND GetSex(characters[i]) = 2 then Say(characters[i], dialogFID);
-
-    end;
-  
+result := speaker;
 end;
 //rubbrwr1 rubbrwr0
 Export function PrepareDifficulty;
@@ -250,7 +248,7 @@ begin
 
   if not buildings_list and not FilterAllUnits([[f_side, side], [f_class, 2], [f_lives, 250]]) then exit;
 
-  if buildings_list > 0 and engineerOkInside then ComExitBuilding(engineerOkInside);
+  if buildings_list > 0 and engineerOkInside then ComExitBuilding(UnitFilter(engineerOkInside, [f_class, 2]));
 
   if buildings_list > 0  and engineerOkOutside > 0 then ComRepairBuilding(engineerOkOutside, buildings_list[1]);
 
@@ -295,13 +293,13 @@ END;
 Export function AttackVehicles(side, meetArea, wayX, wayY);
 var i, j, vehiclesOK, target1, target2, seeEnemy;
 begin
-    vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 650]]);
+    vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer], [f_weapon, ru_crane]], [f_lives, 650]]);
 
     if FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 1000]]) >= [3, 4, 5][Difficulty] then
         repeat
             wait(0$1);
 
-            vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_lives, 650]]);
+            vehiclesOK = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer], [f_weapon, ru_crane]], [f_lives, 650]]);
 
             if not FilterAllUnits([[f_side, side], [f_inarea, meetArea]]) and seeEnemy = 0 then for i := 1 to wayX do AddComAgressiveMove(vehiclesOK, wayX[i], wayY[i]);
 
@@ -327,7 +325,7 @@ end;
 Export function RepairVehicles(side, area, repX, repY);
 var i, j, damageVehicles;
 begin
-    damageVehicles = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_not, [f_lives, 650]]]);
+    damageVehicles = FilterAllUnits([[f_side, side], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay], [f_weapon, ru_bulldozer], [f_weapon, ru_crane]], [f_not, [f_lives, 650]]]);
 
     if damageVehicles > 0 then ComMoveXY(damageVehicles, repX, repY);
 
@@ -513,6 +511,20 @@ begin
                         end;
                end; until soldiersOK_list = [];
         end;
+
+        if not soldiersOK_list and medic_list then
+           begin
+           repeat
+            medic_list = FilterAllUnits([[f_side, side], [f_class, 4], [f_ok]]);
+            wait(0$1);
+
+            for i in medic_list do
+                if not HasTask(i) and not IsInArea(i, RussianAttack) then
+                   ComMoveToArea(i, RussianAttack)
+                else if IsInArea(i, RussianAttack) then
+                     RemoveUnit(i);
+           until not medic_list;
+           end;
 
 END;
 

@@ -10,19 +10,24 @@ if exist_mode then
 result := unit;
 End;
 
-Export function DialogRandom(characters, dialogMID, dialogFID);
-var i, rnd;
+Export function Video(mode);
 begin
-    rnd = rand(1, characters);  
+ingame_video = mode;
+interface_hidden = mode;
+End;
 
-    for i = 1 to characters do
-    begin
+Export function DialogRandom(characters, dialogMID, dialogFID);
+var i, speaker;
+begin
+characters := characters diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Khatam];
+speaker := characters[rand(1, characters)];
 
-       if i = rnd AND GetSex(characters[i]) = 1 then Say(characters[i], dialogMID);
-       if i = rnd AND GetSex(characters[i]) = 2 then Say(characters[i], dialogFID);
+if GetSex(speaker) = sex_male then
+   Say(speaker, dialogMID)
+else
+   Say(speaker, dialogFID);
 
-    end;
-  
+result := speaker;
 end;
 
 Export Function PrepareSolBun(skill, b);
@@ -116,7 +121,7 @@ begin
         [b_turret, 88, 79, 3],
         [b_turret, 76, 87, 1],
         [b_oil_power, 96, 97, 5],
-        [b_oil_power, 85, 84, 2], 
+        [b_oil_power, 85, 84, 2],
         [b_lab, 88, 95, 0],
         [b_ext_noncombat, 103, 89, 4],
         [b_ext_track, 97, 86, 2],
@@ -132,17 +137,17 @@ Export function EnchancedSaveCharacters(charactersList, ident);
 var i;
 begin
     for i in charactersList do
-    begin
-         if IsOk(i) then SaveCharacters(i, ident);
-    end;
+        SaveCharacters(i, ident);
 end;
 
 Export function ResAllTechs(side, lab, nation);
-var i, tech, cout;
+var i, tech, cout, ru_tech_list;
 begin
 
-  For i = 1 to 72 do
-    If GetTech(i, side) = state_enabled and TechNationAvailable(i, nation) = true then AddComResearch(lab, i);
+  ru_tech_list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+
+  For i = 1 to ru_tech_list do
+    If GetTech(ru_tech_list[i], side) = state_enabled and TechNationAvailable(ru_tech_list[i], nation) = true then AddComResearch(lab, ru_tech_list[i]);
 
 end;
 
@@ -178,22 +183,6 @@ Export function BaseDefendersSpawn(side, areaSpawn, nation, skill, infantryCount
 var i,j, un, target, veh;
 begin
 
-        for i = 1 to infantryCount do
-        begin
-
-                uc_side = side;
-                uc_nation = nation;
-
-                hc_class = 1;
-                hc_name = '';
-                hc_gallery = '';
-                PrepareHuman(false, 1, rand(RuSolMinLevel, RuSolMaxLevel));
-
-                un = CreateHuman;
-                PlaceUnitArea(un, areaSpawn, false);
-                defenders_list = defenders_list ^ un;
-        end;
-
         for i = 1 to vehCount do
         begin
                 uc_side = side;
@@ -221,17 +210,45 @@ begin
 end;
 
 Export function DefenseBase(targetSide, defenseArea);
-var i, target;
+var i, target, tmp, veh, mech;
 begin
-        If FilterUnitsInArea(defenseArea, [[f_side, targetSide]]) = 0 and defenders_list > 0 then
+        If FilterUnitsInArea(defenseArea, [[f_side, targetSide]]) = 0 and defenders_list then
         begin
-                  ComMoveXY(defenders_list, 65, 68);
-                  SetFuel(defenders_list, 100);
+             for i in defenders_list do
+                 begin
+                 if GetDistUnitXY(i, 63, 75) > 8 and not HasTask(i) then
+                    ComMoveXY(i, 63, 75)
+                 else if GetClass(i) = 3 and not IsInUnit(i) and not HasTask(i) then
+                     ComEnterUnit(i, NearestUnitToUnit(UnitFilter(defenders_list, [[f_empty], [f_lives, 1000]]), i))
+                 else if GetFuel(i) < 100 then
+                    SetFuel(defenders_list, 100)
+                 else if GetControl(i) = control_manual and GetLives(i) < 990 then
+                      begin
+                      veh := i;
+                      mech := IsDrivenBy(i);
+
+                      if veh then
+                         begin
+                         ComMoveXY(i, 63, 75);
+                         AddComExitVehicle(veh);
+                         AddComRepairVehicle(mech, veh);
+                         end;
+                      end;
+                 end;
         end;
 
-        If FilterUnitsInArea(defenseArea, [[f_side, targetSide]]) > 0 and defenders_list > 0 then
-             ComAgressiveMove(defenders_list, GetX(FilterUnitsInArea(defenseArea, [[f_side, targetSide]])[1]), GetY(FilterUnitsInArea(defenseArea, [[f_side, targetSide]])[1]) );
+        tmp := FilterUnitsInArea(defenseArea, [[f_side, targetSide]]);
 
+        if tmp and defenders_list then
+           for i in defenders_list do
+               begin
+               if GetClass(i) = 3 and not IsInUnit(i) then
+                  ComEnterUnit(i, NearestUnitToUnit(UnitFilter(defenders_list, [f_empty]), i))
+               else if not HasTask(i) and IsInArea(i, defenseArea) then
+                  ComAttackUnit(i, NearestUnitToUnit(tmp, i))
+               else if not IsInArea(i, defenseArea) then
+                  ComMoveXY(i, 63, 75);
+               end;
 end;
 
 Export function BuildingVehicle(side, fabric, vehCount, weaponTab, engine, control, chassis);
@@ -330,7 +347,7 @@ begin
 
   if not buildings_list and not FilterAllUnits([[f_side, side], [f_class, 2], [f_lives, 250]]) then exit;
 
-  if buildings_list > 0 and engineerOkInside then ComExitBuilding(engineerOkInside);
+  if buildings_list > 0 and engineerOkInside then ComExitBuilding(UnitFilter(engineerOkInside, [f_class, 2]));
 
   if buildings_list > 0  and engineerOkOutside > 0 then ComRepairBuilding(engineerOkOutside, buildings_list[1]);
 
@@ -482,7 +499,7 @@ begin
 
 
         // strategy , 1 - flank and attack oil drilling mine,  2 - front attack, 3 - left flank
-  
+
         if strategy = 1 then
         begin
                 repeat
@@ -508,7 +525,7 @@ begin
                                         for i in damageUnit_list  do
                                         begin
                                                 ComMoveToArea(i, healArea);
-                                                for j in medic_list do 
+                                                for j in medic_list do
                                                 AddComHeal(j, i);
                                         end;
                                  end;
@@ -557,7 +574,7 @@ begin
                                         for i in damageUnit_list  do
                                         begin
                                                 ComMoveToArea(i, healArea);
-                                                for j in medic_list do 
+                                                for j in medic_list do
                                                 AddComHeal(j, i);
                                         end;
                                  end;
@@ -607,7 +624,7 @@ begin
                                         for i in damageUnit_list  do
                                         begin
                                                 ComMoveToArea(i, healArea);
-                                                for j in medic_list do 
+                                                for j in medic_list do
                                                 AddComHeal(j, i);
                                         end;
                                  end;
@@ -896,4 +913,281 @@ list := [];
      End;
 
 result := list;
+End;
+
+
+{
+  Check if specify building can be build
+  Returns:
+  0: Can't be build
+  1: Can be build
+}
+Export Function CanBeBuilded(bdepot, btype, x, y, d, check_cost);
+var i, j, pom, cost, hexes, height, dist, hex;
+begin
+result := false;
+
+if not bdepot or not GetBType(bdepot) in [b_depot, b_warehouse] or not btype or not d in [0, 1, 2, 3, 4, 5] or not ValidHex(x, y) then
+   exit;
+
+pom := GetBase(bdepot);
+cost := CostOfBuilding(btype, GetNation(bdepot));
+
+if check_cost then
+   if not (GetResourceType(pom, mat_cans) >= cost[1] and
+           GetResourceType(pom, mat_oil) >= cost[2] and
+           GetResourceType(pom, mat_siberit) >= cost[3]) then
+           exit;
+
+//    MAX_DISTANCE 28 (26 in vanilla)
+//    MAX_DISTANCE_BONUS 8
+
+if GetBType(bdepot) = b_depot then
+   dist := 28
+  else
+   dist := 36;
+
+if GetDistUnitXY(bdepot, x, y) > dist then
+   exit;
+
+hexes := GetBuildingHexes(btype, x, y, d, GetNation(bdepot), 0);
+
+if not hexes then
+   exit;
+
+hex := GetHexInfo(x, y);
+
+if hex[1] then
+   exit;
+
+height := hex[2];
+
+for i = 1 to hexes do
+    begin
+
+    if not ValidHex(hexes[i][1], hexes[i][2]) then
+       continue;
+
+    j := GetHexInfo(hexes[i][1], hexes[i][2]);
+
+    if j[1] or j[2] > height+2 or j[2] < height-2 or
+       not j[3] in [0, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 21] or
+       not j[5] or not j[6] in [1, 2, 7, 9, 10, 11] or
+       HexInfo(hexes[i][1], hexes[i][2]) > 0 or
+       IsEnvironment(hexes[i][1], hexes[i][2]) then
+       exit;
+
+    end;
+
+if btype in [b_oil_mine, b_siberite_mine] and not GetResourceVisibility(x, y, GetSide(bdepot)) then
+   exit;
+
+result := true;
+End;
+
+{
+   Function by 0dd1
+   Source: https://forum.original-war.net/viewtopic.php?f=42&t=5749
+}
+Export Function GetBuildingHexes(btype, x, y, dir, nation, mode);
+var i, temp_list, temp_list2;
+var DepotAm0, DepotAm1, DepotAm2, DepotAm3, DepotAm4, DepotAm5, DepotAr0, DepotAr1, DepotAr2, DepotAr3, DepotAr4, DepotAr5, DepotRu0, DepotRu1, DepotRu2, DepotRu3, DepotRu4, DepotRu5;
+var Factory0, Factory1, Factory2, Factory3, Factory4, Factory5, Ext0, Ext1, Ext2, Ext3, Ext4, Ext5;
+var Lab0, Lab1, Lab2, Lab3, Lab4, Lab5, ControlTower0, ControlTower1, ControlTower2, ControlTower3, ControlTower4, ControlTower5;
+var Barracks0, Barracks1, Barracks2, Barracks3, Barracks4, Barracks5, Bunker0, Bunker1, Bunker2, Bunker3, Bunker4, Bunker5;
+begin
+     result = [];
+     temp_list = [];
+
+     if not dir in [0,1,2,3,4,5] or (btype in [b_depot,b_warehouse] and not nation in [nation_american,nation_arabian,nation_russian]) then
+        exit;
+
+     if btype in [b_lab,b_lab_half,b_lab_full,b_lab_biological,b_lab_computer,b_lab_opto,b_lab_siberium,b_lab_spacetime,b_lab_weapon] then
+        btype = b_lab;
+
+     if not mode in [0,1,2] or (not btype in [b_depot,b_warehouse,b_workshop,b_factory,b_lab,b_control_tower,b_armoury,b_barracks,b_breastwork, b_bunker, b_turret] and mode = 1) or (not btype in [b_workshop,b_factory] and mode = 2) then
+        mode = 0;
+
+
+     case mode of
+          0: begin
+                  //Building Hexes
+                  DepotAm0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[1,2],[0,2],[-1,1],[1,3],[0,3],[-1,2]];
+                  DepotAm1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[-1,1],[-2,0],[-2,-1],[-2,1],[-3,0],[-3,-1]];
+                  DepotAm2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[2,1],[2,2],[1,2],[-2,-1],[-2,-2],[-2,-3],[-3,-2],[-3,-3]];
+                  DepotAm3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[1,2],[0,2],[-1,1],[-1,-3],[0,-3],[1,-2]];
+                  DepotAm4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[-1,1],[-2,0],[-2,-1],[2,-1],[3,0],[3,1]];
+                  DepotAm5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[2,1],[2,2],[1,2],[-2,-1],[-2,-2],[3,2],[3,3],[2,3]];
+
+                  DepotAr0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  DepotAr5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  DepotRu0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[1,-2],[2,-1]];
+                  DepotRu1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[1,-2],[2,-1],[3,1],[3,2]];
+                  DepotRu2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[3,1],[3,2],[2,3],[1,3]];
+                  DepotRu3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[2,3],[1,3],[-1,2],[-2,1]];
+                  DepotRu4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-1,2],[-2,1],[-3,-1],[-3,-2]];
+                  DepotRu5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[-3,-1],[-3,-2]];
+
+                  Factory0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+                  Factory2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+                  Factory4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,1],[1,3],[-1,2],[-3,-2]];
+                  Factory5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-1,-3],[1,-2],[3,2],[2,3],[-2,1],[-3,-1]];
+
+                  Ext0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[-2,-1]];
+                  Ext1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,2]];
+                  Ext2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+                  Ext3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[-2,-1]];
+                  Ext4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,2]];
+                  Ext5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+
+                  Lab0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,0],[3,1],[3,2],[3,3],[2,3],[-2,1],[-3,0],[-3,-1],[-3,-2],[-3,-3]];
+                  Lab1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[0,-3],[1,-2],[3,2],[3,3],[2,3],[1,3],[0,3],[-1,2],[-3,-2],[-3,-3]];
+                  Lab2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[0,-3],[1,-2],[2,-1],[3,0],[3,1],[1,3],[0,3],[-1,2],[-2,1],[-3,0],[-3,-1]];
+                  Lab3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[-1,1],[-2,0],[-2,-1],[-2,-2],[-2,-3],[2,-1],[3,0],[3,1],[3,2],[3,3],[2,3],[-2,1],[-3,0],[-3,-1],[-3,-2],[-3,-3]];
+                  Lab4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,-1],[-2,-2],[-2,-3],[-1,-3],[0,-3],[1,-2],[3,2],[3,3],[2,3],[1,3],[0,3],[-1,2],[-3,-2],[-3,-3]];
+                  Lab5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-1,-3],[0,-3],[1,-2],[2,-1],[3,0],[3,1],[1,3],[0,3],[-1,2],[-2,1],[-3,0],[-3,-1]];
+
+                  ControlTower0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[-2,-1],[-2,-2]];
+                  ControlTower1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1]];
+                  ControlTower2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,-1],[2,0],[2,1],[2,2],[1,2]];
+                  ControlTower3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[2,1],[2,2],[1,2],[0,2],[-1,1]];
+                  ControlTower4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[1,2],[0,2],[-1,1],[-2,0],[-2,-1]];
+                  ControlTower5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  Barracks0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+                  Barracks5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1],[-1,-2],[0,-2],[1,-1],[2,0],[2,1],[2,2],[1,2],[0,2],[-1,1],[-2,0],[-2,-1],[-2,-2]];
+
+                  Bunker0 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker1 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker2 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker3 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker4 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+                  Bunker5 = [[0,0],[0,-1],[1,0],[1,1],[0,1],[-1,0],[-1,-1]];
+             end;
+
+          1: begin
+                  //Exits
+                  DepotAm0 = [[-1,-3],[0,-3],[1,-2]];
+                  DepotAm1 = [[2,-1],[3,0],[3,1]];
+                  DepotAm2 = [[3,2],[3,3],[2,3]];
+                  DepotAm3 = [[1,3],[0,3],[-1,2]];
+                  DepotAm4 = [[-2,1],[-3,0],[-3,-1]];
+                  DepotAm5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  DepotAr0 = [[-1,-3],[0,-3],[1,-2]];
+                  DepotAr1 = [[2,-1],[3,0],[3,1]];
+                  DepotAr2 = [[3,2],[3,3],[2,3]];
+                  DepotAr3 = [[1,3],[0,3],[-1,2]];
+                  DepotAr4 = [[-2,1],[-3,0],[-3,-1]];
+                  DepotAr5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  DepotRu0 = [[0,-3],[-1,-4],[1,-3]];
+                  DepotRu1 = [[3,0],[3,-1],[4,1]];
+                  DepotRu2 = [[3,3],[4,3],[3,4]];
+                  DepotRu3 = [[0,3],[1,4],[-1,3]];
+                  DepotRu4 = [[-3,0],[-3,1],[-4,-1]];
+                  DepotRu5 = [[-3,-3],[-3,-4],[-4,-3]];
+
+                  Factory0 = [[-1,-3],[0,-3],[1,-2],[-1,-4],[0,-4],[1,-3],[-1,-5],[0,-5],[1,-4],[-1,-6],[0,-6],[1,-5]];
+                  Factory1 = [[2,-1],[3,0],[3,1],[3,-1],[4,0],[4,1],[4,-1],[5,0],[5,1],[5,-1],[6,0],[6,1]];
+                  Factory2 = [[3,2],[3,3],[2,3],[4,3],[4,4],[3,4],[5,4],[5,5],[4,5],[6,5],[6,6],[5,6]];
+                  Factory3 = [[1,3],[0,3],[-1,2],[1,4],[0,4],[-1,3],[1,5],[0,5],[-1,4],[1,6],[0,6],[-1,5]];
+                  Factory4 = [[-2,1],[-3,0],[-3,-1],[-3,1],[-4,0],[-4,-1],[-4,1],[-5,0],[-5,-1],[-5,1],[-6,0],[-6,-1]];
+                  Factory5 = [[-2,-3],[-3,-2],[-3,-3],[-3,-4],[-4,-3],[-4,-4],[-4,-5],[-5,-4],[-5,-5],[-5,-6],[-6,-5],[-6,-6]];
+
+                  Lab0 = [[0,-2],[-1,-3],[1,-2]];
+                  Lab1 = [[2,0],[2,-1],[3,1]];
+                  Lab2 = [[2,2],[3,2],[2,3]];
+                  Lab3 = [[0,2],[1,3],[-1,2]];
+                  Lab4 = [[-2,0],[-2,1],[-3,-1]];
+                  Lab5 = [[-2,-2],[-2,-3],[-3,-2]];
+
+                  ControlTower0 = [[-2,-3],[-1,-3]];
+                  ControlTower1 = [[1,-2],[2,-1]];
+                  ControlTower2 = [[3,1],[3,2]];
+                  ControlTower3 = [[2,3],[1,3]];
+                  ControlTower4 = [[-1,2],[-2,1]];
+                  ControlTower5 = [[-3,-1],[-3,-2]];
+
+                  Barracks0 = [[-1,-3],[0,-3],[1,-2]];
+                  Barracks1 = [[2,-1],[3,0],[3,1]];
+                  Barracks2 = [[3,2],[3,3],[2,3]];
+                  Barracks3 = [[1,3],[0,3],[-1,2]];
+                  Barracks4 = [[-2,1],[-3,0],[-3,-1]];
+                  Barracks5 = [[-2,-3],[-3,-2],[-3,-3]];
+
+                  Bunker0 = [[-1,-2],[0,-2],[1,-1]];
+                  Bunker1 = [[1,-1],[2,0],[2,1]];
+                  Bunker2 = [[2,1],[2,2],[1,2]];
+                  Bunker3 = [[1,2],[0,2],[-1,1]];
+                  Bunker4 = [[-1,1],[-2,0],[-2,-1]];
+                  Bunker5 = [[-1,-2],[-2,-1],[-2,-2]];
+             end;
+
+          2: begin
+                  //Extensions
+                  Factory0 = [[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2],[3,3],[3,2],[4,3],[4,4],[3,4],[2,3],[2,2],[4,2],[2,4],[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3],[-3,0],[-3,-1],[-2,0],[-2,1],[-3,1],[-4,0],[-4,-1],[-4,-2],[-2,2],[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3]];
+                  Factory1 = [[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5],[0,3],[0,2],[1,3],[1,4],[0,4],[-1,3],[-1,2],[2,4],[-2,2],[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2],[-3,-3],[-3,-4],[-2,-3],[-2,-2],[-3,-2],[-4,-3],[-4,-4],[-2,-4],[-4,-2],[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5]];
+                  Factory2 = [[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3],[-3,0],[-3,-1],[-2,0],[-2,1],[-3,1],[-4,0],[-4,-1],[-4,-2],[-2,2],[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3],[0,-3],[0,-4],[1,-3],[1,-2],[0,-2],[-1,-3],[-1,-4],[2,-2],[-2,-4],[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2]];
+                  Factory3 = [[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2],[-3,-3],[-3,-4],[-2,-3],[-2,-2],[-3,-2],[-4,-3],[-4,-4],[-2,-4],[-4,-2],[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5],[3,0],[3,-1],[4,0],[4,1],[3,1],[2,0],[2,-1],[2,-2],[4,2],[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5]];
+                  Factory4 = [[-4,-4],[-4,-5],[-3,-4],[-3,-3],[-4,-3],[-5,-4],[-5,-5],[-3,-5],[-5,-3],[0,-3],[0,-4],[1,-3],[1,-2],[0,-2],[-1,-3],[-1,-4],[2,-2],[-2,-4],[4,0],[4,-1],[5,0],[5,1],[4,1],[3,0],[3,-1],[3,-2],[5,2],[3,3],[3,2],[4,3],[4,4],[3,4],[2,3],[2,2],[4,2],[2,4],[0,4],[0,3],[1,4],[1,5],[0,5],[-1,4],[-1,3],[2,5],[-2,3]];
+                  Factory5 = [[0,-4],[0,-5],[1,-4],[1,-3],[0,-3],[-1,-4],[-1,-5],[2,-3],[-2,-5],[3,0],[3,-1],[4,0],[4,1],[3,1],[2,0],[2,-1],[2,-2],[4,2],[4,4],[4,3],[5,4],[5,5],[4,5],[3,4],[3,3],[5,3],[3,5],[0,3],[0,2],[1,3],[1,4],[0,4],[-1,3],[-1,2],[2,4],[-2,2],[-4,0],[-4,-1],[-3,0],[-3,1],[-4,1],[-5,0],[-5,-1],[-5,-2],[-3,2]];
+             end;
+     end;
+
+
+     case btype of
+          b_depot, b_warehouse: case nation of
+                                     nation_american: temp_list = [DepotAm0, DepotAm1, DepotAm2, DepotAm3, DepotAm4, DepotAm5][dir+1];
+                                     nation_arabian: temp_list = [DepotAr0, DepotAr1, DepotAr2, DepotAr3, DepotAr4, DepotAr5][dir+1];
+                                     nation_russian: temp_list = [DepotRu0, DepotRu1, DepotRu2, DepotRu3, DepotRu4, DepotRu5][dir+1];
+                                end;
+
+          b_workshop,b_factory: temp_list = [Factory0, Factory1, Factory2, Factory3, Factory4, Factory5][dir+1];
+
+          b_ext_track,b_ext_gun,b_ext_rocket,b_ext_noncombat,
+          b_ext_radar,b_ext_siberium,b_ext_stitch,b_ext_computer,b_ext_laser: temp_list = [Ext0, Ext1, Ext2, Ext3, Ext4, Ext5][dir+1];
+
+          b_lab, b_lab_half, b_lab_full,
+          b_lab_biological, b_lab_computer, b_lab_opto,
+          b_lab_siberium, b_lab_spacetime, b_lab_weapon: temp_list = [Lab0, Lab1, Lab2, Lab3, Lab4, Lab5][dir+1];
+
+          b_control_tower: temp_list = [ControlTower0, ControlTower1, ControlTower2, ControlTower3, ControlTower4, ControlTower5][dir+1];
+
+          b_armoury,b_barracks,
+          b_teleport, b_behemoth: temp_list = [Barracks0, Barracks1, Barracks2, Barracks3, Barracks4, Barracks5][dir+1];
+
+          b_breastwork, b_bunker, b_turret,
+          b_solar_power,b_oil_power,b_siberite_power,
+          b_oil_mine, b_siberite_mine: temp_list = [Bunker0, Bunker1, Bunker2, Bunker3, Bunker4, Bunker5][dir+1];
+     end;
+
+
+     temp_list2 = [];
+     for i in temp_list do
+         temp_list2 = temp_list2 ^ [[i[1] + x, i[2] + y]];
+
+     result = temp_list2;
+End;
+
+Export Function GetDriverVehicle(unit);
+begin
+if not unit then
+   exit;
+
+result := IsInUnit(unit);
+
+if GetType(result) <> unit_vehicle then
+   result := 0;
 End;

@@ -1,0 +1,895 @@
+// Game settings, functions etc.
+
+// Main Game Settings {Handle by SGUI}
+Export Function InitSettings;
+begin
+debug := 0; // always set to 0 for normal game
+GameType := 1;
+Difficulty := GetMultiplayerSetting(0)+1;
+
+if not Difficulty or debug then
+   Difficulty := 2;
+
+sibBombAllowed := GetMultiPlayerSetting(1);
+reinforceAllowed := GetMultiPlayerSetting(2);
+cratesSpawn := GetMultiPlayerSetting(3)+1;
+
+if not cratesSpawn then
+   cratesSpawn := 2;
+
+commander := GetMultiPlayerSetting(4)+1;
+
+if not commander then
+   commander := 1;
+
+if not debug then
+   exit;
+
+display_strings := [
+'Difficulty: ' & Difficulty,
+'sibBomb: ' & sibBombAllowed,
+'reinforceAllowed: ' & reinforceAllowed,
+'cratesSpawn: ' & cratesSpawn,
+'commander: ' & commander];
+End;
+
+Export Function CustomEvent(event);
+begin
+
+End;
+
+Every 0$1 trigger game and GameType = 1 and not disableGlobalTimer do
+begin
+enable;
+display_strings := ['#SkrTime', tick];
+End;
+
+// Crates
+Every 1 trigger cratesSpawns and game and GameType = 1 do
+Crates(cratesSpawns[1][1], cratesSpawns[1][2], cratesSpawns[1][3], cratesSpawns[1][4]);
+
+Every 1 trigger cratesSpawns and game and GameType = 1 do
+Crates(cratesSpawns[2][1], cratesSpawns[2][2], cratesSpawns[2][3], cratesSpawns[2][4]);
+
+Every 1 trigger cratesSpawns and game and GameType = 1 do
+Crates(cratesSpawns[3][1], cratesSpawns[3][2], cratesSpawns[3][3], cratesSpawns[3][4]);
+
+Every 1 trigger cratesSpawns and game and GameType = 1 do
+Crates(cratesSpawns[4][1], cratesSpawns[4][2], cratesSpawns[4][3], cratesSpawns[4][4]);
+
+Export Function SetTechnologies;
+var i, j, ban_techs, res_techs;
+begin
+
+if GameType = 1 then
+   begin
+   ban_techs := [];
+
+   if sibBombAllowed < 2 then
+      ban_techs := [tech_sibFiss];
+
+   res_techs := [tech_oilPow, tech_oilEng, tech_tech1, tech_tech2, tech_tech3, tech_gun, tech_gatling, tech_rocket];
+   end;                     
+
+for i = 1 to 8 do
+    begin
+    if res_techs then
+       for j in res_techs do
+           SetTech(j, i, state_researched);
+
+    if ban_techs then
+       for j in ban_techs do
+           SetTech(j, i, state_disabled);
+    end;
+
+if sibBombAllowed = 1 then
+   SetTech(tech_sibFiss, 3, state_enabled);
+End;
+
+Export Function SetDiplomacy;
+begin
+
+{
+     Friends:
+          1 - 4
+          3 - 6 - 8
+
+}
+if GameType = 1 then
+   begin
+   SetAttitude(1, 4, att_friend, true);
+   SetAttitude(3, 6, att_friend, true);
+   SetAttitude(3, 8, att_friend, true);
+   SetAttitude(6, 8, att_friend, true);
+   end;
+
+End;
+
+Export Function PrepareGame;
+var i, tmp, sources;
+begin
+
+if GameType = 1 then
+   begin
+   game := false;
+
+   your_side := 1;
+
+   mc_amer := 1;
+   mc_leg := 2;
+   mc_rus_1 := 3;
+   mc_rus_2 := 4;
+
+   cratesSpawns := [
+      [amerCrates, 1, 0, [200, 250, 300][cratesSpawn]],
+      [rusCrates, 8, 50, 500],
+      [legCrates, 5, 50, 300],
+      [playerCrates, [4, 5, 6][cratesSpawn], 30, [300, 450, 500][cratesSpawn]]
+   ];
+
+   sources := [
+      [190, 193, mat_siberit],
+      [182, 117, mat_siberit],
+      [114, 152, mat_oil],
+      [85, 38, mat_oil]
+   ];
+
+   for i in sources do
+       CreateDepositXY(i[1], i[2], i[3]);
+
+   disableGlobalTimer := false; // custom display_strings counter
+   ruEscape := [0, [5, 6, 7][Difficulty]]; // counter - when counter reach some value then russians starts to run from outpost
+   ruOutpost := []; // list - units from russian outpost
+   staticMines := []; // list - legion static mines
+   baseCaptured := false; // var - true if player captured outpost
+   legDestCounter := 0; // counter - units lost by legion (only people and buildings)
+   legOfferAccepted := false; // var - true if player accepted Farmer offer
+   legChangeSide := false; // var - true if legion join to player
+   allyDestCounter := 0; // counter - units lost by player
+   outpostEscape := false; // var - true when outpost escape
+
+   PrepareAmericans;
+   PrepareLegion;
+   PrepareRussians;
+   playerForces := PreparePlayer;
+
+   // birds, tigers, apemans, enchidnas, horses, mastodonts, fishes, nat_area, wat_area);
+   PrepareNature(4, 3, 8, 5, 3, 1, 8, natureGroundArea, natureWaterArea);
+
+   MC_Start;
+   Action; // game start!
+   end;
+
+End;
+
+// mc custom settings
+Export Function CustomInitMacro;
+begin
+// mc only for gametype 1
+if GameType <> 1 then
+   exit;
+
+// Americans
+MC_SetScanArea(mc_amer, amerBase);
+MC_SetParkingArea(mc_amer, amerParking);
+
+MC_SetAllowedTurretWeapons(mc_amer, [us_radar, us_heavy_gun, us_rocket_launcher, us_laser, us_double_laser]);
+MC_SetCratesArea(mc_amer, amerCrates);
+MC_SetTame(mc_amer, amerBase);
+MC_SetDefenderLimit(mc_amer, 3);
+
+MC_SetProduceList(mc_amer, [
+   [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
+   [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
+   [us_heavy_tracked, engine_combustion, control_remote, us_rocket_launcher],
+   [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
+   [us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay]
+]);
+
+MC_SetBuildingList(mc_amer, [
+   [b_turret, 114, 16, 0],
+   [b_bunker, 110, 12, 0]
+]);
+
+MC_SetLabKind(mc_amer, [b_lab_weapon, b_lab_opto, b_lab_computer, b_lab_siberium]);
+
+// Legion
+MC_SetScanArea(mc_leg, legBase);
+MC_SetParkingArea(mc_leg, legParking);
+
+MC_SetAllowedTurretWeapons(mc_leg, [ar_radar, ar_gun, ar_rocket_launcher, ar_gatling_gun]);
+MC_SetCratesArea(mc_leg, legCrates);
+MC_SetTame(mc_leg, legBase);
+MC_SetDefenderLimit(mc_leg, 5);
+MC_SetMinesField(mc_leg, 10, legMines);
+
+MC_SetBuildingList(mc_leg, [
+   [b_armoury, 155, 133, 0]
+]);
+
+MC_SetProduceList(mc_leg, [
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_combustion, control_manual, ar_gun],
+   [ar_medium_trike, engine_combustion, control_remote, ar_gun],
+   [ar_medium_trike, engine_combustion, control_remote, ar_gun],
+   [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+   [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+   [ar_medium_trike, engine_combustion, control_remote, ar_cargo_bay]
+]);
+
+
+// Russians 1
+MC_SetScanArea(mc_rus_1, rus1Base);
+MC_SetParkingArea(mc_rus_1, rus1Parking);
+
+MC_SetAllowedTurretWeapons(mc_rus_1, [ru_gatling_gun, ru_rocket, ru_rocket_launcher, ru_time_lapser, ru_heavy_gun]);
+MC_SetCratesArea(mc_rus_1, rusCrates);
+MC_SetTame(mc_rus_1, rus1Base);
+MC_SetDefenderLimit(mc_rus_1, 5);
+
+MC_SetProduceList(mc_rus_1, [
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_medium_tracked, engine_combustion, control_computer, ru_cargo_bay]
+]);
+
+MC_SetTeleportExit(mc_rus_1, [ [115, 201] ]);
+
+// Russians 2
+MC_SetScanArea(mc_rus_2, rus2Base);
+MC_SetParkingArea(mc_rus_2, rus2Parking);
+
+MC_SetAllowedTurretWeapons(mc_rus_2, [ru_gatling_gun, ru_rocket, ru_rocket_launcher, ru_time_lapser, ru_heavy_gun]);
+MC_SetCratesArea(mc_rus_2, rusCrates);
+MC_SetTame(mc_rus_2, rus2Base);
+MC_SetDefenderLimit(mc_rus_2, 4);
+
+MC_SetProduceList(mc_rus_2, [
+   [ru_heavy_wheeled, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_heavy_wheeled, engine_combustion, control_manual, ru_heavy_gun],
+   [ru_heavy_wheeled, engine_combustion, control_computer, ru_rocket_launcher],
+   [ru_heavy_wheeled, engine_combustion, control_manual, ru_rocket],
+   [ru_medium_wheeled, engine_combustion, control_computer, ru_cargo_bay]
+]);
+End;
+
+Export Function PrepareRussians;
+var i, b, tmp, side, sr, depot, base;
+begin
+PrepareNature(0, 0, 3, 0, 0, 0, 0, rusApe, 0);
+
+side := 3;
+
+SetTech(tech_targTeleport, side, state_researched);
+SetTech(tech_gun, side, state_researched);
+SetTech(tech_advMet, side, state_researched);
+
+tmp := [
+           [0, 208, 163, 4, 0, 0],
+           [3, 194, 161, 1, 0, 0],
+           [17, 190, 161, 1, 0, 0],
+           [5, 200, 145, 3, 0, 0],
+           [32, 192, 144, 3, 0, 0],
+           [26, 216, 172, 3, 0, 0],
+           [26, 218, 176, 3, 0, 0],
+           [29, 182, 149, 3, 0, 0],
+           [8, 201, 171, 0, 10, 11],
+           [32, 188, 167, 0, 0, 0],
+           [32, 202, 179, 0, 0, 0],
+           [32, 209, 182, 0, 0, 0],
+           [32, 220, 183, 5, 0, 0],
+           [32, 225, 181, 5, 0, 0],
+           [26, 220, 174, 5, 0, 0],
+           [1, 84, 128, 4, 0, 0],
+           [3, 68, 121, 1, 0, 0],
+           [19, 72, 125, 5, 0, 0],
+           [18, 68, 124, 0, 0, 0],
+           [24, 64, 121, 1, 0, 0],
+           [17, 65, 118, 2, 0, 0],
+           [21, 68, 117, 3, 0, 0],
+           [8, 68, 130, 1, 14, 10],
+           [8, 67, 110, 2, 11, 12],
+           [28, 71, 136, 2, 0, 0],
+           [28, 73, 141, 2, 0, 0],
+           [30, 75, 145, 2, 0, 0],
+           [5, 111, 138, 4, 0, 0],
+           [33, 104, 130, 3, 0, 0],
+           [33, 110, 142, 5, 0, 0],
+           [33, 91, 131, 5, 0, 0],
+           [33, 107, 157, 5, 0, 0],
+           [33, 104, 160, 5, 0, 0],
+           [33, 101, 162, 5, 0, 0],
+           [32, 87, 157, 5, 0, 0],
+           [32, 82, 158, 5, 0, 0],
+           [33, 91, 118, 4, 0, 0],
+           [33, 89, 107, 4, 0, 0],
+           [5, 86, 96, 3, 0, 0],
+           [33, 91, 102, 4, 0, 0],
+           [32, 80, 95, 3, 0, 0],
+           [28, 77, 105, 3, 0, 0],
+           [28, 85, 113, 3, 0, 0],
+           [28, 55, 97, 3, 0, 0],
+           [28, 88, 128, 3, 0, 0],
+           [32, 69, 101, 2, 0, 0],
+           [1, 34, 23, 4, 0, 0],
+           [8, 25, 4, 3, 11, 10],
+           [8, 15, 4, 2, 14, 12],
+           [29, 55, 35, 2, 0, 0],
+           [29, 24, 44, 2, 0, 0],
+           [34, 34, 32, 4, 0, 0],
+           [3, 14, 16, 1, 0, 0],
+           [24, 10, 16, 1, 0, 0],
+           [19, 11, 13, 2, 0, 0],
+           [18, 14, 12, 3, 0, 0],
+           [16, 14, 19, 0, 0, 0],
+           [17, 18, 20, 5, 0, 0],
+           [28, 10, 5, 1, 0, 0],
+           [28, 8, 8, 1, 0, 0],
+           [26, 19, 2, 1, 0, 0],
+           [26, 30, 2, 1, 0, 0],
+           [5, 53, 20, 4, 0, 0],
+           [32, 55, 24, 4, 0, 0],
+           [32, 61, 45, 5, 0, 0],
+           [32, 52, 51, 5, 0, 0],
+           [33, 56, 51, 5, 0, 0],
+           [33, 62, 49, 5, 0, 0],
+           [33, 41, 47, 5, 0, 0],
+           [33, 33, 52, 5, 0, 0],
+           [5, 31, 40, 0, 0, 0],
+           [33, 65, 37, 5, 0, 0],
+           [33, 63, 29, 4, 0, 0],
+           [33, 54, 11, 4, 0, 0],
+           [33, 51, 6, 4, 0, 0],
+           [26, 39, 25, 0, 0, 0],
+           [26, 37, 21, 0, 0, 0],
+           [32, 35, 17, 4, 0, 0],
+           [33, 35, 28, 4, 0, 0],
+           [33, 28, 46, 5, 0, 0],
+           [33, 31, 6, 4, 0, 0],
+           [26, 54, 38, 4, 0, 0],
+           [33, 207, 167, 3, 0, 0]
+       ];
+
+for i in tmp do
+    begin
+    uc_side := side;
+    uc_nation := nation_russian;
+
+    bc_type := i[1];
+    bc_level := rand(5, 6);
+    bc_kind1 := i[5];
+    bc_kind2 := i[6];
+
+    sr := 0;
+
+    if i[1] = b_oil_mine then
+       sr := mat_oil
+    else if i[1] = b_siberite_mine then
+       sr := mat_siberit;
+
+    if sr then
+       begin
+       CreateDepositXY(i[2], i[3], sr);
+       SetResourceVisibility(i[2], i[3], side);
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+    end;
+
+depot := FilterAllUnits([[f_side, side], [f_btype, b_warehouse]]);
+
+if not depot then
+   exit;
+// PrepareBase(base_dep, area, name, skill, sources, personel);
+base := PrepareBase(depot[2],
+                    0, // <---- base name here
+                    [6, 7, 8][Difficulty],
+                    [
+                     3000,
+                     300,
+                     100
+                    ],
+                    [12, 6, 6, 4]
+                   );
+
+if not base then
+   exit;
+
+mc_bases := Replace(mc_bases, mc_rus_1, base);
+
+base := PrepareBase(depot[1],
+                    0, // <---- base name here
+                    [6, 7, 8][Difficulty],
+                    [
+                     3000,
+                     300,
+                     100
+                    ],
+                    [12, 6, 6, 4]
+                   );
+
+if not base then
+   exit;
+
+mc_bases := Replace(mc_bases, mc_rus_2, base);
+
+ruOutpost := PrepareBase(FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1],
+                         0, // <---- base name here
+                         [6, 7, 8][Difficulty],
+                         [
+                          500,
+                          100,
+                          10
+                         ],
+                         [[6, 7, 8][Difficulty], 2, 0, 1]
+                        );
+End;
+
+Export Function PrepareLegion;
+var i, b, veh, tmp, cameras, side, sr, depot, base;
+begin
+PrepareNature(0, 0, 6, 0, 0, 0, 0, legApe, 0);
+
+side := 8;
+tmp := AreaToList(minesArea, 0);
+
+if tmp then
+   begin
+
+   for i = 1 to tmp[1] do
+       begin
+       PlaceMine(tmp[1][i], tmp[2][i], side, 0);
+       staticMines := Insert(staticMines, staticMines + 1, [tmp[1][i], tmp[2][i]]);
+       end;
+
+   end;
+
+cameras := [
+              [165, 156],
+              [143, 145],
+              [152, 165],
+              [123, 153],
+              [161, 215],
+              [172, 100],
+              [148, 83],
+              [122, 68],
+              [105, 74],
+              [113, 97]
+           ];
+
+for i in cameras do
+    HiddenCamera(i[1], i[2], side);
+
+tmp := [
+           [1, 144, 110, 1, 0, 0],
+           [3, 151, 118, 0, 0, 0],
+           [8, 158, 110, 4, 10, 15],
+           [23, 154, 121, 5, 0, 0],
+           [20, 155, 118, 4, 0, 0],
+           [21, 151, 122, 0, 0, 0],
+           [18, 148, 118, 1, 0, 0],
+           [17, 147, 114, 2, 0, 0],
+           [29, 163, 120, 5, 0, 0],
+           [27, 137, 116, 3, 0, 0],
+           [27, 133, 111, 1, 0, 0],
+           [27, 132, 106, 4, 0, 0],
+           [26, 137, 111, 0, 0, 0],
+           [8, 141, 117, 1, 13, 11],
+           [30, 140, 128, 1, 0, 0],
+           [5, 146, 96, 3, 0, 0],
+           [32, 150, 98, 3, 0, 0],
+           [32, 142, 95, 3, 0, 0],
+           [32, 159, 104, 3, 0, 0],
+           [32, 133, 95, 3, 0, 0],
+           [32, 131, 102, 2, 0, 0],
+           [32, 162, 134, 0, 0, 0],
+           [32, 149, 132, 0, 0, 0],
+           [26, 143, 122, 4, 0, 0],
+           [26, 164, 116, 2, 0, 0],
+       ];
+
+for i in tmp do
+    begin
+    uc_side := side;
+    uc_nation := nation_arabian;
+
+    bc_type := i[1];
+    bc_level := rand(5, 6);
+    bc_kind1 := i[5];
+    bc_kind2 := i[6];
+
+    sr := 0;
+
+    if i[1] = b_oil_mine then
+       sr := mat_oil
+    else if i[1] = b_siberite_mine then
+       sr := mat_siberit;
+
+    if sr then
+       begin
+       CreateDepositXY(i[2], i[3], sr);
+       SetResourceVisibility(i[2], i[3], side);
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+    end;
+
+depot := FilterAllUnits([[f_side, side], [f_btype, b_warehouse]]);
+
+if not depot then
+   exit;
+
+base := PrepareBase(depot[1],
+                    0, // <---- base name here
+                    [6, 7, 8][Difficulty],
+                    [
+                     3000,
+                     300,
+                     100
+                    ],
+                    [12, 6, 6, 5]
+                   );
+
+if not base then
+   exit;
+
+// prepare snipers
+if Difficulty > 1 then
+   begin
+   InitHc;
+   PrepareHuman(sex_male, class_sniper, [5, 8][Difficulty-1]);
+
+   for i = 1 to Difficulty do
+       PlaceUnitArea(CreateHuman, sniperGuardArea, false);
+   end;
+
+mc_bases := Replace(mc_bases, mc_leg, base);
+
+hc_gallery := 'ru';
+hc_face_number := 44;
+hc_name := 'Robert Farmer';
+hc_sex := sex_male;
+hc_class := 1;
+
+Farmer := CreateHuman;
+
+InitHc;
+End;
+
+Export Function PrepareAmericans;
+var i, b, tmp, side, sr, base, depot;
+begin
+PrepareNature(0, 0, 4, 0, 0, 0, 0, amerApe, 0);
+
+side := 4;
+
+SetTech(tech_gun, side, state_researched);
+SetTech(tech_advMet, side, state_researched);
+
+tmp := [
+           [1, 144, 18, 4, 0, 0],
+           [3, 137, 8, 4, 0, 0],
+           [20, 141, 8, 4, 0, 0],
+           [19, 137, 5, 3, 0, 0],
+           [18, 137, 12, 0, 0, 0],
+           [17, 133, 4, 2, 0, 0],
+           [16, 140, 11, 5, 0, 0],
+           [8, 149, 26, 4, 10, 15],
+           [8, 142, 26, 1, 11, 12],
+           [27, 153, 32, 5, 0, 0],
+           [27, 145, 32, 3, 0, 0],
+           [27, 138, 2, 4, 0, 0],
+           [27, 144, 13, 0, 0, 0],
+           [26, 124, 2, 4, 0, 0],
+           [26, 121, 2, 2, 0, 0],
+           [26, 118, 2, 1, 0, 0],
+           [29, 159, 47, 2, 0, 0],
+           [32, 146, 41, 0, 0, 0],
+           [33, 136, 37, 0, 0, 0],
+           [33, 132, 34, 0, 0, 0],
+           [36, 124, 7, 1, 0, 0],
+           [5, 124, 19, 0, 0, 0],
+           [32, 127, 23, 0, 0, 0]
+       ];
+
+for i in tmp do
+    begin
+    uc_side := side;
+    uc_nation := nation_american;
+
+    bc_type := i[1];
+    bc_level := rand(5, 6);
+    bc_kind1 := i[5];
+    bc_kind2 := i[6];
+
+    sr := 0;
+
+    if i[1] = b_oil_mine then
+       sr := mat_oil
+    else if i[1] = b_siberite_mine then
+       sr := mat_siberit;
+
+    if sr then
+       begin
+       CreateDepositXY(i[2], i[3], sr);
+       SetResourceVisibility(i[2], i[3], side);
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+    end;
+
+depot := FilterAllUnits([[f_side, side], [f_btype, b_warehouse]]);
+
+if not depot then
+   exit;
+
+base := PrepareBase(depot[1],
+                    'theta3',
+                    [8, 7, 6][Difficulty],
+                    [
+                     [2500, 2000, 1750][Difficulty],
+                     [300, 250, 200][Difficulty],
+                     [50, 50, 40][Difficulty]
+                    ],
+                    [7, 6, 5, 5]
+                   );
+
+if not base then
+   exit;
+
+mc_bases := Replace(mc_bases, mc_amer, base);
+
+PrepareHuman(sex_male, 1, 7);
+allyCommander := CreateHuman;
+PlaceUnitXY(allyCommander, 139, 15, false);
+ComTurnXY(allyCommander, 137, 15);
+
+hc_gallery := 'us';
+hc_face_number := 7;
+hc_name := 'Arthur Powell';
+hc_sex := sex_male;
+hc_class := 1;
+
+Powell := CreateHuman;
+
+InitHc;
+End;
+
+Export Function PreparePlayer;
+var i, side, techs, tanks, cl, chassis, engines, weapons;
+begin
+side := 1;
+
+result := [[], []];
+
+uc_side := side;
+uc_nation := nation_american;
+
+InitHc;
+InitVc;
+
+hc_importance := 0;
+
+chassis := [us_medium_wheeled, us_medium_tracked, us_medium_tracked];
+
+if commander = 2 then
+   chassis := [us_medium_tracked, us_heavy_tracked, us_heavy_tracked];
+
+if commander = 3 then
+   chassis := [us_medium_wheeled, us_morphling, us_morphling];
+
+engines := [engine_solar, engine_solar, engine_combustion];
+
+if commander = 2 then
+   engines := [engine_combustion, engine_combustion, engine_siberite];
+
+if commander = 3 then
+   engines := [engine_siberite, engine_siberite, engine_combustion];
+
+weapons := [us_double_gun, us_light_gun, us_gatling_gun];
+
+if commander = 2 then
+   weapons := [us_rocket_launcher, us_double_gun, us_heavy_gun];
+
+if commander = 3 then
+   weapons := [us_laser, us_double_laser, us_rocket_launcher];
+
+tanks := [5, 5, 4][Difficulty];
+
+if commander = 2 then
+   tanks := tanks + 3;
+
+// tanks
+for i = 1 to tanks do
+    begin     
+    PrepareVehicle(
+        chassis[i mod 3 + 1],
+        engines[rand(1,3)],
+        control_manual,
+        weapons[i mod 3 + 1],
+        rand(60, 70)
+    );
+    result := Replace(result, 1, result[1] ^ CreateVehicle);
+    end;
+
+cl := 1;
+
+// people
+for i = 1 to 10 do
+    begin
+    if i mod 4 = 0 then
+       cl := cl + 1;
+
+    if cl = 2 then
+       cl := 3;
+
+    PrepareHuman(false, cl, [6, 6, 5][Difficulty]);
+    result := Replace(result, 2, result[2] ^ CreateHuman);
+    end;
+
+// additional people
+if commander = 1 then
+   for i = 1 to 4 do
+       begin
+       PrepareHuman(false, class_soldier, 8);
+       result := Replace(result, 2, result[2] ^ CreateHuman);
+       end;
+
+
+
+// additional techs
+techs := [];
+
+if commander = 1 then
+   techs := [tech_weap1, tech_weap2, tech_weap3, tech_lasSight];
+
+if commander = 2 then
+   techs := [tech_tech1, tech_oilEng, tech_oilPow, tech_solEng, tech_solPow, tech_opto1, tech_radar];
+
+if commander = 3 then
+   techs := [tech_advAI, tech_advchassis, tech_ai, tech_comp1, tech_comp2,
+             tech_oilEng, tech_oilPow, tech_weap1, tech_gatling, tech_gun];
+
+
+if techs then
+   for i in techs do
+       SetTech(i, 1, state_researched);
+
+// commander
+hc_gallery := 'skirmish';
+hc_face_number := commander;
+hc_importance := 100;
+
+case commander of
+1: begin
+   hc_name := 'Jeff Ironside';
+   PrepareHuman(sex_male, 1, 7);
+   end;
+2: begin
+   hc_name := 'Paul Johnson';
+   PrepareHuman(sex_male, 3, 7);
+   end;
+3: begin
+   hc_name := 'Lisa Stuart';
+   PrepareHuman(sex_female, 4, 7);
+   end;
+end;
+
+playerCommander := CreateHuman;
+
+hc_importance := 0;
+hc_gallery := '';
+
+result := Replace(result, 2, result[2] ^ playerCommander);
+End;
+
+Export Function PrepareReinforcements;
+var i, peopleAmount, tmp, veh;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+InitHc;
+
+peopleAmount := [3, 3, 2][Difficulty];
+
+for i = 1 to peopleAmount do
+    begin
+    PrepareHuman(false, 2, [7, 6, 5][Difficulty]);
+    PlaceUnitInArea(CreateHuman, startArea, false);
+    end;
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_computer, us_crane, 58);
+PlaceUnitInArea(CreateVehicle, startArea, false);
+
+if commander = 1 then
+   wait(6$00)
+else
+   wait(8$00);
+
+uc_side := 1;
+uc_nation := 1;
+
+InitVc;
+InitHc;
+
+for i = 1 to 5 do
+    begin
+    PrepareVehicle([us_heavy_tracked, us_medium_tracked, us_light_wheeled][i mod 3 + 1], engine_combustion, [control_manual, control_computer, control_computer][i mod 3 + 1], [us_heavy_gun, us_cargo_bay, us_radar][i mod 3 + 1], rand(40, 55));
+    veh := CreateVehicle;
+    PlaceUnitInArea(veh, startArea, false);
+
+    if GetWeapon(veh) = us_cargo_bay then
+       begin
+       AddCargo(veh, mat_cans, 70);
+       AddCargo(veh, mat_siberit, 30);
+       end;
+
+    if GetControl(veh) = control_manual then
+       begin
+       PrepareHuman(false, 3, 6);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+    end;
+
+if not reinforceAllowed then
+   exit;
+
+wait(25$00);
+
+uc_side := 1;
+uc_nation := 1;
+
+InitVc;
+InitHc;
+
+for i = 1 to 4 do
+    begin
+    PrepareVehicle(us_morphling, engine_siberite, control_manual, us_heavy_gun, 1);
+    veh := CreateVehicle;
+    PlaceUnitInArea(veh, startArea, false);
+
+    if GetControl(veh) = control_manual then
+       begin
+       PrepareHuman(false, 3, [7, 6, 5][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+    end;
+End;
+
+Export Function PrepareLegionReinforcements;
+var i, un, j, tmp;
+begin
+uc_side := 8;
+uc_nation := nation_arabian;
+
+for i = 1 to 2 do
+    for j = 1 to 4 do
+        begin
+        PrepareHuman(false, j, 8);
+        un := CreateHuman;
+        PlaceUnitArea(un, legionSpawn, false);
+        tmp := tmp union un;
+        end;
+
+for i in tmp do
+    ComMoveXY(i, 150, 136);
+
+mc_bases := Replace(mc_bases, mc_leg, mc_bases[mc_leg] union tmp);
+End;
+
+Every 0$10 trigger GetTech(tech_lapser, 3) = state_researched do
+begin
+MC_InsertBuildingList(mc_rus_2, [
+   [b_turret, 78, 151, 5],
+   [b_turret, 101, 159, 5],
+   [b_turret, 105, 158, 5],
+   [b_turret, 96, 136, 5],
+   [b_turret, 94, 133, 4],
+   [b_turret, 84, 102, 4]
+]);
+End;

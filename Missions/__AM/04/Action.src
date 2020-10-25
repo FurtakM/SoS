@@ -250,7 +250,7 @@ begin
         begin
             SetSide(Frank, 0);
             ComMoveToArea(Frank, FrankSpot);
-            SaveCharacters(Frank, 'Frank');
+            SaveCharacters(Frank, '04t_Frank');
             Wait(0$3);
             frankScoutBase = 1;
             RemoveUnit(Frank);
@@ -265,7 +265,7 @@ begin
         begin
             SetSide(Frank, 0);
             ComMoveToArea(Frank, FrankSpot);
-            SaveCharacters(Frank, 'Frank');
+            SaveCharacters(Frank, '04t_Frank');
             Wait(0$3);
             frankScoutBase = 1;
             RemoveUnit(Frank);
@@ -304,12 +304,23 @@ begin
 end;
 
 // Frank incomming
-Every 2$0 trigger saveDonaldson = 1 do 
+Every 0$1 trigger frankScoutBase do
 begin
+
+    wait(2$30);
+
+    repeat
+     wait(0$1);
+    until not FilterAllUnits([[f_enemy, 4], [f_distxy, 84, 28, 22]]);
+
     uc_side = 4;
     uc_nation = 1;
 
-    Frank = CreateCharacter('Frank');
+    Frank = CreateCharacter('04t_Frank');
+
+    if not Frank then
+       exit;
+
     PlaceUnitArea(Frank, FrankSpawn, false);
 
     repeat
@@ -436,7 +447,7 @@ begin
 end;
 
 // Lost command
-Every 0$1 trigger timeToDestroyRuBase <= 0$00 and timerStatus = 3 do 
+Every 0$1 trigger timeToDestroyRuBase <= 0$00 and timerStatus = 3 and not escapeAvalaible do
 var tmp;
 begin
     tmp = FilterAllUnits([f_side, 1]) diff [JMM];

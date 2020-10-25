@@ -1,0 +1,148 @@
+Export Function CustomEvent(event);
+begin
+
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 1 and s2 = 4 and IsLive(Powell) then
+   begin
+   wait(0$2);
+   YouLost('Dismissed');
+   end;
+End;
+
+On SibDepositContaminated(unit, x, y) Do
+begin
+if InArea(x, y, motherLodeArea) then
+   YouLost('Motherlode3');
+End;
+
+On BehemothConstructed(behemoth) do
+begin
+if not behemothDestroyedBeforeFinish then
+   behemothDone := true;
+End;
+
+On SiberiteRocketExploded(unit, x, y) Do
+begin
+if GetSide(unit) = 1 and platonovHasBomb and FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) and not FilterAllUnits([[f_side, 1], [f_weapon, us_siberium_rocket]]) then
+   begin
+   wait(0$5);
+   ComAttackPlace(FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]])[1], 60, 95);
+   end;
+
+if InArea(x, y, motherLodeArea) then
+   begin   
+   if GetSide(unit) = 1 then
+      begin
+      wait(0$6);
+      YouLost('Motherlode2');
+      end;
+
+   if GetSide(unit) = 8 then
+      begin
+      wait(0$6);
+      YouLost('Motherlode1');
+      end;
+   end;
+
+if GetSide(unit) = 3 then
+   begin
+   wait(0$5);
+   SayRadio(Platonov, 'D18-Pla-1');
+   end;
+end;
+
+On UnitDestroyed(un) do
+begin
+if un in behemothBuilders then
+   begin
+   behemothBuilders := behemothBuilders diff un;
+   exit;
+   end;
+
+if un = JMM then
+   begin
+   YouLost('JMM');
+   exit;
+   end;
+
+if un in FilterAllUnits([[f_side, 1], [f_not, [f_class, class_apeman_engineer], [f_class, class_apeman]]]) then
+   lostCounter := lostCounter + 1;
+
+MCE_UnitDestroyed(un);
+End;
+
+On BuildingStarted(building, builder) do
+begin
+MCE_BuildingStarted(building, builder);
+End;
+
+On UpgradeComplete(building) do
+begin
+MCE_UpgradeComplete(building);
+End;
+
+On BuildingComplete(building) do
+begin
+if building in FilterAllUnits([[f_side, 8], [f_btype, b_workshop], [f_nation, 3]]) then
+   begin
+   ComUpgrade(building);
+   ComComplete(Kozlov, building);
+   exit;
+   end;
+
+MCE_BuildingComplete(building);
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+MCE_ResearchComplete(tech, lab);
+End;
+
+On CrateSpawn(id, x, y, amount, mode) do
+begin
+MCE_CrateSpawn(id, x, y, amount, mode);
+End;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+MCE_VehicleConstructed(vehicle, factory);
+End;
+
+On VehicleCaptured(new, old, side, capturing_unit) do
+begin
+MCE_VehicleCaptured(new, old, side, capturing_unit);
+End;
+
+On BuildingCaptured(building, side, capturning_unit) do
+begin
+MCE_BuildingCaptured(building, side, capturning_unit);
+End;
+
+On EnterBuilding(building, unit) do
+begin
+MCE_EnterBuilding(building, unit);
+End;
+
+On LeaveBuilding(building, unit) do
+begin
+MCE_LeaveBuilding(building, unit);
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+begin
+if GetSide(driver) = 4 and driver in powellSquadAttack[1] and powellAllowRetreat then
+   begin
+   ComMoveXY(driver, 61, 93);
+   exit;
+   end;
+
+MCE_EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2);
+End;
+
+On ApemanTamed(ape, sci) do
+begin
+MCE_ApemanTamed(ape, sci);
+End;

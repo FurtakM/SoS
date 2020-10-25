@@ -1,5 +1,5 @@
-Every 0$1 trigger IsDead(Stolypin) do
-var i;
+Every 0$1 trigger IsDead(Stolypin) and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < [14, 13, 12][Difficulty] do
+var i, p;
 begin
      AIEnable = 0;
      escapeAvalaible = 1;
@@ -23,9 +23,18 @@ begin
 
      CenterOnXY(124, 98);
 
+     p := 0$0;
+
+     repeat
+      wait(0$1);
+      p := p + 0$1;
+     until FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 or p >= 0$7;
+
+     FinishMission;
+
 end;
 
-Every 0$1 trigger FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 do FinishMission;
+
 
 Every 0$01 trigger escapeAvalaible = 1 do
 var i; 
@@ -48,6 +57,7 @@ end;
 Export function FinishMission;
 var tmp;
 begin
+        SaveBase(GammBaseArea);
         SaveVariable(GetTech(tech_gatling, 1), 'GatlingInGamma');
 
         if buildOil = 1 and buildPower = 1 then
@@ -79,8 +89,7 @@ begin
         If IsOK(Frank) then SaveCharacters(Frank, mission_prefix&'Frank');
 
         SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Brown, Donaldson, Frank],'04_other_survivors');
-        SaveBase(GammBaseArea);
-
+        
         YouWin;
 
 end;
@@ -90,7 +99,7 @@ var i, gammaBase, buildings;
 begin
 
     gammaBase = [];
-    buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building], [f_ok]]);
+    buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building]]);
 
     for i in buildings do
     begin

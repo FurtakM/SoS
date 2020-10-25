@@ -1,0 +1,74 @@
+Export function PrepareBurlak;
+begin
+    uc_side = 7;
+    uc_nation = 3;
+
+    vc_engine = 3;
+    vc_control = 1;
+    vc_weapon = 46;
+    vc_chassis = 24;
+
+    Masha = CreateVehicle;
+    PlaceUnitArea(Masha, GorkySpawn, false);
+    SetMark(Masha, 1);
+
+    Burlak = PrepareUnit('Burlak', false);
+    PlaceHumanInUnit(Burlak, Masha);
+
+    ComAgressiveMove(Masha, 107, 118);
+    spawnBurlak = 1;
+end;
+
+
+Export function BurlakArmy;
+var i, veh, tmp;
+begin
+    uc_side = 7;
+    uc_nation = 3;
+
+    Gnyevko = PrepareUnit('Gnyevko', false);
+    Titov = PrepareUnit('Titov', false);
+    Xavier = PrepareUnit('Xavier2', false);
+    Belkov = PrepareUnit('Belkov', false);
+    Lipshchin = PrepareUnit('Lipshchin', false);
+
+    for i = 1 to 5 do 
+    begin
+        vc_engine = 3;
+        vc_control = 1;
+        vc_weapon = [43, 44, 45, 49][Rand(1,4)];
+        vc_chassis = 22;
+
+        veh = CreateVehicle;
+        PlaceUnitArea(veh, GorkySpawn, false);
+    end;
+
+    tmp := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle], [f_empty]]);
+
+    PlaceHumanInUnit(Gnyevko, tmp[1]);
+    PlaceHumanInUnit(Titov, tmp[2]);
+    PlaceHumanInUnit(Xavier, tmp[3]);
+    PlaceHumanInUnit(Belkov, tmp[4]);
+    PlaceHumanInUnit(Lipshchin, tmp[5]);
+
+    SetClass(Gnyevko, 3);
+    SetClass([Titov, Lipshchin], 9);
+
+    tmp := FilterAllUnits([f_side, 7]);
+    ComAgressiveMove(tmp, 107, 118);
+
+    repeat
+     wait(0$1);
+     ComMoveUnit(UnitFilter(tmp, [f_weapon, 49]), Masha);
+     ComAgressiveMove(UnitFilter(tmp, [f_not, [f_weapon, 49]]), 107, 118);
+    until UnitFilter(tmp, [f_weapon, 49]) = 0 or IsDying(Masha);
+
+    repeat
+     wait(0$1);
+     tmp := FilterAllUnits([f_side, 7]) diff Burlak;
+     ComAgressiveMove(tmp, 107, 118);
+
+     if IsOk(Burlak) and not IsInUnit(Burlak) then
+        ComMoveXY(Burlak, 107, 118);
+    until not tmp;
+end;

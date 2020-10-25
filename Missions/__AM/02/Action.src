@@ -311,9 +311,11 @@ var i;
 begin
     InGameOn;
     SetLives(Jerry, 250);
+    SetLives(Brian, 750);
     SetAttitude(3, 4, att_enemy, true);
     CenterOnUnits([Brian, Jerry]);
     for i in FilterUnitsInArea(RussiansWaterSpawn, [f_side, 3]) do ComFree(i);
+    for i in FilterUnitsInArea(RussiansWaterSpawn, [f_side, 3]) do AddComAttackUnit(i, Brian);
     for i in FilterAllUnits([f_side, 4]) do ComFree(i);
 
     wait(0$1);
@@ -387,6 +389,9 @@ begin
 
      wait([0$13, 0$12, 0$9][Difficulty]);
 
+    ComExitBuilding(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, 3]]));
+    wait(0$1);
+
     repeat
     wait(0$1);
 
@@ -436,25 +441,53 @@ begin
 
 end;
 
-Every 0$1 trigger FilterAllUnits([[f_side, 1],[f_nation, 3], [f_type, unit_vehicle], [f_weapon, 42]]) >= 1 do
-var tmp, temp1, temp2, i;
+Every 0$1 trigger FilterAllUnits([[f_side, 1],[f_nation, 3], [f_type, unit_vehicle], [f_weapon, 42]]) do
+var tmp, speaker, temp1, temp2, i;
 begin
      tmp = FilterAllUnits([[f_side, 1],[f_nation, 3], [f_type, unit_vehicle], [f_weapon, 42]]);
      temp1 = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, sex_male]]) diff [JMM, Cyrus, Bobby];
      temp2 = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, sex_female]]) diff [Lisa];
 
-     if NOT IsInUnit(JMM) then Say(JMM, 'DX2a-JMM-1');
+     if not tmp then
+        exit;
 
-     IF IsInUnit(Bobby) = tmp[1] then Say(Bobby, 'DX2a-Bobby-1');
-     IF IsInUnit(Cyrus) = tmp[1] then Say(Cyrus, 'DX2a-Cyrus-1');
-     IF IsInUnit(Lisa) = tmp[1] then Say(Lisa, 'DX2a-Lisa-1');
+     DialogueOn;
 
-     for i in temp1 do if IsInUnit(i) = tmp[1] then Say(i, 'DX2a-Sol1-1');
-     for i in temp2 do if IsInUnit(i) = tmp[1] then Say(i, 'DX2a-FSol1-1');
+     speaker := IsDrivenBy(tmp[1]);
 
-     IF IsInUnit(JMM) = tmp[1] then Say(JMM, 'DX2b-JMM-1');
+     if not speaker then
+        exit;
 
-     if NOT IsInUnit(JMM) then Say(JMM, 'DX2a-JMM-2');
+     if speaker = JMM then
+        begin
+        if Lisa then
+           Say(Lisa, 'DX2b-Lisa-1');
+
+        Say(JMM, 'DX2b-JMM-1');
+        end
+     else
+        begin
+        Say(JMM, 'DX2a-JMM-1');
+
+        if speaker = Bobby then
+           Say(Bobby, 'DX2a-Bobby-1');
+
+        if speaker = Cyrus then
+           Say(Cyrus, 'DX2a-Cyrus-1');
+
+        if speaker = Lisa then
+           Say(Lisa, 'DX2a-Lisa-1');
+
+        if speaker in temp1 then
+           Say(speaker, 'DX2a-Sol1-1');
+
+        if speaker in temp2 then
+           Say(speaker, 'DX2a-FSol1-1');
+
+        Say(JMM, 'DX2a-JMM-2');
+        end;
+
+     DialogueOff;
 
 end;
 
@@ -471,11 +504,11 @@ end;
 
 // Capture all enemy bases and spawn Mikhail
 
-Every 0$1 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 AND FilterUnitsInArea(NorthBase, [[f_side, 3], [f_type, unit_human]]) = 0 do
+Every 0$1 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 AND FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < 2 do
 var temp, i;
 begin
 
-    temp = FilterAllUnits([[f_side, 1],[f_nation, 1], [f_class, 2]]) diff [JMM];
+    wait(0$03);
 
     DialogueOn;
     Say(JMM, 'D3a-JMM-1');
@@ -494,9 +527,15 @@ begin
      wait(0$1);
     until FilterUnitsInArea(NorthBase, [[f_side, 1], [f_class, 2]]);
 
+    repeat
+       temp = FilterAllUnits([[f_side, 1], [f_nation, 1], [f_class, 2], [f_ok], [f_outside]]) diff [JMM, Khatam];
+       wait(0$1);
+    until temp > 0;
+
     wait(0$5);
-    InGameOn;
+
     PrepareRussianHeroes;
+    InGameOn;
     CenterNowOnUnits(Mikhail);
     ComTurnUnit([JMM, temp[1]], Mikhail);
     ComTurnUnit(Mikhail, temp[1]);
@@ -584,50 +623,42 @@ end;
 
 // Spawn enemy cargo bay
 Every 0$1 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 and GetResourceType(GetBase(dep1), 1) >= 100 do
+var tmp;
 begin
 
     wait(rand(1$0, 2$0) + 0$30);
 
     PrepareCargoBays;
     cargoRespawn = 1;
-    ComMoveXY([cargo1, cargo2, driver1, driver2], 36, 13);
-    AddComMoveXY([cargo1, cargo2, driver1, driver2], 40, 20);
-    AddComMoveXY([cargo1, cargo2, driver1, driver2], 53, 16);
+    tmp := [cargo1, cargo2, driver1, driver2];
+
+    ComMoveXY(tmp, 17, 10);
+    AddComMoveXY(tmp, 36, 13);
+    AddComMoveXY(tmp, 40, 20);
+    AddComMoveXY(tmp, 53, 16);
 
     wait(0$5);
+
     Say(driver1, 'D5-Rus2-1');
 
 end;
 
 Every 0$1 trigger cargoRespawn = 1 do
-var i, j, tmp1, tmp2;
+var cargos;
 begin
-    enable;
-    tmp1 = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, ru_cargo_bay]]);
-    tmp2 = FilterAllUnits([[f_side, 1], [f_nation, 1]]);
-   
-    for i in tmp1 do
-    begin
-        for j in tmp2 do
-        begin
-            if GetDistUnits(i, j) < 7 then
-            begin
-                disable;
-                ComMoveXY([cargo1, cargo2], 7, 9);
+cargos = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, ru_cargo_bay]]);
 
-                If cargoSee = 0 then
-                begin
-                   cargoSee = 1;
-                   cargoEscape = 1;
-                   Say(driver1, 'D5-Rus2-1a');
-                   exit;
-                end; 
-                
-            end;
-        end;
-    end;
+repeat
+ wait(0$3);
+until UnitFilter(cargos, [f_not, [f_hastask]]) or UnitFilter(cargos, [f_not, [f_lives, 980]]);
 
-end;
+ComMoveXY(cargos, 7, 9);
+
+cargoSee = 1;
+cargoEscape = 1;
+
+Say(driver1, 'D5-Rus2-1a');
+End;
 
 // Escape cargo from map
 Every 0$1 trigger cargoEscape > 0 do
@@ -652,18 +683,24 @@ begin
 end;
 
 Every 0$1 trigger cargoEscape > 1 do
+var speaker;
 begin
 
     SetRestrict(b_armoury, 1, true);
     SetRestrict(31, 1, true);
 
-    If IsOK(Jerry) then
-    begin
-         Say(Jerry, 'D5a-Sol1-1');
-    end else
-    begin
-         Say(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, 1]])[rand(2, FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, 1]]))], 'D5a-Sol1-1');
-    end;
+    if IsOK(Jerry) then
+       Say(Jerry, 'D5a-Sol1-1')
+    else
+       begin
+       speaker := FilterAllUnits([[f_side, 1], [f_sex, sex_male]]) diff [JMM, Bobby, Cyrus, Khatam];
+
+       if not speaker then
+          exit;
+
+       Say(speaker[1], 'D5a-Sol1-1');
+       end;
+
     Say(JMM, 'D5a-JMM-1');
 end;
 
@@ -685,10 +722,9 @@ begin
 end;
 
 // Mikhail ask  > kill/patrol/free
-Every 0$1 trigger IsInArea(Mikhail, MikhailEnter) AND mikhailInBase = 1 AND GetSide(Mikhail) = 1 do
+Export Function AskMikhail;
 begin
-     enable;
-     
+
      case query('QMikh2') of
      1: Begin
         SetAttitude(1, 6, att_enemy, true);
@@ -704,7 +740,7 @@ begin
         SetSide(Mikhail, 6);
         ComExitBuilding(Mikhail);
         wait(0$1);
-        AddComMoveXY(Mikhail, GetX(Mikhail) + 2, GetY(Mikhail) + 2);
+        ComMoveXY(Mikhail, GetX(Mikhail) + 2, GetY(Mikhail) + 2);
         AddComMoveXY(Mikhail, GetX(Mikhail) + 1, GetY(Mikhail) + 2);
         AddComMoveXY(Mikhail, GetX(Mikhail) + 2, GetY(Mikhail));
 
@@ -730,24 +766,24 @@ Every 1 trigger IsInArea(Mikhail, MikhailEnter) AND mikhailInBase = 4 do
 begin
      enable;
 
+     mikhailInBase = 1;
+
      InGameOn;
-     SetSide(Mikhail, 1);
+     SetSide(dep1, 6);
 
      repeat
        wait(0$1);
-       IF GetDistUnits(Mikhail, dep1) < GetDistUnits(Mikhail, dep2) then
-       begin
-          ComEnterUnit(Mikhail, dep1);
-       end else
-       begin
-          ComEnterUnit(Mikhail, dep2);
-       end;
+
+       if Carry(Mikhail) then
+          ComUnload(Mikhail);
+
+       AddComEnterUnit(Mikhail, dep1);
      until IsInUnit(Mikhail);
 
-     InGameOff;
+     SetSide(dep1, 1);
+     SetSide(Mikhail, 1);
 
-     mikhailInBase = 1;
-
+     InGameOff;   
 end;
 
 // Mikhail - Escape
@@ -757,12 +793,14 @@ enable;
 
      IF FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_dist, IsInUnit(Mikhail), 10]]) = 1 then
      begin
+       mikhailStatus = 4;
        SetAttitude(1, 6, att_enemy, true);
        SetSide(Mikhail, 6);
        ComExitBuilding(Mikhail);
        wait(0$1);
        ComMoveToArea(Mikhail, MikhailEscape);
        mikhailStatus = 3;
+       disable;
      end;
 end;
 
@@ -771,7 +809,7 @@ Every 0$1 trigger GetDistUnits(JMM, mikhailDepot) < 5 AND mikhailStatus = 3 AND 
 var tmp;
 begin
 
-     tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, sex_male]]) diff [JMM];
+     tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, sex_male]]) diff [JMM, Khatam];
 
      DialogueOn;
      Say(JMM, 'D7-JMM-1');

@@ -2,14 +2,14 @@
 Export Function MCE_ApemanTamed(ape, sci);
 var i, tmp;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
     begin
     if sci in mc_bases[i] then
        begin
-       mc_ape := Add(mc_ape, [i, mc_ape[i]+1], ape);
+       mc_ape := ReplaceIn(mc_ape, [i, mc_ape[i]+1], ape);
 
        tmp := NearestUnitToUnit(UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]), ape);
 
@@ -24,7 +24,7 @@ End;
 Export Function MCE_EnterBuilding(building, unit);
 var i, tmp;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
@@ -41,7 +41,7 @@ End;
 Export Function MCE_BuildingCaptured(building, side, capturning_unit);
 var i, tmp;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
@@ -64,7 +64,7 @@ Export Function MCE_VehicleCaptured(new, old, side, capturing_unit);
 var i, tmp;
 begin
 
-if not mc_bases or not side in mc_sides then
+if not mc_bases or not skirmish or not side in mc_sides then
    exit;
 
 for i = 1 to mc_vehicles do
@@ -80,7 +80,7 @@ End;
 Export Function MCE_VehicleConstructed(vehicle, factory);
 var i, side, tmp;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 side := GetSide(vehicle);
@@ -89,32 +89,30 @@ for i = 1 to mc_bases do
     begin
     if factory in mc_bases[i] then
        begin
-       if mc_defender[i] < mc_defender_limit[i] then
+       if mc_defender[i] < mc_defender_limit[i] and not GetWeapon(vehicle) in [ar_control_tower, ar_cargo_bay, ru_cargo_bay, ru_big_cargo_bay, us_cargo_bay, ar_radar, ru_radar, us_radar, ru_bulldozer, us_bulldozer, ar_bio_bomb, ar_selfpropelled_bomb, us_hack, us_crane, ru_crane, ru_siberium_rocket, us_siberium_rocket] then
+           mc_defender := Replace(mc_defender, i, mc_defender[i]^vehicle)
+       else
+           mc_vehicles := ReplaceIn(mc_vehicles, [i, mc_vehicles[i]+1], vehicle);
+
+       if not mc_scan[i] then
           begin
-          mc_defender := Replace(mc_defender, i, mc_defender[i]^vehicle);
-
-          if not mc_scan[i] then
-             begin
-             if GetControl(vehicle) = control_remote then
-                repeat
-                 wait(0$1);
-                until IsControledBy(vehicle);
-
-             ComMoveToArea(vehicle, mc_parking[i]);
-
-             if GetControl(vehicle) <> control_manual then
-                break;
-
+          if GetControl(vehicle) = control_remote then
              repeat
               wait(0$1);
-             until IsInArea(vehicle, mc_parking[i]);
+             until IsControledBy(vehicle);
 
-             ComExitVehicle(IsDrivenBy(vehicle));
-             exit;
-             end;
-          end
-         else
-          mc_vehicles := Add(mc_vehicles, [i, mc_vehicles[i]+1], vehicle);
+          ComMoveToArea(vehicle, mc_parking[i]);
+
+          if GetControl(vehicle) <> control_manual then
+             break;
+
+          repeat
+           wait(0$1);
+          until IsInArea(vehicle, mc_parking[i]);
+
+          ComExitVehicle(IsDrivenBy(vehicle));
+          exit;
+          end;
        end;
     end;
 End;
@@ -122,7 +120,7 @@ End;
 Export Function MCE_CrateSpawn(id, x, y, amount, mode);
 var i, j, depot;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 repeat
@@ -138,7 +136,7 @@ for i = 1 to mc_bases do
        for j in mc_crates_area[i] do
            if InArea(x, y, j) then
               begin
-              mc_crates := Add(mc_crates, [i, mc_crates[i]+1], [amount, x, y]);
+              mc_crates := ReplaceIn(mc_crates, [i, mc_crates[i]+1], [amount, x, y]);
               exit;
               end;
 
@@ -150,7 +148,7 @@ for i = 1 to mc_bases do
     for j in depot do
         if GetDistUnitXY(j, x, y) < 30 then
            begin
-           mc_crates := Add(mc_crates, [i, mc_crates[i]+1], [amount, x, y]);
+           mc_crates := ReplaceIn(mc_crates, [i, mc_crates[i]+1], [amount, x, y]);
            exit;
            end;
     end;
@@ -159,6 +157,9 @@ End;
 Export Function MCE_ResearchComplete(tech, lab);
 var side, i, tmp;
 begin
+if not mc_bases or not skirmish then
+   exit;
+
 side := GetSide(lab);
 
 if not side in mc_sides or not mc_tech or not mc_bases then
@@ -193,7 +194,7 @@ Export Function MCE_UnitDestroyed(un);
 var i, j, btype, pos, tmp, fac, components;
 begin
 
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
@@ -210,7 +211,7 @@ for i = 1 to mc_bases do
           mc_ape_in_lab := Replace(mc_ape_in_lab, i, []);
           end;
 
-       if GetType(un) = unit_vehicle and GetTag(un) = 20 then
+       if GetType(un) = unit_vehicle and (GetTag(un) = 20 or un in mc_defender[i]) then
           begin
           fac := MC_GetBuilding(i, b_factory);
 
@@ -241,10 +242,13 @@ for i = 1 to mc_bases do
              pos := 1;
              end;
 
+          if btype = b_barracks then
+             btype := b_armoury;
+
           if btype in [b_lab_half, b_lab_full] then
              btype := b_lab;
 
-          mc_build_list := Add(mc_build_list, [i, mc_build_list[i]+1], [btype, GetX(un), GetY(un), GetDir(un)]);
+          mc_build_list := ReplaceIn(mc_build_list, [i, mc_build_list[i]+1], [btype, GetX(un), GetY(un), GetDir(un)]);
 
           if pos = 1 then
              begin
@@ -273,6 +277,11 @@ for i = 1 to mc_bases do
           mc_vehicles := Replace(mc_vehicles, i, mc_vehicles[i] diff un);
           end;
 
+       if un in mc_defender[i] then
+          begin
+          mc_defender := Replace(mc_defender, i, mc_defender[i] diff un);
+          end;
+
        if un in mc_empty_turret_list[i] then
           begin
           mc_empty_turret_list := Replace(mc_empty_turret_list, i, mc_empty_turret_list[i] diff un);
@@ -290,7 +299,7 @@ End;
 Export Function MCE_UpgradeComplete(building);
 var i, j;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
@@ -304,7 +313,7 @@ for i = 1 to mc_bases do
           mc_lab_upgrade := Replace(mc_lab_upgrade, i, Reindex(mc_lab_upgrade[i], 1, mc_lab_upgrade[i], false));
 
        if not building in mc_bases[i] then
-          mc_bases := Add(mc_bases, [i, mc_bases[i]+1], building);
+          mc_bases := ReplaceIn(mc_bases, [i, mc_bases[i]+1], building);
        exit;
        end;
 
@@ -314,7 +323,7 @@ End;
 Export Function MCE_BuildingComplete(building);
 var i, j, btype, tmp, units, side;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
@@ -323,13 +332,13 @@ for i = 1 to mc_bases do
     if building in mc_construct_list[i] then
        begin
        mc_construct_list := Replace(mc_construct_list, i, mc_construct_list[i] diff building);
-       mc_bases := Add(mc_bases, [i, mc_bases[i]+1], building);
+       mc_bases := ReplaceIn(mc_bases, [i, mc_bases[i]+1], building);
        btype := GetBType(building);
        side := GetSide(building);
 
        if btype = b_lab then
           begin
-          mc_lab := Add(mc_lab, [i, mc_lab[i]+1], building);
+          mc_lab := ReplaceIn(mc_lab, [i, mc_lab[i]+1], building);
           exit;
           end;
 
@@ -345,17 +354,17 @@ for i = 1 to mc_bases do
              btype := b_factory;
 
           if GetRestrict(btype, side) = state_enabled then
-             mc_build_upgrade := Add(mc_build_upgrade, [i, mc_build_upgrade[i]+1], building);
+             mc_build_upgrade := ReplaceIn(mc_build_upgrade, [i, mc_build_upgrade[i]+1], building);
           exit;
           end;
 
        if btype in [b_bunker, b_turret] then
           begin
-          mc_turret_list := Add(mc_turret_list, [i, mc_turret_list[i]+1], building);
+          mc_turret_list := ReplaceIn(mc_turret_list, [i, mc_turret_list[i]+1], building);
 
           if btype = b_bunker then
              begin
-             mc_empty_turret_list := Add(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
+             mc_empty_turret_list := ReplaceIn(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
 
              // get soldier for tower
              tmp := UnitFilter(mc_bases[i], [[f_class, 1], [f_not, [f_inside]]]);
@@ -390,7 +399,7 @@ End;
 Export Function MCE_BuildingStarted(building, builder);
 var i, j, btype, x, y, d;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 btype := GetBType(building);
@@ -407,7 +416,7 @@ for i = 1 to mc_bases do
     if CompareArray([btype, x, y, d], mc_build_list[i][1]) then
        begin
        mc_build_list := Replace(mc_build_list, i, Delete(mc_build_list[i], 1));
-       mc_construct_list := Add(mc_construct_list, [i, mc_construct_list[i]+1], building);
+       mc_construct_list := ReplaceIn(mc_construct_list, [i, mc_construct_list[i]+1], building);
        exit;
        end;
 
@@ -417,14 +426,14 @@ End;
 Export Function MCE_LeaveBuilding(building, unit);
 var i, tmp;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
     begin
     if building in mc_turret_list[i] and not building in mc_empty_turret_list[i] then
        begin
-       mc_empty_turret_list := Add(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
+       mc_empty_turret_list := ReplaceIn(mc_empty_turret_list, [i, mc_empty_turret_list[i]+1], building);
        break;
        end;
     end;
@@ -437,7 +446,7 @@ End;
 Export Function MCE_EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2);
 var i;
 begin
-if not mc_bases then
+if not mc_bases or not skirmish then
    exit;
 
 if GetLives(abandoned_vehicle) > 250 then

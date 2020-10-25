@@ -1,6 +1,11 @@
 On UnitDestroyed(unit) Do
 begin
-     if GetSide(unit) = 1 and GetType(unit) = unit_human then deadsCounter = deadsCounter + 1;
+
+     if GetBType(unit) = b_depot then
+        YouLost('DepotDestroyed');
+
+     if GetSide(unit) = 1 and GetType(unit) = unit_human then
+        deadsCounter = deadsCounter + 1;
 end;
 
 On Command(comandid) do
@@ -21,3 +26,35 @@ begin
             end;
         end;
 end;
+
+On LeaveBuilding(b, un) do
+begin
+if un = Mikhail and mikhailStatus <> 4 then
+   begin
+   if IsOk(Mikhail) then
+      AskMikhail
+   else if IsOk(lab1) then
+        begin
+        SetSide(Mikhail, 6);
+        SetSide(lab1, 6);
+        ComEnterUnit(Mikhail, lab1);
+
+        repeat
+         wait(0$1);
+        until IsInUnit(Mikhail) = lab1 or IsDead(Mikhail);
+
+        SetSide(lab1, 1);
+        end
+      else
+        begin
+        SetSide(Mikhail, 6);
+        ComHold(Mikhail);
+        end;
+   end;
+End;
+
+Every 3 trigger GetClass(Mikhail) <> 3 do
+begin
+enable;
+SetClass(Mikhail, 3);
+End;

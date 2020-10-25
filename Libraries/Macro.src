@@ -1,19 +1,7 @@
-// Macro Module By Serpent
-// ver. 19.07.26
-{
-  TODO #1
-  - Sprawdziæ budowê bazy od zera (bez sk³adu)!
+// Macro Module [SoS] By Serpent
+// ver.  15.10.20
 
-  TODO #2
-  - Dodaæ mechanizm budowy teleportu/ustawiania wyjœcia z teleportu/ataku przez teleport
-  - Dodaæ mechanizm budowy pojazdów sterowanych przez ma³py
-  - Dodaæ mechanizm oswajania mastodontów+tygrysów przez szejków
-  - Dodaæ mechanizm karczowania lasu (buldo¿er + miotacz ognia)
-  - Dodaæ mechanizm patroli (?)
-}
-
-
-Export skirmish;
+Export skirmish, debug_mc;
 Export mc_bases, mc_building_need_repair, mc_building_repairs,
        mc_need_heal, mc_healers, mc_build_list, mc_builders,
        mc_construct_list, mc_turret_list, mc_empty_turret_list,
@@ -21,13 +9,15 @@ Export mc_bases, mc_building_need_repair, mc_building_repairs,
        mc_mines, mc_miners, mc_minefields, mc_crates, mc_crates_collector, mc_crates_area,
        mc_vehicles, mc_attack, mc_produce, mc_defender, mc_scan, mc_parking,
        mc_scan_area, mc_sides, mc_tech, mc_can_tame, mc_ape, mc_ape_in_lab, mc_taming,
-       mc_build_upgrade, mc_lab, mc_lab_upgrade, mc_teleport_exit, mc_deposits_xy,
-       mc_deposits_finder, mc_allowed_tower_weapons, mc_remote_driver;
+       mc_build_upgrade, mc_lab, mc_lab_upgrade, mc_teleport_exit, mc_teleport_exit_set, mc_deposits_xy,
+       mc_deposits_finder, mc_allowed_tower_weapons, mc_remote_driver, mc_class,
+       mc_class_case_use;
 
 Export Function InitMacro;
 var i;
 begin
 skirmish := false;
+debug_mc := false;
 mc_bases := [];
 mc_sides := [];
 mc_building_need_repair := [];
@@ -56,6 +46,105 @@ mc_repair_vehicle := [];
 mc_scan := [];
 mc_scan_area := [];
 mc_tech := [];
+mc_class := [];
+mc_class_case_use := [];
+End;
+
+// destroy current mc_base instance
+Export Function MC_Kill(base);
+begin
+mc_bases := Replace(mc_bases, base, []);
+mc_building_need_repair := Replace(mc_building_need_repair, base, []);
+mc_building_repairs := Replace(mc_building_repairs, base, []);
+mc_need_heal := Replace(mc_need_heal, base, []);
+mc_healers := Replace(mc_healers, base, []);
+mc_build_list := Replace(mc_build_list, base, []);
+mc_builders := Replace(mc_builders, base, []);
+mc_construct_list := Replace(mc_construct_list, base, []);
+mc_turret_list := Replace(mc_turret_list, base, []);
+mc_empty_turret_list := Replace(mc_empty_turret_list, base, []);
+mc_busy_turret_list := Replace(mc_busy_turret_list, base, []);
+mc_defender_limit := Replace(mc_defender_limit, base, 0);
+mc_repair_vehicle := Replace(mc_repair_vehicle, base, []);
+mc_mines := Replace(mc_mines, base, []);
+mc_miners := Replace(mc_miners, base, []);
+mc_minefields := Replace(mc_minefields, base, []);
+mc_crates := Replace(mc_crates, base, []);
+mc_crates_collector := Replace(mc_crates_collector, base, []);
+mc_crates_area := Replace(mc_crates_area, base, []);
+mc_vehicles := Replace(mc_vehicles, base, []);
+mc_attack := Replace(mc_attack, base, []);
+mc_produce := Replace(mc_produce, base, []);
+mc_defender := Replace(mc_defender, base, []);
+mc_scan := Replace(mc_scan, base, []);
+mc_parking := Replace(mc_parking, base, []);
+mc_scan_area := Replace(mc_scan_area, base, []);
+mc_tech := Replace(mc_tech, base, []);
+mc_ape := Replace(mc_ape, base, []);
+mc_ape_in_lab := Replace(mc_ape_in_lab, base, []);
+mc_taming := Replace(mc_taming, base, []);
+mc_build_upgrade := Replace(mc_build_upgrade, base, []);
+mc_lab := Replace(mc_lab, base, []);
+mc_lab_upgrade := Replace(mc_lab_upgrade, base, []);
+mc_teleport_exit := Replace(mc_teleport_exit, base, []);
+mc_teleport_exit_set := Replace(mc_teleport_exit_set, base, []);
+mc_deposits_xy := Replace(mc_deposits_xy, base, []);
+mc_deposits_finder := Replace(mc_deposits_finder, base, []);
+mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, base, []);
+mc_remote_driver := Replace(mc_remote_driver, base, []);
+mc_class := Replace(mc_class, base, []);
+mc_class_case_use := Replace(mc_class_case_use, base, 0);
+End;
+
+Export Function MC_Add(side, units);
+var base;
+begin
+base := mc_bases + 1;
+
+mc_sides := Replace(mc_sides, base, side);
+mc_bases := Replace(mc_bases, base, units);
+mc_building_need_repair := Replace(mc_building_need_repair, base, []);
+mc_building_repairs := Replace(mc_building_repairs, base, []);
+mc_need_heal := Replace(mc_need_heal, base, []);
+mc_healers := Replace(mc_healers, base, []);
+mc_build_list := Replace(mc_build_list, base, []);
+mc_builders := Replace(mc_builders, base, []);
+mc_construct_list := Replace(mc_construct_list, base, []);
+mc_turret_list := Replace(mc_turret_list, base, []);
+mc_empty_turret_list := Replace(mc_empty_turret_list, base, []);
+mc_busy_turret_list := Replace(mc_busy_turret_list, base, []);
+mc_defender_limit := Replace(mc_defender_limit, base, 0);
+mc_repair_vehicle := Replace(mc_repair_vehicle, base, []);
+mc_mines := Replace(mc_mines, base, []);
+mc_miners := Replace(mc_miners, base, []);
+mc_minefields := Replace(mc_minefields, base, []);
+mc_crates := Replace(mc_crates, base, []);
+mc_crates_collector := Replace(mc_crates_collector, base, []);
+mc_crates_area := Replace(mc_crates_area, base, []);
+mc_vehicles := Replace(mc_vehicles, base, []);
+mc_attack := Replace(mc_attack, base, []);
+mc_produce := Replace(mc_produce, base, []);
+mc_defender := Replace(mc_defender, base, []);
+mc_scan := Replace(mc_scan, base, []);
+mc_parking := Replace(mc_parking, base, []);
+mc_scan_area := Replace(mc_scan_area, base, []);
+mc_tech := Replace(mc_tech, base, []);
+mc_ape := Replace(mc_ape, base, []);
+mc_ape_in_lab := Replace(mc_ape_in_lab, base, []);
+mc_taming := Replace(mc_taming, base, []);
+mc_build_upgrade := Replace(mc_build_upgrade, base, []);
+mc_lab := Replace(mc_lab, base, []);
+mc_lab_upgrade := Replace(mc_lab_upgrade, base, []);
+mc_teleport_exit := Replace(mc_teleport_exit, base, []);
+mc_teleport_exit_set := Replace(mc_teleport_exit_set, base, []);
+mc_deposits_xy := Replace(mc_deposits_xy, base, []);
+mc_deposits_finder := Replace(mc_deposits_finder, base, []);
+mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, base, []);
+mc_remote_driver := Replace(mc_remote_driver, base, []);
+mc_class := Replace(mc_class, base, []);
+mc_class_case_use := Replace(mc_class_case_use, base, 0);
+
+result := base;
 End;
 
 Export Function MC_Start();
@@ -64,6 +153,7 @@ begin
 // init
 for i = 1 to mc_bases do
     begin
+    mc_bases := Replace(mc_bases, i, mc_bases[i] diff 0);
     mc_building_need_repair := Replace(mc_building_need_repair, i, []);
     mc_building_repairs := Replace(mc_building_repairs, i, []);
     mc_need_heal := Replace(mc_need_heal, i, []);
@@ -72,7 +162,7 @@ for i = 1 to mc_bases do
     mc_build_upgrade := Replace(mc_build_upgrade, i, []);
     mc_builders := Replace(mc_builders, i, []);
     mc_construct_list := Replace(mc_construct_list, i, []);
-    mc_turret_list := Replace(mc_turret_list, i, []);
+    mc_turret_list := Replace(mc_turret_list, i, UnitFilter(mc_bases[i], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]));
     mc_empty_turret_list := Replace(mc_empty_turret_list, i, UnitFilter(mc_bases[i], [ [f_or, [f_btype, b_bunker], [f_btype, b_breastwork] ], [f_empty]]));
     mc_busy_turret_list := Replace(mc_busy_turret_list, i, []);
     mc_miners := Replace(mc_miners, i, []);
@@ -97,10 +187,13 @@ for i = 1 to mc_bases do
     mc_lab := Replace(mc_lab, i, UnitFilter(mc_bases[i], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]));
     mc_lab_upgrade := Replace(mc_lab_upgrade, i, []);
     mc_teleport_exit := Replace(mc_teleport_exit, i, []);
+    mc_teleport_exit_set := Replace(mc_teleport_exit_set, i, []);
     mc_deposits_xy := Replace(mc_deposits_xy, i, []);
     mc_deposits_finder := Replace(mc_deposits_finder, i, []);
     mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, i, []);
     mc_remote_driver := Replace(mc_remote_driver, i, []);
+    mc_class := Replace(mc_class, i, []);
+    mc_class_case_use := Replace(mc_class_case_use, i, 0);
     end;
 
 MC_InitSides();
@@ -167,6 +260,7 @@ MC_CheckBuildings();
 MC_CheckPeopleLife();
 
 // action's
+RaiseSailEvent(100); // mc_class
 RaiseSailEvent(103); // mc_build
 RaiseSailEvent(104); // mc_weapon_turret
 RaiseSailEvent(105); // mc_upgrade_building
@@ -177,33 +271,21 @@ RaiseSailEvent(109); // mc_produce_vehicle
 RaiseSailEvent(110); // mc_attack
 RaiseSailEvent(111); // mc_defense
 RaiseSailEvent(112); // mc_research
+RaiseSailEvent(113); // mc_mines_trigger
 RaiseSailEvent(120); // mc_repair_vehicle
 RaiseSailEvent(121); // mc_tame
 RaiseSailEvent(122); // mc_change_ape_class
 RaiseSailEvent(123); // mc_bazooka
-// RaiseSailEvent(124); // mc_teleport // todo
+RaiseSailEvent(124); // mc_teleport
 RaiseSailEvent(125); // mc_deposits
 RaiseSailEvent(126); // mc_remote_driver
 RaiseSailEvent(200); // mc_idle
 End;
 
-// mine triggering
-Every 10 trigger skirmish do
-var i;
-begin
-enable;
-
-if not mc_bases then
-   exit;
-
-for i = 1 to mc_bases do
-    if mc_mines[i] and mc_miners[i] then
-       DetonateMines(GetSide(mc_miners[i][1]), mc_mines[i]);
-End;
-
 
 {
   MC EVENT LIST
+  100: ClassManager
   101: RepairBuilding
   102: Heal
   103: BuildBuilding
@@ -216,6 +298,7 @@ End;
   110: SendAttack
   111: Defend
   112: Research
+  113: Mines
   120: RepairVehicle
   121: Tame
   122: ChangeApeClass
@@ -227,7 +310,11 @@ End;
 }
 On SailEvent(event) do
 begin
-
+if event < 100 then
+   CustomEvent(event);
+// class manager
+if event = 100 then
+   MC_ClassManager();
 // repair building
 if event = 101 then
    MC_RepairBuildings();
@@ -263,6 +350,9 @@ if event = 111 then
    MC_Defend();
 if event = 112 then
    MC_Research();
+// mines
+if event = 113 then
+   MC_MinesTrigger();
 // repair
 if event = 120 then
    MC_RepairVehicle();
@@ -301,6 +391,407 @@ for i in mc_bases[base] union mc_ape[base] do
        SetTag(i, 0);
 End;
 
+Export Function MC_ClassManager();
+var i, j, tmp, p, b, e, k;
+begin
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    begin
+    tmp := MC_ClassCheckReq(i);
+
+    mc_class := Replace(mc_class, i, tmp);
+
+    if not tmp then
+       continue;
+
+    b := [UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]),
+          UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]),
+          UnitFilter(mc_bases[i], [f_btype, b_factory]),
+          UnitFilter(mc_bases[i], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]])];
+
+
+    for j = 1 to 4 do
+        begin
+        if not tmp[j] then
+           continue;
+
+        for p in tmp[j] do
+            begin
+
+            if not b[j] then
+               break;
+
+            e := 0;
+
+            for k in b[j] do
+                if IsNotFull(k) then
+                   begin
+                   e := k;
+                   break;
+                   end;
+
+            if e and not UnitGoingToBuilding(p, e) then
+               begin
+
+               if IsInUnit(p) then
+                  ComExitBuilding(p);
+
+               ComEnterUnit(p, e);
+               AddComChangeProfession(p, j);
+               AddComExitBuilding(p);
+               end;
+
+            end;
+        end;
+    end;
+End;
+
+Export Function MC_ClassCheckReq(base);
+var i, tmp, sol, eng, mech, sci, sort, j, p, b, bcount;
+begin
+if not base or not mc_bases[base] or not UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) then
+   exit;
+
+tmp := UnitFilter(mc_bases[base], [f_or, [f_class, 1], [f_class, 2],
+                                         [f_class, 3], [f_class, 4],
+                                         [f_class, 5], [f_class, 8],
+                                         [f_class, 9]]);
+
+for i in tmp do
+    if GetTag(i) then
+       tmp := tmp diff i;
+
+if not tmp then
+   exit;
+
+// przypadki uzycia
+{
+   1. brak labów, brak fabryki, brak zagro¿enia - 100% in¿ynierów
+   2. lab z aktywnymi technologiami, brak fabryki, brak zagro¿enia - 6 naukowców max, reszta in¿ynierowie
+   3. lab z aktywnymi technologiami, fabryka, brak zagro¿enia - 6 naukowcow max, 6 mechanikow max, min 1 eng
+   4. zagro¿enie - naukowcy (min. 1, max. 2), (max. 3 mechów), (max. 4 engów), reszta zolnierze
+   5. lab bez techów, fabryka, brak zagro¿enia - 6 mechów, 1 naukowiec, reszta engi
+   6. lab bez techów, fabryka, brak zagro¿enia, pusta kolejka budowy - 6 mechów, 4 engów, reszta zolnierze, 1 naukowiec
+}
+
+sol := UnitFilter(mc_bases[base], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
+eng := UnitFilter(mc_bases[base], [f_class, 2]);
+mech := UnitFilter(mc_bases[base], [f_class, 3]);
+sci := UnitFilter(mc_bases[base], [[f_class, 4], [f_lives, 251]]);
+
+// case 4
+if mc_scan[base] then
+   begin
+   mc_class_case_use := Replace(mc_class_case_use, base, 4);
+
+   b := UnitFilter(mc_bases[base], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]);
+
+   if not b then
+      exit;
+
+   p := [];
+
+   if sci >= 2 then
+      sci := [sci[1], sci[2]]
+   else if sci = 1 then
+        sci := [sci[1]]
+   else if sci = 0 then
+        p := SortBySkill(tmp, 4)[1];
+
+   if eng > 4 then
+      for i = eng downto 4 do
+          eng := eng diff eng[i];
+
+   tmp := tmp diff (sol union eng union mech union sci);
+
+   bcount := UnitFilter(mc_bases[base], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]])
+           + UnitFilter(mc_bases[base], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) * 6;
+
+
+   if bcount < tmp then
+      for i = tmp downto bcount do
+          tmp := Delete(tmp, tmp);
+
+   result := [tmp, 0, 0, p];
+   exit;
+   end;
+
+// case 1
+if not UnitFilter(mc_bases[base], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]) and not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
+   begin
+   if eng = tmp then
+      exit;
+
+   mc_class_case_use := Replace(mc_class_case_use, base, 1);
+
+   result := [0, tmp diff eng, 0, 0];
+
+   exit;
+   end;
+
+// case 2
+if mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]) and not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
+   begin
+   if sci >= 6 then
+      exit;
+
+   mc_class_case_use := Replace(mc_class_case_use, base, 2);
+
+   sort := SortBySkill(tmp diff sci, 4);
+   p := [];
+
+   if sci < 6 and sort > 6 then
+      begin
+      for i = 1 to 6 - sci do
+          begin
+          p := Insert(p, p + 1, sort[1]);
+          sort := Delete(sort, 1);
+          end;
+      end
+   else if sort then
+      p := sort[1];
+
+   result := [0, 0, 0, p];
+
+   exit;
+   end;
+
+// case 3
+if mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]) and UnitFilter(mc_bases[base], [f_btype, b_factory]) then
+   begin
+   mc_class_case_use := Replace(mc_class_case_use, base, 3);
+
+   result := [0, 0, 0, 0];
+
+   if not eng then
+      begin
+      p := SortBySkill(tmp, 2)[1];
+      result := Replace(result, 2, p);
+
+      tmp := tmp diff p;
+      end;
+
+   if tmp and sci < 6 then
+      begin
+      sort := SortBySkill(tmp diff (sci union mech), 4);
+      p := [];
+
+      if sort then
+         for i = 1 to 6 - sci do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 4 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 4, p);
+      end;
+
+   if tmp and mech < 6 then
+      begin
+      sort := SortBySkill(tmp diff (sci union mech), 3);
+      p := [];
+
+      if sort then
+         for i = 1 to 6 - mech do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 3 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 3, p);
+      end;
+
+    if tmp > 6 and eng < 6 then
+       begin
+       sort := SortBySkill(tmp diff (sci union mech union eng), 2);
+       p := [];
+
+       if sort then
+         for i = 1 to 6 - eng do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 2 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+       if p then
+          result := Replace(result, 2, p);
+       end;
+
+   exit;
+   end;
+
+// case 5
+if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factory]) and mc_build_list[base] then
+   begin
+   mc_class_case_use := Replace(mc_class_case_use, base, 5);
+
+   result := [0, 0, 0, 0];
+
+   if sci > 1 then
+      tmp := tmp diff (sci diff sci[1]);
+
+   if tmp and not sci then
+      begin
+      sort := SortBySkill(tmp, 4);
+
+      if sort then
+         p := sort[1];
+
+      if p then
+         result := Replace(result, 4, p);
+      end;
+
+   tmp := tmp diff mech;
+
+   if tmp and mech < 6 then
+      begin
+      sort := SortBySkill(tmp diff (sci union mech), 3);
+      p := [];
+
+      if sort then
+         for i = 1 to 6 - mech do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 3 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 3, p);
+      end;
+
+   tmp := tmp diff eng;
+
+   if tmp and eng < 6 then
+      begin
+      sort := SortBySkill(tmp diff (sci union mech union eng), 2);
+      p := [];
+
+      if sort then
+         for i = 1 to 6 - eng do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 2 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 2, p);
+      end;
+
+   exit;
+   end;
+
+// case 6
+if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factory]) and not mc_build_list[base] then
+   begin
+   mc_class_case_use := Replace(mc_class_case_use, base, 6);
+
+   result := [0, 0, 0, 0];
+
+   if sci >= 1 then
+      tmp := tmp diff sci[1];
+
+   if tmp and not sci then
+      begin
+      sort := SortBySkill(tmp, 4);
+
+      if sort then
+         p := sort[1];
+
+      if p then
+         result := Replace(result, 4, p);
+      end;
+
+   tmp := tmp diff mech;
+
+   if tmp and mech < 6 then
+      begin
+      sort := SortBySkill(tmp diff mech, 3);
+      p := [];
+
+      if sort then
+         for i = 1 to 6 - mech do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 3 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 3, p);
+      end;
+
+   tmp := tmp diff eng;
+
+   if tmp and eng < 4 then
+      begin
+      sort := SortBySkill(tmp diff (mech union eng), 2);
+      p := [];
+
+      if sort then
+         for i = 1 to 4 - eng do
+             begin
+             if i = sort then
+                break;
+
+             if GetClass(i) = 2 then
+                continue;
+
+             p := Insert(p, p + 1, sort[i]);
+             tmp := tmp diff sort[i];
+             end;
+
+      if p then
+         result := Replace(result, 2, p);
+      end
+   else
+      for i = eng downto 5 do
+          tmp := tmp union eng[i];
+
+   result := Replace(result, 1, tmp diff sol);
+   exit;
+   end;
+
+End;
+
 
 Export Function MC_CheckBuildings();
 var i, tmp;
@@ -326,19 +817,19 @@ if not mc_bases then
 
 for i = 1 to mc_bases do
     begin
-    tmp := UnitFilter(mc_bases[i] union mc_ape[i], [[f_type, unit_human], [f_and, [f_not, [f_inside]], [f_not, [f_lives, 700]]]]);
+    tmp := UnitFilter(mc_bases[i] union mc_ape[i], [[f_type, unit_human], [f_and, [f_not, [f_inside]], [f_not, [f_lives, 750]]]]);
     need_heal_1 := UnitFilter(mc_bases[i], [[f_type, unit_human], [f_and, [f_not, [f_inside]], [f_not, [f_lives, 250]]]]);
     need_heal_2 := tmp diff need_heal_1;
 
     if not need_heal_1 then
-       mc_need_heal := Add(mc_need_heal, [i, 1], [])
+       mc_need_heal := ReplaceIn(mc_need_heal, [i, 1], [])
       else
-       mc_need_heal := Add(mc_need_heal, [i, 1], need_heal_1);
+       mc_need_heal := ReplaceIn(mc_need_heal, [i, 1], UnitFilter(mc_need_heal[i][1], [f_not, [f_lives, 1000]]) union need_heal_1);
 
     if not need_heal_2 then
-       mc_need_heal := Add(mc_need_heal, [i, 2], [])
+       mc_need_heal := ReplaceIn(mc_need_heal, [i, 2], [])
       else
-       mc_need_heal := Add(mc_need_heal, [i, 2], need_heal_2);
+       mc_need_heal := ReplaceIn(mc_need_heal, [i, 2], need_heal_2);
 
     if need_heal_2 then
        for j in need_heal_2 do
@@ -401,10 +892,10 @@ for i = 1 to mc_bases do
         if not j in mc_building_repairs[i] then
            begin
            SetTag(j, 101);
-           mc_building_repairs := Add(mc_building_repairs, [i, mc_building_repairs[i]+1], j);
+           mc_building_repairs := ReplaceIn(mc_building_repairs, [i, mc_building_repairs[i]+1], j);
            end;
 
-        Wait(3);
+        wait(1);
 
         ComRepairBuilding(j, NearestUnitToUnit(mc_building_need_repair[i], j));
         end;
@@ -443,7 +934,7 @@ for i = 1 to mc_bases do
            ComExitBuilding(j);
 
         if not j in mc_healers[i] then
-           mc_healers := Add(mc_healers, [i, mc_healers[i]+1], j);
+           mc_healers := ReplaceIn(mc_healers, [i, mc_healers[i]+1], j);
 
         if GetTag(j) <> 102 then
            SetTag(j, 102);
@@ -461,7 +952,7 @@ End;
 
 
 Export Function MC_Build();
-var i, j, tmp;
+var i, j, tmp, depot;
 begin
 if not mc_bases then
    exit;
@@ -491,7 +982,7 @@ for i = 1 to mc_bases do
            if not mc_builders[i] then
               begin
               SetTag(j, 103);
-              mc_builders := Add(mc_builders, [i, mc_builders[i]+1], j);
+              mc_builders := ReplaceIn(mc_builders, [i, mc_builders[i]+1], j);
               end;
 
            if IsInUnit(j) then
@@ -507,39 +998,59 @@ for i = 1 to mc_bases do
            end;
 
        end
-    else if mc_build_list[i] and UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) then
-    if CanBeBuilded(UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]])[1], mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4]) then
+    else if mc_build_list[i] then
        begin
-       tmp := UnitFilter(mc_bases[i], [f_class, 2]) diff mc_building_repairs[i];
+       depot := UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
 
-       if not tmp then
-          continue;
+       if depot then
+          depot := depot[1]
+       else
+          depot := 0;
 
-       for j in tmp do
-           begin
-           if not mc_builders[i] then
+       if IsExtension(mc_build_list[i][1][1]) and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]) then
+          begin
+
+          for j = 1 to mc_build_list[i] do
+              if mc_build_list[i][j][1] = b_workshop then
+                 begin
+                 mc_build_list := Replace(mc_build_list, i, Reindex(mc_build_list[i], j, 1, false));
+                 break;
+                 end;
+          end;
+
+       if mc_build_list[i][1][1] = b_depot or (depot and CanBeBuilt(depot, mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4])) then
+          begin
+          tmp := UnitFilter(mc_bases[i], [f_class, 2]) diff mc_building_repairs[i];
+
+          if not tmp then
+             continue;
+
+          for j in tmp do
               begin
-              SetTag(j, 103);
-              mc_builders := Add(mc_builders, [i, mc_builders[i]+1], j);
+              if not mc_builders[i] then
+                 begin
+                 SetTag(j, 103);
+                 mc_builders := ReplaceIn(mc_builders, [i, mc_builders[i]+1], j);
+                 end;
+
+              if IsInUnit(j) then
+                 ComExitBuilding(j);
+
+              wait(3);
+
+              if not mc_build_list[i] then
+                 break;
+
+              if not HasTask(j) then
+                 ComBuild(j, mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4]);
               end;
-
-           if IsInUnit(j) then
-              ComExitBuilding(j);
-
-           wait(3);
-
-           if not mc_build_list[i] then
-              break;
-
-           if not HasTask(j) then
-              ComBuild(j, mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4]);
-           end;
-       end
-    else if not TryClearPlaceForBuilding(mc_bases[i], mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4]) then
-         begin
-         mc_build_list := Replace(mc_build_list, i, Reindex(mc_build_list[i], 1, -1, false));
-         continue;
-         end;
+          end
+       else if not TryClearPlaceForBuilding(mc_bases[i], mc_build_list[i][1][1], mc_build_list[i][1][2], mc_build_list[i][1][3], mc_build_list[i][1][4]) then
+          begin
+          mc_build_list := Replace(mc_build_list, i, Reindex(mc_build_list[i], 1, -1, false));
+          continue;
+          end;
+       end;
     end;
 End;
 
@@ -557,7 +1068,6 @@ for i = 1 to mc_bases do
     if not tmp and not lab then
        continue;
 
-
     if tmp then
        for j in tmp do
            begin
@@ -566,7 +1076,7 @@ for i = 1 to mc_bases do
               ComUpgrade(j);
 
               mc_build_upgrade := Replace(mc_build_upgrade, i, mc_build_upgrade[i] diff j);
-              mc_construct_list := Add(mc_construct_list, [i, mc_construct_list[i]+1], j);
+              mc_construct_list := ReplaceIn(mc_construct_list, [i, mc_construct_list[i]+1], j);
               end;
            end;
 
@@ -577,14 +1087,14 @@ for i = 1 to mc_bases do
         begin
         if GetBType(j) in [b_lab, b_lab_half] and BuildingStatus(j) <> bs_build then
            begin
-           
+
            if UpgradeLabCost(j, mc_lab_upgrade[i][1]) then
               begin
               ComCancel(j);
               AddComUpgradeLab(j, mc_lab_upgrade[i][1]);
 
               if not j in mc_construct_list[i] then
-                 mc_construct_list := Add(mc_construct_list, [i, mc_construct_list[i]+1], j);
+                 mc_construct_list := ReplaceIn(mc_construct_list, [i, mc_construct_list[i]+1], j);
               break;
               end;
            end;
@@ -594,7 +1104,7 @@ for i = 1 to mc_bases do
 End;
 
 Export Function MC_TurretWeapon();
-var i, j, tmp, t, busy, weapon;
+var i, j, tmp, tmp2, t, tw, busy, weapon;
 begin
 if not mc_bases then
    exit;
@@ -605,35 +1115,49 @@ for i = 1 to mc_bases do
     if not mc_turret_list[i] or not UnitFilter(mc_bases[i], [f_btype, b_factory]) then
        continue;
 
-    if GetBWeapon(mc_turret_list[i][1]) then
-       begin
-       tmp := Delete(mc_turret_list[i], 1);
-       mc_turret_list := Replace(mc_turret_list, i, tmp);
-
-       if not mc_turret_list[i] then
-          continue;
-       end;
-
     busy := false;
     tmp := UnitFilter(mc_bases[i], [f_btype, b_factory]);
+    t := UnitFilter(mc_turret_list[i], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]);
+
+    if not t then
+       continue;
 
     for j in tmp do
         if not BuildingStatus(j) = bs_idle then
+           begin
            busy := true;
+           break;
+           end;
 
     if busy then
        continue;
 
-    weapon := GetTurretWeapon(mc_turret_list[i][1]);
+    tw := UnitFilter(t, [f_bweapon, 0]);
+
+    if tw then
+       begin
+       tw := tw[1];
+       weapon := GetTurretWeapon(tw, mc_scan_area[i]);
+       
+       if mc_allowed_tower_weapons[i] then
+          if not weapon in mc_allowed_tower_weapons[i] then
+             continue;
+       end
+    else
+       begin
+       tmp2 := UpgradeTurretsWeapon(mc_turret_list[i], tmp);
+
+       if not tmp2 then
+          continue;
+
+       tw := tmp2[1];
+       weapon := tmp2[2];
+       end;
 
     if not weapon then
        continue;
 
-    if mc_allowed_tower_weapons[i] then
-       if not weapon in mc_allowed_tower_weapons[i] then
-          continue;
-
-    ComPlaceWeapon(mc_turret_list[i][1], weapon);
+    ComPlaceWeapon(tw, weapon);
     end;
 End;
 
@@ -656,7 +1180,7 @@ for i = 1 to mc_bases do
 
        for j = mc_miners[i] downto 1 do
            begin
-           if IsDead(mc_miners[i][j]) then
+           if IsDead(mc_miners[i][j]) or GetClass(mc_miners[i][j]) <> 1 then
               begin
               tmp := mc_miners[i] diff mc_miners[i][j];
               mc_miners := Replace(mc_miners, i, tmp);
@@ -709,14 +1233,14 @@ for i = 1 to mc_bases do
        k := list;
 
     for j = 1 to k do
-        mc_miners := Add(mc_miners, [i, mc_miners[i]+1], list[j]);
+        mc_miners := ReplaceIn(mc_miners, [i, mc_miners[i]+1], list[j]);
 
     end;
 
 End;
 
 Export Function MC_CollectCrates();
-var i, j, tmp, target, cargo, depot, fac, components;
+var i, j, k, tmp, target, cargo, depot, fac, components;
 begin
 if not mc_bases then
    exit;
@@ -746,7 +1270,7 @@ for i = 1 to mc_bases do
            continue;
            end;
 
-        if DangerAtRangeXY(GetSide(mc_bases[i][1]), mc_crates[i][j][2], mc_crates[i][j][3], 20)[4] = 0 then
+        if DangerAtRangeXY(GetSide(mc_bases[i][1]), mc_crates[i][j][2], mc_crates[i][j][3], 30)[4] = 0 then
            begin
            target := mc_crates[i][j];
            break;
@@ -761,15 +1285,26 @@ for i = 1 to mc_bases do
 
     if not cargo then
        begin
+
        if mc_crates_collector[i] < 5 then
           begin
+
           if mc_ape[i] then
              tmp := UnitFilter(mc_ape[i], [[f_class, 16], [f_lives, 750]]);
 
           if not tmp then
-             tmp := UnitFilter(mc_bases[i], [[f_class, 2], [f_lives, 750]])
-          else if tmp < 5 then
-             tmp := tmp union UnitFilter(mc_bases[i], [[f_class, 2], [f_lives, 750]]);
+             tmp := UnitFilter(mc_bases[i], [[f_class, 2], [f_lives, 750]]);
+
+          if mc_ape[i] and UnitFilter(mc_bases[i], [[f_class, 2], [f_lives, 750]]) and tmp < 5 then
+             begin
+             for j in UnitFilter(mc_bases[i], [[f_class, 2], [f_lives, 750]]) do
+                 begin
+                 tmp := tmp union j;
+
+                 if tmp >= 5 then
+                    break;
+                 end;
+             end;
 
           if not tmp then
              continue;
@@ -777,7 +1312,7 @@ for i = 1 to mc_bases do
           for j in tmp do
               if not GetTag(j) then
                  begin
-                 mc_crates_collector := Add(mc_crates_collector, [i, mc_crates_collector[i]+1], j);
+                 mc_crates_collector := ReplaceIn(mc_crates_collector, [i, mc_crates_collector[i]+1], j);
                  SetTag(j, 107);
 
                  if mc_crates_collector[i] >= 5 then
@@ -793,13 +1328,27 @@ for i = 1 to mc_bases do
           else
              tmp := target[1];
 
-          for j = 1 to tmp do
+          k := 0;
+
+          for j in mc_crates_collector[i] do
               begin
-              if IsInUnit(mc_crates_collector[i][j]) then
-                 ComExitBuilding(mc_crates_collector[i][j]);
+              k := k + 1;
+
+              if k > tmp then
+                 break;
+
+              if not GetClass(j) in [2, 16] then
+                 begin
+                 mc_crates_collector := Replace(mc_crates_collector, i, mc_crates_collector[i] diff j);
+                 SetTag(j, 0);
+                 continue;
+                 end;
+
+              if IsInUnit(j) then
+                 ComExitBuilding(j);
 
               wait(3);
-              ComCollect(mc_crates_collector[i][j], target[2], target[3]);
+              ComCollect(j, target[2], target[3]);
               end;
 
           end;
@@ -809,6 +1358,12 @@ for i = 1 to mc_bases do
        for j in cargo do
            begin
            if GetTag(j) <> 0 then
+              continue;
+
+           if GetLives(j) < 1000 and not IsInArea(j, mc_parking[i]) then
+              ComMoveToArea(j, mc_parking[i]);
+
+           if GetLives(j) < 1000 and IsInArea(j, mc_parking[i]) then
               continue;
 
            if GetEngine(j) = engine_solar and GetFuel(j) < 15 then
@@ -863,7 +1418,7 @@ if not mc_bases then
 
 for i = 1 to mc_bases do
     begin
-    tmp := UnitFilter(mc_vehicles[i]^mc_defender[i], [f_control, control_remote]);
+    tmp := UnitFilter(mc_vehicles[i] union mc_defender[i], [f_control, control_remote]);
 
     if tmp then
        for j in tmp do
@@ -900,7 +1455,7 @@ for i = 1 to mc_bases do
 
         if CanBeConstructed(j, mc_produce[i][1][1], mc_produce[i][1][2], mc_produce[i][1][3], mc_produce[i][1][4]) and VehicleCost(j, [mc_produce[i][1][1], mc_produce[i][1][2], mc_produce[i][1][3], mc_produce[i][1][4]]) then
            begin
-           ComConstruct(j, mc_produce[i][1][1], mc_produce[i][1][2], mc_produce[i][1][3], mc_produce[i][1][4]);
+           AddComConstruct(j, mc_produce[i][1][1], mc_produce[i][1][2], mc_produce[i][1][3], mc_produce[i][1][4]);
            tmp := Delete(mc_produce[i], 1);
            mc_produce := Replace(mc_produce, i, tmp);
            break;
@@ -956,6 +1511,18 @@ for i = 1 to mc_bases do
               ComChangeProfession(j, class);
        end;
 
+    if mc_scan[i] and not mc_defender[i] and not UnitFilter(mc_bases[i], [f_btype, b_bunker]) and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) then
+       begin
+       tmp := UnitFilter(mc_bases[i], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
+       tmp := tmp diff FilterByTag(tmp, 18);
+
+       if tmp then
+          begin
+          BasicDefend(i, tmp, mc_scan_area[i]);
+          exit;
+          end;
+       end;
+
     if mc_scan[i] and mc_defender[i] then
        begin
        tmp := mc_defender[i];
@@ -967,7 +1534,7 @@ for i = 1 to mc_bases do
 End;
 
 Export Function MC_Research();
-var i, j, side, t, tmp, x, sci, tmp2;
+var i, j, side, t, tmp, x, sci, tmp2, researching, idle_lab;
 begin
 if not mc_bases then
    exit;
@@ -979,20 +1546,45 @@ for i = 1 to mc_bases do
     if not tmp then
        continue;
 
+    idle_lab := 0;
+
     for j in tmp do
         begin
+        researching := false;
         side := GetSide(j);
 
         if not mc_tech[side] then
            continue;
 
         if BuildingStatus(j) = bs_idle then
+           begin
+
+           if idle_lab and UnitsInside(j) < 6 then
+              begin
+              tmp2 := UnitsInside(idle_lab);
+
+              if tmp2 then
+                 for x in tmp2 do
+                     begin
+                     ComExitBuilding(x);
+                     AddComEnterUnit(x, j);
+                     end;
+
+              idle_lab := 0;
+              end;
+
            for t in mc_tech[side] do
                if CanBeResearched(j, t) and TechCanBeResearch(side, t) then
                   begin
+                  researching := true;
                   ComResearch(j, t);
                   break;
                   end;
+
+           if not researching then
+              idle_lab := j;
+
+           end;
 
         if BuildingStatus(j) = bs_need_ape then
            begin
@@ -1007,7 +1599,7 @@ for i = 1 to mc_bases do
 
            if mc_ape[i] and not mc_ape_in_lab[i] then
               begin
-              mc_ape_in_lab := Add(mc_ape_in_lab, [i, mc_ape_in_lab[i]+1], mc_ape[i][1]);
+              mc_ape_in_lab := ReplaceIn(mc_ape_in_lab, [i, mc_ape_in_lab[i]+1], mc_ape[i][1]);
               SetTag(mc_ape[i][1], 112);
 
               tmp2 := Delete(mc_ape[i], 1);
@@ -1037,8 +1629,11 @@ for i = 1 to mc_bases do
            begin
            sci := [];
 
-           for x in tmp diff j do
+           for x in (tmp diff j) do
                begin
+               if sci = 6 then
+                  break;
+
                if BuildingStatus(x) = bs_idle then
                   sci := sci ^ UnitsInside(x);
                end;
@@ -1056,6 +1651,17 @@ for i = 1 to mc_bases do
         end;
 
     end;
+End;
+
+Export Function MC_MinesTrigger();
+var i;
+begin
+if not mc_bases then
+   exit;
+
+for i = 1 to mc_bases do
+    if mc_mines[i] and mc_miners[i] then
+       DetonateMines(GetSide(mc_miners[i][1]), mc_mines[i]);
 End;
 
 Export Function MC_RepairVehicle();
@@ -1110,6 +1716,12 @@ for i = 1 to mc_bases do
 
     for j in mc_repair_vehicle[i] do
         begin
+        if GetClass(j) <> 3 then
+           begin
+           mc_repair_vehicle := Replace(mc_repair_vehicle, i, mc_repair_vehicle[i] diff j);
+           continue;
+           end;
+
         if not IsDrivenBy(j) and not j in mc_need_heal[i][1] and not j in mc_need_heal[i][2] then
            begin
            if IsInUnit(j) then
@@ -1163,11 +1775,18 @@ for i = 1 to mc_bases do
         if not j in mc_taming[i] and mc_taming[i] < 3 then
            begin
            SetTag(j, 121);
-           mc_taming := Add(mc_taming, [i, mc_taming[i]+1], j);
+           mc_taming := ReplaceIn(mc_taming, [i, mc_taming[i]+1], j);
            end;
 
         if j in mc_taming[i] then
            begin
+           if GetClass(j) <> 4 then
+              begin
+              mc_taming := Replace(mc_taming, i, mc_taming[i] diff j);
+              SetTag(j, 0);
+              continue;
+              end;
+
            if IsInUnit(j) then
               ComExitBuilding(j);
 
@@ -1216,6 +1835,8 @@ for i = 1 to mc_bases do
           if depot then
              begin
 
+             selected := 0;
+
              for j in depot do
                  begin
                  if UnitsInside(j) < 6 then
@@ -1233,14 +1854,14 @@ for i = 1 to mc_bases do
                        begin
                        if not IsInUnit(j) then
                           ComEnterUnit(j, selected);
-                       
+
                        AddComChangeProfession(j, 16);
                        AddComExitBuilding(j);
                        end;
-                    
+
                 end;
              end;
-          end; 
+          end;
        end;
 
     // can train ape sold
@@ -1254,6 +1875,8 @@ for i = 1 to mc_bases do
 
           if barracks then
              begin
+
+             selected := 0;
 
              for j in barracks do
                  begin
@@ -1306,15 +1929,68 @@ for i = 1 to mc_bases do
 
 End;
 
-Export Function MC_TeleportExit(); // TODO
-var i, j, tmp;
+Export Function MC_TeleportExit();
+var i, j, x, y, save_point, tmp, teleports, sci;
 begin
 if not mc_bases then
    exit;
 
 for i = 1 to mc_bases do
     begin
+    if not mc_teleport_exit[i] or GetTech(tech_targTeleport, mc_sides[i]) <> state_researched then
+       continue;
 
+    teleports := UnitFilter(mc_bases[i], [f_btype, b_teleport]);
+    sci := FilterByTag(UnitFilter(mc_bases[i], [f_class, 4]), 0);
+
+    if not sci or not teleports or FilterByTag(mc_bases[i], 124) then
+       continue;
+
+    if mc_teleport_exit_set[i] < mc_teleport_exit[i] and mc_teleport_exit_set[i] < teleports then
+       begin
+       tmp := sci[1];
+       SetTag(tmp, 124);
+
+       for j = mc_teleport_exit[i] downto mc_teleport_exit[i] do
+           begin
+           if IsInUnit(tmp) then
+              ComExitBuilding(tmp);
+
+           repeat
+            wait(0$1);
+           until not IsInUnit(tmp) and not HasTask(tmp);
+
+           save_point := [GetX(tmp), GetY(tmp)];
+
+           repeat
+            wait(0$1);
+            x := mc_teleport_exit[i][j][1];
+            y := mc_teleport_exit[i][j][2];
+
+            if DangerAtRange(tmp, 10)[4] then
+               begin
+               ComMoveXY(tmp, save_point[1], save_point[2]);
+               wait(0$10);
+               end
+            else
+               begin
+               ComMoveXY(tmp, x, y);
+               wait(0$3);
+               end;
+            
+           until IsAt(tmp, x, y);
+
+           ComTeleportExit(tmp, x, y, teleports[j]);
+
+           repeat
+            wait(0$1);
+           until not HasTask(tmp);
+
+           mc_teleport_exit_set := ReplaceIn(mc_teleport_exit_set, [i, mc_teleport_exit_set[i]+1], teleports[j]);
+           end;
+
+       MC_Reset(i, 124);
+       end;
     end;
 End;
 
@@ -1328,7 +2004,7 @@ for i = 1 to mc_bases do
     begin
     tmp := UnitFilter(mc_bases[i], [f_class, 4]);
 
-    if not tmp or not mc_deposits_xy[i] then
+    if not tmp or not mc_deposits_xy[i] or not UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) then
        begin
 
        if mc_deposits_finder[i] then
@@ -1373,54 +2049,76 @@ for i = 1 to mc_bases do
 End;
 
 Export Function MC_RemoteDriver();
-var i, j, k, places, tmp, nation, ct, cts;
+var i, j, k, places, tmp, nation, ct, cts, mcts, x;
 begin
 if not mc_bases then
    exit;
 
 for i = 1 to mc_bases do
     begin
+
+    if not mc_bases[i] then
+       continue;
+
     nation := GetNation(mc_bases[i][1]);
 
-    if nation <> 1 or not UnitFilter((mc_vehicles[i] union mc_defender[i]), [f_control, control_remote]) then
+    if nation = 3 or not UnitFilter(mc_vehicles[i] union mc_defender[i], [f_control, control_remote]) then
        continue;
 
     cts := UnitFilter(mc_bases[i], [f_btype, b_control_tower]);
+    mcts := UnitFilter(mc_vehicles[i], [f_weapon, ar_control_tower]);
 
-    if not cts then
+    if not cts and not mcts then
        continue;
+
+    x := cts;
+
+    if not x then
+       x := mcts;
 
     if mc_remote_driver[i] then
        for j in mc_remote_driver[i] do
-           if not IsInUnit(j) or GetBType(IsInUnit(j)) <> b_control_tower then
+           begin
+           if GetClass(j) <> 3 then
+              begin
+              mc_remote_driver := Replace(mc_remote_driver, i, mc_remote_driver[i] diff j);
+              SetTag(j, 0);
+              continue;
+              end;
+
+           if not IsInUnit(j) or (GetBType(IsInUnit(j)) <> b_control_tower and not IsDriver(j)) then
               begin
               if IsInUnit(j) then
                  ComExitBuilding(j);
 
               ct := 0;
 
-              for k in cts do
-                  if UnitsInside(k) < 3 then
+              for k in x do
+                  if (GetWeapon(k) = ar_control_tower and not IsDrivenBy(k)) or (GetBType(k) = b_control_tower and UnitsInside(k) < 3) then
                      begin
                      ct := k;
                      break;
                      end;
 
               if ct then
-                 AddComEnterUnit(j, ct);
+                 ComEnterUnit(j, ct);
               end;
+           end;
 
     places := 0;
 
-    for j = 1 to cts do
-        places := places + 3;
+    for j = 1 to x do
+        if GetWeapon(x[j]) = ar_control_tower then
+           places := places + 1
+        else
+           places := places + 3;
 
-    tmp := UnitFilter(mc_bases[i], [f_class, 3]) diff mc_remote_driver[i];
+    tmp := SortBySkill(UnitFilter(mc_bases[i], [f_class, 3]) diff mc_remote_driver[i], 3);
 
     if not tmp then
        continue;
 
-    places := places - (mc_remote_driver[i] + 1);
+    places := places - mc_remote_driver[i];
 
     if places then
        begin
@@ -1455,7 +2153,7 @@ if class in [1, 15] and mc_empty_turret_list[base] then
 
    if not x in mc_busy_turret_list[base] then
       begin
-      mc_busy_turret_list := Add(mc_busy_turret_list, [base, mc_busy_turret_list[base]+1], x);
+      mc_busy_turret_list := ReplaceIn(mc_busy_turret_list, [base, mc_busy_turret_list[base]+1], x);
       mc_empty_turret_list := Replace(mc_empty_turret_list, base, mc_empty_turret_list[base] diff x);
 
       ComEnterUnit(unit, mc_busy_turret_list[base][mc_busy_turret_list[base]]);
@@ -1558,7 +2256,7 @@ begin
 if not mc_bases[base] then
    exit;
 
-mc_build_list := Replace(mc_build_list, base, Insert(mc_build_list[base], mc_build_list[base]+1, list));
+mc_build_list := Replace(mc_build_list, base, mc_build_list[base] union list);
 End;
 
 Export Function MC_SetProduceList(base, produce_list);
@@ -1569,14 +2267,14 @@ if not mc_bases[base] then
 mc_produce := Replace(mc_produce, base, produce_list);
 End;
 
-Export Function MC_InsertProduceList(base, compontents);
+Export Function MC_InsertProduceList(base, components);
 begin
 if not mc_bases[base] then
    exit;
 
-mc_produce := Replace(mc_produce, base, mc_produce[base] ^ [compontents]);
+mc_produce := Replace(mc_produce, base, mc_produce[base] ^ components);
 End;
-
+  
 Export Function MC_SetDefenderList(base, deflist);
 begin
 if not mc_bases[base] then
@@ -1584,7 +2282,6 @@ if not mc_bases[base] then
 
 mc_defender := Replace(mc_defender, base, deflist);
 mc_defender_limit := Replace(mc_defender_limit, base, deflist+0);
-mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] union UnitFilter(mc_defender[base], [f_type, unit_vehicle]));
 End;
 
 Export Function MC_SetDefenderLimit(base, limit);
@@ -1631,7 +2328,7 @@ begin
 if not mc_bases[base] then
    exit;
 
-mc_attack := Add(mc_attack, [base, mc_attack[base]+1], [base, group, path, flags]);
+mc_attack := ReplaceIn(mc_attack, [base, mc_attack[base]+1], [base, group, path, flags]);
 End;
 
 // list: [ [x, y, type (0 - oil, 1 - sib)] ]
@@ -1701,7 +2398,7 @@ if not mc_bases or not base or not kinds then
    exit;
 
 for i in kinds do
-    mc_lab_upgrade := Add(mc_lab_upgrade, [base, mc_lab_upgrade[base]+1], i);
+    mc_lab_upgrade := ReplaceIn(mc_lab_upgrade, [base, mc_lab_upgrade[base]+1], i);
 End;
 
 // Set area for collect crates
@@ -1714,12 +2411,13 @@ if not mc_bases or not base or not areas then
 mc_crates_area := Replace(mc_crates_area, base, areas);
 End;
 
-Export Function MC_SetTeleportExit(base, x, y);
+// Set teleport exit
+Export Function MC_SetTeleportExit(base, teleports_exit);
 begin
-if not mc_bases or not base then
+if not mc_bases or not base or not teleports_exit then
    exit;
 
-mc_teleport_exit := Replace(mc_teleport_exit, base, [x, y]);
+mc_teleport_exit := Replace(mc_teleport_exit, base, teleports_exit);
 End;
 
 // Set available factory extension for specify coords
@@ -1754,7 +2452,7 @@ if not mc_bases or not base or not weapon_list then
 
 mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, base, weapon_list);
 End;
-                               
+
 // Replace default tech list by specified list
 Export Function MC_SetTechList(base, tech_list);
 begin
@@ -1780,4 +2478,35 @@ if not mc_bases or not base or not scan_area then
    exit;
 
 mc_scan_area := Replace(mc_scan_area, base, scan_area);
+End;
+
+Export Function MC_NotTameApeman(base);
+var ape_techs;
+begin
+if not mc_bases or not base then
+   exit;
+
+ape_techs := [1, 2, 3, 4, 11];
+
+mc_tech := Replace(mc_tech, base, mc_tech[base] diff ape_techs);
+End;
+
+Export Function MC_GetVehicles(base, onlyCombat);
+begin
+result := mc_vehicles[base];
+
+if onlyCombat then
+   result := result diff UnitFilter(result, [f_or, [f_weapon, us_cargo_bay],
+                                                   [f_weapon, ru_cargo_bay],
+                                                   [f_weapon, ru_big_cargo_bay],
+                                                   [f_weapon, ar_cargo_bay],
+                                                   [f_weapon, us_crane],
+                                                   [f_weapon, ru_crane],
+                                                   [f_weapon, us_bulldozer],
+                                                   [f_weapon, ru_bulldozer],
+                                                   [f_weapon, ru_radar],
+                                                   [f_weapon, ar_control_tower],
+                                                   [f_weapon, ru_siberium_rocket],
+                                                   [f_weapon, us_siberium_rocket]
+                                            ]);
 End;

@@ -207,8 +207,6 @@ begin
     AddMusic('');}
     commovexy(joan,getx(sik),gety(sik));
     wait(0$1);
-    say(sik,'DXAttack-Sik-1');
-    dialogueoff;
     setattitude(am,oth,att_enemy,true);
     comattackunit(others^[off,off2],john);
     joanok=false;
@@ -319,6 +317,13 @@ on unitgoestored(un) do
 every 0$0.4 trigger isinarea(john,aeon) and not killhim do
 begin
   follow=false;
+
+  if Crawls(john) then
+     begin
+     ComWalk(john);
+     wait(0$0.3);
+     end;
+
   centernowonunits([eon]);
   commovexy(john,75,36);
   InGameOn;
@@ -386,7 +391,8 @@ begin
       comenterunit(lucy,eon);
       wait(0$3);
       say(off,'DXReady-Off-5');
-      ComMoveXY(john,75,34);
+      ComMoveXY(john,76,34);
+      AddComTurnXY(john, 76, 33);
       wait(0$4);
       //dialogueon;
       say(john,'DQrQuit#2-JMM-1');
@@ -424,14 +430,28 @@ on enterbuilding(b,un) do
 
 On Contact(side1, side2) do
 begin
-    if side1 = 1 and side2 = 4 then
+    if side1 = 1 and side2 = 4 and killhim = false then
     begin
+      wait(0$1);
       music_class=1;
+      DialogueOn;
       say(sik,'DXAttack-Sik-1');
       dialogueoff;
+      killhim=true;
       setattitude(am,oth,att_enemy,true);
       comattackunit(others^[off,off2],john);
-      killhim=true;
     end;
 
 end;
+
+On EnterVehicle(veh, unit) do
+begin
+if unit = john then
+   begin
+   async;
+   Say(joan,'DXComments-Joan-1');
+   ComExitVehicle(john);
+   SetSide(veh, 4);
+   sync;
+   end;
+End;

@@ -4,8 +4,8 @@ var i, has_eng, filter, dep, blist, crates, cargo, sol;
 begin
 ComMoveXY(Cornel^Bierezov^cornel_units, 250, 120);
 
-has_eng := UnitFilter(cornel_units, [f_class, 2]) diff [Bierezov];
-filter := UnitFilter(cornel_units, [f_type, unit_human]);
+has_eng := UnitFilter(cornel_units, [f_class, 2]) diff Bierezov;
+filter := UnitFilter(cornel_units, [f_type, unit_human]) diff has_eng;
 
 if not has_eng then
    begin
@@ -20,7 +20,7 @@ if not has_eng then
 
 repeat
  wait(0$01);
-until IsInArea(Cornel, cornelBaseArea);
+until IsInArea(Cornel, cornelBaseArea) or IsInArea(IsInUnit(Cornel), cornelBaseArea);
 
 if has_eng and not dep then
    begin
@@ -46,27 +46,22 @@ if has_eng and not dep then
 
 dep := FilterAllUnits([[f_side, 4], [f_btype, b_depot]])[1];
 
-for i = 1 to 3-has_eng do
-    begin
+if not has_eng then
+   for i = 1 to 2 do
+       begin
+       ComEnterUnit(filter[1], dep);
+       AddComChangeProfession(filter[1], 2);
+       AddComExitBuilding(filter[1]);
 
-    if GetClass(filter[i]) = 2 then
-       continue;
-
-    ComEnterUnit(filter[i], dep);
-    AddComChangeProfession(filter[i], 2);
-    AddComExitBuilding(filter[i]);
-    end;
-
-   repeat
-    wait(0$01);
-   until UnitFilter(filter, [f_class, 2]) = 3;
+       filter := Delete(filter, 1);
+       end;
 
 if IsInUnit(Cornel) then
    begin
    cargo := IsInUnit(Cornel);
 
    if GetCargo(cargo, mat_cans) then
-      ComGive(Cornel, dep);
+      ComUnload(cargo);
 
    AddComMoveXY(Cornel, 235, 122);
    AddComExitVehicle(Cornel);
@@ -74,9 +69,18 @@ if IsInUnit(Cornel) then
    end;
 
 if Bierezov then
-   ComEnterUnit(Bierezov, dep);
+   begin
+   ComMoveXY(Bierezov, 260, 120);
 
-has_eng := UnitFilter(cornel_units, [f_class, 2]);
+   if dep then
+      AddComEnterUnit(Bierezov, dep)
+   else
+      AddComHold(Bierezov);
+   end;
+
+wait(0$15);
+
+has_eng := FilterAllUnits([[f_side, 4], [f_class, 2]]) diff Bierezov;
 
 repeat
  wait(0$01);
@@ -87,7 +91,8 @@ repeat
 until GetResourceType(GetBase(dep), mat_cans) >= 40;
 
 blist := [ [b_armoury, 256, 111, 2],
-           [b_breastwork, 243, 112, 2] ];
+           [b_breastwork, 243, 112, 2],
+           [b_breastwork, 254, 114, 2] ];
 
 
 for i in blist do
@@ -97,19 +102,58 @@ repeat
  wait(0$01);
 until FilterAllUnits([[f_side, 4], [f_btype, b_armoury], [f_not, [f_constructed]]]);
 
-AddComEnterUnit(filter diff has_eng, FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]);
-AddComChangeProfession(filter diff has_eng, 1);
+AddComEnterUnit(filter, FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]);
+AddComChangeProfession(filter, 1);
+
+if has_eng > 1 then
+   for i = has_eng downto 2 do
+       begin
+
+       if IsInUnit(has_eng[i]) then
+          ComExitBuilding(has_eng[i]);
+
+       AddComEnterUnit(has_eng[i], FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]);
+       AddComChangeProfession(has_eng[i], 1);
+
+       has_eng := Delete(has_eng, i);
+       end;
 
 repeat
  wait(0$01);
-until FilterAllUnits([[f_side, 4], [f_btype, b_breastwork], [f_not, [f_constructed]]]);
+until FilterAllUnits([[f_side, 4], [f_btype, b_breastwork], [f_not, [f_constructed]]]) > 1;
 
 sol := UnitFilter(cornel_units, [f_class, 1]);
 
-ComExitBuilding(sol[1]);
-AddComEnterUnit(sol[1], FilterAllUnits([[f_side, 4], [f_btype, b_breastwork]])[1]);
+for i = 1 to FilterAllUnits([[f_side, 4], [f_btype, b_breastwork], [f_not, [f_constructed]]]) do
+    begin
+    if not sol[i] then
+       break;
 
-ComMoveUnit(has_eng, dep);
+    ComExitBuilding(sol[i]);
+    AddComEnterUnit(sol[i], FilterAllUnits([[f_side, 4], [f_btype, b_breastwork]])[i]);
+    end;
+
+if sol > 3 then
+   begin
+   ComExitBuilding(sol[3]);
+   AddComMoveXY(sol[3], 246, 94);
+   AddComWait(sol[3], 0$5);
+   AddComMoveXY(sol[3], 224, 90);
+   AddComWait(sol[3], 0$7);
+   AddComMoveXY(sol[3], 223, 110);
+   AddComHold(sol[3]);
+   end;
+
+ComEnterUnit(has_eng, dep);
+
+if UnitsInside(FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]) < 6 then
+   begin
+
+   if IsInUnit(Cornel) then
+      ComExitBuilding(Cornel);
+
+   AddComEnterUnit(Cornel, FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1]);
+   end;
 
 repeat
  wait(0$01);
@@ -142,6 +186,9 @@ arm := FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1];
 
 ComExitBuilding(cornel_units);
 
+if Bierezov and IsInUnit(Bierezov) then
+   ComExitBuilding(Bierezov);
+
 Wait(0$03);
 
 for i in cornel_units do
@@ -169,6 +216,8 @@ repeat
 until cornel_attack;
 
 ComAgressiveMove(filter, 209, 63);
+ComAgressiveMove(Cornel, 208, 62);
+AddComHold(Cornel);
 
 if Bierezov then
    begin

@@ -34,7 +34,7 @@ begin
 end;
 
 On BuildingComplete(building) Do
-var i;
+var i, sol, tmp;
 begin
 
     if GetSide(building) = 1 and eventVar1 = 0 then
@@ -54,8 +54,8 @@ begin
         if GetBType(building) = b_depot then
         begin
             SetResourceType(GetBase(building), 1, 5000);
-            SetResourceType(GetBase(building), 2, 5000);
-            SetResourceType(GetBase(building), 3, 5000);
+            SetResourceType(GetBase(building), 2, 300);
+            SetResourceType(GetBase(building), 3, 100);
             ruDepot = building;
         end;
 
@@ -97,6 +97,24 @@ begin
 
     if GetSide(building) = 2 then
     begin
+
+        if GetBType(building) = b_breastwork then
+           begin
+           sol := FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 8]]]) diff Dietrich;
+
+           if not sol then
+              exit;
+
+           for i in sol do
+               if not GetTag(i) then
+                  begin
+                  if IsInUnit(i) then
+                     ComExitBuilding(i);
+                  AddComEnterUnit(i, building);
+                  SetTag(i, 11);
+                  break;
+                  end;
+           end;
     
         if GetBType(building) = b_depot then
         begin
@@ -115,7 +133,13 @@ begin
             arLab = building;
         end; 
 
-        if  GetBType(building) = 2 or GetBType(building) = 4 then ComUpgrade(building);
+        if GetBType(building) = 2 or GetBType(building) = 4 then
+           begin
+           ComUpgrade(building);
+
+           if GetBType(building) = b_armoury then
+              ComMoveXY(FilterAllUnits([[f_side, 2], [f_class, 1]]), 75, 21);
+           end;
 
        // if GetBType(building) = b_breastwork and FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]]) > 0 then
          //   ComEnterUnit(FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]])[1], building);
@@ -130,10 +154,6 @@ begin
             AddComMoveXY(i, 36, 28);
 
             AddComEnterUnit(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_class, 2]]), arDepot);
-
-            ComEnterUnit(FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]])[1], FilterAllUnits([[f_side, 2], [f_btype, 31], [f_empty]])[1]);
-            ComEnterUnit(FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]])[2], FilterAllUnits([[f_side, 2], [f_btype, 31], [f_empty]])[2]);
-            ComEnterUnit(FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]])[3], FilterAllUnits([[f_side, 2], [f_btype, 31], [f_empty]])[3]);
             end;
     
     end;
@@ -203,6 +223,14 @@ begin
         if rnd > 50 then SetClass(human, class_mortar);
     end;
 
+    if human in FilterAllUnits([[f_side, 2], [f_class, class_apeman]]) then
+       begin
+       if GetBType(building) in [b_depot, b_warehouse] then
+          SetClass(human, class_apeman_engineer)
+       else
+          SetClass(human, class_apeman_soldier);
+       end;
+
     if GetSide(human) = 3 and GetClass(human) = 1 and [building = ruArm1 or building = ruArm2] then
     begin
         wait(0$1);
@@ -229,7 +257,7 @@ begin
 end;
 
 // Also lost
-Every 0$3 trigger (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle], [f_empty]])) and GetAttitude(1, 2) = att_friend do
+Every 0$3 trigger (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend do
 begin
 SayRadio(Powell, 'D6b-Pow-1');
 YouLost('Powell');
@@ -240,6 +268,9 @@ begin
 
     if unit = JMM then
        YouLost('JMM');
+
+    if unit = Khatam then
+       KhatamStatus = 0;
 
     if GetSide(unit) = 3 and GetType(unit) = unit_building then
     begin
@@ -296,3 +327,4 @@ begin
     fastEnd = 1;
     FinishMission;
 End;
+

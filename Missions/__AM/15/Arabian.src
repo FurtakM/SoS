@@ -1,0 +1,117 @@
+Export Omar, Heike, Khatam;
+Export Function PrepareOmarInvasion;
+var i, veh, un;
+begin
+missionStage := 13;
+
+uc_side := 2;
+uc_nation := 2;
+
+Omar := NewCharacter('Omar');
+
+SetDir(Omar, 4);
+PlaceUnitXY(Omar, 242, 75, false);
+
+Heike := NewCharacter('Heike');
+
+PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_gun, 100);
+veh := CreateVehicle;
+
+SetMark(veh, 1);
+SetDir(veh, 4);
+
+PlaceUnitXY(veh, 241, 72, false);
+PlaceHumanInUnit(Heike, veh);
+
+if KhatamStatus then
+   begin
+   Khatam := NewCharacter('Khatam');
+   PlaceUnitXYR(Khatam, 245, 78, 3, false);
+
+   SetSkill(Khatam, 4, 10);
+   end;
+
+for i = 1 to Difficulty do
+    begin
+    PrepareScientist(false, 7+Difficulty);
+    un := CreateHuman;
+    PlaceUnitArea(un, [arabianAttackArea, arabianAttackArea2][i mod 2 + 1], false);
+    end;
+
+for i = 1 to 6 do
+    begin
+    PrepareSoldier(false, 7+Difficulty);
+    un := CreateHuman;
+    PlaceUnitArea(un, arabianAttackArea, false);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, class_mortar, 7+Difficulty);
+    un := CreateHuman;
+    PlaceUnitArea(un, arabianAttackArea, false);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_rocket_launcher, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 3);
+    PlaceUnitArea(veh, arabianAttackArea2, false);
+
+    PrepareMechanic(false, 7+Difficulty);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+
+for i = 1 to 5+Difficulty do
+    begin
+    PrepareVehicle(ar_half_tracked, rand(1,3), control_manual, [ar_rocket_launcher, ar_flame_thrower, ar_gun, ar_gatling_gun][i mod 4 + 1], 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arabianAttackArea, false);
+
+    PrepareMechanic(false, 7+Difficulty);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+
+for i = 1 to 3 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, ar_selfpropelled_bomb, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arabianAttackArea, false);
+    end;
+End;
+
+Every 0$1 trigger FilterAllUnits([f_side, 2]) do
+var i, tmp, sci;
+begin
+sci := FilterAllUnits([[f_side, 2], [f_class, 4]]) diff Khatam;
+tmp := FilterAllUnits([f_side, 2]) diff (Khatam union sci);
+
+if Khatam then
+   ComMoveXY(Khatam, 211, 92);
+
+SetResourceVisibility(197, 80, 2);
+SetResourceVisibility(213, 90, 2);
+SetResourceVisibility(215, 129, 2);
+
+if sci then
+   ComContaminate(sci[1], 197, 80);
+
+if sci > 1 then
+   ComContaminate(sci[2], 213, 90);
+
+if sci > 2 then
+   ComContaminate(sci[3], 215, 129);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 2]), i));
+until not FilterAllUnits([f_side, 2]);
+End;

@@ -144,6 +144,13 @@ ChangeMissionObjectives('M1a');
 
 jmm_in_ovsyenko := true;
 
+if debug then
+   begin
+   SetResourceType(GetBase(FilterAllUnits([[f_side, 1], [f_btype, b_depot]])[1]), mat_oil, 1000);
+   SetResourceType(GetBase(FilterAllUnits([[f_side, 1], [f_btype, b_depot]])[1]), mat_cans, 1000);
+   ar_can_arrive := true;
+   end;
+
 
 wait(0$30);
 
@@ -268,7 +275,7 @@ if GetTerminalCargo >= 60 then  // you got sib!
    begin
     case Query('QWait') of
     1: begin // niech mechanik poczeka 5 min
-       Say(JMM, 'D5b-JMM-1');
+       Say(JMM, 'D5a-JMM-1');
        DialogueOff;
        wait(5$00);
 
@@ -401,13 +408,18 @@ End;
 
 // Arabian arrive
 Every 0$1 trigger ar_can_arrive do
-var i, x, tmp, dep, time, no_oil_gain, first_warn, b;
+var i, x, tmp, dep, time, no_oil_gain, first_warn, b, have_crates, filter;
 begin
 PrepareArabian;
+
+blocked := false;
 
 repeat
  wait(0$01);
 until ar_spawned;
+
+have_crates := true;
+player_want_info := 2;
 
 // cinematics
 DialogueOn;
@@ -452,6 +464,7 @@ case Query('QBarracks') of
    2: begin // spadówa
       Say(JMM, 'D8b2-JMM-1');
       SayRadio(Vervecken, 'D8b2-Ar1-1');
+      player_want_info := 0;
       end;
    end;
 
@@ -460,6 +473,7 @@ case Query('QBarracks') of
 3: begin // odmów, niech spadaj¹ na bambus
    Say(JMM, 'D8c-JMM-1');
    SayRadio(Vervecken, 'D8c-Ar1-1');
+   player_want_info := 0;
    end;
 
 end;
@@ -482,7 +496,7 @@ if not dep then
    end;
 
 tmp := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]);
-time := 1$35;
+time := 1$55;
 no_oil_gain := false;
 first_warn := false;
 
@@ -533,6 +547,7 @@ if player_want_mortar then
           begin
           AddComTransport(Gali, dep, mat_oil);
           AddComRefuel(Gali, tmp[i mod 3 + 1]);
+          wait(0$10);
           end;
        end;
 
@@ -581,6 +596,7 @@ if player_want_mortar then
 
          if GetResourceType(GetBase(dep), mat_cans) < 50 then
             begin
+            have_crates := false;
             DialogueOn;
             Say(Vervecken, 'D9c-Ar1-1');
             Say(JMM, 'D9c-JMM-1');
@@ -604,8 +620,9 @@ if player_want_mortar then
             DialogueOff; 
             end;
 
-        end
-       else
+        end;
+
+     if have_crates then
         begin // build barracks
         RemoveEnvironmentArea(mortarArea);
 
@@ -615,10 +632,17 @@ if player_want_mortar then
         CenterNowOnUnits(Gali);
 
         SetSide(Gali, 1);
-        ComBuild(Gali, b_armoury, 107, 131, 0);
 
         repeat
-         wait(1);
+         filter := FilterAllUnits([[f_side, 1], [f_not, [f_nation, 2]], [f_type, unit_human], [f_distxy, 107, 131, 6]]);
+
+         if filter then
+            for i in filter do
+                ComMoveXY(i, 107, 121);
+
+         ComBuild(Gali, b_armoury, 107, 131, 0);
+
+         wait(0$1);
         until FilterAllUnits([[f_btype, b_armoury], [f_nation, nation_arabian]]);
 
         SetSide(Gali, 2);
@@ -711,31 +735,38 @@ if player_want_info then
        wait(0$1);
       until not HasTask(Gali);
 
-      for i = 1 to x do
-          begin
-          AddComTransport(Gali, dep, player_want_info);
-          AddComMoveUnit(Gali, tmp[1]);
-          AddComHold(Gali);
-
-          repeat
-           wait(3);
-
-           if player_attacked_ar then
-              exit;
-
-          until GetDistUnits(Gali, tmp[1]) < 4 and GetCargo(Gali, player_want_info);
-
-          SetCargo(tmp[1], player_want_info, GetCargo(tmp[1], player_want_info)+10);
-          SetCargo(Gali, player_want_info, 0);
-          end;
+      time := 0$00;
 
       repeat
        wait(0$1);
+       time := time + 0$1;
+ 
+       if debug then
+          debug_strings := ['time:' & time];
+
+       if time > 8$00 then
+          begin
+          blocked := true;
+          exit;
+          end;
+
+       if not Carry(Gali) then
+          ComTransport(Gali, dep, player_want_info)
+       else
+          begin
+          if GetDistUnits(Gali, tmp[1]) < 4 and GetCargo(Gali, player_want_info) then
+             begin               
+             SetCargo(tmp[1], player_want_info, GetCargo(tmp[1], player_want_info)+10);
+             SetCargo(Gali, player_want_info, 0);
+             end
+          else
+             ComMoveUnit(Gali, tmp[1]);
+          end;
 
        if player_attacked_ar then
           exit;
 
-      until GetCargo(tmp[1], player_want_info) = x * 10;
+      until GetCargo(tmp[1], player_want_info) >= x * 10;
 
       no_oil_gain := false;
       end
@@ -745,8 +776,15 @@ if player_want_info then
 
       ComMoveXY(Gali, GetX(dep)+1, GetY(dep)+1);
 
+      time := 0$00;
+
       repeat
        wait(0$1);
+       time := time + 0$1;
+
+       if time > 1$45 then
+          break;
+
       until GetDistUnits(Gali, dep) < 4;
 
       for i = 1 to 6 do
@@ -777,12 +815,25 @@ if player_want_info then
              begin
              AddComTransport(Gali, dep, mat_oil);
              AddComRefuel(Gali, tmp[i mod 3 + 1]);
+             wait(0$10);
              end;
 
           end;
 
+          time := 0$00;
+
           repeat
            wait(0$1);
+
+           if not HasTask(Gali) then
+              time := time + 0$1;
+
+           if time > 1$25 then
+              begin
+              Say(Vervecken, 'D9a3-Ar1-1');
+              no_oil_gain := true;
+              break;
+              end;
 
            if player_attacked_ar then
               exit;
@@ -843,6 +894,24 @@ if player_want_mortar or player_want_info then
    Say(Vervecken, 'D9f-Ar1-1');
 
 // go to powell..
+repeat
+
+ ComMoveXY(FilterAllUnits([f_side, 2]), 51, 99);
+ wait(0$1);
+
+ if FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) then
+    for i in FilterAllUnits([[f_side, 2], [f_distxy, 51, 99, 2]]) do
+        RemoveUnit(i);
+
+until FilterAllUnits([f_side, 2]) = 0;
+
+End;
+
+Every 0$01 trigger blocked do
+var i;
+begin
+Say(Vervecken, 'D9f-Ar1-1');
+
 repeat
 
  ComMoveXY(FilterAllUnits([f_side, 2]), 51, 99);

@@ -1,0 +1,327 @@
+Export Function MCT_CutTreeArea(side, area);
+begin
+MREG_Bulldozer := Replace2(MREG_Bulldozer, side, 1, area);
+
+if GetNation(MCF_All(side, [])[1]) = nation_american then
+   MCS_AddVehicle(side, [us_heavy_tracked, engine_combustion, control_manual, us_bulldozer])
+    else
+     MCS_AddVehicle(side, [ru_heavy_tracked, engine_combustion, control_manual, ru_bulldozer]);
+End;
+
+Export Function MCT_CreateDepositXYT(x, y, t);
+begin
+CreateDepositXY(x, y, t);
+End;
+
+Export Function MCT_MarkPlace(x, y, color);  // Map Markers
+var c;
+begin
+c := 1; // default color
+
+case color of
+'red': c = 1;
+'dark-green': c = 2;
+'purple': c = 3;
+'aqua': c = 4;
+'grey': c = 5;
+'lime': c = 6;
+'tan': c = 7;
+'pink': c = 8;
+'green': c = 9;
+'blue': c = 10;
+'yellow': c = 11;
+'brown': c = 12;
+'black': c = 13;
+'aqua2': c = 14;
+'orange': c = 15;
+'white': c = 16;
+end;
+
+if HexInfo(x, y) = 0 then
+   PlaceEnvironment(x, y, 58, c);
+End;
+
+Export Function MCT_RemovePlace(x, y);
+begin
+RemoveEnvironment(x, y);
+End;
+
+// MCT_Enemy(side, x, y);
+Export Function MCT_Enemy(side, x, y, dist);
+begin
+if FilterAllUnits([f_enemy, side]) = 0 then
+   result := false
+    else
+     if FilterAllUnits([[f_enemy, side], [f_distxy, x, y, dist]]) then
+        result := true
+         else
+          result := false;
+End;
+
+// MCT_Retreat
+Export Function MCT_Retreat(un);
+var coord_dist, dir, x, y;
+begin
+
+    ComTurnUnit(un, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(un)]), un));
+    dir := GetDir(un);
+
+    dir := dir - 3;
+
+    if dir < 0 then
+       dir := dir + 6;
+
+    While true do
+    begin
+        coord_dist := 3;
+
+        x := ShiftX(GetX(un), dir, coord_dist);
+        y := ShiftY(GetY(un), dir, coord_dist);
+
+        if MCT_Enemy(GetSide(un), GetX(un), GetY(un), 14) or IsEnvironment(x, y) or ValidHex(x, y) = 0 or GetHexInfo(x, y) = 1 or HexInfo(x, y) <> 0 then
+           begin
+
+           Repeat
+            begin
+              Wait(0$0.3);
+
+              coord_dist := coord_dist + 1;
+              dir := dir + 1;
+
+              if dir > 5 then
+                 dir = 0;
+
+              x := ShiftX(GetX(un), dir, coord_dist);
+              y := ShiftY(GetY(un), dir, coord_dist);
+            end
+           Until not MCT_Enemy(GetSide(un), GetX(un), GetY(un), 14) and not IsEnvironment(x, y) and ValidHex(x, y) and GetHexInfo(x,y) = 0 and HexInfo(x, y) = 0;
+
+           end;
+
+        ComMoveXY(un, x, y);
+        Wait(0$1);
+
+        if GetDistUnits(un, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(un)]), un)) >= 14 then
+           begin
+            ComStop(un);
+            break;
+           end;
+
+      end;
+
+
+End;
+
+// MCT_FindNewPath(unit);
+Export Function MCT_FindNewPath(unit);
+var x, y, x2, y2, dir, i, mode;
+begin
+x := GetX(unit);
+y := GetY(unit);
+i := 0;
+
+ComTurnUnit(unit, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(unit)]), unit));
+
+dir := GetDir(unit);
+mode := Rand(0, 1);
+
+ Repeat
+  begin
+  Wait(0$0.3);
+
+  if mode then
+     dir := dir + 1
+      else
+       dir := dir - 1;
+
+  if (dir < 0) then
+     dir := 5;
+  if (dir > 5) then
+     dir := 0;
+
+  x2 := ShiftX(x, dir, 4);
+  y2 := ShiftY(y, dir, 4);
+
+  i := i + 1;
+  //MC_Show([x,y,dir] ^ [x2,y2]);
+
+  if MCT_Enemy(GetSide(unit), x2, y2, 14) = false and GetHexInfo(x2, y2) = 0 and HexInfo(x2, y2) = 0 then
+     break;
+  end
+ Until i > 4;
+
+if x2 and y2 then
+   result := [x2, y2]
+    else
+     result := [GetX(unit), GetY(unit)];
+End;
+
+// MCT_Hex(x, y);
+// Hex
+Export Function MCT_Hex(x, y);
+begin
+result := [GetHexInfo(x, y), [HexInfo(x, y)]];
+End;
+
+// MCT_CollectCrates(side);
+Export Function MCT_CollectCrates(side);
+var i, j, x, y, z, t1, t2, mode, areas, collectors, is_cargo, debug_time;
+begin
+mode := MREG_Collect[side][1];
+areas:= MREG_Collect[side][2];
+collectors := [];
+is_cargo := false;
+
+if isTest then
+   TimerStart();
+
+if MCF_Cargo(side) then
+   begin
+   collectors := MCF_Cargo(side);
+   is_cargo := true;
+   end
+    else
+     begin
+     if MCF_ApeSpec(side, 'engineer') then
+        collectors := MCF_ApeSpec(side, 'engineer');
+     if MCF_Class(side, 2, []) then
+        begin
+        z := MCF_Class(side, 2, []);
+
+        if z > 5 then
+           t1 := 5
+        else t1 := z;
+
+        for t2 = 1 to t1 do
+            collectors := Insert(collectors, 1, z[t2]);
+        end;
+
+     end;
+
+
+if not mode then
+   exit
+    else
+     begin
+     if collectors then
+        for i in areas do
+            if GetListOfCratesInArea(i) then
+               begin
+               x := GetListOfCratesInArea(i)[1];
+               y := GetListOfCratesInArea(i)[2];
+
+               if is_cargo and GetTag(collectors[1]) = 0 then
+                  begin
+                  if not HasTask(collectors[1]) and GetTag(collectors[1]) = 0 then
+                     begin
+                     ComCollect(collectors[1], x, y);
+                     end;
+                  end
+                   else
+                    begin
+                      for j = 1 to collectors do
+                          if not HasTask(collectors[j]) and GetTag(collectors[j]) = 0 then
+                             begin
+                             MCT_Collect(collectors[j], x, y);
+                             end;
+                    end;
+
+               if isTest then
+                  begin
+                  debug_time := TimerEnd();
+                  end;
+               end;
+     end;
+End;
+
+
+// MCT_Crates(area, amount, percent, interval, limit);
+// area - obszar (area)
+// amount - limit ilosci od 1 do (1-5)
+// percent - czestotliwosc wystapienia zrzuty w procentach (1-100)
+// interval - czas pomiedzy zrzutami (tick)
+// limit - limit na ilosc surowców w arei, powyzej tej wartosci zrzuty beda
+//         wy³aczone do czasu a¿ ilosc surówców w arei spadnie
+Export Function MCT_Crates(area, amount, percent, interval, limit);
+var cr, c, tmp, x, y;
+begin
+
+     if not area then
+        exit
+         else
+          // interval
+          if tick mod interval = 0 and Prob(percent) then
+             begin
+             // area crates limit
+             if GetListOfCratesInArea(area) < limit or limit = 0 then
+                begin
+                Randomize;
+                cr := Rand(1, amount);
+                tmp := AreaToList(area, 0);
+                c := Rand(1, tmp[1]);
+
+                while (HexInfo(tmp[1][c], tmp[2][c]) > 0 and GetResourceAmountXY(tmp[1][c], tmp[2][c]) > 0) do
+                  c := Rand(1, tmp[1]);
+
+                CreateCratesXY(cr, tmp[1][c], tmp[2][c], true);
+                // MREG_Crates := MREG_Crates ^ [[tmp[1][c], tmp[2][c], cr]];
+                end;
+             end;
+End;
+
+Export Function MCT_UpdateCratesList();
+var i;
+begin
+if not MREG_Crates then
+   exit;
+
+for i = MREG_Crates downto 1 do
+    if MREG_Crates[i][3] = 0 then
+       MREG_Crates := Delete(MREG_Crates, i);
+End;
+
+Export Function MCT_Collect(unit, x, y); 
+var i, side, dep;
+begin
+
+if not unit then
+   exit;
+
+if HasTask(unit) or not CanCarry(unit) then
+   exit;
+
+   side := GetSide(unit);
+   dep := MCF_Get(side, [f_btype, b_warehouse]);
+
+if Carry(unit) or not dep then
+   exit
+    else
+     if GetResourceAmountXY(x, y) then
+        begin          
+        ComTake(unit, x, y, dep[1]);
+        end
+         else
+          exit;
+End;
+
+Export Function MCT_EnemyNearBase(side);
+var i, p, tmp, area;
+begin
+result := 0;
+p := 1;
+
+
+for i = 1 to (MREG_DefPoints[side][1])/2 do
+    begin
+    tmp := FilterAllUnits([[f_enemy, side], [f_distxy, MREG_DefPoints[side][1][p], MREG_DefPoints[side][1][p+1], 12]]);
+
+    if tmp then
+       result := result ^ tmp;
+
+    p := p + 2;
+    end;
+
+
+    if FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]) then
+       result := result ^ FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]);
+End;

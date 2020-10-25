@@ -1,0 +1,56 @@
+Export Function MCP_Heal(unit, target);
+var i;
+begin
+if not GetClass(unit) = 4 or not target then
+   exit
+    else
+     if not GetTag(unit) = 4 then
+        exit
+         else
+          ComHeal(unit, target);
+End;
+
+Export Function MCP_Filter(side);
+var i, j, tmp, r, m, d;
+begin
+tmp := FilterAllUnits([[f_side, side], [f_type, unit_human], [f_not, [f_driving]], [f_not, [f_inside]], [f_not, [f_lives, 1000]]]);
+d := MCF_Get(side, [f_btype, b_warehouse]);
+r := [];
+
+   if MCF_Tag(side, 5, []) then
+      for j in MCF_Tag(side, 5, []) do
+          if GetLives(j) = 1000 then
+             SetTag(j, 0);
+
+   if tmp then
+      begin
+      r := [tmp[1]];
+
+      for i = 2 to tmp do
+          begin
+          m := false;
+
+          if d then
+             if GetLives(tmp[i]) < 650 and GetDistUnitXY(tmp[i], GetX(d[1]), GetY(d[1])) > 10 then
+                begin
+                if not GetTag(tmp[i]) = 5 then
+                   SetTag(tmp[i], 5);
+
+                ComMoveXY(tmp[i], GetX(d[1]), GetY(d[1]));
+                end;
+
+          for j = 1 to r do
+              if GetLives(tmp[i]) < r[j] then
+                 begin
+                 r := Insert(r, j, tmp[i]);
+                 m := true;
+                 break;
+                 end;
+
+          if not m then
+             r := r ^ tmp[i];
+          end;
+     end;
+
+result := r
+End;

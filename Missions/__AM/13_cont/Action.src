@@ -1,0 +1,155 @@
+// Start
+Every 1 do 
+begin
+    InGameOn;
+    CenterNowOnUnits(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1]);
+    ComMoveXY(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 69, 94);
+    Say(JMM, 'D2-JMM-1');
+    CenterNowOnUnits(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1]);
+    Say(Stevens, 'D2-Huck-1');
+    CenterNowOnUnits(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1]);
+    Say(JMM, 'D2-JMM-2');
+    CenterNowOnUnits(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1]);
+    InGameOff;
+    ChangeMissionObjectives('M1');
+    SaveForQuickRestart;
+end;
+
+// Dialog about Gorky
+Every 10$0 do 
+begin
+    DialogueOn;
+    SayRadio(Powell, 'D3-Pow-1');
+    Say(JMM, 'D3-JMM-1');
+    SayRadio(Powell, 'D3-Pow-2');
+    Say(JMM, 'D3-JMM-2');
+    SayRadio(Powell, 'D3-Pow-3');
+    Say(JMM, 'D3-JMM-3');
+    SayRadio(Powell, 'D3-Pow-4');
+    Say(JMM, 'D3-JMM-4');
+    DialogueOff;
+    ChangeMissionObjectives('M2');
+    wait(2$30);
+    PrepareBurlak;
+    BurlakArmy;
+end;
+
+// See Gorky's tank
+Every 0$1 trigger See(1, Masha) do
+begin
+    DialogueOn;
+    CenterNowOnUnits(Masha);
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D5-Sol1-1', 'D5-FSol1-1');
+    Say(JMM, 'D5-JMM-1');
+    Say(Burlak, 'DAmer-Bur-1');
+    Say(JMM, 'DAmer-JMM-1');
+    DialogueOff;
+end;
+
+// Remove Alliance from map
+Every 0$1 trigger FilterUnitsInArea(AllianceEscape, [f_side, 7]) do
+var i;
+begin
+enable;
+
+    for i in FilterUnitsInArea(AllianceEscape, [f_side, 7]) do
+        begin
+            if i = Burlak or i = Masha then
+            begin
+                RemoveUnit(i);
+                DialogueOn;
+                Say(JMM, 'D5a-JMM-1');
+                DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D5a-Sol1-1', 'D5-FSol1-1');
+                DialogueOff;
+                ChangeMissionObjectives('M2b');
+                spawnBurlak = 0;
+            end;
+
+            if GetType(i) = unit_vehicle and GetControl(i) = control_manual then
+               begin
+
+                    case IsDrivenBy(i) of
+                         Gnyevko: SaveVariable(1, '13_Gnyevko_1');
+                         Titov: SaveVariable(1, '13_Titov_1');
+                         Xavier: SaveVariable(1, '13_Xavier_1');
+                         Belkov: SaveVariable(1, '13_Belkov_1');
+                         Lipshchin: SaveVariable(1, '13_Lipshchin_1');
+                    end;
+
+               end;
+
+            if GetWeapon(i) = 49 then
+               DestroyUnit(i)
+            else 
+               RemoveUnit(i);
+        end;
+end;
+
+// Gorky fast escape
+Every 0$1 trigger IsOk(Burlak) and GetLives(Masha) < 500 and GetSide(Masha) = 7 do
+ComMoveXY(Burlak, 107, 118);
+
+// Gorky killed
+Every 0$10 trigger IsDead(Burlak) and spawnBurlak = 1 do
+begin
+    Say(JMM, 'D5b-JMM-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D5b-Sol1-1', '');
+    ChangeMissionObjectives('M2a');
+    burlakStatus = 1;
+end;
+
+// Stevens died
+Every 0$1 trigger IsDead(Stevens) do
+begin
+    Say(JMM, 'D6-JMM-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D6-Sol1-1', '');
+    Say(JMM, 'D6-JMM-2');
+    ChangeMissionObjectives('M1a');
+end;
+
+// Siberite Fission researched
+Every 0$1 trigger GetTech(25, 1) = state_researched do
+begin
+    Say(Stevens, 'D6-Huck-2');
+end;
+
+// Start build, builded, and explode siberite rocket -> Events
+
+// Constructed atomic polygon
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_or, [f_weapon, 8], [f_bweapon, 8]]]) > 0 do
+var depot, barrack;
+begin
+    enable;
+
+    depot = FilterUnitsInArea(TestArea, [[f_side, 1], [f_type, unit_building], [f_btype, 1], [f_not, [f_constructed]]]);
+    barrack = FilterUnitsInArea(TestArea, [[f_side, 1], [f_type, unit_building], [f_btype, 5], [f_not, [f_constructed]]]);
+
+    if depot > 0 and barrack > 0 then
+    begin
+        Disable;
+        DialogueOn;
+        Say(JMM, 'D7-JMM-1');
+        DialogueOff;
+        ChangeMissionObjectives('M4');
+        SetAreaMapShow(TestArea, 0);
+    end;
+    
+end;
+
+// Taked data about radation
+Every 0$1 trigger FilterUnitsInArea(SibRadiationArea, [[f_side, 1], [f_class, 4]]) > 0 and eventVar3 = 1 and radationResearched = 0 do 
+begin
+    enable;
+    AmSciSib = FilterUnitsInArea(SibRadiationArea, [[f_side, 1], [f_class, 4]])[1];
+    SetAreaMapShow(SibRadiationArea, 0);
+    radationResearched = 1;
+end;
+
+// Sci with data dead
+Every 0$1 trigger IsDead(AmSciSib) and radationResearched = 1 do 
+begin
+    enable;
+    radationResearched = 0;
+    SetAreaMapShow(SibRadiationArea, 1);
+    Say(JMM, 'D9a-JMM-1');
+end;

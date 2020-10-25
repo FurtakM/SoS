@@ -1,22 +1,20 @@
 Export function PrepareKurt; // team #Kurt ; )
-var i, j, tmp, rnd, dec, dec2;
+var i, depot, tmp, rnd, dec, dec2;
 begin
-    
-    j = 0;
+
+    // spawn Kurt nearby main depot
+    repeat
+     depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+     wait(0$1);
+    until depot;
 
     repeat
-        wait(0$1);
-        for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
-        begin
-            if NOT FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building], [f_occupied]], [f_dist, i, 25]]) then
-            begin
-                tmp = i;
-                j = 1;
-            end;
-        end;
+     wait(0$1);
+     tmp := FilterAllUnits([ [f_side, 1], [f_dist, depot[1], 15], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], [f_not, [f_inside]], [f_not, [f_driving]] ]) diff ([Lisa, Bobby, Cyrus, Frank, Donaldson, Gladstone, Denis] ^ arrivals);
+    until tmp and not InBattle(1);
 
-    until j = 1;
-    
+    tmp := tmp[rand(1, tmp)];
+
     blockSpawn = 1;
     uc_side = 2;
     uc_nation = 2;
@@ -26,11 +24,14 @@ begin
     InGameOn;
     CenterNowOnUnits(Kurt);
     wait(0$2);
-    ComExitVehicle(tmp);
-    ComExitBuilding(tmp);
-    wait(0$1);
     ComTurnUnit(Kurt, tmp);
+
+    ComMoveUnit(tmp, Kurt);
+
+    wait(0$1);
+
     ComTurnUnit(tmp, Kurt);
+
     DialogueOn;
     Say(Kurt, 'D2-Kurt-1');
 

@@ -1,0 +1,78 @@
+On SailEvent(event) do
+var tmp;
+begin
+if event = 1 then
+   begin
+   if not mobile_patrol then
+      exit;
+
+   tmp := mobile_patrol[mobile_patrol];
+   mobile_patrol := Delete(mobile_patrol, mobile_patrol);
+   Patrol(tmp, mobile_points[mobile_patrol+1], []);
+   end;
+End;
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+
+if GetSide(un) = 7 and GetWeapon(un) = us_cargo_bay then
+   YouLost('Artifact');
+
+if (GetSide(un) = 7 and GetType(un) = unit_human) or un = Roth then
+   team_kill_counter := team_kill_counter + 1;
+
+if GetSide(un) = 1 and GetType(un) = unit_human then
+   friends_kill_counter := friends_kill_counter + 1;
+
+if GetSide(un) <> 1 then
+   exit;
+
+if GetControl(un) = control_remote then
+   defenders := defenders diff un;
+
+if not un in defenders then
+   begin
+   defcon := [GetX(un), GetY(un)];
+   Defend;
+   end;
+End;
+
+On VehicleConstructed(veh, fac) do
+begin
+if GetSide(veh) <> 1 then
+   exit;
+
+if GetControl(veh) = control_remote then
+   Connect(veh);
+End;
+
+On UnitGoesToRed(un) do
+var i, veh;
+begin
+if GetSide(un) = 1 and GetControl(un) = control_remote then
+   ComUnlink(un);
+
+if un = ambar0 then
+   begin
+   uc_side := 1;
+   uc_nation := 1;
+
+   for i = 1 to 6 do
+       begin
+       PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_gatling_gun, 100);
+       veh := CreateVehicle;
+
+       SetDir(veh, 1);
+       PlaceUnitArea(veh, west_spawn, false);
+       defenders := defenders ^ veh;
+       end;
+   end;
+End;
+
+On EnterBuilding(building, unit) do
+begin
+if unit = Powell then
+   RemoveUnit(Powell);
+End;

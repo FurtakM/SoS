@@ -1,0 +1,56 @@
+Every 0$1 trigger ruAI = 1 do
+begin
+    enable;
+    RepairAndRebuildBase(3, ruwestdepot, RuWestBase, ruDestroyedBuildings);
+    RepairAndRebuildBase(3, rueastdepot, RuEastBase, ruDestroyedBuildings);
+    CraneRepairBuild(3, RuWestBase);
+    CraneRepairBuild(3, RuEastBase);
+    HealUnitInBase(3, RuWestHealArea, RuWestBase, rulab1);
+    HealUnitInBase(3, RuEastHealArea, RuEastBase, [rulab2, rulab3, rulab4]);
+    AttackVehicles(3);
+    IntBazooka(3);
+    AttackNearBuildings(3, 1);
+end;
+
+Every 0$1 do begin enable; TimeLapsersAI(3); end;
+
+Every 0$1 trigger IsDying(rueastdepot) do DefendDepot(3, rueastdepot);
+
+Every 0$1 do 
+begin
+    ResAllTechs(3, rulab1, 3);
+    ResAllTechs(3, rulab2, 3);
+    ResAllTechs(3, rulab3, 3);
+    ResAllTechs(3, ruheadlab, 3);
+end;
+
+Every 5$0 trigger secondPass = 2 and GetSide(ru_fact) = 3 and GetSide(rufab2) = 3 and IsOk(ru_fact) and IsOk(rufab2) and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_not, [f_empty]]]) diff FilterUnitsInArea(RussianOutsideVehs, [[f_side, 3], [f_type, unit_vehicle]]) = 0 do
+begin
+    enable;
+    BuildingVehicle(3, ru_fact, [3, 4, 4][Difficulty], [46, 45, 44], 3, 3, 24);
+    if russianTimeLapsers = 0 then BuildingVehicle(3, rufab2, [1, 2, 2][Difficulty], [49, 49], 3, 3, 24);
+end;
+
+Every 0$1 trigger arabianMines do
+var i;
+begin
+enable;
+
+for i in arabianMines do
+    begin
+    if FilterAllUnits([[f_side, 1], [f_distxy, i[1], i[2], 3]]) then
+       begin
+       LaunchMineAtPos(i[1], i[2], 5);
+       arabianMines := Delete(arabianMines, i);
+       end;
+    end;
+End;
+
+// Change TP exit :)
+Every 0$1 trigger vehicleTeleported = 4 and tpCounter = [6, 8, 8][Difficulty] do TeleportExit(ruteleprt, 47, 82);
+
+Every 2$0 trigger vehicleTeleported = 4 do
+begin
+enable;
+attackTactic = rand(1, 2);
+end;

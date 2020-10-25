@@ -1,0 +1,155 @@
+Export Function MCL_Research(side, tech);
+var i, basic_tech, lab;
+begin
+basic_tech := [35, 45, 46, 47, 1, 2, 48, 49, 50, 20];
+
+if MCF_Lab(side) then
+   begin     
+       if BuildingStatus(MCF_Lab(side)[1]) = bs_idle then
+          begin
+             if MCL_LabReq(MCF_Lab(side)[1], tech) then
+                ComResearch(MCF_Lab(side)[1], tech)
+                 else
+                  if MCF_Lab(side) > 1 then
+                     if BuildingStatus(MCF_Lab(side)[2]) = bs_idle then
+                        if MCL_LabReq(MCF_Lab(side)[2], tech) then
+                           ComResearch(MCF_Lab(side)[2], tech);
+          end;
+
+       if tech in [tech_apepsych, tech_apeagres, tech_apebrain, tech_apeneural] then
+          begin           
+
+          for lab in MCF_Lab(side) do
+              if BuildingStatus(lab) = bs_need_ape then
+                 MCL_ResTame(side, lab);
+          end;
+ 
+   end;
+
+End;
+
+Export Function MCL_Kind(lab);
+var tmp;
+begin
+tmp := [];
+
+if not lab then
+   result := false
+    else
+     begin
+     tmp := tmp ^ GetLabKind(lab, 1);
+     tmp := tmp ^ GetLabKind(lab, 2);
+     result := tmp;
+     end;
+End;
+
+
+Export Function MCL_LabReq(lab, tech);
+var i, basic_tech;
+begin
+basic_tech := [35, 45, 46, 47, 1, 2, 48, 49, 50, 20];
+
+if lab then
+   begin
+        if (tech in basic_tech) or (GetTechLab(tech) in MCL_Kind(lab)) then
+           result := true
+            else
+             result := false;
+   end
+    else
+     result := false;
+End;
+
+Export Function MCL_ResTame(side, lab);
+var ape, tmp;
+begin
+ape := MCF_Tag(side, 171, []);
+
+if not ape then
+   if MCF_Ape(side) then
+      ape := MCF_Ape(side)[1];
+
+if ape then
+   if IsInUnit(ape[1]) and IsInUnit(ape[1]) <> lab then
+      ComExitBuilding(ape[1]);
+
+if not lab then
+   exit
+    else
+     if MCF_Tag(side, 16, [f_class, 4]) = 0 and UnitsInside(lab) = 6 then
+        begin
+        tmp := UnitsInside(lab);
+        SetTag(tmp[tmp], 16);
+
+        if IsInUnit(tmp[tmp]) then
+           ComExitBuilding(tmp[tmp]);
+        end;
+
+if ape then
+   if not IsInUnit(ape[1]) then
+      ComEnterUnit(ape[1], lab);
+End;
+
+Export Function MCL_HasNext(side);
+var techs, t;
+begin
+result := false;
+techs := MCL_GetTechList(side);
+
+if techs then
+   if techs[2] then
+      result := true
+       else
+        result := false;
+End;
+
+Export Function MCL_Start(side);
+var i;
+begin
+if MCL_GetTechList(side) then
+   MCL_Research(side, MCL_GetTechList(side)[1]);
+End;
+
+Export Function MCL_GetTechList(side);
+var i, techs;
+begin
+
+if MREG_ToRes then
+   for i = 1 to MREG_ToRes do
+       if MREG_ToRes[i][1] = side then
+          begin
+          techs := Replace(techs, techs+1, MREG_ToRes[i][2]);
+          end;
+
+result := techs;
+End;
+
+Export Function MCL_SetTechList(side, tech_list);
+var i;
+begin
+for i = 1 to tech_list do
+    if not tech_list[i] = 20 then
+       MREG_ToRes := MC_RegistryUpdate(MREG_ToRes, side, tech_list[i], []);
+
+result := true;
+End;
+
+Export Function MCL_ClearTechList(side);
+var i;
+begin
+for i = MREG_ToRes downto 1 do
+    if MREG_ToRes[i][1] = side then
+       MREG_ToRes := Delete(MREG_ToRes, i);
+
+result := true;
+End;
+
+Export Function MCL_CheckTechProgress(side, tech);
+begin
+result := GetTechProgress(side, tech);
+End;
+
+Export Function MCL_Require(tech);
+begin
+result := GetTechTechsReq(tech);
+End;

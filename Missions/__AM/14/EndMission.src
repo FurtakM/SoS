@@ -1,0 +1,151 @@
+Every 0$5 trigger IsInArea(IsInUnit(JMM), ExitArea) and fastEnd = 0 do
+var JMMGirlVeh, dec;
+begin
+enable;
+
+    if JMMGirl = 1 then
+       JMMGirlVeh = IsInUnit(Joan);
+
+    if JMMGirl = 2 then
+       JMMGirlVeh = IsInUnit(Lisa);
+
+    if JMMGirl = 3 then
+       JMMGirlVeh = IsInUnit(Connie);
+
+    if GetDistUnits(IsInUnit(JMM), IsInUnit(Joan)) < 10 or GetDistUnits(IsInUnit(JMM), IsInUnit(Lisa)) < 10 or GetDistUnits(IsInUnit(JMM), IsInUnit(Connie)) < 10 then
+       begin
+
+        case Query('Q3b') of
+         1: begin              
+            SaveVariable([ [GetChassis(JMMGirlVeh)], [GetEngine(JMMGirlVeh)], [GetControl(JMMGirlVeh)], [GetWeapon(JMMGirlVeh)]  ], '14_JMMGirlVeh_1');
+            FinishMission;
+            disable;
+            end;
+        end;
+       end
+    else
+     begin
+        if JMMGirl = 1 then
+           dec := Query('Q3bJ')
+        else if JMMGirl = 2 then
+           dec := Query('Q3bL')
+        else
+           dec := Query('Q3bX');
+
+     if dec = 1 then
+        begin
+        FinishMission;
+        exit;
+        end;
+     end;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and fastEnd = 0 do
+begin
+    DialogueOn;
+    Say(JMM, 'DEnd-JMM-1');
+    if JMMGirl = 1 then Say(Joan, 'DEnd-Joan-1');
+    if JMMGirl = 2 then Say(Lisa, 'DEnd-Lisa-1');
+    if JMMGirl = 3 then Say(Connie, 'DEnd-Con-1');
+    DialogueOff;
+    FinishMission;
+end;
+
+Export function FinishMission;
+var JMMNewVeh;
+begin
+
+    SaveCharacters(JMM, '14_JMM');
+
+    JMMNewVeh = IsInUnit(JMM);
+    SaveVariable([[GetChassis(JMMNewVeh)], [GetEngine(JMMNewVeh)], [GetControl(JMMNewVeh)], [GetWeapon(JMMNewVeh)]], '14_JMMVeh_1');
+
+    if fastEnd = 1 then
+    begin
+        AddMedal('fastend', -1);
+        AddMedal('fastend', -1);
+        AddMedal('fastend', -1);
+
+        SaveVariable(JMMGirl, '14_JMMGirl_1');
+        SaveVariable(0, '14_JMMGirlStatus_1');
+        SaveVariable(0, '14_KappaStatus_1');
+
+        GiveMedals('Eliminate');
+
+        RewardPeople(JMM);
+
+        YouWin;
+        exit;
+    end;
+    
+    if fastEnd = 0 then
+    begin
+        RewardPeople(FilterAllUnits([[f_side, 1], [f_not, [f_class, class_apeman]], [f_not, [f_class, class_apeman_engineer]]]));
+
+        SaveVariable(JMMGirl, '14_JMMGirl_1');
+        if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and GetSide(us_depot) = 1 then SaveVariable(1, '14_KappaStatus_1')
+        else SaveVariable(0, '14_KappaStatus_1');
+
+        case JMMGirl of
+            1:begin
+                if IsOk(Joan) and GetSide(Joan) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Joan)) < 10)  then
+                begin
+                    SaveVariable(1, '14_JMMGirlStatus_1');
+                    SaveCharacters(Joan, '14_Joan');
+                    AddMedal('protect', 1)
+                end else
+                begin
+                    SaveVariable(0, '14_JMMGirlStatus_1');
+                    AddMedal('protect', -1);
+                end; 
+            end;
+
+            2:begin
+                if IsOk(Lisa) and GetSide(Lisa) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Lisa)) < 10)  then
+                begin
+                    SaveVariable(1, '14_JMMGirlStatus_1');
+                    SaveCharacters(Lisa, '14_Lisa');
+                    AddMedal('protect', 1)
+                end else
+                begin
+                    SaveVariable(0, '14_JMMGirlStatus_1');
+                    AddMedal('protect', -2);
+                end; 
+            end;
+
+            3:begin
+                if IsOk(Connie) and GetSide(Connie) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Connie)) < 10)  then
+                begin
+                    SaveVariable(1, '14_JMMGirlStatus_1');
+                    SaveCharacters(Connie, '14_Connie');
+                    AddMedal('protect', 1)
+                end else 
+                begin
+                    SaveVariable(0, '14_JMMGirlStatus_1');
+                    AddMedal('protect', -3);
+                end;
+            end;
+
+        end;
+        
+        if amLaserCounter >= 2 then
+        begin 
+            AddMedal('double', 1)
+        end else
+        begin
+            if amLaserCounter = 1 then AddMedal('double', -2)
+            else AddMedal('double', -1);
+        end;
+            
+
+        if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 then 
+            AddMedal('base', 1)
+        else
+            AddMedal('base', -1);
+            
+    end;
+
+    GiveMedals('Eliminate');
+
+    YouWin;
+end;

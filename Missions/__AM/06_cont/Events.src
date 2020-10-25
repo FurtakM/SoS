@@ -30,6 +30,12 @@ end;
 
 On UnitDestroyed(unit) do 
 begin
+
+    if unit = JMM then
+       YouLost('JMM');
+
+    if unit = Joan then JoanStatus = 0;
+
     if GetSide(unit) = 1 and GetType(unit) = unit_human then
     begin
      if GetClass(unit) = 1 OR GetClass(unit) = 2 OR GetClass(unit) = 3 OR GetClass(unit) = 4 then unitLost = unitLost + 1;
@@ -83,6 +89,9 @@ begin
               PlaceHumanInUnit(CreateHuman, rufab);
         end;
 
+        if GetSide(unit) = 3 and GetWeapon(unit) = ru_crane and IsOK(rufab) and GetSide(rufab) = 3 then
+           ComConstruct(rufab, 22, 1, 1, ru_crane);
+
 end;
 
 On VehicleConstructed(vehicle, building) Do
@@ -103,7 +112,11 @@ end;
 On ApemanTamed(apeman, human) Do
 begin
 
-    if GetSide(apeman) = 3 then tamedApemans = tamedApemans + 1;
+    if GetSide(apeman) = 3 then
+    begin
+      tamedApemans = tamedApemans + 1;
+      ComMoveXY(apeman, 106, 85);
+    end;
 end;
 
 On UnitGoesToRed(unit) Do
@@ -132,9 +145,3 @@ On EnterBuilding(building, human) Do
 begin
      if building = rufab and GetSide(human) = 3 then SetLives(human, 1000);
 end;
-
-On CrateSpawn(id, x, y, amount, mode) do
-begin
-if not firstCrateSpawn then
-   firstCrateSpawn := true;
-End;

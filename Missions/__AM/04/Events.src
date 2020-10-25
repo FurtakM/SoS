@@ -81,6 +81,9 @@ begin
     begin
         factoryDialog = 1;
         CenterNowOnUnits(FilterAllUnits ([[f_side, 1], [f_type, unit_building], [f_btype, b_factory], [f_lives, 1000]])[1]);
+
+        if GetTech(47, 1) = state_enabled and GetTech(45, 1) = state_enabled then
+        begin
         Say(JMM, 'D9a-JMM-1');
 
         if IsOK(Campell) then
@@ -99,9 +102,12 @@ begin
         if energyVDialog = 0 then EnergyDialog;    
     end;
 
+    end;
+
 end;
 
-On UnitDestroyed(unit) Do
+On UnitDestroyed(unit) do
+var mech;
 begin
     if GetType(unit) = unit_human and GetSide(unit) = 1 then lostCounter = lostCounter + 1;
 
@@ -114,7 +120,10 @@ begin
         hc_name := '';
 
         PrepareMechanic(false, rand(RuSoldMinLevel, RuSoldMaxLevel));
-        PlaceHumanInUnit(CreateHuman, rubfact0);
+        mech := CreateHuman;
+
+        PlaceUnitXYR(mech, 124, 97, 3, false);
+        ComEnterUnit(mech, rubfact0);
     end;
 
 end;
@@ -133,19 +142,22 @@ begin
 
 end;
 
-On VehicleConstructed(vehicle, building) Do
+On VehicleConstructed(vehicle, building) do
+var driver;
 begin
     if GetWeapon(vehicle) = 53 then
     begin
-        CutTreeInArea(vehicle, TreesArea);
-
         uc_side = 3;
         uc_nation = 3;
 
         PrepareMechanic(false, RuSoldMaxLevel);
-        PlaceHumanInUnit(CreateHuman, building);
-        SetSide(vehicle, 6);
-        SetSide(UnitsInside(vehicle), 6);
+        driver := CreateHuman;
+        PlaceHumanInUnit(driver, building);
+
+        CutTreeInArea(vehicle, TreesArea);
+        AddComMoveXY(vehicle, 104, 73);
+        AddComExitVehicle(driver);
+        AddComEnterUnit(driver, FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1]);
     end;
 
 end;

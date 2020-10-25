@@ -1,6 +1,9 @@
 Export Function Action;
+var i;
 begin
-// game start here
+for i in FilterAllUnits([[f_side, 3], [f_class, 1]]) do
+    ComHold(i);
+    
 InGameOn;
 CenterOnXY(79, 76);
 
@@ -44,16 +47,27 @@ InGameOff;
 
 ChangeMissionObjectives('M1');
 
+SaveForQuickRestart;
+
 active_russian_dialog := true;
 active_road_patrol := true;
 
-PlaceUnitXY(Bobby, 41, 71, false);
-ComHold(Bobby);
+if Difficulty < 3 then
+   begin
+   PlaceUnitXY(Bobby, 41, 71, false);
+   ComHold(Bobby);
+   end
+else
+   begin
+   SetDir(Bobby, 5);
+   PlaceUnitXY(Bobby, 105, 98, false);
+   ComCrawl(Bobby);
+   AddComHold(Bobby);
+   end;
+
 PlaceUnitXY(Cyrus, 90, 42, false);
 ComMoveXY(Cyrus, 79, 34);
-ComCrawl(Cyrus);
-
-SaveForQuickRestart;
+AddComCrawl(Cyrus);
 End;
 
 
@@ -98,7 +112,14 @@ wait_points := 10;
 if Difficulty > 1 then
    begin
    ComAgressiveMove(russian_troops_1, 78, 95);
+   AddComWait(russian_troops_1, 0$05);
    wait_points := wait_points + 15;
+
+   if Difficulty > 2 then
+      begin
+      AddComAgressiveMove(russian_troops_1, 65, 79);
+      wait_points := wait_points + 5;
+      end;
    end;
 
 repeat
@@ -131,6 +152,18 @@ repeat
 
 until GetDistUnitXY(russian_troops_1[1], 45, 5) < 10;
 
+End;
+
+// Easy mode camera
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_distxy, 80, 83, 6]]) and Difficulty = 1 do
+begin
+PlaceSeeing(80, 83, 1, -7);
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 3], [f_distxy, 80, 83, 10]]);
+
+RemoveSeeing(80, 83, 1);
 End;
 
 // Macmilan spot Bobby
@@ -193,7 +226,7 @@ if powell_contact and not cyrus_in_squad then
 End;
 
 // Bobby move
-Every 0$45 trigger active_russian_dialog and not bobby_in_squad do
+Every 0$45 trigger active_russian_dialog and not bobby_in_squad and Difficulty < 3 do
 ComMoveXY(Bobby, 75, 83);
 
 // Bobby move v2
@@ -327,11 +360,11 @@ Say(JMM, 'D4b-JMM-1');
 End;
 
 // Macmilan see meta guards
-Every 0$01 trigger GetDistUnits(JMM, russian_meta_guards[russian_meta_guards]) < 12 or GetLives(russian_meta_guards[russian_meta_guards]) < 999 do
+Every 0$01 trigger GetDistUnits(JMM, russian_meta_guards[russian_meta_guards]) < 12 or UnitFilter(russian_meta_guards, [f_not, [f_lives, 990]]) do
 var i, hp;
 begin
 
-hp := [200, 150, 100][Difficulty];
+hp := [300, 250, 200][Difficulty];
 
 for i in russian_meta_guards do
     if IsOk(i) then
@@ -359,8 +392,17 @@ Every 0$01 trigger GetDistUnitXY(JMM, 93, 1) < 5 and FilterAllUnits([f_side, 1])
 Say(JMM, 'D6a-JMM-1');
 
 // Macmilan is dead
-Every 0$01 trigger IsDying(JMM) do
-YouLost('JMM');
+On UnitGoesToRed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+End;
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   YouLost('JMM');
+End;
 
 
 Every 0$01 trigger IsInArea(Bobby, exitArea) do

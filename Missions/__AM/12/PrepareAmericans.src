@@ -1,0 +1,337 @@
+Export function PrepareAmericanHeroes;
+var tmp, i;
+begin
+    uc_side = 1;
+
+    others11 =  CreateCharacterSet('11c_others') union CreateCharacterSet('11_others');
+
+
+    JMM = PrepareUnit('11_JMM', true);
+    SetClass(JMM, 1);
+    PlaceHumanInUnit(JMM, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]])[1]);
+
+    if TestCharacters('11_Lisa') = true then
+    begin          
+        Lisa = PrepareUnit('11_Lisa', true);
+        SetClass(Lisa, 1);
+        PlaceUnitArea(Lisa, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Donaldson') = true then
+    begin          
+        Donaldson = PrepareUnit('11_Donaldson', true);
+        SetClass(Donaldson, 1);
+        PlaceUnitArea(Donaldson, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Cyrus') = true then
+    begin          
+        Cyrus = PrepareUnit('11_Cyrus', true);
+        SetClass(Cyrus, 1);
+        PlaceUnitArea(Cyrus, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Denis') = true then
+    begin          
+        Denis = PrepareUnit('11_Denis', true);
+        SetClass(Denis, 4);
+        PlaceUnitArea(Denis, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Frank') = true then
+    begin          
+        Frank = PrepareUnit('11_Frank', true);
+        SetClass(Frank, 1);
+        PlaceUnitArea(Frank, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Cornell') = true then
+    begin          
+        Cornel = PrepareUnit('11_Cornell', true);
+        SetClass(Cornel, 1);
+        PlaceUnitArea(Cornel, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    // one men
+    tmp := UnitFilter(others11, [f_sex, 1]);
+
+    if not tmp then
+       begin
+       PrepareSoldier(sex_male, 8);
+       PlaceUnitArea(CreateHuman, PlayerSpawn, false);
+       end
+    else
+       begin
+       PlaceUnitArea(tmp[1], PlayerSpawn, false);
+       others11 := others11 diff tmp[1];
+       end;
+
+    Powell = PrepareUnit('Powell', false);
+end;
+
+Export function PrepareAmericansRandom(area, veh, spawnMode, mech);
+var i, un, tmp, mecha;
+begin
+
+    if mech = 1 then
+    begin   
+        if others11 > 0 then
+        begin
+
+            for i := 1 to others11 - 1 do
+            begin
+                if GetSkill(others11[i], 3) < GetSkill(others11[i + 1], 3) then
+                begin
+                    mecha = others11[i + 1];
+                    SetClass(mecha, 3);
+                    break;
+                end;
+            end;
+
+            if spawnMode = 1 then PlaceUnitArea(mecha, area, false)
+            else PlaceHumanInUnit(mecha, veh);
+
+            others11 = others11 diff mecha;
+
+        end else
+        begin
+            hc_name = '';
+            hc_gallery = '';
+
+            PrepareMechanic(false, rand(7, 9));
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+        end;
+        
+    end else
+    begin
+
+        if others11 > 0 then
+        begin
+            if spawnMode = 1 then PlaceUnitArea(others11[1], area, false)
+            else PlaceHumanInUnit(others11[1], veh);
+
+            others11 = Delete(others11, 1);
+        end else
+        begin
+            hc_name = '';
+            hc_gallery = '';
+
+            PrepareHuman(false, [1, 2, 3, 4][Rand(1,4)], rand(7, 9));
+            un = CreateHuman;
+            PlaceHumanInUnit(un, veh);
+        end;
+
+
+    end;
+
+end;
+
+Export function PrepareVehicles;
+var veh;
+begin
+     uc_side = 1;
+     uc_nation = 1;
+
+    vc_chassis = us_medium_tracked;
+    vc_engine = 3;
+    vc_control = 3;
+    vc_weapon = us_gatling_gun;
+    veh = CreateVehicle;
+    PlaceUnitArea(veh, PlayerSpawn, false);
+
+    vc_weapon = us_double_gun;
+    vc_control = 1;
+    veh = CreateVehicle;
+    PlaceUnitArea(veh, PlayerSpawn, false);
+
+    vc_weapon = us_light_gun;
+    vc_control = 3;
+    vc_chassis = us_medium_wheeled;
+    veh = CreateVehicle;
+    PlaceUnitArea(veh, PlayerSpawn, false);
+
+    vc_weapon = us_gatling_gun;
+    veh = CreateVehicle;
+    PlaceUnitArea(veh, PlayerSpawn, false);
+end;
+
+Export function PowellSupport1;
+var veh, un;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    if TestCharacters('11_Brown') = true then
+    begin          
+        Brown = PrepareUnit('11_Brown', true);
+        SetClass(Brown, 2);
+        PlaceUnitArea(Brown, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    if TestCharacters('11_Gary') = true then
+    begin          
+        Gary = PrepareUnit('11_Gary', true);
+        SetClass(Gary, 2);
+        PlaceUnitArea(Gary, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+    vc_chassis = us_medium_tracked;
+    vc_engine = 3;
+    vc_control = 1;
+    vc_weapon = us_crane;
+    veh = CreateVehicle;
+
+    SetDir(veh, 4);
+
+    PlaceUnitArea(veh, PlayerSpawn, false);
+ 
+    PrepareAmericansRandom(PlayerSpawn, veh, 2, 1);
+
+    vc_weapon = 9;
+    veh = CreateVehicle;
+
+    SetDir(veh, 4);
+
+    PlaceUnitArea(veh, PlayerSpawn, false);
+    PrepareAmericansRandom(PlayerSpawn, veh, 2, 1);
+
+    vc_control = 3;
+    vc_weapon = us_cargo_bay;
+    amCargo1 = CreateVehicle;
+    amCargo2 = CreateVehicle;
+
+    SetDir(amCargo1, 4);
+    SetDir(amCargo2, 4);
+
+    PlaceUnitArea(amCargo1, PlayerSpawn, false);
+    PlaceUnitArea(amCargo2, PlayerSpawn, false);
+
+    AddCargo(amCargo1, 3, 100);
+    AddCargo(amCargo2, 1, 80);
+    AddCargo(amCargo2, 3, 20);
+end;
+
+Export function PowellSupport2;
+var veh, un;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    vc_chassis = us_medium_wheeled;
+    vc_engine = 3;
+    vc_control = 3;
+    vc_weapon = us_light_gun;
+    veh = CreateVehicle;
+
+    SetDir(veh, 4);
+
+    PlaceUnitArea(veh, PlayerSpawn, false);
+
+   vc_control = 1;
+   vc_chassis = us_medium_wheeled;
+   vc_weapon = us_double_gun;
+   veh = CreateVehicle;
+
+   SetDir(veh, 4);
+
+   PlaceUnitArea(veh, PlayerSpawn, false);
+   
+
+
+    if TestCharacters('11_Bobby') = true then
+    begin          
+        Bobby = PrepareUnit('11_Bobby', true);
+        SetClass(Bobby, 3);
+        PlaceHumanInUnit(Bobby, veh);
+    end else
+    begin
+            PrepareAmericansRandom(0, veh, 2, 0);
+    end;
+
+    if TestCharacters('11_Houten') = true then
+    begin          
+        Houten = PrepareUnit('11_Houten', true);
+        SetClass(Houten, 1);
+        PlaceUnitArea(Houten, PlayerSpawn, false);
+    end else
+    begin
+            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+    end;
+
+
+    vc_control = 3;
+    vc_weapon = us_cargo_bay;
+    amCargo3 = CreateVehicle;
+    SetDir(amCargo3, 4);
+    amCargo4 = CreateVehicle;
+    SetDir(amCargo4, 4);
+    amCargo5 = CreateVehicle;
+    SetDir(amCargo5, 4);
+
+    PlaceUnitArea(amCargo3, PlayerSpawn, false);
+    PlaceUnitArea(amCargo4, PlayerSpawn, false);
+    PlaceUnitArea(amCargo5, PlayerSpawn, false);
+
+    if kurtStatus > 0 then
+    begin
+    AddCargo(amCargo3, 1, 100);
+    AddCargo(amCargo4, 1, 100);
+    AddCargo(amCargo5, 3, 80);
+    end else
+    begin
+    AddCargo(amCargo3, 1, 100);
+    AddCargo(amCargo4, 3, 60);
+    AddCargo(amCargo5, 3, 100);
+
+    end;
+end;
+
+Export function PowellSupport3;
+var veh, un;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+
+    vc_chassis = us_medium_wheeled;
+    vc_engine = 3;
+    vc_control = 3;
+    vc_weapon = us_cargo_bay;
+    amCargo6 = CreateVehicle;
+    amCargo7 = CreateVehicle;
+
+    SetDir(amCargo6, 4);
+    SetDir(amCargo7, 4);
+
+    PlaceUnitArea(amCargo6, PlayerSpawn, false);
+    PlaceUnitArea(amCargo7, PlayerSpawn, false);
+
+    AddCargo(amCargo6, 1, 100);
+    AddCargo(amCargo7, 1, 100);
+end;

@@ -11,12 +11,11 @@ result := unit;
 End;
 
 Export function SelectAndSaveCharacters;
-var i, yourPeople, selectedPeople, test, rnd;
+var i, yourPeople, selectedPeople, test;
 begin
-    rnd = [5, rand(4, 5), 4][Difficulty];
     yourPeople = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, DeltaDoctor, Denis];
 
-    selectedPeople = CharacterSelection('text', [5, 4, 4][Difficulty], rnd,
+    selectedPeople = CharacterSelection('text', 5, 5,
                                 [sel_change_class, JMM,
                                  sel_dont_change_class,
                                  sel_not_hired,sel_changeable, sel_change_class]^yourPeople^
@@ -98,8 +97,10 @@ begin
     SetSkill(yourApemans, 2, 5);
 
     SaveCharacters(yourApemans, 'ApeIn06');
-    SaveCharacters(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone], 'OthersIn06');
-    SaveCharacters(FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff randomsDelta^DeltaDoctor, 'OthersStayInDelta');
+    SaveCharacters(selectedPeople diff [JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone, Denis], 'OthersIn06');
+    SaveCharacters(FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [DeltaDoctor, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone, Denis], 'OthersStayInDelta');
+
+    ComStop(selectedPeople);
 
 end;
 
