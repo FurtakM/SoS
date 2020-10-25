@@ -17,10 +17,10 @@ cratesSpawn := GetMultiPlayerSetting(3)+1;
 if not cratesSpawn then
    cratesSpawn := 2;
 
-commander := GetMultiPlayerSetting(4)+1;
+// commander := GetMultiPlayerSetting(4)+1;
 
 if not commander then
-   commander := 1;
+   commander := 3;
 
 if not debug then
    exit;
@@ -31,11 +31,6 @@ display_strings := [
 'reinforceAllowed: ' & reinforceAllowed,
 'cratesSpawn: ' & cratesSpawn,
 'commander: ' & commander];
-End;
-
-Export Function CustomEvent(event);
-begin
-
 End;
 
 Every 0$1 trigger game and GameType = 1 and not disableGlobalTimer do
@@ -147,11 +142,14 @@ if GameType = 1 then
    legChangeSide := false; // var - true if legion join to player
    allyDestCounter := 0; // counter - units lost by player
    outpostEscape := false; // var - true when outpost escape
+   dialogueMineDetected := false; // var - player detect enemy mine
 
    PrepareAmericans;
    PrepareLegion;
    PrepareRussians;
    playerForces := PreparePlayer;
+
+   AnimateTrees(true);
 
    // birds, tigers, apemans, enchidnas, horses, mastodonts, fishes, nat_area, wat_area);
    PrepareNature(4, 3, 8, 5, 3, 1, 8, natureGroundArea, natureWaterArea);
@@ -386,6 +384,7 @@ if not depot then
    exit;
 // PrepareBase(base_dep, area, name, skill, sources, personel);
 base := PrepareBase(depot[2],
+                    rus2Base,
                     0, // <---- base name here
                     [6, 7, 8][Difficulty],
                     [
@@ -402,6 +401,7 @@ if not base then
 mc_bases := Replace(mc_bases, mc_rus_1, base);
 
 base := PrepareBase(depot[1],
+                    rus1Base,
                     0, // <---- base name here
                     [6, 7, 8][Difficulty],
                     [
@@ -418,6 +418,7 @@ if not base then
 mc_bases := Replace(mc_bases, mc_rus_2, base);
 
 ruOutpost := PrepareBase(FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1],
+                         ruOutpostArea,
                          0, // <---- base name here
                          [6, 7, 8][Difficulty],
                          [
@@ -524,6 +525,7 @@ if not depot then
    exit;
 
 base := PrepareBase(depot[1],
+                    legBase,
                     0, // <---- base name here
                     [6, 7, 8][Difficulty],
                     [
@@ -628,6 +630,7 @@ if not depot then
    exit;
 
 base := PrepareBase(depot[1],
+                    amerBase,
                     'theta3',
                     [8, 7, 6][Difficulty],
                     [
@@ -788,7 +791,7 @@ result := Replace(result, 2, result[2] ^ playerCommander);
 End;
 
 Export Function PrepareReinforcements;
-var i, peopleAmount, tmp, veh;
+var i, peopleAmount, tmp, un, veh;
 begin
 uc_side := 1;
 uc_nation := 1;
@@ -831,10 +834,20 @@ for i = 1 to 5 do
 
     if GetControl(veh) = control_manual then
        begin
-       PrepareHuman(false, 3, 6);
-       PlaceHumanInUnit(CreateHuman, veh);
+       PrepareHuman(sex_male, 3, 6);
+       un := CreateHuman;
+       tmp := tmp ^ un;
+       PlaceHumanInUnit(un, veh);
        end;
     end;
+
+if tmp then
+   begin
+   CenterNowOnUnits(tmp);
+
+   Say(tmp[1], 'DAR-1');
+   Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-DAR');
+   end;
 
 if not reinforceAllowed then
    exit;

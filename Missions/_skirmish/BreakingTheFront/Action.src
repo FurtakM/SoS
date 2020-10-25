@@ -20,16 +20,25 @@ for i in playerForces[2] do
 
 wait(0$2);
 
-Say(playerCommander, 'DI-1');
+// commander:
+// 1 - Ironside
+// 2 - Johnson
+// 3 - Stuart
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1');
 SayRadio(Powell, 'DP-1');
 SayRadio(Powell, 'DP-2');
-Say(playerCommander, 'DI-2');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2');
 
 InGameOff;
 
 ChangeMissionObjectives('O1');
 
 game := true;
+
+wait(0$5);
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3');
 
 repeat
  wait(0$1);
@@ -43,6 +52,8 @@ if tmp then
    Say(tmp[1], 'DR-1-Escape');
 
 wait(0$1);
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Escape');
 
 for i in ruOutpost do
     begin
@@ -154,11 +165,11 @@ wait(0$1);
 
 DialogueOn;
 
-Say(playerCommander, 'DI-1-BaseCaptured');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-BaseCaptured');
 SayRadio(Powell, 'DP-1-BaseCaptured');
-Say(playerCommander, 'DI-2-BaseCaptured');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-BaseCaptured');
 SayRadio(Powell, 'DP-2-BaseCaptured');
-Say(playerCommander, 'DI-3-BaseCaptured');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3-BaseCaptured');
 
 DialogueOff;
 InGameOff;
@@ -175,6 +186,12 @@ wait(0$35);
 PrepareReinforcements;
 End;
 
+// Powell alert about Russians
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_distxy, 167, 197, 20]]) > 3 do
+begin
+SayRadio(Powell, 'DP-RuAttack');
+End;
+
 // Spot Theta
 Every 0$2 trigger GameType = 1 and FilterAllUnits([[f_side, 1], [f_see, 4]]) do
 begin
@@ -185,14 +202,42 @@ DialogueOn;
 CenterNowOnUnits(allyCommander);
 
 SayRadio(allyCommander, 'DM-1-Contact');
-Say(playerCommander, 'DI-1-Contact');
-SayRadio(allyCommander, 'DM-2-Contact');
-Say(playerCommander, 'DI-2-Contact');
-SayRadio(allyCommander, 'DM-3-Contact');
-Say(playerCommander, 'DI-3-Contact');
-SayRadio(allyCommander, 'DM-4-Contact');
-Say(playerCommander, 'DI-4-Contact');
-SayRadio(allyCommander, 'DM-5-Contact');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Contact');
+
+if commander = 1 then // Ironside
+   begin
+   SayRadio(allyCommander, 'DM-2-Contact');
+   Say(playerCommander, 'DI-2-Contact');
+   SayRadio(allyCommander, 'DM-3-Contact');
+   Say(playerCommander, 'DI-3-Contact');
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DI-4-Contact');
+   SayRadio(allyCommander, 'DM-5-Contact');
+   end;
+
+if commander = 2 then // Johnson
+   begin
+   SayRadio(allyCommander, 'DM-2c-Contact');
+   Say(playerCommander, 'DJ-2-Contact');
+   SayRadio(allyCommander, 'DM-3-Contact');
+   Say(playerCommander, 'DJ-3-Contact');
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DJ-4-Contact');
+   SayRadio(allyCommander, 'DM-5a-Contact');
+   end;
+
+if commander = 3 then // Stuart
+   begin
+   SayRadio(allyCommander, 'DM-2a-Contact');
+   Say(playerCommander, 'DS-2a-Contact');
+   SayRadio(allyCommander, 'DM-2b-Contact');
+   Say(playerCommander, 'DS-2b-Contact');
+   SayRadio(allyCommander, 'DM-3-Contact');
+   Say(playerCommander, 'DS-3-Contact');
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DS-4-Contact');
+   SayRadio(allyCommander, 'DM-5-Contact');
+   end;
 
 DialogueOff;
 
@@ -207,7 +252,7 @@ begin
 DialogueOn;
 
 SayRadio(Farmer, 'DF-1-Leg');
-Say(playerCommander, 'DI-1-Leg');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Leg');
 SayRadio(Farmer, 'DF-2-Leg');
 
 DialogueOff;
@@ -217,7 +262,8 @@ Case Query('QLegionOffer') of
 2: exit; // not agree
 end;
 
-SayRadio(Farmer, 'DF-3-Leg');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-Leg');
+
 legOfferAccepted := true;
 
 SetAreaMapShow(legOfferArea, 1);
@@ -251,8 +297,10 @@ disableGlobalTimer := false;
 if sib <= 0 then // legion change side
    begin
    legChangeSide := true;
+   SayRadio(Farmer, 'DF-4y-Leg');
 
    ChangeMissionObjectives('O3a');
+
    ChangeSideFog(8, 1);
    SetAttitude(8, 1, att_friend, true);
    SetAttitude(8, 4, att_friend, true);
@@ -262,15 +310,20 @@ if sib <= 0 then // legion change side
    wait(0$30);
 
    PrepareLegionReinforcements;
-   end;
+   end
+else
+   begin
+   ChangeMissionObjectives('O3a');
 
+   SayRadio(Farmer, 'DF-4n-Leg');
+   end;
 End;
 
 // You Win
 Every 0$1 trigger GameType = 1 and game and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and
                   FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) = 0 do
 begin
-Say(playerCommander, 'DI-1-Win');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Win');
 
 if tick >= [150$0, 130$0, 110$0][Difficulty] then
    AddMedal('med1', -1)
@@ -314,6 +367,13 @@ for i in tmp do
     if MineAtPos(x, y) then
        begin
        LaunchMineAtPos(x, y, 8);
+
+       if not dialogueMineDetected then
+          begin
+          CenterNowOnXY(x, y);
+          Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Mine');
+          dialogueMineDetected := true;
+          end;
 
        for j = 1 to staticMines do
            if staticMines[j][1] = x and staticMines[j][2] = y then
