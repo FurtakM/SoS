@@ -1,0 +1,251 @@
+// Sand of Siberia - Beta
+// map by ALTAR, expanded by Serpent
+// SAIL by Pra¿anin
+// Idea, scenario and dialogs by Pra¿anin
+export MissionStart;
+
+starting
+begin
+  GameType;
+
+  RevealFogArea(1, BetaArea);
+
+  SetBName(BetaA, 'beta');
+  SetBName(BetaB, 'beta');
+
+  PrepareHeroes;
+  PrepareBeta;
+
+  InGameOn;
+  CenterNowOnUnits(Brighton);
+
+  ComMoveXY(Megan, 50, 42);
+
+  repeat
+  wait(0$1)
+  until GetDistUnits(Megan, Brighton) < 3;
+
+  Say(Megan, 'DMegan-1a');
+  Say(Brighton, 'DBrighton-1a');
+  Say(Megan, 'DMegan-2a');
+  Say(Brighton, 'DBrighton-2a');
+  Say(Megan, 'DMegan-3a');
+  Say(Brighton, 'DBrighton-3a');
+  Say(Megan, 'DMegan-4a');
+  ComMoveXY(Megan, 40, 37);
+  ComMoveXY(Palmer, 50, 42);
+  wait(0$3);
+  Say(Megan, 'DMegan-5a');
+  Say(Palmer, 'DPalmer-1');
+  Say(Brighton, 'DBrighton-1');
+  Say(Palmer, 'DPalmer-2');
+  Say(Brighton, 'DBrighton-2');
+  Say(Palmer, 'DPalmer-3');
+  Say(Brighton, 'DBrighton-3');
+  Say(Palmer, 'DPalmer-4');
+  ComEnterUnit(Palmer, AmTower);
+
+  repeat
+  wait(0$1);
+  until IsInUnit(Palmer)=AmTower;
+
+  SayRadio(Palmer, 'DPalmer-5');
+
+  ComMoveXY(Brighton, 59, 36);
+  ComMoveXY(Megan, 60, 35);
+  ComMoveXY(Palmer, 60, 34);
+
+  AddComTurnXY(Brighton, 99, 37);
+  AddComTurnUnit(Megan, Brighton);
+  AddComTurnUnit(Palmer, Brighton);
+
+  CenterOnXY(64, 40);
+
+  ComMeeting(BetaSquad, SpotArea);
+
+  wait(0$15);
+  Say(Brighton, 'DBrighton-4');
+  Say(Brighton, 'DBrighton-5');
+  AddComTurnUnit(Brighton, Megan);
+  Say(Brighton, 'DBrighton-6');
+  Say(Megan, 'DMegan-1');
+  Say(Brighton, 'DBrighton-7');
+  AddComTurnXY(Brighton, 99, 37);
+  Say(Brighton, 'DBrighton-8');
+
+  ChangeMissionObjectives('C1');
+  InGameOff;
+
+  MissionStart := true;
+
+  music_nat := 1;
+end;
+
+export ArmadaArrived, FirstAssaultRepelled;
+export RuSpeaker;
+
+every 0$1 trigger MissionStart do
+begin
+  wait(ruArrival);
+
+  PrepareRUArmada;
+  ComMoveXY(RUArmada, 107, 120);
+  ArmadaArrived := true;
+
+  Say(Palmer, 'DPalmer-A1');
+  Say(Brighton, 'DBrighton-A1');
+
+  wait(1$0);
+  PrepareRUBase;
+  PrepareRUBase_v2;
+//  ComBuild(FilterAllUnits([f_side,3]), b_depot, 127, 125, 5);
+  mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+  mc_bases := Replace(mc_bases, 2, RU_SecondPersonnel);
+  MC_Start();
+
+  wait(0$30);
+  PrepareRUBulldozers;
+  CutTreeInArea(Bulldozers[1], BulldozerArea);
+  CutTreeInArea(Bulldozers[2], BulldozerArea2);
+  DoNotAttack(1, Bulldozers[1]);
+  DoNotAttack(1, Bulldozers[2]);
+  wait(0$30);
+
+  InGameOn;
+  ComMoveXY(FilterUnitsInArea(US_BackOffArea, [f_side, 1]), 63, 39);
+  CenterOnXY(95, 93);
+  repeat
+  wait(0$1);
+  until ListEnvironmentArea(BulldozerArea)<4 or
+  ListEnvironmentArea(BulldozerArea2)<4;
+  wait(0$10);
+  ComMoveXY(Bulldozers, 120, 131);
+  wait(0$5);
+
+  NormalAttack(1, Bulldozers[1]);
+  NormalAttack(1, Bulldozers[2]);
+
+   Say(Yashin, 'DDeath-Yas-1');
+   Say(Gaydar, 'DDeath-Gay-2');
+   SayEffect('DRuSol-A1');
+   wait(0$2);
+  InGameOff;
+
+  ComMoveXY(RUArmada, 82, 67);
+
+  wait(0$20);
+
+  AssaultStarted := true;
+
+  Say(Popov, 'DDeath-Pop-1');
+  Say(Gaydar, 'DDeath-Gay-1');
+
+  wait(0$5);
+  Say(Sevi, 'DDeath-Vse-1');
+
+  PriorityAttack(6, BetaA);
+  PriorityAttack(6, BetaB);
+
+  repeat
+  ComAgressiveMove(RUArmada, 67, 37);
+  ComAgressiveMove([Yashin, Popov, Gaydar, Sevi], 67, 37);
+  wait(0$1)
+  until FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human] ]) < 10
+  and IsDead(Yashin)
+  and IsDead(Popov)
+  and IsDead(Gaydar)
+  and IsDead(Sevi);
+
+  AssaultStarted := false;
+
+  ComMoveXY(FilterAllUnits([f_side, 6]), 120, 131);
+  RuSpeaker := FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human], [f_lives, 500] ]);
+  Say(RuSpeaker[1], 'DRuSol-A2');
+
+  wait(0$30);
+  DialogueOn;
+  Say(Brighton, 'DBrighton-B1');
+  Say(Palmer, 'DPalmer-B1');
+  Say(Brighton, 'DBrighton-B2');
+  SayRadio(Burlak, 'DBurlak-B1');
+  Say(Brighton, 'DBrighton-B3');
+  Say(Palmer, 'DPalmer-B2');
+  Say(Brighton, 'DBrighton-B4');
+  Say(Brighton, 'DBrighton-B5');
+  DialogueOff;
+
+  ChangeMissionObjectives('C2');
+  FirstAssaultRepelled := true;
+
+  RemoveUnit(Bulldozers[1]);
+  RemoveUnit(Bulldozers[2]);
+  AddComExitVehicle(FilterAllUnits([f_side, 6]));
+  SetSide(FilterAllUnits([f_side, 6]), 3);
+//  mc_bases := Replace(mc_bases, 1, FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+  mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+end;
+
+every 0$1 trigger FirstAssaultRepelled and jmmArrival > 0$00 do
+begin
+  enable;
+  jmmArrival := jmmArrival - 0$01;
+end;
+
+export JMM_Arrived;
+
+every 0$1 trigger jmmArrival = 0$00 do
+begin
+  JMMReinforcement;
+  DialogueOn;
+  CenterOnUnits(JMM);
+  Say(JMM, 'DJMM-F1');
+   if RussiansDefeated then
+    Say(Brighton, 'DBrighton-F1a')
+   else
+    begin
+    Say(Brighton, 'DBrighton-F1');
+    ChangeMissionObjectives('C3');
+    end;
+  DialogueOff;
+  JMM_Arrived := true;
+end;
+
+every 0$1 trigger JMM_Arrived and See(1,Burlak) do
+begin
+  Say(Burlak, 'DBurlak');
+  Say(JMM, 'DJMM');
+end;
+
+export LaserBuilt;
+every 0$1 trigger FilterAllUnits([f_and, [f_side, 1], [f_or, [f_weapon, us_laser], [f_bweapon, us_laser] ] ]) > 1 do
+begin
+ LaserBuilt := true;
+end;
+
+export AssaultStarted;
+every 0$1 trigger
+ AssaultStarted and
+ See(6, NearestUnitToUnit( FilterAllUnits([f_and, [[f_side, 1], [f_bweapon, us_laser]] ]), IsInUnit(Sevi)))
+ do
+begin
+  wait(0$5);
+  Say(Sevi, 'DDeath-Vse-2');
+  Say(Yashin, 'DDeath-Yas-2');
+end;
+
+every 0$1 trigger AssaultStarted do
+begin
+
+  wait(0$20);
+  Say(Popov, 'DDeath-Pop-2');
+end;
+
+
+
+every 0$1 trigger MissionStart do
+Begin
+ wait(Rand(0$50, 1$20));
+ CreateCratesArea(Rand(2, 5), CratesArea,true);
+
+enable;
+end;

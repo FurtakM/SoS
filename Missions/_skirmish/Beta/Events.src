@@ -1,0 +1,145 @@
+export Losses;
+
+on UnitDestroyed(un) do
+begin
+  if un = Brighton then
+  begin
+   wait(0$1);
+   YouLost('Brighton');
+  end;
+  if un = JMM then
+  begin
+   wait(0$1);
+   YouLost('JMM');
+  end;
+  if un = Megan then
+  begin
+   Say(Brighton, 'DBrighton-MeganDeath');
+  end;
+  if un = Palmer then
+  begin
+   Say(Brighton, 'DBrighton-PalmerDeath');
+  end;
+  if un = Burlak then
+  begin
+   if JMM_Arrived then Say(JMM, 'DJMM-BurlakDead');
+   Say(Palmer, 'DSol-BurlakDead');
+  end;
+  if un = BetaA or un = BetaB then
+  begin
+   wait(0$1);
+   YouLost('Depot');
+  end;
+  if GetSide(un) = 1 and GetType(un) = unit_human then
+   Losses := Losses + 1;
+
+MCE_UnitDestroyed(un);
+end;
+
+on UnitGoesToRed(un) do
+begin
+  if un = Yashin then
+   ForceSay(Yashin, 'DDeath-Yas-3');
+  if un = Popov then
+   ForceSay(Popov, 'DDeath-Pop-3');
+  if un = Gaydar then
+   ForceSay(Gaydar, 'DDeath-Gay-3');
+  if un = Sevi then
+   ForceSay(Sevi, 'DDeath-Vse-3');
+end;
+
+on ResearchComplete(tech, lab) do
+begin
+  if tech = tech_laser then
+  begin
+   Say(Brighton, 'DBrighton-C1');
+   Say(Megan, 'DMegan-C1');
+   Say(Brighton, 'DBrighton-C2');
+  end;
+
+MCE_ResearchComplete(tech, lab);
+end;
+
+On BuildingStarted(building, builder) do
+begin
+MCE_BuildingStarted(building, builder);
+End;
+
+On UpgradeComplete(building) do
+begin
+MCE_UpgradeComplete(building);
+End;
+
+export RUFirstDepot;
+on BuildingComplete(b) do
+begin
+if GetBType(b) = b_depot and GetSide(b) = 3 then
+   begin
+   SetResourceType(GetBase(b), mat_cans, 10000);
+   SetResourceType(GetBase(b), mat_oil, 250);
+   SetResourceType(GetBase(b), mat_siberit, 100);
+{   if not RUFirstDepot then
+    begin
+//    mc_bases := Replace(mc_bases, 1, FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+    mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+    CustomInitMacro();
+    MC_Start();
+    RUFirstDepot := true;
+    end;}
+   end;
+
+MCE_BuildingComplete(b);
+End;
+
+On CrateSpawn(id, x, y, amount, mode) do
+begin
+MCE_CrateSpawn(id, x, y, amount, mode);
+End;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+MCE_VehicleConstructed(vehicle, factory);
+End;
+
+On VehicleCaptured(new, old, side, capturing_unit) do
+begin
+MCE_VehicleCaptured(new, old, side, capturing_unit);
+End;
+
+On BuildingCaptured(building, side, capturning_unit) do
+begin
+MCE_BuildingCaptured(building, side, capturning_unit);
+End;
+
+On EnterBuilding(building, unit) do
+begin
+MCE_EnterBuilding(building, unit);
+End;
+
+On LeaveBuilding(building, unit) do
+begin
+// code here
+
+// MC_Event
+MCE_LeaveBuilding(building, unit);
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+begin
+// code here
+  if GetSide(driver) = 6 then
+     if AssaultStarted then
+      Case Rand(1,4) of
+      1..3:ComAgressiveMove(driver, 67, 37);
+      4:ComMoveXY(driver, 120, 131);
+     end
+     else
+     ComMoveXY(driver, 120, 131);
+// MC_Event
+MCE_EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2);
+End;
+
+On ApemanTamed(ape, sci) do
+begin
+MCE_ApemanTamed(ape, sci);
+End;

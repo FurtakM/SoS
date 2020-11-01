@@ -1,0 +1,316 @@
+Export Function CustomEvent(event);
+begin
+end;
+
+export function CustomInitMacro();
+begin
+//Gorki's Base
+MC_SetScanArea(1, RU_Base_Area);
+MC_SetParkingArea(1, RU_Base_Parking);
+
+MC_SetDepositsXY(1, [
+   [136, 130, 0],
+   [145, 123, 0],
+]);
+
+MC_SetAllowedTurretWeapons(1, [ru_gatling_gun, ru_heavy_gun, ru_rocket_launcher]);
+MC_SetCratesArea(1, RU_Base_Area);
+MC_SetTame(1, RU_Base_Area);
+MC_SetDefenderLimit(1, 8);
+
+MC_SetProduceList(1, [
+   [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+   [ru_medium_tracked, engine_combustion, control_computer, ru_gun],
+   [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
+   [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+   [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+   [ru_medium_tracked, engine_combustion, control_computer, ru_gun]
+]);
+
+MC_SetBuildingList(1, [
+            [b_depot, 127, 125, 5],
+            [b_lab, 124, 132, 0],
+            [b_oil_mine, 136, 130, 1],
+            [b_armoury, 118, 114, 2],
+            [b_oil_mine, 145, 123, 1],
+            [b_oil_power, 150, 135, 1],
+            [b_oil_power, 140, 134, 2],
+            [b_oil_power, 137, 121, 5],
+            [b_workshop, 155, 130, 0],
+            [b_bunker, 155, 130, 0],
+            [b_bunker, 130, 114, 3],
+            [b_bunker, 142, 115, 3],
+            [b_bunker, 153, 120, 3],
+]);
+
+MC_SetLabKind(1, [b_lab_weapon, b_lab_computer]);
+MC_SetFactoryExtension(1, 155, 130, 0, [b_ext_computer, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_siberium]);
+
+//Second Base
+MC_SetScanArea(2, RU_Base_Area);
+MC_SetParkingArea(2, RU_Base_Parking);
+
+MC_SetDepositsXY(2, [
+   [84, 125, 1],
+]);
+
+MC_SetAllowedTurretWeapons(2, [ru_gatling_gun, ru_heavy_gun, ru_rocket_launcher]);
+MC_SetCratesArea(2, RU_Base_Area);
+MC_SetTame(2, RU_Base_Area);
+MC_SetDefenderLimit(2, 8);
+
+MC_SetProduceList(2, [
+   [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+   [ru_medium_tracked, engine_siberite, control_computer, ru_gun],
+   [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+   [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+   [ru_medium_tracked, engine_siberite, control_computer, ru_gun]
+]);
+
+MC_SetBuildingList(2, [
+            [b_depot, 96, 125, 0],
+            [b_lab, 74, 122, 1],
+            [b_siberite_mine, 84, 125, 1],
+            [b_siberite_power, 86, 128, 1],
+            [b_siberite_power, 85, 130, 2],
+            [b_siberite_power, 88, 132, 5],
+            [b_workshop, 106, 130, 0],
+            [b_armoury, 99, 114, 3],
+            [b_bunker, 72, 112, 2],
+            [b_bunker, 78, 110, 3],
+            [b_bunker, 84, 110, 2],
+            [b_bunker, 105, 117, 3],
+]);
+
+MC_SetLabKind(2, [b_lab_spacetime, b_lab_siberium]);
+MC_SetFactoryExtension(2, 106, 130, 0, [b_ext_computer, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_siberium]);
+end;
+
+
+// RU Base Attacks
+Every 1$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) do
+var i, base, tmp, flags, _target, attackers;
+begin
+
+repeat
+ wait([3$00, 2$00, 1$00][Difficulty]);
+ base := 2;
+
+ if not FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) then
+    continue;
+
+ Case Rand(1,3) of
+ 1:begin
+ tmp := [ [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ 2:begin
+ tmp := [ [ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ 3:begin
+ tmp := [ [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ end;
+
+ repeat
+  wait(0$1);
+ until MC_GetProduceList(base) = 0;
+
+ wait(0$30);
+
+ _target := [[86, 77], [63, 38]];
+ flags := [0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+ attackers := mc_vehicles[base] diff (mc_defender[base]);
+ mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
+
+ if not attackers then
+    continue;
+
+ repeat
+  wait(0$1);
+ until not UnitFilter(attackers, [f_hastask]);
+
+ MC_PrepareAttack(base, attackers, _target, flags);
+until not UnitFilter(mc_bases[base], [f_ok]);
+End;
+
+
+Every 1$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) do
+var i, base, tmp, flags, _target, attackers;
+begin
+
+repeat
+ wait([3$00, 2$00, 1$00][Difficulty]);
+ base := 1;
+
+ if not FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) then
+    continue;
+
+ Case Rand(1,3) of
+ 1:begin
+ tmp := [ [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ 2:begin
+ tmp := [ [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ 3:begin
+ tmp := [ [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun],
+          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher]
+        ];
+
+ MC_InsertProduceList(base, tmp);
+ end;
+ end;
+
+ repeat
+  wait(0$1);
+ until MC_GetProduceList(base) = 0;
+
+ wait(0$30);
+
+ _target := [[144, 65], [63, 38]];
+ flags := [0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+ attackers := mc_vehicles[base] diff (mc_defender[base]);
+ mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
+
+ if not attackers then
+    continue;
+
+ repeat
+  wait(0$1);
+ until not UnitFilter(attackers, [f_hastask]);
+
+ MC_PrepareAttack(base, attackers, _target, flags);
+until not UnitFilter(mc_bases[base], [f_ok]);
+End;
+
+
+
+export RussiansDefeated;
+Every 0$1 trigger FirstAssaultRepelled and FilterAllUnits([[f_side, 3],[f_type, unit_human]]) = 0 do
+begin
+  RussiansDefeated := true;
+end;
+
+
+every 0$1 trigger FirstAssaultRepelled and not JMM_Arrived do
+var i, un, filter, soldiers, bazookas, vehs, vehicle, medics, squad, attackers, _target, flags;
+begin
+  wait([Rand(5$00, 6$30), Rand(4$30, 5$30), Rand(4$00, 5$00)][Difficulty]);
+
+  filter := [];
+
+  soldiers := [Rand(2,3), Rand(3,4), Rand(3,5)][Difficulty];
+  bazookas := [1,Rand(1,2),Rand(2,3)][Difficulty];
+  vehs := [Rand(2,3),Rand(2,4),Rand(3,5)][Difficulty];
+  medics := [1,2,2][Difficulty];
+
+  uc_side:=3;
+  uc_nation:=nation_russian;
+
+  for i = 1 to soldiers do
+  begin
+   PrepareSoldier(0, game_eskill);
+   un := CreateHuman;
+   filter := filter ^ un;
+  end;
+
+  for i = 1 to bazookas do
+  begin
+   PrepareSoldier(0, game_eskill);
+   hc_class := class_bazooker;
+   un := CreateHuman;
+   filter := filter ^ un;
+  end;
+
+  for i = 1 to medics do
+  begin
+   PrepareScientist(0, game_eskill);
+   un := CreateHuman;
+   filter := filter ^ un;
+  end;
+
+  for i = 1 to vehs do
+  begin
+   Case Rand(1,5) of
+   1:PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_gatling_gun, 100);
+   2:PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_gun, 100);
+   3:PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_rocket_launcher, 100);
+   4:PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, ru_gatling_gun, 100);
+   5:PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun, 100);
+   end;
+   vehicle := CreateVehicle;
+   filter := filter ^ vehicle;
+  end;
+
+  for i = 1 to filter do
+      PlaceUnitArea(filter[i], RUAttackSpawn1, false);
+
+  Case Rand(1,3) of
+  1:_target := [[165, 114], [104, 108], [86, 77], [63, 38]];
+  2:_target := [[165, 114], [146, 71], [112, 41], [63, 38]];
+  3:_target := [[165, 114], [63, 99], [55, 77], [63, 38]];
+  end;
+
+  attackers := filter;
+  flags := [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
+  MC_PrepareAttack(1, attackers, _target, flags);
+
+  enable;
+end;

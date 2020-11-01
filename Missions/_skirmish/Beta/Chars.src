@@ -1,0 +1,310 @@
+export Brighton, Palmer, Megan;
+export BetaSquad;
+
+export Function PrepareHeroes;
+begin
+    uc_side:=1;
+    hc_class=class_soldier;
+
+    uc_nation:=nation_american;
+    hc_sex=sex_male;
+    hc_importance=110;
+    hc_basic_skills=[5,4,5,3];
+    hc_skills=[9,6,7,6];
+    hc_attr=[12,10];
+    hc_name:='Gerard Brighton';
+    hc_gallery := 'Beta_Skirmish';
+    hc_face_number := 1;
+
+    Brighton:=CreateHuman;
+
+    uc_nation:=nation_american;
+    hc_importance=80;
+    hc_sex=sex_male;
+    hc_basic_skills=[5,5,3,1];
+    hc_skills=[7,6,5,3];
+    hc_attr=[10,10];
+    hc_name:='Brian Palmer';
+    hc_gallery := 'Beta_Skirmish';
+    hc_face_number := 3;
+
+    Palmer:=CreateHuman;
+
+    hc_class=class_scientistic;
+
+    uc_nation:=nation_american;
+    hc_importance=70;
+    hc_sex=sex_female;
+    hc_basic_skills=[3,2,4,6];
+    hc_skills=[4,2,5,8];
+    hc_attr=[10,10];
+    hc_name:='Megan Armitage';
+    hc_gallery := 'Beta_Skirmish';
+    hc_face_number := 4;
+
+    Megan:=CreateHuman;
+end;
+
+export Function PrepareBeta;
+var i, filter, un, soldiers;
+begin
+  uc_side:=1;
+  uc_nation:=nation_american;
+
+  hc_name:='';
+  hc_gallery := '';
+
+  for i = 1 to 8 do // Soldiers
+  begin
+  PrepareSoldier(1, game_skill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  soldiers := soldiers ^ un;
+  end;
+
+  for i = 1 to 3 do // Engineers
+  begin
+  PrepareEngineer(0, game_skill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  PlaceHumanInUnit(un, BetaB);
+  end;
+
+  for i = 1 to 4 do // Mechanics
+  begin
+  PrepareMechanic(0, game_skill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  PlaceHumanInUnit(un, AmFac);
+  end;
+
+  for i = 1 to 3 do // Scientists
+  begin
+  PrepareScientist(0, game_skill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  PlaceHumanInUnit(un, AmLab);
+  end;
+
+  for i = 1 to soldiers do
+      PlaceUnitArea(soldiers[i], spawn_area, false);
+
+  PlaceUnitXY(Brighton, 51, 43, false);
+  PlaceUnitXY(Palmer, 55, 58, false);
+  PlaceUnitXY(Megan, 39, 36, false);
+
+  BetaSquad := filter diff 0;
+end;
+
+
+
+export Yashin, Popov, Gaydar, Sevi;
+export RUArmada;
+
+export Function PrepareRUArmada;
+var i, vehicle, soldiers, un, vehs;
+begin
+  uc_side:=6;
+  uc_nation:=nation_russian;
+
+  soldiers := [];
+  vehs := [];
+  RUArmada := [];
+
+  Yashin := NewCharacter('Yashin');
+  Popov := NewCharacter('Popov');
+  Gaydar := NewCharacter('Gaydar');
+  Sevi := NewCharacter('Vsevolod');
+
+  for i = 1 to 16 do
+  begin
+   PrepareSoldier(0, game_eskill);
+   un := CreateHuman;
+   soldiers := soldiers ^ un;
+  end;
+
+  soldiers := Yashin ^ Popov ^ Gaydar ^ Sevi ^ soldiers;
+
+  PrepareVehicle(ru_heavy_tracked, engine_siberite, control_manual, ru_heavy_gun, 100);
+
+  for i = 1 to 8 do
+  begin
+   vehicle := CreateVehicle;
+   PlaceHumanInUnit(soldiers[1], vehicle);
+   soldiers := soldiers diff soldiers[1];
+   PlaceUnitArea(vehicle, RUArrivalArea, false);
+   vehs := vehs ^ vehicle;
+  end;
+
+  PrepareVehicle(ru_heavy_tracked, engine_siberite, control_manual, ru_gatling_gun, 100);
+
+  for i = 1 to 8 do
+  begin
+   vehicle := CreateVehicle;
+   PlaceHumanInUnit(soldiers[1], vehicle);
+   soldiers := soldiers diff soldiers[1];
+   PlaceUnitArea(vehicle, RUArrivalArea, false);
+   vehs := vehs ^ vehicle;
+  end;
+
+  PrepareVehicle(ru_medium_tracked, engine_siberite, control_manual, ru_gun, 100);
+
+  for i = 1 to 4 do
+  begin
+   vehicle := CreateVehicle;
+   PlaceHumanInUnit(soldiers[1], vehicle);
+   soldiers := soldiers diff soldiers[1];
+   PlaceUnitArea(vehicle, RUArrivalArea, false);
+   vehs := vehs ^ vehicle;
+  end;
+
+  RUArmada := vehs;
+
+  SetMark([IsInUnit(Yashin),IsInUnit(Popov),IsInUnit(Gaydar),IsInUnit(Sevi)], -6);
+
+end;
+
+export Bulldozers;
+export Function PrepareRUBulldozers;
+var i, vehicle;
+begin
+  uc_side:=6;
+  uc_nation:=nation_russian;
+
+  Bulldozers := [];
+
+  PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, ru_bulldozer, 100);
+
+  for i = 1 to 2 do
+  begin
+   vehicle := CreateVehicle;
+   PlaceUnitArea(vehicle, RUArrivalArea, false);
+   Bulldozers := Bulldozers ^ vehicle;
+  end;
+end;
+
+Export Burlak, Gleb, Furmanov, Titov, Scholtze, Dolgov, Kapitsova, Karamazov, Kirlenkova, Kovalyuk, Kozlov, Kuzmov, Lipshchin, Oblukov, Xavier2, Gnyevko, Belkov;
+
+export Function PrepareRUBase;
+var i, filter, un;
+begin
+  uc_side:=3;
+  uc_nation:=nation_russian;
+
+  hc_name:='';
+  hc_gallery := '';
+
+  Burlak := NewCharacter('Burlak');
+  Gleb := NewCharacter('Gleb');
+  Furmanov := NewCharacter('Furmanov');
+  Titov := NewCharacter('Titov');
+
+  Scholtze := NewCharacter('Scholtze');
+  Dolgov := NewCharacter('Dolgov');
+  Kapitsova := NewCharacter('Kapitsova');
+  Karamazov := NewCharacter('Karamazov');
+
+  Kirlenkova := NewCharacter('Kirlenkova');
+  Kovalyuk := NewCharacter('Kovalyuk');
+  Kozlov := NewCharacter('Kozlov');
+  Kuzmov := NewCharacter('Kuzmov');
+
+  Lipshchin := NewCharacter('Lipshchin');
+  Oblukov := NewCharacter('Oblukov');
+  Xavier2 := NewCharacter('Xavier2');
+  Gnyevko := NewCharacter('Gnyevko');
+
+  Belkov := NewCharacter('Belkov');
+
+  filter := [Burlak, Gleb, Furmanov, Titov, Scholtze, Dolgov, Kapitsova, Karamazov, Kirlenkova, Kovalyuk, Kozlov, Kuzmov, Lipshchin, Oblukov, Xavier2, Gnyevko, Belkov];
+
+  for i = 1 to filter do
+      PlaceUnitArea(filter[i], RUArrivalArea2, false);
+
+end;
+
+export RU_SecondPersonnel;
+export Function PrepareRUBase_v2;
+var i, filter, un;
+begin
+  uc_side:=3;
+  uc_nation:=nation_russian;
+
+  hc_name:='';
+  hc_gallery := '';
+//10
+  for i = 1 to 8 do // Soldiers
+  begin
+  PrepareSoldier(0, game_eskill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  end;
+//5
+  for i = 1 to 4 do // Engineers
+  begin
+  PrepareEngineer(0, game_eskill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  end;
+//10
+  for i = 1 to 6 do // Mechanics
+  begin
+  PrepareMechanic(0, game_eskill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  end;
+//4
+  for i = 1 to 4 do // Scientists
+  begin
+  PrepareScientist(0, game_eskill);
+  un := CreateHuman;
+  filter := filter ^ un;
+  end;
+
+  for i = 1 to filter do
+      PlaceUnitArea(filter[i], RUArrivalArea2, false);
+
+  RU_SecondPersonnel := filter;
+end;
+
+Export JMM;
+
+export Function JMMReinforcement;
+var i, soldiers, un, vehs, vehicle, mechs;
+begin
+    uc_side:=1;
+    uc_nation:=nation_american;
+
+  JMM := NewCharacter('JMM');
+     PlaceUnitArea(JMM, JMMArrivalArea, false);
+
+  mechs := [];
+
+  for i = 1 to 4 do
+  begin
+   PrepareSoldier(0, game_skill + 1);
+   un := CreateHuman;
+   soldiers := soldiers ^ un;
+   PlaceUnitArea(un, JMMArrivalArea, false);
+  end;
+
+  for i = 1 to 7 do
+  begin
+   PrepareMechanic(0, game_skill + 1);
+   un := CreateHuman;
+   mechs := mechs ^ un;
+  end;
+
+  PrepareVehicle(us_medium_tracked, engine_siberite, control_manual, us_double_gun, 100);
+
+  for i = 1 to 7 do
+  begin
+   vehicle := CreateVehicle;
+   PlaceHumanInUnit(mechs[1], vehicle);
+   mechs := mechs diff mechs[1];
+   PlaceUnitArea(vehicle, JMMArrivalArea, false);
+   vehs := vehs ^ vehicle;
+  end;
+end;
+
+

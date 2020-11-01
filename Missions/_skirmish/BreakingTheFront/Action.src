@@ -74,7 +74,7 @@ repeat
     for i in tmp do
         begin
         ruOutpost := ruOutpost diff i;
-        mc_bases := Replace(mc_bases, mc_rus_1, mc_bases[mc_rus_1] union i);
+        mc_bases := ReplaceIn(mc_bases, [mc_rus_2, mc_bases[mc_rus_2] + 1], i);
         end;
 until not ruOutpost;
 
@@ -102,9 +102,9 @@ var tmp, engs, buildings, empty, i, j, k;
 begin
 enable;
 
-tmp := UnitFilter(ruOutpost, [f_class, 1]);
-engs := UnitFilter(ruOutpost, [f_class, 2]);
-buildings := UnitFilter(ruOutpost, [[f_type, unit_building], [f_not, [f_lives, 1000]]]);
+tmp := UnitFilter(ruOutpost, [[f_side, 3], [f_class, 1]]);
+engs := UnitFilter(ruOutpost, [[f_side, 3], [f_class, 2]]);
+buildings := UnitFilter(ruOutpost, [[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
 
 if engs and buildings then
    begin
@@ -167,18 +167,22 @@ DialogueOn;
 
 Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-BaseCaptured');
 SayRadio(Powell, 'DP-1-BaseCaptured');
-Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-BaseCaptured');
 
-if commander = 1 then
-   SayRadio(Powell, 'DP-2b-BaseCaptured');
+if sibBombAllowed then
+   begin
+   Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-BaseCaptured');
 
-if commander = 2 then
-   SayRadio(Powell, 'DP-2-BaseCaptured');
+   if commander = 1 then
+      SayRadio(Powell, 'DP-2b-BaseCaptured');
 
-if commander = 3 then
-   SayRadio(Powell, 'DP-2a-BaseCaptured');
+   if commander = 2 then
+      SayRadio(Powell, 'DP-2-BaseCaptured');
 
-Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3-BaseCaptured');
+   if commander = 3 then
+      SayRadio(Powell, 'DP-2a-BaseCaptured');
+
+   Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3-BaseCaptured');
+   end;
 
 DialogueOff;
 InGameOff;
@@ -197,12 +201,10 @@ End;
 
 // Powell alert about Russians
 Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_distxy, 167, 197, 20]]) > 3 do
-begin
 SayRadio(Powell, 'DP-RuAttack');
-End;
 
 // Blockade spotted
-Every 0$2 trigger SeeXY(1, 168, 74) and GetEnvironmentType(168, 72) do
+Every 0$2 trigger not debug and SeeXY(1, 168, 74) and GetEnvironmentType(168, 72) do
 begin
 CenterOnXY(168, 72);
 Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Blockade');
@@ -224,8 +226,13 @@ if commander = 1 then // Ironside
    begin
    SayRadio(allyCommander, 'DM-2-Contact');
    Say(playerCommander, 'DI-2-Contact');
-   SayRadio(allyCommander, 'DM-3-Contact');
-   Say(playerCommander, 'DI-3-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DI-3-Contact');
+      end;
+
    SayRadio(allyCommander, 'DM-4-Contact');
    Say(playerCommander, 'DI-4-Contact');
    SayRadio(allyCommander, 'DM-5-Contact');
@@ -235,8 +242,13 @@ if commander = 2 then // Johnson
    begin
    SayRadio(allyCommander, 'DM-2c-Contact');
    Say(playerCommander, 'DJ-2-Contact');
-   SayRadio(allyCommander, 'DM-3-Contact');
-   Say(playerCommander, 'DJ-3-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DJ-3-Contact');
+      end;
+
    SayRadio(allyCommander, 'DM-4-Contact');
    Say(playerCommander, 'DJ-4-Contact');
    SayRadio(allyCommander, 'DM-5a-Contact');
@@ -248,8 +260,13 @@ if commander = 3 then // Stuart
    Say(playerCommander, 'DS-2a-Contact');
    SayRadio(allyCommander, 'DM-2b-Contact');
    Say(playerCommander, 'DS-2b-Contact');
-   SayRadio(allyCommander, 'DM-3-Contact');
-   Say(playerCommander, 'DS-3-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DS-3-Contact');
+      end;
+
    SayRadio(allyCommander, 'DM-4-Contact');
    Say(playerCommander, 'DS-4-Contact');
    SayRadio(allyCommander, 'DM-5-Contact');
@@ -329,11 +346,14 @@ if sib <= 0 then // legion change side
    end
 else
    begin
-   ChangeMissionObjectives('O3a');
+   ChangeMissionObjectives('O3');
 
    SayRadio(Farmer, 'DF-4n-Leg');
    end;
 End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 and GetAttitude(8, 1) = att_enemy do
+ChangeMissionObjectives('O3a');
 
 // You Win
 Every 0$1 trigger GameType = 1 and game and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and
@@ -351,7 +371,7 @@ if allyDestCounter >= [20, 15, 10][Difficulty] then
 else
    AddMedal('med2', 1);
 
-if legChangeSide and GetAttitude(8, 1) = att_friend then
+if GetAttitude(8, 1) = att_friend then
    AddMedal('med3', 2)
 else if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 then
    AddMedal('med3', 1)
@@ -401,373 +421,12 @@ for i in tmp do
     end;
 End;
 
-// Attacks
-// Ru(3) attack Am(4)
-Every 1$00 trigger GameType = 1 and game and UnitFilter(mc_bases[mc_rus_1], [f_btype, b_factory]) do
-var i, base, tmp, _target, _targetAlt, attackers, e;
-begin
-
-repeat
- wait(9$00);
- base := mc_rus_1;
-
- if not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- tmp := [ [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket],
-          [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket],
-          [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket],
-          [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) < 2;
-
- wait(0$30);
-
- if legChangeSide and FilterAllUnits([f_side, 8]) then
-    _targetAlt := [[107,58], [128,79]];
-
- _target := [[99, 35], [111, 29], [122, 22]];
-
- if _targetAlt then
-    _target := [_target, _targetAlt][rand(1,2)];
-
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ru_crane], [f_weapon, ru_bulldozer], [f_weapon, ru_siberium_rocket]]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- ComAgressiveMove(attackers, 84, 36);
-
- for i = 1 to _target do
-     AddComAgressiveMove(attackers, _target[i][1], _target[i][2]);
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- repeat
-  wait(0$1);
-
-  for i in attackers do
-      begin
-      if IsDead(i) then
-         begin
-         attackers := attackers diff i;
-         continue;
-         end;
-
-      if HasTask(i) then
-         continue;
-
-      e := NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i);
-
-      if e then
-         ComAttackUnit(i, e);
-      end;
- until not attackers;
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-// Ru(3) attack Am(1)
-Every 1$00 trigger GameType = 1 and game and UnitFilter(mc_bases[mc_rus_2], [f_btype, b_factory]) do
-var i, base, tmp, _target, attackers, teleport, e;
-begin
-
-repeat
- wait(9$00);
- base := mc_rus_2;
-
- if not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- tmp := [ [ru_heavy_wheeled, engine_siberite, control_computer, ru_rocket],
-          [ru_heavy_wheeled, engine_siberite, control_computer, ru_rocket],
-          [ru_heavy_wheeled, engine_siberite, control_computer, ru_heavy_gun],
-          [ru_heavy_wheeled, engine_combustion, control_computer, ru_heavy_gun],
-          [ru_medium_wheeled, engine_combustion, control_computer, ru_time_lapser]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) = 0;
-
- wait(0$30);
-
- _target := [[164,198], [176, 180]];
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ru_crane], [f_weapon, ru_bulldozer], [f_weapon, ru_siberium_rocket]]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
-
-for i in attackers do
-    begin
-    if teleport then
-       begin
-       ComEnterUnit(i, teleport[1]);
-       AddComAgressiveMove(i, 129, 215);
-       end
-    else
-       AddComAgressiveMove(i, 125, 157);
-    end;
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- for i = 1 to _target do
-     AddComAgressiveMove(attackers, _target[i][1], _target[i][2]);
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- repeat
-  wait(0$1);
-
-  for i in attackers do
-      begin
-      if IsDead(i) then
-         begin
-         attackers := attackers diff i;
-         continue;
-         end;
-
-      if HasTask(i) then
-         continue;
-
-      e := NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i);
-
-      if e then
-         ComAttackUnit(i, e);
-      end;
- until not attackers;
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-// Leg(8) attack Am(4)
-Every 1$00 trigger GameType = 1 and game and not legChangeSide and FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) and UnitFilter(mc_bases[mc_leg], [f_btype, b_factory]) do
-var i, base, tmp, flags, _target, attackers;
-begin
-
-repeat
- wait([10$00, 9$30, 9$00][Difficulty]);
- base := mc_leg;
-
- if not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- if legChangeSide then
-    exit;
-
-
- tmp := [ [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-          [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-          [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-          [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-          [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) = 0;
-
- wait(0$30);
-
- _target := [[113, 63], [119, 15]];
- flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_control_tower]]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- MC_PrepareAttack(base, attackers, _target, flags);
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-// Leg(8) attack Am(1)
-Every 1$00 trigger GameType = 1 and game and FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) and UnitFilter(mc_bases[mc_leg], [f_btype, b_factory]) do
-var i, base, flags, tmp, _target, attackers;
-begin
-
-repeat
- wait(9$00);
- base := mc_leg;
-
- if not FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) or not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- if legChangeSide then
-    exit;
-
- tmp := [ [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_gun],
-          [ar_medium_trike, engine_combustion, control_remote, ar_gun],
-          [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) = 0;
-
- wait(0$30);
-
- _target := [[165,89], [190,123]];
- flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_control_tower]]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- MC_PrepareAttack(base, attackers, _target, flags);
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-// Leg(8) attack Ru(3)
-Every 1$00 trigger GameType = 1 and game and legChangeSide and FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) and UnitFilter(mc_bases[mc_leg], [f_btype, b_factory]) do
-var i, base, tmp, _target, attackers, flags;
-begin
-
-repeat
- wait(12$00);
- base := mc_leg;
-
- if not FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) or not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- tmp := [ [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
-          [ar_medium_trike, engine_combustion, control_remote, ar_gun],
-          [ar_medium_trike, engine_combustion, control_remote, ar_gun],
-          [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
-          [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) = 0;
-
- wait(0$30);
-
- _target := [[110,63], [92,72]];
- flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_control_tower]]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- MC_PrepareAttack(base, attackers, _target, flags);
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-// Am(4) attack Ru(3)
-Every 1$00 trigger GameType = 1 and game and UnitFilter(mc_bases[mc_amer], [f_btype, b_factory]) do
-var i, base, tmp, _target, attackers, e;
-begin
-
-repeat
- wait(12$00);
- base := mc_amer;
-
- if not UnitFilter(mc_bases[base], [f_btype, b_factory]) then
-    continue;
-
- tmp := [ [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
-          [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
-          [us_medium_wheeled, engine_combustion, control_remote, us_rocket_launcher],
-          [us_medium_wheeled, engine_combustion, control_remote, us_rocket_launcher],
-          [us_medium_wheeled, engine_combustion, control_remote, us_rocket_launcher]
-        ];
-
- MC_InsertProduceList(base, tmp);
-
- repeat
-  wait(0$1);
- until MC_GetProduceList(base) = 0;
-
- wait(0$30);
-
- _target := [[92,34]];
- attackers := mc_vehicles[base] diff (mc_defender[base] union UnitFilter(mc_vehicles[base], [f_weapon, us_cargo_bay]));
- mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
-
- if not attackers then
-    continue;
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- for i = 1 to _target do
-     AddComAgressiveMove(attackers, _target[i][1], _target[i][2]);
-
- repeat
-  wait(0$1);
- until not UnitFilter(attackers, [f_hastask]);
-
- repeat
-  wait(0$1);
-
-  for i in attackers do
-      begin
-      if IsDead(i) then
-         begin
-         attackers := attackers diff i;
-         continue;
-         end;
-
-      if HasTask(i) then
-         continue;
-
-      e := NearestUnitToUnit(FilterAllUnits([f_enemy, 4]), i);
-
-      if e then
-         ComAttackUnit(i, e);
-      end;
- until not attackers;
-until not UnitFilter(mc_bases[base], [f_ok]);
-End;
-
-Every 30$00+50$00 trigger GameType = 1 and game and sibBombAllowed > 0 and UnitFilter(mc_bases[mc_rus_2], [f_btype, b_factory]) do
+Every 30$00+50$00 trigger GameType = 1 and game and sibBombAllowed and UnitFilter(mc_bases[mc_rus_1], [f_btype, b_factory]) do
 var bomb, e;
 begin
 enable;
 
-MC_InsertProduceList(mc_rus_2, [[ru_heavy_wheeled, engine_siberite, control_computer, ru_siberium_rocket]]);
+MC_InsertProduceList(mc_rus_1, [[ru_heavy_wheeled, engine_siberite, control_computer, ru_siberium_rocket]]);
 
 repeat
  wait(0$1);
@@ -780,6 +439,27 @@ if e then
    e := NearestUnitToUnit(e, bomb[1]);
 
 ComAttackPlace(bomb, GetX(e), GetY(e));
+End;
+
+// Build behemoth
+Every 0$2 trigger Difficulty > 1 and UnitFilter(mc_bases[mc_rus_1], [f_class, 3]) and GameType = 1 and game and GetTech(tech_Behemoth, 3) = state_researched do
+var tmp, i;
+begin
+tmp := UnitFilter(mc_bases[mc_rus_1], [f_class, 3]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    SetTag(i, 29);
+    ComExitBuilding(i);
+    AddComBuildBehemoth(i, b_behemoth, 97, 133, 0);
+    end;
+
+wait(1$00);
+
+MC_Reset(mc_rus_1, 29);
 End;
 
 // Convoy
@@ -898,3 +578,261 @@ if tmp then
        if GetFuel(i) < 3 then
           SetFuel(i, 3);
 End;
+
+
+// Attacks
+// Special legion attack from river
+Every 15$00 trigger game and GetAttitude(8, 4) = att_enemy do
+var i, un, tmp;
+begin
+enable;
+
+tmp := [];
+
+for i = 1 to 4 do
+    begin
+    uc_side := 8;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_hovercraft, engine_combustion, control_apeman, [ar_double_machine_gun, ar_light_gun][rand(1,2)], rand(60, 80));
+    un := CreateVehicle;
+    SetDir(un, 2);
+
+    tmp := tmp ^ un;
+
+    PlaceUnitXY(un, 88, 2, false);
+    ComMoveXY(un, 93, 13);
+
+    wait(0$2);
+    end;
+
+for i in tmp do
+    AddComMoveXY(i, 136, 19);
+End;
+
+// Legion attacks Americans
+Every 7$30 + 7$30 trigger game and not MC_GetVehicles(mc_leg, true) do
+var i, base, tmp, target;
+begin
+enable;
+
+base := mc_leg;
+
+if not FilterAllUnits([[f_side, 8], [f_nation, 2], [f_btype, b_factory]]) then
+   exit;
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(base, [
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(base, [
+      [ar_medium_trike, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_flame_thrower, ar_flame_thrower, ar_selfpropelled_bomb][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_flame_thrower, ar_selfpropelled_bomb, ar_selfpropelled_bomb][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
+      [ar_medium_trike, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end;
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= 6;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+target := rand(0, 2);
+
+if legChangeSide then
+   target := 2;
+
+if target = 2 then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 112, 64) > 9 then
+           ComMoveXY(i, 112, 64);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 112, 64, 9]) >= (tmp-1);
+   end
+else
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 174, 94) > 9 then
+           ComMoveXY(i, 174, 94);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 174, 94, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+
+// Russian attacks         
+Every 7$30 trigger game and not MC_GetVehicles(mc_rus_2, true) do
+var i, base, tmp, target, teleport;
+begin
+enable;
+
+if not UnitFilter(mc_bases[mc_rus_2], [[f_side, 3], [f_btype, b_factory]]) then
+   exit;
+
+base := mc_rus_2;
+teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(base, [
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(base, [
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end;
+
+if Difficulty > 1 then
+   MC_InsertProduceList(base, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= [6, 7, 7][Difficulty];
+
+wait(0$30);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+target := rand(0, 1);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 84, 32) > 9 then
+           ComMoveXY(i, 84, 32);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 84, 32, 9]) >= (tmp-1);
+   end
+else
+   begin
+   if teleport then
+      ComEnterUnit(tmp, teleport[1]);
+
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 140, 219) > 9 and not HasTask(i) then
+           AddComMoveXY(i, 140, 219);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 140, 219, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        begin
+        if GetWeapon(i) = ru_time_lapser then
+           ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+        end
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+
+// American attacks
+// Legion attacks Americans
+Every 12$30 + 11$30 trigger game and not MC_GetVehicles(mc_amer, true) do
+var i, base, tmp, target;
+begin
+enable;
+
+base := mc_amer;
+
+if not FilterAllUnits([[f_side, 4], [f_nation, 1], [f_btype, b_factory]]) then
+   exit;
+
+MC_InsertProduceList(base, [
+     [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
+     [us_medium_tracked, engine_combustion, control_remote, us_laser],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher]
+]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= 5;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 4]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+

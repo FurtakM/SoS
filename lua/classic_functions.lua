@@ -688,7 +688,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         anchorLTRB,
         XYWH(4, 0, 211, 22),
         nil,
-        ITEMS[SELECTEDITEM],
+        SGUI_widesub(ITEMS[SELECTEDITEM], 1, 22),
         {
             font_colour = BLACK(),
             nomouseevent = true,
@@ -709,8 +709,18 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         }
     );
 
-    ELEMENT.list = getElementEX(
+    ELEMENT.background = getElementEX(
         nil,
+        anchorNone,
+        XYWH(0, 0, LayoutWidth, LayoutHeight),
+        false,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.list = getElementEX(
+        ELEMENT.background,
         anchorNone,
         XYWH(getAbsX(ELEMENT), getAbsY(ELEMENT) + 22, 234, 270),
         false,
@@ -750,35 +760,44 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         {}
     );
 
+    local elements = {};
+
     for i = 1, table.getn(ITEMS) do
-        comboBoxItem(
+        elements = addToArray(elements, comboBoxItem(
             ELEMENT.list.scroll, 
             i, 
             ITEMS[i], 
             (SELECTEDITEM == i),
             ELEMENT.ID,
+            ELEMENT.background.ID,
             ELEMENT.list.ID, 
             ELEMENT.comboBox.button.ID, 
             ELEMENT.comboBox.selected.label.ID,
             PROPERTIES.textureButton,
             PROPERTIES.textureButtonClick,
             CALLBACK
-        );
+        ));
     end;
 
     if PROPERTIES.hint then
         setHint(ELEMENT.comboBox.selected, PROPERTIES.hint);
     end;
 
-    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
-    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
 
-    COMBOBOX_LIST = addToArray(COMBOBOX_LIST, ELEMENT.list.ID);
+    COMBOBOX_LIST[ELEMENT.list.scroll.ID] = {
+        ID = ELEMENT.list.scroll.ID,
+        PARENT = ELEMENT.list.ID,
+        ITEMS = ITEMS,
+        SELECTED = SELECTEDITEM,
+        ELEMENTS = elements
+    };
 
     return ELEMENT;
 end;
 
-function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
+function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
@@ -794,10 +813,11 @@ function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, LISTID, COMBOBO
         XYWH(3, 15 * (INDEX - 1), 207, 15),
         true,
         {
+            hint = VALUE,
             colour1 = colour,
             callback_mouseleave = 'hoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
             callback_mouseover = 'hoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mousedown = 'selectComboBoxItem(%id, ' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ',"' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", "'.. VALUE .. '"); ' .. CALLBACK
+            callback_mousedown = 'selectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '"); ' .. CALLBACK
         }
     );
     
@@ -806,7 +826,7 @@ function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, LISTID, COMBOBO
         anchorLTRB,
         XYWH(0, 0, 207, 15),
         nil,
-        VALUE,
+        SGUI_widesub(VALUE, 1, 22),
         {
             font_colour = BLACK(),
             nomouseevent = true,
@@ -814,19 +834,36 @@ function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, LISTID, COMBOBO
         }
     );
 
-    return item;
+    return item.ID;
 end;
 
-function selectComboBoxItem(ID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, VALUE)
+function selectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE)
     setComboBoxValue(COMBOBOXLABELID, VALUE);
-    showComboBoxList(LISTID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
+    showComboBoxList(LISTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
+    setComboBoxSelectedItem(PARENTID, INDEX);
+end;
+
+function setComboBoxSelectedItem(ID, INDEX)
+    if COMBOBOX_LIST[ID] == nil then
+        return;
+    end;
+
+    COMBOBOX_LIST[ID].SELECTEDITEM = parseInt(INDEX);
+
+    for i = 1, table.getn(COMBOBOX_LIST[ID].ELEMENTS) do
+        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'hoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
+        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSEOVER, 'hoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 1, ' .. BoolToInt(i == INDEX) .. ')');
+        setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[i]}, WHITEA());
+    end;
+    
+    setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[COMBOBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
 function setComboBoxValue(LABELID, VALUE)
-    setText({ID=LABELID}, VALUE);
+    setText({ID=LABELID}, SGUI_widesub(VALUE, 1, 22));
 end;
 
-function showComboBoxList(ID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
+function showComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
     local mode = getVisible({ID=ID});
 
     if mode then
@@ -836,6 +873,7 @@ function showComboBoxList(ID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
         setTextureID(BUTTONID, BUTTONCLICKTEXTURE);
     end;
 
+    setVisible({ID=PARENTID}, (not mode));
     setVisible({ID=ID}, (not mode));
 end;
 
@@ -1144,20 +1182,25 @@ end;
 
 function setVisibleAll(ARRAY, MODE)
     local result = false;
-    local length = table.getn(ARRAY);
 
-    if (length == 0) then
-        return false;
-    end;
-
-    for i = 1, length do
-        if (getVisibleID(ARRAY[i])) then
-            setVisibleID(ARRAY[i], MODE);
+    for _, v in pairs(ARRAY) do
+        if (getVisibleID(v.PARENT)) then
+            setVisibleID(v.PARENT, MODE);
             result = true;
         end;
     end;
 
     return result;
+end;
+
+function getOneOfVisible(ARRAY)
+    for _, v in pairs(ARRAY) do
+        if (getVisibleID(v.PARENT)) then
+            return true;
+        end;
+    end;
+
+    return false;
 end;
 
 function getWID(ID)

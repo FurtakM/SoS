@@ -51,13 +51,13 @@ function onMenuKeyPress(key)
             return;
         end;
 
-        -- dialog
-        if (classicDialog and getVisible(classicDialog)) then
+        -- combobox
+        if (getOneOfVisible(COMBOBOX_LIST)) then
             return;
         end;
 
-        -- combobox
-        if (setVisibleAll(COMBOBOX_LIST, false)) then
+        -- dialog
+        if (classicDialog and getVisible(classicDialog)) then
             return;
         end;
 

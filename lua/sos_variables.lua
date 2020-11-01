@@ -1,0 +1,14 @@
+TID_Difficulty = 6000;
+TID_Easy = 6001;
+TID_Medium = 6002;
+TID_Hard = 6003;
+TID_NotAllowed = 6004;
+TID_AllowedOnlyForEnemy = 6005;
+TID_Allowed = 6006;
+TID_SiberiteBomb = 6007;
+TID_Rare = 6008;
+TID_Normal = 6009;
+TID_Common = 6010;
+TID_CratesSpawn = 6011;
+TID_AdditionalReinforcements = 6012;
+TID_Commander = 6013;

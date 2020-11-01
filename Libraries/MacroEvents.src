@@ -90,29 +90,28 @@ for i = 1 to mc_bases do
     if factory in mc_bases[i] then
        begin
        if mc_defender[i] < mc_defender_limit[i] and not GetWeapon(vehicle) in [ar_control_tower, ar_cargo_bay, ru_cargo_bay, ru_big_cargo_bay, us_cargo_bay, ar_radar, ru_radar, us_radar, ru_bulldozer, us_bulldozer, ar_bio_bomb, ar_selfpropelled_bomb, us_hack, us_crane, ru_crane, ru_siberium_rocket, us_siberium_rocket] then
-           mc_defender := Replace(mc_defender, i, mc_defender[i]^vehicle)
+           mc_defender := ReplaceIn(mc_defender, [i, mc_defender[i] + 1], vehicle)
        else
-           mc_vehicles := ReplaceIn(mc_vehicles, [i, mc_vehicles[i]+1], vehicle);
+           mc_vehicles := ReplaceIn(mc_vehicles, [i, mc_vehicles[i] + 1], vehicle);
 
-       if not mc_scan[i] then
+       if GetControl(vehicle) = control_remote then
           begin
-          if GetControl(vehicle) = control_remote then
-             repeat
-              wait(0$1);
-             until IsControledBy(vehicle);
-
-          ComMoveToArea(vehicle, mc_parking[i]);
-
-          if GetControl(vehicle) <> control_manual then
-             break;
-
           repeat
            wait(0$1);
-          until IsInArea(vehicle, mc_parking[i]);
-
-          ComExitVehicle(IsDrivenBy(vehicle));
-          exit;
+          until IsControledBy(vehicle);
           end;
+
+       ComMoveToArea(vehicle, mc_parking[i]);
+
+       if GetControl(vehicle) <> control_manual then
+          break;
+
+       repeat
+        wait(0$1);
+       until IsInArea(vehicle, mc_parking[i]);
+
+       ComExitVehicle(IsDrivenBy(vehicle));
+       exit;
        end;
     end;
 End;
@@ -198,7 +197,7 @@ if not mc_bases or not skirmish then
    exit;
 
 for i = 1 to mc_bases do
-    if un in mc_bases[i] or un in mc_construct_list[i] or un in mc_vehicles[i] or un in mc_ape[i] or un in mc_ape_in_lab[i] then
+    if un in mc_bases[i] or un in mc_construct_list[i] or un in mc_defender[i] or un in mc_vehicles[i] or un in mc_ape[i] or un in mc_ape_in_lab[i] then
        begin
 
        if un in mc_ape[i] then
@@ -213,6 +212,9 @@ for i = 1 to mc_bases do
 
        if GetType(un) = unit_vehicle and (GetTag(un) = 20 or un in mc_defender[i]) then
           begin
+          if un in mc_defender[i] then
+             mc_defender := Replace(mc_defender, i, mc_defender[i] diff un);
+
           fac := MC_GetBuilding(i, b_factory);
 
           if fac then
@@ -220,7 +222,7 @@ for i = 1 to mc_bases do
              components := Produce(fac, GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un));
 
              if components then
-                MC_InsertProduceList(i, components);
+                MC_InsertProduceList(i, [components]);
 
              break;
              end;
