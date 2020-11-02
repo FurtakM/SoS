@@ -20,6 +20,8 @@ function setMap()
 	end;
 
 	setTexture(menu.window_skirmish.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map .. '/mappic.png');
+	setTextureFallback(menu.window_skirmish.panel.mappic, 'classic/edit/mappic_default.png');
+	
 	setText(menu.window_skirmish.panel.title, SKIRMISH_DATA[SKIRMISH_SELECTED].title);
 	setText(menu.window_skirmish.panel.description, SKIRMISH_DATA[SKIRMISH_SELECTED].desc);
 
@@ -300,6 +302,7 @@ function showChangeSkirmishPanel(MODE)
 		setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
 		setText(menu.window_skirmish_popup.panel.description, SGUI_widesub(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 1, 255));
 		setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map .. '/mappic.png');
+		setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');
 	end;
 
 	setVisible(menu.window_skirmish_popup, MODE == 1);
@@ -309,6 +312,7 @@ function changeSkirmish(INDEX)
 	setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, INDEX);
 	setText(menu.window_skirmish_popup.panel.description, SGUI_widesub(SKIRMISH_DATA[INDEX].desc, 1, 255));
 	setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[INDEX].map .. '/mappic.png');
+	setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');
 	SKIRMISH_SELECTED = INDEX;
 end;
 

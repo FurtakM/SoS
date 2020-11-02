@@ -783,6 +783,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         setHint(ELEMENT.comboBox.selected, PROPERTIES.hint);
     end;
 
+    set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
     set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
     set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
 
@@ -1184,8 +1185,8 @@ function setVisibleAll(ARRAY, MODE)
     local result = false;
 
     for _, v in pairs(ARRAY) do
-        if (getVisibleID(v.PARENT)) then
-            setVisibleID(v.PARENT, MODE);
+        if (getVisibleID(v.ID)) then
+            setVisibleID(v.ID, MODE);
             result = true;
         end;
     end;
