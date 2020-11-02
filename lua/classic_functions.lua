@@ -1223,3 +1223,15 @@ end;
 function getVisibleID(ID)
     return sgui_get(ID, PROP_VISIBLE);
 end;
+
+function strlen(TEXT)
+    return utf8.len(TEXT);
+end;
+
+function text(TEXT, MAXLENGTH, APPENDCHAR)
+    if (strlen(TEXT) > MAXLENGTH) then
+        return SGUI_widesub(TEXT, 1, MAXLENGTH) .. APPENDCHAR;
+    end;
+
+    return TEXT;
+end;

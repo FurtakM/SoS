@@ -144,10 +144,11 @@ menu.window_skirmish.panel.description = getLabelEX(
     {
 		nomouseevent = true,
         font_colour = WHITE(),
-        font_name = Arial_12,
+        font_name = ADMUI3L,
         wordwrap = true,
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
+        scissor = true
  	}
 );
 
@@ -251,6 +252,7 @@ menu.window_skirmish_popup.panel.description = getLabelEX(
         wordwrap = true,
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
+        scissor = true
  	}
 );
 
@@ -300,7 +302,7 @@ function showChangeSkirmishPanel(MODE)
 	if (MODE == 1) then
 		setListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)'); 
 		setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
-		setText(menu.window_skirmish_popup.panel.description, SGUI_widesub(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 1, 255));
+		setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 164, '...'));
 		setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map .. '/mappic.png');
 		setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');
 	end;
@@ -310,7 +312,7 @@ end;
 
 function changeSkirmish(INDEX)
 	setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, INDEX);
-	setText(menu.window_skirmish_popup.panel.description, SGUI_widesub(SKIRMISH_DATA[INDEX].desc, 1, 255));
+	setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[INDEX].desc, 164, '...'));
 	setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[INDEX].map .. '/mappic.png');
 	setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');
 	SKIRMISH_SELECTED = INDEX;
