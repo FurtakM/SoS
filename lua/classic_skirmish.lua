@@ -138,7 +138,7 @@ menu.window_skirmish.panel.title = getLabelEX(
 menu.window_skirmish.panel.description = getLabelEX(
 	menu.window_skirmish.panel,
     anchorT, 
-    XYWH(510, 36, 500, 600),
+    XYWH(510, 40, 500, 596),
     nil, 
     '',
     {

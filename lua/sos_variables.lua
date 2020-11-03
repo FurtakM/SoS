@@ -12,3 +12,6 @@ TID_Common = 6010;
 TID_CratesSpawn = 6011;
 TID_AdditionalReinforcements = 6012;
 TID_Commander = 6013;
+TID_Mechanics = 6014;
+TID_TeamsAmount = 6015;
+TID_TimeMinutes = 6016;
