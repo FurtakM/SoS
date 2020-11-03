@@ -198,6 +198,8 @@ repeat
           [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun],
           [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
           [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
+          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
           [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher]
         ];
 
@@ -220,7 +222,7 @@ repeat
 
  repeat
   wait(0$1);
- until MC_GetProduceList(base) = 0;
+ until MC_GetVehicles(base, true) >= 8;
 
  wait(0$30);
 
@@ -245,7 +247,7 @@ End;
 export RussiansDefeated;
 Every 0$1 trigger FirstAssaultRepelled and FilterAllUnits([[f_side, 3],[f_type, unit_human]]) = 0 do
 begin
-  RussiansDefeated := true;
+RussiansDefeated := true;
 end;
 
 
@@ -314,3 +316,17 @@ begin
 
   enable;
 end;
+
+// oil
+Every 0$1 do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]);
+
+if tmp then
+   for i in tmp do
+       if GetFuel(i) < 3 then
+          SetFuel(i, 3);
+End;

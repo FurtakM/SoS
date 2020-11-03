@@ -103,17 +103,25 @@ export ArmadaArrived, FirstAssaultRepelled;
 export RuSpeaker;
 
 every 0$1 trigger MissionStart do
+var tmp, i;
 begin
   wait(ruArrival);
 
   PrepareRUArmada;
-  ComMoveXY(RUArmada, 107, 120);
+
+  wait(0$3);
+
+  tmp := AreaToList(RUArrivalParkingArea, 0);
+
+  for i = 1 to RUArmada do
+      ComMoveXY(RUArmada[i], tmp[1][i], tmp[2][i]);
+
   ArmadaArrived := true;
 
   Say(Palmer, 'DPalmer-A1');
   Say(Brighton, 'DBrighton-A1');
 
-  wait(1$0);
+  wait(0$20);
   PrepareRUBase;
   PrepareRUBase_v2;
 //  ComBuild(FilterAllUnits([f_side,3]), b_depot, 127, 125, 5);
@@ -130,26 +138,48 @@ begin
   wait(0$30);
 
   InGameOn;
+  PlaceSeeing(95, 93, 1, -30);
   ComMoveXY(FilterUnitsInArea(US_BackOffArea, [f_side, 1]), 63, 39);
   CenterOnXY(95, 93);
+
   repeat
-  wait(0$1);
-  until ListEnvironmentArea(BulldozerArea)<4 or
-  ListEnvironmentArea(BulldozerArea2)<4;
+   wait(0$1);
+
+   if not HasTask(Bulldozers[1]) then
+      CutTreeInArea(Bulldozers[1], BulldozerArea);
+
+   if not HasTask(Bulldozers[2]) then
+      CutTreeInArea(Bulldozers[2], BulldozerArea2);
+
+  until ListEnvironmentArea(BulldozerArea) < 2 or ListEnvironmentArea(BulldozerArea2) < 2
+        or IsDead(Bulldozers[1]);
+
+  if UnitFilter(Bulldozers, [f_ok]) then
+     begin
+     wait(0$10);
+     ComMoveXY(Bulldozers, 120, 131);
+
+     for i in Bulldozers do
+         NormalAttack(1, i);
+     end;
+
   wait(0$10);
-  ComMoveXY(Bulldozers, 120, 131);
-  wait(0$5);
 
-  NormalAttack(1, Bulldozers[1]);
-  NormalAttack(1, Bulldozers[2]);
+  RemoveSeeing(95, 93, 1);
 
-   Say(Yashin, 'DDeath-Yas-1');
-   Say(Gaydar, 'DDeath-Gay-2');
-   SayEffect('DRuSol-A1');
-   wait(0$2);
+  Say(Yashin, 'DDeath-Yas-1');
+  
+  SayEffect('DRuSol-A1');
+
+  wait(0$2);
+
   InGameOff;
 
-  ComMoveXY(RUArmada, 82, 67);
+  ComMoveXY(RUArmada, 66, 40);
+
+  wait(0$2);
+
+  Say(Gaydar, 'DDeath-Gay-2');
 
   wait(0$20);
 
@@ -165,8 +195,10 @@ begin
   PriorityAttack(6, BetaB);
 
   repeat
-  ComAgressiveMove(RUArmada, 67, 37);
-  ComAgressiveMove([Yashin, Popov, Gaydar, Sevi], 67, 37);
+   for i in RuArmada do
+       if not HasTask(i) then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+
   wait(0$1)
   until FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human] ]) < 10
   and IsDead(Yashin)
@@ -177,8 +209,10 @@ begin
   AssaultStarted := false;
 
   ComMoveXY(FilterAllUnits([f_side, 6]), 120, 131);
-  RuSpeaker := FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human], [f_lives, 500] ]);
-  Say(RuSpeaker[1], 'DRuSol-A2');
+  RuSpeaker := FilterAllUnits([f_and, [f_side, 6], [f_sex, sex_male], [f_type, unit_human], [f_lives, 500] ]);
+
+  if RuSpeaker then
+     Say(RuSpeaker[1], 'DRuSol-A2');
 
   wait(0$30);
   DialogueOn;
@@ -253,17 +287,13 @@ end;
 
 every 0$1 trigger AssaultStarted do
 begin
-
-  wait(0$20);
-  Say(Popov, 'DDeath-Pop-2');
+wait(0$20);
+Say(Popov, 'DDeath-Pop-2');
 end;
-
-
 
 every 0$1 trigger MissionStart do
 Begin
- wait(Rand(0$50, 1$20));
- CreateCratesArea(Rand(2, 5), CratesArea,true);
-
+wait(rand(0$50, 2$20));
+CreateCratesArea(Rand(2, 5), CratesArea,true);
 enable;
 end;
