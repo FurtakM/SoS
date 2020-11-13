@@ -10,9 +10,7 @@ function FROMOW_SHOW_GAMEDIALOG(DATA) -- OW CALLS THIS!
     if (interface.current.side == 'Alien') then
         classicDialog = getDialog(DATA);
     else -- old code below
-        if (not (dialog.game.panel.ID) == nil) then
-            sgui_deletechildren(dialog.game.panel.ID);
-        end;
+        sgui_deletechildren(dialog.game.panel.ID);
 
         local b = nil;
         local list = {};
