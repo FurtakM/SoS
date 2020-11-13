@@ -61,6 +61,14 @@ function debug(var)
     setText(debugValue, getText(debugValue) .. '\n' .. dump(var));   
 end;
 
+function debug2(var)
+    if not getVisible(debugLayout) then
+        setVisible(debugLayout, true);
+    end;
+
+    setText(debugValue, dump(var));   
+end;
+
 
 function dump(o)
     if type(o) == 'table' then
