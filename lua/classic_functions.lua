@@ -1225,13 +1225,38 @@ function getVisibleID(ID)
 end;
 
 function strlen(TEXT)
-    return utf8.len(TEXT);
+    return string.len(TEXT);
 end;
 
 function text(TEXT, MAXLENGTH, APPENDCHAR)
+    if (TEXT == nil) then
+        return '';
+    end;
+
     if (strlen(TEXT) > MAXLENGTH) then
         return SGUI_widesub(TEXT, 1, MAXLENGTH) .. APPENDCHAR;
     end;
 
     return TEXT;
+end;
+
+function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
+    if (not VERSION or not VERSION_TO_COMPARE) then
+        return true;
+    end;
+
+    local v1 = split(VERSION, '.');
+    local v2 = split(VERSION_TO_COMPARE, '.');
+
+    if (#v1 ~= #v2) then
+        return false;
+    end;
+
+    for i = 1, #v1 do
+        if (v1[i] < v2[i]) then
+            return false;
+        end;
+    end;
+
+    return true;
 end;

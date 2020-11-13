@@ -63,6 +63,9 @@ function setSkirmishOption(OPTION, INDEX)
 	        
 	    }
 	);
+
+	-- set default value
+	changeSkirmishOption(OPTION.id, OPTION.default + 1);
 end;
 
 function changeSkirmishOption(INDEX, ID)

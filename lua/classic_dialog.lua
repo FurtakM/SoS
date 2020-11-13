@@ -10,7 +10,9 @@ function FROMOW_SHOW_GAMEDIALOG(DATA) -- OW CALLS THIS!
     if (interface.current.side == 'Alien') then
         classicDialog = getDialog(DATA);
     else -- old code below
-        sgui_deletechildren(dialog.game.panel.ID);
+        if (not (dialog.game.panel.ID) == nil) then
+            sgui_deletechildren(dialog.game.panel.ID);
+        end;
 
         local b = nil;
         local list = {};
@@ -114,13 +116,16 @@ function getDialog(DATA)
     ELEMENT.dialog.top.label = getLabelEX(
         ELEMENT.dialog, 
         anchorLT, 
-        XYWH(18, 6, 260, 72),
+        XYWH(18, 24, 262, 64),
         Arial_12, 
         DATA.QUESTION,
         {
             wordwrap = true,
             autosize = true,
-            font_colour = BLACK()
+            font_colour = BLACK(),
+            scissor = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
         }
     );
 
@@ -134,7 +139,7 @@ function getDialog(DATA)
         }
     );
 
-    sgui_deletechildren(ELEMENT.dialog.center);
+    sgui_deletechildren(ELEMENT.dialog.center.ID);
 
     for i = 1, DATA.COUNT do
         local tmp = getElementEX(
@@ -161,6 +166,109 @@ function getDialog(DATA)
             30, 
             DATA.LIST[i], 
             'setVisibleID(' .. ELEMENT.ID .. ', false); OW_FORM_CLOSE(dialog.game.FORMID,'..(i)..');',
+            PROPERTIES
+        );
+    end;
+
+    ELEMENT.dialog.bottom = getElementEX(
+        ELEMENT.dialog,
+        anchorNone,
+        XYWH(0, ELEMENT.dialog.top.height + (30 * DATA.COUNT), 299, 12),
+        true,
+        {
+            texture = 'classic/edit/query_b.png'
+        }
+    );
+
+    return ELEMENT;
+end;
+
+function getCustomDialog(DATA)
+    local ELEMENT = getElementEX(
+        nil,
+        anchorNone,
+        XYWH(0, 0, ScrWidth, ScrHeight),
+        true,
+        {
+            colour1 = BLACKA(50)
+        }
+    );
+
+    local height = 108 + 30 * DATA.COUNT;
+
+    ELEMENT.dialog = getElementEX(
+        ELEMENT,
+        anchorNone,
+        XYWH(ScrWidth / 2 - 150, ScrHeight / 2 - (height / 2), 299, height),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.dialog.top = getElementEX(
+        ELEMENT.dialog,
+        anchorNone,
+        XYWH(0, 0, 299, 96),
+        true,
+        {
+            texture = 'classic/edit/query_t.png'
+        }
+    );
+
+    ELEMENT.dialog.top.label = getLabelEX(
+        ELEMENT.dialog, 
+        anchorLT, 
+        XYWH(18, 24, 262, 64),
+        Arial_12, 
+        DATA.QUESTION,
+        {
+            wordwrap = true,
+            autosize = true,
+            font_colour = BLACK(),
+            scissor = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+        }
+    );
+
+    ELEMENT.dialog.center = getElementEX(
+        ELEMENT.dialog,
+        anchorNone,
+        XYWH(0, 96, 299, 30 * DATA.COUNT),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    sgui_deletechildren(ELEMENT.dialog.center.ID);
+
+    local PROPERTIES = {};
+
+    for i = 1, DATA.COUNT do
+        local tmp = getElementEX(
+            ELEMENT.dialog.center,
+            anchorNone,
+            XYWH(0, 30 * (i - 1), 299, 30),
+            true,
+            {
+                texture = 'classic/edit/query_c.png'
+            }
+        );
+
+        if (i == 1) then
+            PROPERTIES.clickSoundSelect = true;
+        end;
+
+        button(
+            tmp, 
+            8, 
+            2,
+            284, 
+            30, 
+            DATA.LIST[i].NAME, 
+            'setVisibleID(' .. ELEMENT.ID .. ', false);' .. DATA.LIST[i].CALLBACK,
             PROPERTIES
         );
     end;

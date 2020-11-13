@@ -1,5 +1,5 @@
 Export commanders, player, gladkov, davidov, gorki, stolypin, player_squad, pl_counter, player_com;
-Export Function InitCommanders;
+Export Function InitCommanders(commander);
 var i, skill, tmp, team, veh;
 begin
 uc_side := your_side;
@@ -23,8 +23,8 @@ stolypin := NewCharacter('Stolypin');
 
 commanders := [gladkov, davidov, gorki, stolypin];
 
-player := CharacterSelection('text', 1, 1, [sel_not_hired, sel_changeable]^commanders, []);
-player_com := player[1];
+//player := CharacterSelection('text', 1, 1, [sel_not_hired, sel_changeable]^commanders, []);
+player_com := commanders[commander];
 
 team := [];
 skill := [4, 3, 3][Difficulty];
@@ -34,7 +34,7 @@ hc_name := '';
 hc_importance := 0;
 
 // 15 ludzi
-case player[1] of
+case player_com of
 gladkov: begin
          // ludzie
          for i = 1 to 10 do
@@ -145,7 +145,7 @@ if isTest then
     else
      tmp := CharacterSelection('text', 12, 12, [sel_not_hired, sel_change_class, sel_changeable]^team, [class_soldier, [class_engineer, 1], class_mechanic, class_scientistic]);
 
-PlaceUnitArea(player[1], gaidar_base, false);
+PlaceUnitArea(player_com, gaidar_base, false);
 
 SetClass(tmp[1], 2);
 
@@ -172,18 +172,8 @@ CenterNowOnXY(1, 1);
 uc_side := 6;
 Popov := NewCharacter('Popov');
 
-// poziom trudnosci
-case query('textdiff') of
-1: Difficulty := 1;
-2: Difficulty := 2;
-3: Difficulty := 3;
-end;
-
-case query('choosecom') of
-1: InitCommanders;
-end;
-
-
+Difficulty := GetMultiplayerSetting(0);
+InitCommanders(GetMultiplayerSetting(1));
 End;
 
 
