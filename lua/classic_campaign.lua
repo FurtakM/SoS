@@ -154,7 +154,7 @@ function getCampaignSelectWindow(PARENT)
 	    data[count].buttonLeftY,
 	    data[count].buttonWidth, 
 	    30,
-	    loc(TID_msg_Cancel), 
+	    loc(TID_Main_Menu_Campaign_Back),
 	    'showCampaign(0);',
 	    {}
 	);

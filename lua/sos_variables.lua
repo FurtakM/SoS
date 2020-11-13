@@ -15,3 +15,26 @@ TID_Commander = 6013;
 TID_Mechanics = 6014;
 TID_TeamsAmount = 6015;
 TID_TimeMinutes = 6016;
+TID_Road = 6017;
+TID_Short = 6018;
+TID_Long = 6019;
+TID_VeryHard = 6020;
+TID_Nation = 6021;
+TID_Random = 6022;
+TID_HunterClass = 6023;
+TID_Soldier = 6024;
+TID_Sniper = 6025;
+TID_AnimalsAmount = 6026;
+TID_Side = 6027;
+
+TID_Burlak = 6030;
+TID_Gladkov = 6031;
+TID_Stolypin = 6032;
+TID_Davidov = 6033;
+
+TID_Americans = 6040;
+TID_Arabs = 6041;
+TID_Russians = 6042;
+TID_Alliance = 6043;
+TID_Legion = 6044;
+TID_Neptun = 6045;

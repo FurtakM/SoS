@@ -6,6 +6,21 @@ set_Callback(0, CALLBACK_KEYPRESS, 'onMenuKeyPress(%k)');
 -- see: classic_mods.lua
 OW_mods_initex();
 
+-- version check
+if (not compareVersions(getvalue(OWV_VERSION), MOD_DATA.Req_Ver)) then
+    getCustomDialog({
+        COUNT = 1,
+        QUESTION = loc(TID_Main_Menu_Mod_Old_Ver) .. ' ' .. MOD_DATA.Req_Ver,
+        LIST = {
+            {
+                NAME = loc(TID_Main_Menu_Quit),
+                CALLBACK = 'mainmenuclick(%b,5);'
+            }
+        }
+    });
+end;
+
+
 -- version
 setFontName(version, ADMUI3LB);
 -- mod version

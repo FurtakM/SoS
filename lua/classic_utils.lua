@@ -22,6 +22,7 @@ TID_Main_Menu_Options_Lang_Label = 5011;
 TID_Main_Menu_Options_Graphics_Resolution = 5012;
 TID_Main_Menu_Options_Graphics_Windowed = 5013;
 TID_Main_Menu_Skirmish_ChangeMap = 5014;
+TID_Main_Menu_Mod_Old_Ver = 5015;
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 
 VK_F1 = 112;
@@ -79,7 +80,20 @@ function inArray(array, element)
    end;
 
    return false;
-end
+end;
+
+function split(source, delimiters)
+    local elements = {}
+    local pattern = '([^' .. delimiters .. ']+)'
+    
+    string.gsub(source, pattern, function(value) 
+            elements[#elements + 1] = value;  
+        end
+    );
+    
+    return elements;
+end;
+
 
 --[[
 sgui_getcallback(test.ID,CALLBACK_MOUSEOVER)

@@ -8,8 +8,8 @@
 ---------- Version 1.0 ---------
 include('classic_global');
 include('classic_debug');
-include('classic_functions');
 include('classic_utils');
+include('classic_functions');
 include('classic_debrief');
 include('classic_dialog');
 include('classic_profile');
