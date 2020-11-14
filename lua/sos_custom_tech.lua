@@ -30,4 +30,6 @@ function getCustomIconTypeIndex(TECH)
     		return SOS_TECH[i].BUTTON;
     	end;
     end;
+
+    return -1;
 end;

@@ -1,0 +1,85 @@
+// Sand of Siberia
+// Weapons Logic
+// by Serpent
+// 14-11-2020
+Export Function SOS_UnitExtraDestroyed(un, killerSide, killerUnit);
+var i, eff, side;
+begin
+if GetWeapon(un) = ar_bio_bomb then
+   begin
+   // upgrade for 3 bio
+   if GetTech(tech_bio3, GetSide(un)) = state_researched then
+      eff := 70
+   else
+      eff := 30;
+
+   ArtContamination(GetX(un), GetY(un), eff);
+   end;
+End;
+
+Export Function SOS_Command(cmd);
+var i, j, tmp, taskList, _taskList;
+begin
+if cmd = 124 then
+   begin
+   tmp := FilterAllUnits([f_or, [f_weapon, ru_bulldozer], [f_weapon, us_bulldozer]]);
+
+   if not tmp then
+      exit;
+
+   for i in tmp do
+       begin
+       taskList := GetTaskList(i);
+
+       if not taskList then
+          continue;
+
+       for j = 1 to taskList do
+           if taskList[j][1] = '|' then
+              begin
+              _taskList := Delete(taskList, 1);
+              SetTaskList(i, _taskList);
+              CutTreeXYR(i, taskList[j][2], taskList[j][3], 8);
+              end;
+       end;
+   end;
+
+End;
+
+Function CutTreeXYR(bulldozer, x, y, r);
+var i, min_x, min_y, max_x, max_y, _x, _y, list;
+begin
+if not bulldozer or not ValidHex(x, y) or not r then
+   exit;
+
+list := [];
+
+if x - r < 0 then
+   min_x := 0
+else
+   min_x := x - r;
+
+if y - r < 0 then
+   min_y := 0
+else
+   min_y := y - r;
+
+max_x := x + r;
+max_y := y + r;
+
+for _x = min_x to max_x do
+    for _y = min_y to max_y do
+        begin
+        if not ValidHex(_x, _y) then
+           continue;
+
+        if IsEnvironment(_x, _y) and IsEnvironmentDestroyable(_x, _y) then
+           list := Insert(list, list + 1, [_x, _y]);
+        end;
+
+if not list then
+   exit;
+
+for i in list do
+    AddTaskList(bulldozer, [['M', i[1], i[2], 0, 0, 0, 0]]);
+End;
