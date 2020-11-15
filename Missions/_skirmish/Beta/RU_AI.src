@@ -330,3 +330,37 @@ if tmp then
        if GetFuel(i) < 3 then
           SetFuel(i, 3);
 End;
+
+
+// Zabezpieczenie przed rushem ~Serpent
+Every 0$3 trigger FilterUnitsInArea(RU_Base_Area, [f_side, 1]) or FilterUnitsInArea(US_BackOffArea, [f_side, 1]) do
+var i, veh, tmp;
+begin
+tmp := [];
+
+for i := 1 to 12 do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+    PrepareVehicle(ru_heavy_wheeled, engine_siberite, control_computer, [ru_heavy_gun, ru_gatling_gun][rand(1, 2)], 100);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitXYR(veh, 199, 135, 3, false);
+    tmp := tmp ^ veh;
+
+    ComMoveXY(veh, 173, 118);
+
+    wait(0$2);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsDead(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+
+until not tmp;
+End;
