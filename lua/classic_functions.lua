@@ -44,6 +44,10 @@ function getSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROP
         PROPERTIES.textureSlider = 'classic/edit/scrollbar_horiz_slider.png';
     end;
 
+    if PROPERTIES.hint == nil then
+        PROPERTIES.hint = '';
+    end;
+
     local ELEMENT = {};
 
     ELEMENT.type = TYPE_ELEMENT;
@@ -98,6 +102,7 @@ function getSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROP
         {
             colour1 = PROPERTIES.colour1,
             texture = PROPERTIES.textureBar,
+            hint = PROPERTIES.hint
         }
     );
 
@@ -119,10 +124,6 @@ function getSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROP
         CALLBACK_MOUSEDOWN,
         'sliderclass.mouseDown(' .. ELEMENT.inListID .. ', %x, %y)'
     );
-
-    if PROPERTIES.HINT then
-        setHint(ELEMENT.bar, PROPERTIES.HINT);
-    end;
 
     setNoMouseEvent(ELEMENT.slider, true);
 

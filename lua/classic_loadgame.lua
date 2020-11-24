@@ -36,7 +36,7 @@ end;
 
 menu.window_loadgame = getElementEX(
     menu, 
-    anchorNone, 
+    anchorLTRB, 
     XYWH(0, 0, LayoutWidth, LayoutHeight), 
     false, 
     {
@@ -46,7 +46,7 @@ menu.window_loadgame = getElementEX(
 
 menu.window_loadgame.panel = getElementEX(
 	menu.window_loadgame, 
-	anchorLTRB,
+	anchorNone,
 	XYWH(
 		(LayoutWidth / 2) - 222, 
 		(LayoutHeight / 2) - 160, 

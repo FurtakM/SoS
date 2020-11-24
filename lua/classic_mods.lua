@@ -563,6 +563,11 @@ end;
 function FROMOW_MODS_ADD(INFO) -- Called by OW!
 	if (INFO.id > -1) then
         local name = INFO.ini.Mod;
+
+        if (name == nil) then
+            return;
+        end;
+
         local desc = '';
         local lang = getvalue(OWV_LANG);
 
@@ -652,7 +657,7 @@ function FROMOW_MODS_ADD(INFO) -- Called by OW!
         	10,
             INFO.id * 40,
             SGUI_widesub(name, 1, 18),
-            'showMod("'..INFO.id..'", "'..name..'", "'..INFO.dir..'", "'..desc..'", "'..steam_visible..'", "'..coop_visible..'", "'..mod_ver..'", "'..mod_req_ver..'");'
+            'showMod("' .. INFO.id .. '", "' .. name .. '", "' .. INFO.dir .. '", "' .. desc .. '", "' .. steam_visible .. '", "' .. coop_visible .. '", "' .. mod_ver .. '", "' .. mod_req_ver .. '");'
         );
 
         if (INFO.selected) then
