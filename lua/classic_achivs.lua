@@ -6,11 +6,21 @@
 -- functions
 function showAchivs(mode)
     if mode > 0 then
-       showMenuButton(0);
-       setVisible(menu.window_achivs, true);
+        -- categories
+        achivCategoryButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'displayAchivsByCategory(0)', 0);
+
+        -- achievsCategoryName = { [1] = loc(TID_Achievements_US), [2] = loc(TID_Achievements_AR), [3] = loc(TID_Achievements_RU), [4] = loc(TID_Achievements_Ally), [5] = loc(TID_Achievements_Leg), [6] = loc(TID_Achievements_ACamp), [7] = loc(TID_Achievements_MP), [8] = loc(TID_Achievements_Skir) ,[9] = loc
+        for i = 1, table.getn(achievsCategoryName) do
+            achivCategoryButton(10, 30 + i * 40, achievsCategoryName[i], 'displayAchivsByCategory(' .. i .. ')', i);
+        end;
+
+        displayAchivsByCategory(0);
+
+        showMenuButton(0);
+        setVisible(menu.window_achivs, true);
     else
-       showMenuButton(1);
-       setVisible(menu.window_achivs, false);
+        showMenuButton(1);
+        setVisible(menu.window_achivs, false);
     end;
 end;
 
@@ -77,7 +87,7 @@ function displayAchivsByCategory(category)
                 local desc = loc(TID_Achiev_Hidden);
 
                 -- desc will be hidden until achieve achievement
-                if (achievements[k][3]) then
+                if (achievements[k][3] or achieved) then
                     desc = achievements[k][2];
                 end;
 
@@ -199,31 +209,16 @@ function achivCategoryButton(X, Y, CAPTION, EVENT, CATEGORY)
         count = length(achievsCategory[CATEGORY]);
     end;
 
-    local texture = 'classic/edit/menu_button_disable_l.png';
-    local texture2 = 'classic/edit/menu_button_disable_c.png';
-    local texture3 = 'classic/edit/menu_button_disable_r.png';
-
-    if (count > 0) then
-        texture = 'classic/edit/menu_button_l.png';
-        texture2 = 'classic/edit/menu_button_c.png';
-        texture3 = 'classic/edit/menu_button_r.png';
-    end;
-
-    return getImageButtonEX(
+    return button(
         menu.window_achivs.list, 
-        anchorNone, 
-        XYWH(X, Y, 220, 30), 
+        X,
+        Y, 
+        220, 
+        30,
         CAPTION, 
-        '', 
-        EVENT, 
-        SKINTYPE_NONE,
+        EVENT,
         {
-            font_colour = RGB(0, 0, 0),
-            font_name = BankGotic_14,
-            texture = texture,
-            texture2 = texture2,
-            texture3 = texture3,
-            enabled = (count > 0)
+            disabled = (count == 0)
         }
     );
 end;
@@ -263,21 +258,15 @@ menu.window_achivs.list.title = getLabelEX(
     }
 );
 
-menu.window_achivs.list.button_quit = getImageButtonEX(
+menu.window_achivs.list.button_quit = button(
     menu.window_achivs.list, 
-    anchorNone, 
-    XYWH(5, 575, 230, 18), 
+    5, 
+    568, 
+    230, 
+    18, 
     loc(TID_Main_Menu_Campaign_Back), 
-    '', 
     'showAchivs(0);', 
-    SKINTYPE_NONE,
-    {
-        font_colour = RGB(0, 0, 0),
-        font_name = BankGotic_14,
-        texture = 'classic/edit/menu_button_small_l.png',
-        texture2 = 'classic/edit/menu_button_small_c.png',
-        texture3 = 'classic/edit/menu_button_small_r.png'
-    }
+    {}
 );
 
 menu.window_achivs.panel = getElementEX(
@@ -315,13 +304,3 @@ menu.window_achivs.panel.scrollV = getScrollBarEX_WithButtons2(
     false,
     {}
 );
-
--- categories
-achivCategoryButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'displayAchivsByCategory(0)', 0);
-
--- achievsCategoryName = { [1] = loc(TID_Achievements_US), [2] = loc(TID_Achievements_AR), [3] = loc(TID_Achievements_RU), [4] = loc(TID_Achievements_Ally), [5] = loc(TID_Achievements_Leg), [6] = loc(TID_Achievements_ACamp), [7] = loc(TID_Achievements_MP), [8] = loc(TID_Achievements_Skir) ,[9] = loc
-for i = 1, table.getn(achievsCategoryName) do
-    achivCategoryButton(10, 30 + i * 40, achievsCategoryName[i], 'displayAchivsByCategory(' .. i .. ')', i);
-end;
-
-displayAchivsByCategory(0);

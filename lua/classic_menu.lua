@@ -28,8 +28,7 @@ setFontName(mod_version, Tahoma_10);
 
 -- background
 --setTexture(menu, 'menu-main.png');
-setVisible(logo, false);
-setVisible(logotext, false);
+logoVisible(false);
 
 logo = getElementEX(
     menu,
@@ -295,11 +294,9 @@ function showMenuButton(windowNumber)
     setVisible(profilebar, false);
 
     if (windowNumber == 0) then
-        setVisible(logo, false);
         setVisible(version, false);
         setVisible(mod_version, false);
     else
-        setVisible(logo, true);
         setVisible(version, true);
         setVisible(mod_version, true);
     end;
