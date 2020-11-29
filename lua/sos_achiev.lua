@@ -90,6 +90,10 @@ achievWindowGain.Name = getLabelEX(
 );
 
 function displayAchivementWindow(NAME)
+	if (NAME == nil) then
+		return;
+	end;
+
 	setVisible(achievWindowGain, true);
 	setTexture(achievWindowGain.Image, 'SGUI/Achiev/' .. NAME .. '.png');
 	setText(achievWindowGain.Name, achievements[NAME][1]);
