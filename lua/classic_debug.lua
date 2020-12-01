@@ -135,5 +135,5 @@ SGUI_ENABLE_CLICKTEST(true);
 TestLabel = getLabelEX(nil,anchorLRB,XYWH(0,ScrHeight-50,ScrWidth,50),nil,'',{special=true});
 
 function FROMOW_CLICKTEST(DATA)
-    setText(TestLabel,'ID:'..DATA.ID..' DOWN:'..boolToStr(DATA.DOWN));
+    debug('ID:'..DATA.ID..' DOWN:'..boolToStr(DATA.DOWN));
 end;]]--
