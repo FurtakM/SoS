@@ -38,7 +38,7 @@ begin
   disable(04);
   disable(05);
   disable_07=false;
-  uc_side=am;
+  uc_side=am;  
   john=newcharacter('JMM');
   uc_side=oth;
   joan=newcharacter('Joan');
@@ -50,7 +50,7 @@ begin
   off=newcharacter('Officer');
   CreateOfficer2;
   others=[lucy,grant,sik,will,phi];
-  placeunitxy(off,43,39,false);
+  placeunitxy(off,49,37,false);
   placeunitxyr(off2,74,32,3,false);
 {  placeunitxyr(lucy,47,38,3,false);
   placeunitxyr(grant,47,38,3,false);
@@ -72,9 +72,17 @@ begin
   centernowonXY(48,38);
 
 //  dialogueon;
+  commovexy(joan,47, 41);
+  AddComTurnUnit(joan, john);
+
+
   ComMoveXY(off,49,41);
+  AddComTurnXY(off, 51,42);
+
   wait(0$3);
+
   say(off,'DX1-Off-1');
+
   ComMoveXY(off,51,38);
   ComMoveXY(john,50,39);
   ComMoveXY(lucy,51,40);
@@ -95,10 +103,16 @@ begin
   commovexy(others,75,36);
   commovexy(off,71,34);
   commovexy(john,53,44);
-  commovexy(joan,52,43);
+
+  wait(0$1);
+
+  commovexy(joan,50,41);
+
   addcomturnunit(john,joan);
   addcomturnunit(joan,john);
-  wait(0$7);
+
+  wait(0$5);
+
   say(john,'DX1-JMM-1');
   say(joan,'DX1-Joan-1');
   say(john,'DX1-JMM-2');
@@ -123,7 +137,6 @@ begin
   enable(03);
   enable(04);
   enable(05);
-
 end;
 {
 every 3 trigger isselected(john) marked 01 do
@@ -134,10 +147,12 @@ every 3 trigger isselected(john) marked 01 do
   end;
 }
 
-every 3+1 trigger isselected(others^allmen^[joan,off]) marked 02 do hint('NPC');
-
-every 5 trigger isinarea(john,vis) marked 03 do hint('Visibility');
-
+every 0$3 trigger follow do
+var i;
+begin
+for i in FilterAllUnits([f_class, 2]) do
+    ComEnterUnit(i, depot2);
+End;
 
 every 0$0.5 trigger (not killhim) and follow do //joan followuje JMM
 var tmp,tmp2,tmp3,x,y,px,py,dir;
@@ -324,17 +339,32 @@ begin
 
   centernowonunits([eon]);
   commovexy(john,75,36);
+  ComTurnUnit(Joan, John);
   InGameOn;
+  ComTurnUnit(John, off);
+
   say(off,'DXReady-Off-1');
-  say(sik,'DXReady-Sik-1');
+
+  ComTurnUnit(sik, lucy);
+
+  say(sik,'DXReady-Sik-1');  
   SayEffect('DXReady-All-1');
+
   wait(0$2);
+
+  ComTurnUnit(lucy, sik);
+
   say(lucy,'DXReady-Don-1');
   SayEffect('DXReady-All-2');
+
   wait(0$2);
+
   say(off2,'DXReady-Off2-1');
+
   wait(0$1);
+
   say(off2,'DXReady-Off2-2');
+
   ComMoveXY(off,72,29);
   ComMoveXY(off2,73,31);
   ComMoveXY(john,67,28);

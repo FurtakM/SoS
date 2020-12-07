@@ -128,7 +128,7 @@ if IsOk(JMM) then
    Say(JMM, 'D8-JMM-1');
 End;
 
-Every 0$1 trigger stevensTimer and bombExploded do
+Every 0$1 trigger stevensTimer and not planCaptured and bombExploded do
 begin
 enable;
 
@@ -138,20 +138,26 @@ else
    stevensTimer := stevensTimer - 0$1;
 End;
 
-Every 0$1 trigger stevensTimer <= 0$00 do
+Every 0$1 trigger stevensTimer <= 0$00 and not planCaptured do
 var i, tmp;
 begin
 tmp := FilterAllUnits([[f_side, 1], [f_class, 4]]);
 
 for i in tmp do
     begin
-    ComExitBuilding(i);
-    AddComMoveXY(i, 29, 56);
+    if IsInUnit(i) then
+       ComExitBuilding(i)
+    else
+        if not HasTask(i) then
+           ComMoveXY(i, 29, 56);
     end;
 
 repeat
  wait(0$1);
 until FilterUnitsInArea(stevensEscapeArea, [[f_side, 1], [f_class, 4]]);
+
+if planCaptured then
+   exit;
 
 YouLost('Time');
 End;
@@ -258,7 +264,20 @@ Case Query('QKill') of
    missionTime := tick;
 
    repeat
-    wait(0$2);
+    wait(0$1);
+
+    if FilterAllUnits([[f_side, 1], [f_not, [f_ok]]]) then
+       for i in FilterAllUnits([[f_side, 1], [f_class, 4]]) do
+           begin
+           if IsInUnit(i) then
+              ComExitBuilding(i)
+           else
+              ComHeal(i, NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_not, [f_ok]]]), i));
+           end;
+   until not FilterAllUnits([[f_side, 1], [f_not, [f_ok]]]);
+
+   repeat
+    wait(3);
 
     for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
         begin
@@ -270,8 +289,9 @@ Case Query('QKill') of
 
         if IsInUnit(i) then
            ComExitBuilding(i);
-         
-        AddComMoveXY(i, 28, 55);
+
+        if not HasTask(i) then
+           ComMoveXY(i, 28, 55);
         end;
    until not FilterAllUnits([[f_side, 1], [f_type, unit_human]]);
    end;
@@ -280,33 +300,54 @@ end;
 
 End;
 
-// capture lab
-Every 0$1 trigger GetSide(us_lab) = 7 and not planCaptured do
-begin
-planCaptured := true;
-ChangeMissionObjectives('MEnd');
-canEnd := true;
-missionTime := tick;
-End;
-
 Every 0$1 trigger canEnd do
-var un;
+var un, i, tmp;
 begin
 SetAreaMapShow(endMissionArea, 1);
 
 if Difficulty < 2 then
    exit;
 
-uc_side := 8;
-uc_nation := 2;
+uc_side := 4;
+uc_nation := 1;
 
 InitHc;
 
+tmp := [];
+
 PrepareHuman(false, class_sniper, 10);
 un := CreateHuman;
-PlaceUnitXY(un, 227, 87, false);
+tmp := [un];
+PlaceUnitXY(un, 226, 86, false);
 
 ComHold(un);
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(false, class_soldier, 8);
+    un := CreateHuman;
+    SetDir(un, 5);
+    PlaceUnitXY(un, [215, 217, 219][i], 76, false);
+    ComCrawl(un);
+    tmp := tmp ^ un;
+    end;
+
+repeat
+ wait(0$1);
+until not UnitFilter(un, [f_lives, 1000]);
+
+for i in tmp do
+    begin
+    wait(0$1);
+
+    if Crawls(i) then
+       ComWalk(i)
+    else
+        if GetClass(i) = class_sniper then
+           ComAttackSoporific(i, JMM)
+         else
+           ComAttackUnit(i, JMM);
+    end;
 End;
 
 Every 0$1 trigger not planCaptured and IsDead(us_lab) do
