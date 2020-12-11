@@ -202,15 +202,15 @@ function saveSliderSetting(setting, value)
     end;
 
     if setting == OPTION_SOUND_MUSIC then
-        setting_setvolume(VOLUME_MUSIC, value);
+        OW_settings_setvolume(VOLUME_MUSIC, value);
     end;
 
     if setting == OPTION_SOUND_EFFECTS then
-        setting_setvolume(VOLUME_EFFECTS, value);
+        OW_settings_setvolume(VOLUME_EFFECTS, value);
     end;
 
     if setting == OPTION_SOUND_SPEECH then
-        setting_setvolume(VOLUME_SPEECH, value);
+        OW_settings_setvolume(VOLUME_SPEECH, value);
     end;
 
     OW_settings_save();
