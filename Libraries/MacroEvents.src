@@ -210,21 +210,25 @@ for i = 1 to mc_bases do
           mc_ape_in_lab := Replace(mc_ape_in_lab, i, []);
           end;
 
-       if GetType(un) = unit_vehicle and (GetTag(un) = 20 or un in mc_defender[i]) then
+       if GetType(un) = unit_vehicle and (GetTag(un) = 20 or un in mc_defender[i] or GetWeapon(un) in [us_cargo_bay, ru_cargo_bay, ru_big_cargo_bay, ar_cargo_bay, us_crane, ru_crane]) then
           begin
           if un in mc_defender[i] then
              mc_defender := Replace(mc_defender, i, mc_defender[i] diff un);
 
-          fac := MC_GetBuilding(i, b_factory);
+          fac := MC_GetBuildings(i, b_factory);
 
           if fac then
              begin
-             components := Produce(fac, GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un));
+             for j in fac do
+                 begin
+                 components := Produce(fac, GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un));
 
-             if components then
-                MC_InsertProduceList(i, [components]);
-
-             break;
+                 if components then
+                    begin
+                    MC_InsertProduceList(i, [components]);
+                    break;
+                    end;
+                 end;
              end;
           end;
 

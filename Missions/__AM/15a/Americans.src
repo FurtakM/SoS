@@ -1,0 +1,180 @@
+Export Powell;
+Export Function PrepareAmerican;
+var i, b, veh, cl, tmp, depot, lab, armoury, workshop;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+SetResourceType(GetBase(am_depot), mat_cans, 25500);
+SetResourceType(GetBase(am_depot), mat_oil, 4000);
+SetResourceType(GetBase(am_depot), mat_siberit, 50);
+
+SetResourceType(GetBase(am_depot2), mat_cans, 7500);
+SetResourceType(GetBase(am_depot2), mat_oil, 4000);
+SetResourceType(GetBase(am_depot2), mat_siberit, 10);
+
+Powell := NewCharacter('Powell');
+PlaceUnitXY(Powell, 57, 94, false);
+ComTurnXY(Powell, 58, 94);
+
+tmp := [];
+
+// Lisa, Donaldson, Bobby, Cyrus, Brown,
+// Gladstone, Houten, Cornel, Gary, Frank, Kikuchi
+
+Lisa := PrepareUnit('Lisa', (not debug), '12p_');
+
+if Lisa then
+   tmp := tmp ^ Lisa;
+
+Donaldson := PrepareUnit('Donaldson', (not debug), '12p_');
+
+if Donaldson then
+   tmp := tmp ^ Donaldson;
+
+Bobby := PrepareUnit('Bobby', (not debug), '12p_');
+
+if Bobby then
+   tmp := tmp ^ Bobby;
+
+Cyrus := PrepareUnit('Cyrus', (not debug), '12p_');
+
+if Cyrus then
+   tmp := tmp ^ Cyrus;
+
+Brown := PrepareUnit('Brown', (not debug), '12p_');
+
+if Brown then
+   tmp := tmp ^ Brown;
+
+Gladstone := PrepareUnit('Gladstone', (not debug), '12p_');
+
+if Gladstone then
+   tmp := tmp ^ Gladstone;
+
+Houten := PrepareUnit('Houten', (not debug), '12p_');
+
+if Houten then
+   tmp := tmp ^ Houten;
+
+Cornel := PrepareUnit('Cornel', (not debug), '12p_');
+
+if Cornel then
+   tmp := tmp ^ Cornel;
+
+Gary := PrepareUnit('Gary', (not debug), '12p_');
+
+if Gary then
+   tmp := tmp ^ Gary;
+
+Kikuchi := PrepareUnit('Kikuchi', (not debug), '12p_');
+
+if Kikuchi then
+   tmp := tmp ^ Kikuchi;
+
+tmp := tmp union CreateCharacterSet('12p_others');
+
+if tmp < 36 then
+   for i = 1 to 36 - tmp do
+       begin
+       PrepareHuman(sex_male, i mod 4 + 1, 10);
+       tmp := tmp ^ CreateHuman;
+       end;
+
+for i in tmp do
+    PlaceUnitXYR(i, 62, 93, 9, false);
+
+mc_bases := Replace(mc_bases, 4, FilterAllUnits([f_side, 1]));
+
+uc_side := 0;
+uc_nation := 0;
+
+for i = 1 to 4 do
+    begin
+    InitHc;
+    hc_class := class_apeman;
+    PlaceUnitArea(CreateHuman, powellApe, false);
+    end;
+End;
+
+// American attacks
+Every 11$30 trigger not americanDestroyed and not MC_GetVehicles(4, true) do
+var i, tmp, target;
+begin
+enable;
+
+if not FilterAllUnits([[f_side, 1], [f_nation, 1], [f_btype, b_factory]]) then
+   exit;
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(4, [
+      [us_morphling, engine_combustion, control_remote, us_rocket_launcher],
+      [us_morphling, engine_combustion, control_remote, us_rocket_launcher],
+      [us_morphling, engine_combustion, control_remote, us_rocket_launcher],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(4, [
+      [us_morphling, engine_combustion, control_remote, us_rocket_launcher],
+      [us_morphling, engine_combustion, control_remote, us_laser],
+      [us_morphling, engine_combustion, control_remote, us_laser],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+      [us_morphling, engine_combustion, control_remote, us_heavy_gun],
+   ]);
+   end;
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(4, true) >= 6;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(4, true);
+mc_vehicles := Replace(mc_vehicles, 4, mc_vehicles[4] diff tmp);
+
+target := rand(0, 2);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 114, 108) > 9 then
+           ComMoveXY(i, 114, 108);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 114, 108, 9]) >= (tmp-1);
+   end
+else
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 129, 139) > 9 then
+           ComMoveXY(i, 129, 139);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 129, 139, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;

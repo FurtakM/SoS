@@ -1,0 +1,43 @@
+Export Function Action;
+begin
+InGameOn;
+CenterNowOnUnits(JMM);
+
+InGameOff;
+End;
+
+// legion surrenders
+Every 0$1 trigger legionDestroyed do
+var i, tmp;
+begin
+MC_Kill(3);
+
+if IsOk(Schulz) then
+   begin
+   DialogueOn;
+   SayRadio(Schulz, 'D15-Szulc-1');
+   DialogueOff;
+   end;
+
+SetAttitude(8, 7, att_friend, true);
+
+for i in FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_nation, 3]]) do
+    DestroyUnit(i);
+
+tmp := FilterAllUnits([[f_side, 8], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [control_manual]]);
+
+if tmp then
+   repeat
+    wait(0$1);
+
+    for i in tmp do
+        begin
+        if IsInUnit(i) and GetType(IsInUnit(i)) = unit_building then
+           ComExitBuilding(i);
+        AddComMoveXY(i, 10, 1);
+
+        if IsInArea(i, legionEscape) then
+           RemoveUnit(i);
+        end;
+   until not FilterAllUnits([[f_side, 8], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
+End;

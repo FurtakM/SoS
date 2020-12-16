@@ -210,6 +210,10 @@ Export Function Defend(base, defenders, enemy);
 var i, j, x, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend;
 begin
 mechs := UnitFilter(mc_bases[base], [f_class, 3]);
+
+if mc_remote_driver[base] then
+   mechs := mechs diff mc_remote_driver[base];
+
 solds := UnitFilter(mc_bases[base], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
 
 if not defenders and not solds then
@@ -255,9 +259,9 @@ repeat
           unit_vehicle:
           begin
 
-          if GetLives(i) > 650 and GetDistUnits(i, e) < 40 then
+          if GetLives(i) > 650 and (GetDistUnits(i, e) < 40 or IsInArea(e, mc_scan_area[base])) then
              ComAttackUnit(i, e)
-          else if (GetDistUnits(i, e) >= 30 or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
+          else if ((not IsInArea(e, mc_scan_area[base]) and GetDistUnits(i, e) >= 40) or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
              ComMoveToArea(i, mc_parking[base]);
 
           if GetLives(i) < 998 and GetControl(i) = control_manual and IsDrivenBy(i) and IsInArea(i, mc_parking[base]) then
@@ -453,6 +457,12 @@ _chassis := AvailableChassisList(factory);
 _engine := AvailableEngineList(factory);
 _control := AvailableControlList(factory);
 _weapon := AvailableWeaponList(factory);
+
+if not _chassis or not _engine or not _control or not _weapon then
+   begin
+   result := [chassis, engine, control, weapon];
+   exit;
+   end;
 
 if not chassis in _chassis then
    chassis := _chassis[rand(1, _chassis)];

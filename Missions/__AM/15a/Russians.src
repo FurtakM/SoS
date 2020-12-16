@@ -1,0 +1,196 @@
+Export Platonov, Yakotich, Gleb, Bierezov;
+Export behemoths, behemothBuilders;
+Export Function PrepareRussian;
+var i, j, base, tmp, side, xy, b, teleport;
+begin
+side := 3;
+
+uc_side := side;
+uc_nation := 3;
+
+for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
+    SetBLevel(i, 10);
+
+teleport := FilterAllUnits([[f_side, side], [f_btype, b_teleport]]);
+
+if teleport then
+   TeleportExit(teleport[1], 123, 122);
+
+Platonov := NewCharacter('Platonov');
+Kovalyuk := NewCharacter('Kovalyuk');
+Yakotich := NewCharacter('Yakotich');
+Gleb := NewCharacter('Gleb');
+
+if TestCharacters('03_Cornel') then
+   begin
+   Bierezov := NewCharacter('Mikhail');
+   PlaceUnitXYR(Bierezov, 197, 111, 9, false);
+   SetClass(Bierezov, 3);
+   end;
+
+PlaceHumanInUnit(Platonov, ru_depot);
+PlaceHumanInUnit(Kovalyuk, ru_fac1);
+
+PlaceUnitXYR(Yakotich, 197, 111, 9, false);
+PlaceUnitXYR(Gleb, 197, 111, 9, false);
+
+// PrepareBase(base_dep, area, name, skill, sources, personel);
+tmp := PrepareBase(ru_depot, russianBaseArea, 'zhukov', [9, 10, 10][Difficulty], [99999, 1000, 300], [12, 8, 13, 8]);
+
+base := GetBase(ru_depot2);
+
+SetResourceType(base, mat_cans, 5000);
+SetResourceType(base, mat_oil, 200);
+SetResourceType(base, mat_siberit, 200);
+
+mc_bases := Replace(mc_bases, 2, tmp union FilterAllUnits([[f_side, side], [f_not, [f_type, unit_vehicle]]]) diff Platonov);
+
+// behemoths
+behemoths := [];
+behemothBuilders := [];
+
+j := 3;
+
+for i in FilterAllUnits([[f_side, 3], [f_class, 3]]) do
+    begin
+    behemothBuilders := Join(behemothBuilders, i);
+    j := j - 1;
+
+    if j = 0 then
+       break;
+    end;
+End;
+
+Export Function BuildBehemoths;
+var i, j, xy, tmp;
+begin
+xy := [ [209,149], [219,154], [223,149], [232,155] ];
+
+if not behemothBuilders then
+   exit;
+
+j := 1;
+
+for i in behemothBuilders do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComBuildBehemoth(i, b_behemoth, xy[j][1], xy[j][2], 0);
+    j := j + 1;
+    end;
+End;
+
+// Send behemoth attack
+Every 0$3 trigger GetBehemoths(3) and not FilterAllUnits([[f_side, 3], [f_btype, b_behemoth]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := GetBehemoths(3);
+
+for i in tmp do
+    begin
+    if IsInArea(i, powellBase) and not GetTag(i) = 2 then
+       SetTag(i, 2);
+
+    if not FilterAllUnits([[f_enemy, 3], [f_dist, i, 12]]) and not GetTag(i) = 2 then
+       ComAgressiveMove(i, 64, 93)
+    else
+       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+    end;
+End;   
+
+// Platonov attacks
+Every 11$30 trigger not russianDestroyed and not MC_GetVehicles(2, true) do
+var i, tmp, target, teleport;
+begin
+enable;
+
+if not FilterAllUnits([[f_side, 3], [f_btype, b_factory]]) then
+   exit;
+
+teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(2, [
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(2, [
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end;
+
+if Difficulty > 1 then
+   MC_InsertProduceList(2, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(2, true) >= [6, 7, 7][Difficulty];
+
+wait(0$30);
+
+tmp := MC_GetVehicles(2, true);
+mc_vehicles := Replace(mc_vehicles, 2, mc_vehicles[2] diff tmp);
+
+target := rand(0, 1);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 139, 89) > 9 then
+           ComMoveXY(i, 139, 89);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 139, 89, 9]) >= (tmp-1);
+   end
+else
+   begin
+   ComEnterUnit(tmp, teleport[1]);
+
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 124, 139) > 9 then
+           ComMoveXY(i, 124, 139);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 124, 139, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        begin
+        if GetWeapon(i) = ru_time_lapser then
+           ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+        end
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;

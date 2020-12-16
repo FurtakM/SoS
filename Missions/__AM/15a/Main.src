@@ -1,4 +1,126 @@
+// 12-12-2020
+// Serpent
 Starting
 begin
 ResetFog;
+AnimateTrees(true);
+
+InitVariables;
+InitMacro;
+InitNature;
+
+if debug then
+   FogOff(1);
+
+PrepareAmerican;
+PrepareAlliance;
+PrepareArabian;
+PrepareRussian;
+PrepareLegion;
+
+Action;
+
+MC_Start();
+End;
+
+// TODO
+{
+- Zrzuty skrzyn
+- Area do zbierania skrzyn
+- Dialogi
+- Warunki wygranej
+- Warunki przegranej
+- Omar
+}
+
+{
+  Bazy MC:
+  1 - Arabowie
+  2 - Rosjanie
+  3 - Legion
+  4 - Powell
+
+  Strony:
+  1 - Amerykanie (si造 Powella)
+  2 - Arabowie (si造 Heike)
+  3 - Rosjanie (si造 P豉tonowa)
+  4 - Amerykanie (si造 Powella)
+  5 - Arabowie (si造 Omara)
+  6 - Rosjanie (dodatkowe si造)
+  7 - Przymierze (gracz)
+  8 - Legion
+}
+
+Export debug;
+Export russianDestroyed, legionDestroyed, americanDestroyed, arabianDestroyed;
+Export Function InitVariables;
+begin
+debug := 1;
+russianDestroyed := false;
+legionDestroyed := false;
+americanDestroyed := false;
+arabianDestroyed := false;
+End;
+
+Export Function CustomInitMacro();
+begin
+mc_parking := [ arabianParkingArea, russianParkingArea, legionParkingArea, powellParking ];
+mc_scan_area := [ arabianBaseArea, russianBaseArea, legionBaseArea, powellBase ];
+
+MC_SetMinesField(1, [6, 7, 9][Difficulty], arabianMinefield);
+MC_SetLabKind(1, [b_lab_weapon, b_lab_siberium, b_lab_biological, b_lab_opto]);
+MC_SetCratesArea(1, [arabianCratesArea]);
+mc_ape := Replace(mc_ape, 1, FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]));
+MC_SetProduceList(1, [
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher]
+]);
+MC_SetDefenderLimit(1, 4);
+
+MC_SetLabKind(2, [b_lab_weapon, b_lab_siberium, b_lab_computer, b_lab_spacetime]);
+MC_SetCratesArea(2, [russianCratesArea]);
+MC_SetProduceList(2, [
+   [ru_medium_wheeled, engine_siberite, control_computer, ru_cargo_bay],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+   [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]
+]);
+MC_SetDefenderLimit(2, 5);
+MC_SetUpgradeBuilding(2, b_depot);
+
+MC_SetMinesField(3, [10, 12, 15][Difficulty], legionMinefield);
+MC_SetLabKind(3, [b_lab_weapon, b_lab_siberium, b_lab_biological, b_lab_opto]);
+MC_SetCratesArea(3, [legionCratesArea]);
+mc_ape := Replace(mc_ape, 3, FilterAllUnits([[f_side, 8], [f_class, class_apeman_soldier]]));
+MC_SetProduceList(3, [
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_solar, control_manual, ar_control_tower],
+   [ar_medium_trike, engine_siberite, control_remote, ar_cargo_bay],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher]
+]);
+MC_SetDefenderLimit(3, 4);
+
+MC_SetLabKind(4, [b_lab_weapon, b_lab_computer, b_lab_siberium, b_lab_opto]);
+MC_SetCratesArea(4, [powellBase]);
+MC_SetAllowedTurretWeapons(4, [us_double_gun, us_heavy_gun, us_rocket_launcher, us_laser, us_double_laser]);
+MC_SetFactoryExtension(4, 54, 85, 2, [b_ext_laser, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
+MC_SetProduceList(4, [
+   [us_morphling, engine_combustion, control_manual, us_rocket_launcher],
+   [us_morphling, engine_combustion, control_manual, us_heavy_gun],
+   [us_morphling, engine_combustion, control_manual, us_rocket_launcher],
+   [us_morphling, engine_combustion, control_manual, us_heavy_gun],
+   [us_morphling, engine_combustion, control_computer, us_cargo_bay],
+   [us_medium_tracked, engine_combustion, control_computer, us_crane]
+]);
+MC_SetDefenderLimit(4, 4);
+MC_SetTame(4, powellApe);
 End;
