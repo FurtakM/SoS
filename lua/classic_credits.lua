@@ -11,7 +11,7 @@ menu.window.credits = getElementEX(
 menu.window.credits.content = getElementEX(
     menu.window.credits,
     anchorLTRB,
-    XYWH(menu.side.width, LayoutHeight + 20, LayoutWidth - menu.side.width, 0),
+    XYWH(0, LayoutHeight + 20, LayoutWidth, 0),
     false,
     {
     	colour1 = BLACKA(0)
@@ -86,7 +86,7 @@ function AddCreditImageOffset(texture, width, height, rightalign, offset, credit
     local xo = 0;
 
     if (rightalign) then
-        xo = menu.window.credits.content.width-offset-width;
+        xo = menu.window.credits.content.width - offset - width;
     else
         xo = offset;
     end;
