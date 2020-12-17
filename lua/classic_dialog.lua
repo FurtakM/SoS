@@ -182,10 +182,18 @@ function getDialog(DATA)
 end;
 
 function getCustomDialog(DATA)
+    local w = ScrWidth;
+    local h = ScrHeight;
+
+    if DATA.INSTANT ~= nil then
+        w = LayoutWidth;
+        h = LayoutHeight;
+    end;
+
     local ELEMENT = getElementEX(
         nil,
-        anchorNone,
-        XYWH(0, 0, ScrWidth, ScrHeight),
+        anchorLTRB,
+        XYWH(0, 0, w, h),
         true,
         {
             colour1 = BLACKA(50)
@@ -197,7 +205,7 @@ function getCustomDialog(DATA)
     ELEMENT.dialog = getElementEX(
         ELEMENT,
         anchorNone,
-        XYWH(ScrWidth / 2 - 150, ScrHeight / 2 - (height / 2), 299, height),
+        XYWH(w / 2 - 150, h / 2 - (height / 2), 299, height),
         true,
         {
             colour1 = WHITEA()

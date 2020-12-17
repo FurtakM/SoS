@@ -1,8 +1,4 @@
 ----------- MAIN MENU ----------
--- event
-set_Callback(menu.ID, CALLBACK_MOUSECLICK, 'HideCredits();');
-set_Callback(0, CALLBACK_KEYPRESS, 'onMenuKeyPress(%k)');
-
 -- see: classic_mods.lua
 OW_mods_initex();
 
@@ -14,12 +10,12 @@ if (not compareVersions(getvalue(OWV_VERSION), MOD_DATA.Req_Ver)) then
         LIST = {
             {
                 NAME = loc(TID_Main_Menu_Quit),
-                CALLBACK = 'mainmenuclick(%b,5);'
+                CALLBACK = 'exit();'
             }
-        }
+        },
+        INSTANT = 1
     });
 end;
-
 
 -- version
 setFontName(version, ADMUI3LB);
@@ -128,7 +124,7 @@ menu.window.credits = button(
     170,
     30, 
     loc(TID_Main_Menu_Extras_Credits), 
-    'mainmenuclick(%b,4);',
+    'showCredits();',
     {}
 );
 
@@ -139,7 +135,7 @@ menu.window.quit = button(
     170,
     30,  
     loc(TID_Main_Menu_Quit), 
-    'mainmenuclick(%b,5);',
+    'exit();',
     {}
 );
 
@@ -267,26 +263,6 @@ profile_button = button(
 );
 
 setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));
-
-
---credits
-setXYV(credits, LayoutWidth / 2 - credits.width / 2, 0);
-
--- function override
-function ShowCredits()
-	credits.y = ScrHeight + 20;
-	sgui_set(credits.ID, PROP_Y, credits.y);
-    setVisible(credits, true);
-    showMenuButton(0);
-end;
-
--- function override
-function HideCredits()
-    if getVisible(credits) then
-        setVisible(credits, false);
-        showMenuButton(1);
-    end;
-end;
 
 function showMenuButton(windowNumber)
     setVisible(menu.window, false);

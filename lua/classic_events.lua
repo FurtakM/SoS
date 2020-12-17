@@ -33,7 +33,7 @@ function onMenuKeyPress(key)
     if (key == VK_RETURN) then
        -- credits
        if (getVisible(credits)) then
-           HideCredits();
+           hideCredits();
            return;
        end;
     end;
@@ -41,7 +41,7 @@ function onMenuKeyPress(key)
     if (key == VK_SPACE) then
        -- credits
        if (getVisible(credits)) then
-           HideCredits();
+           hideCredits();
            return;
        end;
     end;
@@ -68,8 +68,8 @@ function onMenuKeyPress(key)
         end;
 
         -- credits
-        if (getVisible(credits)) then
-            HideCredits();
+        if (getVisible(menu.window.credits)) then
+            hideCredits();
             return;
         end;
 
@@ -103,3 +103,6 @@ function onMenuKeyPress(key)
         end;
     end;
 end;
+
+-- event
+set_Callback(0, CALLBACK_KEYPRESS, 'onMenuKeyPress(%k)');

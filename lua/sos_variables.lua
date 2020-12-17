@@ -26,6 +26,7 @@ TID_Soldier = 6024;
 TID_Sniper = 6025;
 TID_AnimalsAmount = 6026;
 TID_Side = 6027;
+TID_AchivUnlocked = 6028;
 
 TID_Burlak = 6030;
 TID_Gladkov = 6031;
@@ -38,3 +39,6 @@ TID_Russians = 6042;
 TID_Alliance = 6043;
 TID_Legion = 6044;
 TID_Neptun = 6045;
+
+TID_Website = 6090;
+TID_Contact = 6091;

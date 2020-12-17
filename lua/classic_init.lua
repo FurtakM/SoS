@@ -20,4 +20,5 @@ include('classic_campaign');
 include('classic_skirmish');
 include('classic_loadgame');
 include('classic_menu');
+include('classic_credits');
 include('classic_events');

@@ -1249,14 +1249,14 @@ function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
     local v1 = split(VERSION, '.');
     local v2 = split(VERSION_TO_COMPARE, '.');
 
-    if (#v1 ~= #v2) then
-        return false;
-    end;
-
     for i = 1, #v1 do
-        if (v1[i] < v2[i]) then
+        if (parseInt(v1[i]) < parseInt(v2[i])) then
             return false;
         end;
+    end;
+
+    if (parseInt(v1[#v1]) == parseInt(v2[#v1])) then
+        return true;
     end;
 
     return true;
