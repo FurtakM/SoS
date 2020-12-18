@@ -86,7 +86,7 @@ menu.window_skirmish = getElementEX(
     XYWH(0, 0, LayoutWidth, LayoutHeight), 
     false, 
     {
-        colour1 = BLACKA(60)
+        colour1 = BLACKA(150)
     }
 );
 
