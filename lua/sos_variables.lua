@@ -42,3 +42,17 @@ TID_Neptun = 6045;
 
 TID_Website = 6090;
 TID_Contact = 6091;
+
+TID_Credits_Mod = 6100;
+TID_Credits_Maps = 6101;
+TID_Credits_Scenarios = 6102;
+TID_Credits_Dialogs = 6103;
+TID_Credits_SupportM = 6104;
+TID_Credits_SupportT = 6105;
+TID_Credits_SupportMed = 6106;
+TID_Credits_Website = 6107;
+TID_Credits_Thanks_1 = 6108;
+TID_Credits_Thanks_2 = 6109;
+TID_Credits_Thanks_3 = 6110;
+TID_Credits_Thanks_4 = 6111;
+TID_Credits_Thanks_5 = 6112;

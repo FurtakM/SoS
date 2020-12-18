@@ -118,7 +118,7 @@ function CreditsTick(FRAMETIME)
     if (getVisible(menu.window.credits.content)) then
         menu.window.credits.content.y = menu.window.credits.content.y - FRAMETIME / 0.02;
 
-        if (menu.window.credits.content.y < 0-menu.window.credits.content.height) then
+        if (menu.window.credits.content.y < 0 - menu.window.credits.content.height) then
             menu.window.credits.content.y = ScrHeight + 20;
         end;
 
@@ -141,5 +141,3 @@ function hideCredits()
         showMenuButton(1);
     end;
 end;
-
-OW_loadcredits(menu.window.credits.content.ID, 'credits/credits');
