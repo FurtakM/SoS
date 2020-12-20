@@ -15,6 +15,460 @@ InGameOff;
 ChangeMissionObjectives('MStart');
 End;
 
+// see alien building
+Every 0$2 trigger SeeXY(7, 255, 219) do
+var speaker;
+begin
+wait(0$3);
+
+alienSpotted := true;
+
+speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_type, unit_human], [f_sex, sex_male]]) diff [Burlak, Titov, Dolgov, Petrosyan, Kuzmov, Kovalyuk, Scholtze];
+DialogueOn;
+PlaceSeeing(255, 219, 7, -20);
+CenterNowOnXY(255, 219);
+
+if speaker then
+   Say(speaker[1], 'DAlienBase-RSol1-1');
+
+Say(JMM, 'DAlienBase-JMM-1');
+
+if IsOk(Burlak) then
+   begin
+   dwait(0$1);
+   Say(Burlak, 'DAlienBase-Bur-1');
+   end;
+
+if IsOk(Roth) then
+   Say(Roth, 'DAlienBase-Roth-1');
+
+if IsOk(Gossudarov) then
+   Say(Gossudarov, 'DAlienBase-Gos-1')
+else
+   begin
+   speaker := FilterAllUnits([[f_side, 7], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+   if speaker then
+      Say(speaker[1], 'DAlienBase-Sci1-1');
+   end;
+
+RemoveSeeing(255, 219, 7);
+DialogueOff;
+
+repeat
+ wait(0$1);
+until IsSelected(alien);
+
+if not artifactIResearched or not artifactIIResearched then
+   begin
+   if IsOk(Roth) then
+      Say(Roth, 'DAlieBaseNotReady-Roth-1')
+   else
+       if IsOk(Gossudarov) then
+          Say(Gossudarov, 'DAlieBaseNotReady-Gos-1')
+   else
+      begin
+      speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+      if speaker then
+         Say(speaker[1], 'DAlieBaseNotReady-RSci1-1');
+      end;
+   end;
+End;
+
+// Researched alien tech
+Every 0$1 trigger GetTech(tech_Artifact, 7) = state_researched do
+var speaker;
+begin
+speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if not speaker then
+   exit;
+
+DialogueOn;
+
+Say(speaker[1], 'DArtefTechnology-RSci1-1');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DArtefTechnology-Bur-1');
+
+Say(speaker[1], 'DArtefTechnology-RSci1-2');
+
+if Denis then
+   speaker := [Denis]
+else
+   speaker := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if speaker then
+   Say(speaker[1], 'DArtefTechnology-Sci1-2');
+
+speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if speaker and (artifactArCaptured or arabianDestroyed) then
+   begin
+
+   if arabianDestroyed and IsOk(Burlak) then
+      Say(Burlak, 'DArtefTechnology-Bur-2')
+   else
+      Say(JMM, 'DArtefTechnology-JMM-2');
+
+   Say(speaker[1], 'DArtefTechnology-RSci1-3');
+
+   if Denis then
+      speaker := [Denis]
+   else
+      speaker := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+   if speaker then
+      if alienSpotted then
+         Say(speaker[1], 'DArtefTechnology-Sci1-3')
+      else
+         Say(speaker[1], 'DArtefTechnology-Sci1-3a');
+   end;
+
+DialogueOff;
+End;
+
+// first artifact researched
+Every 0$1 trigger artifactIResearched do
+var speaker;
+begin
+if Denis then
+   speaker := [Denis]
+else
+   speaker := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if not speaker then
+   exit;
+
+Say(speaker[1], 'DArtefTechnologyAm-Sci1-1');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DArtefTechnologyAm-Bur-1');
+
+Say(JMM, 'DArtefTechnologyAm-JMM-1');
+End;
+
+// second artifact researched
+Every 0$1 trigger artifactIIResearched do
+var speaker;
+begin
+if Denis then
+   speaker := [Denis]
+else
+   speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if not speaker then
+   exit;
+
+Say(speaker[1], 'DArtefTechnologyRu-RSci1-1');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DArtefTechnologyRu-Bur-1');
+
+Say(speaker[1], 'DArtefTechnologyRu-RSci1-2');
+Say(JMM, 'DArtefTechnologyRu-JMM-1');
+End;
+
+// Can research alien building
+Every 0$1 trigger GetTech(tech_Artifact, 7) = state_researched and GetSide(alien) = 7 do
+var speaker;
+begin
+if Denis then
+   speaker := [Denis]
+else
+   speaker := FilterAllUnits([[f_side, 7], [f_nation, 1], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if not speaker then
+   exit;
+
+Say(speaker[1], 'DArtefTechnologyArStart-Sci1-1');
+End;
+
+// Third artifact researched
+Every 0$1 trigger artifactIIIResearched do
+var speaker;
+begin
+speaker := FilterAllUnits([[f_side, 7], [f_nation, 3], [f_class, 4], [f_type, unit_human], [f_sex, sex_male]]) diff [Roth, JMM, Burlak, Titov, Kuzmov, Kovalyuk];
+
+if not speaker then
+   exit;
+
+DialogueOn;
+
+Say(speaker[1], 'DArtefTechnologyAr-RSci1-1');
+Say(JMM, 'DArtefTechnologyAr-JMM-1');
+Say(speaker[1], 'DArtefTechnologyAr-RSci1-2');
+Say(JMM, 'DArtefTechnologyAr-JMM-2');
+Say(speaker[1], 'DArtefTechnologyAr-RSci1-3');
+Say(JMM, 'DArtefTechnologyAr-JMM-3');
+Say(speaker[1], 'DArtefTechnologyAr-RSci1-4');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DArtefTechnologyAr-Bur-4');
+
+Say(JMM, 'DArtefTechnologyAr-JMM-4');
+DialogueOff;
+
+wait(0$45);
+
+spawnOmar := true;
+End;
+
+// spawn omar
+Every 0$1 trigger spawnOmar do
+begin
+PrepareOmarAli;
+
+if not Omar then
+   exit;
+
+repeat
+ wait(0$1);
+until See(7, Omar);
+
+CenterNowOnUnits(Omar);
+
+DialogueOn;
+
+Say(Omar, 'DOmar-Omar-1');
+Say(JMM, 'DOmar-JMM-1');
+Say(Omar, 'DOmar-Omar-2');
+Say(JMM, 'DOmar-JMM-2');
+Say(Omar, 'DOmar-Omar-3');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DOmar-Bur-3')
+else
+   Say(JMM, 'DOmar-JMM-3');
+
+Say(Omar, 'DOmar-Omar-4');
+
+Case Query('QAccept') of
+1: begin
+   Say(JMM, 'DQrAccept#1-JMM-1');
+   SetSide(Omar, 7);
+   ComStop(Omar);
+   end;
+2: begin
+   if IsOk(Burlak) then
+      Say(Burlak, 'DQrAccept#2-Bur-1')
+   else
+      Say(JMM, 'DQrAccept#2-JMM-1');
+   end;
+End;
+
+DialogueOff;
+
+if GetSide(Omar) = 7 then
+   exit;
+
+ComMoveXY(Omar, 202, 115);
+End;
+
+// omar suicide attack
+Every 0$1 trigger GetDistUnitXY(Omar, 200, 98) < 40 and russianDestroyed do
+begin
+SetSide(Omar, 5);
+
+if IsInUnit(Omar) then
+   ComExitVehicle(Omar);
+
+if IsInUnit(Omar) then
+   ComExitBuilding(Omar);
+
+wait(0$1);
+
+ComMoveXY(Omar, 203, 120);
+
+repeat
+ wait(0$1);
+until IsSelected(Omar) or GetDistUnitXY(Omar, 203, 120) < 6;
+
+CenterNowOnUnits(Omar);
+
+DialogueOn;
+
+Say(JMM, 'DOmarContam-JMM-1');
+Say(Omar, 'DOmarContam-Omar-1');
+Say(JMM, 'DOmarContam-JMM-2');
+
+DialogueOff;
+
+SetAttitude(5, 7, att_enemy, true);
+
+repeat
+ wait(0$3);
+until IsAt(Omar, 203, 120);
+
+YouLost('MothContaminate');
+End;
+
+// powell has bomb
+Every 0$2 trigger not americanDestroyed and FilterAllUnits([[f_side, 1], [f_weapon, us_siberium_rocket]]) do
+begin
+if not IsOk(Powell) then
+   exit;
+
+DialogueOn;
+
+SayRadio(Powell, 'DWinAmericans-Pow-1');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DWinAmericans-Bur-1');
+
+Say(JMM, 'DWinAmericans-JMM-1');
+
+DialogueOff;
+
+YouLost('AmBomb');
+End;
+
+// platonov has bomb
+Every 0$2 trigger not russianDestroyed and FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) do
+begin
+if not IsOk(Platonov) then
+   exit;
+
+DialogueOn;
+
+SayRadio(Platonov, 'DWinRussians-Pla-1');
+
+if IsOk(Burlak) then
+   Say(Burlak, 'DWinRussians-Bur-1');
+
+Say(JMM, 'DWinRussians-JMM-1');
+
+DialogueOff;
+
+YouLost('RuBomb');
+End;
+
+// powell angry
+Every 0$20 trigger FilterUnitsInArea(powellBase, [f_side, 7]) and not americanDestroyed do
+begin
+SayRadio(Powell, 'DSurrenderAmericans-Pow-1');
+Say(JMM, 'DSurrenderAmericans-JMM-1');
+End;
+
+// platonov angry
+Every 0$20 trigger FilterUnitsInArea(russianBaseArea, [f_side, 7]) and not russianDestroyed and Burlak do
+begin
+SayRadio(Platonov, 'DSurrenderRussians-Pla-1');
+Say(Burlak, 'DSurrenderRussians-Bur-1');
+End;
+
+// american surrenders
+Every 0$2+0$5 trigger americanDestroyed do
+var i, tmp, speaker;
+begin
+MC_Kill(4);
+
+speaker := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_nation, 1]]) diff [Powell, Gladstone, Cyrus, Bobby, Gary, Houten];
+
+if speaker then
+   begin
+   DialogueOn;
+   Say(speaker[1], 'DSurrenderAmericans-Sol1-1a');
+   DialogueOff;
+   end;
+
+SetAttitude(1, 7, att_friend, true);
+
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [control_manual]]);
+
+if tmp then
+   repeat
+    wait(0$1);
+
+    for i in tmp do
+        begin
+        if IsInUnit(i) and GetType(IsInUnit(i)) = unit_building then
+           ComExitBuilding(i);
+        AddComMoveXY(i, 122, 242);
+
+        if IsInArea(i, americanEscape) then
+           RemoveUnit(i);
+        end;
+   until not FilterAllUnits([[f_side, 1], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
+End;
+
+// russian surrenders
+Every 0$2+0$5 trigger russianDestroyed do
+var i, tmp, speaker;
+begin
+repeat
+ wait(0$1);
+until IsDead(Yakotich);
+
+MC_Kill(2);
+
+speaker := FilterAllUnits([[f_side, 3], [f_sex, sex_male], [f_nation, 3]]) diff [Platonov, Yakotich];
+
+if speaker then
+   begin
+   DialogueOn;
+
+   if Burlak then
+      Say(speaker[1], 'DSurrenderRussians-RSol1-1')
+   else
+      Say(speaker[1], 'DSurrenderRussians-RSol1-1a');
+
+   DialogueOff;
+   end;
+
+SetAttitude(3, 7, att_friend, true);
+
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [control_manual]]);
+
+if tmp then
+   repeat
+    wait(0$1);
+
+    for i in tmp do
+        begin
+        if IsInUnit(i) and GetType(IsInUnit(i)) = unit_building then
+           ComExitBuilding(i);
+        AddComMoveXY(i, 154, 1);
+
+        if IsInArea(i, russianEscape) then
+           RemoveUnit(i);
+        end;
+   until not FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) < 18 or IsDead(Kozlov) do
+legionDestroyed := true;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, 2]]) < 9 do
+arabianDestroyed := true;
+
+// arab surrenders
+Every 0$1 trigger arabianDestroyed do
+var i, tmp;
+begin
+MC_Kill(1);
+
+SetAttitude(2, 7, att_friend, true);
+
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [control_manual]]);
+
+if tmp then
+   repeat
+    wait(0$1);
+
+    for i in tmp do
+        begin
+        if IsInUnit(i) and GetType(IsInUnit(i)) = unit_building then
+           ComExitBuilding(i);
+        AddComMoveXY(i, 254, 268);
+
+        if IsInArea(i, arabEscape) then
+           RemoveUnit(i);
+        end;
+   until not FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
+End;
+
 // legion surrenders
 Every 0$1 trigger legionDestroyed do
 var i, tmp;
@@ -49,4 +503,117 @@ if tmp then
            RemoveUnit(i);
         end;
    until not FilterAllUnits([[f_side, 8], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
+End;
+
+// win
+Every 0$3 trigger americanDestroyed and russianDestroyed and legionDestroyed and arabianDestroyed do
+begin
+CenterNowOnUnits(JMM);
+
+InGameOn;
+DialogueOn;
+
+Say(JMM, 'DEnd-JMM-JMM-1');
+
+if Joan then
+   Say(Joan, 'DEnd-JMM-Joan-1')
+else if Lisa and GetSide(Lisa) = 7 and IsPlaced(Lisa) then
+   Say(Lisa, 'DEnd-JMM-Lisa-1');
+
+if Frank and IsPlaced(Frank) then
+   Say(Frank, 'DEnd-JMM-Frank-1');
+
+if Cyrus and GetSide(Cyrus) = 7 and IsPlaced(Cyrus) then
+   Say(Cyrus, 'DEnd-JMM-Cyrus-1');
+
+if Burlak then
+   Say(Burlak, 'DEnd-JMM-Bur-1');
+
+if Joan and Lisa and GetSide(Lisa) = 7 and IsPlaced(Lisa) then
+   Say(Lisa, 'DEnd-Burlak-Lisa-1');
+
+if Belkov and IsPlaced(Belkov) then
+   Say(Belkov, 'DEnd-JMM-Bel-1');
+
+if Gnyevko and IsPlaced(Gnyevko) then
+   Say(Gnyevko, 'DEnd-JMM-Gny-1');
+
+if Cornel and GetSide(Cornel) = 7 and IsPlaced(Cornel) then
+   Say(Cornel, 'DEnd-JMM-Corn-1');
+
+if Donaldson and GetSide(Donaldson) = 7 and IsPlaced(Donaldson) then
+   Say(Donaldson, 'DEnd-JMM-Don-1');
+
+if Bobby and GetSide(Bobby) = 7 and IsPlaced(Bobby) then
+   Say(Bobby, 'DEnd-JMM-Bobby-1');
+
+if Denis and GetSide(Denis) = 7 and IsPlaced(Denis) then
+   Say(Denis, 'DEnd-JMM-Den-1');
+
+if Gladstone and GetSide(Gladstone) = 7 and IsPlaced(Gladstone) then
+   Say(Gladstone, 'DEnd-JMM-Glad-1');
+
+if Kikuchi and GetSide(Kikuchi) = 7 and IsPlaced(Kikuchi) then
+   Say(Kikuchi, 'DEnd-JMM-Yam-1');
+
+if Brown and GetSide(Brown) = 7 and IsPlaced(Brown) then
+   Say(Brown, 'DEnd-JMM-Brown-1');
+
+if Connie and GetSide(Connie) = 7 and IsPlaced(Connie) then
+   Say(Connie, 'DEnd-JMM-Con-1');
+
+if Gary and GetSide(Gary) = 7 and IsPlaced(Gary) then
+   Say(Gary, 'DEnd-JMM-Gary-1');
+
+if Simms and Roth and IsPlaced(Simms) then
+   Say(Simms, 'DEnd-JMM-Sim-1');
+
+if Houten and GetSide(Houten) = 7 and IsPlaced(Houten) then
+   Say(Houten, 'DEnd-JMM-VanH-1');
+
+if Dolgov and IsPlaced(Dolgov) then
+   Say(Dolgov, 'DEnd-JMM-Dol-1');
+
+if Dolgov and IsPlaced(Dolgov) then
+   Say(Dolgov, 'DEnd-JMM-Dol-1');
+
+if Kapitsova and IsPlaced(Kapitsova) then
+   Say(Kapitsova, 'DEnd-JMM-Kap-1');
+
+if Kovalyuk and IsPlaced(Kovalyuk) then
+   Say(Kovalyuk, 'DEnd-JMM-Kov-1');
+
+if Scholtze and IsPlaced(Scholtze) then
+   Say(Scholtze, 'DEnd-JMM-Sch-1');
+
+if Titov and IsPlaced(Titov) then
+   Say(Titov, 'DEnd-JMM-Tit-1');
+
+if Oblukov and IsPlaced(Oblukov) then
+   Say(Oblukov, 'DEnd-JMM-Obl-1');
+
+if Lipshchin and IsPlaced(Lipshchin) then
+   Say(Lipshchin, 'DEnd-JMM-Lip-1');
+
+if Fadeev and IsPlaced(Fadeev) and Burlak then
+   Say(Fadeev, 'DEnd-Burlak-Fad-1');
+
+if Petrovova and IsPlaced(Petrovova) then
+   Say(Petrovova, 'DEnd-Burlak-Ptr-1');
+
+if Kuzmov and IsPlaced(Kuzmov) then
+   Say(Kuzmov, 'DEnd-Burlak-Kuz-1');
+
+if Kirilenkova and IsPlaced(Kirilenkova) and Burlak then
+   Say(Kirilenkova, 'DEnd-Burlak-Kir-1');
+
+if Burlak then
+   Say(JMM, 'DEnd-Burlak-JMM-1');
+
+AddMedal('Hero', 1);
+AddMedal('Artefact', [-1, 1][artifactIResearched and artifactIIResearched and artifactIIIResearched]);
+AddMedal('ReconcileBurlak', [-1, 1][IsLive(Burlak)]);
+
+GiveMedals('MAIN');
+YouWin;
 End;
