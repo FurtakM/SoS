@@ -5,6 +5,12 @@
 TID_Achievements_Gain = 6028;
 TID_ACH_TROLL = 6300;
 TID_ACH_TROLL_DESC = 6301;
+TID_ACH_CYRUS = 6302;
+TID_ACH_CYRUS_DESC = 6303;
+TID_ACH_RADIO = 6304;
+TID_ACH_RADIO_DESC = 6305;
+TID_ACH_FAST_I = 6306;
+TID_ACH_FAST_I_DESC = 6307;
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -14,22 +20,43 @@ achievements = {
     	0,
     	0
     },
+    ['ACH_CYRUS'] = {
+        loc(TID_ACH_CYRUS), 
+        loc(TID_ACH_CYRUS_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_RADIO'] = {
+        loc(TID_ACH_RADIO), 
+        loc(TID_ACH_RADIO_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_FAST_I'] = {
+        loc(TID_ACH_FAST_I), 
+        loc(TID_ACH_FAST_I_DESC),
+        true,
+        0,
+        0
+    },
 };
 
 achievsCategory = {
-    [1] = {'ACH_TROLL'},
+    [1] = {'ACH_TROLL', 'ACH_CYRUS', 'ACH_RADIO', 'ACH_FAST_I'},
 };
 
 achievsCategoryName = { 
 	[1] = loc(TID_Achievements_US), 
-	[2] = loc(TID_Achievements_AR), 
-	[3] = loc(TID_Achievements_RU), 
-	[4] = loc(TID_Achievements_Ally), 
-	[5] = loc(TID_Achievements_Leg), 
-	[6] = loc(TID_Achievements_ACamp), 
-	[7] = loc(TID_Achievements_MP), 
+	--[2] = loc(TID_Achievements_AR), 
+	--[3] = loc(TID_Achievements_RU), 
+	--[4] = loc(TID_Achievements_Ally), 
+	--[5] = loc(TID_Achievements_Leg), 
+	--[6] = loc(TID_Achievements_ACamp), 
+	--[7] = loc(TID_Achievements_MP), 
 	[8] = loc(TID_Achievements_Skir),
-	[9] = loc(TID_Achievements_Any)
+	--[9] = loc(TID_Achievements_Any)
 };  
 
 
@@ -113,4 +140,8 @@ end;
 function FROMOW_SETACHIEVEMENT(NAME)
     AchievProgress(NAME, 0);
     displayAchivementWindow(NAME);
+end;
+
+--override old!
+function achieveAchievment_openclose(saID,bool)
 end;
