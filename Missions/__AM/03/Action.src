@@ -917,9 +917,16 @@ Every 0$01 trigger (not show_query and not wait_for_them) or FilterAllUnits([[f_
 EndMission;
 
 Export Function EndMission;
-var i;
+var i, m1, m2, m3;
 begin
 Wait(0$02);
+
+if tick <= 10$00 then
+   SetAchievement('ACH_ASPEED_3');
+
+m1 := solar_builded;
+m2 := veh_on_meta;
+m3 := (lose_counter = 0);
 
 // medals
 if solar_builded then
@@ -945,6 +952,9 @@ if lose_counter = 0 then
 
 GiveMedals('MAIN');
 
+if Difficulty = 3 and m1 and m2 and m3 then
+   SetAchievementEX('ACH_AMER', 3);
+
 if IsDead(Pokryshkin) then
    begin
    stop_talking := true;
@@ -956,6 +966,9 @@ if IsDead(Pokryshkin) then
    end;
 
 RewardPeople(save_group^save_others);
+
+if UnitFilter(save_group^save_others, [f_class, 4]) = 0 then
+   SetAchievement('ACH_NOSCI');
 
 SaveCharacters(JMM, mission_prefix&'JMM');
 

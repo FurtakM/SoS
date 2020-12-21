@@ -21,6 +21,14 @@ TID_ACH_ASPEED_2 = 6314;
 TID_ACH_ASPEED_2_DESC = 6315;
 TID_ACH_AMER = 6316;
 TID_ACH_AMER_DESC = 6317;
+TID_ACH_FAUST = 6318;
+TID_ACH_FAUST_DESC = 6319;
+TID_ACH_POKR = 6320;
+TID_ACH_POKR_DESC = 6321;
+TID_ACH_NOSCI = 6322;
+TID_ACH_NOSCI_DESC = 6323;
+TID_ACH_ASPEED_3 = 6324;
+TID_ACH_ASPEED_3_DESC = 6325;
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -85,7 +93,35 @@ achievements = {
         true,
         19,
         2
-    }
+    },
+    ['ACH_POKR'] = {
+        loc(TID_ACH_POKR), 
+        loc(TID_ACH_POKR_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_FAUST'] = {
+        loc(TID_ACH_FAUST), 
+        loc(TID_ACH_FAUST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_NOSCI'] = {
+        loc(TID_ACH_NOSCI), 
+        loc(TID_ACH_NOSCI_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_3'] = {
+        loc(TID_ACH_ASPEED_3), 
+        loc(TID_ACH_ASPEED_3_DESC),
+        true,
+        0,
+        0
+    },
 };
 
 achievsCategory = {
@@ -99,6 +135,10 @@ achievsCategory = {
         'ACH_JERRY',
         'ACH_CARGO',
         'ACH_ASPEED_2',
+        'ACH_FAUST',
+        'ACH_POKR',
+        'ACH_NOSCI',
+        'ACH_ASPEED_3',
     },
 };
 
