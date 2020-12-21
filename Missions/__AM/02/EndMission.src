@@ -38,8 +38,11 @@ end;
 // Finish mission
 
 Export function FinishMission;
-var tmp;
+var tmp, m1, m2, m3;
 begin
+
+    if tick <= 12$00 then
+       SetAchievement('ACH_ASPEED_2');
 
     tmp = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_lives, 251]]);
 
@@ -49,10 +52,14 @@ begin
     if mikhailStatus = 1 then SaveVariable(mikhailStatus,'02_mikhailStatus_1');
     SaveVariable(GetResourceType(GetBase(dep1), 1), '02_resources_4');
 
+    m1 := false;
+    m2 := false;
+    m3 := false;
 
     if GetResourceType(GetBase(dep1), 1) >= 200 then
     begin
         AddMedal('Cans', 1);
+        m1 := true;
     end
     else
     begin
@@ -62,16 +69,33 @@ begin
     if deadsCounter < 2  then
     begin
         AddMedal('Deaths', 1);
+        m2 := true;
     end
     else
     begin
         AddMedal('Deaths', -1);
     end;
 
-    if mikhailStatus = 0 then AddMedal('Prisoner', -1);
-    if mikhailStatus = 1 then AddMedal('Prisoner',  1);
-    if mikhailStatus = 2 then AddMedal('Prisoner',  2);
-    if mikhailStatus = 3 then AddMedal('Prisoner', -2);
+    if mikhailStatus = 0 then
+       AddMedal('Prisoner', -1);
+
+    if mikhailStatus = 1 then
+       begin
+       AddMedal('Prisoner',  1);
+       m3 := true;
+       end;
+
+    if mikhailStatus = 2 then
+       begin
+       AddMedal('Prisoner',  2);
+       m3 := true;
+       end;
+
+    if mikhailStatus = 3 then
+       AddMedal('Prisoner', -2);
+
+    if Difficulty = 3 and m1 and m2 and m3 then
+       SetAchievementEX('ACH_AMER', 2);
 
     GiveMedals('MAIN');
 

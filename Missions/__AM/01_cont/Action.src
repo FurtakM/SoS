@@ -428,13 +428,10 @@ End;
 
 // Save JMM and end mission
 Every 0$01 trigger IsInArea(JMM, exitArea) do
-var i, to_reward, wait_for_them;
+var i, to_reward, wait_for_them, m1, m2, m3;
 begin
      if macmilan_use_radio then
         SetAchievement('ACH_RADIO');
-
-     if tick <= 2$00 then
-        SetAchievement('ACH_FAST_I');
 
      if (not cyrus_saved and cyrus_in_squad and IsOk(Cyrus))
      or (not bobby_saved and bobby_in_squad and IsOk(Bobby)) then
@@ -462,6 +459,10 @@ begin
      if cyrus_saved then
         to_reward := to_reward ^ Cyrus;
 
+     m1 := true;
+     m2 := bobby_saved;
+     m3 := cyrus_saved;
+
      AddMedal('JMM', 1);
 
      if not bobby_in_squad then
@@ -476,6 +477,9 @@ begin
      if not cyrus_saved and (IsDying(Cyrus) or IsDead(Cyrus)) then
         AddMedal('Cyrus', -2);
 
+     if Difficulty = 3 and m1 and m2 and m3 then
+        SetAchievementEX('ACH_AMER', 1);
+
      GiveMedals('MAIN');
      RewardPeople(to_reward);
 
@@ -486,6 +490,9 @@ begin
         SaveCharacters(Cyrus, mission_prefix&'Cyrus');
 
      SaveCharacters(JMM, mission_prefix&'JMM');
+
+     if tick <= 3$00 then
+        SetAchievement('ACH_ASPEED_1');
 
      YouWin;
 End;

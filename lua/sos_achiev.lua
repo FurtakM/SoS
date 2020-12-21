@@ -9,8 +9,18 @@ TID_ACH_CYRUS = 6302;
 TID_ACH_CYRUS_DESC = 6303;
 TID_ACH_RADIO = 6304;
 TID_ACH_RADIO_DESC = 6305;
-TID_ACH_FAST_I = 6306;
-TID_ACH_FAST_I_DESC = 6307;
+TID_ACH_ASPEED_1 = 6306;
+TID_ACH_ASPEED_1_DESC = 6307;
+TID_ACH_CARGO = 6308;
+TID_ACH_CARGO_DESC = 6309;
+TID_ACH_JERRY = 6310;
+TID_ACH_JERRY_DESC = 6311;
+TID_ACH_TIGER = 6312;
+TID_ACH_TIGER_DESC = 6313;
+TID_ACH_ASPEED_2 = 6314;
+TID_ACH_ASPEED_2_DESC = 6315;
+TID_ACH_AMER = 6316;
+TID_ACH_AMER_DESC = 6317;
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -34,17 +44,62 @@ achievements = {
         0,
         0
     },
-    ['ACH_FAST_I'] = {
-        loc(TID_ACH_FAST_I), 
-        loc(TID_ACH_FAST_I_DESC),
+    ['ACH_ASPEED_1'] = {
+        loc(TID_ACH_ASPEED_1), 
+        loc(TID_ACH_ASPEED_1_DESC),
         true,
         0,
         0
     },
+    ['ACH_ASPEED_2'] = {
+        loc(TID_ACH_ASPEED_2), 
+        loc(TID_ACH_ASPEED_2_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_CARGO'] = {
+        loc(TID_ACH_CARGO), 
+        loc(TID_ACH_CARGO_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_TIGER'] = {
+        loc(TID_ACH_TIGER), 
+        loc(TID_ACH_TIGER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_JERRY'] = {
+        loc(TID_ACH_JERRY), 
+        loc(TID_ACH_JERRY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_AMER'] = {
+        loc(TID_ACH_AMER),
+        loc(TID_ACH_AMER_DESC),
+        true,
+        19,
+        2
+    }
 };
 
 achievsCategory = {
-    [1] = {'ACH_TROLL', 'ACH_CYRUS', 'ACH_RADIO', 'ACH_FAST_I'},
+    [1] = {
+        'ACH_AMER',
+        'ACH_TROLL', 
+        'ACH_CYRUS', 
+        'ACH_RADIO', 
+        'ACH_ASPEED_1',
+        'ACH_TIGER',
+        'ACH_JERRY',
+        'ACH_CARGO',
+        'ACH_ASPEED_2',
+    },
 };
 
 achievsCategoryName = { 
