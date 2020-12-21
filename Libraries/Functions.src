@@ -175,6 +175,15 @@ repeat
  wait(0$1);
  enemy := ScanBase(side, area);
 
+ if not mc_bases[base] or mc_bases[base] = [] then
+    begin
+    for i in solds do
+        ComStop(i);
+
+    solds := [];
+    exit;
+    end;
+
  if not enemy or enemy > 3 or mc_defender[base] then
     begin
     for i in solds do
@@ -249,6 +258,15 @@ repeat
  wait(0$1);
  enemy := mc_scan[base];
 
+ if not mc_bases[base] or mc_bases[base] = [] then
+    begin
+    for i in defenders do
+        ComStop(i);
+
+    defenders := [];
+    exit;
+    end;
+
  for i in defenders do
      begin
      e := NearestUnitToUnit(enemy, i);
@@ -305,7 +323,7 @@ repeat
      if IsDead(i) then
         defenders := defenders diff i;
      end;
-until not enemy or not defenders;
+until not enemy or not defenders or not mc_bases[base];
 
 MC_Reset(base, 18);
 defenders := defenders diff UnitFilter(defenders, [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
@@ -327,6 +345,15 @@ if not enemy and UnitFilter(defenders, [f_type, unit_vehicle]) then
    repeat
     wait(0$1);
 
+    if not mc_bases[base] or mc_bases[base] = [] then
+       begin
+       for i in defenders do
+           ComStop(i);
+
+       defenders := [];
+       exit;
+       end;
+
     for i in defenders do
         begin
         if not IsInArea(i, mc_parking[base]) then
@@ -336,7 +363,7 @@ if not enemy and UnitFilter(defenders, [f_type, unit_vehicle]) then
             if IsDrivenBy(i) then
                ComExitVehicle(IsDrivenBy(i));
         end;
-   until UnitFilter(defenders, [f_inarea, mc_parking[base]]) = defenders or mc_scan[base];
+   until UnitFilter(defenders, [f_inarea, mc_parking[base]]) = defenders or mc_scan[base] or not mc_bases[base];
 
    end;
 

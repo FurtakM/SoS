@@ -363,17 +363,16 @@ Every 0$2+0$5 trigger americanDestroyed do
 var i, tmp, speaker;
 begin
 MC_Kill(4);
+SetAttitude(1, 7, att_friend, true);
 
 speaker := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_nation, 1]]) diff [Powell, Gladstone, Cyrus, Bobby, Gary, Houten];
 
 if speaker then
    begin
    DialogueOn;
-   Say(speaker[1], 'DSurrenderAmericans-Sol1-1a');
+   SayRadio(speaker[1], 'DSurrenderAmericans-Sol1-1a');
    DialogueOff;
    end;
-
-SetAttitude(1, 7, att_friend, true);
 
 tmp := FilterAllUnits([[f_side, 1], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [control_manual]]);
 
@@ -402,6 +401,7 @@ repeat
 until IsDead(Yakotich);
 
 MC_Kill(2);
+SetAttitude(3, 7, att_friend, true);
 
 speaker := FilterAllUnits([[f_side, 3], [f_sex, sex_male], [f_nation, 3]]) diff [Platonov, Yakotich];
 
@@ -410,14 +410,12 @@ if speaker then
    DialogueOn;
 
    if Burlak then
-      Say(speaker[1], 'DSurrenderRussians-RSol1-1')
+      SayRadio(speaker[1], 'DSurrenderRussians-RSol1-1')
    else
-      Say(speaker[1], 'DSurrenderRussians-RSol1-1a');
+      SayRadio(speaker[1], 'DSurrenderRussians-RSol1-1a');
 
    DialogueOff;
    end;
-
-SetAttitude(3, 7, att_friend, true);
 
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [control_manual]]);
 
@@ -447,8 +445,7 @@ arabianDestroyed := true;
 Every 0$1 trigger arabianDestroyed do
 var i, tmp;
 begin
-MC_Kill(1);
-
+MC_Kill(1);  
 SetAttitude(2, 7, att_friend, true);
 
 tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [control_manual]]);
@@ -474,10 +471,11 @@ Every 0$1 trigger legionDestroyed do
 var i, tmp;
 begin
 MC_Kill(3);
-
-SayRadio(Schulz, 'D15-Szulc-1');
-
 SetAttitude(8, 7, att_friend, true);
+
+DialogueOn;
+SayRadio(Schulz, 'D15-Szulc-1');
+DialogueOff;
 
 for i in FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_nation, 3]]) do
     DestroyUnit(i);
@@ -502,7 +500,11 @@ End;
 
 // win
 Every 0$3 trigger americanDestroyed and russianDestroyed and legionDestroyed and arabianDestroyed do
+var med1, med2;
 begin
+music_class := 5;
+music_nat := 5;
+
 CenterNowOnUnits(JMM);
 
 InGameOn;
@@ -569,9 +571,6 @@ if Houten and GetSide(Houten) = 7 and IsPlaced(Houten) then
 if Dolgov and IsPlaced(Dolgov) then
    Say(Dolgov, 'DEnd-JMM-Dol-1');
 
-if Dolgov and IsPlaced(Dolgov) then
-   Say(Dolgov, 'DEnd-JMM-Dol-1');
-
 if Kapitsova and IsPlaced(Kapitsova) then
    Say(Kapitsova, 'DEnd-JMM-Kap-1');
 
@@ -605,10 +604,32 @@ if Kirilenkova and IsPlaced(Kirilenkova) and Burlak then
 if Burlak then
    Say(JMM, 'DEnd-Burlak-JMM-1');
 
+dwait(0$2);
+
+SayRadio(Schulz, 'DEnd-Szulc');
+
+dwait(0$1);
+
+if IsLive(Burlak) then
+   med1 := 1
+else
+   med1 := -1;
+
+if artifactIResearched and artifactIIResearched and artifactIIIResearched then
+   med2 := 1
+else
+   med2 := -1;
+
 AddMedal('Hero', 1);
-AddMedal('Artefact', [-1, 1][artifactIResearched and artifactIIResearched and artifactIIIResearched]);
-AddMedal('ReconcileBurlak', [-1, 1][IsLive(Burlak)]);
+AddMedal('Artefact', med2);
+AddMedal('ReconcileBurlak', med1);
 
 GiveMedals('MAIN');
+
+InGameOff;
+DialogueOff;
+
+music_nat := 1;
+music_class := 4;
 YouWin;
 End;
