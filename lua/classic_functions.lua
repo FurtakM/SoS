@@ -713,7 +713,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.background = getElementEX(
         nil,
         anchorNone,
-        XYWH(0, 0, LayoutWidth, LayoutHeight),
+        XYWH(0, 0, ScrWidth, ScrHeight),
         false,
         {
             colour1 = WHITEA()
