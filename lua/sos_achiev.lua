@@ -448,6 +448,10 @@ function displayAchivementWindow(NAME)
 		return;
 	end;
 
+    if (checkAchieved(NAME, true)) then
+        return;
+    end;
+
     if (getX(achievWindowGain) == -300) then
     	setVisible(achievWindowGain, true);
     	setTexture(achievWindowGain.Image, 'SGUI/Achiev/' .. NAME .. '.png');
