@@ -681,5 +681,6 @@ function runCampaign(ID)
 
 	set_Callback(menu.window_campaign_tree.panel.sidebar.delete.ID, CALLBACK_MOUSEUP, 'deleteCampaign(' .. ID .. ');');
 
+	selectDifficulty(2);
 	OW_loadcampaign(menu.window_campaign_tree.panel.scrollbox.ID, camp);
 end;
