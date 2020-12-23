@@ -342,6 +342,9 @@ if not powell_happy then
 AddMedal('EarlySiberite', powell_happy);
 
 if powell_happy then
+   earlySib := true;
+
+if powell_happy then
    ChangeMissionObjectives('M3a')
   else
    ChangeMissionObjectives('M3b');
@@ -991,7 +994,7 @@ End;
 
 // END MISSION
 Every 0$1 trigger jmm_in_ovsyenko do
-var i, tmp, sib;
+var i, tmp, sib, m1, m2, m3;
 begin
 Wait(game_time); // MISSION TIME
 
@@ -1021,6 +1024,10 @@ until GetTerminalCargo >= 20 and FilterAllUnits([[f_side, 1], [f_type, unit_huma
 if not player_get_info then
    player_get_info := -1;
 
+m1 := player_get_info > 0;
+m2 := false;
+m3 := earlySib;
+
 AddMedal('Information', player_get_info);
 
 
@@ -1032,8 +1039,14 @@ sib := sib + GetCargo(tmp, mat_siberit);
 
 if sib < (2+Difficulty)*50 then
    AddMedal('MuchSiberite', -2 * Difficulty + 1)
-  else
+else
+   begin
    AddMedal('MuchSiberite', 1);
+   m2 := true;
+   end;
+
+if m1 and m2 and m3 and Difficulty = 3 then
+   SetAchievementEX('ACH_AMER', 9);
 
 GiveMedals('MAIN');
 RewardPeople(FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 8]]]));

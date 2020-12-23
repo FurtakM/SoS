@@ -472,8 +472,12 @@ for i in FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) do
 End;
 
 Every 0$01 trigger can_escape and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5) do
-var all_taken, tmp;
+var all_taken, tmp, m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 all_taken := (UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0);
 
 if not all_taken then
@@ -494,19 +498,31 @@ else
    Say(JMM, 'D5-JMM-1a');
 
 if all_taken then
-   AddMedal('All', 1)
+   begin
+   AddMedal('All', 1);
+   m1 := true;
+   end
 else
    AddMedal('All', -1);
 
 if team_kill_counter then
    AddMedal('Save', -1)
 else
+   begin
    AddMedal('Save', 1);
+   m2 := true;
+   end;
 
 if friends_kill_counter >= [2, 1, 1][Difficulty] then
    AddMedal('Friendship', -1)
 else
+   begin
    AddMedal('Friendship', 1);
+   m3 := true;
+   end;
+
+if m1 and m2 and m3 and Difficulty = 3 then
+   SetAchievementEX('ACH_AMER', 16);
 
 GiveMedals('MAIN');
 tmp := FilterAllUnits([[[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9]]]]);

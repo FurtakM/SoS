@@ -58,9 +58,14 @@ Every 5$1 + 10$0 trigger FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f
 begin
     enable;
                                                         
-    if Difficulty = 1 then BuildingVehicle(3, rubfact0, Difficulty + 2, [42, 42, 43], 1, 1, 21);
-    if Difficulty = 2 then BuildingVehicle(3, rubfact0, Difficulty + 2, [42, 42, 43, 43], 1, 1, [21, 22][Rand(1,2)]);
-    if Difficulty = 3 then BuildingVehicle(3, rubfact0, Difficulty + rand(2, 3), [43, 43, 43, 43, 44, 44], 1, 1, 22);
+    if Difficulty = 1 then 
+       BuildVehicle(3, rubfact0, Difficulty + 2, [42, 44, 43], 1, 1, 21);
+
+    if Difficulty = 2 then
+       BuildVehicle(3, rubfact0, Difficulty + 2, [44, 44, 43, 43], 1, 1, [21, 22][Rand(1,2)]);
+
+    if Difficulty = 3 then
+       BuildVehicle(3, rubfact0, Difficulty + rand(2, 3), [44, 44, 43], 1, 1, [ru_medium_tracked, ru_heavy_wheeled][rand(1,2)]);
 
 end;
 
@@ -94,3 +99,92 @@ begin
     AddComBuild(eng[1], b_breastwork, 50, 51, 4);
 
 end;
+
+Every 0$1 trigger ruMobile do
+var i, mech, enemy;
+begin
+enable;
+
+if not ruMobile then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in ruMobile do
+    begin
+    if not IsOk(i) or GetSide(i) <> 3 then
+       begin
+       ruMobile := ruMobile diff i;
+       continue;
+       end;
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 106, 88);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 106, 88) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, ruParking) then
+          ComMoveToArea(i, ruParking)
+       else
+          SetTag(i, 1);
+       end;
+
+    if GetTag(i) = 1 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 2);
+       end;
+
+    if GetTag(i) = 2 then
+       begin
+       enemy := FilterUnitsInArea(ruDefArea, [f_enemy, 3]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if ruMobile > 2 then
+          begin
+          enemy := FilterAllUnits([f_enemy, 3]);
+
+          if enemy then
+             if not HasTask(i) then
+                ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end;
+       end;
+    end;
+End;

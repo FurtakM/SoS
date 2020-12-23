@@ -1,14 +1,65 @@
 Every 10$0 do 
 begin
-    RespawnAttackInfantry(5, 3, 1 + [2, 3, 4][Difficulty], 0, 0, 0, 0, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 2);
+RespawnAttackInfantry(5, 3, 2 + [2, 3, 4][Difficulty], 0, 0, 0, 0, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 2);
 end;
 
 Every 20$0 do
 begin
-    RespawnAttackInfantry(5, 3, 3 + [2, 3, 4][Difficulty], 0, 0, 0, 2, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 1);
+RespawnAttackInfantry(5, 3, 4 + [2, 3, 4][Difficulty], 0, 0, 0, 2, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 1);
 end;
 
 Every 25$0 do
 begin
-    RespawnAttackVehicle(RussianAttack, 5, [3, 4, 5][Difficulty], rand(ruSoldMinLevel, ruSoldMaxLevel), 3, 1, 1, [ [42, 42, 43], [42, 43], [43, 43, 43, 44]  ][Difficulty], [], [], 1);
+if Difficulty > 1 then
+   specAttack := true;
+
+RespawnAttackVehicle(RussianAttack, 5, [4, 5, 6][Difficulty], rand(ruSoldMinLevel, ruSoldMaxLevel), 3, 1, 1, [ [42, 42, 43], [42, 43], [43, 43, 43, 44]  ][Difficulty], [], [], 1);
 end;
+
+Every 0$1 trigger specAttack do
+var un, tmp, i, eng;
+begin
+wait(0$20);
+
+uc_side := 5;
+uc_nation := 3;
+
+InitHc;
+hc_importance := 0;
+
+tmp := [];
+
+PrepareHuman(false, 2, 6);
+eng := CreateHuman;
+PlaceUnitXYR(eng, 78, 2, 4, false);
+
+for i = 1 to 2 + Difficulty do
+    begin
+    PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 78, 2, 4, false);
+
+    tmp := tmp ^ un;
+    end;
+
+ComMoveXY(tmp, 49, 3);
+
+wait(0$2);
+
+ComMoveXY(eng, 49, 3);
+AddComDismantle(eng, ambdept0);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i
+     else
+       if not HasTask(i) then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+until not tmp;
+
+End;

@@ -52,8 +52,11 @@ begin
 end;
 
 Export function FinishMission;
-var JMMNewVeh;
+var JMMNewVeh, m1, m2, m3;
 begin
+    m1 := false;
+    m2 := false;
+    m3 := false;
 
     SaveCharacters(JMM, '14_JMM');
 
@@ -92,61 +95,76 @@ begin
         case JMMGirl of
             1:begin
                 if IsOk(Joan) and GetSide(Joan) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Joan)) < 10)  then
-                begin
-                    SaveVariable(1, '14_JMMGirlStatus_1');
-                    SaveCharacters(Joan, '14_Joan');
-                    AddMedal('protect', 1)
-                end else
-                begin
-                    SaveVariable(0, '14_JMMGirlStatus_1');
-                    AddMedal('protect', -1);
+                   begin
+                   SaveVariable(1, '14_JMMGirlStatus_1');
+                   SaveCharacters(Joan, '14_Joan');
+                   AddMedal('protect', 1);
+                   m1 := true;
+                   end
+                else
+                   begin
+                   SaveVariable(0, '14_JMMGirlStatus_1');
+                   AddMedal('protect', -1);
                 end; 
             end;
 
             2:begin
                 if IsOk(Lisa) and GetSide(Lisa) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Lisa)) < 10)  then
-                begin
-                    SaveVariable(1, '14_JMMGirlStatus_1');
-                    SaveCharacters(Lisa, '14_Lisa');
-                    AddMedal('protect', 1)
-                end else
-                begin
-                    SaveVariable(0, '14_JMMGirlStatus_1');
-                    AddMedal('protect', -2);
-                end; 
+                   begin
+                   SaveVariable(1, '14_JMMGirlStatus_1');
+                   SaveCharacters(Lisa, '14_Lisa');
+                   AddMedal('protect', 1);
+                   m1 := true;
+                   end
+                else
+                   begin
+                   SaveVariable(0, '14_JMMGirlStatus_1');
+                   AddMedal('protect', -2);
+                   end;
             end;
 
             3:begin
                 if IsOk(Connie) and GetSide(Connie) = 1 and (FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 or GetDistUnits(IsInUnit(JMM), IsInUnit(Connie)) < 10)  then
-                begin
-                    SaveVariable(1, '14_JMMGirlStatus_1');
-                    SaveCharacters(Connie, '14_Connie');
-                    AddMedal('protect', 1)
-                end else 
-                begin
-                    SaveVariable(0, '14_JMMGirlStatus_1');
-                    AddMedal('protect', -3);
+                   begin
+                   SaveVariable(1, '14_JMMGirlStatus_1');
+                   SaveCharacters(Connie, '14_Connie');
+                   AddMedal('protect', 1);
+                   m1 := true;
+                   end
+                else
+                   begin
+                   SaveVariable(0, '14_JMMGirlStatus_1');
+                   AddMedal('protect', -3);
                 end;
             end;
 
         end;
         
         if amLaserCounter >= 2 then
-        begin 
-            AddMedal('double', 1)
-        end else
-        begin
-            if amLaserCounter = 1 then AddMedal('double', -2)
-            else AddMedal('double', -1);
-        end;
-            
-
-        if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 then 
-            AddMedal('base', 1)
+           begin
+           AddMedal('double', 1);
+           m2 := true;
+           end
         else
-            AddMedal('base', -1);
+           begin
+           if amLaserCounter = 1 then
+              AddMedal('double', -2)
+           else
+              AddMedal('double', -1);
+           end;              
+
+        if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 then
+           begin
+           AddMedal('base', 1);
+           m3 := true;
+           end
+        else
+           AddMedal('base', -1);
             
     end;
+
+    if m1 and m2 and m3 and Difficulty = 3 then
+       SetAchievementEX('ACH_AMER', 14);
 
     GiveMedals('Eliminate');
 

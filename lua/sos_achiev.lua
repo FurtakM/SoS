@@ -280,7 +280,7 @@ achievsCategoryName = {
 achievWindowGain = getElementEX(
     nil,
     anchorLT,
-    XYWH(-300, 180, 300, 85),
+    XYWH(-300, 250, 300, 85),
     false,
     {
         colour1 = RGB(0, 0, 0),
@@ -335,7 +335,7 @@ achievWindowGain.Name = getLabelEX(
 achievWindowGain2 = getElementEX(
     nil,
     anchorLT,
-    XYWH(-300, 266, 300, 85),
+    XYWH(-300, 336, 300, 85),
     false,
     {
         colour1 = RGB(0, 0, 0),
@@ -390,7 +390,7 @@ achievWindowGain2.Name = getLabelEX(
 achievWindowGain3 = getElementEX(
     nil,
     anchorLT,
-    XYWH(-300, 352, 300, 85),
+    XYWH(-300, 422, 300, 85),
     false,
     {
         colour1 = RGB(0, 0, 0),

@@ -35,19 +35,44 @@ end;
 
 
 Export function FinishMission;
+var m1, m2, m3;
 begin
+    m1 := false;
+    m2 := false;
+    m3 := false;
+
     if teleportExplored = 1 then
-       AddMedal('Teleport', 1)
+       begin
+       m1 := true;
+       AddMedal('Teleport', 1);
+       end
     else
        AddMedal('Teleport', -1);
 
-    if sciCounter > 2 then AddMedal('Materials', 1)
-    else AddMedal('Materials', -1);
+    if sciCounter > 2 then
+       begin
+       m2 := true;
+       AddMedal('Materials', 1);
+       end
+    else
+       AddMedal('Materials', -1);
 
-    if sciCounter = 6 then begin AddMedal('Scientists', 1); SaveVariable(1, '12_SciDed_1');
-    end else begin AddMedal('Scientists', -1); SaveVariable(0, '12_SciDed_1'); end;
+    if sciCounter = 6 then
+       begin
+       m3 := true;
+       AddMedal('Scientists', 1);
+       SaveVariable(1, '12_SciDed_1');
+       end
+    else
+       begin
+       AddMedal('Scientists', -1);
+       SaveVariable(0, '12_SciDed_1');
+       end;
 
     SaveVariable(fakeInfo, '12_MainDepositFake_1');
+
+    if m1 and m2 and m3 and Difficulty = 3 then
+       SetAchievementEX('ACH_AMER', 12);
 
     GiveMedals('MAIN');
 

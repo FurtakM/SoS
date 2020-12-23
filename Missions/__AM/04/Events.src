@@ -112,10 +112,13 @@ begin
 if unit = JMM then
    YouLost('JMM');
 
+if unit in ruMobile then
+   ruMobile = ruMobile diff ruMobile;
+
 if GetType(unit) = unit_human and GetSide(unit) = 1 then
    lostCounter = lostCounter + 1;
 
-if GetClass(unit) = 3 and GetSide(unit) = 3 and IsOK(rubfact0) and GetSide(rubfact0) = 3 then
+if UnitsInside(rubfact0) < 6 and GetClass(unit) = 3 and GetSide(unit) = 3 and IsOK(rubfact0) and GetSide(rubfact0) = 3 then
    begin
    uc_side = 3;
    uc_nation = 3;
@@ -126,7 +129,7 @@ if GetClass(unit) = 3 and GetSide(unit) = 3 and IsOK(rubfact0) and GetSide(rubfa
    PrepareMechanic(false, rand(RuSoldMinLevel, RuSoldMaxLevel));
    mech := CreateHuman;
 
-   PlaceUnitXYR(mech, 124, 97, 3, false);
+   PlaceUnitXY(mech, 124, 97, false);
    ComEnterUnit(mech, rubfact0);
    end;
 End;
@@ -137,19 +140,22 @@ begin
      tmp = FilterAllUnits([f_side, 1]);
 
      if side1 = 1 and side2 = 6 and donaldsonCoopAttack = 1 then
-     begin
-          donaldsonCoopAttack = 0;
-          for i in FilterAllUnits([[f_side, 4]]) do ComAgressiveMove(i, 52, 64);
+        begin
+        donaldsonCoopAttack = 0;
 
-     end;
-
-end;
+        for i in FilterAllUnits([[f_side, 4]]) do
+            ComAgressiveMove(i, 52, 64);
+        end; 
+End;
 
 On VehicleConstructed(vehicle, building) do
 var driver;
 begin
     if GetSide(vehicle) = 1 then
        vehicleProduceCounter := vehicleProduceCounter + 1;
+
+    if GetSide(vehicle) = 3 and GetWeapon(vehicle) in [ru_heavy_machine_gun, ru_gatling_gun, ru_gun] then
+       ruMobile := ruMobile union vehicle;
 
     if GetWeapon(vehicle) = 53 then
     begin
@@ -161,9 +167,16 @@ begin
         PlaceHumanInUnit(driver, building);
 
         CutTreeInArea(vehicle, TreesArea);
-        AddComMoveXY(vehicle, 104, 73);
+
+        repeat
+         wait(0$1);
+        until not HasTask(vehicle);
+
+        driver := IsDrivenBy(vehicle);
+
+        AddComMoveXY(driver, 104, 73);
         AddComExitVehicle(driver);
-        AddComEnterUnit(driver, FilterAllUnits([[f_side, 3], [f_btype, b_factory]])[1]);
+        AddComEnterUnit(driver, rubfact0);
     end;
 
 end;
@@ -178,35 +191,37 @@ end;
 
 On LeaveVehicle(vehicle, human) Do
 begin
-    If GetSide(vehicle) = 3 and GetSide(human) = 3 and IsOk(vehicle) then
-    begin
-        ComRepairVehicle(human, vehicle);
-        AddComEnterUnit(human, vehicle);
-        SetFuel(vehicle, 100);
-    end;
+if GetSide(vehicle) = 3 and GetSide(human) = 3 and IsOK(rubfact0) and NOT IsOk(vehicle) then
+   ComEnterUnit(human, rubfact0);
+End;
 
-    If GetSide(vehicle) = 3 and GetSide(human) = 3 and IsOK(rubfact0) and NOT IsOk(vehicle) then
-       ComEnterUnit(human, rubfact0);
-
-end;
+On EnterBuilding(b, un) do
+begin
+if b = rubfact0 and GetLives(un) < 1000 then
+   SetLives(un, 1000);
+End;
 
 On Command(comandid) do
 var i, j, tmp;
 begin
-        for i in FilterAllUnits([[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
-        begin
+SOS_Command(comandid);
 
-            if GetTaskList(i) > 0 then
-            begin
+if not FilterAllUnits([f_side, 4]) then
+   exit;
 
-                for j = 1 to GetTaskList(i) do
-                begin
-                    tmp = GetTaskList(i)[j][4];
-                    if (GetSide(tmp) = 4 or GetSide(tmp) = 0) then
-                        ComStop(i);
-                end;
-            end;
-        end;
-end;
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+    begin
+    if GetTaskList(i) > 0 then
+       begin
+       for j = 1 to GetTaskList(i) do
+           begin
+           tmp = GetTaskList(i)[j][4];
+
+           if (GetSide(tmp) = 4 or GetSide(tmp) = 0) then
+               ComStop(i);
+           end;
+       end;
+    end;
+End;
 
 

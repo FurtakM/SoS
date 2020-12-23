@@ -356,18 +356,31 @@ YouLost('Lab');
 
 // End mission
 Every 0$1 trigger FilterUnitsInArea(endMissionArea, [f_side, 7]) >= 2 and FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]) and canEnd and planCaptured and artifactPickedUp do
+var m1, m2;
 begin
+m1 := false;
+m2 := false;
+
 AddMedal('Explosion', 1);
 
 if enteredContaminatedArea then
-   AddMedal('BioHazard', 1)
+   begin
+   m1 := true;
+   AddMedal('BioHazard', 1);
+   end
 else
    AddMedal('BioHazard', -1);
 
 if missionTime <= [20$00, 15$00, 12$00][Difficulty] then
-   AddMedal('Speed', 1)
+   begin
+   m2 := true;
+   AddMedal('Speed', 1);
+   end
 else
    AddMedal('Speed', -1);
+
+if Difficulty = 3 and m1 and m2 then
+   SetAchievementEX('ACH_AMER', 18);
 
 GiveMedals('Main');
 
