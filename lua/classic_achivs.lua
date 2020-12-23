@@ -31,6 +31,11 @@ function displayAchivsByCategory(category)
 
     sgui_deletechildren(menu.window_achivs.panel.scroll.ID);
 
+    achievAllGained = 0;
+    achievAllTotal = 0;
+    achievGained = 0;
+    achievTotal = 0;
+
     for i, _ in pairs(achievsCategory) do
         local categoryCount = 0;
 
@@ -41,6 +46,19 @@ function displayAchivsByCategory(category)
         if categoryCount > 0 then
             for j, k in pairs(achievsCategory[i]) do
                 achieved = checkAchieved(k, true);
+                achievAllTotal = achievAllTotal + 1;
+
+                if achieved then
+                    achievAllGained = achievAllGained + 1;
+                end;
+
+                if (i == category) then
+                    achievTotal = achievTotal + 1;
+                    
+                    if achieved then
+                        achievGained = achievGained + 1;
+                    end;
+                end;
 
            		menu.window_achivs.panel.scroll.row = getElementEX(
                     menu.window_achivs.panel.scroll, 
@@ -197,9 +215,15 @@ function displayAchivsByCategory(category)
                 end;
 
                 index = index + 1;
-            end;            
+            end;          
         end;
     end;
+
+    if category == 0 then
+        updateAchievCounter(achievAllGained, achievAllTotal);
+    else
+        updateAchievCounter(achievGained, achievTotal);
+    end;  
 end;
 
 function achivCategoryButton(X, Y, CAPTION, EVENT, CATEGORY)
@@ -231,6 +255,23 @@ menu.window_achivs = getElementEX(
     false, 
     {
         colour1 = WHITEA(0)
+    }
+);
+
+menu.window_achivs.counter = getLabelEX(
+    menu.window_achivs, 
+    anchorR, 
+    XYWH(880, 32, 120, 18),
+    nil, 
+    '0/0',
+    {
+        nomouseevent = true,
+        font_colour = RGBA(255, 255, 255, 255),
+        text_halign = ALIGN_MIDDLE,
+        font_name = Trebuchet_18,
+        wordwrap = false,
+        scissor = true,
+        colour1 = RGB(140, 130, 99)
     }
 );
 
@@ -304,3 +345,7 @@ menu.window_achivs.panel.scrollV = getScrollBarEX_WithButtons2(
     false,
     {}
 );
+
+function updateAchievCounter(VALUE, TOTAL_VALUE)
+    setText(menu.window_achivs.counter, VALUE .. '/' .. TOTAL_VALUE .. ' (' .. math.floor((100 * VALUE) / TOTAL_VALUE) .. '%)');
+end;

@@ -14,11 +14,20 @@ begin
 end;
 
 Export function FinishMission(crates);
+var m1, m2, m3;
 begin
+    if killCounter = 0 then
+       SetAchievement('ACH_SURV');
+
+    m1 := false;
+    m2 := false;
+    m3 := false;
+
     if crates + 100 > crates then
     begin
         AddMedal('cans', 1);
         SaveVariable(1, '06_crates_1');
+        m1 := true;
     end else begin
         AddMedal('cans', -1);
         SaveVariable(0, '06_crates_1');
@@ -27,6 +36,7 @@ begin
     if unitLost < 3 then
     begin
         AddMedal('people', 1);
+        m2 := true;
     end else begin
         AddMedal('people', -1);
     end;
@@ -36,6 +46,7 @@ begin
     if remoteVehiclesBuild = 1 then
     begin
         AddMedal('remote', 1);
+        m3 := true;
     end else begin
         if GetTech(18, 1) = state_enabled then
         begin
@@ -45,6 +56,15 @@ begin
             AddMedal('remote', - 2);
         end;
     end;
+
+    if m1 and m2 and m3 then
+       begin
+       wait(3);
+       SetAchievement('ACH_ASPEED_6');
+       end;
+
+    if Difficulty = 3 and m1 and m2 and m3 then
+       SetAchievementEX('ACH_AMER', 6);
 
     SaveVariable(KurtStatus, '06_KurtStatus_1');
 

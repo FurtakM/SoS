@@ -1,5 +1,5 @@
 Export Function Action;
-var un, gamemode;
+var un, gamemode, speaker;
 begin    
 Difficulty := GetMultiplayerSetting(0);
 gamemode := GetMultiplayerSetting(1);
@@ -49,21 +49,40 @@ InGameOn;
    hc_face_number := 1;
    us_guy := CreateHuman;
 
-   hc_gallery := '';
-   hc_name := '';
+   InitHc;
+
+   if rand(0,1) then
+      PrepareHuman(sex_male, 3, 6)
+   else
+      PrepareHuman(sex_female, 4, 8);
 
    ComTurnUnit(un, us_commander);
    ComTurnUnit(us_commander, un);
 
-   Say(un, 'VD-un1');
-   Say(us_commander, 'VDc-1');
-   Say(un, 'VD-un2');
-   Say(us_commander, 'VDc-2');
-   Say(un, 'VD-un3');
+   if GetSex(un) = sex_male then
+      begin
+      Say(un, 'VD-un1');
+      Say(us_commander, 'VDc-1');
+      Say(un, 'VD-un2');
+      Say(us_commander, 'VDc-2');
+      Say(un, 'VD-un3');
 
-   Wait(0$0.2);
+      wait(0$0.2);
 
-   Say(un, 'VD-un4');
+      Say(un, 'VD-un4');
+      end
+   else
+      begin
+      Say(un, 'VD-unf1');
+      Say(us_commander, 'VDc-1');
+      Say(un, 'VD-unf2');
+      Say(us_commander, 'VDc-2');
+      Say(un, 'VD-unf3');
+
+      wait(0$0.2);
+
+      Say(un, 'VD-unf4');
+      end;
 
    ComMoveXY(un, 2, 2);
 
@@ -85,33 +104,59 @@ if your_side = 2 then
 begin
 CenterNowOnUnits(player_commander);
 
-InGameOn;
+speaker := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff ar_commander;
 
-Say(ar_commander, 'VSd-1');
-Say(FilterAllUnits([[[f_side, 2], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VAd-1');
-Say(ar_commander, 'VSd-2');
-Say(FilterAllUnits([[[f_side, 2], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VAd-2');
-Say(ar_commander, 'VSd-3');
+if speaker then
+   begin
+   InGameOn;
 
-InGameOff;
+   Say(ar_commander, 'VSd-1');
+
+   if GetSex(speaker[1]) = sex_male then
+      Say(speaker[1], 'VAd-1')
+   else
+      Say(speaker[1], 'VAfd-1');
+
+   Say(ar_commander, 'VSd-2');
+
+   if GetSex(speaker[1]) = sex_male then
+      Say(speaker[1], 'VAd-2')
+   else
+      Say(speaker[1], 'VAfd-2');
+
+   Say(ar_commander, 'VSd-3');
+
+   InGameOff;
+   end;
 
 ChangeMissionObjectives('CVulc5');
 end
  else
 
 if your_side = 7 then
-begin    
-CenterNowOnUnits(al_commander);
+begin
+speaker := FilterAllUnits([[f_side, 7], [f_type, unit_human]]) diff al_commander;
 
-InGameOn;
-Say(al_commander, 'VPd-1');
-Say(FilterAllUnits([[[f_side, 7], [f_type, unit_human], [f_sex, sex_male]]])[2], 'VPpd-1');
-Say(al_commander, 'VPd-2');
-InGameOff;
+if speaker then
+   begin
+   CenterNowOnUnits(al_commander);
+
+   InGameOn;
+   Say(al_commander, 'VPd-1');
+
+   if GetSex(speaker[1]) then
+      Say(speaker[1], 'VPpd-1')
+   else
+      Say(speaker[1], 'VPpdf-1');
+
+   Say(al_commander, 'VPd-2');
+   InGameOff;
+   end;
 
 ChangeMissionObjectives('CVulc7');
 end;
 
+SaveForQuickRestart;
 End;
 
 
@@ -124,15 +169,26 @@ ru_can_attack := true;
 End;
 
 Every 0$01 trigger GetSide(us_depot) = 1 or FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_factory], [f_btype, b_warehouse]]]) do
+var speaker;
 begin
 ChangeMissionObjectives('CVulc2');
 
+speaker := FilterAllUnits([[f_side, 1], [f_class, 2]]) diff us_commander;
+
 DialogueOn;
 DWait(0$0.3);
-Say((FilterAllUnits([[f_side, 1], [f_class, 2]]) diff us_commander)[1], 'VDb-1');
+
+if GetSex(speaker[1]) = sex_male then
+   Say(speaker[1], 'VDb-1')
+else
+   Say(speaker[1], 'VDbf-1');
 
 DWait(0$0.3);
-Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VDb-2');
+
+if GetSex(speaker[1]) = sex_male then
+   Say(speaker[1], 'VDb-2')
+else
+   Say(speaker[1], 'VDbf-2');
 
 DWait(0$01);
 Say(us_commander, 'VDb-com1');
@@ -151,15 +207,28 @@ End;
 
 
 Every 0$01 trigger GetSide(us_lab) = 1 do
+var speaker;
 begin
+speaker := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
 DialogueOn;
-Say(FilterAllUnits([[f_side, 1], [f_class, 2]])[1], 'VDe-1');
+
+if speaker then
+   if GetSex(speaker[1]) = sex_male then
+      Say(speaker[1], 'VDe-1')
+   else
+      Say(speaker[1], 'VDef-1');
 
 Case Query('SibNote') of
 1: ;
 End;
 
-Say(FilterAllUnits([[f_side, 1], [f_class, 2]])[1], 'VDe-2');
+if speaker then
+   if GetSex(speaker[1]) = sex_male then
+      Say(speaker[1], 'VDe-2')
+   else
+      Say(speaker[1], 'VDef-2');
+
 Say(us_commander, 'VDc-4');
 DialogueOff;
 
@@ -229,13 +298,29 @@ filter := FilterAllUnits([[f_side, your_side],
 un := NearestUnitToXY(filter, 112, 67);
 
 if GetSide(un) = 7 then
-   Say(un, 'VD-find-al');
+   if GetSex(un) = sex_male then
+      Say(un, 'VD-find-al')
+   else
+      Say(un, 'VD-find-al-f');
+
 if GetSide(un) = 2 then
-   Say(un, 'VD-find-ar');
+   if GetSex(un) = sex_male then
+      Say(un, 'VD-find-ar')
+   else
+      Say(un, 'VD-find-ar-f');
+
 if GetSide(un) = 1 then
    begin
-   Say(un, 'VD-find-us');
-   Say(un, 'VD-find-us2');
+   if GetSex(un) = sex_male then
+      begin
+      Say(un, 'VD-find-us');
+      Say(un, 'VD-find-us2');
+      end
+     else
+      begin
+      Say(un, 'VD-find-us-f');
+      Say(un, 'VD-find-us2-f');
+      end;
    end;
 
 Wait(0$0.3);
@@ -245,29 +330,67 @@ End;
 
 // player res artifact
 Every 0$01 trigger player_artifact_ready do
+var speaker;
 begin
 
   // us
      if your_side = 1 then
         begin
-        Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VD-us-sci-art-1');
+        speaker := FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander;
+
+        if not speaker then
+           exit;
+
+        if GetSex(speaker[1]) = sex_male then
+           Say(speaker[1], 'VD-us-sci-art-1')
+        else
+           Say(speaker[1], 'VD-us-fsci-art-1');
+
         Say(us_commander, 'VDc-art1');
-        Say((FilterAllUnits([[f_side, 1], [f_class, 4]]) diff us_commander)[1], 'VD-us-sci-art-2');
+
+        if GetSex(speaker[1]) = sex_male then
+           Say(speaker[1], 'VD-us-sci-art-2')
+        else
+           Say(speaker[1], 'VD-us-fsci-art-2');
+
         Say(us_commander, 'VDc-art2');
         end;
   // ar
      if your_side = 2 then
         begin
-        Say(FilterAllUnits([[f_side, 2], [f_class, 4]])[1], 'VD-ar-sci-art-1');
+        speaker := FilterAllUnits([[f_side, 2], [f_class, 4]]) diff ar_commander;
+
+        if not speaker then
+           exit;
+
+        if GetSex(speaker[1]) = sex_male then
+           Say(speaker[1], 'VD-ar-sci-art-1')
+        else
+           Say(speaker[1], 'VD-ar-fsci-art-1');
         end;
 
   // al
      if your_side = 7 then
         begin
-        Say((FilterAllUnits([[f_side, 7], [f_class, 4]]) diff al_commander)[1], 'VD-al-sci-art-1');
-        Say(al_commander, 'VPd-art-1');
-        Say((FilterAllUnits([[f_side, 7], [f_class, 4]]) diff al_commander)[1], 'VD-al-sci-art-2');
-        Say(al_commander, 'VPd-art-2');
+        speaker := FilterAllUnits([[f_side, 7], [f_class, 4]]) diff al_commander;
+
+        if speaker then
+           begin
+           if GetSex(speaker[1]) = sex_male then
+              Say(speaker[1], 'VD-al-sci-art-1')
+           else
+              Say(speaker[1], 'VD-al-fsci-art-1');
+
+           Say(al_commander, 'VPd-art-1');
+
+           if GetSex(speaker[1]) = sex_male then
+              Say(speaker[1], 'VD-al-sci-art-2')
+           else
+              Say(speaker[1], 'VD-al-fsci-art-2');
+
+           Say(al_commander, 'VPd-art-2');
+           end;
+
         ChangeMissionObjectives('CVulc7out');
         end;
 
@@ -275,11 +398,22 @@ End;
 
 // player spot legion
 Every 0$01 trigger See(8, NearestUnitToSide(FilterAllUnits([f_side, your_side]), 8)) do
+var speaker;
 begin
 if your_side = 1 then
-   Say((FilterAllUnits([f_side, 1]) diff us_commander)[1], 'VD-legion-us');
+   begin
+   speaker := FilterAllUnits([f_side, 1]) diff us_commander;
+
+   if speaker then
+      if GetSex(speaker[1]) then
+         Say(speaker[1], 'VD-legion-us')
+      else
+         Say(speaker[1], 'VD-legion-us-f');
+   end;
+
 if your_side = 2 then
    Say(ar_commander, 'VD-legion-ar');
+
 if your_side = 7 then
    Say(al_commander, 'VD-legion-al');
 End;

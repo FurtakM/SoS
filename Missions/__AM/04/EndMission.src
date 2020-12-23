@@ -49,14 +49,28 @@ end;
 // Finish mission
 
 Export function FinishMission;
-var tmp;
+var tmp, m1, m2, m3;
 begin
+        if not vehicleProduceCounter then
+           SetAchievement('ACH_INFANTRY');
+
+        if tick <= 15$00 then
+           begin
+           wait(3);
+           SetAchievement('ACH_ASPEED_4');
+           end;
+
         SaveBase(GammBaseArea);
         SaveVariable(GetTech(tech_gatling, 1), 'GatlingInGamma');
 
+        m1 := false;
+        m2 := false;
+        m3 := false;
+
         if buildOil = 1 and buildPower = 1 then
         begin
-                AddMedal('oil', 1);
+        AddMedal('oil', 1);
+        m1 := true;
         end else
         begin
                 if buildOil = 1 and buildPower = 0 then AddMedal('oil', -1);
@@ -64,11 +78,26 @@ begin
                 if buildOil = 0 and buildPower = 0 then AddMedal('oil', -3);
         end;
 
-        if lostCounter > 3 then begin AddMedal('deaths', -1);
-        end else begin AddMedal('deaths', 1); end;
+        if lostCounter > 3 then
+           AddMedal('deaths', -1)
+        else
+           begin
+           AddMedal('deaths', 1);
+           m2 := true;
+           end;
 
-        if honor = 1 then begin AddMedal('honour', 1);
-        end else begin AddMedal('honour', -1); end;
+        if honor = 1 then
+           begin
+           AddMedal('honour', 1);
+           m3 := true;
+           end
+        else
+           begin
+           AddMedal('honour', -1);
+           end;
+
+        if m1 and m2 and m3 and Difficulty = 3 then
+           SetAchievementEX('ACH_AMER', 4);
 
         GiveMedals('Main');
 
@@ -83,7 +112,8 @@ begin
         If IsOK(Frank) then SaveCharacters(Frank, mission_prefix&'Frank');
 
         SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Brown, Donaldson, Frank],'04_other_survivors');
-        
+
+        SetAchievementEX('ACH_AMER', 4);
         YouWin;
 
 end;

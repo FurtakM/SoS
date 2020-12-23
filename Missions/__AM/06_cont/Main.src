@@ -50,7 +50,7 @@ Export debugMode;
 
 Export mission_prefix, mission_prefix_prev;
 
-Export ignoreTarget, arrivals;
+Export ignoreTarget, arrivals, killCounter;
 
 Starting
 begin
@@ -80,6 +80,8 @@ begin
     readyToEscape = 0; // 0 - can't escape, 1  - can escape from map
 
     JoanStatus = 0; // 0 - no spawn, die , 1 - survive
+
+    killCounter := 0;
 
     cratesStatus = 2; // 1 - many crates, 2 - rare crates
 
@@ -127,3 +129,9 @@ begin
     If IsSelected(rudepo) then your_side = 3;
     If IsSelected(JMM) then your_side = 1;
 end;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 do
+SetAchievement('ACH_BASEDESTROYER');
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]]) >= 3 do
+SetAchievement('ACH_FULLCARGO');

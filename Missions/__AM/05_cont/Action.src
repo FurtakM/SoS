@@ -289,34 +289,54 @@ End;
 
 // End Mission
 Every 0$1 trigger end_mission do
-var i, tmp;
+var i, tmp, m1, m2, m3;
 begin
+
+if apeKillCounter = 0 then
+   SetAchievement('ACH_APEKILLER');
 
 if FilterAllUnits([f_side, 2]) then  // delete trash from map
    for i in FilterAllUnits([f_side, 2]) do
        RemoveUnit(i);
 
 // medals
+m1 := false;
+m2 := false;
+m3 := false;
+
 if apeman_army then
-   AddMedal('Tame', 1)
-  else
+   begin
+   AddMedal('Tame', 1);
+   m1 := true;
+   end
+else
    AddMedal('Tame', -1);
 
 if radar_researched then
    begin
    SaveVariable(true, 'radarResInDelta');
    AddMedal('Radar', 1);
+   m2 := true;
    end
-  else
+else
    if radar_allowed then
       AddMedal('Radar', -2)
      else
       AddMedal('Radar', -1);
 
 if radar_builded then
-   AddMedal('BuildRadar', 1)
-  else
+   begin
+   AddMedal('BuildRadar', 1);
+   m3 := true;
+   end
+else
    AddMedal('BuildRadar', -1);
+
+if tick <= 7$00 then
+   SetAchievement('ACH_ASPEED_5');
+
+if m1 and m2 and m3 and Difficulty = 3 then
+   SetAchievementEX('ACH_AMER', 5);
 
 GiveMedals('MAIN');
 
