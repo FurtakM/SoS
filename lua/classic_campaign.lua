@@ -261,6 +261,12 @@ function parseCampaings()
 	};
 end;
 
+function startGame()
+	showCampaign(0);
+	showMenuButton(1);
+	OW_camprun();
+end;
+
 menu.window_campaign = getElementEX(
     menu, 
     anchorNone, 
@@ -474,7 +480,7 @@ menu.window_campaign_tree.panel.sidebar.run = button(
 	menu.window_campaign_tree.panel.sidebar.width - 40,
 	20,
 	'',
-	'OW_camprun();',
+	'startGame();',
     {
     	skintype = SKINTYPE_BUTTON,
     	font_colour = WHITE(),

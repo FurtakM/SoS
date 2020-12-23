@@ -582,7 +582,7 @@ menu.window_options.panel.graphics_grap = getLabelEX(
 menu.window_options.panel.grap_label = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(509, 64, 200, 15),
+    XYWH(509, 64, 230, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Transparency_Fill_Short),
     {
@@ -592,7 +592,7 @@ menu.window_options.panel.grap_label = getLabelEX(
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
         wordwrap = false,
-        scissor = true
+        scissor = true,
     }
 );
 
@@ -924,14 +924,14 @@ menu.window_options.panel.behaviour_label = getLabelEX(
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
         wordwrap = false,
-        scissor = true
+        scissor = true,
     }
 );
 
 menu.window_options.panel.behaviour_desc = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(264, 202, 200, 10),
+    XYWH(264, 202, 224, 27),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Units_Behaviour_Label),
     {
@@ -1034,7 +1034,6 @@ function showOptions(mode)
         showMenuButton(0);
         setVisible(menu.window_options, true);
     else
-        setVisibleAll(COMBOBOX_LIST, false);
         showMenuButton(1);
         setVisible(menu.window_options, false);
     end;
