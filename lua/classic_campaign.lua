@@ -528,6 +528,8 @@ function FROMOW_SET_CAMP_DIFF(DIFF) -- Called by OW!
 	if (DIFF == 3) then
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, true);
 	end;
+
+	OW_campdiff(DIFF);
 end;
 
 function FROMOW_SET_CAMP_RUN_BUTTON(ID) -- Called by OW!
