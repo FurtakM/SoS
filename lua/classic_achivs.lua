@@ -204,7 +204,7 @@ function displayAchivsByCategory(category)
                         anchorLT,
                         XYWH(0,0, getWidth(menu.window_achivs.panel.scroll.row.progress_bar), getHeight(menu.window_achivs.panel.scroll.row.progress_bar)),
                         BankGotic_14,
-                        currentProgress / achivProgress * 100 .. '%',
+                        math.floor(currentProgress / achivProgress * 100) .. '%',
                         {
                             text_halign = ALIGN_MIDDLE,
                             font_colour = RGB(0, 0, 0),
