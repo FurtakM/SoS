@@ -508,6 +508,6 @@ function showAchievment(name, hidden, cP, gP)
         displayAchivementWindow(name);         
     else
         sAchievs[y] = createdSProgresAchiev(y, name, cP, gP);
-        displayAchivementWindow(name);
+        -- displayAchivementWindow(name);
     end;
 end;
