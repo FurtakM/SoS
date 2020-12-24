@@ -448,10 +448,6 @@ function displayAchivementWindow(NAME)
 		return;
 	end;
 
-    if (checkAchieved(NAME, true)) then
-        return;
-    end;
-
     if (getX(achievWindowGain) == -300) then
     	setVisible(achievWindowGain, true);
     	setTexture(achievWindowGain.Image, 'SGUI/Achiev/' .. NAME .. '.png');
@@ -478,15 +474,40 @@ function hideAchievmentWindow(ID)
 end;
 
 -- events (display)
-function FROMOW_SETACHIEVEMENTEX(NAME, PROGRESS)
-    AchievProgress(NAME, PROGRESS);
-end;
+--function FROMOW_SETACHIEVEMENTEX(NAME, PROGRESS)
+--    AchievProgress(NAME, PROGRESS);
+--end;
 
-function FROMOW_SETACHIEVEMENT(NAME)
-    AchievProgress(NAME, 0);
-    displayAchivementWindow(NAME);
-end;
+--function FROMOW_SETACHIEVEMENT(NAME)
+--    AchievProgress(NAME, 0);
+--end;
 
 --override old!
-function achieveAchievment_openclose(saID,bool)
+function showAchievment(name, hidden, cP, gP)
+    local y = 0;
+
+    for i= 1, sAchievsCount + 1 do
+        if (sAchievs[i] == nil) then
+            y = i;
+            break;
+        end;
+    end;
+
+    if y > sAchievsCount then
+        sAchievsCount = y;
+    end;
+
+    if cP == nil or gP == nil then
+        local text = loc(TID_Achiev_Achieved);
+
+        if not hidden then
+            text = loc(TID_Achiev_HiddenAchieved);
+        end;
+
+        sAchievs[y] = createdSAchiev(y, name, text);
+        displayAchivementWindow(name);         
+    else
+        sAchievs[y] = createdSProgresAchiev(y, name, cP, gP);
+        displayAchivementWindow(name);
+    end;
 end;
