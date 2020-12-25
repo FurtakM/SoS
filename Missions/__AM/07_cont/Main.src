@@ -24,7 +24,7 @@ End;
 
 Export debug;
 Export mission_prev_prefix, mission_prefix;
-Export buildings_counter, time_to_end, can_end, must_end;
+Export buildings_counter, time_to_end, can_end, must_end, kill_counter;
 Function Init;
 begin
 debug := false;
@@ -36,6 +36,7 @@ time_to_end := [ [32$00, 29$00, 26$00][Difficulty],
                  [44$00, 41$00, 38$00][Difficulty] ];
 can_end := false;
 must_end := false;
+kill_counter := 0;
 End;
 
 Every 0$01 trigger not debug do
@@ -74,3 +75,12 @@ if not filter then
 for i in filter do
     SetLives(i, 1000);
 End;
+
+Every 0$1 trigger kill_counter >= 20 do
+SetAchievement('ACH_HITMAN');
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_nation, 3], [f_type, unit_vehicle]]) >= 3 do
+SetAchievement('ACH_TANKACE');
+
+Every 0$1 trigger FilterAllUnits([f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) = 0 do
+SetAchievement('ACH_COMMANDO');

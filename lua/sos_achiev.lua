@@ -53,6 +53,14 @@ TID_ACH_FULLCARGO = 6346;
 TID_ACH_FULLCARGO_DESC = 6347;
 TID_ACH_ASPEED_6 = 6348;
 TID_ACH_ASPEED_6_DESC = 6349;
+TID_ACH_COMMANDO = 6350;
+TID_ACH_COMMANDO_DESC = 6351;
+TID_ACH_TANKACE = 6352;
+TID_ACH_TANKACE_DESC = 6353;
+TID_ACH_HITMAN = 6354;
+TID_ACH_HITMAN_DESC = 6355;
+TID_ACH_ASPEED_7 = 6356;
+TID_ACH_ASPEED_7_DESC = 6357;
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -230,6 +238,34 @@ achievements = {
         0,
         0
     },
+    ['ACH_COMMANDO'] = {
+        loc(TID_ACH_COMMANDO), 
+        loc(TID_ACH_COMMANDO_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_TANKACE'] = {
+        loc(TID_ACH_TANKACE), 
+        loc(TID_ACH_TANKACE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_HITMAN'] = {
+        loc(TID_ACH_HITMAN), 
+        loc(TID_ACH_HITMAN_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ASPEED_7'] = {
+        loc(TID_ACH_ASPEED_7), 
+        loc(TID_ACH_ASPEED_7_DESC),
+        true,
+        0,
+        0
+    },
 };
 
 achievsCategory = {
@@ -259,6 +295,10 @@ achievsCategory = {
         'ACH_SURV',
         'ACH_FULLCARGO',
         'ACH_ASPEED_6',
+        'ACH_COMMANDO',
+        'ACH_TANKACE',
+        'ACH_HITMAN',
+        'ACH_ASPEED_7',
     }
 };
 
