@@ -333,12 +333,23 @@ End;
 
 
 // Zabezpieczenie przed rushem ~Serpent
-Every 0$1 trigger FilterUnitsInArea(RU_Base_Area, [f_side, 1]) or FilterUnitsInArea(US_BackOffArea, [f_side, 1]) do
+Every 0$1 trigger (FilterUnitsInArea(RU_Base_Area, [f_side, 1]) and not JMMArrival) or (FilterUnitsInArea(US_BackOffArea, [f_side, 1]) and not FirstAssaultRepelled) do
 var i, veh, tmp;
+begin
+ Antirush;
+End;
+
+export function Antirush;
+var i, veh, tmp, num;
 begin
 tmp := [];
 
-for i := 1 to 18 do
+if not FirstAssaultRepelled then num := 18
+else num := 12;
+
+num := num - [4, 2, 0][Difficulty];
+
+for i := 1 to num do
     begin
     uc_side := 3;
     uc_nation := 3;
@@ -363,4 +374,4 @@ repeat
         ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
 
 until not tmp;
-End;
+end;

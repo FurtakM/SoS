@@ -212,19 +212,32 @@ if ru_rebuild_list and not filter then
 
 End;
 
-// Def main depot
-Every 0$1 trigger GetLives(ru_dep_main) < 650 do
-var tmp;
+// Main depot destroyed
+Every 0$1 trigger GetLives(ru_dep_main) < 250 do
+var i, tmp;
 begin
-tmp := FilterAllUnits([[f_side, 3], [f_class, 1]]);
+tmp := FilterAllUnits([[f_side, 3], [f_or, [f_class, 1], [f_class, 3], [f_class, 4]]]);
 
 ComExitBuilding(tmp);
 wait(3);
-ComAgressiveMove(tmp, GetX(ru_dep_main), GetY(ru_dep_main));
+ComMoveXY(tmp, 156, 211);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsInArea(i, escapeArea) then
+        begin
+        RemoveUnit(i);
+        tmp := tmp diff i;
+        end
+     else
+        ComMoveXY(i, 156, 211);
+until not tmp;
 End;
 
 // Idle
-Every 0$01 trigger GetLives(ru_dep_main) > 650 and FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) do
+Every 0$01 trigger GetLives(ru_dep_main) > 250 and FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) do
 var i, tmp;
 begin
 enable;
@@ -308,13 +321,13 @@ if area then
    end;
 End;
 
-Every 10$00 do
+Every 15$00 trigger Difficulty > 1 do
 var i, j, un, veh, time, count;
 begin
 uc_side := 3;
 uc_nation := 3;
 
-time := [8$00, 7$00, 6$00][Difficulty];
+time := [9$00, 7$00, 6$00][Difficulty];
 count := [2, 2, 3][Difficulty];
 
 for i = 1 to count do
@@ -338,7 +351,7 @@ End;
 Every 8$00 do
 var i, un, time;
 begin
-time := [2$00, 1$00, 0$30];
+time := [3$00, 1$00, 0$30];
 
 wait(time);
 
