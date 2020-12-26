@@ -363,27 +363,24 @@ begin
 end;
 
 // Contact with enemy bunker
-
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) = 0 do
+Every 0$2 trigger FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) = 0 do
 var i;
 begin
+enable;
 
-  enable;
-
-  for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, 31]]) do
-  begin
-       IF See(1, i) then
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, 31]]) do
+    begin
+    if See(1, i) then
        begin
-            Disable;
-            Say(JMM, 'DX1-JMM-1');
+       disable;
+       Say(JMM, 'DX1-JMM-1');
        end;
-  end;
+    end;
 end;
 
-// Alert in south base
-
+// Alert in south base 
 Every 0$1 trigger SeeArea(1, SouthBaseRussianSpawn1) do
-var i, j;
+var i, j, mech;
 begin
 
      DialogueOn;
@@ -391,61 +388,42 @@ begin
      Say(JMM, 'DX3-JMM-1');
      DialogueOff;
 
-     for i in FilterUnitsInArea(SouthBaseRussianSpawn1, [[f_side, 3], [f_type, unit_human]]) do southBaseDefenders = southBaseDefenders ^ i;
+     for i in FilterUnitsInArea(SouthBaseRussianSpawn1, [[f_side, 3], [f_class, 1]]) do
+         southBaseDefenders = southBaseDefenders ^ i;
 
-     wait([0$13, 0$12, 0$9][Difficulty]);
+    wait([0$5, 0$4, 0$3][Difficulty]);
 
-    ComExitBuilding(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, 3]]));
+    mech := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, 3]]);
+
+    if not mech then
+       exit;
+
+    ComExitBuilding(mech); 
     wait(0$1);
 
-    repeat
-    wait(0$1);
-
-    for i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]]) do
-    begin
-        for j in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, 3]]) do
-        begin
-            ComEnterUnit(j, i);
-        end;
-    end;
-
-    until FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]]) = 0 OR FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, 3]]) = 0;
-
+    AddComEnterUnit(mech[1], vehicle1);
+    AddComEnterUnit(mech[2], vehicle2);
 end;
 
 // Dialog about tanks
-Every 0$1 do
-var i, tmp;
+Every 0$1 trigger See(1, vehicle1) or See(1, vehicle2) do
 begin
-    enable;
+CenterOnUnits([vehicle1, vehicle2]);
 
-    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human]]);
-
-    for i in tmp do begin
-        if GetDistUnits(i, vehicle1) < 4 or GetDistUnits(i, vehicle2) < 4  then
-        begin
-            Disable;
-            CenterOnUnits([vehicle1, vehicle2]);
-
-            If IsOK(Bobby) then
-            begin
-                DialogueOn;
-                Say(Bobby, 'DX2-Bobby-1'); 
-                Say(JMM, 'DX2-JMM-1a');
-                DialogueOff;
-                Disable;
-            end else
-            begin
-                DialogueOn;
-                Say(JMM, 'DX2-JMM-1');
-                DialogueOff;
-                Disable;
-            end;
-        end;
-
+if IsOK(Bobby) then
+    begin
+    DialogueOn;
+    Say(Bobby, 'DX2-Bobby-1'); 
+    Say(JMM, 'DX2-JMM-1a');
+    DialogueOff;
+    end
+else
+    begin
+    DialogueOn;
+    Say(JMM, 'DX2-JMM-1');
+    DialogueOff;
     end;
-
-end;
+End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 1],[f_nation, 3], [f_type, unit_vehicle], [f_weapon, 42]]) do
 var tmp, speaker, temp1, temp2, i;
@@ -510,9 +488,23 @@ end;
 
 // Capture all enemy bases and spawn Mikhail
 
-Every 0$1 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 AND FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < 2 do
-var temp, i;
+Every 0$1 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 do
+var temp, tmp, i;
 begin
+
+    tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
+
+    if tmp then
+       begin
+       for i in tmp do
+           begin
+           if IsInUnit(i) then
+              ComExitBuilding(i);
+
+           wait(0$1);
+           AddComAgressiveMove(i, 54, 17);
+           end;
+       end;
 
     wait(0$03);
 
@@ -531,7 +523,7 @@ begin
 
     repeat
      wait(0$1);
-    until FilterUnitsInArea(NorthBase, [[f_side, 1], [f_class, 2]]);
+    until FilterUnitsInArea(NorthBase, [[f_side, 1], [f_class, 2]]) and not FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
 
     repeat
        temp = FilterAllUnits([[f_side, 1], [f_nation, 1], [f_class, 2], [f_ok], [f_outside]]) diff [JMM, Khatam];
