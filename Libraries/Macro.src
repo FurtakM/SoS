@@ -2086,7 +2086,7 @@ if not mc_bases then
 for i = 1 to mc_bases do
     begin
 
-    if not mc_bases[i] then
+    if not mc_bases[i] or mc_scan[i] then
        continue;
 
     nation := GetNation(mc_bases[i][1]);
@@ -2105,6 +2105,9 @@ for i = 1 to mc_bases do
     if not x then
        x := mcts;
 
+    if not x then
+       continue;
+
     if mc_remote_driver[i] then
        for j in mc_remote_driver[i] do
            begin
@@ -2113,6 +2116,14 @@ for i = 1 to mc_bases do
               mc_remote_driver := Replace(mc_remote_driver, i, mc_remote_driver[i] diff j);
               SetTag(j, 0);
               continue;
+              end;
+
+           if UnitFilter(mc_vehicles[i], [[f_weapon, ar_control_tower], [f_empty]]) and not IsDriver(j) then
+              begin
+              if IsInUnit(j) then
+                 ComExitBuilding(j);
+
+              AddComEnterUnit(j, UnitFilter(mc_vehicles[i], [[f_weapon, ar_control_tower], [f_empty]])[1]);
               end;
 
            if not IsInUnit(j) or (GetBType(IsInUnit(j)) <> b_control_tower and not IsDriver(j)) then
@@ -2139,15 +2150,20 @@ for i = 1 to mc_bases do
     for j = 1 to x do
         if GetWeapon(x[j]) = ar_control_tower then
            places := places + 1
-        else
+        else if GetBType(x[j]) = b_control_tower then
            places := places + 3;
+
+    if places = 0 or places <= mc_remote_driver[i] then
+       continue;
 
     tmp := SortBySkill(UnitFilter(mc_bases[i], [f_class, 3]) diff mc_remote_driver[i], 3);
 
+    for j in tmp do
+        if GetTag(j) > 0 then
+           tmp := tmp diff j;
+
     if not tmp then
        continue;
-
-    places := places - mc_remote_driver[i];
 
     if places then
        begin
