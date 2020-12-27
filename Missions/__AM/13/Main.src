@@ -14,6 +14,9 @@ begin
     randomsEpsilon = [];
 
     Resetfog;
+    PlaceSeeing(1, 1, 1, -37963);
+    RemoveSeeing(1, 1, 1);
+    PrepareEnv;
     AnimateTrees(true);
     RandomizeAll;
 
@@ -98,3 +101,33 @@ begin
    for i in FilterUnitsInArea(ExitArea,[[f_side, 1], [f_control, 1], [f_weapon, us_cargo_bay]]) do resources = resources ^ [GetMultiCargo(i)];
    SaveVariable(resources, '13_ResourcesInCargo13_1');
 end;
+
+Export Function PrepareEnv;
+var tmp, list, i, j, exist;
+begin
+tmp := LoadVariable('10_EpsilonEnv', []);
+
+if not tmp then
+   exit;
+
+list := ListEnvironmentArea(epsilonTerrain);
+
+if not list then
+   exit;
+
+for i in list do
+    begin
+    exist := false;
+
+    for j in tmp do
+        if i[1] = j[1] and i[2] = j[2] then
+           begin
+           exist := true;
+           break;
+           end;
+
+    if not exist then
+       RemoveEnvironment(i[1], i[2]);
+    end;
+
+End;
