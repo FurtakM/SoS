@@ -61,6 +61,39 @@ TID_ACH_HITMAN = 6354;
 TID_ACH_HITMAN_DESC = 6355;
 TID_ACH_ASPEED_7 = 6356;
 TID_ACH_ASPEED_7_DESC = 6357;
+TID_ACH_HEAVYGUN = 6358;
+TID_ACH_HEAVYGUN_DESC = 6359;
+TID_ACH_BLITZKRIEG = 6360;
+TID_ACH_BLITZKRIEG_DESC = 6361;
+TID_ACH_ARMOR = 6362;
+TID_ACH_ARMOR_DESC = 6363;
+TID_ACH_ASPEED_8 = 6364;
+TID_ACH_ASPEED_8_DESC = 6365;
+TID_ACH_BULLDOZER = 6366;
+TID_ACH_BULLDOZER_DESC = 6367;
+TID_ACH_COUNTERSTRIKE = 6368;
+TID_ACH_COUNTERSTRIKE_DESC = 6369;
+TID_ACH_SIBMINE = 6370;
+TID_ACH_SIBMINE_DESC = 6371;
+TID_ACH_ASPEED_9 = 6372;
+TID_ACH_ASPEED_9_DESC = 6373;
+TID_ACH_POWER = 6374;
+TID_ACH_POWER_DESC = 6375;
+TID_ACH_SNIPER = 6376;
+TID_ACH_SNIPER_DESC = 6377;
+TID_ACH_ARCH = 6378;
+TID_ACH_ARCH_DESC = 6379;
+TID_ACH_ASPEED_10 = 6380;
+TID_ACH_ASPEED_11_DESC = 6381;
+TID_ACH_ARABTECH = 6382;
+TID_ACH_ARABTECH_DESC = 6383;
+TID_ACH_EAST = 6384;
+TID_ACH_EAST_DESC = 6385;
+TID_ACH_GENERAL = 6386;
+TID_ACH_GENERAL_DESC = 6387;
+TID_ACH_ASPEED_11 = 6388;
+TID_ACH_ASPEED_11_DESC = 6389;
+
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -266,6 +299,118 @@ achievements = {
         0,
         0
     },
+    ['ACH_HEAVYGUN'] = {
+        loc(TID_ACH_HEAVYGUN), 
+        loc(TID_ACH_HEAVYGUN_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BLITZKRIEG'] = {
+        loc(TID_ACH_BLITZKRIEG), 
+        loc(TID_ACH_BLITZKRIEG_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ARMOR'] = {
+        loc(TID_ACH_ARMOR), 
+        loc(TID_ACH_ARMOR_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_8'] = {
+        loc(TID_ACH_ASPEED_8), 
+        loc(TID_ACH_ASPEED_8_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BULLDOZER'] = {
+        loc(TID_ACH_BULLDOZER), 
+        loc(TID_ACH_BULLDOZER_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SIBMINE'] = {
+        loc(TID_ACH_SIBMINE), 
+        loc(TID_ACH_SIBMINE_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_COUNTERSTRIKE'] = {
+        loc(TID_ACH_COUNTERSTRIKE), 
+        loc(TID_ACH_COUNTERSTRIKE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_9'] = {
+        loc(TID_ACH_ASPEED_9), 
+        loc(TID_ACH_ASPEED_9_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_POWER'] = {
+        loc(TID_ACH_POWER), 
+        loc(TID_ACH_POWER_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SNIPER'] = {
+        loc(TID_ACH_SNIPER), 
+        loc(TID_ACH_SNIPER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ARCH'] = {
+        loc(TID_ACH_ARCH), 
+        loc(TID_ACH_ARCH_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_10'] = {
+        loc(TID_ACH_ASPEED_10), 
+        loc(TID_ACH_ASPEED_10_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ARABTECH'] = {
+        loc(TID_ACH_ARABTECH), 
+        loc(TID_ACH_ARABTECH_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_EAST'] = {
+        loc(TID_ACH_EAST), 
+        loc(TID_ACH_EAST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_GENERAL'] = {
+        loc(TID_ACH_GENERAL), 
+        loc(TID_ACH_GENERAL_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ASPEED_11'] = {
+        loc(TID_ACH_ASPEED_11), 
+        loc(TID_ACH_ASPEED_11_DESC),
+        true,
+        0,
+        0
+    },
 };
 
 achievsCategory = {
@@ -299,6 +444,22 @@ achievsCategory = {
         'ACH_TANKACE',
         'ACH_HITMAN',
         'ACH_ASPEED_7',
+        'ACH_HEAVYGUN',
+        'ACH_BLITZKRIEG',
+        'ACH_ARMOR',
+        'ACH_ASPEED_8',
+        'ACH_BULLDOZER',
+        'ACH_COUNTERSTRIKE',
+        'ACH_SIBMINE',
+        'ACH_ASPEED_9',
+        'ACH_POWER',
+        'ACH_SNIPER',
+        'ACH_ARCH',
+        'ACH_ASPEED_10',
+        'ACH_ARABTECH',
+        'ACH_EAST',
+        'ACH_GENERAL',
+        'ACH_ASPEED_11',
     }
 };
 

@@ -48,7 +48,7 @@ Export mission_prefix, mission_prefix_prev;
 Export cratesSpawned;
 
 Export ru_vehs_counter, ru_sold_counter;
-Export telep_ru_dialog;
+Export telep_ru_dialog, snipersTrained;
 
 Export fastEnd;
 
@@ -93,6 +93,7 @@ begin
 
     ru_vehs_counter := [1, 2, 2][Difficulty];
     ru_sold_counter := [2, 4, 4][Difficulty];
+    snipersTrained := false;
 
     attackAvalaible = 1;
     
@@ -129,3 +130,29 @@ begin
     for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
     for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
 end;
+
+Every 0$1 trigger FilterAllUnits([f_class, class_sniper]) do
+snipersTrained := true;
+
+Every 0$1 trigger GetAttitude(1, 2) = att_friend and ruDestroyedBuildings and FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 do
+SetAchievement('ACH_POWER');
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_warehouse]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_turret]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radio]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radar]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_noncombat]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_track]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_gun]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_siberium]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_solar_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_power]]) do
+SetAchievement('ACH_ARCH');
