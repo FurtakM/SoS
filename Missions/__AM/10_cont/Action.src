@@ -33,6 +33,7 @@ end;
 
 // Meet Cathy and others
 Every 0$1 trigger GetDistUnits(JMM, Simms) < 15 do
+var p;
 begin
     wait(0$3);
 
@@ -42,13 +43,18 @@ begin
     CenterNowOnUnits(JMM);
 
     AddComTurnUnit(JMM, Simms);
+
+    p := 15;
    
     repeat
         wait(0$1);
         ComMoveUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
-    until GetDistUnits(JMM, Simms) < 5;
+        p := p - 1;
+    until GetDistUnits(JMM, Simms) < 5 or p <= 0;
 
-    ComTurnUnit(JMM, Simms);
+    if not IsInUnit(JMM) then
+       ComTurnUnit(JMM, Simms);
+
     ComTurnUnit([Simms, Joan, Denis, Khatam], JMM);
 
     CenterNowOnUnits([JMM, Simms]);
@@ -58,7 +64,8 @@ begin
 
     if IsOk(Joan) then
     begin
-        ComTurnUnit(JMM, Joan);
+    if not IsInUnit(JMM) then
+       ComTurnUnit(JMM, Joan);
         Say(Joan, 'D2b-Joan-1');
         Say(JMM, 'D2b-JMM-1');
         Say(Joan, 'D2b-Joan-2');
@@ -66,7 +73,8 @@ begin
 
     if IsOk(Denis) then
     begin
-        ComTurnUnit(JMM, Denis);
+        if not IsInUnit(JMM) then
+           ComTurnUnit(JMM, Denis);
         Say(Denis, 'D2c-Den-1');
     end;
 
@@ -78,14 +86,17 @@ begin
             ComMoveUnit(Kikuchi, JMM);
         until GetDistUnits(JMM, Kikuchi) < 5;
 
-        ComTurnUnit(JMM, Kikuchi);
+        if not IsInUnit(JMM) then
+           ComTurnUnit(JMM, Kikuchi);
         Say(Kikuchi, 'D3b-Yam-1');
 
     end;
 
     if IsOk(Khatam) then
     begin
-        ComTurnUnit(JMM, Khatam);
+        if not IsInUnit(JMM) then
+           ComTurnUnit(JMM, Khatam);
+
         Say(JMM, 'D2c-JMM-1');
         Say(Khatam, 'D2c-Khat-1');
     end;
