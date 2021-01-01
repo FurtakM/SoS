@@ -71,11 +71,11 @@ begin
      begin
        SetTech(57, 3, state_enabled);
        SetTech(58, 3, state_enabled);
-       SetTech(59, 3, state_disabled);
+       SetTech(59, 3, state_enabled);
 
        SetTech(51, 3, state_enabled);
        SetTech(52, 3, state_enabled);
-       SetTech(53, 3, state_disabled);
+       SetTech(53, 3, state_enabled);
      end;
 
 end;
@@ -86,7 +86,7 @@ Export function ResAllTechs(side, lab, nation);
 var i, tech, cout, ru_tech_list;
 begin
 
-  ru_tech_list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+  ru_tech_list := [48, 49, 50, 20, 1, 69, 39, 34, 40, 71, 57, 58, 44, 32, 27, 23, 33, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25, 51, 52, 59, 53];
 
   For i = 1 to ru_tech_list do
     If GetTech(ru_tech_list[i], side) = state_enabled and TechNationAvailable(ru_tech_list[i], nation) = true then AddComResearch(lab, ru_tech_list[i]);
@@ -203,7 +203,7 @@ begin
 END;
 
 Export function AttackVehicles(side);
-var i, j, vehiclesOK, target1, target2;
+var i, j, tmp, vehiclesOK, target1, target2;
 begin
     if russianTanks >= [2, 3, 4][Difficulty] and russianTimeLapsers >= [1, 1, 2][Difficulty] then
     begin
@@ -212,6 +212,10 @@ begin
             wait(0$1);
                 for j in russianTanks do
                 begin
+                tmp := UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]);
+
+                if tmp then
+                   ComMoveUnit(tmp, j);
 
                 if GetSide(j) <> side then
                    begin
@@ -222,8 +226,10 @@ begin
                     target1 := NearestUnitToUnit(FilterAllUnits([[f_enemy, side], [f_see, 1]]), j);
                     target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, side], [f_see, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), j);
 
-                    If GetDistUnits(j, target1)+8 < GetDistUnits(j, target2) then ComAttackUnit(j, target1)
-                    else ComAttackUnit(j, target2);
+                    if GetDistUnits(j, target1) + 8 < GetDistUnits(j, target2) then
+                       ComAttackUnit(j, target1)
+                    else
+                       ComAttackUnit(j, target2);
                 end;
 
         until russianTanks = 0;
@@ -254,23 +260,6 @@ begin
             end;
         end;
 End;
-
-
-Export function TimeLapsersAI(side);
-var j, nearUnit;
-begin
-    if russianTanks >= 1 and russianTimeLapsers >= [1, 2, 2][Difficulty] then
-    repeat
-        wait(0$3);
-        if russianTimeLapsers > 0 then
-            for j in UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]) do
-            begin
-                nearUnit := NearestUnitToUnit(FilterAllUnits([[f_enemy, side], [f_see, 1]]), j);
-                ComMoveXY(j, GetX(nearUnit), GetY(nearUnit));
-            end;
-
-    until russianTimeLapsers = 0;
-end;
 
 Export function CraneRepairBuild(side, baseArea);
 var i, mechTmp, vehicleTmp, crane_list, buildings_list;

@@ -178,10 +178,6 @@ begin
 uc_side := 4;
 uc_nation := 3;
 
-repeat
- wait(0$1);
-until not FilterAllUnits([f_distxy, 123, 3, 3]);
-
 InitHc;
 
 Burlak := NewCharacter('Burlak');
@@ -193,7 +189,19 @@ SetLives([Masha, Burlak], 499);
 SetDir(Masha, 3);
 SetMark(Masha, 1);
 
-PlaceUnitArea(Masha, burlak_spawn, false);
+EraseResourceArea(mat_cans, burlak_spawn);
+
+repeat
+ wait(0$1);
+ tmp := FilterUnitsInArea(burlak_spawn, []);
+
+ if tmp then
+    for i in tmp do
+        ComMoveXY(i, 114, 9);
+
+until not FilterUnitsInArea(burlak_spawn, []) and HexInfo(123, 3) = 0;
+
+PlaceUnitXY(Masha, 123, 3, false);
 PlaceUnitXY(Burlak, 125, 1, false);
                          
 ComMoveUnit(Burlak, Masha);
