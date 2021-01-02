@@ -2,7 +2,7 @@
 
 Export Function PrepareUnit(ident, exist_mode, prefix);
 var unit;
-begin
+begin                                          
 
 if exist_mode then
    unit := CreateCharacter(prefix&ident)
@@ -216,7 +216,7 @@ End;
 
 // base, defenders, enemy
 Export Function Defend(base, defenders, enemy);
-var i, j, x, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend;
+var i, j, x, depot, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend;
 begin
 mechs := UnitFilter(mc_bases[base], [f_class, 3]);
 
@@ -275,14 +275,25 @@ repeat
      begin
      e := NearestUnitToUnit(enemy, i);
 
-     depot_under_attack := (not UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) or GetLives(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]])) < 600);
+     depot := UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+     depot_under_attack := (not depot or UnitFilter(depot, [f_not, [f_lives, 600]]));
 
      case GetType(i) of
           unit_vehicle:
           begin
 
           if GetLives(i) > 650 and (GetDistUnits(i, e) < 40 or IsInArea(e, mc_scan_area[base])) then
-             ComAttackUnit(i, e)
+             begin
+             if GetEngine(i) = engine_combustion and GetFuel(i) < 30 and depot then
+                begin
+                ComMoveUnit(i, NearestUnitToUnit(depot, i));
+
+                if GetDistUnits(i, NearestUnitToUnit(depot, i)) < 6 then
+                   SetFuel(i, 100);
+                end
+             else
+                ComAttackUnit(i, e);
+             end
           else if ((not IsInArea(e, mc_scan_area[base]) and GetDistUnits(i, e) >= 40) or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
              ComMoveToArea(i, mc_parking[base]);
 
