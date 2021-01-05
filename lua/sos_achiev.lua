@@ -93,6 +93,45 @@ TID_ACH_GENERAL = 6386;
 TID_ACH_GENERAL_DESC = 6387;
 TID_ACH_ASPEED_11 = 6388;
 TID_ACH_ASPEED_11_DESC = 6389;
+TID_ACH_FRIEND = 6390;
+TID_ACH_FRIEND_DESC = 6391;
+TID_ACH_PATH = 6392;
+TID_ACH_PATH_DESC = 6393;
+TID_ACH_LASER = 6394;
+TID_ACH_LASER_DESC = 6395;
+TID_ACH_ROCKET = 6396;
+TID_ACH_ROCKET_DESC = 6397;
+TID_ACH_ASPEED_12 = 6398;
+TID_ACH_ASPEED_12_DESC = 6399;
+TID_ACH_MASHA = 6400;
+TID_ACH_MASHA_DESC = 6401;
+TID_ACH_REMOTE = 6402;
+TID_ACH_REMOTE_DESC = 6403;
+TID_ACH_DEFMASTER = 6404;
+TID_ACH_DEFMASTER_DESC = 6405;
+TID_ACH_ASPEED_13 = 6406;
+TID_ACH_ASPEED_13_DESC = 6407;
+TID_ACH_DOUBLE = 6408;
+TID_ACH_DOUBLE_DESC = 6409;
+TID_ACH_APE = 6410;
+TID_ACH_APE_DESC = 6411;
+TID_ACH_FORT = 6412;
+TID_ACH_FORT_DESC = 6413;
+TID_ACH_ASPEED_14 = 6414;
+TID_ACH_ASPEED_14_DESC = 6415;
+TID_ACH_POWELL = 6416;
+TID_ACH_POWELL_DESC = 6417;
+TID_ACH_ALLIANCE = 6418;
+TID_ACH_ALLIANCE_DESC = 6419;
+TID_ACH_SIBROCKET = 6420;
+TID_ACH_SIBROCKET_DESC = 6421;
+TID_ACH_ASPEED_15 = 6422;
+TID_ACH_ASPEED_15_DESC = 6423;
+
+TID_ACH_DESERT = 6900;
+TID_ACH_DESERT_DESC = 6901;
+TID_ACH_HARD = 6902;
+TID_ACH_HARD_DESC = 6903;
 
 
 achievements = {
@@ -390,6 +429,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_FRIEND'] = {
+        loc(TID_ACH_FRIEND), 
+        loc(TID_ACH_FRIEND_DESC),
+        false,
+        0,
+        0
+    },
     ['ACH_EAST'] = {
         loc(TID_ACH_EAST), 
         loc(TID_ACH_EAST_DESC),
@@ -407,6 +453,34 @@ achievements = {
     ['ACH_ASPEED_11'] = {
         loc(TID_ACH_ASPEED_11), 
         loc(TID_ACH_ASPEED_11_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_PATH'] = {
+        loc(TID_ACH_PATH), 
+        loc(TID_ACH_PATH_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_LASER'] = {
+        loc(TID_ACH_LASER), 
+        loc(TID_ACH_LASER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ROCKET'] = {
+        loc(TID_ACH_ROCKET), 
+        loc(TID_ACH_ROCKET_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_12'] = {
+        loc(TID_ACH_ASPEED_12), 
+        loc(TID_ACH_ASPEED_12_DESC),
         true,
         0,
         0
@@ -457,9 +531,14 @@ achievsCategory = {
         'ACH_ARCH',
         'ACH_ASPEED_10',
         'ACH_ARABTECH',
+        'ACH_FRIEND',
         'ACH_EAST',
         'ACH_GENERAL',
         'ACH_ASPEED_11',
+        'ACH_PATH',
+        'ACH_LASER',
+        'ACH_ROCKET',
+        'ACH_ASPEED_12',
     }
 };
 

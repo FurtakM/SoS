@@ -783,7 +783,7 @@ End;
 // mechanic
 Export ar_mechanic, ar_mechanic_friend;
 Every 0$20 trigger tick >= 20$00 and (DangerAtRangeXY(2, 169, 90, 10)[4] = 0 or IsDead(ar_dep_w) or GetSide(ar_dep_w) = 1) and not IsDead(ar_dep_n) do
-var un, i, cargo, tmp;
+var un, i, cargo, tmp, escaped;
 begin
 uc_side := 5;
 uc_nation := 2;
@@ -792,6 +792,7 @@ InitHc;
 
 PrepareHuman(sex_male, 3, 8);
 hc_attr := [12, 12];
+hc_name := 'Hans Felige';
 hc_gallery := 'SecondCharsGal';
 hc_face_number := 7;
 
@@ -817,7 +818,7 @@ InGameOn;
 
 un := UnitFilter(FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) diff [JMM, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi], [f_sex, sex_male])[1];
 
-if not un and Brown then
+if Brown then
    un := Brown;
 
 if un then
@@ -871,23 +872,35 @@ ComMoveToArea([ar_mechanic, ar_mechanic_friend], parking_marea);
 AddComEnterUnit(ar_mechanic, cargo);
 AddComMoveXY([ar_mechanic, ar_mechanic_friend], 209, 178);
 
+escaped := 0;
+
 while(true) do
 begin
  wait(0$1);
+
  if not HasTask(ar_mechanic) or not HasTask(ar_mechanic_friend) then
     AddComMoveXY([ar_mechanic, ar_mechanic_friend], 209, 178);
 
  if IsInArea(ar_mechanic, escape_area) then
+    begin
     RemoveUnit(ar_mechanic);
+    escaped := escaped + 1;
+    end;
 
  if IsInArea(ar_mechanic_friend, escape_area) then
+    begin
     RemoveUnit(ar_mechanic_friend);
+    escaped := escaped + 1;
+    end;
 
  if IsInArea(cargo, escape_area) then
     RemoveUnit(cargo);
 
- if not IsLive(ar_mechanic) and not IsLive(ar_mechanic_friend) then
+ if not IsPlaced(ar_mechanic) and escaped >= 2 then
     break;
+
+ if not IsPlaced(ar_mechanic) and not IsPlaced(ar_mechanic_friend) and escaped < 2 then
+    exit;
 end;
 
 wait(0$2);
@@ -902,6 +915,7 @@ if Difficulty = 1 then
 for i in tmp do
     PlaceSeeing(i[1], i[2], 1, -9);
 
+SetAchievement('ACH_FRIEND');
 CenterOnXY(129, 10);
 End;
 

@@ -228,32 +228,18 @@ begin
                     target1 := NearestUnitToUnit(FilterAllUnits([[f_enemy, side], [f_see, 1]]), j);
                     target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, side], [f_see, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), j);
 
-                    If GetDistUnits(j, target1)+8 < GetDistUnits(j, target2) then ComAttackUnit(j, target1)
-                    else ComAttackUnit(j, target2);
+                    if UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]) then
+                       ComMoveUnit(UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]), j);
+
+                    if GetDistUnits(j, target1) + 8 < GetDistUnits(j, target2) then
+                       ComAttackUnit(j, target1)
+                    else
+                       ComAttackUnit(j, target2);
                 end;
 
         until russianTanks = 0;
     end;
 end;
-
-Export function TimeLapsersAI(side);
-var j, nearUnit;
-begin
-    if russianTanks >= 1 and russianTimeLapsers >= [1, 2, 2][Difficulty] then
-    repeat
-        wait(0$3);
-        if russianTimeLapsers > 0 then
-            for j in UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]) do
-            begin
-                nearUnit := NearestUnitToUnit(FilterAllUnits([f_enemy, side]), j);
-
-                if nearUnit then
-                   ComMoveUnit(j, nearUnit);
-            end; 
-
-    until russianTimeLapsers = 0;  
-end;
-
 
 Export Function IntBazooka(side);
 var ta, c, i, list, filter;
