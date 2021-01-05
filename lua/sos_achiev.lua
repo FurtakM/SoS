@@ -637,6 +637,18 @@ achievsCategory = {
         'ACH_LASER',
         'ACH_ROCKET',
         'ACH_ASPEED_12',
+        'ACH_MASHA',
+        'ACH_REMOTE',
+        'ACH_DEFMASTER',
+        'ACH_ASPEED_13',
+        'ACH_DOUBLE',
+        'ACH_APE',
+        'ACH_FORT',
+        'ACH_ASPEED_14',
+        'ACH_POWELL',
+        'ACH_ALLIANCE',
+        'ACH_SIBROCKET',
+        'ACH_ASPEED_15'
     },
     [2] = {
         'ACH_DESERT',
