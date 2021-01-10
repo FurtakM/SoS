@@ -34,7 +34,7 @@ begin
 end;
 
 On BuildingComplete(building) Do
-var i, sol, tmp;
+var i, engineers, sol, tmp;
 begin
 
     if GetSide(building) = 1 and eventVar1 = 0 then
@@ -98,6 +98,19 @@ begin
     if GetSide(building) = 2 then
     begin
 
+        if GetBType(building) = arBuildingsTab[1][1] then
+           begin
+           arBuildingsTab := Delete(arBuildingsTab, 1);
+
+           if arBuildingsTab then
+              begin
+              engineers = FilterAllUnits([[f_side, 2], [f_class, 2]]);
+
+              if engineers then
+                 AddComBuild(engineers, arBuildingsTab[1][1], arBuildingsTab[1][2], arBuildingsTab[1][3], arBuildingsTab[1][4]);
+              end;
+           end;
+
         if GetBType(building) = b_breastwork then
            begin
            sol := FilterAllUnits([[f_side, 2], [f_or, [f_class, 1], [f_class, 8]]]) diff Dietrich;
@@ -122,7 +135,7 @@ begin
             ComMoveXY([cargo1, cargo2], 71, 19);
             SetResourceType(GetBase(building), 1, 500);
             SetResourceType(GetBase(building), 3, 30);
-            ComEnterUnit(Dietrich, arDepot);
+            ComEnterUnit(Dietrich, building);
         end;
 
         if GetBType(building) = b_lab or GetBType(building) = b_lab_basic then
@@ -138,7 +151,7 @@ begin
            ComUpgrade(building);
 
            if GetBType(building) = b_armoury then
-              ComMoveXY(FilterAllUnits([[f_side, 2], [f_class, 1]]), 75, 21);
+              ComMoveXY(FilterAllUnits([[f_side, 2], [f_class, 1]]) diff Dietrich, 75, 21);
            end;
 
        // if GetBType(building) = b_breastwork and FilterAllUnits([[f_side, 2], [f_class, 1], [f_not, [f_inside], [f_not, [f_hastask]]]]) > 0 then
@@ -154,10 +167,14 @@ begin
 
             AddComMoveXY(i, 92, 34);
             AddComWait(i, 0$1);
+            AddComMoveXY(i, 101, 20);
+            AddComWait(i, 0$1);
+            AddComMoveXY(i, 115, 30);
+            AddComWait(i, 0$1);
             AddComMoveXY(i, 82, 57);
             AddComWait(i, 0$1);
             AddComMoveXY(i, 36, 28);
-            AddComWait(i, 0$1);
+            AddComWait(i, 0$2);
 
             AddComEnterUnit(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_class, 2]]), arDepot);
             end;

@@ -109,7 +109,26 @@ begin
 end;
 
 // Ar cargo move
-Every 0$1 trigger GetCargo(cargo1, 1) = 0 and GetCargo(cargo2, 1) = 0  and GetCargo(cargo2, 2) = 0 do ComMoveXY([cargo1, cargo2], 62, 6);
+Every 0$1 trigger GetCargo(cargo1, 1) = 0 and GetCargo(cargo2, 1) = 0  and GetCargo(cargo2, 2) = 0 do
+var p;
+begin
+p := 0;
+ComMoveXY([cargo1, cargo2], 56, 0);
+
+repeat
+ wait(0$1);
+ p := p + 1;
+
+ ComMoveXY([cargo1, cargo2], 56, 0);
+
+ if IsInArea(cargo1, RemArea) then
+    RemoveUnit(cargo1);
+
+ if IsInArea(cargo2, RemArea) then
+    RemoveUnit(cargo2);
+
+until p > 30;
+End;
 
 // Build Siberite lab + power
 Every 0$1 trigger eventVar1 = 1 do
@@ -260,7 +279,11 @@ begin
         DialogueOff;
     end;
 
-    wait([1$0, 1$30, 2$0, 2$30][Rand(1, 4)]);
+    repeat
+     wait(0$1);
+    until tick > 10$00;
+
+    wait(1$30);
 
     if arabianTrait = 0 then
     begin
@@ -275,36 +298,54 @@ begin
 end;
 
 Export function PrepareArabianTrait;
-var i, tmp, un, arSoldiers, arCivilian;
+var i, tmp, un, arSoldiers, arCivilian, barracks, nearestBuilding;
 begin
 
-    ComExitBuilding(FilterAllUnits([[f_side, 2], [f_class, 4]]));
-    ComExitVehicle(FilterAllUnits([[f_side, 2], [f_class, 3]]));
-    SetClass(Dietrich, 8);
+    arCivilian := FilterAllUnits([[f_side, 2], [f_or, [f_class, 4], [f_class, 2], [f_class, 3]]]);
+    arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+    barracks := FilterAllUnits([[f_side, 2], [f_btype, b_barracks]])[1];
+
+    ComExitBuilding(arCivilian);
+    ComExitBuilding(arSoldiers);  
     wait(0$3);
+
+    AddComEnterUnit(arCivilian, barracks);
+    AddComChangeProfession(arCivilian, [class_soldier, class_mortar][rand(1,2)]);
+    AddComExitBuilding(arCivilian);
+
+    wait(0$1);
+
     CenterOnXY(76, 19);
     DialogueOn;
+
     DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D8-Sol1-1', 'D8-Sol1-1');
-    If IsOK(DeltaDoctor) then Say(DeltaDoctor, 'D8-Sci1-1')
-    else  DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D8-Sol1-1', 'D8-Sol1-1');
+
+    If IsOK(DeltaDoctor) then
+       Say(DeltaDoctor, 'D8-Sci1-1')
+    else
+       DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D8-Sol1-1', 'D8-Sol1-1');
+
     Say(JMM, 'D8-JMM-1');
+
     DialogueOff;
 
     ChangeSideFog(2, 2);
     SetAttitude(1, 2, att_enemy, true);
     SetAttitude(3, 2, att_friend, true);
 
-    SetClass(Dietrich, 1);
-
     ChangeMissionObjectives('M4');
 
-    arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+    wait(0$1);
 
     if IsLive(Khatam) then
        DoNotAttack(2, Khatam);
 
-    ComExitBuilding(arSoldiers);
     wait(0$1);
+
+    nearestBuilding := NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_type, unit_building]]), arSoldiers[1]);
+
+    AddComPlaceDelayedCharge(UnitFilter(arSoldiers, [f_class, 1])[1], GetX(nearestBuilding), GetY(nearestBuilding), nearestBuilding);
+
     AddComAgressiveMove(arSoldiers, 84, 22);
     AddComAgressiveMove(arSoldiers, 82, 5);
     AddComAgressiveMove(arSoldiers, 95, 12);
@@ -312,20 +353,21 @@ begin
     AddComAgressiveMove(arSoldiers, 116, 15);
     AddComAgressiveMove(arSoldiers, 140, 25);
     AddComAgressiveMove(arSoldiers, 160, 56);
-    AddComAgressiveMove(arSoldiers, 189, 79);
 
 
+    arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
     arCivilian = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 12], [f_class, 16]]]);
     arCivilian = arCivilian ^ Dietrich;
 
-    wait(0$10);
+    AddComAgressiveMove(arSoldiers, 189, 79);
 
-    ComExitBuilding(arCivilian);
-    wait(0$1);
-    AddComMoveXY(arCivilian, 81, 5);
-    AddComMoveXY(arCivilian, 82, 5);
-    AddComMoveXY(arCivilian, 95, 12);
-    AddComMoveXY(arCivilian, 102, 11);
+    if UnitFilter(arSoldiers, [f_class, class_apeman_soldier]) then
+       ComEnterUnit(UnitFilter(arSoldiers, [f_class, class_apeman_soldier])[1], HexInfo(84, 21));
+
+    wait(0$4);
+
+    AddComMoveXY(arCivilian, 88, 8);
+    AddComMoveXY(arCivilian, 102, 10);
     AddComMoveXY(arCivilian, 116, 15);
     AddComMoveXY(arCivilian, 140, 25);
     AddComMoveXY(arCivilian, 160, 56);
@@ -333,8 +375,9 @@ begin
 
     arabianAttackersAI = 1;
 
-    wait(0$10);
-    If IsOk(Gary) then Say(Gary, 'D8a-Gary-1');
+    If IsOk(Gary) then
+       Say(Gary, 'D8a-Gary-1');
+
     wait(0$5);
  
     if IsOK(Khatam) then

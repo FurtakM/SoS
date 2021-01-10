@@ -264,6 +264,7 @@ end;
 function startGame()
 	showCampaign(0);
 	showMenuButton(1);
+	ChangeInterface(CAMPAIGN_ID);
 	OW_camprun();
 end;
 
@@ -609,6 +610,8 @@ function showCampaign(mode)
 end;
 
 function runCampaign(ID)
+	CAMPAIGN_ID = parseInt(ID) + 1;
+
 	setVisible(menu.window_campaign, false);
 	setVisible(menu.window_campaign_tree, true);
 
@@ -679,7 +682,6 @@ function runCampaign(ID)
 	changeInterfaceScrollboxEX(menu.window_campaign_tree.panel.scrollV, interface);
 	changeInterfaceScrollboxEX(menu.window_campaign_tree.panel.scrollH, interface);
 
-
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxEasy, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxMedium, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxHard, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
@@ -691,4 +693,4 @@ function runCampaign(ID)
 
 	selectDifficulty(2);
 	OW_loadcampaign(menu.window_campaign_tree.panel.scrollbox.ID, camp);
-end;
+end

@@ -127,6 +127,38 @@ TID_ACH_SIBROCKET = 6420;
 TID_ACH_SIBROCKET_DESC = 6421;
 TID_ACH_ASPEED_15 = 6422;
 TID_ACH_ASPEED_15_DESC = 6423;
+TID_ACH_EYE = 6424;
+TID_ACH_EYE_DESC = 6425;
+TID_ACH_ALARM = 6426;
+TID_ACH_ALARM_DESC = 6427;
+TID_ACH_NOINVIS = 6428;
+TID_ACH_NOINVIS_DESC = 6429;
+TID_ACH_TEAM = 6430;
+TID_ACH_TEAM_DESC = 6431;
+TID_ACH_ASPEED_16 = 6432;
+TID_ACH_ASPEED_16_DESC = 6433;
+TID_ACH_COMRADE = 6434;
+TID_ACH_COMRADE_DESC = 6435;
+TID_ACH_ASPEED_17 = 6436;
+TID_ACH_ASPEED_17_DESC = 6437;
+TID_ACH_PACIFIST = 6438;
+TID_ACH_PACIFIST_DESC = 6439;
+TID_ACH_DIPLOMACY = 6440;
+TID_ACH_DIPLOMACY_DESC = 6441;
+TID_ACH_ONEMANARMY = 6442;
+TID_ACH_ONEMANARMY_DESC = 6443;
+TID_ACH_ASPEED_18 = 6444;
+TID_ACH_ASPEED_18_DESC = 6445;
+TID_ACH_ARTIFACT = 6446;
+TID_ACH_ARTIFACT_DESC = 6447;
+TID_ACH_OMAR = 6448;
+TID_ACH_OMAR_DESC = 6449;
+TID_ACH_ECONOMY = 6450;
+TID_ACH_ECONOMY_DESC = 6451;
+TID_ACH_ASPEED_19 = 6452;
+TID_ACH_ASPEED_19_DESC = 6453;
+TID_ACH_HACK = 6454;
+TID_ACH_HACK_DESC = 6455;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -569,6 +601,118 @@ achievements = {
         0,
         0
     },
+    ['ACH_EYE'] = {
+        loc(TID_ACH_EYE), 
+        loc(TID_ACH_EYE_DESC),
+        false,
+        0,
+        0
+    },    
+    ['ACH_ALARM'] = {
+        loc(TID_ACH_ALARM), 
+        loc(TID_ACH_ALARM_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_NOINVIS'] = {
+        loc(TID_ACH_NOINVIS), 
+        loc(TID_ACH_NOINVIS_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_TEAM'] = {
+        loc(TID_ACH_TEAM), 
+        loc(TID_ACH_TEAM_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ASPEED_16'] = {
+        loc(TID_ACH_ASPEED_16), 
+        loc(TID_ACH_ASPEED_16_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_COMRADE'] = {
+        loc(TID_ACH_COMRADE), 
+        loc(TID_ACH_COMRADE_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_HACK'] = {
+        loc(TID_ACH_HACK), 
+        loc(TID_ACH_HACK_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_17'] = {
+        loc(TID_ACH_ASPEED_17), 
+        loc(TID_ACH_ASPEED_17_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_PACIFIST'] = {
+        loc(TID_ACH_PACIFIST), 
+        loc(TID_ACH_PACIFIST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_DIPLOMACY'] = {
+        loc(TID_ACH_DIPLOMACY), 
+        loc(TID_ACH_DIPLOMACY_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ONEMANARMY'] = {
+        loc(TID_ACH_ONEMANARMY), 
+        loc(TID_ACH_ONEMANARMY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_18'] = {
+        loc(TID_ACH_ASPEED_18), 
+        loc(TID_ACH_ASPEED_18_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ARTIFACT'] = {
+        loc(TID_ACH_ARTIFACT), 
+        loc(TID_ACH_ARTIFACT_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_OMAR'] = {
+        loc(TID_ACH_OMAR), 
+        loc(TID_ACH_OMAR_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ECONOMY'] = {
+        loc(TID_ACH_ECONOMY), 
+        loc(TID_ACH_ECONOMY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ASPEED_19'] = {
+        loc(TID_ACH_ASPEED_19), 
+        loc(TID_ACH_ASPEED_19_DESC),
+        true,
+        0,
+        0
+    },
     ['ACH_DESERT'] = {
         loc(TID_ACH_DESERT), 
         loc(TID_ACH_DESERT_DESC),
@@ -648,7 +792,23 @@ achievsCategory = {
         'ACH_POWELL',
         'ACH_ALLIANCE',
         'ACH_SIBROCKET',
-        'ACH_ASPEED_15'
+        'ACH_ASPEED_15',
+        'ACH_EYE',
+        'ACH_ALARM',
+        'ACH_NOINVIS',
+        'ACH_TEAM',
+        'ACH_ASPEED_16',
+        'ACH_COMRADE',
+        'ACH_HACK',
+        'ACH_ASPEED_17',
+        'ACH_PACIFIST',
+        'ACH_DIPLOMACY',
+        'ACH_ONEMANARMY',
+        'ACH_ASPEED_18',
+        'ACH_ARTIFACT',
+        'ACH_OMAR',
+        'ACH_ECONOMY',
+        'ACH_ASPEED_19'
     },
     [2] = {
         'ACH_DESERT',
