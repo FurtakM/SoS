@@ -264,7 +264,11 @@ end;
 function startGame()
 	showCampaign(0);
 	showMenuButton(1);
-	ChangeInterface(CAMPAIGN_ID);
+
+	if CAMPAIGN_ID > 0 then
+		ChangeInterface(parseInt(CAMPAIGN_ID));
+	end;
+	
 	OW_camprun();
 end;
 

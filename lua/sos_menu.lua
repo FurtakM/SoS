@@ -92,9 +92,9 @@ function showMenuButton(windowNumber)
     setVisible(menu.window, false);
     setVisible(menu.window2, false);
     setVisible(profilebar, false);
-    ChangeInterface(0);
 
     if (windowNumber == 0) then
+        ChangeInterface(0);
         setVisible(footer, false);
     else
         setVisible(footer, true);
