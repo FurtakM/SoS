@@ -1,0 +1,638 @@
+
+//First meeting - you and the American base.
+Every 0$5 do
+     var i, see_list, temp_list, count, string_val;
+     begin
+          //After there has been shooting for a short time - first dialogue.
+          count = 0;
+          repeat
+               wait(0$0.5);
+               see_list = [];
+
+               if ContactTime([you,americans]) < 0$2 then
+                    begin
+                         count = count + 1;
+
+                         if count >= 5 then
+                              begin
+                                   see_list = FilterAllUnits([[f_side,americans],[f_see,you]]);
+                                   for i = 1 to see_list do
+                                        begin
+                                             temp_list = UnitsInside(see_list[i]);
+                                             if temp_list > 0 then
+                                                  see_list = Replace(see_list,i,temp_list[1]);
+                                        end;
+                              end;
+                    end
+               else
+                    count = 0;
+
+          until see_list > 0; //or GetLives(dep) < 1000;
+
+          //if GetLives(dep) = 1000 then
+          //     begin
+                    DialogueOn;
+                    Say(see_list[1],'D3AmMale1');
+                    Say(Heike,'D3H1');
+                    DialogueOff;
+          //     end;
+
+          //Americans realizes they cannot win when something gets sufficiently damaged.
+          while UnitFilter(start_americans ^ [b1,b2,dep],[f_not,[f_lives,850]]) = 0 do //and GetLives(dep) = 1000 do
+               wait(0$1);
+
+          see_list = FilterAllUnits([[f_side,americans],[f_see,you],[f_ok]]);
+          for i = 1 to see_list do
+               begin
+                    temp_list = UnitsInside(see_list[i]);
+                    if temp_list > 0 then
+                         see_list = Replace(see_list,i,temp_list[1]);
+               end;
+
+          if GetLives(dep) < 1000 then
+               string_val = 'D3AmMale2b'
+          else string_val = 'D3AmMale2a';
+
+          DialogueOn;
+          if see_list > 0 then
+               Say(see_list[1],string_val)
+          else Say(UnitFilter(start_americans,[f_ok])[1],string_val);
+          DialogueOff;
+
+          americans_are_evacuating = true;
+
+          //Start evacuating to the north
+          for i in start_americans do
+               begin
+                    ComExitBuilding(i);
+                    AddComMoveXY(i,12,1);
+               end;
+
+          repeat
+               for i in start_americans do
+                    if IsInArea(i,am_escape_area) and IsOk(i) then
+                         begin
+                              RemoveUnit(i);
+                              americans_got_away = true;
+                         end;
+
+               wait(0$1);
+
+          until UnitFilter(start_americans,[[f_ok],[f_placed]]) = 0;
+
+          //All initial Americans are gone (in some way)
+          americans_have_evacuated = true;  
+
+          //The first attack comes a little sooner if some got away
+          if americans_got_away then
+               attack_times = Replace(attack_times,1,attack_times[1] - attack_times[1] div 7);
+     end;
+
+
+//Depot captured and Americans are gone.
+On BuildingCaptured(building,former_side,capturing_unit) do
+     begin
+          if building = dep and former_side = americans then
+               begin
+                    while not americans_have_evacuated do
+                         Wait(0$1);
+
+                    DialogueOn;
+                    Say(ArEngi,'D4EnMale1');
+                    Say(Kowalski,'D4Ko1');
+
+                    if americans_got_away then
+                         Say(Heike,'D4H1a')
+                    else Say(Heike,'D4H1b');
+
+                    Say(Aviradze,'D4Av1');
+                    Say(Willard,'D4Wi1');
+                    Say(Heike,'D4H2');
+                    DialogueOff;
+
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M2');
+
+                    SetAreaMapShow(ar_enter_exit_area,1);
+                    Hint('CargoPickup');
+                    Hint('CargoDrop');
+                    display_strings = ['#Ar03-CrateCount',crate_count];
+               end;
+     end;
+
+
+//When first batch of crates spawns, Heike wonders.
+Every 0$1 trigger first_shipment_have_been_sent do
+     var i, delayed;
+     begin
+          //Wait the cooldown of the boom and wait until the boom sound is over. This takes about
+          //4 seconds on game_speed = 4. The number of ticks per 1 'real' second approximally
+          //follows the function f(x) = 35 * (3 ^ (1/3)) ^ (game_speed - 4) . (The third root
+          //of three is ca 1.44).
+          Wait(0$13 + 0$4 * [1/(1.44*1.44*1.44), 1/(1.44*1.44), 1/1.44, 1, 1.44, 1.44*1.44, 1.44*1.44*1.44][game_speed]);
+
+          //Wait until Americans are not attacking, if they are
+          delayed = false;
+          while FilterAllUnits([[f_side,americans],[f_ok],[f_see,you]]) > 0 and americans_attacking and ContactTime([you,americans]) < 0$10 do
+               begin
+                    wait(0$4);
+                    delayed = true;
+               end;
+
+          if delayed then
+               wait(0$5);
+
+          if IsOk(Kowalski) then
+               begin
+                    CenterOnUnits(Heike);
+
+                    DialogueOn;
+
+                    if not delayed then
+                         Say(Heike,'D5H1a')
+                    else Say(Heike,'D5H1b');
+
+                    Say(Kowalski,'D5Ko1');
+                    Say(Heike,'D5H2');
+                    Say(Kowalski,'D5Ko2');
+                    Say(Heike,'D5H3');
+                    Say(Kowalski,'D5Ko3');
+
+                    DialogueOff;
+               end;
+     end;
+
+
+//Lab or workshop finished construction
+On BuildingComplete(building) do
+     var temp_list, temp_list_2, speaker, temp_unit;
+     begin
+          case GetBType(building) of
+               b_armoury:
+                    if first_armoury then
+                         begin
+                              first_armoury = false;
+
+                              if not first_armoury and not first_workshop and not first_lab then
+                                   ChangeMissionObjectives('M_out_build_base');
+                         end;
+               b_workshop:
+                    if first_workshop then
+                         begin
+                              CenterOnUnits(building);
+                              first_workshop = false;
+
+                              //Find who will speak up.
+                              temp_list = FilterAllUnits([[f_type,unit_human],[f_side,you],[f_ok]]);
+                              if (temp_list diff Heike) = 0 then  //Heike is alone
+                                   speaker = Heike
+                              else
+                                   if IsOk(Willard) then
+                                        speaker = Willard;
+                                   {else
+                                             begin
+                                                  temp_list_2 = temp_list diff [Ralph,Sonya,Aviradze,Oswald,Heike,Kowalski];
+                                                  if temp_list_2 > 0 then
+                                                       speaker = temp_list_2[1]
+                                                  else
+                                                       if IsOk(Kowalski) then  
+                                                            speaker = Kowalski
+                                                       else
+                                                            if IsOk(Oswald) then  //Also covers Oswald > 0
+                                                                 speaker = Oswald
+                                                            else
+                                                                 if IsOk(Sonya) then
+                                                                      speaker = Sonya
+                                                                 else
+                                                                      if IsOk(Aviradze) then
+                                                                           speaker = Aviradze
+                                                                      else speaker = Ralph;
+                                             end;}
+
+                              DialogueOn;
+
+                              if speaker = Heike then
+                                   begin
+                                        Say(Heike,'D6H1b');
+                                        Say(Heike,'D6H2b');
+                                        if not first_lab then  //We have a lab
+                                             Say(Heike,'D6H3ba')
+                                        else Say(Heike,'D6H3bb');
+                                   end
+                              else
+                                   begin
+                                        Say(speaker,'D6Wi1');
+                                        Say(Heike,'D6H1');
+                                        Say(speaker,'D6Wi2');
+
+                                        if speaker = Ralph or not IsOk(Ralph) then
+                                             Say(Heike,'D6H2')
+                                        else
+                                             begin
+                                                  Say(Ralph,'D6Ra1');
+
+                                                  //if IsOk(Aviradze) then
+                                                       Say(Aviradze,'D6Av1');
+
+                                                  //if IsOk(Sonya) then
+                                                       Say(Sonya,'D6So1');
+                                                  //else Say(Heike,'D6So1');
+                                             end;
+
+                                        //if IsOk(Sonya) then
+                                             temp_unit = Sonya;
+                                        //else
+                                        //     if speaker = Ralph then
+                                        //          temp_unit = Ralph
+                                        //     else temp_unit = Heike;
+
+                                        
+                                        Say(temp_unit,'D6So2');
+
+                                        if not first_lab then  //We have a lab
+                                             Say(temp_unit,'D6So3a')
+                                        else Say(temp_unit,'D6So3b');
+                                   end;
+
+                              DialogueOff;
+
+                              Wait(0$0.2);
+
+                              if not first_armoury and not first_workshop and not first_lab then
+                                   ChangeMissionObjectives('M_out_build_base');  //Looks best if this is updated first
+                              ChangeMissionObjectives('M_add_build_vehicle');
+
+                              SetTech(tech_solpow,you,state_enabled);
+                              SetTech(tech_soleng,you,state_enabled);
+                         end;
+               b_lab:
+                    if first_lab and IsLive(Aviradze) then
+                         begin
+                              while not IsOk(Aviradze) do
+                                   begin
+                                        wait(0$1);
+                                        if IsDead(Aviradze) then
+                                             exit;
+                                   end;
+
+                              CenterOnUnits(building);
+
+                              DialogueOn;
+
+                              Say(Heike,'D7H1');
+                              Say(Aviradze,'D7Av1');
+                              Say(Heike,'D7H2');
+                              Say(Aviradze,'D7Av2');
+
+                              if IsOk(Oswald) then
+                                   begin
+                                        Say(Oswald,'D7Os1');
+                                        Say(Aviradze,'D7Av3');
+                                        Say(Oswald,'D7Os2');
+                                        Say(Heike,'D7H3');
+                                   end;
+
+                              Say(Heike,'D7H4');
+                              Say(Aviradze,'D7Av4');
+                              Say(Aviradze,'D7Av5');
+                              Say(Aviradze,'D7Av6');
+
+                              DialogueOff;
+
+                              Wait(0$0.2);
+                              
+                              if not first_armoury and not first_workshop and not first_lab then
+                                   ChangeMissionObjectives('M_out_build_base');  //Looks best if this is updated first
+                              ChangeMissionObjectives('M_start_plant_gather');
+
+                              first_lab = false;
+                         end;
+          end;
+     end;
+
+
+//Player builds the first vehicle (secondary objective)
+On VehicleConstructed(vehicle,factory) do
+     begin
+          if first_vehicle then
+               begin
+                    first_vehicle = false;
+                    ChangeMissionObjectives('M_out_build_vehicle');
+               end;
+     end;
+
+
+//Player escortes Aviradze to the different plants.
+//Dialogue and new objectives when all plants have been collected.
+//Dialogue and new objectives when ape has been escorted to the lab.
+Export break_follow;
+Every 0$0.7 trigger not first_lab and IsLive(Aviradze) do
+     var near_ape, first_time, lab_list, lab, temp_unit, temp_list;
+     begin
+          if not HasTask(Aviradze) then
+               if IsInArea(Aviradze,pink_bedflower_area) and aviradze_plant_gathering[1] > 0 then
+                    AviradzePlantGatheringFunc(1)
+               else
+                    if IsInArea(Aviradze,greenhat_area) and aviradze_plant_gathering[2] > 0 then
+                         AviradzePlantGatheringFunc(2)
+                    else
+                         if IsInArea(Aviradze,royal_aphrodite_area) and aviradze_plant_gathering[3] > 0 then
+                              AviradzePlantGatheringFunc(3);
+
+          if (aviradze_plant_gathering diff 0) = 0 then  //All plants have been gathered
+               begin
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M_find_ape');
+
+                    first_time = true;  //First time an ape is encountered
+                    repeat
+                         //Wait until an ape is within reach of Aviradze.
+                         repeat
+                              if UnitFilter(apes,[[f_class,class_apeman],[f_alive]]) = 0 or IsDead(Aviradze) then  //No apemen left on the map or Aviradze is dead (just too bad...)
+                                   exit;
+
+                              wait(0$1);
+                              near_ape = NearestUnitToUnit(UnitFilter(apes,[f_ok]),Aviradze);
+
+                         until GetDistUnits(Aviradze,near_ape) <= 5 and See(you,near_ape);
+
+                         ComTurnUnit(Aviradze,near_ape);
+                         Wait(0$0.2);
+
+                         repeat
+                              //Make apeman follow Aviradze
+                              //ComMoveUnit(near_ape,Aviradze); -> not completely reliable
+                              break_follow = false;  //Tells SailEvent below if the ape should stop following Aviradze
+                              RaiseSailEvent(near_ape);
+
+                              //Dialogue if this is first ape the player lures.
+                              if first_time then
+                                   begin
+                                        Say(Aviradze,'D9Av2');
+                                        first_time = false;
+                                   end;
+
+                              //Wait until Aviradze is inside a lab.
+                              //Stops following if Aviradze enters any other unit than a lab or too far away from the ape.
+                              lab = 0;
+                              repeat
+                                   wait(0$1);
+
+                                   temp_unit = IsInUnit(Aviradze);
+                                   if GetBType(temp_unit) = b_lab then
+                                        begin
+                                             lab = temp_unit;
+                                             break;
+                                        end;
+
+                                   if GetDistUnits(Aviradze,near_ape) > 7 then
+                                        begin
+                                             lab = -1;
+                                             break;
+                                        end;
+
+                              until IsDead(near_ape) or IsDead(Aviradze) or temp_unit <> lab;
+
+                              break_follow = true;  //Stop following Aviradze
+
+                              if IsDead(near_ape) or IsDead(Aviradze) or temp_unit <> lab then
+                                   break;  //Start over again
+
+                              //Ape enter the lab. If Aviradze exits before ape is inside, then ape starts
+                              //following Aviradze again, of course.
+                              //Units of side 0 can't enter or stay in a building, so we ask the ape to move to
+                              //the center entrance hex of the lab. When it has arrived we remove it from the map,
+                              //change the side to the player's side and place the ape in the lab.
+                              temp_list = [ShiftX(GetX(lab),GetDir(lab),2) , ShiftY(GetY(lab),GetDir(lab),2)];
+                              repeat
+                                   ComMoveXY(near_ape,temp_list[1],temp_list[2]);
+                                   AddComStand(near_ape);
+                                   wait(0$0.7);
+
+                              until ( GetDistUnits(near_ape,lab) <= 3 and UnitsInside(lab) < 6 ) or IsInUnit(Aviradze) <> lab or IsDead(near_ape) or IsDead(Aviradze);  //Distance - safety measure
+
+                         until IsInUnit(Aviradze) = lab or IsDead(near_ape) or IsDead(Aviradze);
+
+                    until not IsDead(near_ape) and not IsDead(Aviradze) and lab > 0;
+
+                    //Ape successfully enters the lab
+                    RemoveUnit(near_ape);
+                    SetSide(near_ape,you);
+                    PlaceHumanInUnit(near_ape,lab);
+
+                    CenterOnUnits(lab);
+                    DialogueOn;
+
+                    Say(Aviradze,'D9Av3');
+
+                    if IsOk(Sonya) then
+                         Say(Sonya,'D9So1')
+                    else Say(Heike,'D9H1');
+                    
+                    if GetSex(near_ape) = sex_male then
+                         Say(Aviradze,'D9Av4a')
+                    else Say(Aviradze,'D9Av4b');
+
+                    DialogueOff;
+
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M_train_apes');
+                    SetTech(tech_apelang,you,state_enabled);
+                    SetTech(tech_apeagres,you,state_enabled);
+
+                    tamed_apemen = tamed_apemen ^ near_ape;
+               end
+          else enable;
+     end;
+Function AviradzePlantGatheringFunc(dialogue_num);
+     var avi_hexes_list, i, temp_list, temp_list_x, temp_list_y, temp_hex, temp_list_2, destirbed;
+     begin
+          if aviradze_plant_gathering[dialogue_num] = 2 then
+               begin
+                    CenterOnUnits(Aviradze);
+                    DialogueOn;
+
+                    case dialogue_num of
+                         1: Say(Aviradze,'D8Av1');
+                         2: Say(Aviradze,'D8Av2');
+                         3: Say(Aviradze,'D8Av3');
+                    end;
+
+                    if (aviradze_plant_gathering diff 2) = 0 then  //first time you find a flower
+                         Say(Aviradze,'D8Av4');
+
+                    DialogueOff;
+
+                    aviradze_plant_gathering = Replace(aviradze_plant_gathering,dialogue_num,1);  //Dialogue has been heard
+               end;
+
+          //Walk around in the flower area - choose 5 hexes in the vicinity.
+          //If the gathering is interrupted, the player has to start over again.
+          //Find the hexes this flower area contains.
+          case dialogue_num of
+               1: temp_list = AreaToList(pink_bedflower_area,false);
+               2: temp_list = AreaToList(greenhat_area,false);
+               3: temp_list = AreaToList(royal_aphrodite_area,false);
+          end;
+
+          temp_list_x = temp_list[1];
+          temp_list_y = temp_list[2];
+
+          //Find the hexes within suitable distance of Aviradze.
+          temp_list = [];
+          temp_hex = [GetX(Aviradze),GetY(Aviradze)];
+          for i = 1 to temp_list_x do
+               if GetDistXY(temp_hex[1],temp_hex[2],temp_list_x[i],temp_list_y[i]) <= 7 then
+                    temp_list = Insert(temp_list,1,[temp_list_x[i],temp_list_y[i]]);
+          temp_list = temp_list diff [temp_hex];  //Don't take the hex Aviradze is currentæy standing on
+
+          //Find the five hexes for Aviradze.
+          avi_hexes_list = [];
+          for i = 1 to 5 do
+               begin
+                    temp_list_2 = temp_list;  //Necessary because of SAIL weirdness
+                    avi_hexes_list = Insert(avi_hexes_list,1,temp_list[Rand(1,temp_list)]);
+                    temp_list = temp_list_2;  //Necessary because of SAIL weirdness
+               end;
+
+          //Command Aviradze.
+          ComMoveXY(Aviradze,avi_hexes_list[1][1],avi_hexes_list[1][2]);
+          AddComWait(Aviradze,Rand(0$1,0$2));
+          for i = 2 to 5 do
+               begin
+                    AddComMoveXY(Aviradze,avi_hexes_list[i][1],avi_hexes_list[i][2]);
+                    AddComWait(Aviradze,Rand(0$1,0$2));
+               end;
+
+          //Keep checking if Aviradze is destirbed during the gathering.
+          destirbed = false;
+          repeat
+               Wait(0$0.3);
+               temp_list = GetTaskList(Aviradze);
+
+               if temp_list > 0 then
+                    if not temp_list[temp_list][1] = 'S' then  //'S' is ComWait - the player can't issue this command
+                         begin
+                              destirbed = true;
+                              break;
+                         end;
+
+          until temp_list = 0;
+
+          //Conclusion
+          if not destirbed then
+               begin
+                    aviradze_plant_gathering = Replace(aviradze_plant_gathering,dialogue_num,0);  //Plants have been gathered
+
+                    DialogueOn;
+                    case (aviradze_plant_gathering diff 0) of
+                         2: Say(Aviradze,'D8Av5');
+                         1: Say(Aviradze,'D8Av6');
+                         0: Say(Aviradze,'D9Av1');
+                    end;
+                    DialogueOff;
+
+                    case dialogue_num of
+                         1: ChangeMissionObjectives('M_out_bedflower');
+                         2: ChangeMissionObjectives('M_out_greenhat');
+                         3: ChangeMissionObjectives('M_out_royal');
+                    end;
+               end;
+     end;
+//Ape has to stay in lab as long as Apeman Language is researched.
+On LeaveBuilding(building,un) do
+     begin
+          if not Researched(you,tech_apelang) then
+               if GetClass(un) = class_apeman then
+                    ComEnterUnit(un,building);
+     end;
+On SailEvent(info) do
+     begin
+          while not break_follow do
+               begin
+                    ComMoveXY(info[1],GetX(Aviradze),GetY(Aviradze));
+                    wait(0$0.5);
+               end;
+     end;
+
+
+//Dialogue when apeman agression is researched.
+On ResearchComplete(tech,lab) do
+     begin
+          if tech = tech_apeagres then
+               begin
+                    DialogueOn;
+
+                    Say(Aviradze,'D10Av1');
+
+                    if IsOk(Oswald) then
+                         begin
+                              Say(Aviradze,'D10Av2');
+                              Say(Oswald,'D10Os1');
+                              Say(Aviradze,'D10Av3');
+                              Say(Oswald,'D10Os2');
+                              Say(Heike,'D10H1');
+                              Say(Oswald,'D10Os3');
+                              Say(Heike,'D10H2');
+                              Say(Aviradze,'D10Av4');
+                         end;
+
+                    DialogueOff;
+               end;
+     end;
+
+
+//Keep track of how many apemen the player has turned into apeman soldiers.
+//Update objectives accordingly.
+On ApemanTamed(ape,tamer) do
+     begin
+          tamed_apemen = tamed_apemen ^ ape;
+     end;
+Every 0$1+0$0.4 do
+     var i;
+     begin
+          tamed_apemen = UnitFilter(tamed_apemen,[f_alive]);
+
+          for i in tamed_apemen do
+               if GetClass(i) = class_apeman_soldier then
+                    begin
+                         num_apeman_soldiers = num_apeman_soldiers + 1;
+                         tamed_apemen = tamed_apemen diff i;
+
+                         if num_apeman_soldiers = 5 then
+                              ChangeMissionObjectives('M_out_train_apes');
+                    end;
+
+          enable;
+     end;
+
+
+//Exclamation dialogue when the first and second attack is spotted.
+Every 0$1.7 do
+     begin
+
+          repeat
+          wait(0$1);
+
+          if attack_num > 2 then
+               exit;
+
+          if not americans_attacking then
+               continue;
+
+          if FilterAllUnits([[f_side,americans],[f_see,you],[f_or,[f_type,unit_human],[f_type,unit_vehicle]]]) = 0 then
+               continue;
+
+          DialogueOn;
+          case attack_num of
+               1: Say(Heike,'D11H1');
+               2: Say(Heike,'D11H2');
+          end;
+          DialogueOff;
+
+          repeat
+          wait(0$1);
+          until not americans_attacking;
+
+          until false;
+     end;

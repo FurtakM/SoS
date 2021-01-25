@@ -1,0 +1,194 @@
+Export Heike, Aviradze, Ralph, Oswald, Sonya, Kowalski, Willard, ArEngi, ArSol, Messenger, Sebel;
+Export FarmerVehicle;
+
+Export function PrepareArabian;
+   var i, temp_list;
+     var Lister;
+     begin
+          InitUc;
+          InitHc;
+
+          uc_nation = nation_arabian;
+          uc_side = 2;
+          uc_direction = 4;
+
+          if not testing then
+               begin
+                    //Load characters from former missions
+                    Heike = CreateCharacter('Heike_02');
+                    SetClass(Heike,class_soldier);
+
+                    Aviradze = CreateCharacter('Aviradze_02');
+                    SetClass(Aviradze,class_scientistic);
+
+                    if TestCharacters('Ralph_02') then
+                         begin
+                              Ralph = CreateCharacter('Ralph_02');
+                              SetClass(Ralph,class_soldier);
+                         end
+                    else Ralph = 0;
+
+                    if TestCharacters('Oswald_02') then
+                         begin
+                              Oswald = CreateCharacter('Oswald_02');
+                              SetClass(Oswald,class_soldier);
+                         end
+                    else Oswald = 0;
+
+                    if TestCharacters('Sonya_02') then
+                         begin
+                              Sonya = CreateCharacter('Sonya_02');
+                              SetClass(Sonya,class_scientistic);
+                         end
+                    else Sonya = 0;
+
+                    if TestCharacters('Lister_02') then
+                         begin
+                              Lister = CreateCharacter('Lister_02');
+                              SetClass(Lister,class_soldier);
+                         end
+                    else Lister = 0;
+
+                    for i in [Heike,Aviradze,Ralph,Oswald,Sonya,Lister] do
+                         SetDir(i,uc_direction);
+               end
+          else
+               begin
+                    hc_attr = [10,12];
+                    hc_class = class_soldier;
+                    hc_importance = 110;
+                    hc_sex = sex_female;
+                    hc_name = 'Heike';
+                    hc_skills = [5,0,1,1];
+                    Heike = CreateHuman;
+
+                    hc_importance = 0;  //InitHc does not reset hc_importance
+                    hc_sex:=sex_male;
+                    hc_class:=class_scientistic;
+                    hc_basic_skills = [0,1,1,4];
+                    hc_skills:=[0,2,1,4];
+                    hc_name:='Aviradze';
+                    hc_attr:=[10,12];
+                    Aviradze:=CreateHuman;
+
+                    hc_sex:=sex_male;
+                    hc_class:=class_soldier;
+                    hc_basic_skills = [2,0,1,0];
+                    hc_skills:=[4,1,2,0];
+                    hc_name:='Ralph';
+                    hc_attr:=[10,10];
+                    Ralph:=CreateHuman;
+
+                    hc_sex:=sex_male;
+                    hc_class:=class_soldier;
+                    hc_basic_skills = [2,1,1,0];
+                    hc_skills:=[5,2,1,0];
+                    hc_name:='Oswald';
+                    hc_attr:=[11,10];
+                    Oswald:=CreateHuman;
+
+                    hc_sex:=sex_female;
+                    hc_class:=class_scientistic;
+                    hc_basic_skills = [0,1,2,3];
+                    hc_skills:=[1,1,2,4];
+                    hc_name:='Sonya';
+                    hc_attr:=[10,11];
+                    Sonya:=CreateHuman;
+
+                    PrepareSoldier(sex_male,3);
+                    hc_name = 'Lister';
+                    Lister = CreateHuman;
+               end;
+
+          //Create new characters
+          Kowalski = NewCharacter('Kowalski');
+          SetDir(Kowalski,uc_direction);
+          PlaceUnitXY(Kowalski,87,37,false);
+
+          uc_direction = 1;
+          Willard = NewCharacter('Hadarach');
+          SetDir(Willard,uc_direction);
+          PlaceUnitXY(Willard,85,39,false);
+
+          InitHc;
+          PrepareEngineer(sex_male,3);
+          ArEngi = CreateHuman;
+          SetSkill(ArEngi,skill_engineering,3);
+          PlaceUnitXY(ArEngi,87,38,false);
+
+          ArSol = Lister;
+
+          hc_sex = sex_female;
+          hc_class = class_scientistic;
+          hc_attr = [10,10];
+          hc_basic_skills = [0,1,0,2];
+          hc_skills = [1,2,0,3];
+          hc_gallery = 'SecondCharsGal';
+          hc_face_number = 15;
+          hc_name = 'Lucy Sebel';
+          Sebel = CreateHuman;
+          PlaceUnitXY(Sebel, 88, 40, false);
+
+          InitHc;
+
+          //Load and create the messenger (Farmer) and vehicle.
+
+          uc_direction = 4;
+          uc_nation = 2;
+
+          vc_chassis = ar_light_trike;
+          vc_control = control_manual;
+          vc_engine = engine_solar;
+          vc_weapon = 24;
+
+          FarmerVehicle = CreateVehicle;
+          PlaceUnitXY(FarmerVehicle, 99, 9, false);
+
+          if not testing then
+               begin
+                    Messenger = CreateCharacter('Messenger_03');
+               end
+          else
+              begin
+                   Messenger = NewCharacter('Farmer');
+              end;
+
+          PlaceHumanInUnit(Messenger, FarmerVehicle);
+
+          PlaceUnitXY(Heike,101,9,false);
+          PlaceUnitXY(Aviradze,102,7,false);
+          PlaceUnitXY(Ralph,101, 8,false);
+          PlaceUnitXY(Oswald,102, 10,false);
+          PlaceUnitXY(Sonya,103, 9,false);
+          PlaceUnitXY(Lister,104, 11,false);
+
+          ComTurnUnit([Kowalski, Willard, ArEngi, Sebel], Heike);
+end;
+
+Export function PrepareFarmerUnits;
+var eng,i;
+begin
+    InitUc;
+    InitHc;
+
+     uc_side = 5;
+     uc_nation = 2;
+
+     PrepareEngineer(false, 4);
+     eng = CreateHuman;
+
+     PrepareEngineer(false, 4);
+     eng = eng ^ CreateHuman;
+
+     PrepareEngineer(false, 4);
+     eng = eng ^ CreateHuman;
+
+     for i in eng do
+         PlaceUnitArea(i, FarmerExitArea, false);
+
+     for i = 1 to [2,1,0][difficulty] do
+     begin
+          PrepareSoldier(false, [3, 2, 0][Difficulty]);
+          PlaceUnitArea(CreateHuman, FarmerExitArea, false);
+     end;
+end;

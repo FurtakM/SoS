@@ -1,0 +1,113 @@
+Every 0$03 trigger GameCounterShow do
+var answer, i, un, c;
+begin
+     repeat
+           wait(0$8);
+           c = 0;
+
+           for i in FilterAllUnits([[f_side,2],[f_type,unit_human]]) do
+           begin
+                if IsInUnit(i) then
+                   un = IsInUnit(i)
+                else
+                    un = i;
+
+                if not IsInArea(un, FarmerBaseArea) then
+                begin
+                     c = 1;
+                     break;
+                end;
+           end;
+
+           if c then
+              continue;
+
+
+           if GetResourceType(GetBase(FarmerDepot), 1) < 350 or GetResourceType(GetBase(FarmerDepot), 2) < 350 then
+           begin
+                answer = Query('Q_leave_not_enough_mat');
+
+                case answer of
+                     1: YouLost('LowGather');
+                end;
+           end;
+
+           if GetResourceType(GetBase(FarmerDepot), 1) >= 350 or GetResourceType(GetBase(FarmerDepot), 2) >= 350 then
+           begin
+                answer = Query('Q_leave_enough_mat');
+
+                case answer of
+                     1: EndMission;
+                end;
+           end;
+
+     until false;
+end;
+
+Function EndMission;
+     var num, list, un_list, name_list;
+     begin
+          DialogueOn;
+          Say(Heike, 'D12H1');
+          DialogueOff;
+          //Medals
+          //Extra material
+          if GetResourceType(GetBase(FarmerDepot), mat_cans) >= secondary_crate_goal and GetResourceType(GetBase(FarmerDepot), mat_oil) >= secondary_crate_goal then
+               num = 1
+          else num = -1;
+          AddMedal('ExtraCrates',num);
+
+          //Apemen soldiers trained
+          if num_apeman_soldiers >= 5 then
+               num = 1
+          else
+               if first_lab then
+                    begin
+                         if IsDead(Aviradze) then
+                              num = -5
+                         else num = -4;
+                    end
+               else
+                    if (aviradze_plant_gathering diff 0) > 0 then
+                         num = -3
+                    else
+                         if num_apeman_soldiers = 0 and tamed_apemen = 0 then
+                              num = -2
+                         else num = -1;
+          AddMedal('Apes',num);
+
+          //Vehicle with solar engine constructed
+          if not first_vehicle then
+               num = 1
+          else
+               if first_workshop then
+                    num = -2
+               else num = -1;
+          AddMedal('SolarVehicle',num);
+
+          GiveMedals('Medals');
+
+
+          //Reward and save people
+          list = FilterAllUnits([[f_side, 2],[f_type,unit_human],[f_not,[f_class,class_apeman]],[f_not,[f_class,class_apeman_soldier]],[f_not,[f_class,class_apeman_kamikaze]],[f_not,[f_class,class_apeman_engineer]]]);
+          RewardPeople(list);
+
+          SaveCharacters(Heike,'Heike_03_cont');
+
+          un_list = [Sonya,Oswald,Ralph,Aviradze,Kowalski,Willard];
+          name_list = ['Sonya','Oswald','Ralph','Aviradze','Kowalski','Willard'];
+          for num = 1 to un_list do
+               if un_list[num] in list then
+                    SaveCharacters(un_list[num],name_list[num] & '_03_cont');
+
+          SaveCharacters(list diff (Heike ^ un_list),'Others_03_cont');
+
+
+          //Save variables
+          SaveVariable(GetResourceType(GetBase(FarmerDepot), 1) >= secondary_crate_goal,'Extra_crates_collected_03_cont');
+          SaveVariable(GetResourceType(GetBase(FarmerDepot), 2) >= secondary_crate_goal,'Extra_oil_collected_03_cont');
+          SaveVariable(num_apeman_soldiers >= 5,'Apemen_soldiers_trained_03_cont');
+
+          YouWin;
+end;
+    

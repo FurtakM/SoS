@@ -1,0 +1,146 @@
+
+//(some) losing conditions.
+//Heike dies.
+//The depot is destroyed.
+On UnitDestroyed(un) do
+     begin
+          if un = Heike then
+               begin
+                    ExclusiveOn;
+                    wait(0$1);
+                    YouLost('HeikeDead');
+                    ExclusiveOff;
+               end;
+
+          if un = dep then
+               begin
+                    ExclusiveOn;
+                    wait(0$1);
+                    YouLost('DepDestroyed');
+                    ExclusiveOff;
+               end;
+     end;
+
+//The Americans recapture the depot.
+Every 0$2 trigger americans_have_evacuated and GetSide(dep) = you do
+     begin
+          repeat
+               wait(0$1);
+
+               if GetSide(dep) = americans then
+                    begin
+                         if crate_count < main_crate_goal then
+                              begin
+                                   ExclusiveOn;
+                                   wait(0$1);
+                                   YouLost('DepRecapture');
+                                   ExclusiveOff;
+                              end
+                         else
+                              begin
+                                   DialogueOn;
+                                   ForceSay(Heike,'D12H1');
+                                   dwait(0$0.5);
+                                   DialogueOff;
+
+                                   MissionEnd;
+                              end;
+                    end;
+
+          until false;
+     end;
+
+//Heike enters the enter/exit region in the East. If the player hasn't hauled enough crates, one query.
+//If has hauled enough, another. If the player leaves then end the mission (in one way or the other).
+Every 0$1 trigger americans_have_evacuated and GetSide(dep) = you do
+     begin                                         
+          repeat
+                wait(0$1);
+
+                //Heike could be hauling crates to the area - it would be annoying for the player to answer the
+                //queries all the time.
+                if not ( IsInArea(Heike,ar_enter_exit_area) and IsOk(Heike) and not Carry(Heike) ) then
+                     continue;
+
+               if crate_count < main_crate_goal then
+                    begin
+                         if Query('Q_leave_not_enough_mat') = 1 then
+                              YouLost('LowGather');
+                    end
+               else
+                    if Query('Q_leave_enough_mat') = 1 then
+                         begin
+                              ExclusiveOn;
+                              wait(0$0.5);
+                              MissionEnd;
+                              ExclusiveOff;
+                         end;
+
+               //Negative answer. Wait a bit before asking again.
+               wait(0$5);
+
+          until false;
+     end;
+
+Function MissionEnd;
+     var num, list, un_list, name_list;
+     begin
+          //Medals
+          //Extra material
+          if crate_count >= secondary_crate_goal then
+               num = 1
+          else num = -1;
+          AddMedal('ExtraCrates',num);
+
+          //Apemen soldiers trained
+          if num_apeman_soldiers >= 5 then
+               num = 1
+          else
+               if first_lab then
+                    begin
+                         if IsDead(Aviradze) then
+                              num = -5
+                         else num = -4;
+                    end
+               else
+                    if (aviradze_plant_gathering diff 0) > 0 then
+                         num = -3
+                    else
+                         if num_apeman_soldiers = 0 and tamed_apemen = 0 then
+                              num = -2
+                         else num = -1;
+          AddMedal('Apes',num);
+
+          //Vehicle with solar engine constructed
+          if not first_vehicle then
+               num = 1
+          else
+               if first_workshop then
+                    num = -2
+               else num = -1;
+          AddMedal('SolarVehicle',num);
+
+          GiveMedals('Medals');
+
+
+          //Reward and save people
+          list = FilterAllUnits([[f_side,you],[f_type,unit_human],[f_not,[f_class,class_apeman]],[f_not,[f_class,class_apeman_soldier]],[f_not,[f_class,class_apeman_kamikaze]],[f_not,[f_class,class_apeman_engineer]]]);
+          RewardPeople(list);
+
+          SaveCharacters(Heike,'Heike_03_cont');
+
+          un_list = [Sonya,Oswald,Ralph,Aviradze,Kowalski,Willard];
+          name_list = ['Sonya','Oswald','Ralph','Aviradze','Kowalski','Willard'];
+          for num = 1 to un_list do
+               if un_list[num] in list then
+                    SaveCharacters(un_list[num],name_list[num] & '_03_cont');
+
+          SaveCharacters(list diff (Heike ^ un_list),'Others_03_cont');
+
+
+          //Save variables
+          SaveVariable(crate_count >= secondary_crate_goal,'Extra_crates_collected_03_cont');
+          SaveVariable(num_apeman_soldiers >= 5,'Apemen_soldiers_trained_03_cont');
+
+          YouWin;
+     end;

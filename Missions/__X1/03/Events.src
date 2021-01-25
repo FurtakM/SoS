@@ -1,0 +1,383 @@
+
+//Depot captured and Americans are gone.
+On BuildingCaptured(building,former_side,capturing_unit) do
+     begin
+        
+        if GetBType(building) in [b_lab,b_lab_half] and former_side = 1 and IsOk(Aviradze) then
+        begin
+             DialogueOn;
+             Say(Aviradze, 'D7Av0');
+             DialogueOff;
+
+             if not OtherTechHint then
+             begin
+                  OtherTechHint = 1;
+                  Hint('OtherNationTech');
+             end;
+        end;
+        
+        if GetBType(building) = b_armoury and former_side = 1 then
+        begin
+             first_armoury = false;
+
+             if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+                ChangeMissionObjectives('M_out_build_base');
+        end;
+
+        if GetBType(building) = b_oil_mine and former_side = 1 then
+        begin
+             first_oil_mine = false;
+
+             if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+                ChangeMissionObjectives('M_out_build_base');
+        end;
+        
+        if GetBType(building) in [b_workshop,b_factory] and former_side = 1 then
+        begin
+             DialogueOn;
+
+             if IsOk(Willard) then
+                Say(Willard, 'D6Wi0')
+             else
+                 Say(Willard, 'D6H0');
+
+             if not OtherTechHint then
+             begin
+                  OtherTechHint = 1;
+                  Hint('OtherNationTech');
+             end;
+
+             DialogueOff;
+        end;
+        
+          if building = dep and former_side = 1 then
+               begin
+                    SetResourceType(GetBase(dep), mat_cans, depot_initial_crates);
+
+                    while not americans_have_evacuated do
+                         Wait(0$1);
+
+                    CaptureAmBase = true;
+
+                    DialogueOn;
+                    Say(ArEngi,'D4EnMale1');
+                    Say(Heike, 'D4-H-1');
+                    SayRadio(Messenger, 'D4-F-1');
+                    SayRadio(Messenger, 'D4-F-2');
+
+                    if GetResourceVisibility(28, 3, 2) = 0 then
+                    begin
+                         Say(Heike, 'D4-H-2');
+                         SayRadio(Messenger, 'D4-F-3');
+                    end;
+
+                    Say(Heike, 'D4-H-3');
+                    SayRadio(Messenger, 'D4-F-4');
+                    SayRadio(Messenger, 'D4-F-5');
+                    Say(Heike, 'D4-H-4');
+                    SayRadio(Messenger, 'D4-F-6');
+                    Say(Heike, 'D4-H-5');
+
+                    if americans_got_away then
+                         Say(Heike,'D4H1a')
+                    else
+                        Say(Heike,'D4H1b');
+
+                    Say(Aviradze,'D4Av1');
+
+                    if FilterAllUnits([[f_btype,b_solar_power],[f_not, [f_constructed]]]) = 0 then
+                       Say(Willard,'D4Wil1')
+                    else
+                        Say(Willard,'D4Wil2');
+
+                    Say(Heike,'D4H2');
+                    DialogueOff;
+
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M2New');
+
+                    Hint('Dismantle');
+
+                    wait(0$30);
+
+                    CreateCratesArea(Rand(1, 5), crate_spawn_area, true);
+
+                    wait(0$1);
+
+                    first_shipment_have_been_sent = true;
+               end;
+
+          if building = FarmerDepot then SetSide(building, 5);
+end;
+
+On BuildingComplete(building) do
+var temp_list, temp_list_2, speaker, temp_unit, tmpEng;
+begin
+        if GetSide(building) = 2 then
+        begin
+          case GetBType(building) of
+               b_armoury:
+                    if first_armoury then
+                         begin
+                              first_armoury = false;
+
+                              if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+                                   ChangeMissionObjectives('M_out_build_base');
+                         end;
+
+                b_workshop:
+                    if first_workshop then
+                         begin
+                              CenterOnUnits(building);
+                              first_workshop = false;
+
+                              //Find who will speak up.
+                              temp_list = FilterAllUnits([[f_type,unit_human],[f_side, 2],[f_ok]]);
+                              if (temp_list diff Heike) = 0 then  //Heike is alone
+                                   speaker = Heike
+                              else
+                                   if IsOk(Willard) then
+                                        speaker = Willard;
+                                   {else
+                                             begin
+                                                  temp_list_2 = temp_list diff [Ralph,Sonya,Aviradze,Oswald,Heike,Kowalski];
+                                                  if temp_list_2 > 0 then
+                                                       speaker = temp_list_2[1]
+                                                  else
+                                                       if IsOk(Kowalski) then
+                                                            speaker = Kowalski
+                                                       else
+                                                            if IsOk(Oswald) then  //Also covers Oswald > 0
+                                                                 speaker = Oswald
+                                                            else
+                                                                 if IsOk(Sonya) then
+                                                                      speaker = Sonya
+                                                                 else
+                                                                      if IsOk(Aviradze) then
+                                                                           speaker = Aviradze
+                                                                      else speaker = Ralph;
+                                             end;}
+
+                              DialogueOn;
+
+                              if speaker = Heike then
+                                   begin
+                                        Say(Heike,'D6H1b');
+                                        Say(Heike,'D6H2b');
+                                        if not first_lab then  //We have a lab
+                                             Say(Heike,'D6H3ba')
+                                        else Say(Heike,'D6H3bb');
+                                   end
+                              else
+                                   begin
+                                        Say(speaker,'D6Wi1');
+                                        Say(Heike,'D6H1');
+                                        Say(speaker,'D6Wi2');
+
+                                        if speaker = Ralph or not IsOk(Ralph) then
+                                             Say(Heike,'D6H2')
+                                        else
+                                             begin
+                                                  Say(Ralph,'D6Ra1');
+
+                                                  //if IsOk(Aviradze) then
+                                                       Say(Aviradze,'D6Av1');
+
+                                                  //if IsOk(Sonya) then
+                                                       Say(Sonya,'D6So1');
+                                                  //else Say(Heike,'D6So1');
+                                             end;
+
+                                        //if IsOk(Sonya) then
+                                             temp_unit = Sonya;
+                                        //else
+                                        //     if speaker = Ralph then
+                                        //          temp_unit = Ralph
+                                        //     else temp_unit = Heike;
+
+
+                                        Say(temp_unit,'D6So2');
+
+                                        if not first_lab then  //We have a lab
+                                             Say(temp_unit,'D6So3a')
+                                        else Say(temp_unit,'D6So3b');
+                                   end;
+
+                              DialogueOff;
+
+                              Wait(0$0.2);
+
+                              if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+                                   ChangeMissionObjectives('M_out_build_base');  //Looks best if this is updated first
+                              ChangeMissionObjectives('M_add_build_vehicle');
+
+                              //SetTech(tech_solpow, 2, state_enabled);
+                              //SetTech(tech_soleng, 2, state_enabled);
+                         end;
+
+                b_oil_mine:
+                begin
+                    first_oil_mine = false;
+
+                    if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+                       ChangeMissionObjectives('M_out_build_base');  //Looks best if this is updated first
+              end;
+          end;
+      end;
+
+     if GetSide(building) = 5 and GetBType(building) = b_depot then
+     begin
+       FarmerDepot = building;
+       SetResourceType(GetBase(building), mat_cans, 20);
+     end;
+
+     if GetSide(building) = 1 then
+        AmBuildCount = AmBuildCount + 1;
+end;
+
+On UpgradeComplete(building) Do
+begin
+     if GetSide(building) = 1 then
+        AmBuildCount = AmBuildCount + 1;
+end;
+
+//Ape has to stay in lab as long as Apeman Language is researched.
+On LeaveBuilding(building,un) do
+     begin
+          if not Researched(2,tech_apelang) then
+               if GetClass(un) = class_apeman then
+                    ComEnterUnit(un,building);
+     end;
+On SailEvent(info) do
+     begin
+          while not break_follow do
+               begin
+                    ComMoveXY(info[1],GetX(Aviradze),GetY(Aviradze));
+                    wait(0$0.5);
+               end;
+     end;
+
+
+//Dialogue when apeman agression is researched.
+On ResearchComplete(tech,lab) do
+     begin
+          if tech = tech_apeagres then
+               begin
+                    DialogueOn;
+
+                    Say(Aviradze,'D10Av1');
+
+                    if IsOk(Oswald) then
+                         begin
+                              Say(Aviradze,'D10Av2');
+                              Say(Oswald,'D10Os1');
+                              Say(Aviradze,'D10Av3');
+                              Say(Oswald,'D10Os2');
+                              Say(Heike,'D10H1');
+                              Say(Oswald,'D10Os3');
+                              Say(Heike,'D10H2');
+                              Say(Aviradze,'D10Av4');
+                         end;
+
+                    DialogueOff;
+               end;
+     end;
+
+
+//Keep track of how many apemen the player has turned into apeman soldiers.
+//Update objectives accordingly.
+On ApemanTamed(ape,tamer) do
+     begin
+          tamed_apemen = tamed_apemen ^ ape;
+     end;
+Every 0$1+0$0.4 do
+     var i;
+     begin
+          tamed_apemen = UnitFilter(tamed_apemen,[f_alive]);
+
+          for i in tamed_apemen do
+               if GetClass(i) = class_apeman_soldier then
+                    begin
+                         num_apeman_soldiers = num_apeman_soldiers + 1;
+                         tamed_apemen = tamed_apemen diff i;
+
+                         if num_apeman_soldiers = 5 then
+                              ChangeMissionObjectives('M_out_train_apes');
+                    end;
+
+          enable;
+end;
+
+Every 0$1+0$0.4 do
+     var i;
+     begin
+          tamed_apemen = UnitFilter(tamed_apemen,[f_alive]);
+
+          for i in tamed_apemen do
+               if GetClass(i) = class_apeman_soldier then
+                    begin
+                         num_apeman_soldiers = num_apeman_soldiers + 1;
+                         tamed_apemen = tamed_apemen diff i;
+
+                         if num_apeman_soldiers = 5 then
+                              ChangeMissionObjectives('M_out_train_apes');
+                    end;
+
+          enable;
+end;
+
+//Player builds the first vehicle (secondary objective)
+On VehicleConstructed(vehicle,factory) do
+     begin
+          if first_vehicle then
+               begin
+                    first_vehicle = false;
+                    ChangeMissionObjectives('M_out_build_vehicle');
+               end;
+end;
+
+//(some) losing conditions.
+//Heike dies.
+//The depot is destroyed.
+On UnitDestroyed(un) do
+begin
+     if un = Heike then
+     begin
+          ExclusiveOn;
+          wait(0$1);
+          YouLost('HeikeDead');
+          ExclusiveOff;
+     end;
+
+     if un = dep or un = farmerdepot then
+     begin
+          ExclusiveOn;
+          wait(0$1);
+          YouLost('DepDestroyed');
+          ExclusiveOff;
+     end;
+
+     if not CaptureAmBase and GetClass(un) = class_engineer and GetSide(un) = 2 then
+        YouLost('NoEng');
+end;
+
+On Contact(side1, side2) do
+begin
+     if side1 = 2 and side2 = 5 then YouLost('SojAttack');
+
+end;
+
+On Command(com) do
+var i, j, temp;
+begin
+        for i in FilterAllUnits([[f_side, 2],[f_type,unit_human]]) do
+            if GetTaskList(i) > 0 then
+               for j = 1 to GetTaskList(i) do
+               begin
+                    temp = GetTaskList(i)[j][4];
+
+                    if temp = FarmerDepot and GetSide(temp) = 5 then
+                       SetTaskList(i, []);
+               end;
+end;
+

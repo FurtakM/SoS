@@ -1,0 +1,800 @@
+// Start scene, meet Kowalski and his crew
+Export Function Action;
+begin
+     InGameOn;
+     CenterNowOnUnits([Heike, FarmerVehicle]);
+
+     ComMoveXY([Heike, Aviradze, Ralph, Oswald, Sonya, ArSol, FarmerVehicle], 97, 11);
+     AddComMoveXY([Heike, Aviradze, Ralph, Oswald, Sonya, ArSol, FarmerVehicle], 94, 13);
+     AddComMoveXY([Heike, Aviradze, Ralph, Oswald, Sonya, ArSol, FarmerVehicle], 94, 20);
+     AddComMoveXY([Heike, Aviradze, Ralph, Oswald, Sonya, ArSol, FarmerVehicle], 93, 24);
+     AddComMoveXY([Heike, Aviradze, Ralph, Oswald, Sonya, ArSol, FarmerVehicle], 90, 30);
+     AddComMoveXY(FarmerVehicle, 92, 37);
+
+     AddComMoveXY(Heike, 85, 32);
+     AddComTurnUnit(Heike, Kowalski);
+
+     AddComMoveXY(Aviradze, 84, 30);
+     AddComTurnUnit(Aviradze, Kowalski);
+
+     AddComMoveXY(Ralph, 85, 31);
+     AddComTurnUnit(Ralph, Kowalski);
+
+     AddComMoveXY(Oswald, 86, 32);
+     AddComTurnUnit(Oswald, Kowalski);
+
+     AddComMoveXY(Sonya, 87, 33);
+     AddComTurnUnit(Sonya, Kowalski);
+
+     AddComMoveXY(ArSol, 88, 34);
+     AddComTurnUnit(ArSol, Kowalski);
+
+     repeat
+       wait(0$1);
+     until GetDistUnitXY(FarmerVehicle, 92, 37) <= 1;
+
+     AddComExitVehicle(Messenger);
+     wait(0$1);
+     AddComMoveXY(Messenger, 86, 33);
+     AddComTurnUnit(Messenger, Kowalski);
+
+     repeat
+       wait(0$1);
+     until GetDistUnitXY(Heike, 85, 32) <= 1;
+
+     CenterNowOnUnits([Heike, Kowalski]);
+
+     Say(Messenger, 'D2Me1');
+     Say(Heike,'D2H1');
+     Say(Kowalski,'D2Ko1');
+     Say(Heike,'D2H2');
+     Say(Kowalski,'D2Ko2');
+     Say(Heike,'D2H3');
+     Say(Kowalski,'D2Ko3');
+     Say(Heike,'D2H4');
+
+     ComTurnUnit(Messenger, Heike);
+     Say(Messenger,'D2Me2');
+
+     SetSide([Messenger, FarmerVehicle], 5);
+     ComEnterUnit(Messenger, FarmerVehicle);
+     AddComMoveXY(Messenger, 87, 45);
+     AddComMoveXY(Messenger, 92, 60);
+     AddComMoveXY(Messenger, 107, 71);
+     AddComMoveToArea(Messenger, FarmerExitArea);
+
+     Say(Aviradze,'D2Av1');
+     Say(Heike,'D2H5');
+
+     RevealFogArea(2, HillArea);
+     CenterOnXY(62, 39);
+
+     Say(Kowalski,'D2Ko5');
+
+     CenterNowOnUnits([Heike, Kowalski]);
+
+     If Oswald > 0 then
+     begin
+          Say(Oswald, 'D2Os1');
+          Say(Heike,'D2H6');
+          Say(Heike,'D2H7');
+     end;
+
+     repeat
+       wait(0$1);
+     until IsInUnit(Messenger);
+
+     InGameOff;
+
+     ChangeMissionObjectives('M1');
+
+     SaveForQuickRestart;
+
+     {ComMoveXY(FarmerVehicle, 87, 45);
+     AddComMoveXY(FarmerVehicle, 92, 60);
+     AddComMoveXY(FarmerVehicle, 107, 71); }
+     AddComMoveToArea(FarmerVehicle, FarmerExitArea);
+end;
+
+// Remove Farmer from map
+Every 0$1 trigger IsInArea(FarmerVehicle, FarmerExitArea) do
+begin
+     RemoveUnit(FarmerVehicle);
+     RemoveUnit(Messenger);
+end;
+
+// Dialog enter hill
+Every 0$1 trigger FilterUnitsInArea(HillEnterArea, [[f_side, 2], [f_type, unit_human]]) > 0 and CaptureAmBase = false do
+begin
+     Say(Heike, 'D3-H-1');
+end;
+
+// Detect your units if one or more soldiers don't crawl
+{
+Every 0$1 trigger FilterUnitsInArea(HillEnterArea, [[f_side, 2], [f_type, unit_human]]) > 0 and CaptureAmBase = false and americans_are_evacuating = false do
+var i;
+begin
+     enable;
+
+     if FilterUnitsInArea(DetectArabUnitsArea, [[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4]]]) > 0 then
+        AmericanEscape;
+
+     for i in FilterUnitsInArea(DetectArabUnitsArea, [[f_side, 2], [f_type, unit_human], [f_class, 1]]) do
+         if Crawls(i) = false then AmericanEscape;
+end;
+}
+
+// Dialog on spot area
+Every 0$1 trigger FilterUnitsInArea(SpotArea, [[f_side, 2], [f_type, unit_human]]) > 0 and Americans_are_evacuating = false do
+var i;
+begin
+     SetAttitude(1, 2, att_friend, true);
+                       
+     InGameOn;
+     PlaceSeeing(36, 24, 2, -10);
+     CenterOnXY(37, 25);
+
+     DialogueOn;
+     If IsInArea(Heike, DetectArabUnitsArea) then Say(Heike, 'D3-H-2');
+
+     If Oswald > 0 and IsInArea(Oswald, DetectArabUnitsArea) and IsInArea(Heike, DetectArabUnitsArea) then Say(Oswald, 'D3-Osw-1');
+     If Oswald > 0 and IsInArea(Oswald, DetectArabUnitsArea) and not IsInArea(Heike, DetectArabUnitsArea) then Say(Oswald, 'D3-Osw-1a');
+     If Oswald > 0 and not IsInArea(Oswald, DetectArabUnitsArea) then Say(Oswald, 'D3-Osw-1b');
+
+     Say(Heike, 'D3-H-3');
+     Say(Heike, 'D3-H-4');
+
+     If Oswald > 0 then Say(Oswald, 'D3-Osw-2');
+     If KilledAmSci_02 > 0 and IsOk(Aviradze) then Say(Aviradze, 'D3-Aviradze-1');
+
+     DialogueOff;
+
+     RemoveSeeing(36, 24, 2);
+
+     for i in FilterUnitsInArea(DetectArabUnitsArea, [[f_side, 2], [f_type, unit_human]]) do
+         ComMoveXY(i, 64, 41);
+
+     wait(0$10);
+
+     InGameOff;
+
+     SetAttitude(1, 2, att_enemy, true);
+
+     ChangeMissionObjectives('MRockOut');
+
+     SpottedAmericansBase = true;
+end;
+
+//First meeting - you and the American base.
+Every 0$5 do
+     var i, temp, see_list, temp_list, count, string_val;
+     begin
+          //After there has been shooting for a short time - first dialogue.
+          count = 0;
+          repeat
+               wait(0$0.5);
+               see_list = [];
+
+               if ContactTime([2,1]) < 0$2 then
+                    begin
+                         count = count + 1;
+
+                         if count >= 5 then
+                              begin
+                                   see_list = FilterAllUnits([[f_side, 1],[f_see, 2]]);
+                                   for i = 1 to see_list do
+                                        begin
+                                             temp_list = UnitsInside(see_list[i]);
+                                             if temp_list > 0 then
+                                                  see_list = Replace(see_list,i,temp_list[1]);
+                                        end;
+                              end;
+                    end
+               else
+                    count = 0;
+
+          until see_list > 0; //or GetLives(dep) < 1000;
+
+          //if GetLives(dep) = 1000 then
+          //     begin
+                    DialogueOn;
+                    Say(see_list[1],'D3AmMale1');
+                    Say(Heike,'D3H1');
+                    DialogueOff;
+
+                    if SpottedAmericansBase = false then ChangeMissionObjectives('MRockDel');
+          //     end;
+
+          //Americans realizes they cannot win when something gets sufficiently damaged.
+          repeat
+                wait(0$1);
+                temp = 0;
+
+                for i in start_americans do
+                    if GetLives(i) < 850 or i = 0 then
+                       temp = temp + 1;
+          until temp > 2;
+
+          see_list = FilterAllUnits([[f_side, 1],[f_see, 2],[f_ok]]);
+          for i = 1 to see_list do
+               begin
+                    temp_list = UnitsInside(see_list[i]);
+                    if temp_list > 0 then
+                         see_list = Replace(see_list,i,temp_list[1]);
+               end;
+
+          if GetLives(dep) < 1000 then
+               string_val = 'D3AmMale2b'
+          else string_val = 'D3AmMale2a';
+
+          wait(0$5);
+
+          DialogueOn;
+          if see_list > 0 then
+               Say(see_list[1],string_val)
+          else Say(UnitFilter(start_americans,[f_ok])[1],string_val);   
+          DialogueOff;
+
+          americans_are_evacuating = true;
+
+          //Start evacuating to the north or south
+          for i in start_americans do
+               begin
+                    ComExitBuilding(i);
+
+                    if FilterUnitsInArea(NorthArea, [[f_side, 2], [f_type, unit_human]]) > FilterUnitsInArea(SouthArea, [[f_side, 2], [f_type, unit_human]]) then
+                       AddComMoveToArea(i, AmEscapeSouthArea)
+                    else AddComMoveToArea(i, AmEscapeNorthArea);
+               end;
+
+          repeat
+               for i in start_americans do
+                    if (IsInArea(i, AmEscapeNorthArea) or IsInArea(i, AmEscapeSouthArea)) and IsOk(i) then
+                         begin
+                              RemoveUnit(i);
+                              if not americans_got_away then Say(Heike, 'D3-H-5');
+                              americans_got_away = true;
+                          end;
+
+               wait(0$1);
+
+          until UnitFilter(start_americans,[[f_ok],[f_placed]]) = 0;  
+
+          //All initial Americans are gone (in some way)
+          americans_have_evacuated = true;
+
+          //The first attack comes a little sooner if some got away
+          if americans_got_away then
+               attack_times = Replace(attack_times,1,attack_times[1] - attack_times[1] div 7);
+end;
+
+//Farmer's base
+every 0$1 trigger FilterAllUnits([[f_side,2],[f_btype,b_depot]]) > 0 do
+var i, eng, sol, temp;
+begin
+     PrepareFarmerUnits;
+
+     eng = FilterAllUnits([[f_side,5],[f_class,class_engineer]]);
+     sol = FilterAllUnits([[f_side,5],[f_class,class_soldier]]);
+
+     repeat
+           wait(0$1);
+
+           temp = FilterAllUnits([[f_side,5],[f_constructed]]);
+           if temp > 0 then
+              for i in sol do
+                  SetTaskList(i,[['h',0,0,temp[1],0,0,0]]);
+
+           if FilterAllUnits([[f_side,5],[f_btype, b_depot], [f_not, [f_constructed]]]) = 0 then
+              ComBuild(eng, b_depot, 112, 65, 3)
+           else
+               if FilterAllUnits([[f_side,5],[f_btype, b_breastwork], [f_not, [f_constructed]]]) = 0 then
+                  ComBuild(eng, b_breastwork, 107, 55, 2)
+               else
+                   if FilterAllUnits([[f_side,5],[f_btype, b_breastwork], [f_not, [f_constructed]]]) = 1 then
+                      ComBuild(eng, b_breastwork, 106, 69, 1);
+
+     until FilterAllUnits([[f_side,5],[f_btype, b_breastwork],[f_not,[f_constructed]]]) = 2;
+
+     DialogueOn;
+
+     CenterNowOnXY(113, 65);
+     SayRadio(Messenger, 'D5-F-4');
+
+     If Difficulty = 1 then SayRadio(Messenger, 'D5-F-5');
+     If Difficulty = 2 then SayRadio(Messenger, 'D5-F-5a');
+     If IsOk(Kowalski) then Say(Kowalski, 'D4Ko1');
+
+     DialogueOff;
+
+     GameCounterShow = 1;
+     SetSide(FilterAllUnits([f_side,5]) diff eng, 2);
+     ComMoveToArea(eng, FarmerExitArea);
+
+     ChangeMissionObjectives('M2');
+     GameCounterShow = true;
+
+     Hint('CargoPickup');
+     Hint('Transport');
+
+     Query('Query1');
+     wait(0$15);
+
+     for i in eng do
+         RemoveUnit(i);
+end;
+
+// Dialog about convoy
+Every 2$0 trigger CaptureAmBase and americans_got_away = false do
+var i;
+begin
+     DialogueOn;
+     SayRadio(Messenger, 'D5-F-1');
+     Say(Heike, 'D5-H-1');
+     SayRadio(Messenger, 'D5-F-2');
+     Say(Heike, 'D5-H-2');
+     SayRadio(Messenger, 'D5-F-3');
+     Say(Heike, 'D5-H-3');
+     DialogueOff;
+
+     ChangeMissionObjectives('M_Convoy');
+
+     wait(4$0);
+
+     PrepareAmConvoy;
+
+     wait(0$1);
+end;
+
+
+//When first batch of crates spawns, Heike wonders.
+Every 0$1 trigger first_shipment_have_been_sent do
+     var i, delayed;
+     begin
+          //Wait the cooldown of the boom and wait until the boom sound is over. This takes about
+          //4 seconds on game_speed = 4. The number of ticks per 1 'real' second approximally
+          //follows the function f(x) = 35 * (3 ^ (1/3)) ^ (game_speed - 4) . (The third root
+          //of three is ca 1.44).
+          Wait(0$13 + 0$4 * [1/(1.44*1.44*1.44), 1/(1.44*1.44), 1/1.44, 1, 1.44, 1.44*1.44, 1.44*1.44*1.44][game_speed]);
+
+          //Wait until Americans are not attacking, if they are
+          delayed = false;
+          while FilterAllUnits([[f_side, 1],[f_ok],[f_see, 2]]) > 0 and americans_attacking and ContactTime([2, 1]) < 0$10 do
+               begin
+                    wait(0$4);
+                    delayed = true;
+               end;
+
+          if delayed then
+               wait(0$5);
+
+          if IsOk(Kowalski) then
+               begin
+                    CenterOnUnits(Heike);
+
+                    DialogueOn;
+
+                    if not delayed then
+                         Say(Heike,'D5H1a')
+                    else Say(Heike,'D5H1b');
+
+                    Say(Kowalski,'D5Ko1');
+                    Say(Heike,'D5H2');
+                    Say(Kowalski,'D5Ko2');
+                    Say(Heike,'D5H3');
+                    Say(Kowalski,'D5Ko3');
+
+                    DialogueOff;
+          end;
+end;
+
+
+every 0$1 trigger FilterAllUnits([[f_side,2],[f_nation, nation_arabian],[f_not,[f_constructed]],[f_or, [f_btype,b_lab], [f_btype,b_lab_half]]]) > 0 do
+FirstApeDialogue;
+
+//First Ape taming dialogue
+Function FirstApeDialogue;
+var i, temp;
+begin
+     while not IsOk(Aviradze) do
+     begin
+          wait(0$1);
+          if IsDead(Aviradze) then
+             exit;
+     end;
+
+     CenterOnUnits(Aviradze);
+
+     DialogueOn;
+
+     Say(Heike,'D7H1');
+     Say(Aviradze,'D7Av1');
+     Say(Heike,'D7H2');
+     Say(Aviradze,'D7Av2');
+
+     if IsOk(Oswald) then
+     begin
+          Say(Oswald,'D7Os1');
+          Say(Aviradze,'D7Av3');
+          Say(Oswald,'D7Os2');
+          Say(Heike,'D7H3');
+     end;
+
+     Say(Heike,'D7H4');
+     Say(Aviradze,'D7Av4');
+     Say(Aviradze,'D7Av5');
+     Say(Aviradze,'D7Av6');
+
+     DialogueOff;
+
+     Wait(0$0.2);
+
+     if not first_armoury and not first_workshop and not first_lab and not first_oil_mine then
+        ChangeMissionObjectives('M_out_build_base');  //Looks best if this is updated first
+     ChangeMissionObjectives('M_start_plant_gather');
+
+     first_lab = false;
+
+     SetAreaMapShow(pink_bedflower_area,3);
+     SetAreaMapShow(greenhat_area,5);
+     SetAreaMapShow(royal_aphrodite_area,7);
+end;
+
+//Player escortes Aviradze to the different plants.
+//Dialogue and new objectives when all plants have been collected.
+//Dialogue and new objectives when ape has been escorted to the lab.
+Export break_follow;
+Every 0$0.7 trigger not first_lab and IsLive(Aviradze) do
+     var near_ape, first_time, lab_list, lab, temp_unit, temp_list;
+     begin
+          if not HasTask(Aviradze) then
+               if IsInArea(Aviradze,pink_bedflower_area) and aviradze_plant_gathering[1] > 0 then
+                    AviradzePlantGatheringFunc(1)
+               else
+                    if IsInArea(Aviradze,greenhat_area) and aviradze_plant_gathering[2] > 0 then
+                         AviradzePlantGatheringFunc(2)
+                    else
+                         if IsInArea(Aviradze,royal_aphrodite_area) and aviradze_plant_gathering[3] > 0 then
+                              AviradzePlantGatheringFunc(3);
+
+          if (aviradze_plant_gathering diff 0) = 0 then  //All plants have been gathered
+               begin
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M_find_ape');
+
+                    first_time = true;  //First time an ape is encountered
+                    repeat
+                         //Wait until an ape is within reach of Aviradze.
+                         repeat
+                              if UnitFilter(apes,[[f_class,class_apeman],[f_alive]]) = 0 or IsDead(Aviradze) then  //No apemen left on the map or Aviradze is dead (just too bad...)
+                                   exit;
+
+                              wait(0$1);
+                              near_ape = NearestUnitToUnit(UnitFilter(apes,[f_ok]),Aviradze);
+
+                         until GetDistUnits(Aviradze,near_ape) <= 5 and See(2,near_ape);
+
+                         ComTurnUnit(Aviradze,near_ape);
+                         Wait(0$0.2);
+
+                         repeat
+                              //Make apeman follow Aviradze
+                              //ComMoveUnit(near_ape,Aviradze); -> not completely reliable
+                              break_follow = false;  //Tells SailEvent below if the ape should stop following Aviradze
+                              RaiseSailEvent(near_ape);
+
+                              //Dialogue if this is first ape the player lures.
+                              if first_time then
+                                   begin
+                                        Say(Aviradze,'D9Av2');
+                                        first_time = false;
+                                   end;
+
+                              //Wait until Aviradze is inside a lab.
+                              //Stops following if Aviradze enters any other unit than a lab or too far away from the ape.
+                              lab = 0;
+                              repeat
+                                   wait(0$1);
+
+                                   temp_unit = IsInUnit(Aviradze);
+                                   if GetBType(temp_unit) in [b_lab,b_lab_half] then
+                                        begin
+                                             lab = temp_unit;
+                                             break;
+                                        end;
+
+                                   if GetDistUnits(Aviradze,near_ape) > 7 then
+                                        begin
+                                             lab = -1;
+                                             break;
+                                        end;
+
+                              until IsDead(near_ape) or IsDead(Aviradze) or temp_unit <> lab;
+
+                              break_follow = true;  //Stop following Aviradze
+
+                              if IsDead(near_ape) or IsDead(Aviradze) or temp_unit <> lab then
+                                   break;  //Start over again
+
+                              //Ape enter the lab. If Aviradze exits before ape is inside, then ape starts
+                              //following Aviradze again, of course.
+                              //Units of side 0 can't enter or stay in a building, so we ask the ape to move to
+                              //the center entrance hex of the lab. When it has arrived we remove it from the map,
+                              //change the side to the player's side and place the ape in the lab.
+                              temp_list = [ShiftX(GetX(lab),GetDir(lab),2) , ShiftY(GetY(lab),GetDir(lab),2)];
+                              repeat
+                                   ComMoveXY(near_ape,temp_list[1],temp_list[2]);
+                                   AddComStand(near_ape);
+                                   wait(0$0.7);
+
+                              until ( GetDistUnits(near_ape,lab) <= 3 and UnitsInside(lab) < 6 ) or IsInUnit(Aviradze) <> lab or IsDead(near_ape) or IsDead(Aviradze);  //Distance - safety measure
+
+                         until IsInUnit(Aviradze) = lab or IsDead(near_ape) or IsDead(Aviradze);
+
+                    until not IsDead(near_ape) and not IsDead(Aviradze) and lab > 0;
+
+                    //Ape successfully enters the lab
+                    RemoveUnit(near_ape);
+                    SetSide(near_ape, 2);
+                    PlaceHumanInUnit(near_ape,lab);
+
+                    CenterOnUnits(lab);
+                    DialogueOn;
+
+                    Say(Aviradze,'D9Av3');
+
+                    if IsOk(Sonya) then
+                         Say(Sonya,'D9So1')
+                    else Say(Heike,'D9H1');
+
+                    if GetSex(near_ape) = sex_male then
+                         Say(Aviradze,'D9Av4a')
+                    else Say(Aviradze,'D9Av4b');
+
+                    DialogueOff;
+
+                    wait(0$0.2);
+                    ChangeMissionObjectives('M_train_apes');
+                    SetTech(tech_apelang, 2, state_enabled);
+                    SetTech(tech_apeagres, 2, state_enabled);
+
+                    tamed_apemen = tamed_apemen ^ near_ape;
+               end
+          else enable;
+end;
+
+// Send convoy to base 
+// Cargo follow first veh non civilian
+Every 0$1 trigger ConvoyAmericans_List and AmConvoySeePlayer = false do
+var i, vehs, cargo;
+begin
+     enable;
+
+     vehs = UnitFilter(ConvoyAmericans_List, [[f_side, 1], [f_ok], [f_or, [f_weapon, us_machine_gun], [f_weapon, us_gatling_gun], [f_weapon, us_light_gun]]]);
+     cargo = UnitFilter(ConvoyAmericans_List, [[f_side, 1], [f_ok], [f_weapon, us_cargo_bay]]);
+
+     AddComAgressiveMove(vehs, 94, 21);
+     AddComAgressiveMove(vehs, 89, 39);
+     AddComAgressiveMove(vehs, 85, 69);
+     AddComAgressiveMove(vehs, 49, 49);
+     AddComAgressiveMove(vehs, 38, 30);
+
+     ComMoveXY(cargo, GetX(vehs[1]), GetY(vehs[1]));
+end;
+
+// Am convoy attacked by player
+Every 0$1 trigger AmConvoySeePlayer = false do
+var i, j, tmp;
+begin
+     enable;
+
+     for i in ConvoyAmericans_List do
+      for j in FilterAllUnits([[f_side, 2], [f_type, unit_human]]) do
+         if See(2, i) and GetDistUnits(i, j) <= 11 then
+         begin
+             AmConvoySeePlayer = true;
+
+             tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]);
+
+             DialogueOn;
+             if GetSex(tmp[1]) = 1 then Say(tmp[1], 'D5-AmSol-1')
+             else Say(tmp[1], 'D5-FAmSol-1');
+             DialogueOff;
+
+             exit;
+         end;
+end;
+
+// Am convoy in base
+Every 0$10 trigger AmConvoySeePlayer = false do
+var i, tmp;
+begin
+
+     enable;
+
+     for i in ConvoyAmericans_List do
+         if IsInArea(i, AmericanBaseArea) then
+         begin
+             AmConvoySeePlayer = true;
+             AmConvoyEscapeFromMap = true;
+
+             tmp = FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]);
+
+             DialogueOn;
+             if GetSex(tmp[1]) = 1 then Say(tmp[1], 'D5-AmSol-1a')
+             else Say(tmp[1], 'D5-FAmSol-1a');
+             DialogueOff;
+
+             exit;
+         end;
+end;
+
+// Am convoy damaged
+Every 0$1 trigger AmConvoySeePlayer and AmConvoyEscapeFromMap = false do
+var i, tmp;
+begin
+
+     enable;
+
+     if Difficulty = 1 then
+     for i in ConvoyAmericans_List do
+         if GetWeapon(i) = us_cargo_bay and GetLives(i) <= 700 then
+         begin
+              tmp = i;
+
+              AmConvoyEscapeFromMap = true;
+
+              DialogueOn;
+              if GetSex(UnitsInside(tmp)[1]) = 1 then Say(UnitsInside(tmp)[1], 'D5-AmSol-2')
+              else Say(UnitsInside(tmp)[1], 'D5-FAmSol-2');
+
+              Say(Heike, 'D5-H-4');
+
+              DialogueOff;
+              exit;
+         end;
+
+     if UnitFilter(ConvoyAmericans_List, [[f_type, unit_vehicle],[f_not, [f_lives, 650]]]) >= 2 then
+     begin
+          AmConvoyEscapeFromMap = true;
+          tmp = UnitFilter(ConvoyAmericans_List, [[f_type, unit_human], [f_lives, 251]]);
+
+          if tmp > 0 then
+             tmp = tmp[Rand(1,tmp)];
+
+          DialogueOn;
+          if GetSex(tmp) = 1 then Say(tmp, 'D5-AmSol-3')
+          else Say(tmp, 'D5-FAmSol-3');
+
+          if Difficulty = 1 then
+             Say(Heike, 'D5-H-4')
+          else
+              Say(Heike, 'D5-H-4a');
+
+          DialogueOff;
+          exit;
+     end;
+end;
+
+// Send convoy to escape area and remove from map
+Every 0$1 trigger AmConvoyEscapeFromMap do
+var i;
+begin
+     enable;
+
+     for i in ConvoyAmericans_List do
+     begin
+         ComMoveToArea(i, AmConvoyEscapeArea);
+
+         if IsInArea(i, AmConvoyEscapeArea) and GetSide(i) = 1 then
+         begin
+           RemoveUnit(i);
+           AmConvoyEscapedFromPlayer = true;
+         end;
+     end;
+end;
+
+
+//Trigger the countdown to attack.
+//+6 min in total if no people from the base escape (and then the convoy appears)
+//+5 min if none from the convoy escape (counting from its appearance on map)
+every 0$1 trigger americans_have_evacuated do
+begin
+     if americans_got_away then
+     begin
+          AmAlarmAttack = true;
+          exit;
+     end;
+
+     while not ConvoyPlaced do
+           wait(0$1);
+
+     while FilterAllUnits([[f_side, 1],[f_ok],[f_not, [f_empty]]]) > 0 do
+           wait(0$1);
+
+     ChangeMissionObjectives('M_ConvoyDel');
+
+     if AmConvoyEscapedFromPlayer = false then
+        wait(5$0);
+
+     AmAlarmAttack = true;
+end;
+
+
+// Enemy on hill
+Every 0$1 trigger FilterUnitsInArea(EnemySpotArea, [[f_side, 1], [f_type, unit_human], [f_see, 2]]) do
+     Say(Heike, 'D11-H-1');
+
+// Enemy wave dialog
+Every 0$1 do
+var i, j;
+begin
+
+     enable;
+
+     if waveDialogBlock = 3 then exit;
+
+     if waveDialog = 1 and waveDialogBlock = 0 then
+      for i in first_wave do
+          for j in i do
+           if See(2, j) then
+           begin
+             waveDialogBlock = waveDialogBlock + 1;
+
+             DialogueOn;
+             Say(Heike, 'D11H1');
+             DialogueOff;
+             break;
+           end;
+
+     if waveDialog = 2 and waveDialogBlock = 1 then
+      for i in second_wave do
+          for j in i do
+           if See(2, j) then
+           begin
+             waveDialogBlock = waveDialogBlock + 1;
+
+             DialogueOn;
+             Say(Heike, 'D11H2');
+             DialogueOff;
+             break;
+           end;
+
+     if waveDialog = 3 and waveDialogBlock = 2 then
+      for i in third_wave do
+          for j in i do
+           if See(2, j) then
+           begin
+             waveDialogBlock = waveDialogBlock + 1;
+
+             while FilterAllUnits([[f_side,1],[f_ok]]) > 0 do
+                   wait(0$1);
+
+             DialogueOn;
+             Say(Heike, 'D11H3');
+             DialogueOff;
+             break;
+           end;
+end;
+
+Every 0$1 do
+begin
+     if GetResourceType(GetBase(FarmerDepot), mat_cans) >= secondary_crate_goal and GetResourceType(GetBase(FarmerDepot), mat_oil) >= secondary_crate_goal then
+     begin
+          ChangeMissionObjectives('M_crate_out');
+          exit;
+     end;
+
+enable;
+end;
+
+Every 0$1 do
+var i;
+begin
+     for i in FilterAllUnits([[f_side,1],[f_type, unit_vehicle]]) do
+         if GetFuel(i) < 10 then
+            SetFuel(i, 10);
+
+enable;
+end;
+

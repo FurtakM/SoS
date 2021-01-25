@@ -1,0 +1,1184 @@
+
+//If the player attacks the depot by the "backway" the Americans will try to defend it.
+Every 0$1+0$0.1 do
+     var i, depot_attacked, k, avai_b, stand_down_countdown, in_pos;
+     begin
+          depot_attacked = false;
+          stand_down_countdown = 0$5;
+
+          repeat
+          wait(0$1);
+
+          if americans_are_evacuating then
+               exit;
+
+          if not depot_attacked then
+               if UnitShoot(dep) > 0 and Attacks(UnitShoot(dep)) = dep then
+                    depot_attacked = true;
+
+          avai_b = [b1,b2];
+          in_pos = [];
+
+          for i in UnitFilter(start_americans,[[f_class,class_soldier],[f_ok]]) do
+               begin
+                    if not depot_attacked then
+                         begin
+                              if not IsInUnit(i) in [b1,b2] then
+                                   case GetType(IsInUnit(i)) of
+                                        unit_building: ComExitBuilding(i);
+                                        unit_vehicle: ComExitVehicle(i);
+                                        else
+                                             begin
+                                                  k = NearestUnitToUnit([b1,b2],i);
+                                                  if k > 0 then
+                                                       begin
+                                                            ComEnterUnit(i,k);
+                                                            avai_b = avai_b diff k;
+                                                       end
+                                                  else
+                                                       if GetDistUnitXY(i,43,50) > 4 then
+                                                            ComAgressiveMove(i,43,50);
+                                             end;
+                                   end;
+                         end
+                    else
+                         begin
+                              case GetType(IsInUnit(i)) of
+                                   unit_building: ComExitBuilding(i);
+                                   unit_vehicle: ComExitVehicle(i);
+                                   else
+                                        begin
+                                             if GetDistUnitXY(i,43,65) > 3 then
+                                                  ComAgressiveMove(i,43,65)
+                                             else
+                                                  if Attacks(i) = 0 then
+                                                       in_pos = in_pos ^ i;
+                                        end;
+                              end;
+                         end;
+               end;
+
+          if in_pos+0 = UnitFilter(start_americans,[[f_class,class_soldier],[f_ok]])+0 then
+               begin
+                    stand_down_countdown = stand_down_countdown - 0$1;
+                    if stand_down_countdown <= 0$0 then
+                         begin
+                              depot_attacked = false;
+                              stand_down_countdown = 0$5;
+                         end;
+               end
+          else
+               stand_down_countdown = 0$5;
+
+          until false;
+     end;
+
+//Determine when to start an American attack and when an attack is over.
+Every 0$1 trigger americans_have_evacuated and GetSide(dep) = you do
+     var attacking_units, i, done, displacement, temp_list;
+     var attack_time_counter;
+     begin
+          attack_time_counter = 0$0;
+
+          repeat
+
+          //Wait until new attack should commence
+          repeat
+               if FilterAllUnits([[f_side,americans],[f_ok],[f_type,unit_human]]) = 0 then
+                    americans_attacking = false;
+
+               wait(0$1);
+
+               attack_time_counter = attack_time_counter + 0$1;
+                                                         
+          until attack_time_counter >= attack_times[attack_num+1];
+
+          attack_num = attack_num + 1;
+          americans_attacking = true;
+
+          //Determine which units should be used for this attack
+          case attack_num of
+               1: attacking_units = first_wave;
+               2: attacking_units = second_wave;
+               3: attacking_units = third_wave;
+               4: attacking_units = fourth_wave;
+          end;
+
+          //Prepare unit hex indexes
+          temp_list = [];
+          for i in attacking_units[1] do
+               temp_list = temp_list ^ i;
+          for i in attacking_units[2] do
+               temp_list = temp_list ^ i;
+
+          for i in temp_list do
+               ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,i,1);
+
+          //Place the units in the American enter area. Don't go on until all have been placed.
+          repeat
+               //for k = 1 to 2 do
+               //     begin
+                         done = true;
+
+                         for i in attacking_units[1] ^ attacking_units[2] do
+                              if not IsPlaced(i[1]) then
+                                   begin
+                                        PlaceUnitArea(i[1],am_spawn_area,false);
+                                        done = false;
+                                   end;
+                    
+                         //wait(0$1);
+               //     end;
+
+               if not done then
+                    for i in attacking_units[1] ^ attacking_units[2] do
+                         if IsInArea(i[1],am_spawn_area) then
+                              ComMoveXY(i[1],21,12);  //Move away from the area so all units can be placed
+
+               wait(0$1);
+
+          until done;
+
+          //Determine which units to use for which strategies depending on wave number.
+          //Must be synchronized with function "PrepareAmericans" in module "MAIN".
+          //strategy_1_units = [[],[]];  //[ vehicle_groups , soldiers ]
+          //strategy_2_units = [[],[]];  //[ vehicle_groups , soldiers ]
+          //strategy_3_units = [[],[]];  //[ vehicle_groups , soldiers ] (but no vehicles in this group)
+          //strategy_4_units = [[],[]];  //[ vehicle_groups , soldiers ] (but no vehicles in this group)
+          case attack_num of
+               1:   //All units follow strategy 1
+                    MergeStrategyGroups(1,attacking_units[1],attacking_units[2]);
+               
+               2: begin
+                    //Difficulty - 1 soldiers follow strategy 4.
+                    //Half of the remaining units follow strategy 1. The rest strategy 2.
+                    temp_list = [];
+                    for i = 1 to difficulty - 1 do
+                         temp_list = temp_list ^ attacking_units[2][i];
+                    MergeStrategyGroups(4,[],temp_list);
+
+                    DistributeToStrat1And2(attacking_units,difficulty-1);
+               end;
+               3: begin
+                    //Difficulty soldiers follow strategy 4.
+                    //Difficulty + 1 soldiers follow strategy 3.
+                    //Half of the remaining units follow strategy 1. The rest strategy 2.
+                    temp_list = [];
+                    for i = 1 to difficulty do
+                         temp_list = temp_list ^ attacking_units[2][i];
+                    MergeStrategyGroups(4,[],temp_list);
+
+                    displacement = difficulty;
+                    temp_list = [];
+                    for i = displacement + 1 to displacement + difficulty+1 do
+                         temp_list = temp_list ^ attacking_units[2][i];
+                    MergeStrategyGroups(3,[],temp_list);
+
+                    displacement = displacement + (difficulty + 1);
+                    DistributeToStrat1And2(attacking_units,displacement);
+               end;
+               4: begin
+                    //Difficulty + 1 soldiers follow strategy 4.
+                    //Difficulty + 2 soldiers follow strategy 3.
+                    //Half of the remaining units follow strategy 1. The rest strategy 2.
+                    temp_list = [];
+                    for i = 1 to difficulty + 1 do
+                         temp_list = temp_list ^ attacking_units[2][i];
+                    MergeStrategyGroups(4,[],temp_list);
+
+                    displacement = difficulty + 1;
+                    temp_list = [];
+                    for i = displacement + 1 to displacement + difficulty+2 do
+                         temp_list = temp_list ^ attacking_units[2][i];
+                    MergeStrategyGroups(3,[],temp_list);
+
+                    displacement = displacement + (difficulty + 2);
+                    DistributeToStrat1And2(attacking_units,displacement);
+               end;
+          end;
+
+          //Start the strategy-everys below.
+          ai_attack_groups_in_position = [false,false,false,false];
+          enable(41);
+          enable(42);
+          enable(43);
+          enable(44);
+
+          until attack_num = 4;
+     end;
+//Play an appropriate dialogue when an attack is over. Notice that attacks may overlap.
+Every 0$1.1 do
+     var last_attack_num;
+     begin
+          last_attack_num = attack_num;
+
+          repeat
+
+          repeat
+          wait(0$1);
+          until attack_num > last_attack_num;  //Wait for the next attack to commence
+
+          last_attack_num = attack_num;
+
+          repeat
+          Wait(0$1);
+          until not americans_attacking;
+
+          case attack_num of
+               2: begin
+                  wait(0$2);
+
+                  if americans_attacking then
+                       continue;
+
+                  DialogueOn;
+                  Say(Heike,'D11H3');
+                  DialogueOff;
+               end;
+               3: begin
+                    wait(0$2);
+
+                    if americans_attacking then
+                       continue;
+
+                    DialogueOn;
+                    Say(Heike,'D11H4');
+                    DialogueOff;
+               end;
+          end;
+
+          until attack_num >= 3;
+     end;
+//Distribute soldiers and vehicle groups evenly to strategy 1 and 2. Strategy 1
+//is favoured if the numbers are odd.
+Function DistributeToStrat1And2(attacking_units,soldier_displacement);
+     var temp_list, i, temp_value;
+     begin
+          //Vehicles
+          temp_value = attacking_units[1] div 2;
+
+          temp_list = [];
+          for i = 1 to temp_value do
+               temp_list = Insert(temp_list,1,attacking_units[1][i]);
+
+          MergeStrategyGroups(2,temp_list,[]);
+
+          temp_list = [];
+          for i = temp_value + 1 to attacking_units[1] do
+               temp_list = Insert(temp_list,1,attacking_units[1][i]);
+
+          MergeStrategyGroups(1,temp_list,[]);
+                         
+
+          //Soldiers
+          temp_value = ( attacking_units[2] - soldier_displacement ) div 2;
+
+          temp_list = [];
+          for i = soldier_displacement + 1 to soldier_displacement + temp_value do
+               temp_list = Insert(temp_list,1,attacking_units[2][i]);
+
+          MergeStrategyGroups(2,[],temp_list);
+
+          temp_list = [];
+          for i = soldier_displacement + temp_value + 1 to attacking_units[2] do
+               temp_list = Insert(temp_list,1,attacking_units[2][i]);
+
+          MergeStrategyGroups(1,[],temp_list);
+     end;
+Function MergeStrategyGroups(group_num,vehicles,humans);
+     var temp_list;
+     begin
+          case group_num of
+               1: begin
+                    temp_list = strategy_1_units[1] ^ vehicles;
+                    strategy_1_units = Replace(strategy_1_units,1,temp_list);
+
+                    temp_list = strategy_1_units[2] ^ humans;
+                    strategy_1_units = Replace(strategy_1_units,2,temp_list);
+               end;
+               2: begin
+                    temp_list = strategy_2_units[1] ^ vehicles;
+                    strategy_2_units = Replace(strategy_2_units,1,temp_list);
+
+                    temp_list = strategy_2_units[2] ^ humans;
+                    strategy_2_units = Replace(strategy_2_units,2,temp_list);
+               end;
+               3: begin
+                    temp_list = strategy_3_units[1] ^ vehicles;
+                    strategy_3_units = Replace(strategy_3_units,1,temp_list);
+
+                    temp_list = strategy_3_units[2] ^ humans;
+                    strategy_3_units = Replace(strategy_3_units,2,temp_list);
+               end;
+               4: begin
+                    temp_list = strategy_4_units[1] ^ vehicles;
+                    strategy_4_units = Replace(strategy_4_units,1,temp_list);
+
+                    temp_list = strategy_4_units[2] ^ humans;
+                    strategy_4_units = Replace(strategy_4_units,2,temp_list);
+               end;
+          end;
+     end;
+
+{
+//--10906--//
+//Strategy 1
+//Direct assult from the North.
+Every 0$1+0$0.6 Marked 41 do
+     var i, ready_units, temp_list, temp_unit;
+     var waypoints, unit_hex_index;
+     begin
+          if strategy_1_units[1] = 0 and strategy_1_units[2] = 0 then
+               exit;
+
+          //If someone is following strategy 2 then strat 1 units should
+          //wait until strat 2 units are in position so the two frontal attacks
+          //are carried out at the same time.
+          //Additionally there is a chance that strat 2 units will surprise some
+          //engineers carrying crates while moving into position if strat 1 units
+          //keep unseen.
+          if strategy_2_units[1] > 0 or strategy_2_units[2] > 0 then
+               repeat
+                    Wait(0$2);
+               until strat_2_units_are_in_position;
+
+
+          waypoints = [[21,13],[30,24],[35,33],[43,54]];
+          unit_hex_index = [];
+
+          repeat
+               //Vehicles
+               ready_units = CommandVehicleGroups(1,strategy_1_units[1])[1];
+
+
+               //Soldiers
+               for i in strategy_1_units[2] do
+                    if IsOk(i) then
+                         ready_units = ready_units ^ i
+                    else
+                         if attack_num = 4 then
+                              begin
+                                   temp_unit = CreateAmSoldier;
+                                   PlaceUnitArea(temp_unit,am_spawn_area,false);
+
+                                   temp_list = strategy_1_units[2] diff i;
+                                   temp_list = temp_list ^ temp_unit;
+                                   strategy_1_units = Replace(strategy_1_units,2,temp_list);
+                              end;
+
+
+               for i in ready_units do
+                    begin
+                         //if GetDistUnitXY(i[1],43,53) > 7 then
+                         //     ComAgressiveMove(i[1],43,53);
+
+                         if i[1] > unit_hex_index then
+                              begin
+                                   unit_hex_index = Replace(unit_hex_index,i[1],1);
+                              end
+                         else
+                              if unit_hex_index[i[1]] < waypoints and GetDistUnitXY(i[1],waypoints[unit_hex_index[i[1]]][1],waypoints[unit_hex_index[i[1]]][2]) <= 6 then
+                                   begin
+                                        waypoints = Replace(waypoints,i[1],waypoints[i[1]]+1);
+                                   end;
+
+                         ComAgressiveMove(i[1],waypoints[unit_hex_index[i[1]]][1],waypoints[unit_hex_index[i[1]]][2]);
+                    end;
+
+               Wait(0$1);
+
+               if attack_num = 4 then
+                    continue;
+
+          until UnitFilter(strategy_1_units[2],[f_ok]) = 0 and not CheckVehicleGroups(strategy_1_units[1]);
+     end;
+//--11250--//
+Function CommandVehicleGroups(strat_num,vehicle_groups);
+     var i, temp_unit, strat_units, result_list_1, result_list_2, result_list_3, temp_list;
+     begin
+          result_list_1 = [];  //Ready vehicle groups
+          result_list_2 = [];  //Old vehicle groups which should be deleted
+          result_list_3 = [];  //New vehicle groups
+
+          for i in vehicle_groups do
+               if IsOk(i[2]) then 
+                    begin
+                         if IsOk(i[1]) then
+                              begin
+                                   //If driver isn't inside the vehicle then enter the vehicle.
+                                   temp_unit = IsInUnit(i[2]);
+                                   if temp_unit <> i[1] then
+                                        case GetType(IsInUnit(i[2])) of
+                                             unit_building: ComExitBuilding(i[2]);
+                                             unit_vehicle: ComExitVehicle(i[2]);
+                                             else
+                                                  ComEnterUnit(i[2],i[1]);
+                                        end
+                                   else
+                                        //Vehicle group is ready
+                                        result_list_1 = result_list_1 ^ [i]
+                              end
+                         else
+                              //We don't try to repair the vehicle because it really doesn't do any good
+                              //if you haven't pulled back first. Actually it's just doing the player a
+                              //favour so he/she can more easily capture them.
+                              //ComAgressiveMove(i[2],43,53);  //Mechanic rage! Attack like a soldier.
+                              result_list_1 = result_list_1 ^ i[2];
+                    end
+               else
+                    if attack_num = 4 then
+                         begin
+                              //If the driver is dead (or not placed), create a new vehicle group and spawn
+                              //it in the spawn area. Update the unit lists accordingly.
+                              temp_list = CreateAmVehicleAndDriver;
+                              PlaceUnitArea(temp_list[1],am_spawn_area,false);
+
+                              //The old vehicle group should be deleted
+                              result_list_2 = result_list_2 ^ [i];
+                              //...and the new added
+                              result_list_3 = result_list_3 ^ [temp_list];
+
+                              //We update the strategy lists here
+                              case strat_num of
+                                   1: temp_list = strategy_1_units[1] ^ [temp_list];
+                                   2: temp_list = strategy_2_units[1] ^ [temp_list];
+                              end;
+                              temp_list = temp_list diff [i];
+                              case strat_num of
+                                   1: strategy_1_units = Replace(strategy_1_units,1,temp_list);
+                                   2: strategy_2_units = Replace(strategy_2_units,1,temp_list);
+                              end;
+                         end;
+
+          result = [result_list_1,result_list_2,result_list_3];
+     end;
+//--11802--//
+//Returns "true" if just one vehicle driver is ok. Don't look at the vehicles - they may have just yellow life.
+Function CheckVehicleGroups(vehicle_groups);
+     var i;
+     begin
+          result = false;
+          for i in vehicle_groups do
+               if IsOk(i[2]) then
+                    begin
+                         result = true;
+                         exit;
+                    end;
+     end;
+
+
+//--11894--//
+//Strategy 2
+//Move to the south-east and attack from the east.
+Every 0$1+0$0.7 Marked 42 do
+     var i, position_1_vehicle_groups, position_2_vehicle_groups, position_1_soldiers, position_2_soldiers, ready_units, temp_list;
+     var temp_unit, k, temp_list_2, hex;
+     begin
+          if strategy_2_units[1] = 0 and strategy_2_units[2] = 0 then
+               exit;
+
+          //Move the units into position and attack.
+          position_1_vehicle_groups = strategy_2_units[1];
+          position_1_soldiers = strategy_2_units[2];
+          position_2_vehicle_groups = [];
+          position_2_soldiers = []; 
+          repeat
+               //Vehicles
+               temp_list = CommandVehicleGroups(2,position_1_vehicle_groups);
+               position_1_vehicle_groups = position_1_vehicle_groups diff temp_list[2];
+               position_1_vehicle_groups = position_1_vehicle_groups ^ temp_list[3];
+               for i in temp_list[1] do
+                    if GetDistUnitXY(i[1],41,21) > 4 then
+                         ComAgressiveMove(i[1],41,21)
+                    else
+                         begin
+                              position_1_vehicle_groups = position_1_vehicle_groups diff [i];
+                              position_2_vehicle_groups = position_2_vehicle_groups ^ [i];
+                         end;
+
+               temp_list = CommandVehicleGroups(2,position_2_vehicle_groups);
+               position_2_vehicle_groups = position_2_vehicle_groups diff temp_list[2];
+               position_2_vehicle_groups = position_2_vehicle_groups ^ temp_list[3];
+               for i in temp_list[1] do
+                    if GetDistUnitXY(i[1],72,49) > 4 then
+                         ComAgressiveMove(i[1],72,49)
+                    else
+                         position_2_vehicle_groups = position_2_vehicle_groups diff [i];
+
+               temp_list = CommandVehicleGroups(2,strategy_2_units[1] diff (position_1_vehicle_groups ^ position_2_vehicle_groups));
+               ready_units = temp_list[1];
+               position_1_vehicle_groups = position_1_vehicle_groups ^ temp_list[3];
+
+
+               //Soldiers
+               temp_list_2 = [position_1_soldiers, position_2_soldiers, strategy_2_units[2] diff (position_1_soldiers ^ position_2_soldiers)];
+               for k = 1 to 3 do
+                    for i in temp_list_2[k] do
+                         if IsOk(i) then
+                              case k of
+                                   1,2: begin
+                                        case k of
+                                             1: hex = [41,21];
+                                             2: hex = [72,49];
+                                        end;
+                                             
+                                        if GetDistUnitXY(i,hex[1],hex[2]) > 6 then
+                                             ComAgressiveMove(i,hex[1],hex[2])
+                                        else
+                                             case k of
+                                                  1: begin
+                                                       position_1_soldiers = position_1_soldiers diff i;
+                                                       position_2_soldiers = position_2_soldiers ^ i;
+                                                  end;
+                                                  2: position_2_soldiers = position_2_soldiers diff i;
+                                             end;
+                                   end;
+                                   3: ready_units = ready_units ^ i;
+                              end
+                         else
+                              if attack_num = 4 then
+                                   begin
+                                        temp_unit = CreateAmSoldier;
+                                        PlaceUnitArea(temp_unit,am_spawn_area,false);
+                                        
+                                        case k of
+                                             1: position_1_soldiers = position_1_soldiers diff i;
+                                             2: position_2_soldiers = position_2_soldiers diff i;
+                                        end;
+                                             
+                                        temp_list = strategy_2_units[2] diff i;
+                                        temp_list = temp_list ^ temp_unit;
+                                        strategy_2_units = Replace(strategy_2_units,2,temp_list);
+
+                                        position_1_soldiers = position_1_soldiers union temp_unit;
+                                   end;
+
+               //If there has been contact between the player and the Americans, just go for it.
+               if ( position_1_vehicle_groups = 0 and position_1_soldiers = 0 and position_2_vehicle_groups = 0 and position_2_soldiers = 0 )
+                  or ContactTime([you,americans]) <= 0$3 then
+                    strat_2_units_are_in_position = true;  
+
+
+               //None may attack until all units are in position the first time (considering respawn
+               //in attack 4).
+               if strat_2_units_are_in_position then
+                    for i in ready_units do
+                         if GetDistUnitXY(i[1],43,53) > 7 then
+                              ComAgressiveMove(i[1],43,53);
+
+               Wait(0$1);
+
+               if attack_num = 4 then
+                    continue;
+
+          until UnitFilter(strategy_2_units[2],[f_ok]) = 0 and not CheckVehicleGroups(strategy_2_units[1]);
+     end;
+
+
+//--13046--//
+//Strategy 3
+//Move to the south-east and attack from the north-east through the forest.
+Every 0$1+0$0.8 Marked 43 do
+     var i, temp_unit, temp_list_2;
+     begin
+          if strategy_3_units = 0 then
+               exit;
+
+
+          temp_list_2 = strategy_3_units;
+          repeat
+               for i in strategy_3_units do
+                    if not IsOk(i) and attack_num = 4 then
+                         begin
+                              temp_unit = CreateAmSoldier;
+
+                              strategy_3_units = strategy_3_units diff i;
+                              strategy_3_units = strategy_3_units ^ temp_unit;
+
+                              temp_list_2 = temp_list_2 union temp_unit;
+                         end;
+
+               for i in temp_list_2 do
+                    if not IsPlaced(i) then
+                         PlaceUnitArea(i,am_spawn_area,false)
+                    else
+                         begin
+                              ComAgressiveMove(strategy_3_units,54,31);
+                              AddComAgressiveMove(strategy_3_units,50,38);
+                              AddComAgressiveMove(strategy_3_units,43,53);
+
+                              temp_list_2 = temp_list_2 diff i;
+                         end;
+
+               wait(0$1);
+
+               if attack_num = 4 then
+                    continue;
+
+          until UnitFilter(strategy_3_units,[f_ok]) = 0;
+     end;
+
+
+//Strategy 4
+//Move to the south, sticking to the west-border of the map. Then attack from
+//the south-west.
+Every 0$1+0$0.9 Marked 44 do
+     var i, temp_unit, temp_list_2;
+     begin
+          if strategy_4_units = 0 then
+               exit;
+
+
+          temp_list_2 = strategy_4_units;
+          repeat
+               for i in strategy_4_units do
+                    if not IsOk(i) and attack_num = 4 then
+                         begin
+                              temp_unit = CreateAmSoldier;
+
+                              strategy_4_units = strategy_4_units diff i;
+                              strategy_4_units = strategy_4_units ^ temp_unit;
+
+                              temp_list_2 = temp_list_2 union temp_unit;
+                         end;
+
+               for i in temp_list_2 do
+                    if not IsPlaced(i) then
+                         PlaceUnitArea(i,am_spawn_area,false)
+                    else
+                         begin
+                              ComAgressiveMove(strategy_4_units,9,12);
+                              AddComAgressiveMove(strategy_4_units,16,28);
+                              AddComAgressiveMove(strategy_4_units,21,38);
+                              AddComAgressiveMove(strategy_4_units,38,65);
+                              AddComAgressiveMove(strategy_4_units,43,53);
+
+                              temp_list_2 = temp_list_2 diff i;
+                         end;
+
+               wait(0$1);
+
+               if attack_num = 4 then
+                    continue;
+
+          until UnitFilter(strategy_4_units,[f_ok]) = 0;
+     end;   }
+
+
+//Control the attack.
+//We don't try to repair vehicles because it really doesn't do any good
+//if you haven't pulled back first. Actually it's just doing the player a
+//favour so he/she can more easily capture them.
+Every 0$1.6 do
+     var strat, init_attack_hexes, normal_attack_hexes, k, i, g, temp_list_3, ready;
+     var temp_unit, temp_list, temp_list_2, dist, temp_value, inside_ok, attacking_vehicles, attacking_humans;
+     var hex_dist;
+     begin
+          hex_dist = -1;  //Max dist to attack hex for vehicles and humans before proceeding to the next hex
+
+          repeat
+          wait(0$1);
+
+          for strat in [1,2,3,4] do
+               begin
+                    case strat of
+                         1: begin
+                              init_attack_hexes = [];
+                              normal_attack_hexes = init_attack_hexes ^ [[21,13],[30,24],[35,33],[43,54]];
+                              temp_list = strategy_1_units;
+                              hex_dist = 5;
+                         end;
+                         2: begin
+                              init_attack_hexes = [[30,11],[43,19],[54,31],[72,49]];
+                              normal_attack_hexes = init_attack_hexes ^ [[61,50],[43,53]];
+                              temp_list = strategy_2_units;
+                              hex_dist = 4;
+                         end;
+                         3: begin
+                              init_attack_hexes = [[30,11],[43,19],[54,31]];
+                              normal_attack_hexes = init_attack_hexes ^ [[50,38],[54,44],[43,53]];
+                              temp_list = strategy_3_units;
+                              hex_dist = 4;
+                         end;
+                         4: begin
+                              init_attack_hexes = [[9,12],[16,28],[21,38],[38,65]];
+                              normal_attack_hexes = init_attack_hexes ^ [[43,53]];
+                              temp_list = strategy_4_units;
+                              hex_dist = 2;
+                         end;
+                    end;
+
+                    //Remove dead units.
+                    for i in temp_list[1] do
+                         begin
+                              if not IsOk(i[2]) then
+                                   begin
+                                        case strat of
+                                             1: begin
+                                                  temp_list_3 = strategy_1_units[1] diff [i];
+                                                  strategy_1_units = Replace(strategy_1_units,1,temp_list_3);
+                                             end;
+                                             2: begin
+                                                  temp_list_3 = strategy_2_units[1] diff [i];
+                                                  strategy_2_units = Replace(strategy_2_units,1,temp_list_3);
+                                             end;
+                                             3: begin
+                                                  temp_list_3 = strategy_3_units[1] diff [i];
+                                                  strategy_3_units = Replace(strategy_3_units,1,temp_list_3);
+                                             end;
+                                             4: begin
+                                                  temp_list_3 = strategy_4_units[1] diff [i];
+                                                  strategy_4_units = Replace(strategy_4_units,1,temp_list_3);
+                                             end;
+                                        end;
+
+                                        if attack_num = 4 then
+                                             begin
+                                                  //If the driver is dead (or not placed), create a new vehicle group and spawn
+                                                  //it in the spawn area.
+                                                  temp_list_3 = CreateAmVehicleAndDriver;
+                                                  PlaceUnitArea(temp_list_3[1],am_spawn_area,false);
+
+                                                  ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,temp_list_3[1],1);
+                                                  ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,temp_list_3[2],1);
+
+                                                  case strat of
+                                                       1: begin
+                                                            temp_list_3 = strategy_1_units[1] ^ [temp_list_3];
+                                                            strategy_1_units = Replace(strategy_1_units,1,temp_list_3);
+                                                       end;
+                                                       2: begin
+                                                            temp_list_3 = strategy_2_units[1] ^ [temp_list_3];
+                                                            strategy_2_units = Replace(strategy_2_units,1,temp_list_3);
+                                                       end;
+                                                       3: begin
+                                                            temp_list_3 = strategy_3_units[1] ^ [temp_list_3];
+                                                            strategy_3_units = Replace(strategy_3_units,1,temp_list_3);
+                                                       end;
+                                                       4: begin
+                                                            temp_list_3 = strategy_4_units[1] ^ [temp_list_3];
+                                                            strategy_4_units = Replace(strategy_4_units,1,temp_list_3);
+                                                       end;
+                                                  end;
+                                             end;
+                                   end;
+                         end;
+
+                    for i in temp_list[2] do
+                         begin
+                              if not IsOk(i) then
+                                   begin
+                                        case strat of
+                                             1: begin
+                                                  temp_list_3 = strategy_1_units[2] diff i;
+                                                  strategy_1_units = Replace(strategy_1_units,2,temp_list_3);
+                                             end;
+                                             2: begin
+                                                  temp_list_3 = strategy_2_units[2] diff i;
+                                                  strategy_2_units = Replace(strategy_2_units,2,temp_list_3);
+                                             end;
+                                             3: begin
+                                                  temp_list_3 = strategy_3_units[2] diff i;
+                                                  strategy_3_units = Replace(strategy_3_units,2,temp_list_3);
+                                             end;
+                                             4: begin
+                                                  temp_list_3 = strategy_4_units[2] diff i;
+                                                  strategy_4_units = Replace(strategy_4_units,2,temp_list_3);
+                                             end;
+                                        end;
+
+                                        if attack_num = 4 then
+                                             begin
+                                                  temp_unit = CreateAmSoldier;
+                                                  PlaceUnitArea(temp_unit,am_spawn_area,false);
+
+                                                  ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,temp_unit,1);
+
+                                                  case strat of
+                                                       1: begin
+                                                            temp_list_3 = strategy_1_units[2] ^ temp_unit;
+                                                            strategy_1_units = Replace(strategy_1_units,2,temp_list_3);
+                                                       end;
+                                                       2: begin
+                                                            temp_list_3 = strategy_2_units[2] ^ temp_unit;
+                                                            strategy_2_units = Replace(strategy_2_units,2,temp_list_3);
+                                                       end;
+                                                       3: begin
+                                                            temp_list_3 = strategy_3_units[2] ^ temp_unit;
+                                                            strategy_3_units = Replace(strategy_3_units,2,temp_list_3);
+                                                       end;
+                                                       4: begin
+                                                            temp_list_3 = strategy_4_units[2] ^ temp_unit;
+                                                            strategy_4_units = Replace(strategy_4_units,2,temp_list_3);
+                                                       end;
+                                                  end;
+                                             end;
+                                   end;
+                         end;
+
+                    case strat of
+                         1: begin
+                              temp_list = strategy_1_units;
+                         end;
+                         2: begin
+                              temp_list = strategy_2_units;
+                         end;
+                         3: begin
+                              temp_list = strategy_3_units;
+                         end;
+                         4: begin
+                              temp_list = strategy_4_units;
+                         end;
+                    end;
+
+
+                    //Determine attacking units.
+                    //Make sure mechanics are inside vehicles.
+                    attacking_vehicles = [];
+                    attacking_humans = temp_list[2];
+                    for i in temp_list[1] do
+                         if IsOk(i[1]) then
+                              begin
+                                   //If driver isn't inside the vehicle then enter the vehicle.
+                                   temp_unit = IsInUnit(i[2]);
+                                   if temp_unit <> i[1] then
+                                        case GetType(IsInUnit(i[2])) of
+                                             unit_building: ComExitBuilding(i[2]);
+                                             unit_vehicle: ComExitVehicle(i[2]);
+                                             else
+                                                  ComEnterUnit(i[2],i[1]);
+                                        end;
+
+                                   attacking_vehicles = attacking_vehicles ^ i[1];
+                              end
+                         else
+                              attacking_humans = attacking_humans ^ i[2];  //Mechanic attacks like a soldier
+
+                    if (attacking_vehicles ^ attacking_humans) = 0 then
+                         begin
+                              ai_attack_groups_in_position = Replace(ai_attack_groups_in_position,strat,true);
+                              continue;
+                         end;
+
+
+                    //Check what units are ready to go for the next hex.
+                    ready = true;
+                    for i in attacking_vehicles ^ attacking_humans do
+                         //if ai_attacking_unit_hex_index[i] <= normal_attack_hexes then
+                              begin
+                                   if GetDistUnitXY(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2]) <= hex_dist then
+                                        begin
+                                             if ai_attacking_unit_hex_index[i] + 1 <= normal_attack_hexes then
+                                                  begin
+                                                       if false in ai_attack_groups_in_position then
+                                                           begin
+                                                                if ai_attacking_unit_hex_index[i] < init_attack_hexes then
+                                                                     begin
+                                                                          ready = false;
+                                                                          ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,i, ai_attacking_unit_hex_index[i]+1 );
+
+                                                                          temp_list = UnitsInside(i);
+                                                                          if temp_list > 0 then  //Also increase for vehicle driver
+                                                                               ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,temp_list[1], ai_attacking_unit_hex_index[temp_list[1]]+1 );
+                                                                     end;
+                                                           end
+                                                       else
+                                                            begin
+                                                                 ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,i, ai_attacking_unit_hex_index[i]+1 );
+
+                                                                 temp_list = UnitsInside(i);
+                                                                 if temp_list > 0 then  //Also increase for vehicle driver
+                                                                      ai_attacking_unit_hex_index = Replace(ai_attacking_unit_hex_index,temp_list[1], ai_attacking_unit_hex_index[temp_list[1]]+1 );
+                                                            end;
+                                                  end;
+                                        end
+                                   else
+                                        ready = false;
+                              end;
+
+
+                    if ready or ContactTime([you,americans]) <= 0$2 then
+                         ai_attack_groups_in_position = Replace(ai_attack_groups_in_position,strat,true);
+
+                    if false in ai_attack_groups_in_position then
+                         begin
+                              for i in attacking_vehicles ^ attacking_humans do
+                                   if GetDistUnitXY(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2]) > hex_dist then
+                                        ComMoveXY(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2]);
+
+                              continue;
+                         end;
+
+                    //Make the attack
+                    for i in attacking_vehicles ^ attacking_humans do
+                         begin
+                              //If the unit is shooting at a unit which is Ok and there is a dying human
+                              //unit within the same distance or closer than the current target then
+                              //kill off that human unit first.
+                              {temp_value = GetTaskList(i);
+                              if temp_value > 0 then
+                                        if temp_value[1][1] = '^' then  //'^' is auto attack
+                                             begin
+                                                  //The unit is auto attacking because it has met an enemy.
+                                                  temp_unit = Attacks(i);
+                                                  if temp_unit > 0 and IsOk(temp_unit) then
+                                                       begin
+                                                            temp_value = GetDistUnits(i,temp_unit);
+                                                            temp_list = FilterAllUnits([[f_enemy,americans],[f_type,unit_human],[f_not,[f_ok]],[f_dist,i,temp_value]]);
+                                                            if temp_list > 0 then
+                                                                 ComAttackUnit(i,temp_list[1]);
+
+                                                            continue;
+                                                       end;
+                                             end;}
+
+                              //If the unit is near the base then start shooting at humans if possible - else vehicles and buildings.
+                              //Shoot at nearest non-human unit (not so important with human units since we just agressive move).
+                              k := not normal_attack_hexes[ai_attacking_unit_hex_index[i]] in init_attack_hexes;
+                              if k then
+                                   begin
+                                        temp_list = FilterAllUnits([[f_enemy,americans],[f_type,unit_human],[f_dist,i,20],[f_see,americans]]);
+
+                                        //Finish off dying humans as first priority
+                                        temp_list_2 = UnitFilter(temp_list,[f_not,[f_ok]]);
+                                        if temp_list_2 > 0 then
+                                             temp_list = temp_list_2;
+
+                                        if temp_list > 0 then
+                                             begin
+                                                  temp_unit = AllNearestUnitToUnit(temp_list,i);
+                                                  if IsOk(temp_unit) then
+                                                       ComAgressiveMove(i,GetX(temp_unit),GetY(temp_unit))
+                                                  else
+                                                       ComAttackUnit(i,temp_unit);
+                                             end
+                                        else
+                                             begin
+                                                  temp_list = FindNonhumansNearUnit(americans,i,20,true);
+                                                  if temp_list > 0 then
+                                                       begin
+                                                            temp_unit = AllNearestUnitToUnit(temp_list,i);
+                                                            if temp_unit > 0 then
+                                                                 ComAgressiveMove(i,GetX(temp_unit),GetY(temp_unit));
+                                                       end
+                                                  else
+                                                       begin
+                                                            temp_list = FindNonhumansNearUnit(americans,i,20,false);
+                                                            temp_list = UnitFilter(temp_list,[[f_not,[f_btype,b_depot]],[f_not,[f_btype,b_warehouse]]]);  //Don't attack the depot itself
+                                                            if temp_list > 0 then
+                                                                 begin
+                                                                      temp_unit = AllNearestUnitToUnit(temp_list,i);
+                                                                      if temp_unit > 0 then
+                                                                           ComAttackUnit(i,temp_unit);
+                                                                 end
+                                                            else
+                                                                 k = false;
+                                                       end;
+                                             end;
+
+                                        if k then  //found something to shoot at
+                                             continue;
+                                   end;
+
+                              //Movement to enemy base
+                              if GetDistUnitXY(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2]) > hex_dist then
+                                   if not normal_attack_hexes[ai_attacking_unit_hex_index[i]] in init_attack_hexes then
+                                        ComAgressiveMove(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2])
+                                   else
+                                        ComMoveXY(i,normal_attack_hexes[ai_attacking_unit_hex_index[i]][1],normal_attack_hexes[ai_attacking_unit_hex_index[i]][2]);
+                         end;
+               end;
+
+          until false;
+     end;
+Export Function FindNonhumansNearUnit(side,un,dist,only_dangerous);
+     var weapon_list, temp_list, i, btype, b, val;
+     begin
+          temp_list = FilterAllUnits([[f_enemy,side],[f_not,[f_type,unit_human]],[f_dist,un,dist],[f_see,side]]);
+
+          if only_dangerous then
+               begin
+                    result = DangerousUnits(temp_list);
+               end
+          else
+               result = temp_list
+     end;
+Function DangerousUnits(list);
+     var weapon_list, i, btype, b, val;
+     begin
+          weapon_list = [us_machine_gun,us_light_gun,us_gatling_gun,us_double_gun,us_heavy_gun,us_rocket_launcher,
+                                   us_siberium_rocket,us_laser,us_double_laser,
+                                   ar_multimissile_ballista,ar_light_gun,ar_double_machine_gun,ar_gatling_gun,
+                                   ar_flame_thrower,ar_gun,ar_rocket_launcher,ar_selfpropelled_bomb,
+                                   ru_heavy_machine_gun,ru_gatling_gun,ru_gun,ru_rocket_launcher,ru_heavy_gun,
+                                   ru_rocket,ru_siberium_rocket,ru_time_lapser];
+
+                    result = [];
+
+                    for i in list do
+                         case GetType(i) of
+                              unit_human: begin
+                                   if GetTech(tech_stimdrugs,GetSide(i)) <> state_researched and not IsOk(i) then
+                                        continue;
+
+                                   result = result ^ i;
+                              end;
+                              unit_vehicle: begin
+                                   if not IsOk(i) then
+                                        continue;
+
+                                   case GetControl(i) of
+                                        control_manual,control_rider: begin
+                                             if UnitsInside(i) = 0 then
+                                                  continue;
+                                        end;
+                                        control_remote: begin
+                                             if IsControledBy(i) = 0 then
+                                                  continue;
+                                        end;
+                                        control_computer,control_apeman: begin
+                                        end;
+                                   end;
+
+                                   if GetWeapon(i) in weapon_list then
+                                        result = result ^ i;
+                              end;
+                              unit_building: begin
+                                   if not IsOk(i) then
+                                        continue;
+
+                                   btype = GetBType(i);
+
+                                   case btype of
+                                        b_turret: begin
+                                        end;
+                                        b_bunker,b_breastwork,b_armoury,b_barracks,b_fort: begin
+                                             if UnitsInside(i) = 0 then
+                                                  continue;
+                                        end;
+                                        else
+                                             continue;
+                                   end;
+
+                                   if btype in [b_bunker,b_turret] then
+                                        if not GetBWeapon(i) in weapon_list then
+                                             continue
+                                        else
+                                             begin
+                                                  b = GetBase(i);
+                                                  val = false;
+
+                                                  if b = 0 then
+                                                       val = true
+                                                  else
+                                                       if GetEnergy(b)[4] = 0 then
+                                                            val = true;
+
+                                                  if val then
+                                                       continue;
+                                             end;
+
+                                   result = result ^ i;
+                              end;
+                         end;
+     end;
+
+
+//The computers's vehicles never seem to run completely out of fuel...
+Every 0$5 do
+     var i;
+     begin
+          for i in FilterAllUnits([[f_side,americans],[f_type,unit_vehicle]]) do
+               if GetFuel(i) < 10 and GetEngine(i) = engine_combustion then
+                    SetFuel(i,10);
+
+          enable;
+     end;
+
+
+//If the Americans have successfully reached the base and there are no sign of the player
+//the Americans call in an engineer and recapture the base (which causes the player to lose
+//if this isn't the last attack).
+Every 0$5 trigger americans_attacking and FilterAllUnits([[f_side,americans],[f_ok],[f_inarea,inner_base_area]]) > 0 and ContactTime([you,americans]) > 0$25 do
+     var guard_vehicle_groups, engi_vehicle_group, i, temp_value, target_depot;
+     begin
+          //Create and place the engineer and some guardians.
+          InitUc;
+          InitHc;
+          InitVc;
+          uc_nation = nation_american;
+          uc_side = americans;
+          uc_direction = 2;
+
+          PrepareEngineer(false,am_skill_lvl);
+
+          vc_chassis = us_light_wheeled;
+          vc_engine = engine_combustion;
+          vc_control = control_manual;
+          vc_weapon = us_machine_gun;
+
+          engi_vehicle_group = [CreateVehicle,CreateHuman];
+
+          guard_vehicle_groups = [];
+          for i = 1 to 2 do
+               guard_vehicle_groups = guard_vehicle_groups ^ [CreateAmVehicleAndDriver];
+
+          for i in guard_vehicle_groups ^ [engi_vehicle_group] do
+               PlaceHumanInUnit(i[2],i[1]);
+
+          //Place them
+          repeat
+               temp_value = true;
+               for i in guard_vehicle_groups ^ [engi_vehicle_group] do
+                    if not IsPlaced(i[1]) then
+                         begin
+                              PlaceUnitArea(i[1],am_spawn_area,false);
+                              temp_value = false;
+                         end;
+
+               wait(0$1);
+
+          until temp_value;
+
+          //Give some orders
+          target_depot = 0;
+          repeat
+               for i in guard_vehicle_groups do
+                    if GetDistUnitXY(i[2],43,53) > 7 then
+                         ComAgressiveMove(i[2],43,53);  //Give the drivers the orders - that makes them go along themselves if the vehicle is lost
+
+
+               if IsOk(engi_vehicle_group[2]) then
+                    begin
+                         if not IsInArea(engi_vehicle_group[2],inner_base_area) and target_depot = 0 then
+                              ComMoveToArea(engi_vehicle_group[2],inner_base_area)  //Normal move! Run away if the player tries to shoot you.
+                         else
+                              case GetType(IsInUnit(engi_vehicle_group[2])) of
+                                   unit_building: ComExitBuilding(engi_vehicle_group[2]);
+                                   unit_vehicle: ComExitVehicle(engi_vehicle_group[2]);
+                                   else
+                                        begin
+                                             if target_depot = 0 then
+                                                  if GetSide(dep) = you then
+                                                       target_depot = dep;
+
+                                             if target_depot > 0 then
+                                                  if not IsOk(target_depot) then
+                                                       ComRepairBuilding(engi_vehicle_group[2],target_depot)
+                                                  else
+                                                       if UnitsInside(target_depot) > 0 then  //should not be the case since we have Americans staying in the middle of the base (inner_base_area)
+                                                            ComAttackUnit(engi_vehicle_group[2],target_depot)
+                                                       else
+                                                            ComEnterUnit(engi_vehicle_group[2],target_depot);  //capture
+                                        end;              
+                              end;
+                    end
+               else
+                    break;
+
+               wait(0$1);
+
+          until false;  //Must be broken
+
+          enable;
+     end;

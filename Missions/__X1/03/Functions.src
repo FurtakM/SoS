@@ -1,0 +1,348 @@
+Export num_apes, num_tigers, aggressivity, am_skill_lvl;
+Export depot_initial_crates;
+
+Export Function PrepareDifficulty;
+     var fourth_attack_time, i, mean;
+     begin
+          num_apes = [8,6,5][difficulty];  //The number of apes on the map
+          num_tigers = [2,4,6][difficulty];  //The number of tigers on the map
+          aggressivity = [10,30,50][difficulty];  //Aggressivity measure of apes and tigers
+          am_skill_lvl = [2,3,4][difficulty];  //Average skill level of the Americans
+
+          //Calculate when the four attacks should commence. We start with calculating when the fourth should start.
+          //We presume a trip from the depot to the east and back again takes 100 seconds (experimentally proven to be
+          //a little less, but we give a little extra because the player isn't necessarily optimizing every movement).
+          //What we do is first calculate the number of times an "expected certain number" of engineers have to walk back and forth
+          //to deliver all crates. That "expected certain number" of engineers depends on difficulty. Each engineer can hold
+          //10 "crate resources". Lastly we just multiply the number of trips by the time each trip takes.
+
+          fourth_attack_time = secondary_crate_goal / ([1.3, 1.5, 2.5][difficulty] * 10) * 1$40;   //[50$0,37$30,30$0][difficulty]
+
+          //Now distribute the attack times equally along the time interval. If some Americans got away, the first attack
+          //will commence a little sooner than if they hadn't (fixed in module "Dialogues", the section which takes care of
+          //initial dialogues when attacking the base).
+          mean = fourth_attack_time / 4;
+          attack_times = [];
+
+          for i = 1 to 3 do
+               attack_times = attack_times ^ Rand(mean*i - mean div 7 , mean*i + mean div 7);
+          attack_times = attack_times ^ fourth_attack_time;  //Last attack must come at the correct time
+
+
+          //Amount of crates in the American depot at the beginning
+          depot_initial_crates = [590, 520, 450][difficulty];
+
+          SetResourceType(GetBase(dep),mat_cans,depot_initial_crates);
+end;
+
+
+//Function which makes "unit1" (only 1 unit - not list of units) move "dist" distance away from hex [x,y] (the fastest way)
+//"add" is boolean - if "true" then its an AddComMoveXY, else ComMoveXY
+Export Function AI_GetAwayFromXY(unit1, x, y, dist, add);
+     var list_nearest, list_coords, temp_dir, dir_list, b, min_dist, temp_dist, c, rand_num, rand_near_hex, attempts;
+     begin
+          if not IsOk(unit1) or dist = 1 or not ValidHex(x,y) or GetDistUnitXY(unit1,x,y) >= dist or not add in [true,false] then Exit;
+
+          attempts = 0;
+
+          repeat
+          list_nearest = [];
+          list_coords = [];
+
+          temp_dir = AI_GetTurnDirection(x,y,GetX(unit1),GetY(unit1));
+
+          if attempts = 0 then
+               begin
+                    //find those coordinates that have distance "dist" to "[x,y]" and are in direction unit on [x,y] would turn if asked to face [GetX(unit1),GetY(unti1)]
+                    //this is optimized version but causes 'apathy' (no movement) if "unit1" is cornered
+                    dir_list = [temp_dir,temp_dir+1,temp_dir-1];
+                    if dir_list[2] = 6 then
+                         dir_list = Replace(dir_list,2,0);
+                    if dir_list[3] = -1 then
+                         dir_list = Replace(dir_list,3,5);
+               end
+          else  //if attempts = 1
+               //find all other coordinates that have distance "dist" to "[x,y]" and put them in "list_coords"
+               dir_list = [0,1,2,3,4,5] diff temp_dir;
+
+          //this is the 'corner hexes'
+          for c = 1 to (dir_list+0) do
+               case dir_list[c] of
+                    0: list_coords = Insert(list_coords,1,[x,y-dist]);
+                    1: list_coords = Insert(list_coords,1,[x+dist,y]);
+                    2: list_coords = Insert(list_coords,1,[x+dist,y+dist]);
+                    3: list_coords = Insert(list_coords,1,[x,y+dist]);
+                    4: list_coords = Insert(list_coords,1,[x-dist,y]);
+                    5: list_coords = Insert(list_coords,1,[x-dist,y-dist]);
+               end;
+
+          //this is all the hexes in between the 'corner hexes'
+          //if distance "dist" is >= 30 then we take only every 2. hexes in between (to consume less cpu power)
+          if dist < 30 then
+               c = 1
+          else c = 2;
+
+          b = 1;
+          while b <= (dist - 1) do
+               begin
+                    if 0 in dir_list and 1 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x+b, y-dist+b]);
+                    if 1 in dir_list and 2 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x+dist, y+b]);
+                    if 2 in dir_list and 3 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x+dist-b, y+dist]);
+                    if 3 in dir_list and 4 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x-b, y+dist-b]);
+                    if 4 in dir_list and 5 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x-dist, y-b]);
+                    if 5 in dir_list and 0 in dir_list then
+                         list_coords = Insert(list_coords, 1, [x-dist+b, y-dist]);
+
+                    b = b + c
+               end;
+
+          if list_coords = 0 then exit;
+
+          repeat
+          min_dist = 5000;
+          for b in list_coords do
+               begin
+                    temp_dist = GetDistUnitXY(unit1,b[1],b[2]);
+                    if temp_dist < min_dist then min_dist = temp_dist;
+               end;
+
+          c = 0;
+          repeat
+          c = c + 1;
+
+          //make a new list ("list_nearest") containing those coordiates which have the least distance to "unit1", and remove these coordinates from "list_coords"
+          if GetDistUnitXY(unit1, list_coords[c][1], list_coords[c][2]) = min_dist then
+               begin
+                    list_nearest = Insert(list_nearest, 1, list_coords[c]);
+                    list_coords = Delete(list_coords, c);
+                    c = c - 1;
+               end;
+          until c = list_coords;
+
+          c = 0;
+
+          if list_nearest > 0 then
+               begin
+                    repeat
+                    rand_num = Rand(1,list_nearest);
+                    rand_near_hex = list_nearest[rand_num];
+
+                    if ValidHex(rand_near_hex[1], rand_near_hex[2]) > 0 and HexInfo(rand_near_hex[1], rand_near_hex[2]) = 0 then
+                         c = 1
+                    else
+                         list_nearest = Delete(list_nearest, rand_num);
+                    until c = 1 or list_nearest = 0;
+               end;
+
+          until c = 1 or list_coords = 0;
+
+          attempts = attempts + 1;
+          until c = 1 or attempts > 1;
+
+          //if attempts <= 2 then  //because we don't use "break" "attempts = attempts + 1" will still be executed even if the function actually has found a good hex
+          if c = 1 then
+               if add then
+                    AddComMoveXY(unit1,rand_near_hex[1],rand_near_hex[2])
+               else ComMoveXY(unit1, rand_near_hex[1], rand_near_hex[2]);
+     end;
+
+//Function which returns the direction in which the unit one the specified hex ([x1,y1]) would turn if it was asked to face
+//the other specified hex ([x,y]) (ComTurnXY)
+Export Function AI_GetTurnDirection(x1,y1,x,y);
+     var dist_1, dist_2, b, temp_dist, dir;
+     begin
+          if not ValidHex(x1,y1) or not ValidHex(x,y) then
+               begin
+                    result = -1;
+                    exit;
+               end;
+
+          dist_1 = GetDistXY(x1,y1,x,y);
+          dist_2 = 99999;
+
+          //this is the algorithm
+          for b = 0 to 5 do
+               begin
+                    temp_dist = GetDistXY(ShiftX(x1,b,dist_1),ShiftY(y1,b,dist_1),x,y);
+                    if temp_dist < dist_2 then
+                         begin
+                              dist_2 = temp_dist;
+                              dir = b;
+                         end;
+               end;
+
+          result = dir;
+end;
+
+Export Function AviradzePlantGatheringFunc(dialogue_num);
+     var avi_hexes_list, i, temp_list, temp_list_x, temp_list_y, temp_hex, temp_list_2, destirbed;
+     begin
+          if aviradze_plant_gathering[dialogue_num] = 2 then
+               begin
+                    CenterOnUnits(Aviradze);
+                    DialogueOn;
+
+                    case dialogue_num of
+                         1: Say(Aviradze,'D8Av1');
+                         2: Say(Aviradze,'D8Av2');
+                         3: Say(Aviradze,'D8Av3');
+                    end;
+
+                    if (aviradze_plant_gathering diff 2) = 0 then  //first time you find a flower
+                         Say(Aviradze,'D8Av4');
+
+                    DialogueOff;
+
+                    aviradze_plant_gathering = Replace(aviradze_plant_gathering,dialogue_num,1);  //Dialogue has been heard
+               end;
+
+          //Walk around in the flower area - choose 5 hexes in the vicinity.
+          //If the gathering is interrupted, the player has to start over again.
+          //Find the hexes this flower area contains.
+          case dialogue_num of
+               1: temp_list = AreaToList(pink_bedflower_area,false);
+               2: temp_list = AreaToList(greenhat_area,false);
+               3: temp_list = AreaToList(royal_aphrodite_area,false);
+          end;
+
+          temp_list_x = temp_list[1];
+          temp_list_y = temp_list[2];
+
+          //Find the hexes within suitable distance of Aviradze.
+          temp_list = [];
+          temp_hex = [GetX(Aviradze),GetY(Aviradze)];
+          for i = 1 to temp_list_x do
+               if GetDistXY(temp_hex[1],temp_hex[2],temp_list_x[i],temp_list_y[i]) <= 7 then
+                    temp_list = Insert(temp_list,1,[temp_list_x[i],temp_list_y[i]]);
+          temp_list = temp_list diff [temp_hex];  //Don't take the hex Aviradze is currentæy standing on
+
+          //Find the five hexes for Aviradze.
+          avi_hexes_list = [];
+          for i = 1 to 5 do
+               begin
+                    temp_list_2 = temp_list;  //Necessary because of SAIL weirdness
+                    avi_hexes_list = Insert(avi_hexes_list,1,temp_list[Rand(1,temp_list)]);
+                    temp_list = temp_list_2;  //Necessary because of SAIL weirdness
+               end;
+
+          //Command Aviradze.
+          ComMoveXY(Aviradze,avi_hexes_list[1][1],avi_hexes_list[1][2]);
+          AddComWait(Aviradze,Rand(0$1,0$2));
+          for i = 2 to 5 do
+               begin
+                    AddComMoveXY(Aviradze,avi_hexes_list[i][1],avi_hexes_list[i][2]);
+                    AddComWait(Aviradze,Rand(0$1,0$2));
+               end;
+
+          //Keep checking if Aviradze is destirbed during the gathering.
+          destirbed = false;
+          repeat
+               Wait(0$0.3);
+               temp_list = GetTaskList(Aviradze);
+
+               if temp_list > 0 then
+                    if not temp_list[temp_list][1] = 'S' then  //'S' is ComWait - the player can't issue this command
+                         begin
+                              destirbed = true;
+                              break;
+                         end;
+
+          until temp_list = 0;
+
+          //Conclusion
+          if not destirbed then
+               begin
+                    aviradze_plant_gathering = Replace(aviradze_plant_gathering,dialogue_num,0);  //Plants have been gathered
+
+                    DialogueOn;
+                    case (aviradze_plant_gathering diff 0) of
+                         2: Say(Aviradze,'D8Av5');
+                         1: Say(Aviradze,'D8Av6');
+                         0: Say(Aviradze,'D9Av1');
+                    end;
+                    DialogueOff;
+
+                    case dialogue_num of
+                         1: ChangeMissionObjectives('M_out_bedflower');
+                         2: ChangeMissionObjectives('M_out_greenhat');
+                         3: ChangeMissionObjectives('M_out_royal');
+                    end;
+
+                    case dialogue_num of
+                         1: SetAreaMapShow(pink_bedflower_area,0);
+                         2: SetAreaMapShow(greenhat_area,0);
+                         3: SetAreaMapShow(royal_aphrodite_area,0);
+                    end;
+               end;
+end;
+
+Export Function CreateAmVehicleAndDriver;
+     begin
+          InitUc;
+          InitVc;
+          uc_nation = nation_american;
+          uc_side = 1;
+          uc_direction = 2;
+
+          vc_chassis = us_medium_wheeled;
+          vc_engine = engine_combustion;
+          vc_control = control_manual;
+
+          if Rand(1,2) = 1 then
+               vc_weapon = us_light_gun
+          else vc_weapon = us_double_gun;
+
+          result = [CreateVehicle];
+
+          InitHc;
+          PrepareMechanic(false,am_skill_lvl);
+          result = Replace(result,2,CreateHuman);
+
+          PlaceHumanInUnit(result[2],result[1]);
+end;
+
+Export Function CreateAmSoldier;
+     begin
+          InitUc;
+          InitHc;
+          uc_nation = nation_american;
+          uc_side = 1;
+          uc_direction = 2;
+
+          PrepareSoldier(false,am_skill_lvl);
+          result = CreateHuman;
+end;
+
+Export function AmericanEscape;
+var i;
+begin
+   DialogueOn;
+   Say(UnitFilter(start_americans,[f_ok])[1], 'D3AmMale2b');
+   DialogueOff;
+
+   americans_are_evacuating = true;
+
+          //Start evacuating to the north or south
+          for i in start_americans do
+               begin
+                    ComExitBuilding(i);
+
+                    if FilterUnitsInArea(NorthArea, [[f_side, 2], [f_type, unit_human]]) = 0 then
+                       AddComMoveToArea(i, AmEscapeNorthArea);
+
+                    if FilterUnitsInArea(SouthArea, [[f_side, 2], [f_type, unit_human]]) = 0 then
+                       AddComMoveToArea(i, AmEscapeSouthArea);
+
+                    if FilterUnitsInArea(NorthArea, [[f_side, 2], [f_type, unit_human]]) > 0 and FilterUnitsInArea(SouthArea, [[f_side, 2], [f_type, unit_human]]) > 0 then
+                    begin
+                        if  FilterUnitsInArea(NorthArea, [[f_side, 2], [f_type, unit_human]]) > FilterUnitsInArea(SouthArea, [[f_side, 2], [f_type, unit_human]]) then
+                            AddComMoveToArea(i, AmEscapeSouthArea)
+                        else AddComMoveToArea(i, AmEscapeSouthArea);
+                    end;
+               end;
+end;

@@ -1,0 +1,85 @@
+// Mission 11 by Serpent
+// 12-10-2018
+Starting
+begin
+ResetFog;
+AnimateTrees(true);
+Randomize;
+
+InitVariables;
+InitMacro;
+
+if debug then
+   FogOff(1);
+
+ChangeSideFog(8, 1);
+
+PrepareNature(4, 3, 6, 3, 2, 0, 7, natureArea, waterArea);
+PrepareAmerican;
+PrepareArabian;
+
+MC_Start();
+
+Action;
+End;
+
+Export debug, game;
+Export mission_prefix, mission_prefix_prev;
+Export ar_run, base_captured, ar_patrol, us_scout, seen, can_kamikazed, kamikazed,
+       artifact_stolen, artifact_get, artifact_oncargo, game_time, powell_warn, loses_counter,
+       gensher_active, selected, am_veh_consturcted;
+Function InitVariables;
+begin
+debug := false;
+game := true;
+mission_prefix := '11_';
+mission_prefix_prev := '10c_';
+ar_run := false;
+ar_patrol := false;
+base_captured := false;
+us_scout := 0;
+seen := [0, 0, 0, 0, 0];
+kamikazed := false;
+artifact_stolen := false;
+artifact_get := false;
+game_time := [130$00, 120$00, 115$00][Difficulty];
+powell_warn := false;
+loses_counter := 0;
+artifact_oncargo := false;
+gensher_active := LoadVariable('10_GensherEscape_1', debug);
+can_kamikazed := false;
+am_veh_consturcted := false;
+End;
+
+Export Function CustomInitMacro;
+var i;
+begin
+// mc_def
+mc_parking := [ parking_north, parking_west, parking_east ];
+mc_scan_area := [ base_north, base_west, base_east ];
+
+// set mines
+MC_SetMinesField(1, [3, 6, 9][Difficulty], minefield1_left);
+MC_SetMinesField(2, [3, 6, 9][Difficulty], minefield2_left);
+MC_SetMinesField(3, [3, 5, 9][Difficulty], minefield3_left);
+
+for i = 1 to mc_bases do
+    MC_SetDefenderList(i, ar_defenders_tmp[i]);
+End;
+
+Function Debuger;
+var i;
+begin 
+if not debug then
+   exit;
+
+game_speed := 5;
+
+uc_side := 1;
+uc_nation := 1;
+
+SetSide(ar_force_south, 1);
+End;
+
+Every 0$1 trigger IsDead(ar_dep_n) and IsOk(ar_dep_w) do
+SetAchievement('ACH_EAST');

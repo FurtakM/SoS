@@ -1,0 +1,91 @@
+Export apes, tigers;
+
+Export Function PrepareNature;
+     var i, spots, num, temp_unit;
+     begin
+          InitHc;
+          InitUc;
+
+          //To ensure the animals are spread throughout the map we choose some spots that may be choosed.
+          //Two animals can't spawn on the same spot.
+          spots = [ [29,6],[38,13],[49,5],[64,20],[67,9],[73,25],[83,7],[110,28],[125,60],[71,73],[59,72],[43,68],[28,49],[52,62],[73,4],[61,7],[40,5],[89,76],[63,68],[44,65] ];
+
+          uc_nation = nation_nature;
+          uc_side = 0;
+
+          //Apemen
+          hc_class = class_apeman;
+          apes = [];
+          for i = 1 to num_apes do
+               begin
+                    if spots = 0 then
+                         exit;
+
+                    uc_direction = Rand(0,5);
+                    hc_agressivity = Rand(-aggressivity,0);  //We can't have the apes attacking Aviradze when he lures them to the lab.
+                    hc_attr = [Rand(11,13),Rand(10,11)];
+                    hc_sex = Rand(sex_male,sex_female);
+                    hc_skills = [Rand(0,1),0,0,0];
+
+                    apes = apes ^ CreateHuman;
+                    num = Rand(1,spots);
+                    PlaceUnitXYR(apes[i],spots[num][1],spots[num][2],5,false);
+                    spots = Delete(spots,num);
+               end;
+
+          //Tigers
+          hc_class = class_tiger;
+          hc_sex = sex_male;
+          hc_gallery = 'nature_foreg';
+          hc_face_number = 3;
+          tigers = [];
+          for i = 1 to num_tigers do
+               begin
+                    if spots = 0 then
+                         exit;
+
+                    uc_direction = Rand(0,5);
+                    hc_agressivity = Rand(aggressivity-10,aggressivity+10);
+                    hc_attr = [Rand(10,12),Rand(10,11)];
+                    hc_skills = [Rand(0,difficulty-1),0,0,0];
+
+                    tigers = tigers ^ CreateHuman;
+                    num = Rand(1,spots);
+                    PlaceUnitXYR(tigers[i],spots[num][1],spots[num][2],5,false);
+                    spots = Delete(spots,num);
+               end;
+
+          //Phororhacoses (big birds)
+          hc_class = class_phororhacos;
+          hc_face_number = 1;
+          hc_skills = [0,0,0,0];
+          for i = 1 to 5 do
+               begin
+                    if spots = 0 then
+                         exit;
+
+                    uc_direction = Rand(0,5);
+                    hc_agressivity = Rand(-30,0);
+                    hc_attr = [Rand(9,10),Rand(11,12)];
+
+                    num = Rand(1,spots);
+                    PlaceUnitXYR(CreateHuman,spots[num][1],spots[num][2],5,false);
+                    spots = Delete(spots,num);
+               end;
+end;
+
+//Keep tigers and apes away during intro and Farmer base
+Every 0$1 do
+var i;
+begin
+     enable;
+          for i in apes ^ tigers do
+          begin
+               if GetSide(i) = 0 then
+               begin
+                 AI_GetAwayFromXY(i, 87, 33, 10,false);
+                 AI_GetAwayFromXY(i, 111, 65, 20,false);
+               end;
+          end;
+
+     end;

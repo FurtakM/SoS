@@ -102,6 +102,41 @@ function getCampaignSelectWindow(PARENT)
 				}
 			}
 		},
+		{
+			W = 1250, 
+			H = 312, 
+			buttonLeftX = 131, 
+			buttonLeftY = 273, 
+			buttonRightX = 753,
+			buttonRightY = 273,
+			buttonWidth = 366,
+			descriptionWidth = 982,
+			descriptionX = 10,
+			descriptionY = 220,
+			texture = 'classic/edit/background_campaign_5.png',
+			campaings = {
+				{
+					X = 50,
+					Y = 35
+				},
+				{
+					X = 300,
+					Y = 35
+				},
+				{
+					X = 548,
+					Y = 35
+				},
+				{
+					X = 796,
+					Y = 35
+				},
+				{
+					X = 1044,
+					Y = 35
+				}
+			}
+		},
 	};
 
 	local campaingsDetails = {};
@@ -135,6 +170,22 @@ function getCampaignSelectWindow(PARENT)
 			texture = 'classic/edit/campaign/menu-camp-btn-ap-pattern.png',
 			description = TID_Main_Menu_Campaign_Ape_Hint, -- 5100
 			id = 3
+		});
+	end;
+
+	if campaings.X1 then
+		campaingsDetails = addToArray(campaingsDetails, {
+			texture = 'classic/edit/campaign/menu-camp-btn-x1-pattern.png',
+			description = TID_Main_Menu_Campaign_X1_Hint, -- 5102
+			id = 4
+		});
+	end;
+
+	if campaings.X2 then
+		campaingsDetails = addToArray(campaingsDetails, {
+			texture = 'classic/edit/campaign/menu-camp-btn-x2-pattern.png',
+			description = TID_Main_Menu_Campaign_X2_Hint, -- 5104
+			id = 5
 		});
 	end;
 
@@ -228,14 +279,16 @@ function parseCampaings()
 			Ar = false,
 			Ru = false,
 			Ap = false,
+			X1 = false,
+			X2 = false,
 			COUNT = 0
 		};
 
 		local campaings = {
-			'Am', 'Ar', 'Ru', 'Ap',
+			'Am', 'Ar', 'Ru', 'Ap', 'X1', 'X2',
 		};
 
-		for c = 1, 4 do
+		for c = 1, 6 do
 			local tmp = OW_FILELIST('%ow%/mods/' .. dir .. '/Campaigns/' .. campaings[c] .. '/');
 
 			if (table.getn(tmp) > 0) then
@@ -257,6 +310,8 @@ function parseCampaings()
 		Ar = false,
 		Ru = true,
 		Ap = false,
+		X1 = false,
+		X2 = false,
 		COUNT = 2
 	};
 end;
@@ -639,12 +694,24 @@ function runCampaign(ID)
 		camp = 'Ru';
 		lowerCamp = 'ru';
 		scrollboxPos = XYWH(52, 64, menu.window_campaign_tree.panel.width - 312, menu.window_campaign_tree.panel.height - 92);
-	else
+	elseif (ID == 3) then
 		backgroundImage = 'classic/edit/campaign/window/ap-campaign.png';
 		interface = 'Ape';
 		camp = 'Ap';
 		lowerCamp = 'ap';
 		scrollboxPos = XYWH(10, 40, menu.window_campaign_tree.panel.width - 262, menu.window_campaign_tree.panel.height - 72);
+	elseif (ID == 4) then
+		backgroundImage = 'classic/edit/campaign/window/ar-campaign.png';
+		interface = 'Arab';
+		camp = 'X1';
+		lowerCamp = 'ar';
+		scrollboxPos = XYWH(56, 78, menu.window_campaign_tree.panel.width - 322, menu.window_campaign_tree.panel.height - 112);
+	else
+		backgroundImage = 'classic/edit/campaign/window/ar-campaign.png';
+		interface = 'Arab';
+		camp = 'X2';
+		lowerCamp = 'x2';
+		scrollboxPos = XYWH(56, 78, menu.window_campaign_tree.panel.width - 322, menu.window_campaign_tree.panel.height - 112);
 	end;
 
 	setTexture(menu.window_campaign_tree.panel, backgroundImage);

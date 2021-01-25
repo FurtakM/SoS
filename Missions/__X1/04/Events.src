@@ -1,0 +1,114 @@
+Export Function CustomEvent(event);
+begin
+End;
+
+On ArtifactLoaded(cargo, artifact) do
+begin
+if GetSide(cargo) = 1 then
+   artifact_get := true;
+if GetSide(cargo) = 2 then
+   begin
+   artifact_get := false;
+   artifact_stolen := true;
+   end;
+
+artifact_oncargo := true;
+End;
+
+On ArtifactUnloaded(cargo, artifact) do
+begin
+artifact_oncargo := false;
+End;
+
+
+On UnitDestroyed(un) do
+begin
+if un = JMM then
+   begin
+   YouLost('JMM');
+   exit;
+   end;
+
+if un in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) then
+   loses_counter := loses_counter + 1;
+
+MCE_UnitDestroyed(un);
+End;
+
+On BuildingStarted(building, builder) do
+begin
+MCE_BuildingStarted(building, builder);
+End;
+
+On BuildingComplete(building) do
+begin
+MCE_BuildingComplete(building);
+End;
+
+On CrateSpawn(id, x, y, amount, mode) do
+begin
+MCE_CrateSpawn(id, x, y, amount, mode);
+End;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+if GetNation(vehicle) = nation_american then
+   am_veh_consturcted := true;
+
+MCE_VehicleConstructed(vehicle, factory);
+End;
+
+On UnitKamikazed(unit) do
+begin
+if GetType(unit) = unit_vehicle then
+   exit;
+
+if not kamikazed then
+   kamikazed := unit;
+End;
+
+On VehicleCaptured(new, old, side, capturing_unit) do
+var i, tmp;
+begin
+MCE_VehicleCaptured(new, old, side, capturing_unit);
+End;
+
+On BuildingCaptured(building, side, capturning_unit) do
+begin
+MCE_BuildingCaptured(building, side, capturning_unit);
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+MCE_ResearchComplete(tech, lab);
+End;
+
+On ApemanTamed(ape, sci) do
+begin
+MCE_ApemanTamed(ape, sci);
+End;
+
+On EnterBuilding(building, unit) do
+begin
+MCE_EnterBuilding(building, unit);
+End;
+
+On UpgradeComplete(building) do
+begin
+MCE_UpgradeComplete(building);
+End;
+
+On LeaveBuilding(building, unit) do
+begin
+MCE_LeaveBuilding(building, unit);
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+begin
+MCE_EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2);
+End;
+
+On Command(cmd) do
+begin
+SOS_Command(cmd);
+End;

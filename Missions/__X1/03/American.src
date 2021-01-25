@@ -1,0 +1,613 @@
+Export AmBuildCount;
+
+//Base buildbup
+Every 0$1 do
+var i, temp, sol, eng, mech, sci, wounded, center, emptyBunkers, arm, enemy_inbase, fact, lab, depo, con, damaged;
+begin
+     if americans_are_evacuating then
+        exit;
+
+     center = [37,30];
+
+     wounded = UnitFilter(start_americans, [f_not,[f_lives,600]]);
+     con = FilterAllUnits([[f_side,1],[f_constructed]]);
+
+     for i in wounded do
+         if IsInUnit(i) then
+            ComExitBuilding(i)
+         else
+             if GetDistUnitXY(i, center[1], center[2]) > 5 then
+                ComMoveXY(i, center[1], center[2]);
+
+
+     sol = UnitFilter(start_americans, [[f_class, class_soldier],[f_lives,600]]);
+     emptyBunkers = FilterAllUnits([[f_side,1],[f_empty],[f_btype,b_bunker]]) ^ FilterAllUnits([[f_side,1],[f_empty],[f_btype,b_breastwork]]);
+     arm = FilterAllUnits([[f_side,1],[f_btype,b_armoury],[f_ok]]);
+     enemy_inbase = FilterUnitsInArea(AmericanBaseArea, [f_enemy,1]);
+
+     for i in sol do
+         if emptybunkers > 0 then
+         begin
+              ComEnterUnit(i, emptybunkers[1]);
+              emptybunkers = Delete(emptybunkers, 1);
+         end
+         else
+             if not IsInUnit(i) then
+                if arm > 0 then
+                   ComEnterUnit(i, arm[1])
+                else
+                    if enemy_inbase > 0 then
+                       ComAttackUnit(i, enemy_inbase[1])
+                    else
+                        if con > 0 then
+                           SetTaskList(i,[['h',0,0,con[1],0,0,0]])      //'h' is "help building building"
+                        else
+                            if GetDistUnitXY(i, center[1], center[2]) > 5 then
+                               ComMoveXY(i, center[1], center[2]);
+
+
+     mech = UnitFilter(start_americans, [[f_class, class_mechanic],[f_lives,600]]);
+     fact = FilterAllUnits([[f_side,1],[f_btype,b_factory],[f_ok]]);
+
+     for i in mech do
+         if fact = 0 then
+         begin
+              if con > 0 then
+                 SetTaskList(i,[['h',0,0,con[1],0,0,0]])      //'h' is "help building building"
+              else
+                  if GetDistUnitXY(i, center[1], center[2]) > 5 then
+                     ComMoveXY(i, center[1], center[2]);
+         end
+            else if not IsInUnit(mech) then
+                    ComEnterUnit(mech, fact[1]);
+
+
+     sci = UnitFilter(start_americans, [[f_class, class_scientistic],[f_lives,600]]);
+     lab = FilterAllUnits([[f_side,1],[f_or, [f_btype, b_lab], [f_btype, b_lab_half]],[f_ok]]);
+
+     for i in sci do
+         if wounded > 0 then
+         begin
+              if IsInUnit(i) then
+                 ComExitBuilding(i)
+              else
+                  ComHeal(i, wounded[1]);
+         end
+         else
+             if lab > 0 then
+             begin
+                  if not IsInUnit(i) then
+                     ComEnterUnit(i, lab[1]);
+             end
+             else
+                 if con > 0 then
+                    SetTaskList(i,[['h',0,0,con[1],0,0,0]])      //'h' is "help building building"
+                 else
+                     if GetDistUnitXY(i, center[1], center[2]) > 5 then
+                        ComMoveXY(i, center[1], center[2]);
+
+
+     eng = UnitFilter(start_americans, [[f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]],[f_lives,600]]);
+     depo = FilterAllUnits([[f_side,1],[f_btype,b_depot]]);
+     damaged = FilterAllUnits([[f_side, 1],[f_type, unit_building],[f_not, [f_lives, 1000]]]);
+
+     for i in eng do
+         if damaged > 0 then
+         begin
+              if IsInUnit(i) then
+                 ComExitBuilding(i)
+              else
+                  ComRepairBuilding(i, damaged[1])
+         end
+         else
+         if con > 0 then
+            SetTaskList(i,[['h',0,0,con[1],0,0,0]])      //'h' is "help building building"
+         else
+             case AmBuildCount of
+                  0: ComBuild(i, b_lab, 29, 15, 2);
+                  1: ComBuild(i, b_armoury, 42, 19, 3);
+                  2: ComBuild(i, b_workshop, 30, 29, 2);
+                  3: ComBuild(i, b_solar_power, 31, 24,3);
+                  4: begin
+                          temp = FilterAllUnits([[f_side, 1],[f_btype, b_lab]]);
+
+                          if temp = 0 then
+                             AmBuildCount = AmBuildCount + 5
+                          else
+                              ComUpgradeLab(temp[1], b_lab_weapon);
+                     end;
+                  5: begin
+                          temp = FilterAllUnits([[f_side, 1],[f_btype, b_workshop]]);
+
+                          if temp = 0 then
+                             AmBuildCount = AmBuildCount + 5
+                          else                     
+                              ComUpgrade(temp[1]);
+                     end;
+                  6: begin
+                          temp = FilterAllUnits([[f_side, 1],[f_btype, b_breastwork]]);
+
+                          if temp = 0 then
+                             AmBuildCount = AmBuildCount + 5
+                          else
+                              SetTaskList(temp[1], [[2,0,0,0,0,0,0]]);
+                     end;
+
+                  else if not IsInUnit(i) then
+                          ComEnterUnit(i, depo[1]);
+             end;
+
+     temp = FilterAllUnits([[f_side,1],[f_btype,b_bunker]]);
+
+     if temp > 0 then
+        if GetBWeapon(temp[1]) = 0 and fact > 0 and IsBusy(fact[1]) = 0 then
+           ComPlaceWeapon(temp[1], us_gatling_gun);
+
+enable;
+end;
+
+
+Export Function PrepareAmericans;
+     var i, k, temp_unit, temp_list;
+     begin
+          //Set base name
+          SetBName(dep,'eta');
+
+          InitHc;
+          InitUc;
+
+          uc_nation = nation_american;
+          uc_side = 1;
+
+          //People initially in the base
+          start_americans = [];
+
+          for i = 1 to 2 do
+               begin
+                    PrepareSoldier(sex_male,am_skill_lvl);
+                    hc_attr = [Rand(10,11),[10,11,12][difficulty]];  //They sure can run
+                    start_americans = start_americans ^ CreateHuman;
+                    PlaceHumanInUnit(start_americans[i],[bunkr1][1]);
+               end;
+
+          PrepareEngineer(sex_male,2);
+          hc_attr = [Rand(10,11),[10,11,12][difficulty]];  //They sure can run
+          start_americans = start_americans ^ CreateHuman;
+          PlaceHumanInUnit(start_americans[3],dep);
+
+          PrepareScientist(false,2);
+          hc_attr = [Rand(10,11),[10,11,12][difficulty]];  //They sure can run
+          start_americans = start_americans ^ CreateHuman;
+          PlaceUnitXY(start_americans[4], 35, 28, false);
+
+          PrepareMechanic(false,2);
+          hc_attr = [Rand(10,11),[10,11,12][difficulty]];  //They sure can run
+          start_americans = start_americans ^ CreateHuman;
+          PlaceUnitXY(start_americans[4], 35, 28, false);
+
+          for i = 1 to [2, 2, 3][Difficulty] do
+          begin
+            PrepareSoldier(sex_male,am_skill_lvl);
+            hc_attr = [Rand(10,11),[10,11,12][difficulty]];  //They sure can run
+            start_americans = start_americans ^ CreateHuman;
+            PlaceUnitXYR(start_americans[4 + i], 37, 29, 5, false);
+          end;
+
+          // Create ape if in mission 2 player didin't kill all scientist
+
+          if KilledAmSci_02 = 1 then
+          begin
+              for i = 1 to 2 do
+              begin
+                  uc_nation = 0;
+
+                  hc_class = class_apeman_engineer;
+
+                  temp_unit = CreateHuman;
+                  start_americans = start_americans ^ temp_unit;
+                  PlaceUnitXYR(temp_unit, 37, 29, 5, false);
+              end;
+          end;
+
+          //American buildings in the base - fit lvl with engineer skill
+          k = GetSkill(start_americans[3],skill_engineering);
+          for i in [dep,bunkr1] do SetBLevel(i,k);
+
+          SetResourceVisibility(28, 3, 1);
+end;
+
+
+Export function PrepareAmConvoy;
+var i, tmp_veh, tmp_human;
+begin
+
+    InitUc;
+    InitHc;
+
+     uc_side = 1;
+     uc_nation = 1;
+
+     vc_control = control_manual;
+     vc_engine = engine_combustion;
+
+     for i = 1 to [2,2,3][difficulty] do
+     begin
+           case i of
+                1: begin
+                        vc_chassis = us_light_wheeled;
+                        vc_weapon = us_machine_gun;
+                   end;
+
+                2: begin
+                        vc_chassis = us_medium_wheeled;
+
+                        if Difficulty = 1 then
+                           vc_weapon = us_cargo_bay
+                        else
+                            vc_weapon = us_gatling_gun;
+
+                   end;
+
+                3: begin
+                        vc_chassis = us_light_wheeled;
+                        vc_weapon = us_light_gun;
+                   end;
+           end;
+
+          tmp_veh = CreateVehicle;
+          PlaceUnitArea(tmp_veh, AmConvoySpawnArea, false);
+
+          if i = 1 then  AddCargo(tmp_veh, 1, 50);
+
+
+          PrepareMechanic(false, am_skill_lvl);
+          tmp_human = CreateHuman;
+
+          PlaceHumanInUnit(tmp_human, tmp_veh);
+
+          ConvoyAmericans_List = ConvoyAmericans_List ^ tmp_human;
+          ConvoyAmericans_List = ConvoyAmericans_List ^ tmp_veh;
+
+          ConvoyPlaced = 1;
+     end;
+
+     
+end;
+
+Export function SpawnAttack(AttackIndex, SpawnArea);
+var i, roadX, roadY, roadRand, temp_list, temp_unit, temp_veh;
+begin
+
+     roadRand = 0;
+
+   // Enemy attacks road
+     if SpawnArea = AmNorthSpawnArea then
+     begin   // North road
+
+     roadRand = Rand(1, 3);
+
+      roadX =
+      [
+      [62, 39, 32, 33],
+      [62, 57, 61, 54],
+      [62, 92, 111]
+      ];
+
+     roadY =
+      [
+      [6, 5, 9, 26],
+      [6, 23, 38, 36],
+      [6, 30, 59]
+      ];
+     end else  // South road
+     begin
+       roadRand = Rand(1, 2);
+
+       roadX =
+       [
+       [38, 45, 38],
+       [38, 54, 81, 87, 111]
+       ];
+
+       roadY =
+       [
+       [66, 46, 30],
+       [66, 52, 72, 57, 72]
+       ];
+     end;
+
+
+
+
+     InitHc;
+     InitUc;
+
+     uc_nation = nation_american;
+     uc_side = 1;
+
+     case AttackIndex of
+     1:
+       begin
+          //First
+          temp_list = [];
+
+          if Difficulty > 1 then
+               begin
+                    PrepareMechanic(false,am_skill_lvl);
+                    temp_unit = CreateHuman;
+
+                    vc_weapon = us_light_gun;
+
+                    case difficulty of
+                         2: vc_chassis = us_light_wheeled;
+                         3: vc_chassis = us_medium_wheeled;
+                    end;
+
+                    temp_veh = CreateVehicle;
+                    temp_list = [[temp_veh,temp_unit]];
+                    PlaceUnitArea(temp_veh, SpawnArea, false);
+                    PlaceHumanInUnit(temp_unit,temp_list[1][1]);
+               end;    
+
+          first_wave = Replace(first_wave,1,temp_list);
+
+          temp_list = [];
+
+          for i = 1 to difficulty+1 do
+               begin
+                    PrepareSoldier(false,am_skill_lvl);
+                    temp_unit = CreateHuman;
+                    temp_list = temp_list ^ temp_unit;
+                    PlaceUnitArea(temp_unit, SpawnArea, false);
+               end;
+
+          first_wave = Replace(first_wave,2,temp_list);
+
+          for i = 1 to roadX[RoadRand] do
+          begin
+            if SpawnArea = AmNorthSpawnArea and RoadRand <> 2 then AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i])
+            else AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+
+            AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+         end;
+
+         if SpawnArea = AmNorthSpawnArea and RoadRand = 2 then
+            if Rand(1,2) = 1 then
+               ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 39, 25)
+            else
+            begin
+                 ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 88,42);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 78,71);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 35,29);
+            end;
+
+       end;                                                                                               
+
+     2:
+     begin
+        //Second
+          temp_list = [];
+          for i = 1 to 2 do
+               begin
+                    if i = 2 and difficulty = 1 then
+                         break;
+
+                    if Rand(1,2) = 1 then
+                         PrepareMechanic(false,am_skill_lvl)
+                    else PrepareMechanic(false,-am_skill_lvl);
+
+                    temp_unit = CreateHuman;
+
+                    case i of
+                         1: begin
+                              vc_chassis = us_medium_wheeled;
+
+                              if difficulty = 1 then
+                                   vc_weapon = us_light_gun
+                              else vc_weapon = us_double_gun;
+                         end;
+                         2: begin
+                              if difficulty = 2 then
+                                   vc_chassis = us_light_wheeled
+                              else vc_chassis = us_medium_wheeled;
+
+                              vc_weapon = us_light_gun;
+                         end;
+                    end;
+                    temp_veh = CreateVehicle;
+                    temp_list = temp_list ^ [[temp_veh,temp_unit]];
+                    PlaceUnitArea(temp_veh, SpawnArea, false);
+                    PlaceHumanInUnit(temp_unit,temp_list[i][1]);
+               end;
+          second_wave = Replace(second_wave,1,temp_list);
+
+          temp_list = [];
+          for i = 1 to (difficulty+1)*2 + difficulty-1 do              
+               begin
+                    PrepareSoldier(false,am_skill_lvl);
+                    temp_unit = CreateHuman;
+                    temp_list = temp_list ^ temp_unit;
+                    PlaceUnitArea(temp_unit, SpawnArea, false);
+               end;
+          second_wave = Replace(second_wave,2,temp_list);
+
+          for i = 1 to roadX[RoadRand] do
+          begin
+            if SpawnArea = AmNorthSpawnArea and RoadRand <> 2 then AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i])
+            else AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+
+            AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+         end;
+
+         if SpawnArea = AmNorthSpawnArea and RoadRand = 2 then
+            if Rand(1,2) = 1 then
+               ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 39, 25)
+            else
+            begin
+                 ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 88,42);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 78,71);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 35,29);
+            end;
+     end;
+
+     3:
+     begin
+          //Third
+          temp_list = [];
+          for i = 1 to 2 do
+               begin
+                    if Rand(1,2) = 1 then
+                         PrepareMechanic(false,am_skill_lvl)
+                    else PrepareMechanic(false,-am_skill_lvl);
+
+                    temp_unit = CreateHuman;
+
+                    case i of
+                         1: begin
+                              vc_chassis = us_medium_wheeled;
+
+                              if difficulty = 1 then
+                                   vc_weapon = us_light_gun
+                              else vc_weapon = us_double_gun;
+                         end;
+                         2: begin
+                              if difficulty = 1 then
+                                   vc_chassis = us_light_wheeled
+                              else vc_chassis = us_medium_wheeled;
+
+                              if difficulty < 3 then
+                                   vc_weapon = us_light_gun
+                              else vc_weapon = us_double_gun;
+                         end;
+                    end;
+                    temp_veh = CreateVehicle;
+                    temp_list = temp_list ^ [[temp_veh,temp_unit]];
+                    PlaceUnitArea(temp_veh, SpawnArea, false);
+                    PlaceHumanInUnit(temp_unit,temp_list[i][1]);
+               end;
+          third_wave = Replace(third_wave,1,temp_list);
+
+          temp_list = [];
+          for i = 1 to [7,9,11][difficulty] do     
+               begin
+                    PrepareSoldier(false,am_skill_lvl);
+                    temp_unit = CreateHuman;
+                    temp_list = temp_list ^ temp_unit;
+                    PlaceUnitArea(temp_unit, SpawnArea, false);
+               end;
+          third_wave = Replace(third_wave,2,temp_list);
+
+          for i = 1 to roadX[RoadRand] do
+          begin
+            if SpawnArea = AmNorthSpawnArea and RoadRand <> 2 then AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i])
+            else AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+
+            AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+         end;
+
+         if SpawnArea = AmNorthSpawnArea and RoadRand = 2 then
+            if Rand(1,2) = 1 then
+               ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 39, 25)
+            else
+            begin
+                 ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 88,42);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 78,71);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 35,29);
+            end;
+     end;
+
+     4:
+     begin
+         //Fourth
+          temp_list = [];
+          for i = 1 to 6 do
+               begin
+                    if i > 4 and difficulty = 1 then
+                         break;
+
+                    if Rand(1,2) = 1 then
+                         PrepareMechanic(false,am_skill_lvl)
+                    else PrepareMechanic(false,-am_skill_lvl);
+
+                    temp_unit = CreateHuman;
+
+                    case i of
+                         1,2: begin
+                              vc_chassis = us_medium_wheeled;
+                              vc_weapon = us_double_gun;
+                         end;
+                         3,4: begin
+                              vc_chassis = us_medium_wheeled;
+
+                              if Rand(1,difficulty) = 1 then
+                                   vc_weapon = us_light_gun
+                              else vc_weapon = us_double_gun;
+                         end;
+                         5,6:
+                              if Rand(1,difficulty) = 1 then
+                                   begin
+                                        vc_weapon = us_light_gun;
+                                        vc_chassis = us_light_wheeled;
+                                   end
+                              else
+                                   begin
+                                        vc_weapon = us_double_gun;
+                                        vc_chassis = us_medium_wheeled;
+                                   end;
+                    end;
+
+                    temp_veh = CreateVehicle;
+                    temp_list = temp_list ^ [[temp_veh ,temp_unit]];
+                    PlaceUnitArea(temp_veh, SpawnArea, false);
+                    PlaceHumanInUnit(temp_unit,temp_list[i][1]);
+               end;
+          fourth_wave = Replace(fourth_wave,1,temp_list);
+
+          temp_list = [];
+          for i = 1 to (difficulty+3)*2 + difficulty+2 + difficulty+1 do          
+               begin
+                    PrepareSoldier(false,am_skill_lvl);
+                    temp_unit = CreateHuman;
+                    temp_list = temp_list ^ temp_unit;
+                    PlaceUnitArea(temp_unit, SpawnArea, false);
+               end;
+          fourth_wave = Replace(fourth_wave,2,temp_list);
+
+          for i = 1 to roadX[RoadRand] do
+          begin
+            if SpawnArea = AmNorthSpawnArea and RoadRand <> 2 then AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i])
+            else AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+
+            AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), roadX[RoadRand][i], roadY[RoadRand][i]);
+         end;
+
+         if SpawnArea = AmNorthSpawnArea and RoadRand = 2 then
+            if Rand(1,2) = 1 then
+               ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 39, 25)
+            else
+            begin
+                 ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 88,42);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 78,71);
+                 AddComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 35,29);
+            end;
+        end;
+
+     end;
+end;
+
+// Attack near unit if not hastask
+Every 0$1 trigger AmAlarmAttack and FilterAllUnits([[f_side, 1], [f_ok]]) do
+var i, target1, target2;
+begin
+     enable;
+
+     for i in FilterAllUnits([[f_side, 1], [f_ok]]) do
+         if not HasTask(i) then
+         begin
+            target1 := NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i);
+            target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), i);
+
+            If GetDistUnits(i, target1)+8 < GetDistUnits(i, target2) then ComAttackUnit(i, target1)
+            else ComAttackUnit(i, target2);
+        end;
+end;
