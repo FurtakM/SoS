@@ -38,7 +38,7 @@ ar_force_north := PrepareBase(ar_dep_n, base_north, 'dammam', skill, [10000, 100
 ar_force_north := ar_force_north union PrepareBase(ar_dep_n2, base_north_2, '', skill, [500, 60, 0], [-1, [3, 3, 4][Difficulty], 2, 0]);
 ar_force_west := PrepareBase(ar_dep_w, base_west, 'jeddah', skill, [700, 300, 10], [-1, 5, 3, 2]);
 ar_force_south := PrepareBase(ar_dep_s, base_south, 'riyadh', skill, [500, 60, 0], [4, 2, 3, 1]);
-ar_force_east := PrepareBase(ar_dep_e, base_east, '', skill, [500, 50, 0], [-1, 3, 3, 2]);
+ar_force_east := PrepareBase(ar_dep_e, base_east, '', skill, [500, 50, 0], [12, 3, 3, 2]);
 
 mc_bases := [ar_force_north, ar_force_west, ar_force_east];
 
@@ -234,7 +234,8 @@ skill := [5, 6, 7][Difficulty];
 coords := [];
 flags := [0, 0, 0, 0, 1, 0, 0, 0, 1, 0];
 
-MC_SetProduceList(1, [ [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+MC_SetProduceList(1, [
+                       [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                        [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
                        [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                        [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb]
@@ -287,12 +288,12 @@ for i = 1 to [1,3,3][Difficulty] do
     end;
 
 // mortar
-for i = 1 to [2,3,3][Difficulty] do
+for i = 1 to [3,4,4][Difficulty] do
     begin
     uc_side := 2;
     uc_nation := 2;
 
-    PrepareHuman(false, [1,8][rand(1,2)], skill);
+    PrepareHuman(false, [1, 8][i mod 2 + 1], skill);
     un := CreateHuman;
     tmp := ReplaceIn(tmp, [2, tmp[2]+1], un);
     PlaceUnitArea(un, west_attack_spawn, false);
@@ -319,8 +320,7 @@ for i = 1 to [1,2,3][Difficulty] do
 coords := [ [148,158], [148,158] ];
 MC_PrepareAttack(3, tmp[3], coords, flags);
 
-// attack from East
-
+// attack from East          
 for i = 1 to [2, 4, 4][Difficulty] do
     begin
     uc_side := 2;
@@ -400,13 +400,15 @@ repeat
   tmp := [];
 
   if w mod 4 = 0 then
-     list := [ [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
+     list := [
+               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
                [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
                [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
                [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun]
              ]
   else
-     list := [ [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+     list := [
+               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
                [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
@@ -485,7 +487,7 @@ for i = 1 to 3 do
 
 for i = 1 to 4 do
     begin
-    PrepareHuman(false, rand(1,4), 6);
+    PrepareHuman(false, 1, 6);
     un := CreateHuman;
     PlaceUnitArea(un, east_attack_spawn, false);
     tmp := Replace(tmp, tmp+1, un);
@@ -513,5 +515,8 @@ End;
 
 Every 0$2 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower], [f_not, [f_lives, 1000]]]) do
 begin
-ComMoveXY(FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]), 106, 14);
+if IsOk(ar_dep_w) and GetSide(ar_dep_w) then
+   ComMoveXY(FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]), 18, 8)
+else
+   ComMoveXY(FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]), 106, 14);
 End;

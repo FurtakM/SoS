@@ -1,5 +1,5 @@
 // Macro Module [SoS] By Serpent
-// ver.  15.12.20
+// ver.  28.01.21
 
 Export skirmish, debug_mc;
 Export mc_bases, mc_building_need_repair, mc_building_repairs,
@@ -857,7 +857,7 @@ End;
 
 // Action's
 Export Function MC_RepairBuildings();
-var i, j, un, tmp, cranes;
+var i, j, un, tmp, cranes, to_repair_tmp, to_repair;
 begin
 if not mc_bases then
    exit;
@@ -918,7 +918,18 @@ for i = 1 to mc_bases do
 
         wait(1);
 
-        ComRepairBuilding(j, NearestUnitToUnit(mc_building_need_repair[i], j));
+        to_repair_tmp := mc_building_need_repair[i];
+
+        if mc_scan[i] then
+           to_repair_tmp := UnitFilter(mc_building_need_repair[i], [f_not, [f_or, [f_btype, b_bunker], [f_btype, b_turret], [f_btype, b_breastwork]]]);
+
+        if not to_repair_tmp then
+           continue;
+
+        to_repair := NearestUnitToUnit(to_repair_tmp, j);
+
+        if DangerAtRange(to_repair, 14)[4] < 5 then
+           ComRepairBuilding(j, to_repair);
         end;
     end;
 End;
@@ -1192,13 +1203,11 @@ if not mc_bases then
 for i = 1 to mc_bases do
     begin
 
-    if not mc_mines[i] or mc_mines[i] = mc_miners[i] then
+    if not mc_mines[i] or mc_mines[i] = mc_miners[i] or mc_scan[i] then
        continue;
 
     if mc_miners[i] then
        begin
-       k := 1;
-
        for j = mc_miners[i] downto 1 do
            begin
            if IsDead(mc_miners[i][j]) or GetClass(mc_miners[i][j]) <> 1 then
@@ -1208,22 +1217,14 @@ for i = 1 to mc_bases do
               continue;
               end;
 
-           if WantPlant(mc_miners[i][j]) and (DangerAtRangeXY(GetSide(mc_miners[i][j]), mc_mines[i][k][1], mc_mines[i][k][2], 15)[4] or DangerAtRange(mc_miners[i][j], 10)[4]) then
-              ComStop(mc_miners[i][j]);
-
-           if GetClass(mc_miners[i][j]) = 1 and not MineOfUnit(mc_miners[i][j]) and DangerAtRangeXY(GetSide(mc_miners[i][j]), mc_mines[i][k][1], mc_mines[i][k][2], 15)[4] = 0 and not HasTask(mc_miners[i][j]) then
+           if GetClass(mc_miners[i][j]) = 1 and not MineOfUnit(mc_miners[i][j]) and not HasTask(mc_miners[i][j]) then
               begin
 
               if IsInUnit(mc_miners[i][j]) then
                  ComExitBuilding(mc_miners[i][j]);
 
               if not HasTask(mc_miners[i][j]) then
-                 AddComPlaceRemoteCharge(mc_miners[i][j], mc_mines[i][k][1], mc_mines[i][k][2], 0);
-
-              k := k + 1;
-
-              if k > mc_mines[i] then
-                 k := 1;
+                 AddComPlaceRemoteCharge(mc_miners[i][j], mc_mines[i][j mod mc_mines[i] + 1][1], mc_mines[i][j mod mc_mines[i] + 1][2], 0);
               end;
            end;
         end;
@@ -1236,8 +1237,7 @@ for i = 1 to mc_bases do
     list := [];
 
     for j in tmp do
-        begin
-
+        begin     
         for k in UnitsInside(j) do
             if GetClass(k) = 1 and not MineOfUnit(k) then
                list := list ^ k;
@@ -1248,7 +1248,7 @@ for i = 1 to mc_bases do
     if not list then
        continue;
 
-    k := mc_mines[i]-mc_miners[i];
+    k := mc_mines[i] - mc_miners[i];
 
     if k > list then
        k := list;
