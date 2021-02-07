@@ -1,0 +1,104 @@
+Export Function Action;
+begin
+InGameOn;
+
+CenterNowOnXY(51, 85);
+
+PlaceSeeing(1, 1, 5, -32763);
+RemoveSeeing(1, 1, 5);
+
+ComMoveXY([Heike, Kaia], 53, 88);
+
+wait(0$1);
+
+Say(Kaia, 'DK-1');
+Say(Heike, 'DH-1');
+
+wait(0$2);
+
+PrepareArabian;
+
+InGameOff;
+
+ChangeMissionObjectives('O1');
+goWithHeike := true;
+
+SaveForQuickRestart;
+End;
+
+Every 0$1 trigger GetAttitude(2, 5) = att_enemy do
+var i;
+begin
+goWithHeike := false;
+
+DialogueOn;
+
+CenterNowOnUnits(Heike);
+
+Say(Kaia, 'DK-betray-1');
+
+DialogueOff;
+
+ComMoveXY(Kaia, 90, 46);
+
+repeat
+ wait(0$1);
+
+ for i in FilterAllUnits([[f_side, 5], [f_class, 1]]) diff Kaia do
+     ComAttackUnit(i, Heike);
+until IsDead(Heike);
+
+YouLost('Betray');
+End;
+
+// go with Heike
+Every 0$1 trigger goWithHeike do
+begin
+enable;
+
+if GetDistUnits(Heike, Kaia) > 3 then
+   ComMoveXY(Kaia, GetX(Heike), GetY(Heike));
+End;
+
+// see bunker on west
+Every 0$2 trigger SeeXY(2, 47, 68) and not baseSpotted do
+begin
+Say(Heike, 'DH-spot-1');
+Say(UnitsInside(HexInfo(47, 68))[1], 'DR-spot-1');
+End;
+
+// see bunker on east
+Every 0$2 trigger SeeXY(2, 93, 89) and not baseSpotted do
+begin
+Say(Heike, 'DH-spot-1');
+Say(UnitsInside(HexInfo(93, 89))[1], 'DR-spot-2');
+End;
+
+// idle
+Every 0$2 trigger GetDistUnits(Heike, eon) > 40 do
+begin
+Say(Kaia, 'DK-idle-1');
+End;
+
+// see base
+Every 0$2 trigger SeeXY(2, 59, 47) do
+begin
+PlaceSeeing(59, 47, 2, -10);
+CenterNowOnXY(59, 47);
+
+goWithHeike := false;
+baseSpotted := true;
+
+InGameOn;
+
+ComMoveXY([Heike, Kaia], 54, 45);
+AddComTurnXY([Heike, Kaia], 59, 47);
+
+Say(Heike, 'DH-base-1');
+Say(Kaia, 'DK-base-1');
+
+InGameOff;
+
+foundPoints := foundPoints + 1;
+goWithHeike := true;
+End;
