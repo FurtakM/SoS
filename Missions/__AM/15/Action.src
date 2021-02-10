@@ -1100,11 +1100,12 @@ else
    end;
 
 wait(0$10);
-AddComRecycle(bomb, FilterAllUnits([[f_side, 8], [f_btype, b_factory]])[1]);
+AddComRecycle(bomb, FilterAllUnits([[f_side, 8], [f_nation, 2], [f_btype, b_factory]])[1]);
 End;
 
 // Legion surrender
-Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) <= [9, 8, 7][Difficulty] and not FilterAllUnits([[f_side, 8], [f_weapon, ru_siberium_rocket]]) and IsOk(Kurt) do
+Every 0$1 trigger (GetLives(Kurt) < 999 or FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) <= [9, 8, 7][Difficulty]) and not FilterAllUnits([[f_side, 8], [f_weapon, ru_siberium_rocket]]) and IsOk(Kurt) and FilterUnitsInArea(legionBaseArea, [f_side, 1]) do
+var i, tmp, x;
 begin
 DialogueOn;
 
@@ -1136,13 +1137,55 @@ KillUnit(Kozlov);
 KillUnit(FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_nation, 3], [f_btype, b_factory]])[1]);
 
 ChangeSideFog(8, 1);
-SetSide(FilterAllUnits([f_side, 8]), 1);
 
+tmp := FilterAllUnits([[f_side, 8], [f_type, unit_human]]) diff [Kozlov, Kurt];
+
+if tmp >= [9, 8, 7][Difficulty] then
+   begin
+   x :=  [9, 8, 7][Difficulty];
+
+   for i := tmp - (x + 1) downto 1 do
+       begin
+       legionEscapeUnits := legionEscapeUnits ^ tmp[i];
+
+       if IsInUnit(tmp[i]) then
+          ComExitBuilding(tmp[i]);
+
+       if IsInUnit(i) then
+          ComExitVehicle(tmp[i]);
+
+       AddComMoveXY(tmp[i], 37, 1);
+       end;
+   end
+else
+   x := tmp;
+
+for i := tmp downto tmp - x do
+    SetSide(tmp[i], 1);
+
+SetSide(Kurt, 1);
+SetSide(FilterAllUnits([[f_side, 8], [f_type, unit_building]]), 1); 
 SetAttitude(8, 1, att_friend, true);
+
+wait(0$40);
 
 PlaceUnitXY(Friend, 37, 1, false);
 wait(0$1);
 ComMoveXY(Friend, 60, 95);
+End;
+
+Every 0$1 trigger legionEscapeUnits do
+var i;
+begin
+enable;
+
+for i in legionEscapeUnits do
+    begin
+    if IsInArea(i, legionEscapeArea) then
+       RemoveUnit(i)
+    else if not HasTask(i) then
+       ComMoveToArea(i, legionEscapeArea);
+    end;
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 do

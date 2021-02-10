@@ -251,18 +251,17 @@ begin
 
         if bc_type in [b_lab, b_lab_half] then
            begin
-           bc_type := b_lab_half;
-
-           if LoadVariable('06_remoteVehs_1', 0) then
+           if not LoadVariable('06_remoteVehs_1', 0) then
               begin
-              if i[7] > 9 then
-                 begin
-                 bc_type := b_lab_full;
-                 bc_kind1 := 10;
-                 bc_kind2 := 15;
-                 end
-              else
-                 bc_kind1 := 15;
+              bc_type := b_lab_full;
+              bc_kind1 := 10;
+              bc_kind2 := 15;
+              end
+           else
+              begin
+              bc_type := b_lab_half;
+              bc_kind1 := 10;
+              bc_kind2 := -1;
               end;
            end;
 
@@ -301,7 +300,7 @@ begin
     if FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) then
        begin
        b := FilterAllUnits([[f_side, 1], [f_btype, b_factory]])[1];
-       tmp := MCB_Extension(GetX(b), GetY(b), GetDir(b));
+       tmp := GetFacExtXYD(GetX(b), GetY(b), GetDir(b));
        blist := [b_ext_noncombat, b_ext_gun];
 
        if LoadVariable('06_remoteVehs_1', 0) then

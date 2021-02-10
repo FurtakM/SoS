@@ -308,49 +308,50 @@ end;
 
 // Find new AM soldiers
 
-Every 1 trigger (FilterUnitsInArea(WaterScene, [f_side, 1]) > 0 OR GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_side, 1]), Jerry), Jerry) < 15) do
+Every 1 trigger (FilterUnitsInArea(WaterScene, [f_side, 1]) > 0 OR GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_side, 1]), Jerry), Jerry) < 13) do
 var i;
 begin
     InGameOn;
     SetLives(Jerry, 250);
-    SetLives(Brian, 750);
+    SetLives(Brian, [1000, 800, 750][Difficulty]);
     SetAttitude(3, 4, att_enemy, true);
     CenterOnUnits([Brian, Jerry]);
-    for i in FilterUnitsInArea(RussiansWaterSpawn, [f_side, 3]) do ComFree(i);
-    for i in FilterUnitsInArea(RussiansWaterSpawn, [f_side, 3]) do AddComAttackUnit(i, Brian);
-    for i in FilterAllUnits([f_side, 4]) do ComFree(i);
+
+    for i in FilterUnitsInArea(RussiansWaterSpawn, [f_side, 3]) do
+        ComFree(i);
+
+    for i in FilterAllUnits([f_side, 4]) do
+        ComFree(i);
 
     wait(0$1);
 
     InGameOff;
-    Say(Brian, 'DF-Sol1-1');
-    Say(JMM, 'DF-JMM-1'); 
 
+    Say(Brian, 'DF-Sol1-1');
+    Say(JMM, 'DF-JMM-1');  
 end;
 
-// Kill russians near river
-
+// Kill russians near river  
 Every 0$1 trigger FilterUnitsInArea(WaterArea, [f_side, 3]) = 0 do
 begin
 
-    If NOT IsDead(Brian) then SetSide(Brian, 1);
-    If NOT IsDead(Jerry) then SetSide(Jerry, 1);
+    if not IsDead(Brian) then
+       SetSide(Brian, 1);
 
-    IF FilterAllUnits([[f_side, 1], [f_class, 4]]) > 0 then
-    begin
-        Say(JMM, 'DFa-JMM-1');
-    end else
-    begin
-        Say(JMM, 'DFa-JMM-1a');
-    end;
+    if not IsDead(Jerry) then
+       SetSide(Jerry, 1);
 
+    if FilterAllUnits([[f_side, 1], [f_class, 4]]) then
+       Say(JMM, 'DFa-JMM-1')
+    else
+       Say(JMM, 'DFa-JMM-1a');
 end;
 
 // Brian dialog
 Every 0$1 trigger FilterUnitsInArea(WaterArea, [f_side, 3]) = 0 AND NOT IsOk(Brian) do
 begin
      repeat
-     wait(0$1);
+      wait(0$1);
      until GetLives(Brian) > 250;
 
      Say(Brian, 'DFb-Sol1-1');
