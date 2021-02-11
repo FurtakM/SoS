@@ -10,14 +10,14 @@ begin
     enable;
     arabianAttacksCounter = arabianAttacksCounter + 1;
 
-    if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) = 0 then
+    if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) < 2 then
        begin
        uc_side := 8;
        uc_nation := 2;
 
        PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_control_tower, 100);
 
-       for i = 1 to 2 do
+       for i = FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) + 1 to 2 do
            begin
            veh := CreateVehicle;
            SetDir(veh, 5);
@@ -38,14 +38,14 @@ begin
     enable;
     arabianAttacksCounter = arabianAttacksCounter + 1;
 
-    if FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]) = 0 then
+    if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) < 2 then
        begin
        uc_side := 8;
        uc_nation := 2;
 
        PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_control_tower, 100);
 
-       for i = 1 to 2 do
+       for i = FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) + 1 to 2 do
            begin
            veh := CreateVehicle;
            SetDir(veh, 5);
@@ -60,6 +60,25 @@ begin
 end;
 
 Every 1$0 trigger eventVar2 = 1 do
+var i, veh;
 begin
-    RespawnAttackVehicle([ArabianSpawn1, ArabianSpawn2][Rand(1, 2)], 3, [5, 7, 8][Difficulty], 10, 3, 3, [3, 3], [46, 44, 45, 47, 49], [], [], 1);
+if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) < 2 then
+   begin
+   uc_side := 8;
+   uc_nation := 2;
+
+   PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_control_tower, 100);
+
+   for i = FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) + 1 to 2 do
+       begin
+       veh := CreateVehicle;
+       SetDir(veh, 5);
+       PlaceUnitXYR(veh, 181, 105, 12, false);
+
+       PrepareMechanic(false, [8, 9, 10][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+   end;
+
+RespawnAttackVehicle([ArabianSpawn1, ArabianSpawn2][Rand(1, 2)], 3, [5, 7, 8][Difficulty], 10, 3, 3, [3, 3], [46, 44, 45, 47, 49], [], [], 1);
 end;
