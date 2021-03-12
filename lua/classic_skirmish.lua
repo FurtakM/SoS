@@ -6,11 +6,11 @@ function FROMOW_SKIRMISH_LISTBOX_ADD(INFO, INDEX) -- Called by OW!
 	if (SKIRMISH_ALLOWED_MAPS == nil or inArray(SKIRMISH_ALLOWED_MAPS, INFO.map)) then
 		SKIRMISH_DATA = addToArray(SKIRMISH_DATA, INFO);
 		SKIRMISH_DISPLAY_DATA = addToArray(SKIRMISH_DISPLAY_DATA, INFO.title);
-	end;
 
-	if (SKIRMISH_SELECTED == nil) then
-		SKIRMISH_SELECTED = INDEX + 1;
-		setMap();
+		if (SKIRMISH_SELECTED == nil) and (#SKIRMISH_DATA > 0) then
+			SKIRMISH_SELECTED = #SKIRMISH_DATA;-- INDEX + 1;
+			setMap();
+		end;
 	end;
 end;
 
@@ -332,4 +332,9 @@ function playSkirmish()
 	end;
 
 	OW_runmap_single('_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map);
+end;
+
+-- @override
+function skirSort(Type,isInit)
+
 end;

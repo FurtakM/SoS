@@ -1,7 +1,4 @@
 ----------- MAIN MENU ----------
--- see: classic_mods.lua
-OW_mods_initex();
-
 -- version check
 if (not compareVersions(getvalue(OWV_VERSION), MOD_DATA.Req_Ver)) then
     getCustomDialog({
@@ -23,10 +20,7 @@ setFontName(version, ADMUI3LB);
 setFontName(mod_version, Tahoma_10);
 
 -- background
---setTexture(menu, 'menu-main.png');
-logoVisible(false);
-
-logo = getElementEX(
+classic_logo = getElementEX(
     menu,
     anchorT,
     XYWH(LayoutWidth / 2 - 290, 75, 580, 58),
@@ -35,9 +29,6 @@ logo = getElementEX(
         texture = 'logos/logo.png'
     }
 );
-
--- hide sgui menu
-setVisible(menu.side, false);
 
 -- old window
 menu.window = getElementEX(
@@ -68,7 +59,7 @@ menu.window.user = button(
     19, 
     170,
     30,
-    loc(TID_Main_Menu_User) .. ': ' .. getvalue(OWV_STEAMUSERNAME), 
+    loc(TID_Main_Menu_User) .. ': ' .. PROFILE_NAME,
     'showProfile(1);',
     {}
 );
@@ -157,9 +148,9 @@ menu.window2.multiplayer = button(
     170,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
-    '',
+    'multiplayer_show();',
     {
-        disabled = true
+        -- disabled = true
     }
 );
 
@@ -210,7 +201,6 @@ function steam_init()
 	SteamInitialized = true;
 end;
 
--- hide old steam
 setVisible(profilebar, false);
 
 profilebar = getElementEX(
@@ -262,8 +252,6 @@ profile_button = button(
     }
 );
 
-setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));
-
 function showMenuButton(windowNumber)
     setVisible(menu.window, false);
     setVisible(menu.window2, false);
@@ -271,11 +259,19 @@ function showMenuButton(windowNumber)
     ChangeInterface(0);
 
     if (windowNumber == 0) then
+        if (getvalue(OWV_ISMOD)) then
+            setVisible(mod_version, false);
+        end;
+
         setVisible(version, false);
-        setVisible(mod_version, false);
+        setVisible(classic_logo, false);
     else
+        if (getvalue(OWV_ISMOD)) then
+            setVisible(mod_version, true);
+        end;
+
         setVisible(version, true);
-        setVisible(mod_version, true);
+        setVisible(classic_logo, true);
     end;
 
     if (windowNumber > 0) then
@@ -290,3 +286,10 @@ function showMenuButton(windowNumber)
         setVisible(menu.window2, true);
     end;
 end;
+
+-- hide modern sgui menu
+logoVisible(false);
+setVisible(menu.side, false);
+setVisible(menu.window, true);
+setVisible(classic_logo, true);
+setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));

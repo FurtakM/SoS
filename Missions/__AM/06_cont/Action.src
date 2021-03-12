@@ -269,17 +269,15 @@ begin
 end;
 
 
-// Spawn Joan + dialog
-Every 35$0 do
+// Dialog about Joan
+Every 0$10+1$00 trigger IsOk(Joan) and GetSide(Joan) = 1 do
 begin
 
-    repeat
-     wait(0$1);
-    until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
-    
-    PrepareJoan;
+    wait(0$20);
 
-    wait(1$0);
+    if not IsOk(Joan) then
+       exit;
+
     If IsOK(Lisa) then
     begin
         DialogueOn;
@@ -311,7 +309,7 @@ begin
 end; 
 
 // Spawn randoms
-Every 0$10+2$00 do
+Every 2$00 do
 var i, last;
 begin
 last := 8;
@@ -323,8 +321,7 @@ for i = 1 to last do
     end;
 End;
 
-// Dialogs from Delta base
-
+// Dialogs from Delta base  
 Every 5$20 do
 begin
     DialogueOn;
@@ -352,6 +349,14 @@ begin
     SayRadio(DeltaDoctor, 'D12d-Sci-1');
     DialogueOff;
     cratesStatus = 1;
+
+    wait(0$40);
+
+    repeat
+     wait(0$1);
+    until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
+
+    PrepareJoan;
 end;
 
 Every 42$0 do 

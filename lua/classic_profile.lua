@@ -1,4 +1,5 @@
 PROFILES_DATA = {};
+PROFILE_NAME = '';
 
 function FROMOW_PROFILES(DATA)
 --[[
@@ -37,6 +38,7 @@ DATA
         DATA - Varies
 --]]
 
+	PROFILE_NAME = DATA.NAME;
 	setText(menu.window.user, loc(TID_Main_Menu_User) .. ': ' .. DATA.NAME);
 	setText(profile_label, DATA.NAME);
     currentProfileDir = DATA.DIR;

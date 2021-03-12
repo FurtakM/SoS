@@ -3,6 +3,7 @@ setVisible(version, false);
 setVisible(mod_version, false);
 setTexture(menu, 'mainbackground-l.png');
 logoVisible(false);
+setVisible(classic_logo, false);
 
 -- footer
 footer = getElementEX(

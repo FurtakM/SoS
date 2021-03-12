@@ -141,3 +141,5 @@ function hideCredits()
         showMenuButton(1);
     end;
 end;
+
+OW_loadcredits(menu.window.credits.content.ID, 'credits/test');

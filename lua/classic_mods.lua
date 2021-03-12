@@ -668,5 +668,4 @@ function FROMOW_MODS_ADD(INFO) -- Called by OW!
 	end;
 end;
 
-
-
+OW_mods_initex();
