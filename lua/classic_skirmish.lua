@@ -52,7 +52,7 @@ function setSkirmishOption(OPTION, INDEX)
 	    }
 	);
 	
-	getComboBox(
+	clComboBox(
 	    menu.window_skirmish.panel.options,
 	    10 + (((INDEX - 1) % 3) * 240),
 	    24 + (math.floor((INDEX - 1) / 3) * 60),
@@ -165,7 +165,7 @@ menu.window_skirmish.panel.options = getElementEX(
 	}
 );
 
-menu.window_skirmish.panel.cancel = button(
+menu.window_skirmish.panel.cancel = clButton(
 	menu.window_skirmish.panel,
 	142,
 	734,
@@ -176,7 +176,7 @@ menu.window_skirmish.panel.cancel = button(
     {}
 );
 
-menu.window_skirmish.panel.loadgame = button(
+menu.window_skirmish.panel.loadgame = clButton(
 	menu.window_skirmish.panel,
 	328,
 	734,
@@ -187,7 +187,7 @@ menu.window_skirmish.panel.loadgame = button(
     {}
 );
 
-menu.window_skirmish.panel.change = button(
+menu.window_skirmish.panel.change = clButton(
 	menu.window_skirmish.panel,
 	514,
 	734,
@@ -198,7 +198,7 @@ menu.window_skirmish.panel.change = button(
     {}
 );
 
-menu.window_skirmish.panel.play = button(
+menu.window_skirmish.panel.play = clButton(
 	menu.window_skirmish.panel,
 	700,
 	734,
@@ -259,7 +259,7 @@ menu.window_skirmish_popup.panel.description = getLabelEX(
  	}
 );
 
-menu.window_skirmish_popup.panel.list = getListBox(
+menu.window_skirmish_popup.panel.list = clListBox(
 	menu.window_skirmish_popup.panel, 
 	XYWH(10, 24, 224, 312), 
 	{}, 
@@ -268,7 +268,7 @@ menu.window_skirmish_popup.panel.list = getListBox(
 	{}
 );
 
-menu.window_skirmish_popup.panel.ok = button(
+menu.window_skirmish_popup.panel.ok = clButton(
 	menu.window_skirmish_popup.panel,
 	245,
 	301,
@@ -279,7 +279,7 @@ menu.window_skirmish_popup.panel.ok = button(
     {}
 );
 
-menu.window_skirmish_popup.panel.cancel = button(
+menu.window_skirmish_popup.panel.cancel = clButton(
 	menu.window_skirmish_popup.panel,
 	388,
 	301,
@@ -303,8 +303,8 @@ end;
 
 function showChangeSkirmishPanel(MODE)
 	if (MODE == 1) then
-		setListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)'); 
-		setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
+		clSetListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)'); 
+		clSetListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
 		setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 164, '...'));
 		setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map .. '/mappic.png');
 		setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');
@@ -314,7 +314,7 @@ function showChangeSkirmishPanel(MODE)
 end;
 
 function changeSkirmish(INDEX)
-	setListSelectedItem(menu.window_skirmish_popup.panel.list.ID, INDEX);
+	clSetListSelectedItem(menu.window_skirmish_popup.panel.list.ID, INDEX);
 	setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[INDEX].desc, 164, '...'));
 	setTexture(menu.window_skirmish_popup.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[INDEX].map .. '/mappic.png');
 	setTextureFallback(menu.window_skirmish_popup.panel.mappic, 'classic/edit/mappic_default.png');

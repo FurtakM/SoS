@@ -87,13 +87,13 @@ function onMenuKeyPress(key)
 
         -- profile
         if (getVisible(menu.window_profile.panel.promptNew)) then
-            closePrompt(menu.window_profile.panel.promptNew.ID);
+            clClosePrompt(menu.window_profile.panel.promptNew.ID);
             return;
         end;
 
         -- profile
         if (getVisible(menu.window_profile.panel.promptEdit)) then
-            closePrompt(menu.window_profile.panel.promptEdit.ID);
+            clClosePrompt(menu.window_profile.panel.promptEdit.ID);
             return;
         end;
 

@@ -5,7 +5,12 @@
 ----------- Serpent ------------
 ------------ Jakes  ------------
 --------------------------------
----------- Version 1.0 ---------
+---------- Version 2.0 ---------
+--[[
+		Classic GUI
+		prefix - cl
+]]--
+
 include('classic_global');
 include('classic_debug');
 include('classic_utils');

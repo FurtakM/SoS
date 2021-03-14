@@ -53,7 +53,7 @@ setTexture(menu.window2, 'classic/edit/mainmenu2.png');
 setVisible(menu.window2, false);
 
 -- buttons
-menu.window.user = button(
+menu.window.user = clButton(
     menu.window, 
     12, 
     19, 
@@ -64,7 +64,7 @@ menu.window.user = button(
     {}
 );
 
-menu.window.play = button(
+menu.window.play = clButton(
     menu.window, 
     12, 
     61, 
@@ -75,7 +75,7 @@ menu.window.play = button(
     {}
 );
 
-menu.window.mods = button(
+menu.window.mods = clButton(
     menu.window, 
     12, 
     103,
@@ -86,7 +86,7 @@ menu.window.mods = button(
     {}
 );
 
-menu.window.options = button(
+menu.window.options = clButton(
     menu.window, 
     12, 
     145, 
@@ -97,7 +97,7 @@ menu.window.options = button(
     {}
 );
 
-menu.window.achivs = button(
+menu.window.achivs = clButton(
     menu.window, 
     12, 
     187, 
@@ -108,7 +108,7 @@ menu.window.achivs = button(
     {}
 );
 
-menu.window.credits = button(
+menu.window.credits = clButton(
     menu.window, 
     12, 
     229, 
@@ -119,7 +119,7 @@ menu.window.credits = button(
     {}
 );
 
-menu.window.quit = button(
+menu.window.quit = clButton(
     menu.window, 
     12, 
     271,
@@ -130,7 +130,7 @@ menu.window.quit = button(
     {}
 );
 
-menu.window2.campaign = button(
+menu.window2.campaign = clButton(
     menu.window2, 
     12, 
     19,
@@ -141,20 +141,18 @@ menu.window2.campaign = button(
     {}
 );
 
-menu.window2.multiplayer = button(
+menu.window2.multiplayer = clButton(
     menu.window2, 
     12, 
     61, 
     170,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
-    'multiplayer_show();',
-    {
-        -- disabled = true
-    }
+    'showMultiplayer(1);',
+    {}
 );
 
-menu.window2.skirmish = button(
+menu.window2.skirmish = clButton(
     menu.window2, 
     12, 
     103,
@@ -165,7 +163,7 @@ menu.window2.skirmish = button(
     {}
 );
 
-menu.window2.back = button(
+menu.window2.back = clButton(
     menu.window2, 
     12, 
     145,
@@ -237,7 +235,7 @@ profile_label = getLabelEX(
     }
 );
 
-profile_button = button(
+profile_button = clButton(
     profilebar, 
     82, 
     42,

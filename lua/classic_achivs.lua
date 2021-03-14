@@ -7,11 +7,11 @@
 function showAchivs(mode)
     if mode > 0 then
         -- categories
-        achivCategoryButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'displayAchivsByCategory(0)', 0);
+        achivCategoryclButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'displayAchivsByCategory(0)', 0);
 
         -- achievsCategoryName = { [1] = loc(TID_Achievements_US), [2] = loc(TID_Achievements_AR), [3] = loc(TID_Achievements_RU), [4] = loc(TID_Achievements_Ally), [5] = loc(TID_Achievements_Leg), [6] = loc(TID_Achievements_ACamp), [7] = loc(TID_Achievements_MP), [8] = loc(TID_Achievements_Skir) ,[9] = loc
         for i = 1, table.getn(achievsCategoryName) do
-            achivCategoryButton(10, 30 + i * 40, achievsCategoryName[i], 'displayAchivsByCategory(' .. i .. ')', i);
+            achivCategoryclButton(10, 30 + i * 40, achievsCategoryName[i], 'displayAchivsByCategory(' .. i .. ')', i);
         end;
 
         displayAchivsByCategory(0);
@@ -226,14 +226,14 @@ function displayAchivsByCategory(category)
     end;  
 end;
 
-function achivCategoryButton(X, Y, CAPTION, EVENT, CATEGORY)
+function achivCategoryclButton(X, Y, CAPTION, EVENT, CATEGORY)
     local count = 1;
 
     if (CATEGORY > 0) then
         count = length(achievsCategory[CATEGORY]);
     end;
 
-    return button(
+    return clButton(
         menu.window_achivs.list, 
         X,
         Y, 
@@ -299,7 +299,7 @@ menu.window_achivs.list.title = getLabelEX(
     }
 );
 
-menu.window_achivs.list.button_quit = button(
+menu.window_achivs.list.button_quit = clButton(
     menu.window_achivs.list, 
     5, 
     568, 
@@ -331,7 +331,7 @@ menu.window_achivs.panel.scroll = getScrollboxEX(
 
 set_Property(menu.window_achivs.panel.scroll.ID, PROP_AUTOHIDESCROLL, false);
 
-menu.window_achivs.panel.scrollV = getScrollBarEX_WithButtons2(
+menu.window_achivs.panel.scrollV = clScrollBarEX2(
     menu.window_achivs.panel, 
     anchorTRB,
     XYWH(

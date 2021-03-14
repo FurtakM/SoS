@@ -156,7 +156,7 @@ function getDialog(DATA)
             PROPERTIES.clickSoundSelect = true;
         end;
 
-        button(
+        clButton(
             tmp, 
             8, 
             2,
@@ -267,7 +267,7 @@ function getCustomDialog(DATA)
             PROPERTIES.clickSoundSelect = true;
         end;
 
-        button(
+        clButton(
             tmp, 
             8, 
             2,

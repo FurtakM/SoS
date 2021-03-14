@@ -2,28 +2,7 @@
     Author: Serpent
     03-2020
 --]]
-function setCheckedID(ELEMENT_ID, VALUE)
-    return sgui_set(ELEMENT_ID, PROP_CHECKED, VALUE);
-end;
-
-function getCheckedID(ELEMENT_ID)
-    return sgui_get(ELEMENT_ID, PROP_CHECKED);
-end;
-
-function setTexture2ID(ELEMENT_ID, VALUE)
-    set_Property(ELEMENT_ID, PROP_TEXTURE2, VALUE);
-end;
-
-function getXYWH(ELEMENT)
-    return {
-        X = sgui_get(ELEMENT.ID, PROP_X),
-        Y = sgui_get(ELEMENT.ID, PROP_Y),
-        W = sgui_get(ELEMENT.ID, PROP_W),
-        H = sgui_get(ELEMENT.ID, PROP_H)
-    }
-end;
-
-function getSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROPERTIES)
+function clSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROPERTIES)
     if PROPERTIES.colour1 == nil then
         PROPERTIES.colour1 = WHITE();
     end;
@@ -133,9 +112,9 @@ function getSliderElement(PARENT, ANCHOR, POSSIZE, MIN, MAX, POS, CALLBACK, PROP
 end;
 
 --[[
-    @see: getInterfaceScrollboxEX - PROPERTIES.returnAllData
+    see: clScrollboxEX - PROPERTIES.returnAllData
 ]]--
-function changeInterfaceScrollboxEX(DATA, INTERFACE)
+function clUpdateScrollboxEX(DATA, INTERFACE)
     if DATA.horizontal then
         setTextureID(DATA.scrollBarID, 'SGUI/' .. INTERFACE .. '/scrollbar_back_h.png');
         setTexture2ID(DATA.scrollBarID, 'SGUI/' .. INTERFACE .. '/scrollbar.png');
@@ -185,7 +164,7 @@ function changeInterfaceScrollboxEX(DATA, INTERFACE)
     end;
 end;
 
-function getInterfaceScrollboxEX(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, INTERFACE, PROPERTIES)
+function clScrollboxEX(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, INTERFACE, PROPERTIES)
     if PROPERTIES.returnAllData then
         local DATA = {};
     end;
@@ -346,7 +325,7 @@ function getInterfaceScrollboxEX(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORI
     return ELEMENT;
 end;
 
-function getScrollBarEX_WithButtons2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, PROPERTIES)
+function clScrollBarEX2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, PROPERTIES)
 
     if HORIZONTAL then
         -- todo        
@@ -397,8 +376,8 @@ function getScrollBarEX_WithButtons2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, 
         '',
         SKINTYPE_NONE,
         {
-            callback_mousedown = 'scrollUpEventOn(%b, %id, ' .. ELEMENT.bar.ID .. ', "' .. ELEMENT.scrolluptextureclick .. '")',
-            callback_mouseup = 'scrollUpEventOff(%id, "' .. ELEMENT.scrolluptexture .. '")',
+            callback_mousedown = 'clScrollUpEventOn(%b, %id, ' .. ELEMENT.bar.ID .. ', "' .. ELEMENT.scrolluptextureclick .. '")',
+            callback_mouseup = 'clScrollUpEventOff(%id, "' .. ELEMENT.scrolluptexture .. '")',
         }
     );
 
@@ -411,8 +390,8 @@ function getScrollBarEX_WithButtons2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, 
         '',
         SKINTYPE_NONE,
         {
-            callback_mousedown = 'scrollDownEventOn(%b, %id, ' .. ELEMENT.bar.ID .. ', "' .. ELEMENT.scrolldowntextureclick .. '")',
-            callback_mouseup = 'scrollDownEventOff(%id, "' .. ELEMENT.scrolldowntexture .. '")',
+            callback_mousedown = 'clScrollDownEventOn(%b, %id, ' .. ELEMENT.bar.ID .. ', "' .. ELEMENT.scrolldowntextureclick .. '")',
+            callback_mouseup = 'clScrollDownEventOff(%id, "' .. ELEMENT.scrolldowntexture .. '")',
         }
     );
 
@@ -427,7 +406,7 @@ function getScrollBarEX_WithButtons2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, 
     return ELEMENT;
 end;
 
-function scrollUpEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
+function clScrollUpEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
     local value = 200;
 
     if (MOUSEBUTTON == 1) then
@@ -438,11 +417,11 @@ function scrollUpEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
     SGUI_scrollbar_scroll(SCROLL, value);
 end;
 
-function scrollUpEventOff(ELEMENT, TEXTURE)
+function clScrollUpEventOff(ELEMENT, TEXTURE)
     setTextureID(ELEMENT, TEXTURE);
 end;
 
-function scrollDownEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
+function clScrollDownEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
     local value = -200;
 
     if (MOUSEBUTTON == 1) then
@@ -453,11 +432,11 @@ function scrollDownEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
     SGUI_scrollbar_scroll(SCROLL, value);
 end;
 
-function scrollDownEventOff(ELEMENT, TEXTURE)
+function clScrollDownEventOff(ELEMENT, TEXTURE)
     setTextureID(ELEMENT, TEXTURE);
 end;
 
-function button(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
+function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
     if (PROPERTIES.font_colour == nil) then
         PROPERTIES.font_colour = RGB(0, 0, 0);
     end;
@@ -521,7 +500,7 @@ function button(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
     );
 end;
 
-function radioBox(PARENT, GROUP, X, Y, EVENT, PROPERTIES)
+function clRadioBox(PARENT, GROUP, X, Y, EVENT, PROPERTIES)
     if PROPERTIES.W == nil then
         PROPERTIES.W = 16;
     end;
@@ -583,7 +562,7 @@ function radioBox(PARENT, GROUP, X, Y, EVENT, PROPERTIES)
     return ELEMENT;
 end;
 
-function checkbox(PARENT, X, Y, EVENT, PROPERTIES)
+function clCheckbox(PARENT, X, Y, EVENT, PROPERTIES)
     if PROPERTIES.W == nil then
         PROPERTIES.W = 16;
     end;
@@ -633,7 +612,7 @@ function checkbox(PARENT, X, Y, EVENT, PROPERTIES)
     return ELEMENT;
 end;
 
-function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
+function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     if PROPERTIES.texture == nil then
         PROPERTIES.texture = 'classic/edit/combobox-small-text.png';
     end;
@@ -751,7 +730,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
 
     set_Property(ELEMENT.list.scroll.ID, PROP_AUTOHIDESCROLL, false);
 
-    ELEMENT.list.scrollBar = getScrollBarEX_WithButtons2(
+    ELEMENT.list.scrollBar = clScrollBarEX2(
         ELEMENT.list,
         anchorNone,
         XYWH(214, 0, 20, 270), 
@@ -764,7 +743,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     local elements = {};
 
     for i = 1, table.getn(ITEMS) do
-        elements = addToArray(elements, comboBoxItem(
+        elements = addToArray(elements, clComboBoxItem(
             ELEMENT.list.scroll, 
             i, 
             ITEMS[i], 
@@ -784,9 +763,9 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         setHint(ELEMENT.comboBox.selected, PROPERTIES.hint);
     end;
 
-    set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
-    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
-    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'showComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
 
     COMBOBOX_LIST[ELEMENT.list.scroll.ID] = {
         ID = ELEMENT.list.scroll.ID,
@@ -799,7 +778,7 @@ function getComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     return ELEMENT;
 end;
 
-function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
+function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
@@ -817,9 +796,9 @@ function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, L
         {
             hint = VALUE,
             colour1 = colour,
-            callback_mouseleave = 'hoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mouseover = 'hoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mousedown = 'selectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '"); ' .. CALLBACK
+            callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
+            callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
+            callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '"); ' .. CALLBACK
         }
     );
     
@@ -839,13 +818,13 @@ function comboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, L
     return item.ID;
 end;
 
-function selectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE)
-    setComboBoxValue(COMBOBOXLABELID, VALUE);
-    showComboBoxList(LISTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
-    setComboBoxSelectedItem(PARENTID, INDEX);
+function clSelectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE)
+    clSetComboBoxValue(COMBOBOXLABELID, VALUE);
+    clShowComboBoxList(LISTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
+    clSetComboBoxSelectedItem(PARENTID, INDEX);
 end;
 
-function setComboBoxSelectedItem(ID, INDEX)
+function clSetComboBoxSelectedItem(ID, INDEX)
     if COMBOBOX_LIST[ID] == nil then
         return;
     end;
@@ -853,19 +832,19 @@ function setComboBoxSelectedItem(ID, INDEX)
     COMBOBOX_LIST[ID].SELECTEDITEM = parseInt(INDEX);
 
     for i = 1, table.getn(COMBOBOX_LIST[ID].ELEMENTS) do
-        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'hoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
-        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSEOVER, 'hoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 1, ' .. BoolToInt(i == INDEX) .. ')');
+        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'clHoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
+        set_Callback(COMBOBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSEOVER, 'clHoverItem(' .. COMBOBOX_LIST[ID].ELEMENTS[i] .. ', 1, ' .. BoolToInt(i == INDEX) .. ')');
         setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[i]}, WHITEA());
     end;
     
     setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[COMBOBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
-function setComboBoxValue(LABELID, VALUE)
+function clSetComboBoxValue(LABELID, VALUE)
     setText({ID=LABELID}, SGUI_widesub(VALUE, 1, 22));
 end;
 
-function showComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
+function clShowComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
     local mode = getVisible({ID=ID});
 
     if mode then
@@ -879,7 +858,7 @@ function showComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXT
     setVisible({ID=ID}, (not mode));
 end;
 
-function hoverItem(ID, MODE, SELECTED)
+function clHoverItem(ID, MODE, SELECTED)
     if (MODE == 1 and SELECTED == 0) then
         setColour1({ID=ID}, RGB(219, 219, 219));
     else
@@ -891,7 +870,7 @@ function hoverItem(ID, MODE, SELECTED)
     end;
 end;
 
-function getListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
+function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     if (PROPERTIES.autoHideScroll == nil) then
         PROPERTIES.autoHideScroll = false;
     end;
@@ -940,7 +919,7 @@ function getListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
 
     set_Property(ELEMENT.list.scroll.ID, PROP_AUTOHIDESCROLL, PROPERTIES.autoHideScroll);
 
-    ELEMENT.list.scrollBar = getScrollBarEX_WithButtons2(
+    ELEMENT.list.scrollBar = clScrollBarEX2(
         ELEMENT,
         anchorNone,
         XYWH(
@@ -957,12 +936,12 @@ function getListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         }
     );
 
-    setListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK);    
+    clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK);    
 
     return ELEMENT.list.scroll;
 end;
 
-function setListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
+function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
     sgui_deletechildren(PARENT.ID);
 
     local tmpCallback = CALLBACK;
@@ -988,8 +967,8 @@ function setListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
             true,
             {
                 colour1 = WHITEA(),
-                callback_mouseleave = 'hoverItem(%id, 0, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
-                callback_mouseover = 'hoverItem(%id, 1, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
+                callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
+                callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
                 callback_mousedown = tmpCallback,
             }
         );
@@ -1022,7 +1001,7 @@ function setListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
     };
 end;
 
-function setListSelectedItem(ID, INDEX)
+function clSetListSelectedItem(ID, INDEX)
     if LISTBOX_LIST[ID].ELEMENTS == nil then
         return;
     end;
@@ -1030,33 +1009,33 @@ function setListSelectedItem(ID, INDEX)
     LISTBOX_LIST[ID].SELECTEDITEM = parseInt(INDEX);
 
     for i = 1, table.getn(LISTBOX_LIST[ID].ELEMENTS) do
-        set_Callback(LISTBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'hoverItem(' .. LISTBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
-        set_Callback(LISTBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSEOVER, 'hoverItem(' .. LISTBOX_LIST[ID].ELEMENTS[i] .. ', 1, ' .. BoolToInt(i == INDEX) .. ')');
+        set_Callback(LISTBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'clHoverItem(' .. LISTBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
+        set_Callback(LISTBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSEOVER, 'clHoverItem(' .. LISTBOX_LIST[ID].ELEMENTS[i] .. ', 1, ' .. BoolToInt(i == INDEX) .. ')');
         setColour1({ID = LISTBOX_LIST[ID].ELEMENTS[i]}, WHITEA());
     end;
     
     setColour1({ID = LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
-function getListSelectedItem(ID)
+function clGetListSelectedItem(ID)
     local list = LISTBOX_LIST[ID];
     return list.ITEMS[list.SELECTED];
 end;
 
-function getListSelectedIndex(ID)
+function clGetListSelectedIndex(ID)
     local list = LISTBOX_LIST[ID];
     return list.SELECTED;
 end;
 
-function getListSelectedElement(ID)
+function clGetListSelectedElement(ID)
     return LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTEDITEM];
 end;
 
-function getListItems(ID)
+function clGetListItems(ID)
     return LISTBOX_LIST[ID].ITEMS;
 end;
 
-function getPrompt(CALLBACK, PROPERTIES)
+function clPrompt(CALLBACK, PROPERTIES)
     if (PROPERTIES.visible == nil) then
         PROPERTIES.visible = false;
     end;
@@ -1100,7 +1079,7 @@ function getPrompt(CALLBACK, PROPERTIES)
         }
     );
 
-    ELEMENT.prompt.cancel = button(
+    ELEMENT.prompt.cancel = clButton(
         ELEMENT.prompt, 
         9, 
         56,
@@ -1111,7 +1090,7 @@ function getPrompt(CALLBACK, PROPERTIES)
         {}
     );
 
-    ELEMENT.prompt.accept = button(
+    ELEMENT.prompt.accept = clButton(
         ELEMENT.prompt, 
         154, 
         56,
@@ -1130,134 +1109,11 @@ function getPrompt(CALLBACK, PROPERTIES)
     return ELEMENT;
 end;
 
-function openPrompt(ID, VALUE)
+function clOpenPrompt(ID, VALUE)
     setVisibleID(ID, true);
     setTextID(PROMPT_LIST[ID].INPUT, VALUE);
 end;
 
-function closePrompt(ID)
+function clClosePrompt(ID)
     setVisibleID(ID, false);
-end;
-
-function getLanguagesKey()
-    return {
-        'ENG',
-        'CZE',
-        'FRA',
-        'GER',
-        'POL',
-        'SPA',
-        'JAP',        
-        'RUS',
-        'SLO',        
-        'SWE',
-        'ITA',
-    }
-end;
-
-function getLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-        'Nihonjin',        
-        'Pусский',
-        'Slovenščina',        
-        'Svenska',
-        'Italiano',
-    }
-end;
-
-function getAudioLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-    }
-end;
-
-function setVisibleAll(ARRAY, MODE)
-    local result = false;
-
-    for _, v in pairs(ARRAY) do
-        if (getVisibleID(v.ID)) then
-            setVisibleID(v.ID, MODE);
-            result = true;
-        end;
-    end;
-
-    return result;
-end;
-
-function getOneOfVisible(ARRAY)
-    for _, v in pairs(ARRAY) do
-        if (getVisibleID(v.PARENT)) then
-            return true;
-        end;
-    end;
-
-    return false;
-end;
-
-function getWID(ID)
-    return sgui_get(ID, PROP_W);
-end;
-
-function getHID(ID)
-    return sgui_get(ID, PROP_H);
-end;
-
-function getXID(ID)
-    return sgui_get(ID, PROP_X);
-end;
-
-function getYID(ID)
-    return sgui_get(ID, PROP_Y);
-end;
-
-function getVisibleID(ID)
-    return sgui_get(ID, PROP_VISIBLE);
-end;
-
-function strlen(TEXT)
-    return string.len(TEXT);
-end;
-
-function text(TEXT, MAXLENGTH, APPENDCHAR)
-    if (TEXT == nil) then
-        return '';
-    end;
-
-    if (strlen(TEXT) > MAXLENGTH) then
-        return SGUI_widesub(TEXT, 1, MAXLENGTH) .. APPENDCHAR;
-    end;
-
-    return TEXT;
-end;
-
-function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
-    if (not VERSION or not VERSION_TO_COMPARE) then
-        return true;
-    end;
-
-    local v1 = split(VERSION, '.');
-    local v2 = split(VERSION_TO_COMPARE, '.');
-
-    for i = 1, #v1 do
-        if (parseInt(v1[i]) < parseInt(v2[i])) then
-            return false;
-        end;
-    end;
-
-    if (parseInt(v1[#v1]) == parseInt(v2[#v1])) then
-        return true;
-    end;
-
-    return true;
 end;

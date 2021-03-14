@@ -268,7 +268,7 @@ menu.window_options.panel = getElementEX(
     }
 );
 
-menu.window_options.panel.cancel = button(
+menu.window_options.panel.cancel = clButton(
     menu.window_options.panel, 
     12, 
     320,
@@ -279,7 +279,7 @@ menu.window_options.panel.cancel = button(
     {}
 );
 
-menu.window_options.panel.shortcuts = button(
+menu.window_options.panel.shortcuts = clButton(
     menu.window_options.panel, 
     255, 
     320,
@@ -292,7 +292,7 @@ menu.window_options.panel.shortcuts = button(
     }
 );
 
-menu.window_options.panel.accept = button(
+menu.window_options.panel.accept = clButton(
     menu.window_options.panel, 
     505, 
     320,
@@ -339,7 +339,7 @@ menu.window_options.panel.music_label = getLabelEX(
 );
 
 
-menu.window_options.panel.music_slider = getSliderElement(
+menu.window_options.panel.music_slider = clSliderElement(
     menu.window_options.panel, 
     anchorNone, 
     XYWH(14, 51, 230, 15),
@@ -370,7 +370,7 @@ menu.window_options.panel.speech_label = getLabelEX(
 );
 
 
-menu.window_options.panel.speech_slider = getSliderElement(
+menu.window_options.panel.speech_slider = clSliderElement(
     menu.window_options.panel, 
     anchorNone, 
     XYWH(14, 85, 230, 15),
@@ -400,7 +400,7 @@ menu.window_options.panel.effects_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.effects_slider = getSliderElement(
+menu.window_options.panel.effects_slider = clSliderElement(
     menu.window_options.panel, 
     anchorNone, 
     XYWH(14, 119, 230, 15),
@@ -458,7 +458,7 @@ menu.window_options.panel.tlang.label = getLabelEX(
     }
 );
 
-menu.window_options.panel.tlang.listbox = getComboBox(
+menu.window_options.panel.tlang.listbox = clComboBox(
     menu.window_options.panel.tlang,
     0,
     15,
@@ -500,7 +500,7 @@ menu.window_options.panel.alang.label = getLabelEX(
     }
 );
 
-menu.window_options.panel.alang.listbox = getComboBox(
+menu.window_options.panel.alang.listbox = clComboBox(
     menu.window_options.panel.alang,
     0,
     15,
@@ -551,7 +551,7 @@ menu.window_options.panel.graphics_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.graphics_graph_checkbox = checkbox(
+menu.window_options.panel.graphics_graph_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
     41,
@@ -597,7 +597,7 @@ menu.window_options.panel.grap_label = getLabelEX(
 );
 
 
-menu.window_options.panel.graph_slider = getSliderElement(
+menu.window_options.panel.graph_slider = clSliderElement(
     menu.window_options.panel, 
     anchorNone, 
     XYWH(509, 80, 230, 15),
@@ -610,7 +610,7 @@ menu.window_options.panel.graph_slider = getSliderElement(
     }
 );
 
-menu.window_options.panel.graphics_windowed_checkbox = checkbox(
+menu.window_options.panel.graphics_windowed_checkbox = clCheckbox(
     menu.window_options.panel,
     512, 
     122,
@@ -665,7 +665,7 @@ menu.window_options.panel.resolution.label = getLabelEX(
     }
 );
 
-menu.window_options.panel.resolution.listbox = getComboBox(
+menu.window_options.panel.resolution.listbox = clComboBox(
     menu.window_options.panel.resolution,
     0,
     15,
@@ -697,7 +697,7 @@ menu.window_options.panel.graphics_fps = getLabelEX(
     }
 );
 
-menu.window_options.panel.graphics_fps_checkbox = checkbox(
+menu.window_options.panel.graphics_fps_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
     215,
@@ -725,7 +725,7 @@ menu.window_options.panel.graphics_vsync = getLabelEX(
     }
 );
 
-menu.window_options.panel.graphics_vsync_checkbox = checkbox(
+menu.window_options.panel.graphics_vsync_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
     240,
@@ -753,7 +753,7 @@ menu.window_options.panel.graphics_limited_mouse_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.graphics_limited_mouse_checkbox = checkbox(
+menu.window_options.panel.graphics_limited_mouse_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
     265,
@@ -782,7 +782,7 @@ menu.window_options.panel.game_steamoverlay = getLabelEX(
 );
 
 
-menu.window_options.panel.game_steamoverlay_checkbox = checkbox(
+menu.window_options.panel.game_steamoverlay_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
     290,
@@ -827,7 +827,7 @@ menu.window_options.panel.game_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.game_subtitles_checkbox = checkbox(
+menu.window_options.panel.game_subtitles_checkbox = clCheckbox(
     menu.window_options.panel,
     17,
     240,
@@ -855,7 +855,7 @@ menu.window_options.panel.game_subtitles = getLabelEX(
     }
 );
 
-menu.window_options.panel.game_objectives_checkbox = checkbox(
+menu.window_options.panel.game_objectives_checkbox = clCheckbox(
     menu.window_options.panel,
     17,
     265,
@@ -882,7 +882,7 @@ menu.window_options.panel.game_objectives = getLabelEX(
     }
 );
 
-menu.window_options.panel.game_hold_ground = checkbox(
+menu.window_options.panel.game_hold_ground = clCheckbox(
     menu.window_options.panel,
     17,
     290,
@@ -945,7 +945,7 @@ menu.window_options.panel.behaviour_desc = getLabelEX(
     }
 );
 
-menu.window_options.panel.behaviour_wounded_checkbox = checkbox(
+menu.window_options.panel.behaviour_wounded_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
     240,
@@ -973,7 +973,7 @@ menu.window_options.panel.behaviour_wounded = getLabelEX(
     }
 );
 
-menu.window_options.panel.behaviour_noncombat_checkbox = checkbox(
+menu.window_options.panel.behaviour_noncombat_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
     265,
@@ -1001,7 +1001,7 @@ menu.window_options.panel.behaviour_noncombat = getLabelEX(
     }
 );
 
-menu.window_options.panel.behaviour_vehicles_checkbox = checkbox(
+menu.window_options.panel.behaviour_vehicles_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
     290,

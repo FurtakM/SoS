@@ -97,6 +97,150 @@ function split(source, delimiters)
     return elements;
 end;
 
+function getLanguagesKey()
+    return {
+        'ENG',
+        'CZE',
+        'FRA',
+        'GER',
+        'POL',
+        'SPA',
+        'JAP',        
+        'RUS',
+        'SLO',        
+        'SWE',
+        'ITA',
+    }
+end;
+
+function getLanguages()
+    return {
+        'English',
+        'Ceština',
+        'Français',
+        'Deutsche',
+        'Polski',
+        'Español',
+        'Nihonjin',        
+        'Pусский',
+        'Slovenščina',        
+        'Svenska',
+        'Italiano',
+    }
+end;
+
+function getAudioLanguages()
+    return {
+        'English',
+        'Ceština',
+        'Français',
+        'Deutsche',
+        'Polski',
+        'Español',
+    }
+end;
+
+function setVisibleAll(ARRAY, MODE)
+    local result = false;
+
+    for _, v in pairs(ARRAY) do
+        if (getVisibleID(v.ID)) then
+            setVisibleID(v.ID, MODE);
+            result = true;
+        end;
+    end;
+
+    return result;
+end;
+
+function getOneOfVisible(ARRAY)
+    for _, v in pairs(ARRAY) do
+        if (getVisibleID(v.PARENT)) then
+            return true;
+        end;
+    end;
+
+    return false;
+end;
+
+function getWID(ID)
+    return sgui_get(ID, PROP_W);
+end;
+
+function getHID(ID)
+    return sgui_get(ID, PROP_H);
+end;
+
+function getXID(ID)
+    return sgui_get(ID, PROP_X);
+end;
+
+function getYID(ID)
+    return sgui_get(ID, PROP_Y);
+end;
+
+function getVisibleID(ID)
+    return sgui_get(ID, PROP_VISIBLE);
+end;
+
+function strlen(TEXT)
+    return string.len(TEXT);
+end;
+
+function text(TEXT, MAXLENGTH, APPENDCHAR)
+    if (TEXT == nil) then
+        return '';
+    end;
+
+    if (strlen(TEXT) > MAXLENGTH) then
+        return SGUI_widesub(TEXT, 1, MAXLENGTH) .. APPENDCHAR;
+    end;
+
+    return TEXT;
+end;
+
+function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
+    if (not VERSION or not VERSION_TO_COMPARE) then
+        return true;
+    end;
+
+    local v1 = split(VERSION, '.');
+    local v2 = split(VERSION_TO_COMPARE, '.');
+
+    for i = 1, #v1 do
+        if (parseInt(v1[i]) < parseInt(v2[i])) then
+            return false;
+        end;
+    end;
+
+    if (parseInt(v1[#v1]) == parseInt(v2[#v1])) then
+        return true;
+    end;
+
+    return true;
+end;
+
+function setCheckedID(ELEMENT_ID, VALUE)
+    return sgui_set(ELEMENT_ID, PROP_CHECKED, VALUE);
+end;
+
+function getCheckedID(ELEMENT_ID)
+    return sgui_get(ELEMENT_ID, PROP_CHECKED);
+end;
+
+function setTexture2ID(ELEMENT_ID, VALUE)
+    set_Property(ELEMENT_ID, PROP_TEXTURE2, VALUE);
+end;
+
+function getXYWH(ELEMENT)
+    return {
+        X = sgui_get(ELEMENT.ID, PROP_X),
+        Y = sgui_get(ELEMENT.ID, PROP_Y),
+        W = sgui_get(ELEMENT.ID, PROP_W),
+        H = sgui_get(ELEMENT.ID, PROP_H)
+    }
+end;
+
 
 --[[
 sgui_getcallback(test.ID,CALLBACK_MOUSEOVER)

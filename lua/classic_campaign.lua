@@ -199,7 +199,7 @@ function getCampaignSelectWindow(PARENT)
 	    }
 	);
 
-	ELEMENT.buttonBack = button(
+	ELEMENT.buttonBack = clButton(
 	    ELEMENT, 
 	    data[count].buttonLeftX, 
 	    data[count].buttonLeftY,
@@ -210,7 +210,7 @@ function getCampaignSelectWindow(PARENT)
 	    {}
 	);
 
-	ELEMENT.buttonLoad = button(
+	ELEMENT.buttonLoad = clButton(
 	    ELEMENT, 
 	    data[count].buttonRightX, 
 	    data[count].buttonRightY,
@@ -372,7 +372,7 @@ menu.window_campaign_tree.panel.scrollbox = getScrollboxEX(
 	}
 );
 
-menu.window_campaign_tree.panel.scrollV = getInterfaceScrollboxEX(
+menu.window_campaign_tree.panel.scrollV = clScrollboxEX(
     menu.window_campaign_tree.panel,
     anchorTRB,
     XYWH(
@@ -390,7 +390,7 @@ menu.window_campaign_tree.panel.scrollV = getInterfaceScrollboxEX(
     }
 );
 
-menu.window_campaign_tree.panel.scrollH = getInterfaceScrollboxEX(
+menu.window_campaign_tree.panel.scrollH = clScrollboxEX(
     menu.window_campaign_tree.panel,
     anchorTRB,
     XYWH(
@@ -442,7 +442,7 @@ menu.window_campaign_tree.panel.sidebar.text = getLabelEX(
 	}
 );
 
-menu.window_campaign_tree.panel.sidebar.checkboxEasy = checkbox(
+menu.window_campaign_tree.panel.sidebar.checkboxEasy = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
 	menu.window_campaign_tree.panel.sidebar.height - 200, 
@@ -472,7 +472,7 @@ menu.window_campaign_tree.panel.sidebar.labelEasy = getLabelEX(
    	}
 );
 
-menu.window_campaign_tree.panel.sidebar.checkboxMedium = checkbox(
+menu.window_campaign_tree.panel.sidebar.checkboxMedium = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
 	menu.window_campaign_tree.panel.sidebar.height - 180, 
@@ -503,7 +503,7 @@ menu.window_campaign_tree.panel.sidebar.labelMedium = getLabelEX(
    	}
 );
 
-menu.window_campaign_tree.panel.sidebar.checkboxHard = checkbox(
+menu.window_campaign_tree.panel.sidebar.checkboxHard = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
 	menu.window_campaign_tree.panel.sidebar.height - 160, 
@@ -533,7 +533,7 @@ menu.window_campaign_tree.panel.sidebar.labelHard = getLabelEX(
    	}
 );
 
-menu.window_campaign_tree.panel.sidebar.run = button(
+menu.window_campaign_tree.panel.sidebar.run = clButton(
 	menu.window_campaign_tree.panel.sidebar,
 	35,
 	menu.window_campaign_tree.panel.sidebar.height - 125,
@@ -548,7 +548,7 @@ menu.window_campaign_tree.panel.sidebar.run = button(
     }
 );
 
-menu.window_campaign_tree.panel.sidebar.delete = button(
+menu.window_campaign_tree.panel.sidebar.delete = clButton(
 	menu.window_campaign_tree.panel.sidebar,
 	35,
 	menu.window_campaign_tree.panel.sidebar.height - 100,
@@ -563,7 +563,7 @@ menu.window_campaign_tree.panel.sidebar.delete = button(
     }
 );
 
-menu.window_campaign_tree.panel.sidebar.back = button(
+menu.window_campaign_tree.panel.sidebar.back = clButton(
 	menu.window_campaign_tree.panel.sidebar,
 	35,
 	menu.window_campaign_tree.panel.sidebar.height - 75,
@@ -750,8 +750,8 @@ function runCampaign(ID)
 	setTexture2(menu.window_campaign_tree.panel.sidebar.delete, texture2);
 	setTexture3(menu.window_campaign_tree.panel.sidebar.delete, texture3);
 
-	changeInterfaceScrollboxEX(menu.window_campaign_tree.panel.scrollV, interface);
-	changeInterfaceScrollboxEX(menu.window_campaign_tree.panel.scrollH, interface);
+	clUpdateScrollboxEX(menu.window_campaign_tree.panel.scrollV, interface);
+	clUpdateScrollboxEX(menu.window_campaign_tree.panel.scrollH, interface);
 
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxEasy, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxMedium, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');

@@ -31,7 +31,7 @@ function FROMOW_SAVEGAME_LIST(DATA)
 	LOADGAME_DATA_ACTIVE = nil;
 	LOADGAME_DATA_SORT = nil;
 
-	setListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
+	clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
 end;
 
 menu.window_loadgame = getElementEX(
@@ -76,7 +76,7 @@ menu.window_loadgame.panel.name = getLabelEX(
    	}
 );
 
-menu.window_loadgame.panel.sortTime = checkbox(
+menu.window_loadgame.panel.sortTime = clCheckbox(
     menu.window_loadgame.panel,
     213,
     29,
@@ -102,7 +102,7 @@ menu.window_loadgame.panel.sortTimeLabel = getLabelEX(
     }
 );
 
-menu.window_loadgame.panel.sortMission = checkbox(
+menu.window_loadgame.panel.sortMission = clCheckbox(
     menu.window_loadgame.panel,
     213,
     54,
@@ -128,7 +128,7 @@ menu.window_loadgame.panel.sortMissionLabel = getLabelEX(
     }
 );
 
-menu.window_loadgame.panel.sortDescription = checkbox(
+menu.window_loadgame.panel.sortDescription = clCheckbox(
     menu.window_loadgame.panel,
     213,
     79,
@@ -154,7 +154,7 @@ menu.window_loadgame.panel.sortMissionLabel = getLabelEX(
     }
 );
 
-menu.window_loadgame.panel.list = getListBox(
+menu.window_loadgame.panel.list = clListBox(
 	menu.window_loadgame.panel, 
 	XYWH(6, 50, 197, 226), 
 	{}, 
@@ -193,7 +193,7 @@ menu.window_loadgame.panel.image.border = getElementEX(
 	}
 );
 
-menu.window_loadgame.panel.cancel = button(
+menu.window_loadgame.panel.cancel = clButton(
 	menu.window_loadgame.panel,
 	10,
 	280,
@@ -204,7 +204,7 @@ menu.window_loadgame.panel.cancel = button(
     {}
 );
 
-menu.window_loadgame.panel.delete = button(
+menu.window_loadgame.panel.delete = clButton(
 	menu.window_loadgame.panel,
 	153,
 	280,
@@ -217,7 +217,7 @@ menu.window_loadgame.panel.delete = button(
     }
 ); 
 
-menu.window_loadgame.panel.ok = button(
+menu.window_loadgame.panel.ok = clButton(
 	menu.window_loadgame.panel,
 	296,
 	280,
@@ -247,7 +247,7 @@ end;
 function selectSaveGame(INDEX)
 	INDEX = parseInt(INDEX);
 
-	setListSelectedItem(menu.window_loadgame.panel.list.ID, INDEX);
+	clSetListSelectedItem(menu.window_loadgame.panel.list.ID, INDEX);
 	setText(menu.window_loadgame.panel.name, LOADGAME_DATA[INDEX].NAME);
 	setEnabled(menu.window_loadgame.panel.delete, true);
 	setEnabled(menu.window_loadgame.panel.ok, true);
@@ -355,7 +355,7 @@ function sortGameSave(ID, SORT)
 		LOADGAME_DATA = data;
 		LOADGAME_DATA_ACTIVE = nil;
 
-		setListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
+		clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
 		
 		setEnabled(menu.window_loadgame.panel.delete, false);
 		setEnabled(menu.window_loadgame.panel.ok, false);

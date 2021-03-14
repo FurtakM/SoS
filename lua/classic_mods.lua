@@ -20,8 +20,8 @@ function showMods(mode)
     end;
 end;
 
-function modsButton(X, Y, CAPTION, EVENT)
-    return button(
+function modsclButton(X, Y, CAPTION, EVENT)
+    return clButton(
         menu.window_mods.list.mods, 
         X, 
         Y, 
@@ -128,7 +128,7 @@ menu.window_mods.list.mods = getScrollboxEX(
 
 set_Property(menu.window_mods.list.mods.ID, PROP_AUTOHIDESCROLL, false);
 
-menu.window_mods.list.scrollV = getScrollBarEX_WithButtons2(
+menu.window_mods.list.scrollV = clScrollBarEX2(
     menu.window_mods.list,
     anchorTRB,
     XYWH(
@@ -653,7 +653,7 @@ function FROMOW_MODS_ADD(INFO) -- Called by OW!
             mod_req_ver = INFO.ini.Req_Ver;
         end;
 
-        local button = modsButton(
+        local button = modsclButton(
         	10,
             INFO.id * 40,
             SGUI_widesub(name, 1, 18),

@@ -27,7 +27,7 @@ DATA
 		end;
 	end;
 
-	setListItems(menu.window_profile.panel.list, profiles, selected, 'changeProfile("VALUE");');
+	clSetListItems(menu.window_profile.panel.list, profiles, selected, 'changeProfile("VALUE");');
 end;
 
 function FROMOW_SWITCHPROFILE(DATA)
@@ -63,13 +63,13 @@ function createProfile(ID)
 	local tmpName = OW_profile_new(name);
 
 	if tmpName ~= '' then
-		closePrompt(menu.window_profile.panel.promptNew.ID);
+		clClosePrompt(menu.window_profile.panel.promptNew.ID);
         changeProfile(tmpName);
 	end;
 end;
 
 function editProfile(ID)
-	local realName = getProfilesDirectory(getListSelectedItem(menu.window_profile.panel.list.ID));
+	local realName = getProfilesDirectory(clGetListSelectedItem(menu.window_profile.panel.list.ID));
 	local changedName = getTextID(ID);
 
 	if (realName == nil) then
@@ -77,14 +77,14 @@ function editProfile(ID)
 	end;
 
 	if OW_profile_rename(realName, changedName) then
-		closePrompt(menu.window_profile.panel.promptEdit.ID);
+		clClosePrompt(menu.window_profile.panel.promptEdit.ID);
 		OW_profile_init();
 		changeProfile(changedName);
 	end;
 end;
 
 function deleteProfile()
-	local name = getProfilesDirectory(getListSelectedItem(menu.window_profile.panel.list.ID));
+	local name = getProfilesDirectory(clGetListSelectedItem(menu.window_profile.panel.list.ID));
 
 	if (OW_profile_delete(name)) then
 		OW_profile_init();
@@ -118,7 +118,7 @@ menu.window_profile.panel = getElementEX(
     }
 );
 
-menu.window_profile.panel.list = getListBox(
+menu.window_profile.panel.list = clListBox(
 	menu.window_profile.panel, 
 	XYWH(8, 20, 224, 279), 
 	{}, 
@@ -135,39 +135,39 @@ menu.window_profile.panel.avatar = getElementEX(
     {}
 );
 
-menu.window_profile.panel.promptNew = getPrompt(
+menu.window_profile.panel.promptNew = clPrompt(
 	'createProfile(VALUE)', 
 	{}
 );
 
-menu.window_profile.panel.promptEdit = getPrompt(
+menu.window_profile.panel.promptEdit = clPrompt(
 	'editProfile(VALUE)', 
 	{}
 );
 
-menu.window_profile.panel.add = button(
+menu.window_profile.panel.add = clButton(
     menu.window_profile.panel, 
     243, 
     27,
     180, 
     30,
     loc(TID_Main_Menu_Current_Player_Add), 
-    'openPrompt(' .. menu.window_profile.panel.promptNew.ID .. ', "");',
+    'clOpenPrompt(' .. menu.window_profile.panel.promptNew.ID .. ', "");',
     {}
 );
 
-menu.window_profile.panel.edit = button(
+menu.window_profile.panel.edit = clButton(
     menu.window_profile.panel, 
     243, 
     64,
     180, 
     30,
     loc(TID_Main_Menu_Current_Player_Rename), 
-    'openPrompt(' .. menu.window_profile.panel.promptEdit.ID .. ', getListSelectedItem(' .. menu.window_profile.panel.list.ID .. '));',
+    'clOpenPrompt(' .. menu.window_profile.panel.promptEdit.ID .. ', clGetListSelectedItem(' .. menu.window_profile.panel.list.ID .. '));',
     {}
 );
 
-menu.window_profile.panel.delete = button(
+menu.window_profile.panel.delete = clButton(
     menu.window_profile.panel, 
     243, 
     101,
@@ -178,7 +178,7 @@ menu.window_profile.panel.delete = button(
     {}
 );
 
-menu.window_profile.panel.cancel = button(
+menu.window_profile.panel.cancel = clButton(
     menu.window_profile.panel, 
     243, 
     261,
