@@ -4,3 +4,5 @@ include('sos_achiev');
 include('sos_video');
 include('sos_menu');
 include('sos_credits');
+include('sos_stream');
+include('sos_events');

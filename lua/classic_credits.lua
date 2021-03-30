@@ -142,4 +142,4 @@ function hideCredits()
     end;
 end;
 
-OW_loadcredits(menu.window.credits.content.ID, 'credits/test');
+--OW_loadcredits(menu.window.credits.content.ID, 'credits/test');

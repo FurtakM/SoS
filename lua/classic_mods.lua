@@ -3,11 +3,6 @@
     03-2020
 --]]
 
-function FROMOW_MODS_GETINI(DATA)
-    SKIRMISH_ALLOWED_MAPS = DATA.Skirmish_Maps;
-    MOD_DATA = DATA;
-end;
-
 local selectedMod = -1;
 
 function showMods(mode)
