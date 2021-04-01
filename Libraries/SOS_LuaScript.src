@@ -1,1 +1,90 @@
-//
+// SoS Stream Mode by Serpent
+// 01.04.2021
+
+Export StreamModeActive, sSpec, sSpeed, sRocket, sEngine;
+
+Every 0$1 do
+begin
+ToLua('initStreamRollete();');
+InitStreamMode;
+End;
+
+Function InitStreamMode;
+begin
+streamModeActive := false;
+sRocket := false; // 1
+sSpeed := false; // 2
+sEngine := false; // 3
+sSpec := false; // 4
+End;
+
+On CustomCommand(p1, p2, p3, p4, p5, p6) do
+begin
+
+if p2 = 100 then // stream mode
+   begin
+   if not StreamModeActive then
+      StreamModeActive := true;
+
+   if p3 = 0 then
+      InitStreamMode;
+
+   if p3 = 1 then
+      sRocket := true;
+
+   if p3 = 2 then
+      sSpeed := true;
+
+   if p3 = 3 then
+      sEngine := true;
+
+   if p3 = 4 then
+      sSpec := true;
+   end;
+End;
+
+Every 0$2 trigger StreamModeActive and sRocket do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, your_side], [f_or,
+    [f_weapon, us_rocket_launcher],
+    [f_weapon, ru_rocket_launcher],
+    [f_weapon, ar_rocket_launcher],
+    [f_weapon, ru_rocket]]]) do
+    begin
+    DestroyUnit(i);
+    end;
+End;
+
+Every 0$2 trigger StreamModeActive and sEngine do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, your_side], [f_engine, engine_siberite]]) do
+    begin
+    DestroyUnit(i);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sSpec do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, your_side], [f_or,
+    [f_class, class_sniper],
+    [f_class, class_bazooker],
+    [f_class, class_mortar]]]) do
+    begin
+    SetClass(i, 1);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sSpeed and game_speed < 7 do
+begin
+enable;  
+game_speed := 7;
+End;
