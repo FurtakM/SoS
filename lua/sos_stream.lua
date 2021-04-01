@@ -205,6 +205,12 @@ streamPanel.activeList.back = clButton(
 function initStreamRollete()
 	STREAM_MODE_BLOCK = 0;
 	STREAM_ITEMS_ACTIVE = {};
+
+	if (STREAM_HARDCORE_MODE == 0) then
+		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS);
+	else
+		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
+	end;
 end;
 
 
@@ -239,6 +245,8 @@ function resetStreamRoullete()
 	else
 		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
 	end;
+
+	OW_CUSTOM_COMMAND(100, 0, parseInt(STREAM_HARDCORE_MODE));
 
 	newStreamInstance();
 end;
