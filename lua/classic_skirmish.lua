@@ -77,6 +77,8 @@ function reloadSkirmishList()
 	SKIRMISH_DISPLAY_DATA = {};
 	SKIRMISH_SELECTED = nil;
 
+	clSetListItems(menu.window_skirmish_popup.panel.list, {}, 0, '');
+
 	OW_skirmishlist(menu.window_skirmish_popup.panel.list.ID);
 end;
 
@@ -303,6 +305,8 @@ end;
 
 function showChangeSkirmishPanel(MODE)
 	if (MODE == 1) then
+		reloadSkirmishList();
+		
 		clSetListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)'); 
 		clSetListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
 		setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 164, '...'));
@@ -335,6 +339,6 @@ function playSkirmish()
 end;
 
 -- @override
-function skirSort(Type,isInit)
+function skirSort(Type, isInit)
 
 end;

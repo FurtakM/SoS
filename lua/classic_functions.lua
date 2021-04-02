@@ -481,6 +481,14 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
         PROPERTIES.clickSound = '"Effects/Interface/vyber.wav"';
     end;
 
+    if (PROPERTIES.scissor == nil) then
+        PROPERTIES.scissor = true;
+    end;
+
+    if (PROPERTIES.text_halign == nil) then
+        PROPERTIES.text_halign = ALIGN_MIDDLE;
+    end;
+
     return getImageButtonEX(
         PARENT, 
         anchorNone, 
@@ -495,7 +503,9 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
             texture = PROPERTIES.texture,
             texture2 = PROPERTIES.texture2,
             texture3 = PROPERTIES.texture3,
-            disabled = PROPERTIES.disabled
+            disabled = PROPERTIES.disabled,
+            scissor = PROPERTIES.scissor,
+            text_halign = PROPERTIES.text_halign 
         }
     );
 end;
@@ -947,7 +957,12 @@ function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
     local tmpCallback = CALLBACK;
     local tmpElement = {};
 
-    for i = 1, table.getn(ITEMS) do
+    if (#ITEMS == 0) then
+        LISTBOX_LIST[PARENT.ID] = {};
+        return;
+    end;
+
+    for i = 1, #ITEMS do
         if (CALLBACK ~= '') then
             tmpCallback = CALLBACK;
 
