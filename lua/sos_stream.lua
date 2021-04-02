@@ -6,24 +6,69 @@ STREAM_MODE = parseInt(MOD_DATA.Stream_Mode); -- define if stream mode is active
 STREAM_MODE_BLOCK = 0;
 STREAM_ITEMS_INIT_NORMAL = {
 	{
-		NAME = 'sRocket', ITEM_ID = 1, PROB = 3, LABEL = loc(6211),
+		NAME = 'sRocket', ITEM_ID = 1, PROB = 15, LABEL = loc(6211),
 	},
 	{
-		NAME = 'sSpeed', ITEM_ID = 2, PROB = 10, LABEL = loc(6213),
+		NAME = 'sSpeed', ITEM_ID = 2, PROB = 5, LABEL = loc(6213),
 	},
 	{
 		NAME = 'sEngine', ITEM_ID = 3, PROB = 10, LABEL = loc(6212),
 	},
 	{
-		NAME = 'sSpec', ITEM_ID = 4, PROB = 5, LABEL = loc(6210),
-	}
+		NAME = 'sSpec', ITEM_ID = 4, PROB = 10, LABEL = loc(6210),
+	},
+	{
+		NAME = 'sLevel', ITEM_ID = 5, PROB = 25, LABEL = loc(6217),
+	},
+	{
+		NAME = 'sArmoury', ITEM_ID = 6, PROB = 20, LABEL = loc(6219),
+	},
+	{
+		NAME = 'sRadar', ITEM_ID = 7, PROB = 15, LABEL = loc(6220),
+	},
+	{
+		NAME = 'sBunker', ITEM_ID = 8, PROB = 15, LABEL = loc(6221),
+	},
+	{
+		NAME = 'sHack', ITEM_ID = 9, PROB = 3, LABEL = loc(6222),
+	},
+	{
+		NAME = 'sFire', ITEM_ID = 10, PROB = 20, LABEL = loc(6224),
+	},
+	{
+		NAME = 'sRefresh', ITEM_ID = 11, PROB = 25, LABEL = loc(6226),
+	},
+	{
+		NAME = 'sExp', ITEM_ID = 12, PROB = 15, LABEL = loc(6227),
+	},
+	{
+		NAME = 'sDepot', ITEM_ID = 13, PROB = 5, LABEL = loc(6228),
+	},
+	{
+		NAME = 'sFlag', ITEM_ID = 14, PROB = 5, LABEL = loc(6230),
+	},
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
-		NAME = 'sRocket', ITEM_ID = 10, PROB = 3, LABEL = loc(6211),
+		NAME = 'sSold', ITEM_ID = 101, PROB = 15, LABEL = loc(6214),
 	},
 	{
-		NAME = 'sSpeed', ITEM_ID = 11, PROB = 10, LABEL = loc(6213),
+		NAME = 'sDiff', ITEM_ID = 102, PROB = 10, LABEL = loc(6215),
+	},
+	{
+		NAME = 'sFog', ITEM_ID = 103, PROB = 5, LABEL = loc(6216),
+	},
+	{
+		NAME = 'sReset', ITEM_ID = 104, PROB = 10, LABEL = loc(6218),
+	},
+	{
+		NAME = 'sSun', ITEM_ID = 105, PROB = 20, LABEL = loc(6223),
+	},
+	{
+		NAME = 'sTiger', ITEM_ID = 106, PROB = 5, LABEL = loc(6225),
+	},
+	{
+		NAME = 'sBomb', ITEM_ID = 107, PROB = 2, LABEL = loc(6229),
 	},
 };
 STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS); -- tmp list of items
@@ -132,9 +177,7 @@ streamPanel.list = clButton(
 	30, 
 	loc(6203),
 	'showActiveList();', 
-	{
-		disabled = true
-	}
+	{}
 );
 
 streamPanel.activeList = getElementEX(
@@ -193,12 +236,131 @@ streamPanel.activeList.back = clButton(
 	streamPanel.activeList, 
 	16, 
 	566, 
-	streamPanel.activeList.width - 32, 
+	streamPanel.activeList.width / 2 - 32, 
 	30, 
 	'<<<',
 	'hideActiveList();', 
 	{}
 );
+
+streamPanel.activeList.next = clButton(
+	streamPanel.activeList, 
+	streamPanel.activeList.width / 2 + 2, 
+	566, 
+	streamPanel.activeList.width / 2 - 32, 
+	30, 
+	'>>>',
+	'showActivatorPanel();', 
+	{}
+);
+
+streamPanel.activatorPanel = getElementEX(
+    streamPanel, 
+    anchorL, 
+    XYWH(streamPanel.width / 2 - 160, 120, 320, 600), 
+    false,
+    {
+        texture = 'SGUI/Stream/streamPanelActiveList.png'
+    }
+);
+
+streamPanel.activatorPanel.text = getLabelEX(
+    streamPanel.activatorPanel, 
+    anchorLT, 
+    XYWH(6, 1, streamPanel.activatorPanel.width - 6, 15), 
+    nil, 
+    'Activator Panel', 
+    {
+        nomouseevent = true,
+        wordwrap = true,
+        font_colour = RGBA(0, 0, 0, 255),
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        font_name = BankGotic_14
+    }
+);
+
+streamPanel.activatorPanel.list = getScrollboxEX(
+    streamPanel.activatorPanel, 
+    anchorL, 
+    XYWH(10, 24, 286, 540), 
+    {
+        colour1 = WHITEA()
+    }
+);
+
+set_Property(streamPanel.activatorPanel.list.ID, PROP_AUTOHIDESCROLL, false);
+
+streamPanel.activatorPanel.scroll = clScrollBarEX2(
+    streamPanel.activatorPanel, 
+    anchorTRB,
+    XYWH(
+        streamPanel.activatorPanel.list.x + streamPanel.activatorPanel.list.width + 1,
+        streamPanel.activatorPanel.list.y, 
+        12, 
+        streamPanel.activatorPanel.list.height
+    ),
+    streamPanel.activatorPanel.list, 
+    SKINTYPE_NONE,
+    false,
+    {}
+);
+
+streamPanel.activatorPanel.back = clButton(
+	streamPanel.activatorPanel, 
+	16, 
+	566, 
+	streamPanel.activatorPanel.width / 2 - 32, 
+	30, 
+	'<<<',
+	'hideActivatorPanel();', 
+	{}
+);
+
+for i = 1, #STREAM_ITEMS_INIT_NORMAL do
+	clButton(
+		streamPanel.activatorPanel.list, 
+		0, 
+		32 * (i - 1) + 6, 
+		streamPanel.activatorPanel.list.width, 
+		30, 
+		STREAM_ITEMS_INIT_NORMAL[i].LABEL,
+		'addStreamBonus(' .. STREAM_ITEMS_INIT_NORMAL[i].ITEM_ID .. ')', 
+		{
+			text_halign = ALIGN_LEFT
+		}
+	);
+end;
+
+for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
+	clButton(
+		streamPanel.activatorPanel.list, 
+		0, 
+		32 * (i + #STREAM_ITEMS_INIT_NORMAL - 1) + 6, 
+		streamPanel.activatorPanel.list.width, 
+		30, 
+		STREAM_ITEMS_INIT_HARDCORE[i].LABEL,
+		'addStreamBonus(' .. STREAM_ITEMS_INIT_HARDCORE[i].ITEM_ID .. ')',
+		{
+			text_halign = ALIGN_LEFT
+		}
+	);
+end;
+
+function addStreamBonus(bonus)
+	OW_CUSTOM_COMMAND(100, parseInt(bonus), parseInt(STREAM_HARDCORE_MODE));
+
+	for i = 1, #STREAM_ITEMS do
+		if (parseInt(bonus) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
+			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
+			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
+			table.remove(STREAM_ITEMS, i);
+			break;
+		end;
+	end;
+
+	saveStreamToFile();
+end;
 
 
 -- sail function
@@ -211,6 +373,8 @@ function initStreamRollete()
 	else
 		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
 	end;
+
+	saveStreamToFile();
 end;
 
 
@@ -245,6 +409,8 @@ function resetStreamRoullete()
 	else
 		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
 	end;
+
+	saveStreamToFile();
 
 	OW_CUSTOM_COMMAND(100, 0, parseInt(STREAM_HARDCORE_MODE));
 
@@ -302,6 +468,16 @@ function hideActiveList()
 	setVisible(streamPanel.activeList, false);
 end;
 
+function showActivatorPanel()
+	setVisible(streamPanel.activeList, false);
+	setVisible(streamPanel.activatorPanel, true);
+end;
+
+function hideActivatorPanel()
+	setVisible(streamPanel.activeList, true);
+	setVisible(streamPanel.activatorPanel, false);
+end;
+
 function showReward()
 	STREAM_MODE_BLOCK = 0;
 
@@ -309,6 +485,8 @@ function showReward()
 	setText(streamPanel.activeLabel, STREAM_LABEL_ACTIVE);
 	setVisible(streamPanel.center, false);
 	setEnabled(streamPanel.list, true);
+
+	saveStreamToFile();
 
 	OW_CUSTOM_COMMAND(100, parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID), parseInt(STREAM_HARDCORE_MODE));
 end;
@@ -342,6 +520,17 @@ function showStreamPanel()
 	end;
 
 	setVisible(streamPanel, (not mode));
+end;
+
+function saveStreamToFile()
+	TXT = OW_TXT_CREATE();
+
+	for i = 1, #STREAM_ITEMS_ACTIVE do
+		OW_TXT_ADD(TXT, STREAM_ITEMS_ACTIVE[i].LABEL);
+	end;
+	
+	OW_TXT_SAVE(TXT, '/mods/SoS/Data/stream');
+	OW_TXT_FREE(TXT); -- Free the memory
 end;
 
 function newStreamInstance()
