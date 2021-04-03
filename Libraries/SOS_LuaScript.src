@@ -1,7 +1,12 @@
 // SoS Stream Mode by Serpent
 // 01.04.2021
 
-Export StreamModeActive, sSpec, sSpeed, sRocket, sEngine;
+Export StreamModeActive,
+       sSpec, sSpeed, sRocket, sEngine,
+       sLevel, sArmoury, sRadar, sBunker,
+       sHack, sFire, sRefresh, sExp, sDepot,
+       sFlag, sSold, sDiff, sTiger, sBomb, sFog,
+       sReset, sSun;
 
 Every 0$1 do
 begin
@@ -16,6 +21,23 @@ sRocket := false; // 1
 sSpeed := false; // 2
 sEngine := false; // 3
 sSpec := false; // 4
+sLevel := false; // 5
+sArmoury := false; // 6
+sRadar := false; // 7
+sBunker := false; // 8
+sHack := false; // 9
+sFire := false; // 10
+sRefresh := false; // 11
+sExp := false; // 12
+sDepot := false; // 13
+sFlag := false; // 14
+sSold := false; // 101
+sDiff := false; // 102
+sTiger := false; // 106
+sBomb := false; // 107
+sFog := false; // 103
+sReset := false; // 104
+sSun := false; // 105
 End;
 
 On CustomCommand(p1, p2, p3, p4, p5, p6) do
@@ -40,30 +62,91 @@ if p2 = 100 then // stream mode
 
    if p3 = 4 then
       sSpec := true;
+
+   if p3 = 5 then
+      sLevel := true;
+
+   if p3 = 6 then
+      sArmoury := true;
+
+   if p3 = 7 then
+      sRadar := true;
+
+   if p3 = 8 then
+      sBunker := true;
+
+   if p3 = 9 then
+      sHack := true;
+
+   if p3 = 10 then
+      sFire := true;
+
+   if p3 = 11 then
+      sRefresh := true;
+
+   if p3 = 12 then
+      sExp := true;
+
+   if p3 = 13 then
+      sDepot := true;
+
+   if p3 = 14 then
+      sFlag := true;
+
+   if p3 = 101 then
+      sSold := true;
+
+   if p3 = 102 then
+      sDiff := true;
+
+   if p3 = 103 then
+      sFog := true;
+
+   if p3 = 104 then
+      sReset := true;
+
+   if p3 = 105 then
+      sSun := true;
+
+   if p3 = 106 then
+      sTiger := true;
+
+   if p3 = 107 then
+      sBomb := true;
    end;
 End;
 
 Every 0$2 trigger StreamModeActive and sRocket do
-var i;
+var i, tmp;
 begin
 enable;
 
-for i in FilterAllUnits([[f_side, your_side], [f_or,
+tmp := FilterAllUnits([[f_side, your_side], [f_or,
     [f_weapon, us_rocket_launcher],
     [f_weapon, ru_rocket_launcher],
     [f_weapon, ar_rocket_launcher],
-    [f_weapon, ru_rocket]]]) do
+    [f_weapon, ru_rocket]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
     begin
     DestroyUnit(i);
     end;
 End;
 
 Every 0$2 trigger StreamModeActive and sEngine do
-var i;
+var i, tmp;
 begin
 enable;
 
-for i in FilterAllUnits([[f_side, your_side], [f_engine, engine_siberite]]) do
+tmp := FilterAllUnits([[f_side, your_side], [f_engine, engine_siberite]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
     begin
     DestroyUnit(i);
     end;
@@ -87,4 +170,151 @@ Every 0$1 trigger StreamModeActive and sSpeed and game_speed < 7 do
 begin
 enable;  
 game_speed := 7;
+End;
+
+Every 0$1 trigger StreamModeActive and sLevel do
+var i, k, tmp;
+begin
+tmp := FilterAllUnits([[f_enemy, your_side], [f_type, unit_human]]);
+
+if not tmp then
+   exit;
+
+if tmp > 5 then
+   k := 5
+else
+   k := tmp;
+
+for i := 1 to k do
+    if GetSkill(tmp[i], i mod 4 + 1) < 10 then
+       SetSkill(tmp[i], i mod 4 + 1, GetSkill(tmp[i], i mod 4 + 1) + 1);
+End;
+
+Every 0$1 trigger StreamModeActive and sArmoury do
+SetRestrict(b_armoury, your_side, false);
+
+Every 0$1 trigger StreamModeActive and sRadar do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, your_side], [f_or, [f_weapon, us_radar], [f_weapon, ar_radar]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    DestroyUnit(i);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sBunker do
+SetRestrict(b_bunker, your_side, false);
+
+Every 0$1 trigger StreamModeActive and sHack do
+SetTech(tech_Virus, your_side, state_disabled);
+
+Every 0$1 trigger StreamModeActive and sFire do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_building]]);
+
+if not tmp then
+   exit;
+
+SetLives(tmp[rand(1, tmp)], 100);
+End;
+
+Every 0$1 trigger StreamModeActive and sExp do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human]]);
+
+if not tmp then
+   exit;
+
+AddExperience(tmp[rand(1, tmp)], rand(1, 4), rand(3000, 9000));
+End;
+
+Every 0$1 trigger StreamModeActive and sDepot do
+SetRestrict(b_warehouse, your_side, false);
+
+Every 0$1 trigger StreamModeActive and sFlag do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_building]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    SetBLevel(i, 10);
+End;
+
+Every 0$1 trigger StreamModeActive and sSold do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_class, 1]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    SetClass(i, 4);
+End;
+
+Every 0$1 trigger StreamModeActive and sDiff and Difficulty < 3 do
+Difficulty := Difficulty + 1;
+
+Every 0$1 trigger StreamModeActive and sTiger do
+var i;
+begin
+for i := 1 to 5 do
+    begin
+    uc_nation := nation_nature;
+    uc_side := 0;
+
+    hc_attr := [12, 12];
+    hc_agressivity := 20;
+    hc_class := class_tiger;
+    hc_gallery := '';
+    hc_name := '';
+
+    PlaceUnitAnyWhere(CreateHuman, false);
+    end;
+End;
+          
+Every 0$1 trigger StreamModeActive and sBomb do
+var i, x, y, result;
+begin
+result := false;
+
+for i := 1 to 8 do
+    begin
+    x := [10, 50, 90, 140][rand(1,4)];
+    y := [10, 50, 90, 140][rand(1,4)];
+
+    if ValidHex(x, y) then
+       begin
+       result := [x, y];
+       break;
+       end;
+    end;
+
+if result then
+   SendSiberiteRocket(result[1], result[2]);
+End;
+
+Every 0$1 trigger StreamModeActive and sReset do
+YouLost('');
+
+Every 0$1 trigger StreamModeActive and sFog do
+FogOff(your_side);
+
+Every 0$1 trigger StreamModeActive and sSun do
+begin
+solar_recharge_percent := 0;
+wait(5$00);
+solar_recharge_percent := 100;
 End;
