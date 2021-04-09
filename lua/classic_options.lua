@@ -203,14 +203,19 @@ function saveSliderSetting(setting, value)
 
     if setting == OPTION_SOUND_MUSIC then
         OW_settings_setvolume(VOLUME_MUSIC, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_MUSIC', value);
     end;
 
     if setting == OPTION_SOUND_EFFECTS then
         OW_settings_setvolume(VOLUME_EFFECTS, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_EFFECTS', value);
+        sound.playOptions('Effects/People/Weapons/Am/pistol.wav', VOLUME_EFFECTS);
     end;
 
     if setting == OPTION_SOUND_SPEECH then
         OW_settings_setvolume(VOLUME_SPEECH, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_SPEECH', value);
+        sound.playOptions('Dialogs/Am/Exclamations/EX_CA-ARM-2.wav', VOLUME_SPEECH);
     end;
 
     OW_settings_save();

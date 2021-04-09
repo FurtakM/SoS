@@ -47,6 +47,24 @@ STREAM_ITEMS_INIT_NORMAL = {
 	{
 		NAME = 'sFlag', ITEM_ID = 14, PROB = 5, LABEL = loc(6230),
 	},
+	{
+		NAME = 'sKamikadze', ITEM_ID = 15, PROB = 5, LABEL = loc(6231),
+	},
+	{
+		NAME = 'sTroll', ITEM_ID = 16, PROB = 10, LABEL = loc(6232),
+	},
+	{
+		NAME = 'sSlow', ITEM_ID = 17, PROB = 6, LABEL = loc(6233),
+	},
+	{
+		NAME = 'sLack', ITEM_ID = 18, PROB = 12, LABEL = loc(6234),
+	},
+	{
+		NAME = 'sTank', ITEM_ID = 19, PROB = 5, LABEL = loc(6236),
+	},
+	{
+		NAME = 'sRemote', ITEM_ID = 20, PROB = 3, LABEL = loc(6237),
+	}
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
@@ -70,6 +88,9 @@ STREAM_ITEMS_INIT_HARDCORE = {
 	{
 		NAME = 'sBomb', ITEM_ID = 107, PROB = 2, LABEL = loc(6229),
 	},
+	{
+		NAME = 'sWound', ITEM_ID = 108, PROB = 10, LABEL = loc(6235),
+	}
 };
 STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS); -- tmp list of items
 STREAM_ITEMS_ACTIVE = {}; -- list of active items
@@ -183,7 +204,7 @@ streamPanel.list = clButton(
 streamPanel.activeList = getElementEX(
     streamPanel, 
     anchorL, 
-    XYWH(streamPanel.width / 2 - 160, 120, 320, 600), 
+    XYWH(streamPanel.width / 2 - 240, 120, 480, 600), 
     false,
     {
         texture = 'SGUI/Stream/streamPanelActiveList.png'
@@ -209,7 +230,7 @@ streamPanel.activeList.text = getLabelEX(
 streamPanel.activeList.list = getScrollboxEX(
     streamPanel.activeList, 
     anchorL, 
-    XYWH(10, 24, 286, 540), 
+    XYWH(10, 24, 446, 540), 
     {
         colour1 = WHITEA()
     }
@@ -234,9 +255,9 @@ streamPanel.activeList.scroll = clScrollBarEX2(
 
 streamPanel.activeList.back = clButton(
 	streamPanel.activeList, 
-	16, 
+	12, 
 	566, 
-	streamPanel.activeList.width / 2 - 32, 
+	streamPanel.activeList.width / 2 - 16, 
 	30, 
 	'<<<',
 	'hideActiveList();', 
@@ -247,7 +268,7 @@ streamPanel.activeList.next = clButton(
 	streamPanel.activeList, 
 	streamPanel.activeList.width / 2 + 2, 
 	566, 
-	streamPanel.activeList.width / 2 - 32, 
+	streamPanel.activeList.width / 2 - 16, 
 	30, 
 	'>>>',
 	'showActivatorPanel();', 
@@ -257,7 +278,7 @@ streamPanel.activeList.next = clButton(
 streamPanel.activatorPanel = getElementEX(
     streamPanel, 
     anchorL, 
-    XYWH(streamPanel.width / 2 - 160, 120, 320, 600), 
+    XYWH(streamPanel.width / 2 - 160, 120, 480, 600), 
     false,
     {
         texture = 'SGUI/Stream/streamPanelActiveList.png'
@@ -283,7 +304,7 @@ streamPanel.activatorPanel.text = getLabelEX(
 streamPanel.activatorPanel.list = getScrollboxEX(
     streamPanel.activatorPanel, 
     anchorL, 
-    XYWH(10, 24, 286, 540), 
+    XYWH(10, 24, 446, 540), 
     {
         colour1 = WHITEA()
     }
@@ -308,9 +329,9 @@ streamPanel.activatorPanel.scroll = clScrollBarEX2(
 
 streamPanel.activatorPanel.back = clButton(
 	streamPanel.activatorPanel, 
-	16, 
+	12, 
 	566, 
-	streamPanel.activatorPanel.width / 2 - 32, 
+	streamPanel.activatorPanel.width / 2 - 16, 
 	30, 
 	'<<<',
 	'hideActivatorPanel();', 
@@ -327,7 +348,7 @@ for i = 1, #STREAM_ITEMS_INIT_NORMAL do
 		STREAM_ITEMS_INIT_NORMAL[i].LABEL,
 		'addStreamBonus(' .. STREAM_ITEMS_INIT_NORMAL[i].ITEM_ID .. ')', 
 		{
-			text_halign = ALIGN_LEFT
+			--text_halign = ALIGN_LEFT
 		}
 	);
 end;
@@ -342,9 +363,29 @@ for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
 		STREAM_ITEMS_INIT_HARDCORE[i].LABEL,
 		'addStreamBonus(' .. STREAM_ITEMS_INIT_HARDCORE[i].ITEM_ID .. ')',
 		{
-			text_halign = ALIGN_LEFT
+			--text_halign = ALIGN_LEFT
 		}
 	);
+end;
+
+streamPanel.troll = getElementEX(
+    game.ui.minimap, 
+    anchorL, 
+    XYWH(30, 60, 198, 159), 
+    false,
+    {
+        texture = 'SGUI/Stream/troll.png'
+    }
+);
+
+-- stream bonuses
+function displayTroll()
+	setVisible(streamPanel.troll, true);
+	bringToFront(streamPanel.troll);
+end;
+
+function hideTroll()
+	setVisible(streamPanel.troll, false);
 end;
 
 function addStreamBonus(bonus)
@@ -360,6 +401,8 @@ function addStreamBonus(bonus)
 	end;
 
 	saveStreamToFile();
+	hideActivatorPanel();
+	hideActiveList();
 end;
 
 
@@ -375,6 +418,7 @@ function initStreamRollete()
 	end;
 
 	saveStreamToFile();
+	hideTroll();
 end;
 
 
@@ -397,7 +441,28 @@ function startStreamRoullete()
 	setEnabled(streamPanel.hardcore, false);
 	setEnabled(streamPanel.list, false);
 
-	AddEventSlideX(streamPanel.content.ID, (-STREAM_TARGET * 53) + (streamPanel.background.width / 2) + math.random(11, 26), STREAM_TARGET / 2, 'showReward();');
+	animateRoullete(0, 0.2);
+end;
+
+function animateRoullete(point, time)
+	-- AddEventSlideX(streamPanel.content.ID, (-STREAM_TARGET * 53) + (streamPanel.background.width / 2) + math.random(11, 26), STREAM_TARGET / 2, 'showReward();');
+
+	local finalPos = 53 * #STREAM_ITEMS;
+	local oneStepPos = 53;
+
+	if (point == STREAM_TARGET) then
+		sound.play('Sound/Stream/ItemSelect.wav', '', VOLUME_EFFECTS);
+		showReward();
+		return;
+	end;
+
+	sound.play('Sound/Stream/ItemChange.wav', '', VOLUME_EFFECTS);
+
+	if (point % 6 == 0) then
+		time = time + 0.05;
+	end;
+
+	AddEventSlideX(streamPanel.content.ID, 160 - (oneStepPos * point), time, 'animateRoullete(' .. (point + 1) .. ', '.. time .. ')');
 end;
 
 function resetStreamRoullete()
@@ -410,10 +475,9 @@ function resetStreamRoullete()
 		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
 	end;
 
-	saveStreamToFile();
-
 	OW_CUSTOM_COMMAND(100, 0, parseInt(STREAM_HARDCORE_MODE));
 
+	saveStreamToFile();
 	newStreamInstance();
 end;
 
@@ -446,7 +510,7 @@ function showActiveList()
 		getLabelEX(
 		    streamPanel.activeList.list, 
 		    anchorLT, 
-		    XYWH(3, (i - 1) * 36, streamPanel.activeList.list.width, 30), 
+		    XYWH(3, (i - 1) * 32, streamPanel.activeList.list.width, 30), 
 		    nil, 
 		    '- ' .. STREAM_ITEMS_ACTIVE[i].LABEL, 
 		    {

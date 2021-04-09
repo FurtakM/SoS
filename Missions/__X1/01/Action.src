@@ -2,6 +2,13 @@ Export Function Action;
 begin
 InGameOn;
 
+wait(0$2);
+
+PrepareArabian;
+PrepareKurtGroup;
+PrepareSheikGroup;
+PrepareHeikeGroup;
+
 CenterNowOnXY(51, 85);
 
 PlaceSeeing(1, 1, 5, -32763);
@@ -74,8 +81,42 @@ Say(Heike, 'DH-spot-1');
 Say(UnitsInside(HexInfo(93, 89))[1], 'DR-spot-2');
 End;
 
+// meeting active
+Every 0$3 trigger meetingActive and UnitFilter(eonGuards, [f_see, 2]) do
+var tmp, i, points, dist, tdist;
+begin
+enable;
+
+tmp := UnitFilter(eonGuards, [f_see, 2]);
+
+if not tmp then
+   exit;
+
+InGameOn;
+ComTurnUnit([Heike, Kaia], tmp[1]);
+ComTurnUnit(tmp[1], Heike);
+
+Say(tmp[1], 'DG-meeting-1');
+
+points := [ [81,10], [63,25], [108,73] ];
+dist := [9999, []];
+
+for i := 1 to 3 do
+    begin
+    tdist := GetDistUnitXY(Heike, points[i][1], points[i][2]);
+
+    if dist[1] > tdist then
+       dist := [tdist, i];
+    end;
+
+ComMoveXY(Heike, points[dist[2]][1], points[dist[2]][2]);
+
+wait(0$3);
+InGameOff;
+End;
+
 // idle
-Every 0$2 trigger GetDistUnits(Heike, eon) > 40 do
+Every 0$20 trigger GetDistUnits(Heike, eon) > 40 and IsIdle(Heike) do
 begin
 Say(Kaia, 'DK-idle-1');
 End;
@@ -101,4 +142,147 @@ InGameOff;
 
 foundPoints := foundPoints + 1;
 goWithHeike := true;
+End;
+
+// see kurt
+Every 0$2 trigger See(2, Kurt) do
+var i, tmp, tmp2;
+begin
+meetingActive := false;
+goWithHeike := false;
+tmp := AreaToList(eonSpawn, 0);
+
+for i := 1 to 4 do
+    begin
+    ComMoveXY(firstGroup[i], tmp[1][i], tmp[2][i]);
+    AddComTurnUnit(firstGroup[i], eon);
+    end;
+
+InGameOn;
+
+ComMoveUnit(Heike, Kurt);
+ComMoveUnit(Kaia, Heike);
+
+repeat
+ wait(0$0.3);
+ ComMoveUnit(Heike, Kurt);
+ ComMoveXY(Kaia, ShiftX(GetX(Heike), 5, 1), ShiftY(GetY(Heike), 5, 1));
+until GetDistUnits(Heike, Kurt) < 5 and GetDistUnits(Kaia, Kurt) < 6;
+
+ComTurnUnit([Heike, Kaia], Kurt);
+ComTurnUnit([Kurt, Olaf, Hans], Heike);
+
+wait(0$0.2);
+
+Say(Kurt, 'DKu-Kurt-1');
+Say(Kaia, 'DK-Kurt-1');
+Say(Kurt, 'DKu-Kurt-2');
+
+wait(0$0.2);
+
+Say(Heike, 'DH-Kurt-1');
+Say(Kurt, 'DKu-Kurt-3');
+Say(Kaia, 'DK-Kurt-3');
+Say(Hans, 'DHa-Kurt-3');
+Say(Olaf, 'DO-Kurt-3');
+
+
+tmp2 := [Kurt, Olaf, Hans, Kaia, Heike];
+
+for i = 1 to 5 do
+    begin
+    ComMoveXY(tmp2[i], tmp[1][i+4], tmp[2][i+4]);
+    AddComTurnUnit(tmp2[i], eon);
+    end;
+
+wait(0$2);
+
+CenterOnUnits(eon);
+PlaceSeeing(90, 43, 2, -21);
+
+ComMoveXY(Omar, 84, 36);
+AddComTurnUnit(Omar, eon);
+
+ComMoveXY(Shariff, 85, 36);
+AddComTurnUnit(Shariff, eon);
+
+ComMoveXY(Saliba, 86, 36);
+AddComTurnUnit(Saliba, eon);
+
+ComMoveXY(Mahtab, 87, 36);
+AddComTurnUnit(Mahtab, eon);
+
+wait(0$3);
+
+repeat
+ wait(0$1);
+until IsInArea(Heike, eonSpawn);
+
+heikeNearbyEon := true;
+
+ComMoveXY(Shahrzad, 88, 37);
+AddComTurnUnit(Shahrzad, scientists[1]);
+
+ComMoveXY(scientists[1], 89, 37);
+ComMoveXY(scientists[2], 91, 39);
+AddComTurnUnit(scientists, Shariff);
+
+wait(0$1);
+
+Say(scientists[1], 'DS-eon-1');
+Say(Shahrzad, 'DSh-eon-1');
+
+ComMoveXY(scientists[1], 92, 43);
+AddComTurnUnit(scientists[1], eon);
+
+ComMoveXY(scientists[2], 93, 41);
+AddComTurnXY(scientists[2], 93, 40);
+
+ComMoveXY(Shahrzad, 88, 41);
+AddComTurnXY(Shahrzad, 87, 41);
+
+repeat
+ wait(0$1);
+until IsAt(Shahrzad, 88, 41);
+
+wait(0$1);
+
+Say(Shahrzad, 'DSh-eon-2');
+
+ComMoveXY(Shariff, 87, 40);
+AddComTurnXY(Shariff, 86, 40);
+
+repeat
+ wait(0$1);
+until IsAt(Shariff, 87, 40);
+
+Say(Shariff, 'DShar-eon-3');
+Say(Shariff, 'DShar-eon-4');
+
+Say(Kaia, 'DK-eon-4');
+
+ComEnterUnit(Kaia, eon);
+
+repeat
+ wait(0$1);
+until not IsPlaced(Kaia);
+
+Say(Shariff, 'DShar-eon-5');
+
+ComMoveXY(Heike, 91, 44);
+AddComTurnUnit(Heike, eon);
+
+repeat
+ wait(0$1);
+until IsAt(Heike, 91, 44);
+
+Say(Heike, 'DH-eon-5');
+
+ComEnterUnit(Heike, eon);
+
+wait(0$2);
+
+ChangeMap(1, '%_cont');
+
+InGameOff;
 End;
