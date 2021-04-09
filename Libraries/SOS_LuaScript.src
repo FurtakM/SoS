@@ -6,7 +6,8 @@ Export StreamModeActive,
        sLevel, sArmoury, sRadar, sBunker,
        sHack, sFire, sRefresh, sExp, sDepot,
        sFlag, sSold, sDiff, sTiger, sBomb, sFog,
-       sReset, sSun;
+       sReset, sSun, sKamikadze, sTroll, sSlow, sLack,
+       sWound, sTank, sRemote;
 
 Every 0$1 do
 begin
@@ -31,13 +32,20 @@ sRefresh := false; // 11
 sExp := false; // 12
 sDepot := false; // 13
 sFlag := false; // 14
+sKamikadze := false; // 15
+sTroll := false; // 16
+sSlow := false;  // 17
+sLack := false; // 18
+sTank := false; // 19
+sRemote := false; // 20
 sSold := false; // 101
 sDiff := false; // 102
-sTiger := false; // 106
-sBomb := false; // 107
 sFog := false; // 103
 sReset := false; // 104
 sSun := false; // 105
+sTiger := false; // 106
+sBomb := false; // 107
+sWound := false; // 108
 End;
 
 On CustomCommand(p1, p2, p3, p4, p5, p6) do
@@ -93,6 +101,24 @@ if p2 = 100 then // stream mode
    if p3 = 14 then
       sFlag := true;
 
+   if p3 = 15 then
+      sKamikadze := true;
+
+   if p3 = 16 then
+      sTroll := true;
+
+   if p3 = 17 then
+      sSlow := true;
+
+   if p3 = 18 then
+      sLack := true;
+
+   if p3 = 19 then
+      sTank := true;
+
+   if p3 = 20 then
+      sRemote := true;
+
    if p3 = 101 then
       sSold := true;
 
@@ -113,6 +139,9 @@ if p2 = 100 then // stream mode
 
    if p3 = 107 then
       sBomb := true;
+
+   if p3 = 108 then
+      sWound := true;
    end;
 End;
 
@@ -213,7 +242,37 @@ Every 0$1 trigger StreamModeActive and sBunker do
 SetRestrict(b_bunker, your_side, false);
 
 Every 0$1 trigger StreamModeActive and sHack do
-SetTech(tech_Virus, your_side, state_disabled);
+var i, tmp, side;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_control, control_computer]]);
+
+if not tmp then
+   exit;
+
+side := 0;
+
+for i := 1 to 8 do
+    if your_side <> i and GetAttitude(your_side, i) = att_enemy then
+       begin
+       side := i;
+       break;
+       end;
+
+if not side then
+   exit;
+
+for i := 1 to tmp do
+    if Prob(30) then
+       SetSide(i, side);
+End;
+
+Every 0$1 trigger StreamModeActive and sRefresh do
+var un;
+begin
+for un in FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]) do
+    if GetClass(un) in [1, 2, 3, 4] then
+       SetClass(un, rand(1, 4));
+End;
 
 Every 0$1 trigger StreamModeActive and sFire do
 var tmp;
@@ -261,7 +320,12 @@ if not tmp then
    exit;
 
 for i in tmp do
+    begin
+    if Crawls(i) then
+       ComWalk(i);
+
     SetClass(i, 4);
+    end;
 End;
 
 Every 0$1 trigger StreamModeActive and sDiff and Difficulty < 3 do
@@ -317,4 +381,98 @@ begin
 solar_recharge_percent := 0;
 wait(5$00);
 solar_recharge_percent := 100;
+End;
+
+Every 0$1 trigger StreamModeActive and sKamikadze do
+var i, un;
+begin
+for i := 1 to 6 do
+    begin
+    uc_nation := nation_nature;
+    uc_side := 0;
+
+    hc_attr := [12, 12];
+    hc_agressivity := 20;
+    hc_class := class_apeman_kamikaze;
+    hc_gallery := '';
+    hc_name := '';
+
+    un := CreateHuman;
+    PlaceUnitAnyWhere(un, true);
+
+    ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 0]]), un));
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sTroll do
+begin
+ToLua('displayTroll();');
+wait(3$00);
+ToLua('hideTroll();');
+End;
+
+Every 0$1 trigger StreamModeActive and sSlow do
+var p;
+begin
+p := 0;
+
+repeat
+ game_speed := 1;
+ wait(0$1);
+ p := p + 1;
+until p >= 60;
+
+game_speed := 4;
+End;
+
+Every 0$1 trigger StreamModeActive and sLack do
+var depot, base;
+begin
+depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+if not depot then
+   exit;
+
+base := GetBase(depot[rand(1, depot)]);
+
+SetResourceType(base, mat_cans, 0);
+SetResourceType(base, mat_oil, 0);
+SetResourceType(base, mat_siberit, 0);
+End;
+
+Every 0$1 trigger StreamModeActive and sWound do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+SetLives(tmp[rand(1, tmp)], 200);
+End;
+
+Every 0$1 trigger StreamModeActive and sTank do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_vehicle]]);
+
+if not tmp then
+   exit;
+
+SetLives(tmp[rand(1, tmp)], 10);
+End;
+
+Every 0$1 trigger StreamModeActive and sRemote do
+var tmp, i;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, your_side], [f_linked], [f_control, control_remote]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    if IsControledBy(i) then
+       ComUnlink(i);
 End;
