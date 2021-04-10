@@ -7,7 +7,8 @@ Export StreamModeActive,
        sHack, sFire, sRefresh, sExp, sDepot,
        sFlag, sSold, sDiff, sTiger, sBomb, sFog,
        sReset, sSun, sKamikadze, sTroll, sSlow, sLack,
-       sWound, sTank, sRemote;
+       sWound, sTank, sRemote, sPowell, sBetray, sContamin,
+       sTeleport, sOil, sOilTower, sShovel, sSheik, sStu;
 
 Every 0$1 do
 begin
@@ -38,6 +39,11 @@ sSlow := false;  // 17
 sLack := false; // 18
 sTank := false; // 19
 sRemote := false; // 20
+sPowell := false; // 21
+sTeleport := false; // 22
+sOilTower := false; // 23
+sShovel := false; // 24
+sSheik := false; // 25
 sSold := false; // 101
 sDiff := false; // 102
 sFog := false; // 103
@@ -46,6 +52,10 @@ sSun := false; // 105
 sTiger := false; // 106
 sBomb := false; // 107
 sWound := false; // 108
+sBetray := false; // 109
+sContamin := false; // 110
+sOil := false; // 111
+sStu := false; // 112
 End;
 
 On CustomCommand(p1, p2, p3, p4, p5, p6) do
@@ -119,6 +129,21 @@ if p2 = 100 then // stream mode
    if p3 = 20 then
       sRemote := true;
 
+   if p3 = 21 then
+      sPowell := true;
+
+   if p3 = 22 then
+      sTeleport := true;
+
+   if p3 = 23 then
+      sOilTower := true;
+
+   if p3 = 24 then
+      sShovel := true;
+
+   if p3 = 25 then
+      sSheik := true;
+
    if p3 = 101 then
       sSold := true;
 
@@ -142,6 +167,18 @@ if p2 = 100 then // stream mode
 
    if p3 = 108 then
       sWound := true;
+
+   if p3 = 109 then
+      sBetray := true;
+
+   if p3 = 110 then
+      sContamin := true;
+
+   if p3 = 111 then
+      sOil := true;
+
+   if p3 = 112 then
+      sStu := true;
    end;
 End;
 
@@ -161,7 +198,7 @@ if not tmp then
 
 for i in tmp do
     begin
-    DestroyUnit(i);
+    SetLives(i, 0);
     end;
 End;
 
@@ -221,6 +258,9 @@ End;
 
 Every 0$1 trigger StreamModeActive and sArmoury do
 SetRestrict(b_armoury, your_side, false);
+
+Every 0$1 trigger StreamModeActive and sShovel do
+SetRestrict(b_ext_noncombat, your_side, false);
 
 Every 0$1 trigger StreamModeActive and sRadar do
 var i, tmp;
@@ -312,20 +352,19 @@ for i in tmp do
 End;
 
 Every 0$1 trigger StreamModeActive and sSold do
-var i, tmp;
+var i, un, tmp;
 begin
 tmp := FilterAllUnits([[f_side, your_side], [f_class, 1]]);
 
 if not tmp then
    exit;
 
-for i in tmp do
-    begin
-    if Crawls(i) then
-       ComWalk(i);
+un := tmp[rand(1, tmp)];
 
-    SetClass(i, 4);
-    end;
+if Crawls(un) then
+   ComWalk(un);
+
+SetClass(un, class_sniper);
 End;
 
 Every 0$1 trigger StreamModeActive and sDiff and Difficulty < 3 do
@@ -384,8 +423,10 @@ solar_recharge_percent := 100;
 End;
 
 Every 0$1 trigger StreamModeActive and sKamikadze do
-var i, un;
+var i, un, tmp;
 begin
+tmp := [];
+
 for i := 1 to 6 do
     begin
     uc_nation := nation_nature;
@@ -400,8 +441,24 @@ for i := 1 to 6 do
     un := CreateHuman;
     PlaceUnitAnyWhere(un, true);
 
-    ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 0]]), un));
+    tmp := tmp * un;
     end;
+
+repeat
+ wait(0$1);
+
+ for un in tmp do
+     begin
+     if IsDead(un) then
+        begin
+        tmp := tmp diff un;
+        continue;
+        end;
+
+     ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 0]]), un));
+     end;
+
+until not tmp;
 End;
 
 Every 0$1 trigger StreamModeActive and sTroll do
@@ -459,7 +516,7 @@ tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_vehicle]]);
 if not tmp then
    exit;
 
-SetLives(tmp[rand(1, tmp)], 10);
+SetLives(tmp[rand(1, tmp)], 60);
 End;
 
 Every 0$1 trigger StreamModeActive and sRemote do
@@ -475,4 +532,106 @@ if not tmp then
 for i in tmp do
     if IsControledBy(i) then
        ComUnlink(i);
+End;
+
+Every 0$1 trigger StreamModeActive and sPowell do
+begin
+ToLua('displayPowell();');
+wait(0$20);
+ToLua('displayPowell();');
+wait(0$40);
+ToLua('displayPowell();');
+End;
+
+Every 0$1 trigger StreamModeActive and sStu do
+begin
+ToLua('displayStucuk();');
+End;
+
+Every 0$1 trigger StreamModeActive and sBetray do
+var un, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human]]);
+
+if not tmp then
+   exit;
+
+un := tmp[rand(1, tmp)];
+
+SetSide(un, 0);
+
+ComAttackUnit(un, NearestUnitToUnit(all_units diff un, un));
+
+wait(0$20);
+
+SetSide(un, your_side);
+End;
+
+Every 0$1 trigger StreamModeActive and sContamin do
+var depot;
+begin
+depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+if not depot then
+   exit;
+
+ArtContamination(GetX(depot[1]), GetY(depot[1]), 70);
+End;
+
+Every 0$1 trigger StreamModeActive and sTeleport do
+var i, x, y, d, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    d := rand(0, 5);
+    x := ShiftX(GetX(i), d, rand(3, 12));
+    y := ShiftY(GetY(i), d, rand(3, 12));
+
+    if ValidHex(x, y) then
+       TeleportUnit(i, x, y, rand(3, 6), true);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sOil do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_engine, engine_combustion], [f_type, unit_vehicle]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    SetFuel(i, 0);
+End;
+
+Every 0$1 trigger StreamModeActive and sOilTower do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_btype, b_oil_mine]]);
+
+if not tmp then
+   exit;
+
+DestroyUnit(tmp[1]);
+End;
+
+Every 0$1 trigger StreamModeActive and sSheik do
+var un;
+begin
+uc_side := 0;
+uc_nation := nation_arabian;
+
+PrepareHuman(sex_male, 10, class_desert_warior);
+un := CreateHuman;
+PlaceUnitAnywhere(un, true);
+
+repeat
+ wait(0$1);
+ ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), un));
+until IsDead(un);
 End;

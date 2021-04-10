@@ -36,10 +36,10 @@ STREAM_ITEMS_INIT_NORMAL = {
 		NAME = 'sFire', ITEM_ID = 10, PROB = 20, LABEL = loc(6224),
 	},
 	{
-		NAME = 'sRefresh', ITEM_ID = 11, PROB = 25, LABEL = loc(6226),
+		NAME = 'sRefresh', ITEM_ID = 11, PROB = 20, LABEL = loc(6226),
 	},
 	{
-		NAME = 'sExp', ITEM_ID = 12, PROB = 15, LABEL = loc(6227),
+		NAME = 'sExp', ITEM_ID = 12, PROB = 10, LABEL = loc(6227),
 	},
 	{
 		NAME = 'sDepot', ITEM_ID = 13, PROB = 5, LABEL = loc(6228),
@@ -64,11 +64,26 @@ STREAM_ITEMS_INIT_NORMAL = {
 	},
 	{
 		NAME = 'sRemote', ITEM_ID = 20, PROB = 3, LABEL = loc(6237),
+	},
+	{
+		NAME = 'sPowell', ITEM_ID = 21, PROB = 8, LABEL = loc(6238),
+	},
+	{
+		NAME = 'sTeleport', ITEM_ID = 22, PROB = 4, LABEL = loc(6241),
+	},
+	{
+		NAME = 'sOilTower', ITEM_ID = 23, PROB = 8, LABEL = loc(6243),
+	},
+	{
+		NAME = 'sShovel', ITEM_ID = 24, PROB = 6, LABEL = loc(6244),
+	},
+	{
+		NAME = 'sSheik', ITEM_ID = 25, PROB = 5, LABEL = loc(6245),
 	}
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
-		NAME = 'sSold', ITEM_ID = 101, PROB = 15, LABEL = loc(6214),
+		NAME = 'sSold', ITEM_ID = 101, PROB = 10, LABEL = loc(6214),
 	},
 	{
 		NAME = 'sDiff', ITEM_ID = 102, PROB = 10, LABEL = loc(6215),
@@ -77,19 +92,31 @@ STREAM_ITEMS_INIT_HARDCORE = {
 		NAME = 'sFog', ITEM_ID = 103, PROB = 5, LABEL = loc(6216),
 	},
 	{
-		NAME = 'sReset', ITEM_ID = 104, PROB = 10, LABEL = loc(6218),
+		NAME = 'sReset', ITEM_ID = 104, PROB = 3, LABEL = loc(6218),
 	},
 	{
-		NAME = 'sSun', ITEM_ID = 105, PROB = 20, LABEL = loc(6223),
+		NAME = 'sSun', ITEM_ID = 105, PROB = 10, LABEL = loc(6223),
 	},
 	{
 		NAME = 'sTiger', ITEM_ID = 106, PROB = 5, LABEL = loc(6225),
 	},
 	{
-		NAME = 'sBomb', ITEM_ID = 107, PROB = 2, LABEL = loc(6229),
+		NAME = 'sBomb', ITEM_ID = 107, PROB = 3, LABEL = loc(6229),
 	},
 	{
 		NAME = 'sWound', ITEM_ID = 108, PROB = 10, LABEL = loc(6235),
+	},
+	{
+		NAME = 'sBetray', ITEM_ID = 109, PROB = 15, LABEL = loc(6239),
+	},
+	{
+		NAME = 'sContamin', ITEM_ID = 110, PROB = 7, LABEL = loc(6240),
+	},
+	{
+		NAME = 'sOil', ITEM_ID = 111, PROB = 10, LABEL = loc(6242),
+	},
+	{
+		NAME = 'sStu', ITEM_ID = 112, PROB = 20, LABEL = loc(6246),
 	}
 };
 STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS); -- tmp list of items
@@ -378,14 +405,71 @@ streamPanel.troll = getElementEX(
     }
 );
 
+streamPanel.powell = getElementEX(
+    game, 
+    anchorL, 
+    XYWH(getWidth(game) + 160, getHeight(game) / 2 - 174, 320, 348), 
+    false,
+    {
+        texture = 'SGUI/Stream/powell.png'
+    }
+);
+
+streamPanel.stucuk = getElementEX(
+    game, 
+    anchorL, 
+    XYWH(getWidth(game) + 240, getHeight(game) / 2 - 240, 480, 480), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+for i = 1, 14 do
+	getElementEX(
+		streamPanel.stucuk,
+		anchorNone,
+		XYWH(i * 40, (i % 4) * 80, 120, 166),
+		true,
+		{
+			texture = 'SGUI/Stream/stucuk.png'
+		}
+	);
+end;
+
 -- stream bonuses
 function displayTroll()
 	setVisible(streamPanel.troll, true);
 	bringToFront(streamPanel.troll);
+	sound.play('Sound/Stream/TrollLaugh.wav', '', VOLUME_EFFECTS);
 end;
 
 function hideTroll()
 	setVisible(streamPanel.troll, false);
+end;
+
+function displayPowell()
+	setX(streamPanel.powell, getWidth(game) + 160);
+	setVisible(streamPanel.powell, true);
+	bringToFront(streamPanel.powell);
+	sound.play('Sound/Stream/Powell.wav', '', VOLUME_EFFECTS);
+	AddEventSlideX(streamPanel.powell.ID, - 320, 4, 'hidePowell();');
+end;
+
+function hidePowell()
+	setVisible(streamPanel.powell, false);
+end;
+
+function displayStucuk()
+	setX(streamPanel.stucuk, getWidth(game) + 240);
+	setVisible(streamPanel.stucuk, true);
+	bringToFront(streamPanel.stucuk);
+	sound.play('Sound/Stream/Stucuk.wav', '', VOLUME_EFFECTS);
+	AddEventSlideX(streamPanel.stucuk.ID, - 480, 4, 'hideStucuk();');
+end;
+
+function hideStucuk()
+	setVisible(streamPanel.stucuk, false);
 end;
 
 function addStreamBonus(bonus)
@@ -425,21 +509,12 @@ end;
 function startStreamRoullete()
 	STREAM_MODE_BLOCK = 1;	
 
-	STREAM_TARGET = math.random(1, #STREAM_QUEUE - 1);
-
-	for i = 1, #STREAM_ITEMS do
-		if (parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
-			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
-			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
-			table.remove(STREAM_ITEMS, i);
-			break;
-		end;
-	end;
-
 	setEnabled(streamPanel.run, false);
 	setEnabled(streamPanel.reset, false);
 	setEnabled(streamPanel.hardcore, false);
 	setEnabled(streamPanel.list, false);
+
+	STREAM_TARGET = math.random(1, #STREAM_QUEUE);
 
 	animateRoullete(0, 0.2);
 end;
@@ -545,6 +620,15 @@ end;
 function showReward()
 	STREAM_MODE_BLOCK = 0;
 
+	for i = 1, #STREAM_ITEMS do
+		if (parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
+			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
+			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
+			table.remove(STREAM_ITEMS, i);
+			break;
+		end;
+	end;
+
 	setBorder({ID = STREAM_QUEUE[STREAM_TARGET].ID}, BORDER_TYPE_INNER, 2, RGB(0, 255, 0));
 	setText(streamPanel.activeLabel, STREAM_LABEL_ACTIVE);
 	setVisible(streamPanel.center, false);
@@ -575,12 +659,18 @@ function showStreamPanel()
 
 	setX(streamPanel.activeList, ScrWidth / 2 - 160);
 
-	OW_PAUSE();
-
 	local mode = getVisible(streamPanel);
 
 	if (not mode) then
+		if not getVisible(gamewindow.pause) then
+			OW_PAUSE();
+		end;
+
+		sound.play('Sound/Stream/ShowPanel.wav', '', VOLUME_EFFECTS);
+
 		newStreamInstance();
+	else
+		OW_PAUSE();
 	end;
 
 	setVisible(streamPanel, (not mode));
@@ -610,7 +700,8 @@ function newStreamInstance()
 
 	setText(streamPanel.activeLabel, '');	
 
-	if (#STREAM_ITEMS <= 1) then
+	if (#STREAM_ITEMS == 0) then
+		setEnabled(streamPanel.run, false);
 		return;
 	end;
 
