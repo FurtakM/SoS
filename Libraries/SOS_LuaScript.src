@@ -99,7 +99,7 @@ if campaign_id = 1 then // us_camp
              10: result := [ [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 114] ];
              11: result := [ [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 114] ];
              12: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] ];
-             13: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] ];
+             13: result := [ [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] ];
              14: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] ];
              15: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] ];
              16: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 33, 34], [101, 102, 103, 106, 108, 112, 113, 114] ];
@@ -434,7 +434,7 @@ if not side then
    exit;
 
 for i := 1 to tmp do
-    if Prob(30) then
+    if Prob(60) then
        SetSide(i, side);
 End;
 
@@ -696,13 +696,14 @@ PlaceUnitAnywhere(un, true);
 
 repeat
  wait(0$1); 
- ComAttackUnit(un, NearestUnitToUnit(all_units diff un, un));
-until IsOk(un);
+ ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), un));
+until IsDead(un);
 End;
 
 Every 0$1 trigger StreamModeActive and sStu do
 begin
 ToLua('displayStucuk();');
+ResetFog;
 End;
 
 Every 0$1 trigger StreamModeActive and sBetray do
@@ -933,7 +934,10 @@ i := rand(1, 7);
 
 case i of
      1: ToLua('earthquake(getX(game), 0, 32)');
-     2: ToLua('displayStucuk();');
+     2: begin
+        ToLua('displayStucuk();');
+        ResetFog;
+        end;
      3: begin
         tmp := FilterAllUnits([[f_side, your_side], [f_class, 1]]);
 
@@ -1008,6 +1012,9 @@ var i, p, un;
 begin
 SetAttitude(your_side, 9, att_friend, true);
 ChangeSideFog(9, your_side);
+
+uc_side := 9;
+uc_nation := 2;
 
 hc_name := 'Dark Warrior';
 hc_gallery := '';

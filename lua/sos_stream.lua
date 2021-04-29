@@ -116,49 +116,49 @@ STREAM_ITEMS_INIT_NORMAL = {
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
-		NAME = 'sSold', ITEM_ID = 101, PROB = 10, LABEL = loc(6214),
+		NAME = 'sSold', ITEM_ID = 101, PROB = 6, LABEL = loc(6214),
 	},
 	{
-		NAME = 'sDiff', ITEM_ID = 102, PROB = 10, LABEL = loc(6215),
+		NAME = 'sDiff', ITEM_ID = 102, PROB = 6, LABEL = loc(6215),
 	},
 	{
-		NAME = 'sFog', ITEM_ID = 103, PROB = 5, LABEL = loc(6216),
+		NAME = 'sFog', ITEM_ID = 103, PROB = 6, LABEL = loc(6216),
 	},
 	{
 		NAME = 'sReset', ITEM_ID = 104, PROB = 3, LABEL = loc(6218),
 	},
 	{
-		NAME = 'sSun', ITEM_ID = 105, PROB = 10, LABEL = loc(6223),
+		NAME = 'sSun', ITEM_ID = 105, PROB = 6, LABEL = loc(6223),
 	},
 	{
-		NAME = 'sTiger', ITEM_ID = 106, PROB = 5, LABEL = loc(6225),
+		NAME = 'sTiger', ITEM_ID = 106, PROB = 6, LABEL = loc(6225),
 	},
 	{
-		NAME = 'sBomb', ITEM_ID = 107, PROB = 3, LABEL = loc(6229),
+		NAME = 'sBomb', ITEM_ID = 107, PROB = 8, LABEL = loc(6229),
 	},
 	{
-		NAME = 'sWound', ITEM_ID = 108, PROB = 10, LABEL = loc(6235),
+		NAME = 'sWound', ITEM_ID = 108, PROB = 6, LABEL = loc(6235),
 	},
 	{
-		NAME = 'sBetray', ITEM_ID = 109, PROB = 15, LABEL = loc(6239),
+		NAME = 'sBetray', ITEM_ID = 109, PROB = 6, LABEL = loc(6239),
 	},
 	{
-		NAME = 'sContamin', ITEM_ID = 110, PROB = 7, LABEL = loc(6240),
+		NAME = 'sContamin', ITEM_ID = 110, PROB = 8, LABEL = loc(6240),
 	},
 	{
-		NAME = 'sOil', ITEM_ID = 111, PROB = 10, LABEL = loc(6242),
+		NAME = 'sOil', ITEM_ID = 111, PROB = 8, LABEL = loc(6242),
 	},
 	{
-		NAME = 'sStu', ITEM_ID = 112, PROB = 20, LABEL = loc(6246),
+		NAME = 'sStu', ITEM_ID = 112, PROB = 6, LABEL = loc(6246),
 	},
 	{
-		NAME = 'sBazooka', ITEM_ID = 113, PROB = 8, LABEL = loc(6249),
+		NAME = 'sBazooka', ITEM_ID = 113, PROB = 6, LABEL = loc(6249),
 	},
 	{
-		NAME = 'sMortar', ITEM_ID = 114, PROB = 8, LABEL = loc(6250),
+		NAME = 'sMortar', ITEM_ID = 114, PROB = 6, LABEL = loc(6250),
 	},
 	{
-		NAME = 'sRanger', ITEM_ID = 115, PROB = 4, LABEL = loc(6257),
+		NAME = 'sRanger', ITEM_ID = 115, PROB = 8, LABEL = loc(6257),
 	},
 };
 STREAM_ITEMS_NORMAL = {};

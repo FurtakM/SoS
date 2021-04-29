@@ -39,6 +39,11 @@ function onMenuKeyPress(key)
     end;
 
     if (key == VK_SPACE) then
+        if (getVisible(streamPanel)) then
+            showStreamPanel();
+            return;
+        end;
+        
        -- credits
        if (getVisible(credits)) then
            hideCredits();
@@ -47,6 +52,11 @@ function onMenuKeyPress(key)
     end;
 
     if (key == VK_ESC) then
+        if (getVisible(streamPanel)) then
+            showStreamPanel();
+            return;
+        end;
+
         if (not getVisible(menu)) then
             return;
         end;

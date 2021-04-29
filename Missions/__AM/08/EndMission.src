@@ -1,5 +1,5 @@
 Every 0$1 trigger IsDead(Borodin) and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < [7, 6, 5][Difficulty] and IsPlaced(JMM) do
-var i, p;
+var i, tmp, p;
 begin
     russianAI = 0;
     escapeAvalaible = 1;
@@ -28,12 +28,17 @@ begin
        YouLost('Dismissed');
        end;
 
-    p := 0$0;
+    p := 0$0;                                                                       
+    tmp := FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_human]]);
 
     repeat
      wait(0$1);
      p := p + 0$1;
-     ComMoveToArea(FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_human]]), RussianEscape);
+     ComMoveToArea(tmp, RussianEscape);
+
+     for i in tmp do
+         if IsInArea(i, RussianEscape) then
+            RemoveUnit(i);
     until FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 or p >= 0$7;
 
     FinishMission;
