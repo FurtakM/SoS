@@ -618,8 +618,6 @@ function startStreamRoullete()
 end;
 
 function animateRoullete(point, time)
-	-- AddEventSlideX(streamPanel.content.ID, (-STREAM_TARGET * 53) + (streamPanel.background.width / 2) + math.random(11, 26), STREAM_TARGET / 2, 'showReward();');
-
 	local finalPos = 53 * #STREAM_ITEMS;
 	local oneStepPos = 53;
 
@@ -704,7 +702,6 @@ function showReward()
 		if (parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
 			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
 			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
-			--table.remove(STREAM_ITEMS, i);
 			break;
 		end;
 	end;

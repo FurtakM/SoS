@@ -22,8 +22,8 @@ End;
 Function InitStreamMode;
 begin
 streamModeActive := false;
-normalCounter := 26;
-hardcoreCounter := 12;
+normalCounter := 36;
+hardcoreCounter := 16;
 
 sRocket := false; // 1
 sSpeed := false; // 2
@@ -107,6 +107,10 @@ if campaign_id = 1 then // us_camp
              18: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 33, 34, 35, 36], [101, 102, 103, 106, 108, 112, 113, 114, 115] ];
              19: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115] ];
         end;
+   end
+else if campaign_id = 5 then
+   begin
+   result := [ [1, 2], [100] ];
    end;
 
 if result then
@@ -1019,8 +1023,12 @@ uc_nation := 2;
 hc_name := 'Dark Warrior';
 hc_gallery := '';
 
-PrepareHuman(sex_male, 1, 10);
+hc_noskilllimit := true;
+hc_skills := [30, 30, 30, 30];
+
 un := CreateHuman;
+
+hc_noskilllimit := false;
 
 PlaceUnitAnywhere(un, true);
 
@@ -1028,11 +1036,12 @@ p := 0;
 
 repeat
  wait(0$1);
+ p := p + 1;
 
  if GetLives(un) < 1000 then
     SetLives(un, 1000);
 
- ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_enemy, your_side]), un));
+ ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([[f_enemy, your_side], [f_dist, un, 30]]), un));
 until p > 60 or IsDead(un);
 
 if un then
