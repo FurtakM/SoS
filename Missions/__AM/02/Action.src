@@ -205,7 +205,7 @@ end;
 
 // Find Americans corpses
 Every 0$1 trigger FilterUnitsInArea(DeadTriggerArea, [f_side, 1]) > 0 do
-var i, distanceTab, min, tmp;
+var i, distanceTab, min, tmp, p;
 begin
 
      distanceTab = [ [999, 999] ];
@@ -251,10 +251,14 @@ begin
                SetLives(DyingSold, 150);
                break;
           end;
-     end; 
+     end;
+
+     p := 0;
 
      repeat
        wait(0$1);
+       p := p + 1;
+
        for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM] do
        begin
           ComMoveToArea(i, DeadCutscene);
@@ -263,7 +267,7 @@ begin
           AddComTurnXY(JMM, 23, 11);
           SetLives(DyingSold, 250);
        end;
-     until IsInArea(JMM, JMMAreaCutscene);
+     until IsInArea(JMM, JMMAreaCutscene) or p >= 16;
 
      wait(0$1);
 

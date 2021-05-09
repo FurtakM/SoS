@@ -3,7 +3,7 @@
 -- 29-03-2021
 
 STREAM_MODE = parseInt(MOD_DATA.Stream_Mode); -- define if stream mode is active (check mod.ini)
-STREAM_MODE_BLOCK = 0;
+STREAM_MODE_BLOCK = 1;
 STREAM_ITEMS_INIT_NORMAL = {
 	{
 		NAME = 'sRocket', ITEM_ID = 1, PROB = 15, LABEL = loc(6211),
@@ -18,10 +18,10 @@ STREAM_ITEMS_INIT_NORMAL = {
 		NAME = 'sSpec', ITEM_ID = 4, PROB = 10, LABEL = loc(6210),
 	},
 	{
-		NAME = 'sLevel', ITEM_ID = 5, PROB = 25, LABEL = loc(6217),
+		NAME = 'sLevel', ITEM_ID = 5, PROB = 15, LABEL = loc(6217),
 	},
 	{
-		NAME = 'sArmoury', ITEM_ID = 6, PROB = 20, LABEL = loc(6219),
+		NAME = 'sArmoury', ITEM_ID = 6, PROB = 8, LABEL = loc(6219),
 	},
 	{
 		NAME = 'sRadar', ITEM_ID = 7, PROB = 15, LABEL = loc(6220),
@@ -36,10 +36,10 @@ STREAM_ITEMS_INIT_NORMAL = {
 		NAME = 'sFire', ITEM_ID = 10, PROB = 20, LABEL = loc(6224),
 	},
 	{
-		NAME = 'sRefresh', ITEM_ID = 11, PROB = 25, LABEL = loc(6226),
+		NAME = 'sRefresh', ITEM_ID = 11, PROB = 20, LABEL = loc(6226),
 	},
 	{
-		NAME = 'sExp', ITEM_ID = 12, PROB = 15, LABEL = loc(6227),
+		NAME = 'sExp', ITEM_ID = 12, PROB = 10, LABEL = loc(6227),
 	},
 	{
 		NAME = 'sDepot', ITEM_ID = 13, PROB = 5, LABEL = loc(6228),
@@ -64,34 +64,105 @@ STREAM_ITEMS_INIT_NORMAL = {
 	},
 	{
 		NAME = 'sRemote', ITEM_ID = 20, PROB = 3, LABEL = loc(6237),
-	}
+	},
+	{
+		NAME = 'sPowell', ITEM_ID = 21, PROB = 8, LABEL = loc(6238),
+	},
+	{
+		NAME = 'sTeleport', ITEM_ID = 22, PROB = 4, LABEL = loc(6241),
+	},
+	{
+		NAME = 'sOilTower', ITEM_ID = 23, PROB = 8, LABEL = loc(6243),
+	},
+	{
+		NAME = 'sShovel', ITEM_ID = 24, PROB = 6, LABEL = loc(6244),
+	},
+	{
+		NAME = 'sSheik', ITEM_ID = 25, PROB = 5, LABEL = loc(6245),
+	},
+	{
+		NAME = 'sEarthquake', ITEM_ID = 26, PROB = 10, LABEL = loc(6247),
+	},
+	{
+		NAME = 'sAI', ITEM_ID = 27, PROB = 6, LABEL = loc(6248),
+	},
+	{
+		NAME = 'sCargo', ITEM_ID = 28, PROB = 3, LABEL = loc(6251),
+	},
+	{
+		NAME = 'sDLaser', ITEM_ID = 29, PROB = 10, LABEL = loc(6252),
+	},
+	{
+		NAME = 'sExchange', ITEM_ID = 30, PROB = 5, LABEL = loc(6253),
+	},
+	{
+		NAME = 'sFac', ITEM_ID = 31, PROB = 9, LABEL = loc(6254),
+	},
+	{
+		NAME = 'sPower', ITEM_ID = 32, PROB = 9, LABEL = loc(6255),
+	},
+	{
+		NAME = 'sRandom', ITEM_ID = 33, PROB = 5, LABEL = loc(6256),
+	},
+	{
+		NAME = 'sShield', ITEM_ID = 34, PROB = 5, LABEL = loc(6258),
+	},
+	{
+		NAME = 'sTime', ITEM_ID = 35, PROB = 5, LABEL = loc(6259),
+	},
+	{
+		NAME = 'sTools', ITEM_ID = 36, PROB = 9, LABEL = loc(6260),
+	},
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
-		NAME = 'sSold', ITEM_ID = 101, PROB = 15, LABEL = loc(6214),
+		NAME = 'sSold', ITEM_ID = 101, PROB = 6, LABEL = loc(6214),
 	},
 	{
-		NAME = 'sDiff', ITEM_ID = 102, PROB = 10, LABEL = loc(6215),
+		NAME = 'sDiff', ITEM_ID = 102, PROB = 6, LABEL = loc(6215),
 	},
 	{
-		NAME = 'sFog', ITEM_ID = 103, PROB = 5, LABEL = loc(6216),
+		NAME = 'sFog', ITEM_ID = 103, PROB = 6, LABEL = loc(6216),
 	},
 	{
-		NAME = 'sReset', ITEM_ID = 104, PROB = 10, LABEL = loc(6218),
+		NAME = 'sReset', ITEM_ID = 104, PROB = 3, LABEL = loc(6218),
 	},
 	{
-		NAME = 'sSun', ITEM_ID = 105, PROB = 20, LABEL = loc(6223),
+		NAME = 'sSun', ITEM_ID = 105, PROB = 6, LABEL = loc(6223),
 	},
 	{
-		NAME = 'sTiger', ITEM_ID = 106, PROB = 5, LABEL = loc(6225),
+		NAME = 'sTiger', ITEM_ID = 106, PROB = 6, LABEL = loc(6225),
 	},
 	{
-		NAME = 'sBomb', ITEM_ID = 107, PROB = 2, LABEL = loc(6229),
+		NAME = 'sBomb', ITEM_ID = 107, PROB = 8, LABEL = loc(6229),
 	},
 	{
-		NAME = 'sWound', ITEM_ID = 108, PROB = 10, LABEL = loc(6235),
-	}
+		NAME = 'sWound', ITEM_ID = 108, PROB = 6, LABEL = loc(6235),
+	},
+	{
+		NAME = 'sBetray', ITEM_ID = 109, PROB = 6, LABEL = loc(6239),
+	},
+	{
+		NAME = 'sContamin', ITEM_ID = 110, PROB = 8, LABEL = loc(6240),
+	},
+	{
+		NAME = 'sOil', ITEM_ID = 111, PROB = 8, LABEL = loc(6242),
+	},
+	{
+		NAME = 'sStu', ITEM_ID = 112, PROB = 6, LABEL = loc(6246),
+	},
+	{
+		NAME = 'sBazooka', ITEM_ID = 113, PROB = 6, LABEL = loc(6249),
+	},
+	{
+		NAME = 'sMortar', ITEM_ID = 114, PROB = 6, LABEL = loc(6250),
+	},
+	{
+		NAME = 'sRanger', ITEM_ID = 115, PROB = 8, LABEL = loc(6257),
+	},
 };
+STREAM_ITEMS_NORMAL = {};
+STREAM_ITEMS_HARDCORE = {};
 STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS); -- tmp list of items
 STREAM_ITEMS_ACTIVE = {}; -- list of active items
 STREAM_QUEUE = {}; -- queue of items
@@ -378,14 +449,101 @@ streamPanel.troll = getElementEX(
     }
 );
 
+streamPanel.powell = getElementEX(
+    game, 
+    anchorL, 
+    XYWH(getWidth(game) + 160, getHeight(game) / 2 - 174, 320, 348), 
+    false,
+    {
+        texture = 'SGUI/Stream/powell.png'
+    }
+);
+
+streamPanel.stucuk = getElementEX(
+    game, 
+    anchorL, 
+    XYWH(getWidth(game) + 240, getHeight(game) / 2 - 240, 480, 480), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+for i = 1, 14 do
+	getElementEX(
+		streamPanel.stucuk,
+		anchorNone,
+		XYWH(i * 40, (i % 4) * 80, 120, 166),
+		true,
+		{
+			texture = 'SGUI/Stream/stucuk.png'
+		}
+	);
+end;
+
 -- stream bonuses
 function displayTroll()
 	setVisible(streamPanel.troll, true);
 	bringToFront(streamPanel.troll);
+	sound.play('Sound/Stream/TrollLaugh.wav', '', VOLUME_EFFECTS);
 end;
 
 function hideTroll()
 	setVisible(streamPanel.troll, false);
+end;
+
+function displayPowell()
+	setX(streamPanel.powell, getWidth(game) + 160);
+	setVisible(streamPanel.powell, true);
+	bringToFront(streamPanel.powell);
+	sound.play('Sound/Stream/Powell.wav', '', VOLUME_SPEECH);
+	AddEventSlideX(streamPanel.powell.ID, - 320, 4, 'hidePowell();');
+end;
+
+function hidePowell()
+	setVisible(streamPanel.powell, false);
+end;
+
+function displayStucuk()
+	setX(streamPanel.stucuk, getWidth(game) + 240);
+	setVisible(streamPanel.stucuk, true);
+	bringToFront(streamPanel.stucuk);
+	sound.play('Sound/Stream/Stucuk.wav', '', VOLUME_SPEECH);
+	AddEventSlideX(streamPanel.stucuk.ID, - 480, 4, 'hideStucuk();');
+end;
+
+function hideStucuk()
+	setVisible(streamPanel.stucuk, false);
+end;
+
+function playSibBomb()
+	sound.play('Sound/Stream/SibExplosion.wav', '', VOLUME_EFFECTS);
+end;
+
+function earthquake(gamePos, point, lastPoint)
+	local moveTo = 0;
+
+	if (point % 2 == 0) then
+		moveTo = -30;
+	else
+		moveTo = 30;
+	end;
+
+	if (point % 4 == 0) then
+		sound.play('Sound/Stream/Earthquake.wav', '', VOLUME_EFFECTS);
+	end;
+
+	if getVisible(gamewindow.pause) then
+		OW_PAUSE();
+	end;
+
+	point = point + 1;
+
+	if (point < lastPoint) then
+		AddEventSlideX(game.ID, moveTo, 0.5, 'earthquake(' .. gamePos .. ',' .. point .. ',' .. lastPoint .. ');');
+	else
+		AddEventSlideX(game.ID, gamePos, 0.5, '');
+	end;
 end;
 
 function addStreamBonus(bonus)
@@ -395,7 +553,7 @@ function addStreamBonus(bonus)
 		if (parseInt(bonus) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
 			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
 			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
-			table.remove(STREAM_ITEMS, i);
+			--table.remove(STREAM_ITEMS, i);
 			break;
 		end;
 	end;
@@ -407,15 +565,39 @@ end;
 
 
 -- sail function
-function initStreamRollete()
-	STREAM_MODE_BLOCK = 0;
-	STREAM_ITEMS_ACTIVE = {};
+function getStreamItemsFromMission(normal, hardcore)
+	local _normal = stringToArray(normal);
+	local _hardcore = stringToArray(hardcore);
 
-	if (STREAM_HARDCORE_MODE == 0) then
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS);
+	STREAM_ITEMS_NORMAL = {};
+	STREAM_ITEMS_HARDCORE = {};
+
+	if (#_normal == 0) then
+		STREAM_ITEMS_NORMAL = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS_NORMAL);
 	else
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
+		for i = 1, #STREAM_ITEMS_INIT_NORMAL do
+			if (parseInt(_normal[i]) == 1) then
+				STREAM_ITEMS_NORMAL = addToArray(STREAM_ITEMS_NORMAL, STREAM_ITEMS_INIT_NORMAL[i]);
+			end;
+		end;
 	end;
+
+	if (#_hardcore == 0) then
+		STREAM_ITEMS_HARDCORE = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS_HARDCORE);
+	else			
+		for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
+			if (parseInt(_hardcore[i]) == 1) then
+				STREAM_ITEMS_HARDCORE = addToArray(STREAM_ITEMS_HARDCORE, STREAM_ITEMS_INIT_HARDCORE[i]);
+			end;
+		end;
+	end;
+
+	STREAM_MODE_BLOCK = 0;
+end;
+
+function initStreamRollete()
+	STREAM_MODE_BLOCK = 1;
+	STREAM_ITEMS_ACTIVE = {};
 
 	saveStreamToFile();
 	hideTroll();
@@ -425,28 +607,17 @@ end;
 function startStreamRoullete()
 	STREAM_MODE_BLOCK = 1;	
 
-	STREAM_TARGET = math.random(1, #STREAM_QUEUE - 1);
-
-	for i = 1, #STREAM_ITEMS do
-		if (parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
-			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
-			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
-			table.remove(STREAM_ITEMS, i);
-			break;
-		end;
-	end;
-
 	setEnabled(streamPanel.run, false);
 	setEnabled(streamPanel.reset, false);
 	setEnabled(streamPanel.hardcore, false);
 	setEnabled(streamPanel.list, false);
 
+	STREAM_TARGET = math.random(1, #STREAM_QUEUE);
+
 	animateRoullete(0, 0.2);
 end;
 
 function animateRoullete(point, time)
-	-- AddEventSlideX(streamPanel.content.ID, (-STREAM_TARGET * 53) + (streamPanel.background.width / 2) + math.random(11, 26), STREAM_TARGET / 2, 'showReward();');
-
 	local finalPos = 53 * #STREAM_ITEMS;
 	local oneStepPos = 53;
 
@@ -466,18 +637,6 @@ function animateRoullete(point, time)
 end;
 
 function resetStreamRoullete()
-	STREAM_MODE_BLOCK = 0;
-	STREAM_ITEMS_ACTIVE = {};
-
-	if (STREAM_HARDCORE_MODE == 0) then
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS);
-	else
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
-	end;
-
-	OW_CUSTOM_COMMAND(100, 0, parseInt(STREAM_HARDCORE_MODE));
-
-	saveStreamToFile();
 	newStreamInstance();
 end;
 
@@ -486,12 +645,6 @@ function switchStreamMode()
 	local types = {'NORMAL', 'HARDCORE'};
 
 	setText(streamPanel.hardcore, loc(6202) .. ' ' .. types[STREAM_HARDCORE_MODE + 1]);
-
-	if (STREAM_HARDCORE_MODE == 0) then
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS);
-	else
-		STREAM_ITEMS = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS);
-	end;
 
 	newStreamInstance();
 end;
@@ -545,6 +698,14 @@ end;
 function showReward()
 	STREAM_MODE_BLOCK = 0;
 
+	for i = 1, #STREAM_ITEMS do
+		if (parseInt(STREAM_QUEUE[STREAM_TARGET].ITEM_ID) == parseInt(STREAM_ITEMS[i].ITEM_ID)) then
+			STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, STREAM_ITEMS[i]);
+			STREAM_LABEL_ACTIVE = STREAM_ITEMS[i].LABEL;
+			break;
+		end;
+	end;
+
 	setBorder({ID = STREAM_QUEUE[STREAM_TARGET].ID}, BORDER_TYPE_INNER, 2, RGB(0, 255, 0));
 	setText(streamPanel.activeLabel, STREAM_LABEL_ACTIVE);
 	setVisible(streamPanel.center, false);
@@ -575,12 +736,18 @@ function showStreamPanel()
 
 	setX(streamPanel.activeList, ScrWidth / 2 - 160);
 
-	OW_PAUSE();
-
 	local mode = getVisible(streamPanel);
 
 	if (not mode) then
+		if not getVisible(gamewindow.pause) then
+			OW_PAUSE();
+		end;
+
+		sound.play('Sound/Stream/ShowPanel.wav', '', VOLUME_EFFECTS);
+
 		newStreamInstance();
+	else
+		OW_PAUSE();
 	end;
 
 	setVisible(streamPanel, (not mode));
@@ -588,13 +755,28 @@ end;
 
 function saveStreamToFile()
 	TXT = OW_TXT_CREATE();
+	TXT2 = OW_TXT_CREATE();
 
 	for i = 1, #STREAM_ITEMS_ACTIVE do
-		OW_TXT_ADD(TXT, STREAM_ITEMS_ACTIVE[i].LABEL);
+		OW_TXT_ADD(TXT, i .. '. ' .. STREAM_ITEMS_ACTIVE[i].LABEL);
+		OW_TXT_ADD(TXT2, STREAM_ITEMS_ACTIVE[i].NAME);
 	end;
 	
 	OW_TXT_SAVE(TXT, '/mods/SoS/Data/stream');
+	OW_TXT_SAVE(TXT2, 'mods/SoS/Data/stream_id');
+
 	OW_TXT_FREE(TXT); -- Free the memory
+	OW_TXT_FREE(TXT2);
+end;
+
+function StreamNotRepeat(item)
+	for i = 1, #STREAM_ITEMS_ACTIVE do
+		if (item.ITEM_ID == STREAM_ITEMS_ACTIVE[i].ITEM_ID) then
+			return false;
+		end;
+	end;
+
+	return true;
 end;
 
 function newStreamInstance()
@@ -610,7 +792,14 @@ function newStreamInstance()
 
 	setText(streamPanel.activeLabel, '');	
 
-	if (#STREAM_ITEMS <= 1) then
+	if (STREAM_HARDCORE_MODE == 0) then
+		STREAM_ITEMS = copy(STREAM_ITEMS_NORMAL, STREAM_ITEMS);
+	else
+		STREAM_ITEMS = copy(STREAM_ITEMS_HARDCORE, STREAM_ITEMS);
+	end;
+
+	if (#STREAM_ITEMS_ACTIVE == #STREAM_ITEMS_NORMAL + #STREAM_ITEMS_HARDCORE or #STREAM_ITEMS == 0) then
+		setEnabled(streamPanel.run, false);
 		return;
 	end;
 
@@ -624,7 +813,7 @@ function newStreamInstance()
 	repeat
 		local chance = math.random(1, 100);
 
-		if (STREAM_ITEMS[j % #STREAM_ITEMS + 1].PROB > chance) then
+		if (STREAM_ITEMS[j % #STREAM_ITEMS + 1].PROB > chance and StreamNotRepeat(STREAM_ITEMS[j % #STREAM_ITEMS + 1])) then
 			item = getElementEX(
 			    streamPanel.content, 
 			    anchorL, 

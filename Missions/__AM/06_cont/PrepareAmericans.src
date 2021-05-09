@@ -240,22 +240,19 @@ begin
 end;
 
 Export function PrepareJoan;
-var i, j, tmp, rnd;
+var i, tmp, _tmp;
 begin
-    j = 0;
+    tmp := FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, sex_male]]) diff [Bobby, Cyrus, Gladstone, Denis, Frank];
 
-    repeat
-        wait(0$1);
-        for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
-        begin
-            if NOT FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building], [f_occupied]], [f_dist, i, 25]]) AND GetDistUnits(i, JMM) < 15 then
-            begin
-                tmp = i;
-                j = 1;
-            end;
-        end;
+    for i in _tmp do
+        if IsInArea(i, scanArea) and IsOk(i) then
+           begin
+           tmp := i;
+           break;
+           end;
 
-    until j = 1;
+    if not tmp then
+       tmp := JMM;
     
     blockSpawn = 1;
     uc_side = 4;
@@ -308,9 +305,16 @@ begin
         Say(tmp, 'D5a-Sol1-4');
         DialogueOff;
 
+        if JMM in FilterAllUnits([f_driving]) then
+           begin
+           ComMoveUnit(JMM, Joan);
+           wait(0$05);
+           end;
+
         ComExitVehicle(JMM);
         ComExitBuilding(JMM);
         wait(0$1);
+
         repeat
             wait(0$1);
             ComMoveUnit([Joan, tmp], JMM);
@@ -428,7 +432,7 @@ begin
 
     if number = 4 then
     begin
-        hc_class := 3;
+        hc_class := 2;
         hc_sex := sex_female;
         hc_gallery := 'SecondCharsGal';
         hc_face_number := 46;
@@ -440,10 +444,10 @@ begin
         un = CreateHuman;
         PlaceUnitArea(un, NewPeopleSpawn4, true);
         CenterNowOnUnits(un);
-        wait(0$1);
-        DialogueOn;
-        Say(un, 'D11e-FSol4-1');
-        DialogueOff;
+        // wait(0$1);
+        // DialogueOn;
+        // Say(un, 'D11e-FSol4-1');
+        // DialogueOff;
     end;
 
     if number = 5 then

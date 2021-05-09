@@ -128,8 +128,10 @@ begin
 end;
 
 // Factory + researcherd oil engine
-Every 0$1 trigger GetTech(47, 1) = state_researched and FilterAllUnits ([[f_side, 1], [f_type, unit_building], [f_btype, b_factory]]) > 0 do
+Every 0$1 trigger GetTech(47, 1) = state_researched and not factoryDialog and FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_btype, b_factory], [f_constructed]]) > 0 do
 begin
+factoryDialog := true;
+
     if IsOk(Campell) then
     begin
         Say(Campell, 'D10-Mech1-1');
@@ -204,10 +206,13 @@ Every 0$1 trigger firstRussianAttack = 2 do
 var i;
 begin
     enable;
-    for i in FilterUnitsInArea(RussianEscape, [[f_side, 5], [f_type, unit_human]]) do RemoveUnit(i);
+
+    for i in FilterUnitsInArea(RussianEscape, [[f_side, 5], [f_type, unit_human]]) do
+        RemoveUnit(i);
 end;
 
-Every 0$1 trigger FilterAllUnits([[f_side, 5]]) = 0 and firstRussianAttack = 2 do firstRussianAttack = 3;
+Every 0$1 trigger FilterAllUnits([[f_side, 5]]) = 0 and firstRussianAttack = 2 do
+firstRussianAttack = 3;
 
 // Donaldson dialog
 Every 0$01 trigger timeToSupport = 0$00 do 
@@ -284,31 +289,31 @@ end;
 
 // Coop attack with Donaldson
 Every 7$0 trigger GetSide(Donaldson) = 4 and IsOK(Donaldson) do
+var i, tmp;
 begin
-     SayRadio(Donaldson, 'D3b-Don-1');
-     donaldsonCoopAttack = 1;
+SayRadio(Donaldson, 'D3b-Don-1');
+donaldsonCoopAttack = 1;
+tmp := FilterAllUnits([f_side, 4]);
+
+repeat
+ wait(0$1);
+until not tmp or FilterAllUnits([[f_side, 6], [f_see, 1]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    ComAgressiveMove(i, 52, 64);
 end;
 
 // Save Donaldson
-Every 0$1 trigger saveDonaldson = 0 do
-var i, j;
+Every 0$1 trigger not saveDonaldson and FilterAllUnits([[f_side, 4], [f_type, unit_human], [f_dist, JMM, 9]]) diff Frank do
+var i;
 begin
-    enable;
+saveDonaldson := 1;
 
-     for i in FilterAllUnits([[f_side, 4], [f_type, unit_human]]) do
-     begin
-          for j in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
-          begin
-               If GetDistUnits(i, j) < 7 then
-               begin
-               
-                    saveDonaldson = 1;
-                    SetSide(FilterAllUnits([[f_side, 4], [f_type, unit_human]]), 1);
-
-               end;
-          end;
-     end;
-
+for i in FilterAllUnits([f_side, 4]) do
+    SetSide(i, 1);
 end;
 
 // Frank incomming
@@ -361,7 +366,7 @@ begin
 end;
 
 // Russian build buldozer
-Every 12$0 trigger Difficulty = 2 or Difficulty = 3 do
+Every 12$0 trigger Difficulty > 1 do
 AddComConstruct(rubfact0, 24, 1, 1, 53);
 
 // Ron ask
@@ -428,7 +433,7 @@ begin
         wait(1$0);
         SayRadio(Harisson, 'D7-Har-1');
         ChangeMissionObjectives('M2');
-        timeToDestroyRuBase = 13$0 + [5$0, 4$0, 3$0][Difficulty];
+        timeToDestroyRuBase = 16$0 + [5$0, 4$0, 3$0][Difficulty];
         startTimer = 1;
         timerStatus = 3;
     end;
@@ -439,7 +444,7 @@ begin
         wait(1$0);
         SayRadio(Harisson, 'D7-Har-1');
         ChangeMissionObjectives('M2');
-        timeToDestroyRuBase = 11$0 + [5$0, 3$0, 2$0][Difficulty];
+        timeToDestroyRuBase = 17$0 + [5$0, 3$0, 2$0][Difficulty];
         startTimer = 1;
         timerStatus = 3;
     end;

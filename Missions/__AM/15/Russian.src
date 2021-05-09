@@ -38,7 +38,7 @@ PlaceUnitXYR(Bystrov, 197, 111, 9, false);
 PlaceUnitXYR(Gleb, 197, 111, 9, false);
 
 // PrepareBase(base_dep, area, name, skill, sources, personel);
-tmp := PrepareBase(ru_depot, russianBaseArea, 'zhukov', [9, 10, 10][Difficulty], [90000, 1000, 300], [21, 8, 13, 8]);
+tmp := PrepareBase(ru_depot, russianBaseArea, 'zhukov', [9, 10, 10][Difficulty], [90000, 1000, 300], [18, 8, 13, 8]);
 
 base := GetBase(ru_depot2);
 
@@ -206,11 +206,11 @@ case strength of
 
          uc_nation := 3;
 
-         for i = 1 to 3 do
+         for i = 1 to 2 + Difficulty do
              begin
              PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
                             [engine_combustion, engine_siberite][rand(1,2)],
-                            control_computer,
+                            control_manual,
                             [ru_rocket_launcher, ru_rocket, ru_rocket][i mod 3 + 1],
                             80
                            );
@@ -219,7 +219,7 @@ case strength of
 
          PrepareVehicle(ru_heavy_tracked, engine_siberite, control_manual, ru_rocket, 100);
          sewiVeh := CreateVehicle;
-         SetMark(sewiVeh, 1);
+         SetMark(sewiVeh, -6);
 
          result := result union sewiVeh;
          end;
@@ -233,7 +233,7 @@ Every 0$30 trigger activeAttacks do
 var i, tmp, time, areas, strength, xy;
 begin
 areas := [southSpawn, southWestSpawn];
-time := [5$30, 4$40, 4$10][Difficulty];
+time := [5$30, 4$50, 4$40][Difficulty];
 xy := [ [70, 118], [78, 31] ];
 
 repeat
@@ -285,7 +285,20 @@ repeat
            begin
            Vsevolod = PrepareUnit('Vsevolod', false, '');
            PlaceHumanInUnit(Vsevolod, i);
-           end;
+           end
+        else
+           if GetControl(i) = control_manual then
+              begin
+              uc_side := 6;
+              uc_nation := 3;
+
+              hc_gallery := '';
+              hc_name := '';
+
+              PrepareHuman(false, 3, 10);
+              PlaceHumanInUnit(CreateHuman, i);
+              wait(0$0.3);
+              end;
 
         ComMoveXY(i, 111, 197);
         wait(0$2);

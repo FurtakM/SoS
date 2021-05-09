@@ -15,6 +15,8 @@ begin
 
     ChangeMissionObjectives('M1cont');
 
+    wait(0$2);
+
     SaveForQuickRestart;
 
     wait(rand(0$15, 0$20));
@@ -36,6 +38,7 @@ begin
        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol1-1', 'DR0-Sol1-1');
 
     DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol2-1', 'DR0-Sol2-1');
+
     if IsOk(Cyrus) then
        Say(Cyrus, 'DR0-Cyrus-1');
 
@@ -180,7 +183,7 @@ end;
 // Build first remote vehicle without tower control
 Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, 36]]) = 0 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) > 0 and firstTower = 0 and not InBattle(1) do
 begin
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3]]) diff [JMM, Brown, Donaldson, Denis, Joan, Bobby, Cyrus, Lisa, Frank, Gladstone], 'D3a-Mech1-1', 'D3a-Mech1-1');
+    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, sex_male]]) diff [JMM, Brown, Donaldson, Denis, Joan, Bobby, Cyrus, Lisa, Frank, Gladstone], 'D3a-Mech1-1', 'D3a-Mech1-1');
     firstTower = 2;
 end;
 
@@ -263,17 +266,17 @@ Every 25$0 do
 begin
  repeat
   wait(0$1);
- until not InBattle(1);
+ until not InBattle(1) and GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), JMM), JMM) > 30;
 
  PrepareKurt;
 end;
 
 
 // Dialog about Joan
-Every 0$10+1$00 trigger IsOk(Joan) and GetSide(Joan) = 1 do
+Every 0$10+1$00 trigger IsOk(Joan) and GetSide(Joan) = 1 and Lisa do
 begin
 
-    wait(0$20);
+    wait(0$50);
 
     if not IsOk(Joan) then
        exit;
