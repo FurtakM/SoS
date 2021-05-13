@@ -28,5 +28,254 @@ ChangeMissionObjectives('O1_cont');
 SaveForQuickRestart;
 
 missionStarted := true;
+
+PrepareJohnny;
+End;
+
+// meet johnny
+Every 0$1 trigger not olafSpotted and not mercenariesSpotted and See(2, Johnny) and NearestUnitToUnit(FilterAllUnits([f_side, 1]), Heike) = Johnny do
+begin
+InGameOn;
+
+CenterNowOnUnits(Heike);
+
+Say(Johnny, 'DJ-ambush-1');
+
+wait(0$0.3);
+
+ComTurnUnit(Heike, Johnny);
+
+Say(Heike, 'DH-ambush-1');
+
+wait(0$1);
+
+ComWalk(Johnny);
+AddComMoveUnit(Johnny, Heike);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Johnny, Heike) < 4;
+
+ComTurnUnit(Johnny, Heike);
+
+Say(Johnny, 'DJ-ambush-2');
+Say(Heike, 'DH-ambush-2');
+Say(Johnny, 'DJ-ambush-3');
+Say(Heike, 'DH-ambush-3');
+Say(Johnny, 'DJ-ambush-4');
+
+ComTurnXY(Heike, 39, 22);
+
+Say(Heike, 'DH-ambush-4');
+
+PrepareRussianPatrol;
+
+PlaceSeeing(39, 22, 2, -12);
+CenterOnXY(39, 22);
+
+ComMoveXY(russianPatrol, 39, 23);
+ComMoveXY([Heike, Johnny], 39, 7);
+AddComTurnUnit([Heike, Johnny], russianPatrol[1]);
+
+Say(russianPatrol[1], 'DR-ambush-5');
+Say(russianPatrol[2], 'DR1-ambush-5');
+
+repeat
+ wait(0$1);
+until GetDistUnitXY(Heike, 39, 7) < 4;
+
+ComTurnUnit(Heike, russianPatrol[1]);
+ComTurnUnit(Johnny, Heike);
+
+Say(Johnny, 'DJ-ambush-6');
+Say(Heike, 'DH-ambush-6');
+
+InGameOff;
+
+meetJohnny := true;
+
+ComFree(Johnny);
+
+ChangeMissionObjectives('O2_ambush_cont');
+
+ComMoveXY(russianPatrol[russianPatrol], 29, 15);
+
+wait(0$2);
+
+if not See(3, Heike) and not See(3, Johnny) then
+   ComMoveXY(russianPatrol[1], 58, 32);
+
+wait([0$50, 0$40, 0$35][Difficulty]);
+
+ComAgressiveMove(russianPatrol, 43, 13);
+
+repeat
+ wait(0$1);
+until not russianPatrol;
+
+RemoveSeeing(39, 22, 2);
+
+if GetAttitude(1, 2) = att_enemy then
+   exit;
+
+if not IsOk(Johnny) then
+   begin
+   ChangeMissionObjectives('O2_ambush_out_cont');
+   exit;
+   end;
+
+if GetDistUnits(Heike, Johnny) > 10 then
+   begin
+   ComMoveUnit(Johnny, Heike);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Johnny, Heike) < 6;
+   end;
+
+CenterNowOnUnits(Heike);
+
+InGameOn;
+
+ComTurnUnit(Heike, Johnny);
+ComTurnUnit(Johnny, Heike);
+
+Say(Johnny, 'DJ-thanks-1');
+Say(Heike, 'DH-thanks-1');
+Say(Johnny, 'DJ-thanks-2');
+Say(Heike, 'DH-thanks-2');
+
+ComMoveXY(Johnny, 4, 3);
+
+repeat
+ wait(0$1);
+until not See(2, Johnny);
+
+Say(Heike, 'DH-thanks-2a');
+
+RemoveUnit(Johnny);
+InGameOff;
+
+johnnySaved := true;
+AddExperience(Heike, 1, 600);
+
+if IsOk(Olaf) then
+   ComMoveXY(Olaf, 44, 25);
+End;
+
+// attack Johnny
+Every 0$1 trigger GetAttitude(1, 2) = att_enemy and IsOk(Johnny) do
+Say(Johnny, 'DJ-fire-1');
+
+// spotted east patrol
+Every 0$1 trigger not mercenariesSpotted and UnitFilter(russianForces, [f_see, 2]) do
+begin
+CenterNowOnUnits(Heike);
+
+DialogueOn;
+Say(Heike, 'DH-see-enemy-patrol-1');
+Say(UnitFilter(russianForces, [f_sex, sex_male])[1], 'DR-see-enemy-patrol-1');
+DialogueOff;
+
+ComAgressiveMove(russianForces, 72, 21);
+
+repeat
+ wait(0$1);
+until not UnitFilter(russianForces, [f_not, [f_hastask]]) and not See(3, Heike);
+
+ComMoveToArea(russianForces, russianEastPatrolArea);
+AddComHold(russianForces);
+End;
+
+// see animals
+// tiger
+Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_tiger]), Heike)) < 6 do
+Say(Heike, 'DH-tiger-1');
+
+// ape
+Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_apeman]), Heike)) < 6 do
+Say(Heike, 'DH-ape-1');
+
+// bird
+Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_phororhacos]), Heike)) < 6 do
+Say(Heike, 'DH-bird-1');
+
+// russian spotted
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_see, 3]]) do
+russianSpotted := true;
+
+
+// DogTag event
+Every 0$1 trigger not IsPlaced(Johnny) and not dogTagFound and dogTag do
+var i;
+begin
+repeat
+ wait(0$1);
+
+ for i in dogTag do
+     if GetDistUnitXY(Heike, i[1], i[2]) < 3 then
+        begin
+        dogTagFound := i;
+        break;
+        end;
+
+until dogTagFound;
+
+CenterNowOnUnits(Heike);
+
+ComMoveXY(Heike, dogTagFound[1], dogTagFound[2]);
+
+Say(Heike, 'DH-dogtag-found');
+End;
+
+// Olaf spotted
+Every 0$1 trigger not olafSpotted and not mercenariesSpotted and See(5, Heike) and GetDistUnits(Heike, Olaf) < 8 do
+begin
+olafSpotted := true;
+
+if HasTask(Olaf) then
+   ComStop(Olaf);
+
+InGameOn;
+
+if GetDistUnits(Olaf, Heike) > 8 then
+   ComMoveUnit(Olaf, Heike);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Olaf, Heike) <= 8;
+
+ComTurnUnit(Heike, Olaf);
+ComTurnUnit(Olaf, Heike);
+
+Say(Olaf, 'DO-olaf-1');
+Say(Heike, 'DH-olaf-1');
+Say(Olaf, 'DO-olaf-2');
+Say(Heike, 'DH-olaf-2');
+Say(Olaf, 'DO-olaf-3');
+Say(Olaf, 'DO-olaf-4');
+Say(Heike, 'DH-olaf-4');
+Say(Olaf, 'DO-olaf-5');
+Say(Heike, 'DH-olaf-5');
+Say(Olaf, 'DO-olaf-6');
+
+if russianSpotted or johnnySaved then
+   begin
+   Say(Heike, 'DH-olaf-6a');
+   Say(Olaf, 'DO-olaf-7a');
+   end
+else
+   begin
+   Say(Heike, 'DH-olaf-6b');
+   Say(Olaf, 'DO-olaf-7b');
+   end;
+
+Say(Olaf, 'DO-olaf-8');
+
+InGameOff;
+
+ChangeMissionObjectives('O3_camp_cont');
+
+ComMoveXY(Olaf, 51, 85);
 End;
 
