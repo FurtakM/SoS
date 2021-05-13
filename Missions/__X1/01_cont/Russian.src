@@ -1,1 +1,46 @@
-//
+Export russianPatrol, russianForces;
+Export Function PrepareRussianPatrol;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+russianPatrol := [];
+
+for i = 1 to 3 do
+    begin
+    PrepareHuman(sex_male, 1, 0);
+    hc_attr := [9, rand(10, 11)];
+    un := CreateHuman;
+    russianPatrol := Replace(russianPatrol, i, un);
+    PlaceUnitXYR(un, 31, 22, 4, false);
+    end;
+End;
+
+
+Export Function PrepareRussian;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+russianForces := [];
+
+for i in FilterAllUnits([f_btype, b_breastwork]) do
+    begin
+    PrepareHuman(false, 1, Difficulty - 1);
+    un := CreateHuman;
+    SetDir(un, (GetDir(i) - 3) mod 6);
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i = 1 to 5 do
+    begin
+    PrepareHuman(false, 1, Difficulty - 1);
+    un := CreateHuman;
+    PlaceUnitArea(un, russianEastPatrolArea, false);
+    ComHold(un);
+
+    russianForces := Replace(russianForces, russianForces + 1, un);
+    end;
+End;
