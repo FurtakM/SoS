@@ -82,9 +82,9 @@ Say(russianPatrol[2], 'DR1-ambush-5');
 
 repeat
  wait(0$1);
-until GetDistUnitXY(Heike, 39, 7) < 4;
+until GetDistUnitXY(Heike, 39, 7) < 6;
 
-ComTurnUnit(Heike, russianPatrol[1]);
+AddComTurnUnit(Heike, russianPatrol[1]);
 ComTurnUnit(Johnny, Heike);
 
 Say(Johnny, 'DJ-ambush-6');
@@ -156,11 +156,23 @@ Say(Heike, 'DH-thanks-2a');
 RemoveUnit(Johnny);
 InGameOff;
 
+ChangeMissionObjectives('O2_ambush_out_cont');
+
 johnnySaved := true;
 AddExperience(Heike, 1, 600);
 
 if IsOk(Olaf) then
    ComMoveXY(Olaf, 44, 25);
+End;
+
+Every 0$1 trigger russianPatrol do
+var i;
+begin
+enable;
+
+for i in russianPatrol do
+    if GetLives(i) < 1000 and not HasTask(i) then
+       ComAgressiveMove(i, 42, 12);
 End;
 
 // attack Johnny
@@ -177,11 +189,9 @@ Say(Heike, 'DH-see-enemy-patrol-1');
 Say(UnitFilter(russianForces, [f_sex, sex_male])[1], 'DR-see-enemy-patrol-1');
 DialogueOff;
 
-ComAgressiveMove(russianForces, 72, 21);
+ComAgressiveMove(russianForces, 66, 22);
 
-repeat
- wait(0$1);
-until not UnitFilter(russianForces, [f_not, [f_hastask]]) and not See(3, Heike);
+wait(0$10);
 
 ComMoveToArea(russianForces, russianEastPatrolArea);
 AddComHold(russianForces);
@@ -204,9 +214,12 @@ Say(Heike, 'DH-bird-1');
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_see, 3]]) do
 russianSpotted := true;
 
+// see enemy buildings
+Every 0$1 trigger GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_building]]), Heike)) < 8 do
+Say(Heike, 'DH-enemy-base');
 
 // DogTag event
-Every 0$1 trigger not IsPlaced(Johnny) and not dogTagFound and dogTag do
+Every 0$1 trigger not IsPlaced(Johnny) and not dogTagFound and dogTag and not mercenariesQuestDone do
 var i;
 begin
 repeat
@@ -225,7 +238,10 @@ CenterNowOnUnits(Heike);
 
 ComMoveXY(Heike, dogTagFound[1], dogTagFound[2]);
 
-Say(Heike, 'DH-dogtag-found');
+if mercenariesQuestReady then
+   Say(Heike, 'DH-dogtag-found-quest')
+else
+   Say(Heike, 'DH-dogtag-found');
 End;
 
 // Olaf spotted
@@ -276,6 +292,424 @@ InGameOff;
 
 ChangeMissionObjectives('O3_camp_cont');
 
-ComMoveXY(Olaf, 51, 85);
+ComMoveXY(Olaf, 52, 90);
+AddComTurnXY(Olaf, 53, 89);
 End;
 
+// heike goes to camp without olaf
+Every 0$1 trigger not olafSpotted and GetDistUnits(Heike, Givi) < 36 do
+ComMoveXY(Olaf, 39, 71);
+
+// spot camp
+Every 0$1 trigger not mercenariesSpotted and (See(2, Mike) or See(2, Givi)) do
+var i, driver, tank;
+begin
+if IsLive(Johnny) then
+   KillUnit(Johnny);
+
+mercenariesSpotted := true;
+ChangeMissionObjectives('O4_camp_cont');
+
+InGameOn;
+
+CenterNowOnXY(53, 89);
+PlaceSeeing(53, 89, 2, -8);
+
+if olafSpotted then
+   begin
+   AddComTurnUnit(Olaf, Heike);
+   ComMoveXY(Heike, 51, 86);
+   AddComTurnUnit(Heike, Olaf);
+
+   Say(Olaf, 'DO-camp-1'); 
+
+   ComTurnUnit([Givi, Mike], Heike);
+
+   Say(Givi, 'DG-camp-1');
+   Say(Heike, 'DH-camp-1');
+   Say(Olaf, 'DO-camp-2');
+   end
+else
+   begin
+   ComMoveXY(Heike, 51, 86);
+   AddComTurnUnit(Heike, Givi);
+
+   ComTurnUnit([Givi, Mike], Heike);
+
+   Say(Givi, 'DG-camp-1a');
+   Say(Heike, 'DH-camp-1a');
+
+   wait(0$0.03);
+
+   ComTurnUnit(Mike, Olaf);
+
+   Say(Mike, 'DM-camp-1a');
+
+   ComMoveXY(Olaf, 52, 90);
+
+   ComTurnUnit(Mike, Heike);
+
+   Say(Givi, 'DG-camp-2a');
+   Say(Heike, 'DH-camp-2a');
+   Say(Mike, 'DM-camp-2a');
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Olaf, Heike) < 10;
+
+   AddComTurnUnit(Olaf, Heike);
+   ComTurnUnit(Mike, Heike);
+
+   Say(Olaf, 'DO-camp-2a');
+
+   ComTurnUnit(Heike, Olaf);
+
+   if russianSpotted then
+      begin
+      Say(Heike, 'DH-camp-2aa');
+      Say(Givi, 'DG-camp-2aa');
+      Say(Mike, 'DM-camp-2aa');
+      end
+   else
+      begin
+      Say(Heike, 'DH-camp-2ab');
+      Say(Mike, 'DM-camp-2ab');
+      end;
+
+   Say(Heike, 'DH-camp-3a');
+   Say(Olaf, 'DO-camp-3a');
+   Say(Givi, 'DG-camp-3a');
+
+   Say(Heike, 'DH-camp-4aa');
+   Say(Mike, 'DM-camp-4aa');
+
+   Say(Olaf, 'DO-camp-4a');   
+   end;
+
+Say(Olaf, 'DO-camp-3');
+Say(Olaf, 'DO-camp-4');
+
+ComTurnUnit(Givi, Olaf);
+
+Say(Givi, 'DG-camp-4');
+
+ComTurnUnit(Heike, Givi);
+
+Say(Heike, 'DH-camp-4');
+
+ComTurnUnit([Mike, Olaf, Givi], Heike);
+
+Say(Givi, 'DG-camp-5');
+Say(Givi, 'DG-camp-6');
+Say(Heike, 'DH-camp-6');
+Say(Givi, 'DG-camp-7');
+
+if DogTagFound then
+   begin
+   Say(Heike, 'DH-quest-1a');
+   Say(Givi, 'DG-quest-1a');
+   mercenariesQuestDone := true; 
+   InGameOff;
+   end
+else
+   begin
+   Say(Heike, 'DH-camp-7');
+
+   if GetLives(Heike) < 1000 then
+      begin
+      Say(Olaf, 'DO-heal-1');
+
+      ComMoveXY(Heike, 51, 88);
+
+      repeat
+       wait(0$1);
+      until GetDistUnits(Heike, Olaf) < 4 or IsAt(Heike, 51, 88);
+
+      SetLives(Heike, 1000);
+
+      wait(0$2);
+      end; 
+
+   InGameOff;
+
+   ComTurnXY([Olaf, Givi, Mike], 53, 89);
+
+   ChangeMissionObjectives('O5_proof_cont');
+   mercenariesQuestReady := true;
+   end;
+
+if not mercenariesQuestReady then
+   exit;
+
+wait(0$35);
+
+driver := PreparePatrolTank;
+
+if not driver then
+   exit;
+
+SetAttitude(2, 1, att_enemy, true);
+
+tank := IsInUnit(driver);
+
+SetLives(tank, 500);
+SetLives(driver, 450);
+
+ComMoveXY(driver, 59, 60);
+
+repeat
+ wait(0$1);
+until IsAt(tank, 59, 60);
+
+if not See(1, Heike) then
+   begin
+   if Difficulty < 3 then
+      PlaceSeeing(59, 60, 2, 6);
+
+   ComExitVehicle(driver);
+
+   wait(0$1);
+
+   AddComMoveXY(driver, 58, 54);
+
+   wait(0$1);
+
+   AddComTurnXY(driver, 57, 53);
+   AddComWait(driver, 0$10);
+   AddComEnterUnit(driver, tank);
+   AddComMoveXY(driver, 107, 118);
+   end
+else
+   begin
+   ComMoveXY(driver, 107, 118);
+   end;
+
+repeat
+ wait(0$1);
+until IsAt(tank, 107, 118) or IsDead(driver);
+
+if IsDead(driver[1]) then
+   exit;
+
+for i in FilterAllUnits([f_side, 1]) do
+    RemoveUnit(i);
+End;
+
+// see tank in camp
+Every 0$1 trigger FilterUnitsInArea(campArea, [[f_side, 2], [f_type, unit_vehicle]]) do
+begin
+InGameOn;
+
+ComTurnUnit([Olaf, Mike, Givi], Heike);
+
+Say(Mike, 'DM-quest-1');
+Say(Givi, 'DG-quest-1');
+
+InGameOff;
+
+mercenariesQuestDone := true;
+End;
+
+// see dogtag in camp
+Every 0$1 trigger IsInArea(Heike, campArea) and dogTagFound and mercenariesQuestReady do
+begin
+InGameOn;
+
+ComTurnUnit([Olaf, Mike, Givi], Heike);
+
+ComMoveUnit(Heike, Givi);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Heike, Givi) < 4;
+
+Say(Mike, 'DM-quest-1');
+Say(Givi, 'DG-quest-1');
+
+ComMoveXY(Heike, 55, 87);
+
+InGameOff;
+
+mercenariesQuestDone := true;
+End;
+
+// heike driver
+Every 0$1 trigger Heike in FilterAllUnits([f_driving]) do
+begin
+if Difficulty < 3 then
+   RemoveSeeing(59, 60, 2);
+
+Say(Heike, 'DH-driver');
+End;
+
+// quest done
+Every 0$1 trigger mercenariesQuestDone do
+begin
+if mercenariesQuestReady then
+   ChangeMissionObjectives('O5_proof_cont_out');
+
+InGameOn;
+
+if IsInUnit(Heike) then
+   ComExitVehicle(Heike);
+
+wait(3);
+
+AddComTurnUnit(Heike, Givi);
+ComTurnUnit([Olaf, Mike, Givi], Heike);
+
+Say(Heike, 'DH-quest-done-1');
+Say(Mike, 'DM-quest-done-1');
+
+ComTurnUnit(Heike, Olaf);
+
+Say(Heike, 'DH-quest-done-2');
+Say(Olaf, 'DO-quest-done-2');
+Say(Olaf, 'DO-quest-done-3');
+
+ComMoveXY(Givi, 51, 90);
+AddComTurnXY(Givi, 50, 89);
+
+ComTurnUnit(Heike, Givi);
+
+Say(Givi, 'DG-quest-done-4');
+
+ComTurnUnit(Givi, Heike);
+
+Say(Heike, 'DH-quest-done-4');
+Say(Olaf, 'DO-quest-done-4');
+
+ComTurnUnit(Heike, Olaf);
+
+Say(Heike, 'DH-quest-done-5');
+
+InGameOff;
+
+ChangeMissionObjectives('O6_end_cont');
+
+SetSide(Givi, 2);
+SetSide(Mike, 2);
+
+SetTech(tech_explos, 2, state_researched);
+
+ComTurnXY(Olaf, 53, 89);
+
+lastObjectiveActive := true;
+SetAreaMapShow(escapeEast, 1);
+
+PreparePrison;
+End;
+
+// heike in north base
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, northDep, 10]]) do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 3], [f_class, 1], [f_inside]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    ComExitBuilding(i);
+    AddComAgressiveMove(i, 121, 22);
+    end;
+
+ComAgressiveMove(russianForces, 121, 22);
+ComAgressiveMove(russianTank, 121, 22);
+AddComAttackUnit(russianTank, Heike);
+End;
+
+// heike in south base
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, southDep, 10]]) do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 3], [f_class, 1], [f_inside]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    ComExitBuilding(i);
+    AddComAgressiveMove(i, 142, 71);
+    end;
+
+ComAgressiveMove(russianForces, 142, 71);
+ComAgressiveMove(russianTank, 142, 71);
+AddComAttackUnit(russianTank, Heike);
+End;
+
+// north depot destroyed
+Every 0$1 trigger lastObjectiveActive and not IsOk(northDep) and Difficulty = 1 and not prisonFound do
+begin
+Say(Heike, 'DH-prison-missing');
+End;
+
+// south depot destroyed
+Every 0$1 trigger lastObjectiveActive and not IsOk(southDep) and Difficulty > 1 and not prisonFound do
+begin
+Say(Heike, 'DH-prison-missing');
+End;
+
+// workshop destroyed
+Every 0$1 trigger lastObjectiveActive and not IsOk(workshop) and not prisonFound do
+begin
+Say(Heike, 'DH-prison-missing-a');
+End;
+
+// lab destroyed
+Every 0$1 trigger lastObjectiveActive and not IsOk(lab) and not prisonFound do
+begin
+Say(Heike, 'DH-prison-missing-a');
+End;
+
+// prison found
+Every 0$1 trigger not prisonFound and lastObjectiveActive and See(2, Kamil) do
+begin
+ComTurnUnit(Kamil, Heike);
+
+DialogueOn;
+
+CenterNowOnUnits(Kamil);
+
+Say(Kamil, 'DK-prison-found');
+Say(Heike, 'DH-prison-found');
+
+DialogueOff;
+
+SetSide(Kamil, 2);
+
+prisonFound := true;
+
+ChangeMissionObjectives('O6_prison_out');
+End;
+
+// end mission
+Every 0$1 trigger lastObjectiveActive and IsOk(Heike) and FilterUnitsExceptArea(escapeEast, [[f_type, unit_human], [f_side, 2]]) = 0 do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]);
+
+if prisonFound then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if (tmp < 3 and not prisonFound)
+or (tmp < 4 and prisonFound) then
+   AddMedal('med2', -1)
+else
+   AddMedal('med2', 1);
+
+if prisonFound and johnnySaved and tmp >= 4 then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(tmp);
+
+YouWin;
+End;
