@@ -1,4 +1,4 @@
-Export russianPatrol, russianForces;
+Export russianPatrol, russianForestPatrol, russianForces, russianTank;
 Export Function PrepareRussianPatrol;
 var i, un;
 begin
@@ -13,18 +13,27 @@ for i = 1 to 3 do
     hc_attr := [9, rand(10, 11)];
     un := CreateHuman;
     russianPatrol := Replace(russianPatrol, i, un);
-    PlaceUnitXYR(un, 31, 22, 4, false);
+    PlaceUnitXYR(un, 26, 22, 4, false);
     end;
 End;
 
 
 Export Function PrepareRussian;
-var i, un;
+var i, un, xy;
 begin
 uc_side := 3;
 uc_nation := 3;
 
 russianForces := [];
+russianForestPatrol := [];
+
+xy := AreaToList(russianForestPatrolArea, 0);
+
+for i in FilterAllUnits([f_type, b_depot]) do
+    begin
+    SetResourceType(GetBase(i), mat_cans, 200);
+    SetResourceType(GetBase(i), mat_oil, 10);
+    end;
 
 for i in FilterAllUnits([f_btype, b_breastwork]) do
     begin
@@ -36,11 +45,86 @@ for i in FilterAllUnits([f_btype, b_breastwork]) do
 
 for i = 1 to 5 do
     begin
-    PrepareHuman(false, 1, Difficulty - 1);
+    PrepareHuman(false, 1, Difficulty);
     un := CreateHuman;
     PlaceUnitArea(un, russianEastPatrolArea, false);
     ComHold(un);
 
     russianForces := Replace(russianForces, russianForces + 1, un);
     end;
+
+for i := 1 to Difficulty + 1 do
+    begin
+    PrepareHuman(false, 1, Difficulty);
+    un := CreateHuman;
+    PlaceUnitXY(un, xy[1][i], xy[2][i], false);
+
+    russianForestPatrol := Replace(russianForestPatrol, russianForestPatrol + 1, un);
+    end;
+
+vc_chassis := ru_medium_wheeled;
+vc_engine := engine_combustion;
+vc_control := control_manual;
+vc_weapon := ru_heavy_machine_gun;
+
+russianTank := CreateVehicle;
+PlaceUnitXY(russianTank, 121, 25, false);
+
+PrepareHuman(false, 1, Difficulty);
+PlaceHumanInUnit(CreateHuman, russianTank);
+End;
+
+Every 0$10 trigger russianForestPatrol do
+var i, d, l, x, y;
+begin
+enable;
+
+for i in russianForestPatrol do
+    begin
+    if GetDistUnitXY(i, 53, 89) < 30 then
+       begin
+       ComMoveXY(i, 114, 80);
+       continue;
+       end;
+
+    if not HasTask(i) then
+       begin
+       d := rand(0, 5);
+       l := rand(3, 7);
+       x := ShiftX(GetX(i), d, l);
+       y := ShiftY(GetY(i), d, l);
+
+       if ValidHex(x, y) then
+          ComAgressiveMove(i, x, y);
+       end;
+
+    end;
+End;
+
+Every 0$1 trigger IsOk(russianTank) and GetSide(russianTank) = 3 do
+begin
+enable;
+
+if IsAt(russianTank, 124, 25) then
+   SetFuel(russianTank, 100);
+
+if HasTask(russianTank) then
+   exit;
+
+AddComAgressiveMove(russianTank, 121, 25);
+AddComAgressiveMove(russianTank, 122, 48);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 107, 57);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 100, 61);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 78, 64);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 100, 61);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 107, 57);
+AddComWait(russianTank, 0$2);
+AddComAgressiveMove(russianTank, 122, 48);
+AddComWait(russianTank, 0$2);
+AddComMoveXY(russianTank, 124, 25);
 End;

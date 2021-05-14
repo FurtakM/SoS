@@ -3,9 +3,14 @@ begin
 if un = Heike then
    YouLost('Heike');
 
-if un in russianPatrol then
+if un in FilterAllUnits([[f_side, 3], [f_class, 1]]) then
    begin
-   russianPatrol := russianPatrol diff un;
+   if un in russianPatrol then
+      russianPatrol := russianPatrol diff un;
+
+   if un in russianForestPatrol then
+      russianForestPatrol := russianForestPatrol diff un;
+
    dogTag := Replace(dogTag, dogTag + 1, [GetX(un), GetY(un)]);
    end;
 End;
@@ -14,4 +19,10 @@ On UnitGoesToRed(un) do
 begin
 if un = Heike then
    YouLost('Heike');
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 in [2,5] and s2 in [5,2] then
+   YouLost('FriendlyFire');
 End;
