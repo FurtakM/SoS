@@ -4,12 +4,12 @@
 //   - false if unit not exist in save
 //   - true if unit already exist in save
 // example: JMM := PrepareUnit('JMM', false);
-Export Function PrepareUnit(ident, exist_mode);
+Export Function PrepareUnit(ident, exist_mode, prefix);
 var unit;
 begin
 
 if exist_mode then
-   unit := CreateCharacter(mission_prefix_prev&ident)
+   unit := CreateCharacter(prefix & ident)
   else
    unit := NewCharacter(ident);
 
@@ -67,45 +67,4 @@ for i = 1 to amount do
     end;
 
 InitHc;
-End;
-
-
-Export Function Attack(unit, enemy_list);
-var target, targets_list;
-begin
-if not unit then
-   exit;
-
-if IsInUnit(unit) then
-   unit := IsDrivenBy(unit);
-
-targets_list := [];
-
-
-target := UnitFilter(enemy_list, [[f_lives, 250], [f_not, [f_weapon, us_cargo_bay]], [f_type, unit_vehicle], [f_empty]]);
-
-if GetDistUnits(NearestUnitToUnit(target, unit), unit) < 11 and not IsInUnit(unit) then
-   begin
-   ComEnterUnit(unit, NearestUnitToUnit(target, unit));
-   exit;
-   end;
-
-targets_list := [UnitFilter(enemy_list, [[f_type, unit_human], [f_not, [f_inside]]]),
-                 UnitFilter(enemy_list, [f_type, unit_vehicle]),
-                 UnitFilter(enemy_list, [[f_type, unit_building], [f_not, [f_empty]]]),
-                 enemy_list
-                 ];
-
-for target in targets_list do
-    begin
-    if target then
-       if GetTag(unit) = 11 and (GetType(NearestUnitToUnit(target, unit)) = unit_building or GetWeapon(NearestUnitToUnit(target, unit)) = us_cargo_bay) then
-          begin 
-          ComPlaceDelayedCharge(unit, 0, 0, NearestUnitToUnit(target, unit));
-          SetTag(unit, 0);
-          end
-         else
-          if not HasTask(unit) then
-             ComAttackUnit(unit, NearestUnitToUnit(target, unit));
-    end;
 End;
