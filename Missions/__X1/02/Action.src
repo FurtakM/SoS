@@ -2,53 +2,161 @@ Export Function Action;
 begin
 InGameOn;
 
-ComMoveXY(Heike, 81, 65);
+ComMoveXY(Heike, 78, 61);
 
 if Mike then
-   ComMoveXY(Mike, 81, 68);
+   ComMoveXY(Mike, 80, 66);
 
 if Givi then
-   ComMoveXY(Givi, 85, 72);
+   ComMoveXY(Givi, 82,66);
 
 if Kamil then
-   ComMoveXY(Kamil, 83, 73);
+   ComMoveXY(Kamil, 82, 69);
 
 CenterNowOnUnits(Heike);
 
-if Givi or Mike or Kamil then
-   begin
-   if Givi then
-      begin
-      AddComTurnUnit(Givi, Heike);
-      AddComTurnUnit(Heike, Givi);
-         
-      Say(Givi, 'DG-1-start');
-      end;
+wait(0$2);
 
+if Givi and Mike then
+   begin
+   AddComTurnUnit([Givi, Mike, Kamil], Heike);
+   AddComTurnUnit(Heike, Givi);
+         
+   Say(Givi, 'DG-1-start'); 
    Say(Heike, 'DH-1-start');
 
-   if Mike then
-      begin
-      AddComTurnUnit(Mike, Heike);
-      AddComTurnUnit(Heike, Mike);
+   AddComTurnUnit(Mike, Heike);
+   AddComTurnUnit(Heike, Mike);
 
-      Say(Mike, 'DM-1-start');
-      end;
-
-   if Givi or Mike then
-      Say(Heike, 'DH-2-start');
-
+   Say(Mike, 'DM-1-start');
+   Say(Heike, 'DH-2-start'); 
    Say(Mike, 'DM-2-start');
    Say(Givi, 'DG-2-start');
+
+   ComTurnUnit(Mike, Givi);
+   ComTurnUnit(Heike, Mike);
+
    Say(Mike, 'DM-3-start');
    Say(Heike, 'DH-3-start');
-   end
-else
-   begin
 
+   ComMoveXY([Heike, Mike, Givi, Kamil], 84, 51);
+
+   wait(0$2);
+
+   Say(Givi, 'DG-3-start');
+
+   ComHold([Heike, Mike, Givi, Kamil]);
+   AddComTurnUnit(Heike, Givi);
+   AddComTurnUnit([Givi, Mike, Kamil], Heike);
+
+   Say(Heike, 'DH-4-start');  
+   Say(Givi, 'DG-4-start');
+   Say(Heike, 'DH-5-start');
+   Say(Givi, 'DG-5-start');
+   Say(Heike, 'DH-6-start');
+   Say(Mike, 'DM-6-start');
+
+   ComTurnUnit([Heike, Givi], Mike);
+
+   Say(Givi, 'DG-6-start');
+   Say(Heike, 'DH-7-start');
+   end
+else if not Mike and Givi then
+   begin
+   AddComTurnUnit([Givi, Kamil], Heike);
+   AddComTurnUnit(Heike, Givi);
+
+   Say(Givi, 'DG-1-start-c');
+   Say(Heike, 'DH-1-start-c');
+   Say(Givi, 'DG-2-start-c');
+   Say(Heike, 'DH-2-start-c');
+   Say(Givi, 'DG-3-start-c');
+
+   ComMoveXY(Heike, 83, 56);
+   ComMoveXY(Givi, 83, 59);
+
+   if Kamil then
+      ComMoveXY(Kamil, 80, 58);
+
+   AddComTurnUnit(Heike, Givi);
+   AddComTurnUnit([Givi, Kamil], Heike);
+
+   Say(Heike, 'DH-3-start-c');
+   Say(Givi, 'DG-4-start-c');
+
+   Say(Heike, 'DH-5-start-c');
+   Say(Givi, 'DG-5-start-c');
+   Say(Heike, 'DH-6-start-c');
+   Say(Givi, 'DG-6-start-c');
+
+   if Kamil then
+      begin
+      ComTurnUnit(Kamil, Heike);
+      Say(Kamil, 'DKam-1-start-c');
+
+      ComTurnUnit(Givi, Kamil);
+      Say(Givi, 'DG-7-start-c');
+      end
+   else
+      begin
+      Say(Givi, 'DG-8-start-c');
+      Say(Heike, 'DH-7-start-c');
+      end;
+   end
+else if not Givi and Mike then
+   begin
+   AddComTurnUnit([Mike, Kamil], Heike);
+   AddComTurnUnit(Heike, Mike);
+
+   Say(Mike, 'DM-1-start-b');
+   Say(Heike, 'DH-1-start-b');
+   Say(Mike, 'DM-2-start-b');
+   Say(Heike, 'DH-2-start-b');
+   Say(Mike, 'DM-3-start-b');
+   
+   if Kamil then
+      ComMoveXY(Kamil, 80, 58);
+
+   ComMoveXY(Heike, 83, 56);
+   ComMoveXY(Mike, 83, 59);
+
+   AddComTurnUnit(Heike, Mike);
+   AddComTurnUnit([Kamil, Mike], Heike);
+
+   Say(Heike, 'DH-3-start-b');
+   Say(Mike, 'DM-4-start-b');
+
+   if Kamil then
+      begin
+      ComTurnUnit(Kamil, Heike);
+      Say(Kamil, 'DKam-1-start-c');
+      end
+   else
+      begin
+      Say(Mike, 'DM-5-start-b');
+      end;
+   end
+else if Kamil then
+   begin
+   AddComTurnUnit(Heike, Kamil);
+   AddComTurnUnit(Kamil, Heike);
+
+   Say(Heike, 'DH-1-start-f');
+   Say(Kamil, 'DKam-1-start-f');
+   Say(Heike, 'DH-2-start-f');
+   Say(Kamil, 'DKam-2-start-f');
+   end
+else // Heike alone
+   begin
+   Say(Heike, 'DH-1-start-d');
    end;
 
+ComFree([Heike, Givi, Mike, Kamil]);
 InGameOff;
 
 ChangeMissionObjectives('OEast');
+
+wait(0$20);
+
+SendSciToForest;
 End;

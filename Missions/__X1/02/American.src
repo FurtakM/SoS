@@ -2,7 +2,7 @@ Export Gladstone, Lynch;
 Export usForces, usSci;
 
 Export Function PrepareAmericans;
-var i, veh, tmp;
+var i, un, veh, tmp;
 begin
 usForces := [];
 usSci := [];
@@ -26,5 +26,75 @@ for i := 1 to [1, 2, 2][Difficulty] do
     begin
     PrepareHuman(false, 2, [1, 2, 2][Difficulty]);
     PlaceHumanInUnit(CreateHuman, Delta);
+    end;
+
+// sci
+for i := 1 to 2 + Difficulty do
+    begin
+    PrepareHuman(false, 4, [1, 2, 2][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, usLab);
+    usSci := Replace(usSci, usSci + 1, un);
+    end;
+End;
+
+Export Function SendSciToForest;
+var i, j, k, tmp, xy;
+begin
+if not usSci then
+   exit;
+
+xy := AreaToList(tameArea, 0);
+
+for i in usSci do
+    begin
+    k := rand(1, xy[1]);
+
+    ComExitBuilding(i);
+    AddComMoveXY(i, xy[1][k], xy[2][k]);
+
+    for j := 1 to 2 do
+        begin
+        tmp := Delete(xy[j], k);
+        xy := Replace(xy, j, tmp);
+        end;
+    end;
+End;
+
+Every 0$5+0$10 trigger usSci and FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+var i, x, y, d, ape;
+begin
+enable;
+
+if UnitFilter(usSci, [f_or, [f_hastask], [f_inside]]) then
+   exit;
+
+for i in usSci do
+    begin
+    if not HasTask(i) and GetLives(i) = 1000 then
+       begin
+       ape := NearestUnitToUnit(FilterAllUnits([[f_side, 0], [f_class, class_apeman]]), i);
+
+       if GetDistUnits(i, ape) < 10 then
+          ComTameXY(i, GetX(ape), GetY(ape))
+       else
+          begin
+          d := rand(0, 5);
+          x := ShiftX(GetX(i), d, 3);
+          y := ShiftY(GetY(i), d, 3);
+
+          if not ValidHex(x, y) then
+             continue;
+
+          ComMoveXY(i, x, y);
+          end;
+       end;
+
+    if GetLives(i) < 900 and GetDistUnitXY(i, 37, 23) > 10 then
+       begin
+       ComMoveXY(i, 37, 23);
+       AddComEnterUnit(i, usLab);
+       usSci := usSci diff i;
+       end;
     end;
 End;
