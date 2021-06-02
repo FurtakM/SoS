@@ -2,7 +2,7 @@ Export Gladstone, Lynch;
 Export usForces, usSci;
 
 Export Function PrepareAmericans;
-var i, un, veh, tmp;
+var i, un, veh, tmp, arm;
 begin
 usForces := [];
 usSci := [];
@@ -36,6 +36,22 @@ for i := 1 to 2 + Difficulty do
     PlaceHumanInUnit(un, usLab);
     usSci := Replace(usSci, usSci + 1, un);
     end;
+
+arm := FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]);
+
+// sold
+for i := 1 to 3 + Difficulty do
+    begin
+    PrepareHuman(false, 1, [1, 2, 3][Difficulty]);
+    un := CreateHuman;
+    usForces := usForces ^ un;
+    PlaceHumanInUnit(un, arm[1]);
+    end;
+
+PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_machine_gun, 100);
+veh := CreateVehicle;
+SetDir(veh, 2);
+PlaceUnitXY(veh, 43, 24, false);
 End;
 
 Export Function SendSciToForest;
@@ -93,8 +109,66 @@ for i in usSci do
     if GetLives(i) < 900 and GetDistUnitXY(i, 37, 23) > 10 then
        begin
        ComMoveXY(i, 37, 23);
+       end
+    else if GetLives(i) < 1000 then
+       begin
        AddComEnterUnit(i, usLab);
        usSci := usSci diff i;
        end;
     end;
+End;
+
+// alert
+// when player attack base
+Every 0$1 trigger not usAlert and FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 999]]]) do
+usAlert := true;
+
+Every 0$1 trigger usAlert do
+var i, b, arm;
+begin
+usActiveDefend := true;
+
+if not usForces then
+   exit;
+
+arm := FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]);
+b := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
+
+ComExitBuilding(Lynch);
+AddComEnterUnit(Lynch, arm[1]);
+
+if IsOk(Gladstone) then
+   begin
+   ComExitBuilding(Gladstone);
+   AddComEnterUnit(Gladstone, arm[1]);
+   AddComChangeProfession(Gladstone, class_soldier);
+   end;
+
+ComExitBuilding(usForces[1]);
+AddComEnterUnit(usForces[1], b[1]);
+
+ComExitBuilding(usForces[2]);
+AddComEnterUnit(usForces[2], FilterAllUnits([[f_side, 1], [f_btype, b_bunker]])[1]);
+
+if b > 1 and usForces > 2 then
+   begin
+   repeat
+    wait(0$1);
+   until BuildingStatus(b[2]) <> bs_build;
+
+   ComExitBuilding(usForces[3]);
+   AddComEnterUnit(usForces[3], b[2]);
+   end;
+End;
+
+Every 0$3 trigger GetDistUnits(Heike, Delta) < 9 and FilterAllUnits([[f_side, 1], [f_class, 2]]) do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
+if not tmp then
+   exit;
+
+ComExitBuilding(tmp);
+AddComDismantle(tmp, usLab);
 End;

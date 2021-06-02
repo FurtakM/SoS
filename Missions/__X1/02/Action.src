@@ -1,4 +1,5 @@
 Export Function Action;
+var i, tmp;
 begin
 InGameOn;
 
@@ -159,4 +160,226 @@ ChangeMissionObjectives('OEast');
 wait(0$20);
 
 SendSciToForest;
+
+if Difficulty = 1 then
+   exit;
+
+wait([5$00, 2$30][Difficulty - 1]);
+
+if usAlert then
+   exit;
+
+tmp := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
+if not tmp then
+   exit;
+
+ComExitBuilding(tmp);
+AddComBuild(tmp, b_breastwork, 40, 13, 3);
+AddComEnterUnit(tmp, Delta);
 End;
+
+// see Aviradze
+Every 0$1 trigger not aviradzeSpotted and See(2, Aviradze) do
+var i;
+begin
+aviradzeSpotted := true;
+
+ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
+
+repeat
+ wait(0$1);
+until GetDistUnits(Heike, Aviradze) < 16;
+
+InGameOn;
+
+ChangeSideFog(5, 2);
+
+if FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 2 then
+   Say(Heike, 'DH-1-spot')
+else
+   Say(Heike, 'DH-1-spot-b');
+
+ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
+ComMoveXY([Kamil, Mike, Givi], 102, 40);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Heike, Aviradze) < 6;
+
+ComTurnUnit(Heike, Aviradze);
+ComTurnUnit([Aviradze, Sophia, Kaia], Heike);
+
+if Givi or Mike or Kamil then
+   begin
+   wait(0$2);
+
+   ComTurnUnit([Kamil, Mike, Givi], Aviradze);
+   end;
+
+Say(Heike, 'DH-2-spot');
+Say(Aviradze, 'DA-2-spot');
+Say(Heike, 'DH-3-spot');
+
+ComMoveUnit(Kaia, Heike);
+ComTurnUNit(Heike, Kaia);
+
+wait(0$0.3);
+
+async;
+
+Say(Kaia, 'DK-3-spot');
+
+repeat
+  wait(0$1);
+until GetDistUnits(Heike, Kaia) < 4;
+
+ComTurnUnit(Kaia, Heike);
+
+sync;
+
+Say(Heike, 'DH-4-spot');
+
+wait(0$0.3);
+
+ComTurnUnit(Heike, Aviradze);
+
+Say(Aviradze, 'DA-4-spot');
+
+ComTurnUnit(Kaia, Aviradze);
+
+Say(Kaia, 'DK-4-spot');
+
+ComTurnUnit(Aviradze, Kaia);
+
+Say(Aviradze, 'DA-5-spot');
+Say(Kaia, 'DK-5-spot');
+Say(Aviradze, 'DA-6-spot');
+
+if Kamil then
+   Say(Kamil, 'DKam-6-spot');
+
+Say(Kaia, 'DK-6-spot');
+
+ComTurnUnit(Aviradze, Heike);
+
+Say(Aviradze, 'DA-7-spot');
+Say(Heike, 'DH-7-spot');
+
+if sciCounterKill >= 3 then
+   begin
+   Say(Heike, 'DH-7-spot-a');
+   Say(Aviradze, 'DA-8-spot-a');
+   end;
+
+InGameOff;
+
+if sciCounterKill < 3 then
+   begin
+   SetSide(Kaia, 2);
+   ComFree(Kaia);
+
+   ChangeMissionObjectives('OSci');
+   end
+else
+   begin
+   aviradzeQuestDone := true;
+   attackDeltaAllowed := true;
+
+   ChangeMissionObjectives('ODelta2');
+
+   for i in FilterAllUnits([f_side, 5]) do
+       SetSide(i, 2);
+   end;
+End;
+
+// see scientist
+Every 0$1 trigger not sciSpotted and GetDistUnits(NearestUnitToUnit(usSci, Heike), Heike) < 8 and See(2, NearestUnitToUnit(usSci, Heike)) and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 1 and not aviradzeSpotted do
+begin
+sciSpotted := true;
+CenterNowOnUnits(NearestUnitToUnit(usSci, Heike));
+Say(Heike, 'DH-1-sci');
+End;
+
+// see scientist
+Every 0$1 trigger not sciSpotted and GetDistUnits(NearestUnitToUnit(usSci, Heike), Heike) < 8 and See(2, NearestUnitToUnit(usSci, Heike)) and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 1 and aviradzeSpotted and not aviradzeQuestDone do
+begin
+sciSpotted := true;
+
+CenterNowOnUnits(NearestUnitToUnit(usSci, Heike));
+Say(Heike, 'DH-1-sci-a');
+
+if Mike then
+   Say(Mike, 'DM-1-sci-a');
+End;
+
+// quest done
+Every 0$1 trigger aviradzeSpotted and sciCounterKill >= 3 and not aviradzeQuestDone do
+begin
+aviradzeQuestDone := true;
+
+Say(Heike, 'DH-1-quest-done');
+
+if Givi then
+   Say(Givi, 'DG-1-quest-done');
+End;
+
+Every 0$1 trigger See(5, Heike) and GetDistUnits(Heike, Aviradze) < 6 and aviradzeQuestDone and not attackDeltaAllowed do
+var i;
+begin
+attackDeltaAllowed := true;
+
+InGameOn;
+
+CenterNowOnUnits(Heike);
+
+wait(0$0.3);
+
+ComTurnUnit(Aviradze, Heike);
+ComTurnUnit(Heike, Aviradze);
+
+Say(Heike, 'DH-1-return');
+Say(Aviradze, 'DA-1-return');
+
+InGameOff;
+
+ChangeMissionObjectives('ODelta');
+
+for i in FilterAllUnits([f_side, 5]) do
+    SetSide(i, 2);
+End;
+
+Every 0$30+0$20 trigger attackDeltaAllowed and IsOk(Markov) and GetSide(Delta) = 1 and IsOk(Lynch) and not usAlert do
+begin
+DialogueOn;
+
+Say(Markov, 'DMar-1-radio');
+Say(Heike, 'DH-1-radio');
+Say(Markov, 'DMar-2-radio');
+Say(Heike, 'DH-2-radio');
+
+if IsOk(Kamil) or IsOk(Sophia) then
+   begin
+
+        Case Query('Q1Trap') of
+             1: begin
+                if Kamil then
+                   begin
+                   Say(Kamil, 'DKam-2-radio');
+                   Say(Kamil, 'DKam-3-radio');
+                   SayRadio(Lynch, 'DDelta-3-radio');
+                   end
+                else
+                   begin
+
+                   end;
+             end;
+             2: ;
+        End;
+
+   end;
+
+DialogueOff;
+End;
+
+
