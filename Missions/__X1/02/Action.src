@@ -3,16 +3,18 @@ var i, tmp;
 begin
 InGameOn;
 
+DoNotAttack(2, usLab);
+
 ComMoveXY(Heike, 78, 61);
 
 if Mike then
    ComMoveXY(Mike, 80, 66);
 
 if Givi then
-   ComMoveXY(Givi, 82,66);
+   ComMoveXY(Givi, 82, 66);
 
 if Kamil then
-   ComMoveXY(Kamil, 82, 69);
+   ComMoveXY(Kamil, 82, 67);
 
 CenterNowOnUnits(Heike);
 
@@ -181,9 +183,10 @@ End;
 
 // see Aviradze
 Every 0$1 trigger not aviradzeSpotted and See(2, Aviradze) do
-var i;
+var i, pepAmount;
 begin
 aviradzeSpotted := true;
+pepAmount := FilterAllUnits([[f_side, 2], [f_type, unit_human]]);
 
 ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
 
@@ -195,13 +198,16 @@ InGameOn;
 
 ChangeSideFog(5, 2);
 
-if FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 2 then
+if pepAmount > 2 then
    Say(Heike, 'DH-1-spot')
 else
-   Say(Heike, 'DH-1-spot-b');
+   Say(Heike, 'DH-1-spot-d');
 
 ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
-ComMoveXY([Kamil, Mike, Givi], 102, 40);
+
+for i in [Kamil, Mike, Givi] do
+    if GetDistUnits(i, Aviradze) > 7 then
+       ComMoveXY(i, 102, 40);
 
 repeat
  wait(0$1);
@@ -210,14 +216,15 @@ until GetDistUnits(Heike, Aviradze) < 6;
 ComTurnUnit(Heike, Aviradze);
 ComTurnUnit([Aviradze, Sophia, Kaia], Heike);
 
-if Givi or Mike or Kamil then
+if pepAmount > 1 then
    begin
-   wait(0$2);
-
+   wait(0$2); 
    ComTurnUnit([Kamil, Mike, Givi], Aviradze);
-   end;
+   Say(Heike, 'DH-2-spot');
+   end
+else
+   Say(Heike, 'DH-2-spot-d');
 
-Say(Heike, 'DH-2-spot');
 Say(Aviradze, 'DA-2-spot');
 Say(Heike, 'DH-3-spot');
 
@@ -254,7 +261,16 @@ ComTurnUnit(Aviradze, Kaia);
 
 Say(Aviradze, 'DA-5-spot');
 Say(Kaia, 'DK-5-spot');
-Say(Aviradze, 'DA-6-spot');
+
+if pepAmount = 1 then
+   Say(Heike, 'DH-5-spot-f');
+
+if pepAmount < 3 then
+   Say(Aviradze, 'DA-6-spot-f')
+else if pepAmount < 4 then
+   Say(Aviradze, 'DA-6-spot-c')
+else
+   Say(Aviradze, 'DA-6-spot');
 
 if Kamil then
    Say(Kamil, 'DKam-6-spot');
@@ -349,8 +365,13 @@ for i in FilterAllUnits([f_side, 5]) do
     SetSide(i, 2);
 End;
 
-Every 0$30+0$20 trigger attackDeltaAllowed and IsOk(Markov) and GetSide(Delta) = 1 and IsOk(Lynch) and not usAlert do
+Every 0$1 trigger attackDeltaAllowed and IsOk(Markov) and GetSide(Delta) = 1 and IsOk(Lynch) and not usAlert do
+var i, k, tmp;
 begin
+trap := 0;
+
+wait(0$15);
+
 DialogueOn;
 
 Say(Markov, 'DMar-1-radio');
@@ -363,23 +384,283 @@ if IsOk(Kamil) or IsOk(Sophia) then
 
         Case Query('Q1Trap') of
              1: begin
-                if Kamil then
+                if IsOk(Kamil) then
                    begin
                    Say(Kamil, 'DKam-2-radio');
                    Say(Kamil, 'DKam-3-radio');
                    SayRadio(Lynch, 'DDelta-3-radio');
+
+                   dwait(0$01);
+
+                   Say(Heike, 'DH-3-radio');
+                   Say(Kamil, 'DKam-4-radio');
+
+                   trap := 1;
                    end
                 else
                    begin
+                   Say(Sophia, 'DS-1-radio');
+                   Say(Sophia, 'DS-2-radio');
+                   SayRadio(Lynch, 'DDelta-2-radio-s');
+                   Say(Sophia, 'DS-3-radio');
+                   SayRadio(Lynch, 'DDelta-3-radio-s');
+                   Say(Sophia, 'DS-4-radio-s');
 
+                   dwait(0$01);
+
+                   Say(Heike, 'DH-1-trap');
+
+                   trap := 0;
                    end;
-             end;
-             2: ;
+
+                DialogueOff;
+                end;
+
+             2: begin
+                DialogueOff;
+                exit;
+                end;
         End;
 
+   if trap = 1 then
+      begin
+      tmp := [];
+      k := 3;
+
+      if usForces < 3 then
+         k := usForces;
+
+      for i := 1 to k do
+          begin
+          tmp := Replace(tmp, tmp + 1, usForces[1]);
+          usForces := Delete(usForces, 1);
+          end;
+
+      usPatrol := tmp;
+
+      for i in tmp do
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+
+          AddComAgressiveMove(i, 63, 31);
+          AddComWait(i, 0$2);
+          AddComAgressiveMove(i, 103, 43);
+          AddComWait(i, 0$3);
+
+          if Difficulty > 1 then
+             AddComAgressiveMove(i, 114, 69);
+
+          AddComWait(i, 0$3);
+          AddComAgressiveMove(i, 42, 20);
+          end;
+
+      repeat
+       wait(0$1);
+
+       for i in tmp do
+           if IsDead(i) then
+              tmp := tmp diff i;
+
+      until not tmp or UnitFilter(tmp, [[f_inarea, deltaBaseArea], [f_not, [f_hastask]]]) = tmp;
+
+      if tmp then
+         begin
+         usPatrol := [];
+         usForces := usForces union tmp;
+         end
+      else
+         trickyMove := true;
+      end
+   else
+      begin
+      tmp := [];
+      k := 4;
+
+      if usForces < 4 then
+         k := usForces;
+
+      for i := 1 to k do
+          begin
+          tmp := Replace(tmp, tmp + 1, usForces[1]);
+          usForces := Delete(usForces, 1);
+          end;
+
+      if Lynch then
+         tmp := tmp ^ Lynch;
+
+      usPatrol := tmp;
+
+      for i in tmp do
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+
+          AddComAgressiveMove(i, 69, 15);
+          AddComWait(i, 0$20);
+          AddComAgressiveMove(i, 55, 43);
+          AddComWait(i, 0$20);
+          AddComAgressiveMove(i, 42, 20);
+          end;
+
+      repeat
+       wait(0$1);
+
+       for i in tmp do
+           if IsDead(i) then
+              tmp := tmp diff i;
+
+      until not tmp or UnitFilter(tmp, [[f_inarea, deltaBaseArea], [f_not, [f_hastask]]]) = tmp;
+
+      if not tmp then
+         trickyMove := true
+      else
+         usPatrol := [];
+
+      if tmp diff Lynch then
+         usForces := usForces union (tmp diff Lynch);
+
+      if IsOk(Lynch) then
+         ComEnterUnit(Lynch, Delta);
+      end;
+   end;
+End;
+
+// see patrol
+Every 0$1 trigger UnitFilter(usPatrol, [f_see, 2]) do
+begin
+if not trap then
+   begin
+   Say(Heike, 'DH-2-trap');
+   Say(Mike, 'DM-2-trap');
+   end
+else
+   begin
+   Say(Heike, 'DH-1-trap-a');
    end;
 
+repeat
+ wait(0$1);
+until trickyMove;
+
+Say(Heike, 'DH-3-trap');
+
+if IsOk(Givi) and IsOk(Kaia) then
+   begin
+   Say(Givi, 'DG-3-trap');
+   Say(Kaia, 'DK-3-trap');
+   Say(Givi, 'DG-4-trap');
+   end;
+End;
+
+// Capture Delta
+Every 0$1 trigger GetSide(Delta) = 2 do
+begin
+if not IsOk(Kaia) then
+   exit;
+
+Say(Kaia, 'DK-1-capture');
+Say(Heike, 'DH-1-capture');
+End;
+
+Every 0$1 trigger GetSide(usLab) = 2 do
+begin
+DialogueOn;
+Say(Aviradze, 'DA-1-capture');
 DialogueOff;
+
+ChangeMissionObjectives('OTame');
+End;
+
+// Research
+Every 0$1 trigger GetTech(tech_ApeLang, 2) = state_researched do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-1-ape');
+Say(Heike, 'DH-1-ape');
+Say(Aviradze, 'DA-2-ape');
+Say(Aviradze, 'DA-3-ape');
+Say(Heike, 'DH-3-ape');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) do
+var tmp;
+begin
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]])[1];
+
+InGameOn;
+CenterNowOnUnits(tmp);
+
+ComMoveUnit(tmp, Aviradze);
+ComTurnUnit(Aviradze, tmp);
+
+wait(0$1);
+
+Say(Aviradze, 'DA-1-tame-a');
+
+if IsOk(Mike) then
+   begin
+   Say(Mike, 'DM-1-tame-a');
+   Say(Sophia, 'DS-1-tame-a');
+   Say(Mike, 'DM-2-tame-a');
+   end;
+
+wait(0$3);
+
+PrepareFarmer;
+
+CenterOnUnits(Farmer);
+
+ComMoveXY(Farmer, 105, 59);
+AddComHold(Farmer);
+
+SayRadio(Farmer, 'DF-1-end');
+Say(Aviradze, 'DA-1-end');
+SayRadio(Farmer, 'DF-2-end');
+Say(Aviradze, 'DA-2-end');
+SayRadio(Farmer, 'DF-3-end');
+Say(Heike, 'DH-3-end');
+SayRadio(Farmer, 'DF-4-end');
+
+if tick <= [20$00, 15$00, 10$00][Difficulty] then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if FilterAllUnits([[f_side, 1], [f_class, 4]]) = 0 then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if trickyMove then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+YouWin;
+
+InGameOff;
+End;
+
+Every 0$1 trigger tick > timeUntilFarmer and aviradzeSpotted do
+begin
+InGameOn;
+PrepareFarmer;
+
+CenterNowOnUnits(Farmer);
+
+wait(0$2);
+
+YouLost('Farmer');
+
+InGameOff;
 End;
 
 
