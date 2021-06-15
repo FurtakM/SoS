@@ -19,7 +19,7 @@ End;
 
 
 Export Function PrepareRussian;
-var i, un, xy;
+var i, b, un, xy;
 begin
 uc_side := 3;
 uc_nation := 3;
@@ -72,10 +72,33 @@ PlaceUnitXY(russianTank, 121, 25, false);
 
 PrepareHuman(false, 1, Difficulty);
 PlaceHumanInUnit(CreateHuman, russianTank);
+
+if Difficulty > 1 then
+   begin
+   bc_type := b_breastwork;
+   bc_level := 2;
+
+   b := CreateAndPlaceBuildingXYD(143, 88, 1);
+
+   PrepareHuman(false, 1, 2);
+   un := CreateHuman;
+   SetDir(un, 4);
+
+   PlaceHumanInUnit(un, b);
+   end;
+
+if Difficulty > 2 then
+   begin
+   for i := 1 to 2 do
+       begin
+       PrepareHuman(false, 1, 2);
+       PlaceUnitXYR(CreateHuman, 156, 108, 3, false);
+       end;
+   end;
 End;
 
 Every 0$10 trigger russianForestPatrol do
-var i, d, l, x, y;
+var i, d, l, x, y, tmp;
 begin
 enable;
 
@@ -86,6 +109,15 @@ for i in russianForestPatrol do
        ComMoveXY(i, 114, 80);
        continue;
        end;
+
+    tmp := NearestUnitToUnit(russianForestPatrol diff i, i);
+
+    if tmp then
+       if GetDistUnits(i, tmp) < 14 and GetLives(tmp) < 999 then
+          begin
+          ComAgressiveMove(i, GetX(tmp), GetY(tmp));
+          break;
+          end;
 
     if not HasTask(i) then
        begin
