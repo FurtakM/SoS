@@ -1,1 +1,127 @@
-//
+Export Function Action;
+var hasAll, i, tmp;
+begin
+hasAll := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]) >= 7;
+
+InGameOn;
+
+CenterNowOnUnits(Heike);
+
+wait(0$2);
+
+Say(Farmer, 'DF-1-start');
+
+ComTurnUnit(Heike, Farmer);
+
+Say(Heike, 'DH-1-start');
+
+ComMoveXY(Omar, 92, 21);
+ComMoveXY(Aviradze, 94, 23);
+
+ComMoveXY(omarSquad[1], 90, 23);
+ComMoveXY(omarSquad[2], 93, 25);
+
+AddComTurnUnit(omarSquad, Omar);
+AddComTurnUnit([Omar, Aviradze], Heike);
+
+AddComTurnUnit(Heike, Omar);
+
+Say(Omar, 'DO-1-start');
+Say(Heike, 'DH-2-start');
+
+if hasAll then
+   begin
+   Say(Omar, 'DO-2-start');
+   Say(Omar, 'DO-3-start');
+   Say(Heike, 'DH-3-start');
+   Say(Farmer, 'DF-2-start');
+
+   ComTurnUnit(Omar, Farmer);
+
+   Say(Omar, 'DO-4-start');
+   Say(Farmer, 'DF-3-start');
+   Say(Omar, 'DO-5-start');
+   Say(Farmer, 'DF-4-start');
+
+   ComTurnUnit(Omar, Heike);
+   end
+else
+   begin
+   Say(Omar, 'DO-2-start-a');
+   Say(Omar, 'DO-3-start-a');
+   Say(Heike, 'DH-3-start-a');
+
+   Say(Farmer, 'DF-2-start-a');
+
+   ComTurnUnit(Omar, Farmer);
+
+   Say(Omar, 'DO-4-start-a');
+   Say(Farmer, 'DF-3-start-a');
+
+   ComTurnUnit(Omar, Heike);
+   end;
+
+wait(0$0.3);
+
+Say(Omar, 'DO-1-mission');
+Say(Omar, 'DO-2-mission');
+
+if not hasAll then
+   Say(Omar, 'DO-3-mission');
+
+Say(Omar, 'DO-4-mission');
+Say(Heike, 'DH-1-mission');
+Say(Farmer, 'DF-1-mission');
+
+Say(Omar, 'DO-5-mission');
+
+if hasAll and IsOk(Kaia) then
+   begin
+   ComTurnUnit(Kaia, Farmer);
+
+   Say(Kaia, 'DK-1-side');
+
+   ComTurnUnit(Farmer, Kaia);
+
+   Say(Farmer, 'DF-1-side');
+   end;
+
+InGameOff;
+
+ChangeMissionObjectives('CaptureBase');
+
+ComFree(FilterAllUnits([f_side, 2]));
+
+SaveForQuickRestart;
+
+// give heike some units
+if not hasAll then
+   begin
+   tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]);
+
+   for i := 7 downto tmp do
+       begin
+       if omarSquad < 3 then
+          break;
+
+       SetSide(omarSquad[3], 2);
+       omarSquad := Delete(omarSquad, 3);
+       end;
+   end;
+
+// farmer go build some base
+ComMoveXY(Farmer ^ farmerSquad, 108, 62);
+
+// omar go out
+ComMoveXY(Omar ^ omarSquad, 103, 9);
+End;
+
+// delete Omar
+Every 0$1 trigger UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
+    RemoveUnit(i);
+End;
