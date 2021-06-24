@@ -26,6 +26,10 @@ AddComTurnUnit([Omar, Aviradze], Heike);
 
 AddComTurnUnit(Heike, Omar);
 
+repeat
+ wait(0$1);
+until IsAt(Omar, 92, 21);
+
 Say(Omar, 'DO-1-start');
 Say(Heike, 'DH-2-start');
 
@@ -75,25 +79,6 @@ Say(Farmer, 'DF-1-mission');
 
 Say(Omar, 'DO-5-mission');
 
-if hasAll and IsOk(Kaia) then
-   begin
-   ComTurnUnit(Kaia, Farmer);
-
-   Say(Kaia, 'DK-1-side');
-
-   ComTurnUnit(Farmer, Kaia);
-
-   Say(Farmer, 'DF-1-side');
-   end;
-
-InGameOff;
-
-ChangeMissionObjectives('CaptureBase');
-
-ComFree(FilterAllUnits([f_side, 2]));
-
-SaveForQuickRestart;
-
 // give heike some units
 if not hasAll then
    begin
@@ -109,19 +94,151 @@ if not hasAll then
        end;
    end;
 
+// omar go out
+ComMoveXY(Omar ^ omarSquad, 103, 9);
+
+if hasAll and IsOk(Kaia) then
+   begin
+   wait(0$3);
+
+   ComTurnUnit(Kaia, Farmer);
+
+   Say(Kaia, 'DK-1-side');
+
+   ComTurnUnit(Farmer, Kaia);
+
+   Say(Farmer, 'DF-1-side');
+   end;
+
+InGameOff;
+
+ChangeMissionObjectives('BuildBase');
+
+ComFree(FilterAllUnits([f_side, 2]));
+
+SaveForQuickRestart;
+
 // farmer go build some base
 ComMoveXY(Farmer ^ farmerSquad, 108, 62);
 
-// omar go out
-ComMoveXY(Omar ^ omarSquad, 103, 9);
+gameStarted := true;
 End;
 
-// delete Omar
-Every 0$1 trigger UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
-var i;
+// talk about base
+Every 0$6 trigger gameStarted do
 begin
-enable;
+InGameOn;
 
-for i in UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
-    RemoveUnit(i);
+CenterOnUnits(Heike);
+
+ComTurnUnit(Heike, Aviradze);
+ComTurnUnit(FilterAllUnits([f_side, 2]) diff Heike, Heike);
+
+Say(Heike, 'DH-1-explore');
+
+if Givi then
+   Say(Givi, 'DG-1-explore')
+else if heikeSecondSquad then
+   Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-1-explore');
+
+Say(Aviradze, 'DA-1-explore');
+
+if Sophia then
+   begin
+   Say(Sophia, 'DS-2-explore');
+   Say(Aviradze, 'DA-2-explore');
+
+   ComTurnUnit(Sophia, Aviradze);
+   ComTurnUnit(Aviradze, Sophia);
+
+   Say(Sophia, 'DS-3-explore');
+   Say(Aviradze, 'DA-3-explore');
+   end;
+
+if Mike then
+   begin
+   Say(Mike, 'DM-1-explore');
+   Say(Heike, 'DH-2-explore');
+   Say(Mike, 'DM-2-explore');
+
+   if Kaia then
+      Say(Kaia, 'DK-1-explore');
+   end;
+
+ComFree(FilterAllUnits([f_side, 2]));
+
+InGameOff;
 End;
+
+// see hill
+Every 0$1 trigger not americanBaseSpoted and FilterUnitsInArea(hillArea, [f_side, 2]) and not americanBaseCaptured do
+begin
+if Mike then
+   Say(Mike, 'DM-1-scout')
+else
+   Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-1-explore');
+
+PlaceSeeing(54, 35, 2, 1);
+RemoveSeeing(54, 35, 2);
+End;
+
+// on hill
+Every 0$1 trigger FilterUnitsInArea(upHillArea, [f_side, 2]) do
+var randomMen, randomWomen, speakerOk;
+begin
+randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
+randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
+
+DialogueOn;
+
+PlaceSeeing(36, 27, 2, -10);
+
+dwait(0$2);
+
+speakerOk := false;
+
+if Mike then
+   speakerOk := Say(Mike, 'DM-1-spot')
+else if randomMen then
+   speakerOk := Say(randomMen[1], 'DArm-1-spot-a');
+
+if speakerOk then
+   begin
+   if Givi then
+      Say(Givi, 'DG-1-spot')
+   else if randomWomen then
+      Say(randomWomen[1], 'DArf-1-spot-a');
+   end;
+
+if Mike then
+   Say(Heike, 'DH-1-spot')
+else
+   Say(Heike, 'DH-1-spot-a');
+
+RemoveSeeing(36, 27, 2);
+DialogueOff;
+
+americanBaseSpoted := true;
+End;
+
+// See american base
+Every 0$1 trigger not americanBaseSpoted and FilterAllUnits([[f_side, 2], [f_see, 1]]) and not americanBaseCaptured do
+var randomMen;
+begin
+americanBaseSpoted := true;
+
+randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
+
+if not randomMen then
+   exit;
+
+DialogueOn;
+Say(randomMen[1], 'DArm-1-spot-a');
+Say(Heike, 'DH-1-spot-a');
+DialogueOff;
+End;
+
+// Farmer depot captured
+Every 0$1 trigger GetSide(arDepot) = 2 do
+YouLost('Attack');
+

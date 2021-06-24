@@ -1,15 +1,18 @@
 Export Heike, Givi, Mike, Kamil, Aviradze, Kaia, Sophia, Markov, Farmer, Omar;
-Export farmerSquad, omarSquad;
+Export farmerSquad, omarSquad, heikeSecondSquad;
 Export Function PrepareArabian;
 var i, un, tmp;
 begin
 uc_side := 5;
 uc_nation := 2;
 
+SetResourceType(GetBase(arDepot), mat_cans, 45);
+
 Farmer := PrepareUnit('Farmer', false, '');
 Omar := PrepareUnit('Omar', false, '');
 
 omarSquad := [];
+heikeSecondSquad := [];
 
 for i := 1 to 5 do
     begin
@@ -34,7 +37,9 @@ Kaia := PrepareUnit('Kaia', (not debug), prefix);
 Sophia := PrepareUnit('Sophia', (not debug), prefix);
 Markov := PrepareUnit('Markov', (not debug), prefix);
 
-tmp := [Mike, Kamil, Kaia, Sophia, Markov, Givi, Mike] ^ CreateCharacterSet('02_others') diff 0;
+heikeSecondSquad := CreateCharacterSet('02_others');
+
+tmp := [Mike, Kamil, Kaia, Sophia, Markov, Givi] ^ heikeSecondSquad diff 0;
 
 uc_nation := 0;
 hc_class := class_apeman;
@@ -83,4 +88,83 @@ ComTurnUnit(un, Omar);
 
 PlaceSeeing(109, 63, 2, -15);
 RemoveSeeing(109, 63, 2);
+End;
+
+// delete Omar
+Every 0$1 trigger UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(Omar ^ omarSquad, [f_inarea, northRoad]) do
+    RemoveUnit(i);
+End;
+
+// Farmer Script
+Every 0$3 trigger gameStarted and IsInArea(Farmer, farmerBase) do
+var i, tmp, arm, bun;
+begin
+ComMoveXY(Farmer, 110, 60);
+AddComTurnXY(Farmer, 110, 61);
+
+// train 2 engineers
+tmp := UnitFilter(farmerSquad, [f_class, 1]);
+
+if tmp then
+   begin
+   for i := 1 to 2 do
+       begin
+       ComEnterUnit(tmp[i], arDepot);
+       AddComChangeProfession(tmp[i], class_engineer);
+       AddComExitBuilding(tmp[i]);
+       AddComMoveXY(tmp[i], 107, 66);
+       end;
+   end;
+
+tmp := UnitFilter(farmerSquad, [f_class, 2]);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(farmerSquad, [f_class, 2]);
+until tmp;
+
+ComBuild(tmp, b_breastwork, 102, 69, 2);
+
+repeat
+ wait(0$1);
+until UnitFilter(farmerSquad, [[f_not, [f_hastask]], [f_class, 2]]);
+
+tmp := UnitFilter(farmerSquad, [f_class, 2]);
+
+AddComBuild(tmp, b_armoury, 116, 70, 5);
+AddComBuild(tmp, b_breastwork, 108, 50, 2);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 5], [f_btype, b_armoury], [f_not, [f_constructed]]]);
+
+arm := FilterAllUnits([[f_side, 5], [f_btype, b_armoury], [f_not, [f_constructed]]])[1];
+tmp := UnitFilter(farmerSquad, [f_class, 1]);
+
+ComEnterUnit(tmp, arm);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 5], [f_btype, b_breastwork], [f_not, [f_constructed]]]) >= 2;
+
+tmp := UnitFilter(farmerSquad, [f_class, 2]);
+
+ComEnterUnit(tmp[1], arDepot);
+ComEnterUnit([tmp[2], tmp[3]], arm);
+AddComChangeProfession([tmp[2], tmp[3]], class_soldier);
+AddComExitBuilding([tmp[2], tmp[3]]);
+
+bun := FilterAllUnits([[f_side, 5], [f_btype, b_breastwork]]);
+
+for i := 1 to 2 do
+    AddComEnterUnit(tmp[i + 1], bun[i]);
+
+wait(1$00);
+
+farmerBaseReady := true;
 End;
