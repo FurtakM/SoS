@@ -2,10 +2,35 @@ On UnitDestroyed(un) do
 begin
 if un = Heike then
    YouLost('Heike');
+if un = Aviradze then
+   YouLost('Aviradze');
+if un = usDepot and not retreatAllowed then
+   YouLost('Depot');
+if un in usForces then
+   usForces := usForces diff un;
+if un in FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]) then
+   deadCounter := deadCounter + 1;
 End;
 
 On Contact(s1, s2) do
 begin
 if s1 = 2 and s2 = 5 then
    YouLost('Attack');
+End;
+
+On BuildingComplete(b) do
+begin
+if GetSide(b) = 1 then
+   begin
+   if GetBType(b) = b_lab then
+      begin
+      ComEnterUnit(UnitFilter(usForces, [f_class, 4]), b);
+      AmLabResearch(b);
+      end;
+
+   if GetBType(b) = b_armoury then
+      ComEnterUnit(UnitFilter(usForces, [[f_class, 1], [f_not, [f_inside]]]), b);
+
+   americanBuildList := Delete(americanBuildList, 1);
+   end;
 End;

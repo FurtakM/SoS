@@ -125,9 +125,9 @@ gameStarted := true;
 End;
 
 // talk about base
-Every 0$6 trigger gameStarted do
+Every 0$3 trigger gameStarted do
 begin
-InGameOn;
+Video(true);
 
 CenterOnUnits(Heike);
 
@@ -167,7 +167,7 @@ if Mike then
 
 ComFree(FilterAllUnits([f_side, 2]));
 
-InGameOff;
+Video(false);
 End;
 
 // see hill
@@ -191,9 +191,7 @@ randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
 
 DialogueOn;
 
-PlaceSeeing(36, 27, 2, -10);
-
-dwait(0$2);
+dwait(0$1);
 
 speakerOk := false;
 
@@ -215,7 +213,6 @@ if Mike then
 else
    Say(Heike, 'DH-1-spot-a');
 
-RemoveSeeing(36, 27, 2);
 DialogueOff;
 
 americanBaseSpoted := true;
@@ -238,7 +235,168 @@ Say(Heike, 'DH-1-spot-a');
 DialogueOff;
 End;
 
+// american base captured
+Every 0$1 trigger GetSide(usDepot) = 2 or FilterAllUnits([[f_side, 1], [f_not, [f_ok]], [f_btype, b_breastwork]]) or FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 1 do
+var i, p;
+begin
+americanBaseCaptured := true;
+
+wait(0$2);
+
+if IsOk(usCommander) then
+   begin
+   usForces := usForces union usCommander;
+   Say(usCommander, 'DUsm-1-assault');
+   end;
+
+for i in usForces do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveXY(i, 34, 67);
+    end;
+
+Say(Heike, 'DH-1-assault');
+
+repeat
+ wait(0$1);
+until not usForces;
+
+if not americanHasEscaped then
+   Say(Heike, 'DH-2-assault');
+
+wait(0$2);
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_not, [f_ok]]]);
+
+Video(true);
+
+if not GetSide(usDepot) = 2 then
+   SetSide(usDepot, 2);
+
+ComMoveXY(Heike, 35, 22);
+AddComTurnXY(Heike, 38, 25);
+ComMoveXY(heikeSquad union heikeSecondSquad, 39, 26);
+AddComTurnUnit(heikeSquad union heikeSecondSquad, Heike);
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := p + 1;
+until not HasTask(Heike) or p > 10;
+
+Say(Heike, 'DH-1-capture');
+
+if Markov then
+   Say(Markov, 'DMar-1-capture');
+
+if Sophia then
+   begin
+   Say(Heike, 'DH-2-capture');
+   Say(Sophia, 'DS-1-capture');
+   end;
+
+Video(false);
+
+ChangeMissionObjectives('ConstructBase');
+End;
+
+// workshop
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_workshop], [f_not, [f_constructed]]]) do
+begin
+workshopBuilded := true;
+ChangeMissionObjectives('ConstructVeh');
+
+if not IsOk(Markov) then
+   exit;
+
+Say(Heike, 'DH-1-shop');
+
+if not (GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched) then
+   Say(Markov, 'DMar-1-shop-a');
+End;
+
+// engines
+Every 0$1 trigger IsOk(Markov) and workshopBuilded and GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched do
+begin
+DialogueOn;
+
+Say(Markov, 'DMar-1-shop');
+Say(Heike, 'DH-1-shop');
+Say(Markov, 'DMar-2-shop');
+Say(Markov, 'DMar-3-shop');
+Say(Heike, 'DH-2-shop');
+Say(Markov, 'DMar-4-shop');
+Say(Heike, 'DH-3-shop');
+Say(Markov, 'DMar-5-shop');
+Say(Heike, 'DH-4-shop');
+
+DialogueOff;
+End;
+
+// first balista
+Every 0$3 trigger IsOk(Markov) and FilterAllUnits([[f_side, 2], [f_or, [f_weapon, ar_multimissile_ballista], [f_bweapon, ar_multimissile_ballista]]]) do
+begin
+DialogueOn;
+CenterNowOnUnits(FilterAllUnits([[f_side, 2], [f_or, [f_weapon, ar_multimissile_ballista], [f_bweapon, ar_multimissile_ballista]]]));
+dwait(0$0.3);
+
+Say(Heike, 'DH-1-bal');
+Say(Markov, 'DMar-1-bal');
+Say(Heike, 'DH-2-bal');
+
+DialogueOff;
+End;
+
+// lab builded
+Every 0$1 trigger IsOk(Aviradze) and FilterAllUnits([[f_side, 2], [f_btype, b_lab]]) do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-1-lab');
+Say(Heike, 'DH-1-lab');
+Say(Aviradze, 'DA-2-lab');
+Say(Heike, 'DH-2-lab');
+
+DialogueOff;
+End;
+
+// first ape sold
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+begin
+
+End;
+
+// first ape eng
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+begin
+
+End;
+
+// remove base squad
+Every 0$1 trigger UnitFilter(usForces, [f_inarea, westRoad]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(usForces, [f_inarea, westRoad]) do
+    begin
+    usForces := usForces diff i;
+    RemoveUnit(i);
+    end;
+
+if not americanHasEscaped then
+   begin
+   americanHasEscaped := true;
+   Say(Heike, 'DH-2-assault-a');
+   end;
+End;
+
 // Farmer depot captured
-Every 0$1 trigger GetSide(arDepot) = 2 do
+Every 0$1 trigger GetSide(arDepot) = 2 and FarmerOnMap do
 YouLost('Attack');
 
