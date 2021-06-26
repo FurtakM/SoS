@@ -1,98 +1,361 @@
-Export JMM, Gladstone, Harrison, Denis, Brown, Donaldson, Lisa, Frank, Bobby, Cyrus;
-Export others;
+Export Gladstone, Lynch;
+Export usForces, usSci;
 
 Export Function PrepareAmericans;
-var i, points, veh, tmp;
+var i, un, veh, tmp, arm;
 begin
-uc_nation := 1; 
-uc_side := 4;
+usForces := [];
+usSci := [];
 
-// Denis 
-Denis := PrepareUnit('Denis', false);
-// Harrison
-Harrison := PrepareUnit('Harisson', false);
+SetBName(Delta, 'Delta');
 
+SetResourceType(GetBase(Delta), mat_cans, 400);
+SetResourceType(GetBase(Delta), mat_oil, 80);
 
 uc_side := 1;
+uc_nation := 1;
 
-// JMM
-JMM := PrepareUnit('JMM', (not debug)); 
-// Gladstone
-Gladstone := PrepareUnit('Gladstone', false);
-// Brown
-if LoadVariable('BrownInDelta', debug) then
-   begin
-   Brown := PrepareUnit('Brown', (not debug));
-   tmp := tmp ^ Brown;
-   end;
-// Donaldson
-if LoadVariable('DonaldsonInDelta', debug) then
-   begin
-   Donaldson := PrepareUnit('Donaldson', (not debug));
-   tmp := tmp ^ Donaldson;
-   end;
-// Lisa
-if LoadVariable('LisaInDelta', debug) then
-   begin
-   Lisa := PrepareUnit('Lisa', (not debug));
-   tmp := tmp ^ Lisa;
-   end;
-// Frank
-if LoadVariable('FrankInDelta', debug) then
-   begin
-   Frank := PrepareUnit('Frank', (not debug));
-   tmp := tmp ^ Frank;
-   end;
-// Bobby
-if LoadVariable('BobbyInDelta', 0) then
-   begin
-   Bobby := PrepareUnit('Bobby', (not debug));
-   tmp := tmp ^ Bobby;
-   end;
-// Cyrus
-if LoadVariable('CyrusInDelta', 0) then
-   begin
-   Cyrus := PrepareUnit('Cyrus', (not debug));
-   tmp := tmp ^ Cyrus;
-   end;
+InitHc;
+hc_importance := 0;
 
-// others
-others := CreateCharacterSet('othersDelta');
+Lynch := PrepareUnit('Lynch', false, '');
+Gladstone := PrepareUnit('Gladstone', false, '');
 
-if not others and debug then
-   begin
-   InitHc;
+PlaceHumanInUnit(Lynch, Delta);
+PlaceHumanInUnit(Gladstone, usLab);
 
-   for i = 1 to 2 do
+// eng
+for i := 1 to [1, 2, 2][Difficulty] do
+    begin
+    PrepareHuman(false, 2, [1, 2, 2][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, Delta);
+    end;
+
+// sci
+for i := 1 to 2 + Difficulty do
+    begin
+    PrepareHuman(false, 4, [1, 2, 2][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, usLab);
+    usSci := Replace(usSci, usSci + 1, un);
+    end;
+
+arm := FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]);
+
+// sold
+for i := 1 to 3 + Difficulty do
+    begin
+    PrepareHuman(false, 1, [1, 2, 3][Difficulty]);
+    un := CreateHuman;
+    usForces := usForces ^ un;
+    PlaceHumanInUnit(un, arm[1]);
+    end;
+
+PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_machine_gun, 100);
+veh := CreateVehicle;
+SetDir(veh, 2);
+PlaceUnitXY(veh, 43, 24, false);
+End;
+
+Export Function SendSciToForest;
+var i, j, k, tmp, xy;
+begin
+if not usSci then
+   exit;
+
+xy := AreaToList(tameArea, 0);
+
+for i in usSci do
+    begin
+    k := rand(1, xy[1]);
+
+    ComExitBuilding(i);
+    AddComMoveXY(i, xy[1][k], xy[2][k]);
+
+    for j := 1 to 2 do
+        begin
+        tmp := Delete(xy[j], k);
+        xy := Replace(xy, j, tmp);
+        end;
+    end;
+End;
+
+Every 0$5+0$10 trigger usSci and FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+var i, x, y, d, ape;
+begin
+enable;
+
+if UnitFilter(usSci, [f_or, [f_hastask], [f_inside]]) then
+   exit;
+
+for i in usSci do
+    begin
+    if not HasTask(i) and GetLives(i) = 1000 then
        begin
-       PrepareHuman(false, i mod 4 + 1, 3);
-       others := others ^ CreateHuman;
+       ape := NearestUnitToUnit(FilterAllUnits([[f_side, 0], [f_class, class_apeman]]), i);
+
+       if GetDistUnits(i, ape) < 10 then
+          ComTameXY(i, GetX(ape), GetY(ape))
+       else
+          begin
+          d := rand(0, 5);
+          x := ShiftX(GetX(i), d, 3);
+          y := ShiftY(GetY(i), d, 3);
+
+          if not ValidHex(x, y) then
+             continue;
+
+          ComMoveXY(i, x, y);
+          end;
        end;
+
+    if GetLives(i) < 900 and GetDistUnitXY(i, 37, 23) > 10 then
+       begin
+
+       if IsOk(Gladstone) and IsInUnit(Gladstone) then
+          ComExitBuilding(Gladstone);
+
+       ComMoveXY(i, 37, 23);
+       end
+    else if GetLives(i) = 1000 then
+       begin
+
+       if IsOk(Gladstone) then
+          ComEnterUnit(Gladstone, usLab);
+
+       if SideShoot(i) = 2 then
+          begin
+          if not usAlert then
+             usAlert := true;
+
+          AddComEnterUnit(i, usLab);
+          usSci := usSci diff i;
+          end
+       else
+          ComMoveToArea(i, tameArea);
+       end;
+    end;
+End;
+
+// alert
+// when player attack base
+Every 0$1 trigger not usAlert and (FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 999]]]) or FilterUnitsInArea(deltaBaseArea, [f_side, 2])) do
+usAlert := true;
+
+Every 0$1 trigger usAlert do
+var i, b, arm;
+begin
+usActiveDefend := true;
+
+if not usForces then
+   exit;
+
+arm := FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]);
+b := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
+
+ComExitBuilding(Lynch);
+AddComEnterUnit(Lynch, arm[1]);
+
+if IsOk(Gladstone) then
+   begin
+   ComExitBuilding(Gladstone);
+   AddComEnterUnit(Gladstone, arm[1]);
+   AddComChangeProfession(Gladstone, class_soldier);
    end;
 
-if others then
-   tmp := tmp ^ others;
+ComExitBuilding(usForces[1]);
+AddComEnterUnit(usForces[1], b[1]);
 
-// prepare vehicles
-points := [ [28,49], [33,54], [38,56] ];
+ComExitBuilding(usForces[2]);
+AddComEnterUnit(usForces[2], FilterAllUnits([[f_side, 1], [f_btype, b_bunker]])[1]);
 
-// PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
-veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_cargo_bay, 80);
-SetDir(veh, 1);
-PlaceUnitXY(veh, points[1][1], points[1][2], false);
-SetCargo(veh, mat_cans, 100);
-PlaceHumanInUnit(others[1], veh);
+if b > 1 and usForces > 2 then
+   begin
+   repeat
+    wait(0$1);
+   until BuildingStatus(b[2]) <> bs_build;
 
-veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_machine_gun, 80);
-SetDir(veh, 1);                                                          
-PlaceUnitXY(veh, points[2][1], points[2][2], false);
-PlaceHumanInUnit(Gladstone, veh);
+   ComExitBuilding(usForces[3]);
+   AddComEnterUnit(usForces[3], b[2]);
+   end;
+End;
 
-veh := PrepareTank(1, 1, us_light_wheeled, engine_solar, control_manual, us_light_gun, 80);
-SetDir(veh, 1);
-PlaceUnitXY(veh, points[3][1], points[3][2], false);
-PlaceHumanInUnit(JMM, veh);
+Every 0$1 trigger GetLives(usLab) < 999 and usAlert and usForces do
+var i;
+begin
 
-for i in tmp diff others[1] do
-    PlaceUnitArea(i, startArea, false);
+for i in usForces do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComAgressiveMove(i, 31, 8);
+    end;
+
+wait(0$8);
+
+if FilterAllUnits([[f_side, 2], [f_dist, usLab, 14]]) then
+   ComAttackUnit(usForces, FilterAllUnits([[f_side, 2], [f_dist, usLab, 14]])[1])
+else
+   begin
+   wait(0$20);
+   AddComMoveXY(usForces, 39, 19);
+   end;
+End;
+
+Every 0$3 trigger (GetDistUnits(Heike, Delta) < 10 or GetLives(usLab) < 999) and FilterAllUnits([[f_side, 1], [f_class, 2]]) do
+var tmp, veh;
+begin
+tmp := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+veh := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);
+
+if not tmp then
+   exit;
+
+ComExitBuilding(tmp);
+AddComDismantle(tmp, usLab);
+
+if veh and IsOk(Gladstone) then
+   begin
+
+   if IsInUnit(Gladstone) then
+      ComExitBuilding(Gladstone);
+
+   AddComEnterUnit(Gladstone, veh[1]);
+   AddComAgressiveMove(Gladstone, 39, 14);
+   end;
+End;
+
+Every 0$1 trigger usAlert and FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]) diff (usForces union usSci) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]) diff (usForces union usSci);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    if IsInUnit(i) then
+       ComExitBuilding(i)
+    else
+       ComMoveXY(i, 48, 74);
+End;
+
+// more troops..
+Every 5$00 do
+var i, un, tmp;
+begin
+tmp := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+     case Difficulty of
+          1: begin
+             wait(1$00);
+
+             for i := 1 to 2 do
+                 begin
+                 PrepareHuman(false, [1, 4][i mod 2 + 1], 1);
+                 un := CreateHuman;
+                 tmp := Replace(tmp, tmp + 1, un);
+                 end;
+             end;
+
+          2: begin
+             wait(0$30);
+
+             for i := 1 to 2 do
+                 begin
+                 PrepareHuman(false, 1, 2);
+                 un := CreateHuman;
+                 tmp := Replace(tmp, tmp + 1, un);
+                 end;
+
+             PrepareHuman(false, 4, 2);
+             un := CreateHuman;
+             tmp := Replace(tmp, tmp + 1, un);
+             end;
+
+          3: begin
+             for i := 1 to 2 do
+                 begin
+                 PrepareHuman(false, 1, 2);
+                 un := CreateHuman;
+                 tmp := Replace(tmp, tmp + 1, un);
+                 end;
+
+             PrepareHuman(false, 4, 2);
+             un := CreateHuman;
+             tmp := Replace(tmp, tmp + 1, un);
+
+             PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_machine_gun, 90);
+             un := CreateVehicle;
+             tmp := Replace(tmp, tmp + 1, un);
+
+             PrepareHuman(false, 1, 2);
+             un := CreateHuman;
+             tmp := Replace(tmp, tmp + 1, un);
+             end;
+     end;
+
+for i := 1 to tmp do
+    begin
+    SetDir(tmp[i], 1);
+
+    if GetType(tmp[i]) = unit_human then
+       PlaceUnitXY(tmp[i], 28, 52, false)
+    else
+       begin
+       PlaceUnitXY(tmp[i], 28, 52, false);
+       i := i + 1;
+       PlaceHumanInUnit(tmp[i], tmp[i - 1]);
+       end;
+
+    ComMoveXY(tmp[i], 43, 56);
+    wait(0$2);
+    end;
+
+wait(0$2);
+
+if not FilterUnitsInArea(deltaBaseArea, [f_side, 2]) then
+   begin
+   AddComAgressiveMove(tmp, 35, 24);
+   usForces := usForces union UnitFilter(tmp, [f_class, 1]);
+
+   if UnitsInside(FilterAllUnits([[f_side, 1], [f_btype, b_armoury]])[1]) < 6 then
+      AddComEnterUnit(UnitFilter(tmp, [f_class, 1]), FilterAllUnits([[f_side, 1], [f_btype, b_armoury]])[1]);
+
+   if UnitFilter(tmp, [f_class, 4]) then
+      AddComEnterUnit(UnitFilter(tmp, [f_class, 4]), usLab);
+   end
+else
+   begin
+   tmp := tmp union FilterUnitsInArea(retreatArea, [f_side, 1]);
+
+   ComMoveXY(tmp, 45, 54);
+
+   wait(0$3);
+
+   AddComAgressiveMove(tmp diff UnitFilter(tmp, [f_class, 4]), 35, 24);
+   AddComMoveXY(UnitFilter(tmp, [f_class, 4]), 42, 49);
+
+   repeat
+    wait(0$1);
+
+    for i in tmp do
+        if IsDead(i) then
+           tmp := tmp diff i
+        else if GetClass(i) = 1 then
+           begin
+           if GetLives(i) < 600 and GetDistUnitXY(i, 42, 49) > 6 then
+              ComMoveXY(i, 42, 49)
+           else if GetLives(i) = 1000 then
+              ComAgressiveMove(i, 36, 25);
+           end;
+
+   until not tmp;
+   end;
 End;

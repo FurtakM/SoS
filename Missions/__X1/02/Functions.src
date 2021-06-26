@@ -4,12 +4,12 @@
 //   - false if unit not exist in save
 //   - true if unit already exist in save
 // example: JMM := PrepareUnit('JMM', false);
-Export Function PrepareUnit(ident, exist_mode);
+Export Function PrepareUnit(ident, exist_mode, prefix);
 var unit;
 begin
 
 if exist_mode then
-   unit := CreateCharacter(mission_prefix_prev&ident)
+   unit := CreateCharacter(prefix & ident)
   else
    unit := NewCharacter(ident);
 
@@ -61,7 +61,7 @@ uc_nation := 0;
 for i = 1 to amount do
     begin
     hc_attr := [rand(9, 12), rand(9, 12)];
-    hc_agressivity := rand(-5, 5);
+    hc_agressivity := rand(-1, 1);
     PrepareHuman(false, class_apeman, 1);
     PlaceUnitArea(CreateHuman, area, false);
     end;
@@ -69,43 +69,43 @@ for i = 1 to amount do
 InitHc;
 End;
 
-
-Export Function Attack(unit, enemy_list);
-var target, targets_list;
+Export Function PrepareNature;
+var i;
 begin
-if not unit then
-   exit;
+SpawnApeman(forest, 9);
 
-if IsInUnit(unit) then
-   unit := IsDrivenBy(unit);
-
-targets_list := [];
-
-
-target := UnitFilter(enemy_list, [[f_lives, 250], [f_not, [f_weapon, us_cargo_bay]], [f_type, unit_vehicle], [f_empty]]);
-
-if GetDistUnits(NearestUnitToUnit(target, unit), unit) < 11 and not IsInUnit(unit) then
-   begin
-   ComEnterUnit(unit, NearestUnitToUnit(target, unit));
-   exit;
-   end;
-
-targets_list := [UnitFilter(enemy_list, [[f_type, unit_human], [f_not, [f_inside]]]),
-                 UnitFilter(enemy_list, [f_type, unit_vehicle]),
-                 UnitFilter(enemy_list, [[f_type, unit_building], [f_not, [f_empty]]]),
-                 enemy_list
-                 ];
-
-for target in targets_list do
+for i := 1 to 4 do
     begin
-    if target then
-       if GetTag(unit) = 11 and (GetType(NearestUnitToUnit(target, unit)) = unit_building or GetWeapon(NearestUnitToUnit(target, unit)) = us_cargo_bay) then
-          begin 
-          ComPlaceDelayedCharge(unit, 0, 0, NearestUnitToUnit(target, unit));
-          SetTag(unit, 0);
-          end
-         else
-          if not HasTask(unit) then
-             ComAttackUnit(unit, NearestUnitToUnit(target, unit));
+    hc_class := 21;
+    hc_gallery := '';
+    PlaceUnitArea(CreateHuman, forest, false);
     end;
+
+for i := 1 to 2 do
+    begin
+    hc_class := 18;
+    hc_gallery := '';
+    PlaceUnitArea(CreateHuman, forest, false);
+    end;
+
+for i := 1 to 3 do
+    begin
+    hc_class := 13;
+    hc_gallery := '';
+    PlaceUnitArea(CreateHuman, forest, false);
+    end;
+
+End;
+
+Export Function SeeUnit(observer, unit);
+var i, tmp;
+begin
+if not observer or not unit then
+   exit;
+
+if not See(GetSide(observer), unit) then
+   exit;
+
+
+result := GetDistUnits(observer, unit) < 12;
 End;

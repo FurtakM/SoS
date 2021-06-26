@@ -163,7 +163,7 @@ STREAM_ITEMS_INIT_HARDCORE = {
 };
 STREAM_ITEMS_NORMAL = {};
 STREAM_ITEMS_HARDCORE = {};
-STREAM_ITEMS = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS); -- tmp list of items
+STREAM_ITEMS = {}; -- tmp list of items
 STREAM_ITEMS_ACTIVE = {}; -- list of active items
 STREAM_QUEUE = {}; -- queue of items
 STREAM_TARGET = 0; -- selected item

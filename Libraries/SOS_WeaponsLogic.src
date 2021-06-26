@@ -23,32 +23,14 @@ begin
 End;
 
 Export Function SOS_Command(cmd);
-var i, j, tmp, taskList, _taskList;
 begin
-if cmd = 124 then
-   begin
-   tmp := FilterAllUnits([f_or, [f_weapon, ru_bulldozer], [f_weapon, us_bulldozer]]);
 
-   if not tmp then
-      exit;
+End;
 
-   for i in tmp do
-       begin
-       taskList := GetTaskList(i);
-
-       if not taskList then
-          continue;
-
-       for j = 1 to taskList do
-           if taskList[j][1] = '|' then
-              begin
-              _taskList := Delete(taskList, 1);
-              SetTaskList(i, _taskList);
-              CutTreeXYR(i, taskList[j][2], taskList[j][3], 8);
-              end;
-       end;
-   end;
-
+On TargetableSAIL(cmd, unit, selectedunit, x, y) do
+begin
+if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
+   CutTreeXYR(unit, x, y, 12);
 End;
 
 Function CutTreeXYR(bulldozer, x, y, r);

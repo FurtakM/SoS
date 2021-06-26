@@ -6,3 +6,373 @@
    7: CALL_OW 344
 // end ;
   11: END
+// every 0 0$10 + 0 0$3 do
+  12: GO 14
+  14: DISABLE
+// begin enable ;
+  15: ENABLE
+// display_strings := tick ;
+  16: LD_ADDR_OWVAR 47
+  20: PUSH
+  21: LD_OWVAR 1
+  25: ST_TO_ADDR
+// end ; end_of_file
+  26: END
+// export function SOS_UnitDestroyed ( un ) ; var i , eff , side ; begin
+  27: LD_INT 0
+  29: PPUSH
+  30: PPUSH
+  31: PPUSH
+  32: PPUSH
+// if GetWeapon ( un ) = ar_bio_bomb then
+  33: LD_VAR 0 1
+  37: PPUSH
+  38: CALL_OW 264
+  42: PUSH
+  43: LD_EXP 5
+  47: EQUAL
+  48: IFFALSE 120
+// begin if GetTech ( tech_bio3 , GetSide ( un ) ) = state_researched then
+  50: LD_INT 68
+  52: PPUSH
+  53: LD_VAR 0 1
+  57: PPUSH
+  58: CALL_OW 255
+  62: PPUSH
+  63: CALL_OW 321
+  67: PUSH
+  68: LD_INT 2
+  70: EQUAL
+  71: IFFALSE 83
+// eff := 70 else
+  73: LD_ADDR_VAR 0 4
+  77: PUSH
+  78: LD_INT 70
+  80: ST_TO_ADDR
+  81: GO 91
+// eff := 30 ;
+  83: LD_ADDR_VAR 0 4
+  87: PUSH
+  88: LD_INT 30
+  90: ST_TO_ADDR
+// ArtContamination ( GetX ( un ) , GetY ( un ) , eff ) ;
+  91: LD_VAR 0 1
+  95: PPUSH
+  96: CALL_OW 250
+ 100: PPUSH
+ 101: LD_VAR 0 1
+ 105: PPUSH
+ 106: CALL_OW 251
+ 110: PPUSH
+ 111: LD_VAR 0 4
+ 115: PPUSH
+ 116: CALL_OW 495
+// end ; end ;
+ 120: LD_VAR 0 2
+ 124: RET
+// export function SOS_UnitExtraDestroyed ( un , killerSide , killerUnit ) ; begin
+ 125: LD_INT 0
+ 127: PPUSH
+// end ;
+ 128: LD_VAR 0 4
+ 132: RET
+// export function SOS_Command ( cmd ) ; begin
+ 133: LD_INT 0
+ 135: PPUSH
+// end ;
+ 136: LD_VAR 0 2
+ 140: RET
+// on TargetableSAIL ( cmd , unit , selectedunit , x , y ) do begin if cmd = 255 and GetWeapon ( unit ) in [ us_bulldozer , ru_bulldozer ] and ValidHex ( x , y ) then
+ 141: LD_VAR 0 1
+ 145: PUSH
+ 146: LD_INT 255
+ 148: EQUAL
+ 149: PUSH
+ 150: LD_VAR 0 2
+ 154: PPUSH
+ 155: CALL_OW 264
+ 159: PUSH
+ 160: LD_INT 14
+ 162: PUSH
+ 163: LD_INT 53
+ 165: PUSH
+ 166: EMPTY
+ 167: LIST
+ 168: LIST
+ 169: IN
+ 170: AND
+ 171: PUSH
+ 172: LD_VAR 0 4
+ 176: PPUSH
+ 177: LD_VAR 0 5
+ 181: PPUSH
+ 182: CALL_OW 488
+ 186: AND
+ 187: IFFALSE 211
+// CutTreeXYR ( unit , x , y , 12 ) ;
+ 189: LD_VAR 0 2
+ 193: PPUSH
+ 194: LD_VAR 0 4
+ 198: PPUSH
+ 199: LD_VAR 0 5
+ 203: PPUSH
+ 204: LD_INT 12
+ 206: PPUSH
+ 207: CALL 214 0 4
+// end ;
+ 211: PPOPN 5
+ 213: END
+// function CutTreeXYR ( bulldozer , x , y , r ) ; var i , min_x , min_y , max_x , max_y , _x , _y , list ; begin
+ 214: LD_INT 0
+ 216: PPUSH
+ 217: PPUSH
+ 218: PPUSH
+ 219: PPUSH
+ 220: PPUSH
+ 221: PPUSH
+ 222: PPUSH
+ 223: PPUSH
+ 224: PPUSH
+// if not bulldozer or not ValidHex ( x , y ) or not r then
+ 225: LD_VAR 0 1
+ 229: NOT
+ 230: PUSH
+ 231: LD_VAR 0 2
+ 235: PPUSH
+ 236: LD_VAR 0 3
+ 240: PPUSH
+ 241: CALL_OW 488
+ 245: NOT
+ 246: OR
+ 247: PUSH
+ 248: LD_VAR 0 4
+ 252: NOT
+ 253: OR
+ 254: IFFALSE 258
+// exit ;
+ 256: GO 598
+// list := [ ] ;
+ 258: LD_ADDR_VAR 0 13
+ 262: PUSH
+ 263: EMPTY
+ 264: ST_TO_ADDR
+// if x - r < 0 then
+ 265: LD_VAR 0 2
+ 269: PUSH
+ 270: LD_VAR 0 4
+ 274: MINUS
+ 275: PUSH
+ 276: LD_INT 0
+ 278: LESS
+ 279: IFFALSE 291
+// min_x := 0 else
+ 281: LD_ADDR_VAR 0 7
+ 285: PUSH
+ 286: LD_INT 0
+ 288: ST_TO_ADDR
+ 289: GO 307
+// min_x := x - r ;
+ 291: LD_ADDR_VAR 0 7
+ 295: PUSH
+ 296: LD_VAR 0 2
+ 300: PUSH
+ 301: LD_VAR 0 4
+ 305: MINUS
+ 306: ST_TO_ADDR
+// if y - r < 0 then
+ 307: LD_VAR 0 3
+ 311: PUSH
+ 312: LD_VAR 0 4
+ 316: MINUS
+ 317: PUSH
+ 318: LD_INT 0
+ 320: LESS
+ 321: IFFALSE 333
+// min_y := 0 else
+ 323: LD_ADDR_VAR 0 8
+ 327: PUSH
+ 328: LD_INT 0
+ 330: ST_TO_ADDR
+ 331: GO 349
+// min_y := y - r ;
+ 333: LD_ADDR_VAR 0 8
+ 337: PUSH
+ 338: LD_VAR 0 3
+ 342: PUSH
+ 343: LD_VAR 0 4
+ 347: MINUS
+ 348: ST_TO_ADDR
+// max_x := x + r ;
+ 349: LD_ADDR_VAR 0 9
+ 353: PUSH
+ 354: LD_VAR 0 2
+ 358: PUSH
+ 359: LD_VAR 0 4
+ 363: PLUS
+ 364: ST_TO_ADDR
+// max_y := y + r ;
+ 365: LD_ADDR_VAR 0 10
+ 369: PUSH
+ 370: LD_VAR 0 3
+ 374: PUSH
+ 375: LD_VAR 0 4
+ 379: PLUS
+ 380: ST_TO_ADDR
+// for _x = min_x to max_x do
+ 381: LD_ADDR_VAR 0 11
+ 385: PUSH
+ 386: DOUBLE
+ 387: LD_VAR 0 7
+ 391: DEC
+ 392: ST_TO_ADDR
+ 393: LD_VAR 0 9
+ 397: PUSH
+ 398: FOR_TO
+ 399: IFFALSE 516
+// for _y = min_y to max_y do
+ 401: LD_ADDR_VAR 0 12
+ 405: PUSH
+ 406: DOUBLE
+ 407: LD_VAR 0 8
+ 411: DEC
+ 412: ST_TO_ADDR
+ 413: LD_VAR 0 10
+ 417: PUSH
+ 418: FOR_TO
+ 419: IFFALSE 512
+// begin if not ValidHex ( _x , _y ) then
+ 421: LD_VAR 0 11
+ 425: PPUSH
+ 426: LD_VAR 0 12
+ 430: PPUSH
+ 431: CALL_OW 488
+ 435: NOT
+ 436: IFFALSE 440
+// continue ;
+ 438: GO 418
+// if IsEnvironment ( _x , _y ) and IsEnvironmentDestroyable ( _x , _y ) then
+ 440: LD_VAR 0 11
+ 444: PPUSH
+ 445: LD_VAR 0 12
+ 449: PPUSH
+ 450: CALL_OW 351
+ 454: PUSH
+ 455: LD_VAR 0 11
+ 459: PPUSH
+ 460: LD_VAR 0 12
+ 464: PPUSH
+ 465: CALL_OW 554
+ 469: AND
+ 470: IFFALSE 510
+// list := Insert ( list , list + 1 , [ _x , _y ] ) ;
+ 472: LD_ADDR_VAR 0 13
+ 476: PUSH
+ 477: LD_VAR 0 13
+ 481: PPUSH
+ 482: LD_VAR 0 13
+ 486: PUSH
+ 487: LD_INT 1
+ 489: PLUS
+ 490: PPUSH
+ 491: LD_VAR 0 11
+ 495: PUSH
+ 496: LD_VAR 0 12
+ 500: PUSH
+ 501: EMPTY
+ 502: LIST
+ 503: LIST
+ 504: PPUSH
+ 505: CALL_OW 2
+ 509: ST_TO_ADDR
+// end ;
+ 510: GO 418
+ 512: POP
+ 513: POP
+ 514: GO 398
+ 516: POP
+ 517: POP
+// if not list then
+ 518: LD_VAR 0 13
+ 522: NOT
+ 523: IFFALSE 527
+// exit ;
+ 525: GO 598
+// for i in list do
+ 527: LD_ADDR_VAR 0 6
+ 531: PUSH
+ 532: LD_VAR 0 13
+ 536: PUSH
+ 537: FOR_IN
+ 538: IFFALSE 596
+// AddTaskList ( bulldozer , [ [ M , i [ 1 ] , i [ 2 ] , 0 , 0 , 0 , 0 ] ] ) ;
+ 540: LD_VAR 0 1
+ 544: PPUSH
+ 545: LD_STRING M
+ 547: PUSH
+ 548: LD_VAR 0 6
+ 552: PUSH
+ 553: LD_INT 1
+ 555: ARRAY
+ 556: PUSH
+ 557: LD_VAR 0 6
+ 561: PUSH
+ 562: LD_INT 2
+ 564: ARRAY
+ 565: PUSH
+ 566: LD_INT 0
+ 568: PUSH
+ 569: LD_INT 0
+ 571: PUSH
+ 572: LD_INT 0
+ 574: PUSH
+ 575: LD_INT 0
+ 577: PUSH
+ 578: EMPTY
+ 579: LIST
+ 580: LIST
+ 581: LIST
+ 582: LIST
+ 583: LIST
+ 584: LIST
+ 585: LIST
+ 586: PUSH
+ 587: EMPTY
+ 588: LIST
+ 589: PPUSH
+ 590: CALL_OW 447
+ 594: GO 537
+ 596: POP
+ 597: POP
+// end ; end_of_file
+ 598: LD_VAR 0 5
+ 602: RET
+// export ru_radar , ru_big_cargo_bay , us_hack , us_artillery , ar_bio_bomb ; every 1 do
+ 603: GO 605
+ 605: DISABLE
+// begin ru_radar := 98 ;
+ 606: LD_ADDR_EXP 1
+ 610: PUSH
+ 611: LD_INT 98
+ 613: ST_TO_ADDR
+// ru_big_cargo_bay := 89 ;
+ 614: LD_ADDR_EXP 2
+ 618: PUSH
+ 619: LD_INT 89
+ 621: ST_TO_ADDR
+// us_hack := 99 ;
+ 622: LD_ADDR_EXP 3
+ 626: PUSH
+ 627: LD_INT 99
+ 629: ST_TO_ADDR
+// us_artillery := 97 ;
+ 630: LD_ADDR_EXP 4
+ 634: PUSH
+ 635: LD_INT 97
+ 637: ST_TO_ADDR
+// ar_bio_bomb := 91 ;
+ 638: LD_ADDR_EXP 5
+ 642: PUSH
+ 643: LD_INT 91
+ 645: ST_TO_ADDR
+// end ;
+ 646: END

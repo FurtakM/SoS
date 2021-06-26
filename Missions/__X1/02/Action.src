@@ -1,416 +1,714 @@
 Export Function Action;
-var m;
+var i, tmp;
 begin
 InGameOn;
 
-CenterNowOnXY(28, 51);
+DoNotAttack(2, usLab);
 
-Wait(3);
+ComMoveXY(Heike, 78, 61);
 
-Say(JMM, 'D1d-JMM-1a');
-SayRadio(Harrison, 'D1d-Har-1');
+if Mike then
+   ComMoveXY(Mike, 80, 66);
 
-InGameOff;
+if Givi then
+   ComMoveXY(Givi, 82, 66);
 
-SaveForQuickRestart;
+if Kamil then
+   ComMoveXY(Kamil, 82, 67);
 
-ChangeMissionObjectives('M1');
+CenterNowOnUnits(Heike);
 
-Wait(0$2);
+wait(0$2);
 
-Say(JMM, 'D2-JMM-1');
-Say(Gladstone, 'D2-Glad-1');
-Say(JMM, 'D2-JMM-2');
-Say(Gladstone, 'D2-Glad-2');
-Say(JMM, 'D2-JMM-3');
-
-Wait(rand(0$30, 1$00));
-
-// Weather LNW Mode On
-SetWeather(2, 90, 150);
-
-//m := PlaySoundXYLoop(-100, -1, 'Rain');
-
-Wait(rand(3$00, 5$00));
-
-//StopSound(m);
-
-SetWeather(0, 90, 150);
-// Weather LNW Mode Off
-End;
-
-// Delta builded
-Every 0$01 trigger FilterAllUnits([[[f_side, 1], [f_not, [f_constructed]], [f_btype, b_depot]]]) and not deltaBuilded do
-begin
-deltaBuilded := true;
-End;
-
-// Rename new depot
-Every 0$01 trigger not Delta and deltaBuilded and FilterAllUnits([[[f_side, 1], [f_not, [f_constructed]], [f_btype, b_depot]]]) do
-begin
-enable;
-SetRestrict(b_depot, 1, state_disabled);
-Delta := FilterAllUnits([[[f_side, 1], [f_not, [f_constructed]], [f_btype, b_depot]]])[1];
-SetBName(Delta, 'Delta');
-End;
-
-// Tame allowed
-Every 0$2 trigger GetTech(tech_ApeLang, 1) = state_researched do
-begin
-DialogueOn;
-
-Say(Gladstone, 'D3-Glad-1');
-Say(JMM, 'D3-JMM-1');
-Say(Gladstone, 'D3-Glad-2');
-Say(JMM, 'D3-JMM-2');
-
-DialogueOff;
-End;
-
-// First apeman tamed --> moved to Events
-
-// Apeman Psych researched
-Every 0$1 trigger GetTech(tech_ApePsych, 1) = state_researched do
-var sol;
-begin
-DialogueOn;
-
-if Frank then
-   Say(Frank, 'D8a-Frank-1');
-
-sol := SayX(UnitFilter(others, [f_sex, sex_male]), 'D8a-Sol1-1');
-
-if Denis and GetSide(Denis) = 1 then
-   Say(Denis, 'D8a-Den-1');
-
-if sol or Denis or Frank then
+if Givi and Mike then
    begin
-   SayX(UnitFilter(others, [[f_class, 4], [f_sex, sex_male]]) diff sol, 'D8a-Sci1-1');
-   Say(JMM, 'D8a-JMM-1');
+   AddComTurnUnit([Givi, Mike, Kamil], Heike);
+   AddComTurnUnit(Heike, Givi);
+         
+   Say(Givi, 'DG-1-start'); 
+   Say(Heike, 'DH-1-start');
+
+   AddComTurnUnit(Mike, Heike);
+   AddComTurnUnit(Heike, Mike);
+
+   Say(Mike, 'DM-1-start');
+   Say(Heike, 'DH-2-start'); 
+   Say(Mike, 'DM-2-start');
+   Say(Givi, 'DG-2-start');
+
+   ComTurnUnit(Mike, Givi);
+   ComTurnUnit(Heike, Mike);
+
+   Say(Mike, 'DM-3-start');
+   Say(Heike, 'DH-3-start');
+
+   ComMoveXY([Heike, Mike, Givi, Kamil], 84, 51);
+
+   wait(0$2);
+
+   Say(Givi, 'DG-3-start');
+
+   ComHold([Heike, Mike, Givi, Kamil]);
+   AddComTurnUnit(Heike, Givi);
+   AddComTurnUnit([Givi, Mike, Kamil], Heike);
+
+   Say(Heike, 'DH-4-start');  
+   Say(Givi, 'DG-4-start');
+   Say(Heike, 'DH-5-start');
+   Say(Givi, 'DG-5-start');
+   Say(Heike, 'DH-6-start');
+   Say(Mike, 'DM-6-start');
+
+   ComTurnUnit([Heike, Givi], Mike);
+
+   Say(Givi, 'DG-6-start');
+   Say(Heike, 'DH-7-start');
+   end
+else if not Mike and Givi then
+   begin
+   AddComTurnUnit([Givi, Kamil], Heike);
+   AddComTurnUnit(Heike, Givi);
+
+   Say(Givi, 'DG-1-start-c');
+   Say(Heike, 'DH-1-start-c');
+   Say(Givi, 'DG-2-start-c');
+   Say(Heike, 'DH-2-start-c');
+   Say(Givi, 'DG-3-start-c');
+
+   ComMoveXY(Heike, 83, 56);
+   ComMoveXY(Givi, 83, 59);
+
+   if Kamil then
+      ComMoveXY(Kamil, 80, 58);
+
+   AddComTurnUnit(Heike, Givi);
+   AddComTurnUnit([Givi, Kamil], Heike);
+
+   Say(Heike, 'DH-3-start-c');
+   Say(Givi, 'DG-4-start-c');
+
+   Say(Heike, 'DH-5-start-c');
+   Say(Givi, 'DG-5-start-c');
+   Say(Heike, 'DH-6-start-c');
+   Say(Givi, 'DG-6-start-c');
+
+   if Kamil then
+      begin
+      ComTurnUnit(Kamil, Heike);
+      Say(Kamil, 'DKam-1-start-c');
+
+      ComTurnUnit(Givi, Kamil);
+      Say(Givi, 'DG-7-start-c');
+      end
+   else
+      begin
+      Say(Givi, 'DG-8-start-c');
+      Say(Heike, 'DH-7-start-c');
+      end;
+   end
+else if not Givi and Mike then
+   begin
+   AddComTurnUnit([Mike, Kamil], Heike);
+   AddComTurnUnit(Heike, Mike);
+
+   Say(Mike, 'DM-1-start-b');
+   Say(Heike, 'DH-1-start-b');
+   Say(Mike, 'DM-2-start-b');
+   Say(Heike, 'DH-2-start-b');
+   Say(Mike, 'DM-3-start-b');
+   
+   if Kamil then
+      ComMoveXY(Kamil, 80, 58);
+
+   ComMoveXY(Heike, 83, 56);
+   ComMoveXY(Mike, 83, 59);
+
+   AddComTurnUnit(Heike, Mike);
+   AddComTurnUnit([Kamil, Mike], Heike);
+
+   Say(Heike, 'DH-3-start-b');
+   Say(Mike, 'DM-4-start-b');
+
+   if Kamil then
+      begin
+      ComTurnUnit(Kamil, Heike);
+      Say(Kamil, 'DKam-1-start-c');
+      end
+   else
+      begin
+      Say(Mike, 'DM-5-start-b');
+      end;
+   end
+else if Kamil then
+   begin
+   AddComTurnUnit(Heike, Kamil);
+   AddComTurnUnit(Kamil, Heike);
+
+   Say(Heike, 'DH-1-start-f');
+   Say(Kamil, 'DKam-1-start-f');
+   Say(Heike, 'DH-2-start-f');
+   Say(Kamil, 'DKam-2-start-f');
+   end
+else // Heike alone
+   begin
+   Say(Heike, 'DH-1-start-d');
    end;
 
-DialogueOff;
+ComFree([Heike, Givi, Mike, Kamil]);
+InGameOff;
+
+ChangeMissionObjectives('OEast');
+
+wait(0$20);
+
+SendSciToForest;
+
+if Difficulty = 1 then
+   exit;
+
+wait([5$00, 2$30][Difficulty - 1]);
+
+if usAlert then
+   exit;
+
+tmp := FilterAllUnits([[f_side, 1], [f_class, 2]]);
+
+if not tmp then
+   exit;
+
+ComExitBuilding(tmp);
+AddComBuild(tmp, b_breastwork, 40, 13, 3);
+AddComEnterUnit(tmp, Delta);
 End;
 
-// First apeman eng
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_class, class_apeman_engineer]]) do
+Every 3$00 do
 begin
-ChangeMissionObjectives('M1a');
-
-Case Query('Q2') of
-1: end_mission := true;
-2: end_the_mission_allowed := true;
-end;
-
+SetWeather(1, 570, 350);
+wait(2$40);
+SetWeather(0, 570, 350);
 End;
 
-
-// Denis arrives
-Every 0$2 trigger FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) and FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]) and Delta do
+// see Aviradze
+Every 0$1 trigger not aviradzeSpotted and See(2, Aviradze) do
+var i, pepAmount;
 begin
-Wait(rand(0$20, 0$40));
+aviradzeSpotted := true;
+pepAmount := FilterAllUnits([[f_side, 2], [f_type, unit_human]]);
 
-PlaceUnitArea(Denis, [denisArea1, denisArea2, denisArea3][Difficulty], false);
-ComHold(Denis);
+ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
+
+repeat
+ wait(0$1);
+until GetDistUnits(Heike, Aviradze) < 16;
 
 InGameOn;
-DialogueOn;
 
-if Delta then
-   CenterNowOnUnits(Delta)
-  else
-   CenterNowOnUnits(JMM);
+ChangeSideFog(5, 2);
 
-SayRadio(Denis, 'DD-Den-1');
-Say(JMM, 'DD-JMM-1');
-SayRadio(Denis, 'DD-Den-2');
+if pepAmount > 2 then
+   Say(Heike, 'DH-1-spot')
+else
+   Say(Heike, 'DH-1-spot-d');
 
-Wait(3);
+ComMoveXY(Heike, GetX(Aviradze), GetY(Aviradze));
 
-DialogueOff;
-InGameOff;
+for i in [Kamil, Mike, Givi] do
+    if GetDistUnits(i, Aviradze) > 7 then
+       ComMoveXY(i, 102, 40);
 
 repeat
- wait(0$01);
-until See(1, Denis) or IsDead(Denis);
+ wait(0$1);
+until GetDistUnits(Heike, Aviradze) < 6;
 
-if IsDead(Denis) then
-   exit;
+ComTurnUnit(Heike, Aviradze);
+ComTurnUnit([Aviradze, Sophia, Kaia], Heike);
 
-SetSide(Denis, 1);
-
-Say(Denis, 'DD-Den-2a');
-
-repeat
- wait(0$01);
-until GetBType(IsInUnit(Denis)) in [b_lab, b_lab_half, b_lab_full] or IsDead(Denis);
-
-if IsDead(Denis) then
-   exit;
-
-Say(Denis, 'DD-Den-2b');
-
-ComChangeProfession(Denis, 4);
-
-Wait(0$02);
-
-DialogueOn;
-
-CenterNowOnUnits(Denis);
-
-Say(JMM, 'D4-JMM-1');
-Say(Denis, 'D4-Den-1');
-Say(JMM, 'D4-JMM-2');
-Say(Denis, 'D4-Den-2');
-
-DialogueOff;
-
-ChangeMissionObjectives('M2');
-
-radar_allowed := true;
-
-SetTech(tech_radar, 1, state_enabled);
-SetRestrict(b_lab_opto, 1, state_enabled);
-SetRestrict(b_ext_radar, 1, state_enabled);
-End;
-
-// Arab spotted
-Every 0$1 trigger arab_spotted do
-var sol, sol2;
-begin
-sol := SayX(UnitFilter(others, [f_sex, sex_male]), 'D5-Sol1-1');
-
-if not sol then
-   exit;
-
-repeat
- wait(0$01);
-until FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0;
-
-if IsOk(sol) then
+if pepAmount > 1 then
    begin
-   sol2 := others diff sol;
+   wait(0$2); 
+   ComTurnUnit([Kamil, Mike, Givi], Aviradze);
+   Say(Heike, 'DH-2-spot');
    end
-  else
-   exit; // non-sense dialog
+else
+   Say(Heike, 'DH-2-spot-d');
 
-if not Lisa and not sol2 then
-   exit; // also non-sense dialog
+Say(Aviradze, 'DA-2-spot');
+Say(Heike, 'DH-3-spot');
 
-DialogueOn;
+ComMoveUnit(Kaia, Heike);
+ComTurnUNit(Heike, Kaia);
 
-if Lisa then
-   Say(Lisa, 'D5a-Lisa-1')
-  else
-   if sol2 then
-      case GetSex(sol2[1]) of
-           sex_male: Say(sol2[1], 'D5-Sol2-1');
-           sex_female: Say(sol2[1], 'D5-FSol2-1');
-      end;
+wait(0$0.3);
 
-Say(sol, 'D5-Sol1-2');
+async;
 
-if Lisa then
-   Say(Lisa, 'D5a-Lisa-2')
-  else
-   if sol2 then
-      case GetSex(sol2[1]) of
-           sex_male: Say(sol2[1], 'D5-Sol2-2');
-           sex_female: Say(sol2[1], 'D5-FSol2-2');
-      end;
+Say(Kaia, 'DK-3-spot');
 
-Say(sol, 'D5a-Sol1-3');
+repeat
+  wait(0$1);
+until GetDistUnits(Heike, Kaia) < 4;
 
-if Lisa then
-   Say(Lisa, 'D5a-Lisa-3');
+ComTurnUnit(Kaia, Heike);
 
-if not sol2 then
+sync;
+
+Say(Heike, 'DH-4-spot');
+
+wait(0$0.3);
+
+ComTurnUnit(Heike, Aviradze);
+
+Say(Aviradze, 'DA-4-spot');
+
+ComTurnUnit(Kaia, Aviradze);
+
+Say(Kaia, 'DK-4-spot');
+
+ComTurnUnit(Aviradze, Kaia);
+
+Say(Aviradze, 'DA-5-spot');
+Say(Kaia, 'DK-5-spot');
+
+if pepAmount = 1 then
+   Say(Heike, 'DH-5-spot-f');
+
+if pepAmount < 3 then
+   Say(Aviradze, 'DA-6-spot-f')
+else if pepAmount < 4 then
+   Say(Aviradze, 'DA-6-spot-c')
+else
+   Say(Aviradze, 'DA-6-spot');
+
+if Kamil then
+   Say(Kamil, 'DKam-6-spot');
+
+Say(Kaia, 'DK-6-spot');
+
+ComTurnUnit(Aviradze, Heike);
+
+Say(Aviradze, 'DA-7-spot');
+Say(Heike, 'DH-7-spot');
+
+if sciCounterKill >= 3 then
    begin
-   DialogueOff;
-   exit;
+   Say(Heike, 'DH-7-spot-a');
+   Say(Aviradze, 'DA-8-spot-a');
    end;
 
-case GetSex(sol2[1]) of
-     sex_male: Say(sol2[1], 'D5-Sol2-3');
-     sex_female: Say(sol2[1], 'D5-FSol2-3');
-end;
+InGameOff;
 
-Say(sol, 'D5-Sol1-4');
+if sciCounterKill < 3 then
+   begin
+   SetSide(Kaia, 2);
+   ComFree(Kaia);
 
-case GetSex(sol2[1]) of
-     sex_male: Say(sol2[1], 'D5-Sol2-4');
-     sex_female: Say(sol2[1], 'D5-FSol2-4');
-end;
+   ChangeMissionObjectives('OSci');
+   end
+else
+   begin
+   aviradzeQuestDone := true;
+   attackDeltaAllowed := true;
 
-Say(sol, 'D5-Sol1-5');
+   ChangeMissionObjectives('ODelta2');
 
-case GetSex(sol2[1]) of
-     sex_male: Say(sol2[1], 'D5-Sol2-5');
-     sex_female: Say(sol2[1], 'D5-FSol2-5');
-end;
+   for i in FilterAllUnits([f_side, 5]) do
+       SetSide(i, 2);
+   end;
+End;
+
+// see scientist
+Every 0$1 trigger not sciSpotted and GetDistUnits(NearestUnitToUnit(usSci, Heike), Heike) < 8 and See(2, NearestUnitToUnit(usSci, Heike)) and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 1 and not aviradzeSpotted do
+begin
+sciSpotted := true;
+CenterNowOnUnits(NearestUnitToUnit(usSci, Heike));
+Say(Heike, 'DH-1-sci');
+End;
+
+// see scientist
+Every 0$1 trigger not sciSpotted and GetDistUnits(NearestUnitToUnit(usSci, Heike), Heike) < 8 and See(2, NearestUnitToUnit(usSci, Heike)) and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 1 and aviradzeSpotted and not aviradzeQuestDone do
+begin
+sciSpotted := true;
+
+CenterNowOnUnits(NearestUnitToUnit(usSci, Heike));
+Say(Heike, 'DH-1-sci-a');
+
+if Mike then
+   Say(Mike, 'DM-1-sci-a');
+End;
+
+// quest done
+Every 0$1 trigger aviradzeSpotted and sciCounterKill >= 3 and not aviradzeQuestDone do
+begin
+aviradzeQuestDone := true;
+
+Say(Heike, 'DH-1-quest-done');
+
+if Givi then
+   Say(Givi, 'DG-1-quest-done');
+End;
+
+Every 0$1 trigger See(5, Heike) and GetDistUnits(Heike, Aviradze) < 6 and aviradzeQuestDone and not attackDeltaAllowed do
+var i;
+begin
+attackDeltaAllowed := true;
+
+InGameOn;
+
+CenterNowOnUnits(Heike);
+
+wait(0$0.3);
+
+ComTurnUnit(Aviradze, Heike);
+ComTurnUnit(Heike, Aviradze);
+
+Say(Heike, 'DH-1-return');
+Say(Aviradze, 'DA-1-return');
+
+InGameOff;
+
+ChangeMissionObjectives('ODelta');
+
+for i in FilterAllUnits([f_side, 5]) do
+    SetSide(i, 2);
+End;
+
+Every 0$1 trigger attackDeltaAllowed and IsOk(Markov) and GetSide(Delta) = 1 and IsOk(Lynch) and not usAlert do
+var i, k, tmp;
+begin
+trap := 0;
+
+wait(0$15);
+
+DialogueOn;
+
+Say(Markov, 'DMar-1-radio');
+Say(Heike, 'DH-1-radio');
+Say(Markov, 'DMar-2-radio');
+Say(Heike, 'DH-2-radio');
+
+if IsOk(Kamil) or IsOk(Sophia) then
+   begin
+
+        Case Query('Q1Trap') of
+             1: begin
+                if IsOk(Kamil) then
+                   begin
+                   Say(Kamil, 'DKam-2-radio');
+                   Say(Kamil, 'DKam-3-radio');
+                   SayRadio(Lynch, 'DDelta-3-radio');
+
+                   dwait(0$01);
+
+                   Say(Heike, 'DH-3-radio');
+                   Say(Kamil, 'DKam-4-radio');
+
+                   trap := 1;
+                   end
+                else
+                   begin
+                   Say(Sophia, 'DS-1-radio');
+                   Say(Sophia, 'DS-2-radio');
+                   SayRadio(Lynch, 'DDelta-2-radio-s');
+                   Say(Sophia, 'DS-3-radio');
+                   SayRadio(Lynch, 'DDelta-3-radio-s');
+                   Say(Sophia, 'DS-4-radio-s');
+
+                   dwait(0$01);
+
+                   Say(Heike, 'DH-1-trap');
+
+                   trap := 0;
+                   end;
+
+                DialogueOff;
+                end;
+
+             2: begin
+                DialogueOff;
+                exit;
+                end;
+        End;
+
+   if trap = 1 then
+      begin
+      tmp := [];
+      k := 3;
+
+      if usForces < 3 then
+         k := usForces;
+
+      for i := 1 to k do
+          begin
+          tmp := Replace(tmp, tmp + 1, usForces[1]);
+          usForces := Delete(usForces, 1);
+          end;
+
+      usPatrol := tmp;
+
+      for i in tmp do
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+
+          AddComAgressiveMove(i, 63, 31);
+          AddComWait(i, 0$2);
+          AddComAgressiveMove(i, 103, 43);
+          AddComWait(i, 0$3);
+
+          if Difficulty > 1 then
+             AddComAgressiveMove(i, 114, 69);
+
+          AddComWait(i, 0$3);
+          AddComAgressiveMove(i, 42, 20);
+          end;
+
+      repeat
+       wait(0$1);
+
+       for i in tmp do
+           if IsDead(i) then
+              tmp := tmp diff i;
+
+      until not tmp or UnitFilter(tmp, [[f_inarea, deltaBaseArea], [f_not, [f_hastask]]]) = tmp;
+
+      if tmp then
+         begin
+         usPatrol := [];
+         usForces := usForces union tmp;
+         end
+      else
+         trickyMove := true;
+      end
+   else
+      begin
+      tmp := [];
+      k := 4;
+
+      if usForces < 4 then
+         k := usForces;
+
+      for i := 1 to k do
+          begin
+          tmp := Replace(tmp, tmp + 1, usForces[1]);
+          usForces := Delete(usForces, 1);
+          end;
+
+      if Lynch then
+         tmp := tmp ^ Lynch;
+
+      usPatrol := tmp;
+
+      for i in tmp do
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+
+          AddComAgressiveMove(i, 69, 15);
+          AddComWait(i, 0$20);
+          AddComAgressiveMove(i, 55, 43);
+          AddComWait(i, 0$20);
+          AddComAgressiveMove(i, 42, 20);
+          end;
+
+      repeat
+       wait(0$1);
+
+       for i in tmp do
+           if IsDead(i) then
+              tmp := tmp diff i;
+
+      until not tmp or UnitFilter(tmp, [[f_inarea, deltaBaseArea], [f_not, [f_hastask]]]) = tmp;
+
+      if not tmp then
+         trickyMove := true
+      else
+         usPatrol := [];
+
+      if tmp diff Lynch then
+         usForces := usForces union (tmp diff Lynch);
+
+      if IsOk(Lynch) then
+         ComEnterUnit(Lynch, Delta);
+      end;
+   end;
+End;
+
+// see patrol
+Every 0$1 trigger UnitFilter(usPatrol, [f_see, 2]) do
+begin
+if not trap then
+   begin
+   Say(Heike, 'DH-2-trap');
+   Say(Mike, 'DM-2-trap');
+   end
+else
+   begin
+   Say(Heike, 'DH-1-trap-a');
+   end;
+
+repeat
+ wait(0$1);
+until trickyMove;
+
+Say(Heike, 'DH-3-trap');
+
+if IsOk(Givi) and IsOk(Kaia) then
+   begin
+   Say(Givi, 'DG-3-trap');
+   Say(Kaia, 'DK-3-trap');
+   Say(Givi, 'DG-4-trap');
+   end;
+End;
+
+// Capture Delta
+Every 0$1 trigger GetSide(Delta) = 2 do
+begin
+if not IsOk(Kaia) then
+   exit;
+
+Say(Kaia, 'DK-1-capture');
+Say(Heike, 'DH-1-capture');
+End;
+
+Every 0$1 trigger GetSide(usLab) = 2 do
+begin
+DialogueOn;
+Say(Aviradze, 'DA-1-capture');
+DialogueOff;
+
+ChangeMissionObjectives('OTame');
+End;
+
+// Research
+Every 0$1 trigger GetTech(tech_ApeLang, 2) = state_researched do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-1-ape');
+Say(Heike, 'DH-1-ape');
+Say(Aviradze, 'DA-2-ape');
+Say(Aviradze, 'DA-3-ape');
+Say(Heike, 'DH-3-ape');
 
 DialogueOff;
 End;
 
-Every 0$01 trigger FilterAllUnits([[f_side, 1], [f_class, class_apeman_engineer]]) >= 5 do
+// too many lost
+Every 0$5 trigger lostCounter >= [3, 2, 2][Difficulty] do
 begin
-ChangeMissionObjectives('M1b');
-apeman_army := true;
+DialogueOn;
+Say(Aviradze, 'DA-1-failure');
+Say(Aviradze, 'DA-2-failure');
+
+YouLost('Failure');
+DialogueOff;
 End;
 
-// Radar researched
-Every 0$1 trigger GetTech(tech_radar, 1) = state_researched do
+
+// win
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) do
+var tmp;
 begin
-ChangeMissionObjectives('M2a');
-radar_researched := true;
-End;
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]])[1];
 
-// Radar builded
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_or, [f_weapon, us_radar], [f_bweapon, us_radar]]]) do
-begin
-ChangeMissionObjectives('M2b');
-radar_builded := true;
-End;
+InGameOn;
+CenterNowOnUnits(tmp);
 
-// All apemans were killed
-Every 0$3 trigger FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) = 0 and not first_apeman_tamed do
-YouLost('Apeman');
+ComMoveUnit(tmp, Aviradze);
+ComTurnUnit(Aviradze, tmp);
 
-// Secrect Bonus
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_class, class_apeman_engineer]]) >= 7 do
-var i, filter;
-begin
-filter := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 4]]) ^ JMM;
+wait(0$1);
 
-if filter then
-   for i in filter do
-       AddExperience(i, 4, 3500);
-End;
+Say(Aviradze, 'DA-1-tame-a');
 
-// End Mission
-Every 0$1 trigger end_mission do
-var i, tmp, m1, m2, m3;
-begin
-
-if apeKillCounter = 0 then
-   SetAchievement('ACH_APEKILLER');
-
-if FilterAllUnits([f_side, 2]) then  // delete trash from map
-   for i in FilterAllUnits([f_side, 2]) do
-       RemoveUnit(i);
-
-// medals
-m1 := false;
-m2 := false;
-m3 := false;
-
-if apeman_army then
+if IsOk(Mike) then
    begin
-   AddMedal('Tame', 1);
-   m1 := true;
-   end
+   Say(Mike, 'DM-1-tame-a');
+   Say(Sophia, 'DS-1-tame-a');
+   Say(Mike, 'DM-2-tame-a');
+   end;
+
+wait(0$3);
+
+PrepareFarmer;
+
+CenterOnUnits(Farmer);
+
+ComMoveXY(Farmer, 105, 59);
+AddComHold(Farmer);
+
+SayRadio(Farmer, 'DF-1-end');
+Say(Aviradze, 'DA-1-end');
+SayRadio(Farmer, 'DF-2-end');
+Say(Aviradze, 'DA-2-end');
+SayRadio(Farmer, 'DF-3-end');
+Say(Heike, 'DH-3-end');
+SayRadio(Farmer, 'DF-4-end');
+
+if tick <= [20$00, 15$00, 10$00][Difficulty] then
+   AddMedal('med1', 1)
 else
-   AddMedal('Tame', -1);
+   AddMedal('med1', -1);
 
-if radar_researched then
-   begin
-   SaveVariable(true, 'radarResInDelta');
-   AddMedal('Radar', 1);
-   m2 := true;
-   end
+if FilterAllUnits([[f_side, 1], [f_class, 4]]) = 0 then
+   AddMedal('med2', 1)
 else
-   if radar_allowed then
-      AddMedal('Radar', -2)
-     else
-      AddMedal('Radar', -1);
+   AddMedal('med2', -1);
 
-if radar_builded then
-   begin
-   AddMedal('BuildRadar', 1);
-   m3 := true;
-   end
+if trickyMove then
+   AddMedal('med3', 1)
 else
-   AddMedal('BuildRadar', -1);
-
-if tick <= 7$00 then
-   SetAchievement('ACH_ASPEED_5');
-
-if m1 and m2 and m3 and Difficulty = 3 then
-   SetAchievementEX('ACH_AMER', 5);
+   AddMedal('med3', -1);
 
 GiveMedals('MAIN');
 
-tmp := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]);
+SaveCharacters(tmp, '02_ape');
+
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]);
 
 RewardPeople(tmp);
 
-// save characters for next nefek's missions
-SaveCharacters(JMM, mission_prefix&'JMM');
+SaveCharacters(Heike, '02_Heike');
+SaveCharacters(Aviradze, '02_Aviradze');
 
-if IsOk(Gladstone) then
-   begin
-   SaveCharacters(Gladstone, mission_prefix&'Gladstone');
-   end;
+if Givi then
+   SaveCharacters(Givi, '02_Givi');
 
-if IsOk(Denis) and GetSide(Denis) = 1 then
-   begin
-   SaveCharacters(Denis, mission_prefix&'Denis');
-   SaveVariable(true, 'DenisInDelta');
-   end;
+if Mike then
+   SaveCharacters(Mike, '02_Mike');
 
-if IsOk(Lisa) then
-   begin
-   SaveCharacters(Lisa, mission_prefix&'Lisa');
-   end;
+if Kamil then
+   SaveCharacters(Kamil, '02_Kamil');
 
-if IsOk(Frank) then
-   begin
-   SaveCharacters(Frank, mission_prefix&'Frank');
-   end;
+if Kaia then
+   SaveCharacters(Kaia, '02_Kaia');
 
-if IsOk(Bobby) then
-   begin
-   SaveCharacters(Bobby, mission_prefix&'Bobby');
-   end;
+if Sophia then
+   SaveCharacters(Sophia, '02_Sophia');
 
-if IsOk(Cyrus) then
-   begin
-   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
-   end;
+if Markov then
+   SaveCharacters(Markov, '02_Markov');
 
-if IsOk(Brown) then
-   begin
-   SaveCharacters(Brown, mission_prefix&'Brown');
-   end;
+if tmp diff [Heike, Aviradze, Givi, Mike, Kamil, Sophia, Kaia, Markov] then
+   SaveCharacters(tmp diff [Heike, Aviradze, Givi, Mike, Kamil, Sophia, Kaia, Markov], '02_others');
 
-if IsOk(Donaldson) then
-   begin
-   SaveCharacters(Donaldson, mission_prefix&'Donaldson');
-   end;
+YouWin;
 
-if others then
-   SaveCharacters(others, 'othersInDelta');
-
-if FilterAllUnits([[f_side, 1], [f_class, class_apeman_engineer]]) then
-   SaveCharacters(FilterAllUnits([[f_side, 1], [f_class, class_apeman_engineer]]), 'apeInDelta');
-
-tmp := [];
-
-if FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) then
-   for i in FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) do
-       tmp := tmp ^ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)];
-
-if tmp then
-   SaveVariable(tmp, 'vehiclesInDelta');
-
-tmp := [];
-
-if FilterAllUnits([[f_side, 1], [f_type, unit_building]]) then
-   for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do
-       tmp := tmp ^ [[GetBType(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i), GetLabKind(i, 1), GetLabKind(i, 2), GetBWeapon(i)]];
-
-if tmp then
-   SaveVariable(tmp, 'buildingsInDelta');
-
-YouWin; // your history end's here Tomato
+InGameOff;
 End;
+
+Every 0$1 trigger tick > timeUntilFarmer and aviradzeSpotted do
+begin
+InGameOn;
+PrepareFarmer;
+
+CenterNowOnUnits(Farmer);
+
+wait(0$2);
+
+YouLost('Farmer');
+
+InGameOff;
+End;
+
+

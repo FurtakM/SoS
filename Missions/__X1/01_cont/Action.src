@@ -33,7 +33,7 @@ PrepareJohnny;
 End;
 
 // meet johnny
-Every 0$1 trigger not olafSpotted and not mercenariesSpotted and See(2, Johnny) and NearestUnitToUnit(FilterAllUnits([f_side, 1]), Heike) = Johnny do
+Every 0$1 trigger not olafSpotted and not mercenariesSpotted and See(2, Johnny) and NearestUnitToUnit(FilterAllUnits([f_side, 1]), Heike) = Johnny and GetAttitude(1, 3) = att_neutral do
 begin
 InGameOn;
 
@@ -143,9 +143,12 @@ ComTurnUnit(Johnny, Heike);
 Say(Johnny, 'DJ-thanks-1');
 Say(Heike, 'DH-thanks-1');
 Say(Johnny, 'DJ-thanks-2');
-Say(Heike, 'DH-thanks-2');
 
 ComMoveXY(Johnny, 4, 3);
+
+wait(0$1);
+
+Say(Heike, 'DH-thanks-2');
 
 repeat
  wait(0$1);
@@ -193,8 +196,32 @@ ComAgressiveMove(russianForces, 66, 22);
 
 wait(0$10);
 
-ComMoveToArea(russianForces, russianEastPatrolArea);
-AddComHold(russianForces);
+AddComWait(russianForces, 0$05);
+AddComMoveToArea(russianForces, russianEastPatrolArea);
+AddComFree(russianForces);
+End;
+
+Every 0$1 trigger UnitFilter(russianForces, [f_not, [f_lives, 960]]) do
+var i, tmp, tmp2, tmp3;
+begin
+enable;
+
+tmp := FilterAllUnits([f_side, 2]);
+tmp2 := UnitFilter(russianForces, [f_and, [f_not, [f_lives, 960], [f_lives, 500]]]);
+tmp3 := UnitFilter(russianForces, [f_not, [f_lives, 500]]);
+
+if not tmp then
+   exit;
+
+tmp := NearestUnitToUnit(tmp2[1], tmp);
+
+if GetDistUnits(tmp, tmp2[1]) < 10 then
+   ComAttackUnit(tmp2, tmp);
+
+if tmp3 then
+   for i in tmp do
+       if GetDistUnitXY(i, 119, 21) > 10 then
+          ComMoveXY(i, 119, 21);
 End;
 
 // see animals
@@ -219,7 +246,7 @@ Every 0$1 trigger GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([[f_side,
 Say(Heike, 'DH-enemy-base');
 
 // DogTag event
-Every 0$1 trigger not IsPlaced(Johnny) and not dogTagFound and dogTag and not mercenariesQuestDone do
+Every 0$1 trigger not IsPlaced(Johnny) and not dogTagFound and dogTag and not lastObjectiveActive and not mercenariesQuestDone do
 var i;
 begin
 repeat
@@ -512,16 +539,20 @@ End;
 
 // see dogtag in camp
 Every 0$1 trigger IsInArea(Heike, campArea) and dogTagFound and mercenariesQuestReady do
+var p;
 begin
 InGameOn;
 
 ComTurnUnit([Olaf, Mike, Givi], Heike);
 
-ComMoveUnit(Heike, Givi);
+ComMoveXY(Heike, 54, 86);
+
+p := p + 1;
 
 repeat
  wait(0$1);
-until GetDistUnits(Heike, Givi) < 4;
+ p := p + 1;
+until GetDistUnits(Heike, Givi) < 4 or p > 5;
 
 Say(Mike, 'DM-quest-1');
 Say(Givi, 'DG-quest-1');
@@ -560,6 +591,7 @@ ComTurnUnit([Olaf, Mike, Givi], Heike);
 
 Say(Heike, 'DH-quest-done-1');
 Say(Mike, 'DM-quest-done-1');
+Say(Givi, 'DG-quest-done-1');
 
 ComTurnUnit(Heike, Olaf);
 
@@ -575,6 +607,21 @@ ComTurnUnit(Heike, Givi);
 Say(Givi, 'DG-quest-done-4');
 
 ComTurnUnit(Givi, Heike);
+
+if GetLives(Heike) < 1000 then
+   begin
+   Say(Olaf, 'DO-heal-1');
+
+   ComMoveXY(Heike, 51, 88);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Heike, Olaf) < 4 or IsAt(Heike, 51, 88);
+
+   SetLives(Heike, 1000);
+
+   wait(0$2);
+   end;
 
 Say(Heike, 'DH-quest-done-4');
 Say(Olaf, 'DO-quest-done-4');
@@ -601,9 +648,11 @@ PreparePrison;
 End;
 
 // heike in north base
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, northDep, 10]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, northDep, 4]]) do
 var i, tmp;
 begin
+wait([0$07, 0$06, 0$05][Difficulty]);
+
 tmp := FilterAllUnits([[f_side, 3], [f_class, 1], [f_inside]]);
 
 if not tmp then
@@ -621,9 +670,11 @@ AddComAttackUnit(russianTank, Heike);
 End;
 
 // heike in south base
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, southDep, 10]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_dist, southDep, 4]]) do
 var i, tmp;
 begin
+wait([0$06, 0$05, 0$04][Difficulty]);
+
 tmp := FilterAllUnits([[f_side, 3], [f_class, 1], [f_inside]]);
 
 if not tmp then
@@ -638,6 +689,16 @@ for i in tmp do
 ComAgressiveMove(russianForces, 142, 71);
 ComAgressiveMove(russianTank, 142, 71);
 AddComAttackUnit(russianTank, Heike);
+End;
+
+// olaf repair veh
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_empty], [f_not, [f_lives, 1000]], [f_dist, Olaf, 8]]) and IsOk(Olaf) do
+begin
+enable;
+
+ComRepairVehicle(Olaf, FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_empty], [f_not, [f_lives, 1000]], [f_dist, Olaf, 8]])[1]);
+AddComMoveXY(Olaf, 52, 90);
+AddComHold(Olaf);
 End;
 
 // north depot destroyed
@@ -710,6 +771,17 @@ else
 GiveMedals('MAIN');
 
 RewardPeople(tmp);
+
+SaveCharacters(Heike, '01_Heike');
+
+if IsOk(Givi) and Givi in tmp then
+   SaveCharacters(Givi, '01_Givi');
+
+if IsOk(Mike) and Mike in tmp then
+   SaveCharacters(Mike, '01_Mike');
+
+if IsOk(Kamil) and Kamil in tmp then
+   SaveCharacters(Kamil, '01_Kamil');
 
 YouWin;
 End;

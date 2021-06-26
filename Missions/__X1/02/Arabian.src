@@ -1,178 +1,74 @@
-Export Function PrepareArabianTroops(amount, skill, area);
-var i, un, tmp;
+Export Heike, Givi, Mike, Kamil, Aviradze, Kaia, Sophia, Markov, Farmer;
+Export Function PrepareArabian;
+var un, veh;
 begin
-InitHc;
-InitUc;
-
 uc_side := 2;
 uc_nation := 2;
 
-if not amount then
-   exit;
+Heike := PrepareUnit('Heike', (not debug), prefix);
+PlaceUnitXY(Heike, 83, 72, false);
 
-for i = 1 to amount do
-    begin
-    PrepareHuman(false, 1, skill);
-    un := CreateHuman;
-    tmp := Insert(tmp, 1, un);
-    PlaceUnitArea(un, area, false);
+Givi := PrepareUnit('Givi', (not debug), prefix);
 
-    if i mod 2 = 0 then
-       SetTag(un, 11);
-    end;
+if Givi then
+   PlaceUnitXY(Givi, 87, 76, false);
 
-result := tmp;
-End;
+Mike := PrepareUnit('Mike', (not debug), prefix);
 
-Export ar_forces, ap_killers;
-// allow arabs attack
-Every 0$1 trigger Delta do
-var i, timer, more_troops, skill, eng, un, veh, force;
-begin
-more_troops := false;
-skill := [3, 4, 5][Difficulty];
-timer := [5$00, 4$00, 3$00][Difficulty];
-force := [];
-ar_forces := []; // global array force lol
-ap_killers := []; // gelwe & owchyba
+if Mike then
+   PlaceUnitXY(Mike, 84, 76, false);
 
-Wait(timer);
+Kamil := PrepareUnit('Kamil', (not debug), prefix);
 
-if Denis and GetSide(Denis) = 4 then
-   Wait(0$45);
+if Kamil then
+   PlaceUnitXY(Kamil, 85, 78, false);
 
-// add more time
-if FilterAllUnits([[f_side, 1], [f_btype, b_armoury]]) then
+uc_side := 5;
+uc_nation := 2;
+
+Aviradze := PrepareUnit('Aviradze', false, '');
+PlaceUnitXY(Aviradze, 106, 38, false);
+ComTurnXY(Aviradze, 103, 38);
+
+Kaia := PrepareUnit('Kaia', false, '');
+PlaceUnitXY(Kaia, 100, 34, false);
+ComTurnXY(Kaia, 100, 39);
+
+Sophia := PrepareUnit('Sophia', false, '');
+PlaceUnitXY(Sophia, 109, 50, false);
+ComTurnXY(Sophia, 100, 39);
+
+Markov := PrepareUnit('Markov', false, '');
+PrepareTank(5, 3, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, [90, 70, 60][Difficulty]);
+veh := CreateVehicle;
+SetDir(veh, 4);
+PlaceUnitXY(veh, 109, 38, false);
+PlaceHumanInUnit(Markov, veh);
+
+ComTurnUnit(Kaia, Aviradze);
+ComTurnUnit(Aviradze, Kaia);
+
+if not Givi or not Mike then
    begin
-   Wait(1$25); // we need more troops
-   more_troops := true;
-   end;
-
-if more_troops then
-   begin
-   force := PrepareArabianTroops([4, 5, 6][Difficulty], skill, arArea2);
-
-   // add russian tank
-   veh := PrepareTank(2, 3, ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_heavy_machine_gun, ru_gatling_gun][Difficulty], 90);
-   SetDir(veh, 4);
-   PlaceUnitArea(veh, arArea1, false);
-
-   uc_side := 2;
-   uc_nation := 2;
-
-   PrepareHuman(false, 1, skill);
+   PrepareHuman(sex_male, 1, 1);
    un := CreateHuman;
-   PlaceHumanInUnit(un, veh);
-
-   force := force ^ un;
-   end
-  else
-   begin
-   force := PrepareArabianTroops([3, 4, 5][Difficulty], skill, arArea2);
+   PlaceUnitXYR(un, 112, 40, 3, false);
+   ComTurnUnit(un, Aviradze);
    end;
-
-if force then
-   ar_forces := force;
-
-repeat
- wait(0$01);
-until FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0;
-
-Wait(timer);
-
-// more nazi terrorist from Sosnowiec
-force := PrepareArabianTroops([4, 5, 6][Difficulty], skill, [arArea1, arArea2][rand(1,2)]);
-
-// tricky eng
-if Difficulty > 1 and Delta then
-   begin
-   uc_side := 2;
-   uc_nation := 2;
-
-   PrepareHuman(false, 2, skill);
-   eng := CreateHuman;
-   PlaceUnitArea(eng, arArea1, false);
-
-   Wait(3);
-
-   AddComEnterUnit(eng, Delta);
-   end;
-
-if force then
-   ar_forces := force;
-
-repeat
- wait(0$01);
-
- if eng then
-    if GetSide(Delta) = 2 and IsOk(eng) and not IsInUnit(eng) then
-       ComEnterUnit(eng, Delta);
-
-until FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0;
-
-Wait(2$00);
-
-ap_killers := PrepareArabianTroops([1, 2, 2][Difficulty], skill, arArea1);
-
-Wait(timer*2);
-
-// last attack
-ar_forces := PrepareArabianTroops([5, 6, 7][Difficulty], skill, arArea1) ^ PrepareArabianTroops([3, 4, 4][Difficulty], skill, arArea2);
 End;
 
-
-Every 0$03 trigger ar_forces do
-var i, target;
+Export Function PrepareFarmer;
+var i;
 begin
-enable;
+uc_side := 5;
+uc_nation := 2;
 
-if not ar_forces then
-   exit;
+Farmer := PrepareUnit('Farmer', false, '');
+PlaceUnitXY(Farmer, 106, 62, false);
 
-if Delta then
-   target := Delta
-  else
-   target := JMM;
-
-for i in ar_forces do
+for i := 1 to 2 do
     begin
-    if i in FilterAllUnits([f_driving]) then
-       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), IsInUnit(i)))
-    else
-    if GetDistUnits(i, target) > 30 then
-       ComAgressiveMove(i, GetX(target), GetY(target))
-      else
-       Attack(i, FilterAllUnits([f_enemy, 2]));
+    PrepareHuman(sex_male, 1, 1);
+    PlaceUnitXYR(CreateHuman, 105, 64, 2, false);
     end;
-End;
-
-// apeman killers
-Every 0$01 trigger ap_killers do
-var filter, i, target;
-begin
-enable;
-
-filter := FilterAllUnits([[f_side, 0], [f_class, class_apeman]]);
-
-if not filter then
-   begin
-   ar_forces := ar_forces ^ ap_killers;
-   ap_killers := [];
-   exit;
-   end;
-
-for i in ap_killers do
-    begin
-
-    if not IsOk(i) then
-       continue;
-
-    if not HasTask(i) then
-       target := NearestUnitToUnit(filter, i);
-
-    if target then
-       ComAttackUnit(i, target);
-
-    end;
-
 End;

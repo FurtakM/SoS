@@ -1131,6 +1131,9 @@ Say(JMM, 'D13-JMM-4');
 
 DialogueOff;
 
+ChangeMissionObjectives('MlegionOut');
+legionDestroyed := true;
+
 MC_Kill(3); // !!!
 
 KillUnit(Kozlov);
@@ -1181,6 +1184,12 @@ wait(0$1);
 ComMoveXY(Friend, 60, 95);
 End;
 
+Every 0$1 trigger not legionDestroyed and FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 do
+begin
+legionDestroyed := true;
+ChangeMissionObjectives('MlegionOut');
+End;
+
 Every 0$1 trigger legionEscapeUnits do
 var i;
 begin
@@ -1193,12 +1202,6 @@ for i in legionEscapeUnits do
     else if not HasTask(i) then
        ComMoveToArea(i, legionEscapeArea);
     end;
-End;
-
-Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 do
-begin
-ChangeMissionObjectives('MlegionOut');
-legionDestroyed := true;
 End;
 
 // Friend spotted
