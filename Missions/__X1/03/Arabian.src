@@ -171,3 +171,39 @@ wait(1$00);
 
 farmerBaseReady := true;
 End;
+
+Every 0$1 trigger farmerBaseReady do
+var i, eng;
+begin
+enable;
+
+eng := UnitFilter(farmerSquad, [f_class, 2]);
+
+if not eng then
+   begin
+   uc_side := 5;
+   uc_nation := 2;
+
+   PrepareHuman(false, 2, 2);
+   eng := CreateHuman;
+   PlaceUnitXY(eng, 102, 8, false);
+
+   ComMoveXY(eng, 110, 60);
+
+   farmerSquad := farmerSquad union eng;
+   end
+else
+   begin 
+   for i in eng do
+       begin
+       if GetResourceArea(collectFarmerArea, mat_cans) then
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+          end
+       else
+          if not IsInUnit(i) and not HasTask(i) then
+             ComEnterUnit(i, arDepot);
+       end;
+   end;
+End;

@@ -277,6 +277,8 @@ Video(true);
 if not GetSide(usDepot) = 2 then
    SetSide(usDepot, 2);
 
+CenterOnXY(35, 22);
+
 ComMoveXY(Heike, 35, 22);
 AddComTurnXY(Heike, 38, 25);
 ComMoveXY(heikeSquad union heikeSecondSquad, 39, 26);
@@ -366,15 +368,136 @@ DialogueOff;
 End;
 
 // first ape sold
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+Every 0$1 trigger IsOk(Kaia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+var ape;
 begin
+ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]);
 
+Video(true);
+
+CenterNowOnUnits(ape[1]);
+
+ComExitBuilding(ape[1]);
+AddComMoveXY(ape[1], 35, 28);
+AddComMoveXY(ape[1], 36, 17);
+
+Say(Kaia, 'DK-1-apesol');
+Say(Aviradze, 'DA-1-apesol');
+Say(Kaia, 'DK-2-apesol');
+Say(Aviradze, 'DA-2-apesol');
+Say(Kaia, 'DK-3-apesol');
+
+Video(false);
 End;
 
 // first ape eng
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+Every 0$1 trigger IsOk(Sophia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+var ape;
 begin
+ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]);
 
+Video(true);
+
+CreateCratesXY(5, 35, 22, true);
+
+ComTurnUnit(Sophia, ape[1]);
+CenterNowOnUnits(ape[1]);
+ComExitBuilding(ape[1]);
+
+wait(0$2);
+
+Say(Sophia, 'DS-1-apeeng');
+
+if IsOk(Kamil) then
+   begin
+   Say(Kamil, 'DKam-1-apeeng');
+   Say(Sophia, 'DS-2-apeeng');
+   Say(Kamil, 'DKam-2-apeeng');
+   Say(Sophia, 'DS-3-apeeng');
+
+   if not IsOK(Kaia) then
+      begin
+      Video(false);
+      exit;
+      end;
+
+   Say(Kaia, 'DK-1-apeeng');
+
+   if not IsOk(Givi) then
+      begin
+      Video(false);
+      exit;
+      end;
+
+   Say(Givi, 'DG-1-apeeng');
+   Say(Kaia, 'DK-2-apeeng');
+   end;
+
+Video(false);
+End;
+
+// farmer is ready
+Every 0$1 trigger farmerBaseReady do
+begin
+DialogueOn;
+
+CenterNowOnUnits(Farmer);
+
+SayRadio(Farmer, 'DF-1-distribution');
+Say(Heike, 'DH-2-distribution');
+
+if IsOk(Kaia) then
+   begin
+   Say(Kaia, 'DK-1-distribution');
+   Say(Heike, 'DH-1-distribution');
+
+   if IsOk(Givi) then
+      begin
+      Say(Givi, 'DG-1-distribution');
+      Say(Heike, 'DH-3-distribution');
+      end;
+   end;
+
+DialogueOff;
+ChangeMissionObjectives('Crates1');
+
+farmerRequestedCrates := 300;
+
+Query('FarmerCrates');
+SetAreaMapShow(collectFarmerArea, 1);
+
+CenterNowOnXY(108, 61);
+End;
+
+// base constructed
+Every 0$1 trigger americanBaseCaptured and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_lab]]) and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_armoury]]) do
+var eng;
+begin
+wait(0$10);
+
+eng := UnitFilter(heikeSecondSquad, [[f_sex, sex_male], [f_class, 2]]);
+
+Say(Heike, 'DH-1-task');
+
+if IsOk(Sophia) then
+   begin
+   Say(Sophia, 'DS-1-task');
+   Say(Heike, 'DH-2-task');
+   end
+else if eng then
+   begin
+   Say(eng[1], 'DArm-1-task');
+   Say(Heike, 'DH-2-task');
+   end;
+
+ChangeMissionObjectives('BaseConstructed');
+allowConvoys := true;
+End;
+
+// farmer wants more crates..
+Every 0$1 trigger farmerBaseReady and farmerCrates >= 300 do
+begin
+farmerRequestedCrates := 600;
 End;
 
 // remove base squad
