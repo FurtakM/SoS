@@ -1,5 +1,6 @@
 Export Heike, Givi, Mike, Kamil, Aviradze, Kaia, Sophia, Markov, Farmer, Omar;
 Export farmerSquad, omarSquad, heikeSquad, heikeSecondSquad;
+Export omarCargo;
 Export Function PrepareArabian;
 var i, un, tmp;
 begin
@@ -14,6 +15,7 @@ Omar := PrepareUnit('Omar', false, '');
 omarSquad := [];
 heikeSquad := [];
 heikeSecondSquad := [];
+omarCargo := [];
 
 for i := 1 to 5 do
     begin
@@ -172,12 +174,13 @@ wait(1$00);
 farmerBaseReady := true;
 End;
 
-Every 0$1 trigger farmerBaseReady do
-var i, eng;
+Every 0$1 trigger farmerBaseReady and not retreatAllowed do
+var i, eng, damagedBuilding;
 begin
 enable;
 
 eng := UnitFilter(farmerSquad, [f_class, 2]);
+damagedBuilding := FilterAllUnits([[f_side, 5], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
 
 if not eng then
    begin
@@ -202,8 +205,72 @@ else
              ComExitBuilding(i);
           end
        else
-          if not IsInUnit(i) and not HasTask(i) then
+          begin
+          if damagedBuilding then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i)
+             else
+                ComRepairBuilding(i, damagedBuilding[1]);
+             end
+          else if not IsInUnit(i) and not HasTask(i) then
              ComEnterUnit(i, arDepot);
+          end;
        end;
    end;
+End;
+
+Export Function StartCargoEvacuation;
+begin
+while GetResourceType(GetBase(arDepot), mat_cans) > 0 and omarCargoCounter > 0 do
+   begin
+   wait(1$20);
+
+   omarCargo := PrepareCargo;
+
+   ComMoveXY(omarCargo, 107, 59);
+
+   repeat
+    wait(0$1);
+    ComMoveXY(omarCargo, 107, 59);
+
+    if not IsOk(omarCargo) or IsDead(omarCargo) then
+       continue;
+
+   until IsAt(omarCargo, 107, 59) or GetDistUnits(omarCargo, arDepot) < 6;
+
+   wait(0$05);
+
+   SetCargo(omarCargo, mat_cans, 100);
+   SetResourceType(GetBase(arDepot), mat_cans, GetResourceType(GetBase(arDepot), mat_cans) - 100);
+
+   AddComMoveXY(omarCargo, 103, 9);
+
+   repeat
+    wait(0$1);
+    ComMoveXY(omarCargo, 103, 9);
+
+    if not IsOk(omarCargo) or IsDead(omarCargo) then
+       continue;
+
+   until IsInArea(omarCargo, northRoad) and GetCargo(omarCargo, mat_cans) > 0;
+
+   RemoveUnit(omarCargo);
+   omarCargoCounter := omarCargoCounter - 1;
+   end;
+End;
+
+Export Function PrepareCargo;
+var un, veh;
+begin
+PrepareTank(5, 2, ar_medium_trike, engine_combustion, control_manual, ar_cargo_bay, 80);
+veh := CreateVehicle;
+SetDir(veh, 4);
+PlaceUnitXY(veh, 101, 8, false);
+
+PrepareHuman(false, 3, 2);
+un := CreateHuman;
+PlaceHumanInUnit(un, veh);
+
+result := veh;
 End;
