@@ -277,6 +277,8 @@ Video(true);
 if not GetSide(usDepot) = 2 then
    SetSide(usDepot, 2);
 
+CenterOnXY(35, 22);
+
 ComMoveXY(Heike, 35, 22);
 AddComTurnXY(Heike, 38, 25);
 ComMoveXY(heikeSquad union heikeSecondSquad, 39, 26);
@@ -366,15 +368,331 @@ DialogueOff;
 End;
 
 // first ape sold
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+Every 0$1 trigger IsOk(Kaia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+var ape;
 begin
+ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]);
 
+Video(true);
+
+CenterNowOnUnits(ape[1]);
+
+ComExitBuilding(ape[1]);
+AddComMoveXY(ape[1], 35, 28);
+AddComMoveXY(ape[1], 36, 17);
+
+Say(Kaia, 'DK-1-apesol');
+Say(Aviradze, 'DA-1-apesol');
+Say(Kaia, 'DK-2-apesol');
+Say(Aviradze, 'DA-2-apesol');
+Say(Kaia, 'DK-3-apesol');
+
+Video(false);
 End;
 
 // first ape eng
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+Every 0$1 trigger IsOk(Sophia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+var ape;
 begin
+ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]);
 
+Video(true);
+
+CreateCratesXY(5, 35, 22, true);
+
+ComTurnUnit(Sophia, ape[1]);
+CenterNowOnUnits(ape[1]);
+ComExitBuilding(ape[1]);
+
+wait(0$2);
+
+Say(Sophia, 'DS-1-apeeng');
+
+if IsOk(Kamil) then
+   begin
+   Say(Kamil, 'DKam-1-apeeng');
+   Say(Sophia, 'DS-2-apeeng');
+   Say(Kamil, 'DKam-2-apeeng');
+   Say(Sophia, 'DS-3-apeeng');
+
+   if not IsOK(Kaia) then
+      begin
+      Video(false);
+      exit;
+      end;
+
+   Say(Kaia, 'DK-1-apeeng');
+
+   if not IsOk(Givi) then
+      begin
+      Video(false);
+      exit;
+      end;
+
+   Say(Givi, 'DG-1-apeeng');
+   Say(Kaia, 'DK-2-apeeng');
+   end;
+
+Video(false);
+End;
+
+// farmer is ready
+Every 0$1 trigger farmerBaseReady do
+begin
+DialogueOn;
+
+CenterNowOnUnits(Farmer);
+
+SayRadio(Farmer, 'DF-1-distribution');
+Say(Heike, 'DH-2-distribution');
+
+if IsOk(Kaia) then
+   begin
+   Say(Kaia, 'DK-1-distribution');
+   Say(Heike, 'DH-1-distribution');
+
+   if IsOk(Givi) then
+      begin
+      Say(Givi, 'DG-1-distribution');
+      Say(Heike, 'DH-3-distribution');
+      end;
+   end;
+
+DialogueOff;
+ChangeMissionObjectives('Crates1');
+
+farmerRequestedCrates := 300;
+
+Query('FarmerCrates');
+SetAreaMapShow(collectFarmerArea, 1);
+
+CenterNowOnXY(108, 61);
+End;
+
+// base constructed
+Every 0$1 trigger americanBaseCaptured and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_lab]]) and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_armoury]]) do
+var eng;
+begin
+wait(0$10);
+
+eng := UnitFilter(heikeSecondSquad, [[f_sex, sex_male], [f_class, 2]]);
+
+Say(Heike, 'DH-1-task');
+
+if IsOk(Sophia) then
+   begin
+   Say(Sophia, 'DS-1-task');
+   Say(Heike, 'DH-2-task');
+   end
+else if eng then
+   begin
+   Say(eng[1], 'DArm-1-task');
+   Say(Heike, 'DH-2-task');
+   end;
+
+ChangeMissionObjectives('BaseConstructed');
+allowConvoys := true;
+End;
+
+// farmer wants more crates.. #2
+Every 0$1 trigger farmerBaseReady and farmerCrates >= 300 do
+begin
+DialogueOn;
+
+SayRadio(Farmer, 'DF-1-delivery-2');
+Say(Heike, 'DH-1-delivery-2');
+SayRadio(Farmer, 'DF-2-delivery-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('Crates2');
+
+farmerCratesCounter := 4$00;
+farmerRequestedCrates := 600;
+End;
+
+// farmer wants more crates.. #3
+Every 0$1 trigger farmerBaseReady and farmerCrates >= 600 and Difficulty > 1 do
+begin
+DialogueOn;
+
+SayRadio(Farmer, 'DF-1-delivery-3');
+Say(Heike, 'DH-1-delivery-3');
+SayRadio(Farmer, 'DF-2-delivery-3');
+
+if IsOk(Kaia) then
+   begin
+   Say(Kaia, 'DK-1-delivery-3');
+   Say(Heike, 'DH-2-delivery-3');
+   Say(Givi, 'DG-1-delivery-3');
+   Say(Mike, 'DM-1-delivery-3');
+   end;
+
+DialogueOff;
+
+if Difficulty = 2 then
+   begin
+   ChangeMissionObjectives('Crates3');
+   farmerCratesCounter := 5$00;
+   farmerRequestedCrates := 900;
+   end
+else
+   begin
+   ChangeMissionObjectives('Crates4');
+   farmerCratesCounter := 6$00;
+   farmerRequestedCrates := 1200;
+   end;
+End;
+
+// crates collected
+Every 0$2 trigger farmerBaseReady and farmerCrates >= [600, 900, 1200][Difficulty] and farmerRequestedCrates <= farmerCratesCounter do
+begin
+retreatAllowed := true;
+display_strings := [];
+
+DialogueOn;
+Video(true);
+
+SayRadio(Omar, 'DO-radio-end');
+Say(Heike, 'DH-1-radio-end');
+
+Video(false);
+DialogueOff;
+
+ChangeMissionObjectives('Retreat');
+End;
+
+Every 0$1 trigger retreatAllowed do
+StartCargoEvacuation;
+
+// farmer depot destroyed
+Every 0$1 trigger not retreatAllowed and IsDead(arDepot) do
+begin
+SayRadio(Farmer, 'DF-1-failure');
+YouLost('FarmerDepot');
+End;
+
+// talk with Farmer
+Every 0$1 trigger retreatAllowed and GetDistUnits(Heike, Farmer) < 6 do
+var i, max, tmp;
+begin
+Video(true);
+
+ComTurnUnit(Heike, Farmer);
+ComTurnUnit(Farmer, Heike);
+
+CenterNowOnUnits(Farmer);
+
+Say(Heike, 'DH-1-end');
+Say(Farmer, 'DF-1-end');
+Say(Farmer, 'DF-2-end');
+Say(Heike, 'DH-2-end');
+Say(Farmer, 'DF-3-end');
+Say(Heike, 'DH-3-end');
+Say(Givi, 'DG-1-end');
+Say(Heike, 'DH-4-end');
+Say(Farmer, 'DF-4-end');
+Say(Heike, 'DH-5-end');
+Say(Farmer, 'DF-5-end');
+
+Video(false);
+
+max := [4, 3, 2][Difficulty];
+
+if farmerSquad < max then
+   max := farmerSquad;
+
+for i := 1 to max do
+    begin
+    SetSide(farmerSquad[1], 2);
+    farmerSquad := Delete(farmerSquad, 1);
+    end;
+
+for i in Farmer ^ farmerSquad do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+    AddComMoveXY(i, 102, 7);
+    end;
+
+for i in FilterAllUnits([[f_side, 5], [f_type, unit_building]]) diff arDepot do
+    SetSide(i, 2);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(Farmer ^ farmerSquad, [f_inarea, northRoad]);
+
+ if tmp then
+    for i in tmp do
+        begin
+        if i in farmerSquad then
+           farmerSquad := farmerSquad diff i;
+
+        RemoveUnit(i);
+        end;
+until not Farmer and not farmerSquad;
+End;
+
+// farmer angry
+Every 0$2 trigger farmerCratesCounter <= 0$00 do
+begin
+DialogueOn;
+SayRadio(Farmer, 'DF-1-distribution-a');
+Say(Heike, 'DH-1-distribution-a');
+SayRadio(Farmer, 'DF-2-distribution-a');
+DialogueOff;
+End;
+
+// first cargo captured
+Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_weapon, us_cargo_bay]]) do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-1-truck');
+
+if IsOk(Markov) then
+   begin
+   Say(Markov, 'DMar-1-truck');
+   Say(Heike, 'DH-2-truck');
+   end;
+
+DialogueOff;
+End;
+
+Export Function EmptyCargoDialog;
+var randomMen, randomWomen;
+begin
+randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
+randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
+
+if randomMen then
+   Say(randomMen[1], 'DArm-1-nocargo')
+else if randomWomen then
+   Say(randomWomen[1], 'DArf-1-nocargo');
+End;
+
+Export Function IncomingAttack;
+begin
+if attackWave = 1 then
+   begin
+   DialogueOn;
+
+   SayRadio(Omar, 'DO-1-radio-1');
+   Say(Heike, 'DH-1-radio-1-');
+
+   if IsOk(Markov) then
+      begin
+      Say(Markov, 'DMar-1-radio-1');
+      Say(Heike, 'DH-2-radio-1');
+      end;
+
+   DialogueOff;
+   end
+else
+   begin
+   SayRadio(Omar, 'DO-1-radio-u');
+   Say(Heike, 'DH-1-radio-u');
+   end;
 End;
 
 // remove base squad
@@ -397,6 +715,36 @@ if not americanHasEscaped then
 End;
 
 // Farmer depot captured
-Every 0$1 trigger GetSide(arDepot) = 2 and FarmerOnMap do
+Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
+
+// end mission
+Every 0$1 trigger retreatAllowed and omarCargoCounter < 1 do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-1-final');
+
+if tick <= [60$00, 50$00, 45$00][Difficulty] then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if vehCounter >= 2 then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if deadCounter = 0 then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+YouWin;
+
+DialogueOff;
+End;
 

@@ -936,7 +936,7 @@ clt_critter=7;
 clt_tiger=8;
 
 SPECIAL_CLASSES     = {[class_sniper]={NAT=nation_am,TECH=tech_LasSight},[class_mortarer]={NAT=nation_ar,TECH=tech_Mortar},[class_bazooker]={NAT=nation_ru,TECH=tech_Bazooka},};
-SPECIAL_APE_CLASSES = {[class_apeman_soldier]={NAT={nation_am},TECH=tech_ApeAgres},[class_apeman_kamikaze]={NAT={nation_am,nation_ru},TECH=tech_ApeBrain},};
+SPECIAL_APE_CLASSES = {[class_apeman_soldier]={NAT={nation_am},TECH=tech_ApeAgres},[class_apeman_engineer]={NAT={},TECH=tech_ApePsych},[class_apeman_kamikaze]={NAT={nation_am,nation_ru},TECH=tech_ApeBrain},};
 
 -- [Vehicle Driver Types] --
 

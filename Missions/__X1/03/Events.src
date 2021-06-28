@@ -6,10 +6,18 @@ if un = Aviradze then
    YouLost('Aviradze');
 if un = usDepot and not retreatAllowed then
    YouLost('Depot');
+if un = Farmer then
+   YouLost('Farmer');
 if un in usForces then
    usForces := usForces diff un;
 if un in FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]) then
    deadCounter := deadCounter + 1;
+End;
+
+On VehicleCaptured(newId, oldId, oldSide, captureUnit) do
+begin
+if GetWeapon(oldId) = us_cargo_bay and GetCargo(oldId, mat_cans) = 0 then
+   EmptyCargoDialog;
 End;
 
 On Contact(s1, s2) do
@@ -33,4 +41,10 @@ if GetSide(b) = 1 then
 
    americanBuildList := Delete(americanBuildList, 1);
    end;
+End;
+
+On VehicleConstructed(veh, fac) do
+begin
+if GetSide(veh) = 2 then
+   vehCounter := vehCounter + 1;
 End;
