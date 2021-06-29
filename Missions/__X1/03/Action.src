@@ -192,6 +192,8 @@ randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
 
 DialogueOn;
 
+PlaceSeeing(36, 22, 2, 8);
+
 dwait(0$1);
 
 speakerOk := false;
@@ -213,6 +215,8 @@ if Mike then
    Say(Heike, 'DH-1-spot')
 else
    Say(Heike, 'DH-1-spot-a');
+
+RemoveSeeing(36, 22, 2);
 
 DialogueOff;
 
@@ -312,16 +316,21 @@ End;
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_workshop], [f_not, [f_constructed]]]) do
 begin
 workshopBuilded := true;
+
+if IsOk(Markov) then
+   begin
+   Say(Heike, 'DH-1-shop');
+
+   if not (GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched) then
+      Say(Markov, 'DMar-1-shop-a');
+   end;
+
 ChangeMissionObjectives('ConstructVeh');
-
-if not IsOk(Markov) then
-   exit;
-
-Say(Heike, 'DH-1-shop');
-
-if not (GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched) then
-   Say(Markov, 'DMar-1-shop-a');
 End;
+
+// all techs
+Every 0$1 trigger GetTechNation(2, 2, state_enabled) = 0 do
+ChangeMissionObjectives('Techs');
 
 // engines
 Every 0$1 trigger IsOk(Markov) and workshopBuilded and GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched do
@@ -564,7 +573,10 @@ ChangeMissionObjectives('Retreat');
 End;
 
 Every 0$1 trigger retreatAllowed do
+begin
+SetAreaMapShow(collectFarmerArea, 0);
 StartCargoEvacuation;
+End;
 
 // farmer depot destroyed
 Every 0$1 trigger not retreatAllowed and IsDead(arDepot) do
@@ -632,6 +644,15 @@ repeat
         RemoveUnit(i);
         end;
 until not Farmer and not farmerSquad;
+
+wait(3$00);
+SendAttack;
+
+if Difficulty > 1 then
+   begin
+   wait(3$00);
+   SendAttack;
+   end;
 End;
 
 // farmer angry
