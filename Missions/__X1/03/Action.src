@@ -90,6 +90,7 @@ if not hasAll then
           break;
 
        SetSide(omarSquad[3], 2);
+       heikeSecondSquad := heikeSecondSquad union omarSquad[3];
        omarSquad := Delete(omarSquad, 3);
        end;
    end;
@@ -707,7 +708,7 @@ for i in UnitFilter(usForces, [f_inarea, westRoad]) do
     RemoveUnit(i);
     end;
 
-if not americanHasEscaped then
+if not americanHasEscaped and attackWave = 1 then
    begin
    americanHasEscaped := true;
    Say(Heike, 'DH-2-assault-a');
@@ -717,6 +718,212 @@ End;
 // Farmer depot captured
 Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
+
+// ibrahim
+Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not retreatAllowed and farmerCrates > 100 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) do
+var randomMen, randomWomen, speaker, place;
+begin
+randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
+randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
+
+if IsOk(Kaia) then
+   speaker := [Kaia, 'DK']
+else if randomMen then
+   speaker := [randomMen[rand(1, randomMen)], 'DArm']
+else if randomWomen then
+   speaker := [randomWomen[rand(1, randomWomen)], 'DArf']
+else
+   exit;
+
+if IsInUnit(speaker[1]) then
+   place := IsInUnit(speaker[1])
+else
+   place := speaker[1];
+
+CenterNowOnUnits(place);
+PrepareIbrahim(GetX(place), GetY(place));
+
+wait(0$2);
+
+if not IsPlaced(Ibrahim) then
+   exit;
+
+Video(true);
+
+wait(0$1);
+
+Say(Ibrahim, 'DI-1-land');
+
+if IsInUnit(speaker[1]) then
+   ComExit(speaker[1]);
+
+AddComMoveUnit(speaker[1], Ibrahim);
+AddComTurnUnit(speaker[1], Ibrahim);
+
+ComTurnUnit(Ibrahim, speaker[1]);
+
+wait(0$1);
+
+Say(speaker[1], speaker[2] & '-1-land');
+Say(Ibrahim, 'DI-2-land');
+Say(speaker[1], speaker[2] & '-2-land');
+
+if IsInUnit(Heike) then
+   ComExitBuilding(Heike);
+
+AddComMoveXY(Heike, 34, 21);
+AddComTurnUnit(Heike, speaker[1]);
+
+ComMoveXY(Ibrahim, 36, 22);
+ComMoveXY(speaker[1], 35, 22);
+
+AddComTurnUnit([Ibrahim, speaker[1]], Heike);
+
+repeat
+ wait(0$1);
+until GetDistUnits(speaker[1], usDepot) < 8;
+
+Say(speaker[1], speaker[2] & '-3-land');
+Say(Heike, 'DH-1-land');
+
+if UnitsInside(usDepot) = 6 then
+   ComExitBuilding(UnitsInside(usDepot)[1]);
+
+SetSide(Ibrahim, 2);
+
+ComEnterUnit(Ibrahim, usDepot);
+
+Video(false);
+
+ibrahimInDepot := true;
+End;
+
+Export Function IbrahimQuery;
+begin
+
+case Query('IbrahimQuery') of
+1: begin // accept
+   Video(true);
+
+   ibrahimInDepot := false;
+
+   Say(Heike, 'DH-1-interrogation');
+   Say(Ibrahim, 'DI-1-interrogation');
+   Say(Heike, 'DH-2-interrogation');
+   Say(Ibrahim, 'DI-2-interrogation');
+   Say(Heike, 'DH-3-interrogation');
+   Say(Ibrahim, 'DI-3-interrogation');
+   Say(Heike, 'DH-4-interrogation');
+   Say(Ibrahim, 'DI-4-interrogation');
+   Say(Heike, 'DH-5-interrogation');
+   Say(Ibrahim, 'DI-5-interrogation');
+
+   wait(0$1);
+
+   case Query('IbrahimDecisionQuery') of
+   1: begin // kill
+      Say(Ibrahim, 'DI-1-kill');
+      KillUnit(Ibrahim); 
+      end;
+
+   2: begin // let him go
+      ComExitBuilding(Ibrahim);
+      AddComMoveXY(Ibrahim, 32, 5);
+
+      wait(0$3);
+
+      ComExitBuilding(Heike);
+      AddComMoveXY(Heike, 36, 21);
+
+      AddComWait(Ibrahim, 0$2);
+      AddComHold(Ibrahim);
+
+      ibrahimIsFree := true;
+      end;
+   end;
+
+   Video(false);
+   end;
+2:;
+end;
+
+End;
+
+Every 0$10 trigger ibrahimIsFree and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+var changeClass;
+begin
+Video(true);
+
+CenterNowOnUnits(Ibrahim);
+
+ComTurnUnit(Heike, Ibrahim);
+ComTurnUnit(Ibrahim, Heike);
+
+Say(Ibrahim, 'DI-1-free');
+Say(Heike, 'DH-1-free');
+Say(Ibrahim, 'DI-2-free');
+
+changeClass := 0;
+
+case Query('IbrahimJoinQuery') of
+1: begin // accept
+   changeClass := 1;
+   end;
+
+2: begin // decline
+   Say(Heike, 'DH-1-decline');
+   Say(Ibrahim, 'DI-1-decline');
+
+   ComMoveXY(Ibrahim, 30, 1);
+
+   repeat
+    wait(0$1);
+   until IsAt(Ibrahim, 30, 1) or not FilterAllUnits([[f_side, 2], [f_see, 6]]);
+
+   RemoveUnit(Ibrahim);
+   SaveVariable(1, 'IbrahimHasEscaped');
+   end;
+
+3: begin // ask Omar
+   Say(Heike, 'DH-1-radio-hq');
+   Say(Ibrahim, 'DO-1-radio-hq');
+   Say(Heike, 'DH-2-radio-hq');
+   Say(Ibrahim, 'DO-2-radio-hq');
+   Say(Heike, 'DH-3-radio-hq');
+
+   changeClass := 1;
+   end;
+end;
+
+if changeClass then
+   begin
+   Say(Heike, 'DH-1-agree');
+
+   if IsOk(Givi) then
+      begin
+      Say(Givi, 'DG-1-agree');
+      Say(Heike, 'DH-2-agree');
+      Say(Givi, 'DG-2-agree');
+      end;
+
+   if UnitsInside(usDepot) = 6 then
+      ComExitBuilding(UnitsInside(usDepot)[1]);
+
+   ComEnterUnit(Ibrahim, usDepot);
+
+   repeat
+    wait(0$1);
+   until IsInUnit(Ibrahim);
+
+   RemoveUnit(Ibrahim);
+
+   uc_side := 2;
+   Ibrahim := PrepareUnit('Ibrahim', false, '');
+   PlaceHumanInUnit(Ibrahim, usDepot);
+   end;
+
+Video(false);
+End;
 
 // end mission
 Every 0$1 trigger retreatAllowed and omarCargoCounter < 1 do
@@ -743,6 +950,34 @@ else
 GiveMedals('MAIN');
 
 RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+SaveCharacters(Heike, '03_Heike');
+SaveCharacters(Aviradze, '03_Aviradze');
+
+if Givi then
+   SaveCharacters(Givi, '03_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '03_Mike');
+
+if Kamil then
+   SaveCharacters(Kamil, '03_Kamil');
+
+if Kaia then
+   SaveCharacters(Kaia, '03_Kaia');
+
+if Sophia then
+   SaveCharacters(Sophia, '03_Sophia');
+
+if Markov then
+   SaveCharacters(Markov, '03_Markov');
+
+if Ibrahim and GetSide(Ibrahim) = 2 then
+   SaveCharacters(Markov, '03_Ibrahim');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '03_others');
+
 YouWin;
 
 DialogueOff;

@@ -95,20 +95,288 @@ for i in tech do
     AddComResearch(lab, i);
 End;
 
-Every 6$00+2$00 trigger americanBaseCaptured do
+Every 8$00+2$00 trigger allowConvoys and convoyCounter < 15 do
 begin
 enable;
 SendConvoy;
 End;
 
-Export Function SendConvoy;
+Every 0$1 trigger americanBaseCaptured do
 begin
+
+if americanHasEscaped then
+   wait(6$00)
+else
+   wait(9$00);
+
+// first attack
+SendAttack;
+
+repeat
+ wait([6$30, 6$00, 5$30][Difficulty]);
+ SendAttack;
+until attackWave < 10;
 
 End;
 
+Export Function SendConvoy;
+var un, veh, road, tmp, points, i, finalArea;
+begin
+road := rand(1, 2);
+finalArea := [northRoad, westRoad][road];
+tmp := [ [35, 66, 1], [101, 8, 4] ];
+points := [
+   [34,67],
+   [38,62],
+   [43,54],
+   [57,57],
+   [77,71],
+   [86,60],
+   [89,35],
+   [93,17],
+   [97,10],
+   [103,9]
+];
+
+if road = 2 then
+   points := ReverseArray(points);
+
+PrepareTank(4, 1, us_medium_wheeled, engine_combustion, control_manual, us_cargo_bay, 80);
+veh := CreateVehicle;
+SetDir(veh, tmp[road][3]);
+PlaceUnitXY(veh, tmp[road][1], tmp[road][2], false);
+
+PrepareHuman(false, 1, Difficulty);
+un := CreateHuman;
+PlaceHumanInUnit(un, veh);
+
+if Prob(50 + tick mod 30) then
+   SetCargo(veh, mat_cans, 100);
+
+for i := 2 to points do
+    AddComMoveXY(veh, points[i][1], points[i][2]);
+
+convoyCounter := convoyCounter + 1;
+
+repeat
+ wait(0$1);
+
+ if not HasTask(veh) then
+    ComMoveXY(veh, points[points][1], points[points][2]);
+
+ if not IsOk(veh) then
+    break;
+until IsInArea(veh, finalArea);
+
+RemoveUnit(un);
+RemoveUnit(veh);
+End;
+
 Export Function SendAttack;
+var un, veh, i;
 begin
 IncomingAttack;
 
-wait(1$30);
+wait(rand(1$0, 1$40));
+
+for i := 1 to [3, 3, 4][Difficulty] + attackWave div 3 do
+    begin
+    uc_side := 1;
+    uc_nation := 1;
+
+    PrepareHuman(false, 1, [2, 3, 4][Difficulty]);
+    un := CreateHuman;
+    
+    PlaceUnitXYR(un, 37, 70, 3, false);
+    usForces := usForces union un;
+
+    ComMoveXY(un, 40, 65);
+    end;
+
+if attackWave > 2 then
+   begin
+   uc_side := 1;
+   uc_nation := 1;
+
+   PrepareHuman(false, 4, 2);
+   un := CreateHuman;
+
+   PlaceUnitXYR(un, 37, 70, 3, false);
+   usForces := usForces union un;
+
+   ComMoveXY(un, 40, 65);
+   end;
+
+if attackWave > 1 or Difficulty > 1 then
+   begin
+   for i := 1 to Difficulty + attackWave div 4 do
+       begin
+       veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, [us_gatling_gun, us_light_gun, us_machine_gun][rand(1,3)], 90);
+       PlaceUnitXY(veh, 35, 65, false);
+
+       PrepareHuman(false, 3, Difficulty + 1);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, veh);
+
+       ComMoveXY(veh, 39, 60);
+       wait(0$2);
+       usForces := usForces union veh;
+       end;
+   end;
+
+attackWave := attackWave + 1;
+RaiseSailEvent(eventAttack);
+End;
+
+// script attack
+Export Function AmericanAttack;
+var i, j, tag, strategy, attackFormula, sol, sci, mech, tanks, veh;
+begin
+// strategy
+// 0 - attack heike base from south
+// 1 - attack heike base from east
+// 2 - attack farmer base
+if retreatAllowed then
+   strategy := 2
+else
+   strategy := rand(0, 2);
+
+// aggressive inf point (x, y) | heal point (x, y) | aggressive tank point (x, y) | repair point (x, y)
+attackFormula := [];
+
+case strategy of
+0: begin
+   if not FilterUnitsInArea(southZone, [[f_side, 2], [f_btype, b_armoury]]) then
+      attackFormula := [ [ [41,34] ], [33,46], [41,34], [ [39,53] ] ]
+   else if not FilterUnitsInArea(southForestZone, [[f_side, 2], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork], [f_btype, b_bunker]]]) then
+      attackFormula := [ [ [27,42], [27,32] ], [33,46], [41,34], [ [39,53] ] ]
+   else
+      attackFormula := [ [ [71,67], [54,35] ], [63,40], [41,34], [ [39,53] ] ];
+   end;
+
+1: attackFormula := [ [ [71,67], [82,23], [53,7], [43,10] ], [63,40], [41,34], [ [39,53] ] ];
+2: attackFormula := [ [ [95,61] ], [82,75], [73,67], [ [95,61] ] ];
+end;
+
+if not attackFormula then
+   exit;
+
+sol := UnitFilter(usAttackers, [f_class, 1]);
+sci := UnitFilter(usAttackers, [f_class, 4]);
+mech := UnitFilter(usAttackers, [f_class, 3]);
+tanks := UnitFilter(usAttackers, [f_type, unit_vehicle]);
+
+if sci then
+   ComMoveXY(sci, attackFormula[2][1], attackFormula[2][2]);
+
+repeat
+ wait(0$1);
+
+ sol := UnitFilter(usAttackers, [f_class, 1]);
+ sci := UnitFilter(usAttackers, [f_class, 4]);
+ mech := UnitFilter(usAttackers, [f_class, 3]);
+ tanks := UnitFilter(usAttackers, [f_type, unit_vehicle]);
+
+ if sol then
+    begin
+    for i in sol do
+        begin
+        tag := GetTag(i);
+
+        if not tag then
+           begin
+           if GetLives(i) = 1000 then
+              SetTag(i, 1)
+           else
+              if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 6 then
+                 ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+           end
+        else
+           begin
+           if GetLives(i) < 720 then
+              SetTag(i, 0)
+           else
+              if tag < attackFormula[1] then
+                 begin
+                 if GetDistUnitXY(i, attackFormula[1][tag][1], attackFormula[1][tag][2]) > 6 then
+                    ComAgressiveMove(i, attackFormula[1][tag][1], attackFormula[1][tag][2])
+                 else if not FilterAllUnits([[f_enemy, 1], [f_dist, i, 10]]) then
+                    SetTag(i, tag + 1);
+                 end
+              else
+                 ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+           end;
+        end;
+    end;
+
+ if sci then
+    begin
+    if not sol and not mech then
+       begin
+       for i in sci do
+           begin
+           usAttackers := usAttackers diff i;
+           usForces := usForces union i;
+
+           ComMoveXY(i, 34, 68);
+           end;
+       end
+    else
+     for i in sci do
+         if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 8 then
+            ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+    end;
+
+ if tanks and mech then
+    begin
+    for i in mech do
+        begin
+        tag := GetTag(i);
+        veh := IsInUnit(i);
+
+        if not tag then
+           begin
+           if veh then
+              begin
+              if GetLives(veh) = 1000 and GetFuel(veh) > 60 then
+                 SetTag(i, 1)
+              else
+                 if GetDistUnitXY(i, attackFormula[3][1], attackFormula[3][2]) > 7 then
+                    ComMoveXY(i, attackFormula[3][1], attackFormula[3][2])
+                 else
+                    begin
+                    ComExitVehicle(i);
+                    AddComRepairVehicle(i, veh);                     
+                    end;
+              end
+           else
+              if GetLives(i) < 700 then
+                 begin
+                 usAttackers := usAttackers diff i;
+                 usForces := usForces union i;
+
+                 ComMoveXY(i, 34, 68);
+                 end
+              else if UnitFilter(tanks, [[f_empty], [f_lives, 1000]]) then
+                 ComEnterUnit(i, NearestUnitToUnit(UnitFilter(tanks, [[f_empty], [f_lives, 1000]]), i));
+           end
+        else
+           begin
+           if GetLives(veh) < 620 then
+              SetTag(i, 0)
+           else
+              if tag < attackFormula[1] then
+                 begin
+                 if GetDistUnitXY(i, attackFormula[1][tag][1], attackFormula[1][tag][2]) > 6 then
+                    ComAgressiveMove(i, attackFormula[1][tag][1], attackFormula[1][tag][2])
+                 else if not FilterAllUnits([[f_enemy, 1], [f_dist, i, 10]]) then
+                    SetTag(i, tag + 1);
+                 end
+              else
+                 ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+           end;
+        end;
+    end;
+
+until not usAttackers;
 End;
