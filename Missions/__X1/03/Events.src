@@ -12,10 +12,39 @@ if un in usForces then
    usForces := usForces diff un;
 if un in FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]) then
    deadCounter := deadCounter + 1;
+if un in FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) and not firstConvoyDestroyed then
+   firstConvoyDestroyed := true;
+if un in usAttackers then
+   usAttackers := usAttackers diff un;
+End;
+
+On LeaveBuilding(building, unit) do
+begin
+if unit = Ibrahim and ibrahimInDepot then
+   begin
+   Video(true);
+
+   ComEnterUnit(Ibrahim, usDepot);
+   wait(0$1);
+
+   Video(false);
+   end;
+End;
+
+On EnterBuilding(building, unit) do
+begin
+if unit = Heike and building = usDepot and ibrahimInDepot then
+   IbrahimQuery;
 End;
 
 On VehicleCaptured(newId, oldId, oldSide, captureUnit) do
 begin
+if oldId in usAttackers then
+   usAttackers := usAttackers diff oldId;
+
+if oldSide = 4 and not firstConvoyDestroyed then
+   firstConvoyDestroyed := true;
+
 if GetWeapon(oldId) = us_cargo_bay and GetCargo(oldId, mat_cans) = 0 then
    EmptyCargoDialog;
 End;
@@ -47,4 +76,10 @@ On VehicleConstructed(veh, fac) do
 begin
 if GetSide(veh) = 2 then
    vehCounter := vehCounter + 1;
+End;
+
+On SailEvent(event) do
+begin
+if event = eventAttack then
+   AmericanAttack;
 End;
