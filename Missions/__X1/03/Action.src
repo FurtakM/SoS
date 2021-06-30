@@ -3,7 +3,7 @@ var hasAll, i, tmp;
 begin
 hasAll := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]) >= 7;
 
-InGameOn;
+Video(true);
 
 CenterNowOnUnits(Heike);
 
@@ -111,24 +111,14 @@ if hasAll and IsOk(Kaia) then
    Say(Farmer, 'DF-1-side');
    end;
 
-InGameOff;
-
-ChangeMissionObjectives('BuildBase');
-
 ComFree(FilterAllUnits([f_side, 2]));
-
-SaveForQuickRestart;
 
 // farmer go build some base
 ComMoveXY(Farmer ^ farmerSquad, 108, 62);
 
 gameStarted := true;
-End;
 
-// talk about base
-Every 0$3 trigger gameStarted do
-begin
-Video(true);
+wait(0$3);
 
 CenterOnUnits(Heike);
 
@@ -169,10 +159,13 @@ if Mike then
 ComFree(FilterAllUnits([f_side, 2]));
 
 Video(false);
+
+ChangeMissionObjectives('BuildBase');
+SaveForQuickRestart;
 End;
 
 // see hill
-Every 0$1 trigger not americanBaseSpoted and FilterUnitsInArea(hillArea, [f_side, 2]) and not americanBaseCaptured do
+Every 0$1 trigger not americanBaseSpoted and not americanBaseCaptured and FilterUnitsInArea(hillArea, [f_side, 2]) and not americanBaseCaptured do
 begin
 if Mike then
    Say(Mike, 'DM-1-scout')
@@ -184,7 +177,7 @@ RemoveSeeing(54, 35, 2);
 End;
 
 // on hill
-Every 0$1 trigger FilterUnitsInArea(upHillArea, [f_side, 2]) do
+Every 0$1 trigger FilterUnitsInArea(upHillArea, [f_side, 2]) and not americanBaseCaptured do
 var randomMen, randomWomen, speakerOk;
 begin
 randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
@@ -241,17 +234,24 @@ DialogueOff;
 End;
 
 // american base captured
-Every 0$1 trigger GetSide(usDepot) = 2 or FilterAllUnits([[f_side, 1], [f_not, [f_ok]], [f_btype, b_breastwork]]) or FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 1 do
+Every 0$1 trigger GetSide(usDepot) = 2 or
+                  FilterUnitsInArea(americanBaseArea, [[f_side, 1], [f_not, [f_ok]], [f_btype, b_breastwork]]) or
+                  FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 1 or
+                  FilterUnitsInArea(upHillArea, [f_side, 2]) do
 var i, p;
 begin
 americanBaseCaptured := true;
 
-wait(0$2);
+wait(0$3);
 
 if IsOk(usCommander) then
    begin
    usForces := usForces union usCommander;
-   Say(usCommander, 'DUsm-1-assault');
+
+   if FilterUnitsInArea(upHillArea, [f_side, 2]) then
+      Say(usCommander, 'DUsm-2-assault')
+   else
+      Say(usCommander, 'DUsm-1-assault');
    end;
 
 for i in usForces do
@@ -266,7 +266,11 @@ Say(Heike, 'DH-1-assault');
 
 repeat
  wait(0$1);
+ ComMoveXY(i, 34, 67);
 until not usForces;
+
+music_nat := 2;
+music_class := music_victory;
 
 if not americanHasEscaped then
    Say(Heike, 'DH-2-assault');
@@ -309,6 +313,9 @@ if Sophia then
 
 Video(false);
 
+music_nat := music_auto;
+music_class := music_auto;
+
 ChangeMissionObjectives('ConstructBase');
 End;
 
@@ -319,9 +326,9 @@ workshopBuilded := true;
 
 if IsOk(Markov) then
    begin
-   Say(Heike, 'DH-1-shop');
+   Say(Heike, 'DH-1-shop-a');
 
-   if not (GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched) then
+   if not (GetTech(tech_OilEng, 2) = state_researched and GetTech(tech_SolEng, 2) = state_researched) then
       Say(Markov, 'DMar-1-shop-a');
    end;
 
@@ -333,8 +340,10 @@ Every 0$1 trigger GetTechNation(2, 2, state_enabled) = 0 do
 ChangeMissionObjectives('Techs');
 
 // engines
-Every 0$1 trigger IsOk(Markov) and workshopBuilded and GetTech(2, tech_OilEng) = state_researched and GetTech(2, tech_SolEng) = state_researched do
+Every 0$1 trigger IsOk(Markov) and workshopBuilded and GetTech(tech_OilEng, 2) = state_researched and GetTech(tech_SolEng, 2) = state_researched do
 begin
+wait(0$1);
+
 DialogueOn;
 
 Say(Markov, 'DMar-1-shop');
@@ -480,7 +489,7 @@ CenterNowOnXY(108, 61);
 End;
 
 // base constructed
-Every 0$1 trigger americanBaseCaptured and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_lab]]) and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_armoury]]) do
+Every 0$1 trigger americanBaseCaptured and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) and FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_armoury]]) do
 var eng;
 begin
 wait(0$10);
@@ -492,6 +501,7 @@ Say(Heike, 'DH-1-task');
 if IsOk(Sophia) then
    begin
    Say(Sophia, 'DS-1-task');
+   Say(Sophia, 'DS-2-task');
    Say(Heike, 'DH-2-task');
    end
 else if eng then
@@ -502,6 +512,30 @@ else if eng then
 
 ChangeMissionObjectives('BaseConstructed');
 allowConvoys := true;
+End;
+
+// see first cargo
+Every 0$2 trigger FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) do
+var cargo, x, y;
+begin
+wait(0$2);
+cargo := FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]);
+x := GetX(cargo[1]);
+y := GetY(cargo[1]);
+
+DialogueOn;
+
+CenterNowOnXY(x, y);
+
+PlaceSeeing(x, y, 2, -6);
+
+dwait(0$0.3);
+
+Say(Heike, 'DH-1-seecargo');
+
+RemoveSeeing(x, y, 2);
+
+DialogueOff;
 End;
 
 // farmer wants more crates.. #2
@@ -517,12 +551,12 @@ DialogueOff;
 
 ChangeMissionObjectives('Crates2');
 
-farmerCratesCounter := 4$00;
+farmerCratesCounter := 30$00;
 farmerRequestedCrates := 600;
 End;
 
 // farmer wants more crates.. #3
-Every 0$1 trigger farmerBaseReady and farmerCrates >= 600 and Difficulty > 1 do
+Every 0$1 trigger farmerBaseReady and farmerCrates >= 600 do
 begin
 DialogueOn;
 
@@ -543,13 +577,13 @@ DialogueOff;
 if Difficulty = 2 then
    begin
    ChangeMissionObjectives('Crates3');
-   farmerCratesCounter := 5$00;
+   farmerCratesCounter := 30$00;
    farmerRequestedCrates := 900;
    end
 else
    begin
    ChangeMissionObjectives('Crates4');
-   farmerCratesCounter := 6$00;
+   farmerCratesCounter := 30$00;
    farmerRequestedCrates := 1200;
    end;
 End;
@@ -589,6 +623,8 @@ End;
 Every 0$1 trigger retreatAllowed and GetDistUnits(Heike, Farmer) < 6 do
 var i, max, tmp;
 begin
+allowConvoys := false;
+
 Video(true);
 
 ComTurnUnit(Heike, Farmer);
@@ -638,17 +674,18 @@ repeat
  if tmp then
     for i in tmp do
         begin
-        if i in farmerSquad then
-           farmerSquad := farmerSquad diff i;
-
+        farmerSquad := farmerSquad diff i; 
         RemoveUnit(i);
         end;
-until not Farmer and not farmerSquad;
+until farmerSquad = [] and not IsPlaced(Farmer);
 
-wait(3$00);
+wait(2$00);
 SendAttack;
 
-if Difficulty > 1 then
+wait([4$00, 3$30, 3$00][Difficulty]);
+SendAttack;
+
+if Difficulty > 2 then
    begin
    wait(3$00);
    SendAttack;
@@ -656,7 +693,7 @@ if Difficulty > 1 then
 End;
 
 // farmer angry
-Every 0$2 trigger farmerCratesCounter <= 0$00 do
+Every 0$2 trigger farmerCratesCounter <= 9$00 do
 begin
 DialogueOn;
 SayRadio(Farmer, 'DF-1-distribution-a');
@@ -664,6 +701,18 @@ Say(Heike, 'DH-1-distribution-a');
 SayRadio(Farmer, 'DF-2-distribution-a');
 DialogueOff;
 End;
+
+// farmer angry
+Every 0$2 trigger farmerCratesCounter <= 0$00 do
+begin
+DialogueOn;
+SayRadio(Farmer, 'DF-3-distribution-a');
+YouLost('Distribution');
+DialogueOff;
+End;
+
+Every 0$1 trigger vehCounter >= 2 do
+ChangeMissionObjectives('VehConstructed');
 
 // first cargo captured
 Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_weapon, us_cargo_bay]]) do
@@ -741,7 +790,7 @@ Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
 
 // ibrahim
-Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not retreatAllowed and farmerCrates > 100 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) do
+Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not FilterAllUnits([f_side, 4]) and not retreatAllowed and farmerCrates > 160 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) do
 var randomMen, randomWomen, speaker, place;
 begin
 randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
@@ -768,6 +817,8 @@ wait(0$2);
 
 if not IsPlaced(Ibrahim) then
    exit;
+
+allowConvoys := false;
 
 Video(true);
 
@@ -801,8 +852,11 @@ ComMoveXY(speaker[1], 35, 22);
 AddComTurnUnit([Ibrahim, speaker[1]], Heike);
 
 repeat
- wait(0$1);
+ wait(0$2);
+ CenterOnUnits(speaker[1]);
 until GetDistUnits(speaker[1], usDepot) < 8;
+
+CenterOnUnits(usDepot);
 
 Say(speaker[1], speaker[2] & '-3-land');
 Say(Heike, 'DH-1-land');
@@ -817,6 +871,7 @@ ComEnterUnit(Ibrahim, usDepot);
 Video(false);
 
 ibrahimInDepot := true;
+allowConvoys := true;
 End;
 
 Export Function IbrahimQuery;
@@ -824,9 +879,10 @@ begin
 
 case Query('IbrahimQuery') of
 1: begin // accept
-   Video(true);
-
+   allowConvoys := false;
    ibrahimInDepot := false;
+
+   Video(true);
 
    Say(Heike, 'DH-1-interrogation');
    Say(Ibrahim, 'DI-1-interrogation');
@@ -848,31 +904,34 @@ case Query('IbrahimQuery') of
       end;
 
    2: begin // let him go
+      SetSide(Ibrahim, 6);
+
       ComExitBuilding(Ibrahim);
       AddComMoveXY(Ibrahim, 32, 5);
-
-      wait(0$3);
 
       ComExitBuilding(Heike);
       AddComMoveXY(Heike, 36, 21);
 
-      AddComWait(Ibrahim, 0$2);
-      AddComHold(Ibrahim);
-
-      ibrahimIsFree := true;
+      AddComWait(Ibrahim, 1$20);
+      AddComMoveXY(Ibrahim, 38, 28);
       end;
    end;
 
    Video(false);
    end;
-2:;
+2: exit;
 end;
 
+allowConvoys := true;
+wait(0$40);
+ibrahimIsFree := true;
 End;
 
-Every 0$10 trigger ibrahimIsFree and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+Every 0$10 trigger ibrahimIsFree and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
 var changeClass;
 begin
+allowConvoys := false;
+
 Video(true);
 
 CenterNowOnUnits(Ibrahim);
@@ -944,6 +1003,8 @@ if changeClass then
    end;
 
 Video(false);
+
+allowConvoys := true;
 End;
 
 // end mission
