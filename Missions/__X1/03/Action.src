@@ -677,15 +677,15 @@ repeat
         end;
 until farmerSquad = [] and not IsPlaced(Farmer);
 
-wait(2$00);
+wait(1$00);
 SendAttack;
 
-wait([4$00, 3$30, 3$00][Difficulty]);
+wait([5$00, 4$30, 4$00][Difficulty]);
 SendAttack;
 
 if Difficulty > 2 then
    begin
-   wait(3$00);
+   wait(4$00);
    SendAttack;
    end;
 End;
@@ -788,6 +788,10 @@ if not americanHasEscaped and attackWave = 1 then
    Say(Heike, 'DH-2-assault-a');
    end;
 End;
+
+// Farmer under attack
+Every 0$1 trigger FilterUnitsInArea(farmerBase, [f_side, 1]) do
+SayRadio(Farmer, 'DF-1-attack');
 
 // Farmer depot captured
 Every 0$1 trigger GetSide(arDepot) = 2 do
@@ -975,9 +979,9 @@ case Query('IbrahimJoinQuery') of
 
 3: begin // ask Omar
    Say(Heike, 'DH-1-radio-hq');
-   Say(Ibrahim, 'DO-1-radio-hq');
+   SayRadio(Omar, 'DO-1-radio-hq');
    Say(Heike, 'DH-2-radio-hq');
-   Say(Ibrahim, 'DO-2-radio-hq');
+   SayRadio(Omar, 'DO-2-radio-hq');
    Say(Heike, 'DH-3-radio-hq');
 
    changeClass := 1;
@@ -998,6 +1002,7 @@ if changeClass then
    if UnitsInside(usDepot) = 6 then
       ComExitBuilding(UnitsInside(usDepot)[1]);
 
+   SetSide(Ibrahim, 2);
    ComEnterUnit(Ibrahim, usDepot);
 
    InGameOff;
