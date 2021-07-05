@@ -184,14 +184,21 @@ farmerBaseReady := true;
 End;
 
 Every 0$1 trigger farmerBaseReady and not retreatAllowed do
-var i, eng, damagedBuilding;
+var i, eng, sol, arm, damagedBuilding;
 begin
 enable;
 
+sol := UnitFilter(farmerSquad, [f_class, 1]) ^ Farmer;
 eng := UnitFilter(farmerSquad, [f_class, 2]);
 damagedBuilding := FilterAllUnits([[f_side, 5], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+arm := FilterAllUnits([[f_side, 5], [f_btype, b_armoury]]);
 
-if not eng then
+if IsOk(arm[1]) then
+   for i in sol do
+       if GetLives(i) < 999 and not IsInUnit(i) then
+          ComEnterUnit(i, arm[1]);
+
+if not eng and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) then
    begin
    uc_side := 5;
    uc_nation := 2;
@@ -250,9 +257,7 @@ while GetResourceType(GetBase(arDepot), mat_cans) > 0 and omarCargoCounter > 0 d
 
    wait(0$05);
 
-   SetCargo(omarCargo, mat_cans, 100);
-   SetResourceType(GetBase(arDepot), mat_cans, GetResourceType(GetBase(arDepot), mat_cans) - 100);
-
+   ComTransport(omarCargo, arDepot, mat_cans);
    AddComMoveXY(omarCargo, 103, 9);
 
    repeat

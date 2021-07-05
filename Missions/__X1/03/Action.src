@@ -332,17 +332,9 @@ if IsOk(Markov) then
       Say(Markov, 'DMar-1-shop-a');
    end;
 
-ChangeMissionObjectives('ConstructVeh');
-End;
-
-// all techs
-Every 0$1 trigger GetTechNation(2, 2, state_enabled) = 0 do
-ChangeMissionObjectives('Techs');
-
-// engines
-Every 0$1 trigger IsOk(Markov) and workshopBuilded and GetTech(tech_OilEng, 2) = state_researched and GetTech(tech_SolEng, 2) = state_researched do
-begin
-wait(0$1);
+repeat
+ wait(0$1);
+until GetTech(tech_OilEng, 2) = state_researched and GetTech(tech_SolEng, 2) = state_researched;
 
 DialogueOn;
 
@@ -357,7 +349,13 @@ Say(Markov, 'DMar-5-shop');
 Say(Heike, 'DH-4-shop');
 
 DialogueOff;
+
+ChangeMissionObjectives('ConstructVeh');
 End;
+
+// all techs
+Every 0$1 trigger GetTechNation(2, 2, state_enabled) = 0 do
+ChangeMissionObjectives('Techs');
 
 // first balista
 Every 0$3 trigger IsOk(Markov) and FilterAllUnits([[f_side, 2], [f_or, [f_weapon, ar_multimissile_ballista], [f_bweapon, ar_multimissile_ballista]]]) do
@@ -679,15 +677,15 @@ repeat
         end;
 until farmerSquad = [] and not IsPlaced(Farmer);
 
-wait(2$00);
+wait(1$00);
 SendAttack;
 
-wait([4$00, 3$30, 3$00][Difficulty]);
+wait([5$00, 4$30, 4$00][Difficulty]);
 SendAttack;
 
 if Difficulty > 2 then
    begin
-   wait(3$00);
+   wait(4$00);
    SendAttack;
    end;
 End;
@@ -733,6 +731,12 @@ End;
 Export Function EmptyCargoDialog;
 var randomMen, randomWomen;
 begin
+if IsOk(Givi) then
+   begin
+   Say(Givi, 'DG-1-nocargo');
+   exit;
+   end;
+
 randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
 randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
 
@@ -785,6 +789,10 @@ if not americanHasEscaped and attackWave = 1 then
    end;
 End;
 
+// Farmer under attack
+Every 0$1 trigger FilterUnitsInArea(farmerBase, [f_side, 1]) do
+SayRadio(Farmer, 'DF-1-attack');
+
 // Farmer depot captured
 Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
@@ -820,7 +828,7 @@ if not IsPlaced(Ibrahim) then
 
 allowConvoys := false;
 
-Video(true);
+InGameOn;
 
 wait(0$1);
 
@@ -868,7 +876,7 @@ SetSide(Ibrahim, 2);
 
 ComEnterUnit(Ibrahim, usDepot);
 
-Video(false);
+InGameOff;
 
 ibrahimInDepot := true;
 allowConvoys := true;
@@ -882,7 +890,11 @@ case Query('IbrahimQuery') of
    allowConvoys := false;
    ibrahimInDepot := false;
 
-   Video(true);
+   InGameOn;
+
+   CenterNowOnUnits(Heike);
+
+   wait(0$1);
 
    Say(Heike, 'DH-1-interrogation');
    Say(Ibrahim, 'DI-1-interrogation');
@@ -917,7 +929,7 @@ case Query('IbrahimQuery') of
       end;
    end;
 
-   Video(false);
+   InGameOff;
    end;
 2: exit;
 end;
@@ -928,11 +940,11 @@ ibrahimIsFree := true;
 End;
 
 Every 0$10 trigger ibrahimIsFree and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
-var changeClass;
+var changeClass, b;
 begin
 allowConvoys := false;
 
-Video(true);
+InGameOn;
 
 CenterNowOnUnits(Ibrahim);
 
@@ -953,6 +965,7 @@ case Query('IbrahimJoinQuery') of
 2: begin // decline
    Say(Heike, 'DH-1-decline');
    Say(Ibrahim, 'DI-1-decline');
+   InGameOff;
 
    ComMoveXY(Ibrahim, 30, 1);
 
@@ -966,9 +979,9 @@ case Query('IbrahimJoinQuery') of
 
 3: begin // ask Omar
    Say(Heike, 'DH-1-radio-hq');
-   Say(Ibrahim, 'DO-1-radio-hq');
+   SayRadio(Omar, 'DO-1-radio-hq');
    Say(Heike, 'DH-2-radio-hq');
-   Say(Ibrahim, 'DO-2-radio-hq');
+   SayRadio(Omar, 'DO-2-radio-hq');
    Say(Heike, 'DH-3-radio-hq');
 
    changeClass := 1;
@@ -989,22 +1002,24 @@ if changeClass then
    if UnitsInside(usDepot) = 6 then
       ComExitBuilding(UnitsInside(usDepot)[1]);
 
+   SetSide(Ibrahim, 2);
    ComEnterUnit(Ibrahim, usDepot);
+
+   InGameOff;
+   allowConvoys := true;
+   b := 0;
 
    repeat
     wait(0$1);
-   until IsInUnit(Ibrahim);
+    b := IsInUnit(Ibrahim);
+   until b and GetType(b) = unit_building;
 
    RemoveUnit(Ibrahim);
 
    uc_side := 2;
    Ibrahim := PrepareUnit('Ibrahim', false, '');
-   PlaceHumanInUnit(Ibrahim, usDepot);
+   PlaceHumanInUnit(Ibrahim, b);
    end;
-
-Video(false);
-
-allowConvoys := true;
 End;
 
 // end mission
@@ -1014,7 +1029,7 @@ DialogueOn;
 
 Say(Heike, 'DH-1-final');
 
-if tick <= [60$00, 50$00, 45$00][Difficulty] then
+if tick <= [68$00, 65$00, 63$00][Difficulty] then
    AddMedal('med1', 1)
 else
    AddMedal('med1', -1);
