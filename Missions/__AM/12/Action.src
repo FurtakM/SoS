@@ -501,29 +501,28 @@ begin
 end;
 
 // First tep
-Every 0$1 trigger vehicleTeleported = 1 do
-var i, vehicles;
+Every 0$1 trigger vehicleTeleported = 1 and FilterUnitsInArea(OutsideArea1, [f_side, 3]) do
+var vehicles;
 begin
-    vehicles = FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_lives, 250]]);
-    enable;
+vehicles := FilterUnitsInArea(OutsideArea1, [f_side, 3]);
 
-    for i in vehicles do
-    begin
-        if See(1, i) and vehicleTeleported = 1 and tpCounter <= 4 then
-        begin
-            Disable;
-            DialogueOn;
-            DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1-Sol1-1', 'DT1-FSol1-1');
-            Say(JMM, 'DT1-JMM-1');
-            DialogueOff;
-            break;
-        end;
-    end;
+if not vehicles then
+   exit;
 
-end;
+repeat
+ wait(0$1);
+until UnitFilter(vehicles, [f_see, 1]);
+
+CenterNowOnUnits(UnitFilter(vehicles, [f_see, 1])[1]);
+
+DialogueOn;
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1-Sol1-1', 'DT1-FSol1-1');
+Say(JMM, 'DT1-JMM-1');
+DialogueOff;
+End;
 
 // Dialog after destroy tanks
-Every 0$10 trigger vehicleTeleported = 1 and FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_lives, 251], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) = 0 and tpCounter do
+Every 0$10 trigger vehicleTeleported = 1 and FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_ok], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) = 0 and tpCounter do
 begin
     vehicleTeleported = 2;
     DialogueOn;
@@ -546,7 +545,7 @@ begin
 
    repeat
     wait(0$1);
-   until FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_lives, 250]]) = 0;
+   until not FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_ok]]);
 
    wait(0$2);
 

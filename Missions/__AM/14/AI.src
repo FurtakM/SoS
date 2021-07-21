@@ -8,12 +8,62 @@ begin
     enable;
     RepairAndRebuildBase(3, ru_depot, RussianBase, ruDestroyedBuildings);
     HealUnitInBase(3, RussianHealArea, RussianBase, [ru_lab1, ru_lab2][Rand(1, 2)]);
-    AttackVehicles(3);
-    AttackNearBuildings(3, 1);
     IntBazooka(3);
     CollectCrates(3, ru_cargo_bay, russianCrates);
     CraneRepairBuild(3, RussianBase);
 end;
+
+// attacks
+Every 0$30 trigger russianTanks >= [3, 4, 5][Difficulty] and russianTimeLapsers >= [1, 2, 3][Difficulty] do
+var j, tmp, target1, target2;
+begin
+enable;
+
+tmp := russianTanks union russianTimeLapsers;
+
+russianTanks := russianTanks diff tmp;
+russianTimeLapsers := russianTimeLapsers diff tmp;
+
+if IsOk(ruTeleport) then
+   begin
+   for j in tmp do
+       if j mod 3 = 0 then
+            ComEnterUnit(j, ruTeleport)
+       else
+          ComAgressiveMove(j, 117, 92);
+
+   wait(0$8);
+   end;
+
+repeat
+ wait(0$1);
+
+ for j in tmp do
+     begin
+     if IsDead(j) then
+        tmp := tmp diff j;
+
+     target1 := NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), j);
+     target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, 3], [f_type, unit_human]]]), j);
+
+     if GetWeapon(j) = ru_time_lapser then
+        begin
+        if UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]) > 1 then
+           ComMoveUnit(j, NearestUnitToUnit(UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]), j))
+        else
+           ComMoveUnit(j, NearestUnitToUnit(target1, j));
+        end
+     else
+        begin
+        if GetDistUnits(j, target2) < GetDistUnits(j, target1) + 2 then
+           ComAttackUnit(j, target2)
+        else
+           ComAttackUnit(j, target1);
+        end;
+     end;
+until not tmp;
+
+End;
 
 Every 0$1 trigger IsDying(ru_depot) or GetSide(ru_depot) = 1 do DefendDepot(3, ru_depot);
 
