@@ -173,27 +173,6 @@ begin
 
 END;
 
-Export function AttackNearBuildings(side, enemySide);
-var i, j, turretsList, enemyBuildings;
-begin
-    turretsList = FilterAllUnits([[f_side, side], [f_or, [f_btype, 31], [f_btype, 32], [f_btype, 33], [f_btype, 4], [f_btype, 5]]]);
-    enemyBuildings = FilterAllUnits([[f_side, enemySide], [f_type, unit_building], [f_empty]]);
-
-    if turretsList > 0 and enemyBuildings > 0 then
-    begin
-        for i in turretsList do
-        begin
-            for j in enemyBuildings do
-            begin
-                if GetDistUnits(i, j) < 20 then
-                begin
-                    ComAttackUnit(i, j);
-                end;
-            end;
-        end;
-    end;
-
-END;
 
 Export function CraneRepairBuild(side, baseArea);
 var i, mechTmp, vehicleTmp, crane_list, buildings_list;
@@ -204,8 +183,7 @@ begin
     if buildings_list > 0 and UnitFilter(crane_list, [f_lives, 750]) > 0 then ComRepairBuilding(crane_list, buildings_list[1]);
 
 end;
-
-
+  
 Export function BuildingVehicle(side, fabric, vehCount, weaponTab, engine, control, chassis);
 var i;
 begin
@@ -215,31 +193,6 @@ begin
 
 END;
 
-Export function AttackVehicles(side);
-var i, j, vehiclesOK, target1, target2;
-begin
-    if russianTanks >= [3, 4, 4][Difficulty] and russianTimeLapsers >= [1, 2, 2][Difficulty] then
-    begin
-
-        repeat
-            wait(0$3);
-                for j in russianTanks do
-                begin
-                    target1 := NearestUnitToUnit(FilterAllUnits([[f_enemy, side], [f_see, 1]]), j);
-                    target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, side], [f_see, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), j);
-
-                    if UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]) then
-                       ComMoveUnit(UnitFilter(russianTimeLapsers, [f_not, [f_hastask]]), j);
-
-                    if GetDistUnits(j, target1) + 8 < GetDistUnits(j, target2) then
-                       ComAttackUnit(j, target1)
-                    else
-                       ComAttackUnit(j, target2);
-                end;
-
-        until russianTanks = 0;
-    end;
-end;
 
 Export Function IntBazooka(side);
 var ta, c, i, list, filter;

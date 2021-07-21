@@ -1,17 +1,18 @@
 On UnitDestroyed(unit) Do
 var i;
 begin
+    if unit in russianTanks then
+       russianTanks := russianTanks diff unit;
 
-    if GetSide(unit) = 3 and GetType(unit) = unit_human then
-    begin
-        for i in RuScientists do 
-            if i = unit then
-            begin
-                RuScientists = RuScientists diff [unit];
-                sciCounter = sciCounter + 1;
-            end; 
-    end;
-end;
+    if unit in russianTimeLapsers then
+       russianTimeLapsers := russianTimeLapsers diff unit;
+
+    if unit in RuScientists then
+       begin
+       RuScientists = RuScientists diff unit;
+       sciCounter = sciCounter + 1;
+       end;
+End;
 
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do
 begin
@@ -50,33 +51,16 @@ begin
         begin
             if GetWeapon(vehicle) = 46 or GetWeapon(vehicle) = 45 or GetWeapon(vehicle) = 44 then
             begin
-                russianTanks = russianTanks ^ vehicle;
-                if attackTactic = 1 or attackTactic = 0 then ComEnterUnit(vehicle, ruteleprt);
-                if attackTactic = 2 then ComMoveXY(vehicle, 88, 69);
+            russianTanks = russianTanks ^ vehicle; 
             end;
 
             if GetWeapon(vehicle) = 49 then
             begin
-                russianTimeLapsers = russianTimeLapsers ^ vehicle;
-                ComEnterUnit(vehicle, rutp);
+            russianTimeLapsers = russianTimeLapsers ^ vehicle;
+            ComEnterUnit(vehicle, rutp);
             end;
 
         end;
-end;
-
-On UnitGoesToRed(unit) Do
-var i;
-begin
-    if GetSide(unit) = 3 and GetType(unit) = unit_vehicle then
-    begin
-        if russianTanks > 0 then
-            for i in russianTanks do
-                if i = unit then russianTanks = russianTanks diff [unit];
-
-        if russianTimeLapsers > 0 then
-            for i in russianTimeLapsers do
-                if i = unit then russianTimeLapsers = russianTimeLapsers diff [unit];
-    end;
 end;
 
 On LeaveVehicle(vehicle, human) Do
