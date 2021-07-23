@@ -1,17 +1,17 @@
 function showCredits()
     playCreditsMusic(1);
-	menu.window.credits.content.y = ScrHeight + 20;
-	sgui_set(menu.window.credits.content.ID, PROP_Y, menu.window.credits.content.y);
-    setVisible(menu.window.credits, true);
-    setVisible(menu.window.credits.content, true);
+	menu.window_credits.content.y = ScrHeight + 20;
+	sgui_set(menu.window_credits.content.ID, PROP_Y, menu.window_credits.content.y);
+    setVisible(menu.window_credits, true);
+    setVisible(menu.window_credits.content, true);
     showMenuButton(0);
 end;
 
 function hideCredits()
-    if getVisible(menu.window.credits) then
+    if getVisible(menu.window_credits) then
         playCreditsMusic(0);
-        setVisible(menu.window.credits, false);
-        setVisible(menu.window.credits.content, false);
+        setVisible(menu.window_credits, false);
+        setVisible(menu.window_credits.content, false);
         showMenuButton(1);
     end;
 end;
@@ -27,4 +27,4 @@ function playCreditsMusic(mode)
     end;
 end;
 
-OW_loadcredits(menu.window.credits.content.ID, 'credits/credits');
+OW_loadcredits(menu.window_credits.content.ID, 'credits/credits');
