@@ -836,14 +836,14 @@ for i = 1 to mc_bases do
 
     if need_heal_2 then
        for j in need_heal_2 do
-           begin
-           tmp := UnitFilter(mc_bases[i], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full], [f_btype, b_depot], [f_btype, b_warehouse], [f_class, 4]]);
+           begin        
+           tmp := UnitFilter(mc_bases[i], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full], [f_btype, b_depot], [f_btype, b_warehouse]]);
 
            if tmp then
               begin
               k := NearestUnitToUnit(tmp, j);
 
-              if GetDistUnits(j, k) > 7 then
+              if GetDistUnits(j, k) > 5 then
                  ComMoveUnit(j, k);
               end;
            end;
@@ -880,11 +880,10 @@ for i = 1 to mc_bases do
        end;
 
     mc_builders := Replace(mc_builders, i, []);
-    MC_Reset(i, 103);
-
+    MC_Reset(i, 103); 
 
     // get engs/ape engs
-    tmp := UnitFilter(mc_bases[i] union mc_ape[i], [[f_or, [f_class, 2], [f_class, 16]]]);
+    tmp := UnitFilter(mc_bases[i] union mc_ape[i], [[f_or, [f_class, 2], [f_class, 16]]]) diff (mc_need_heal[i][1] union mc_need_heal[i][2]);
     cranes := UnitFilter(mc_vehicles[i], [f_or, [f_weapon, us_crane], [f_weapon, ru_crane]]);
 
     if cranes then
@@ -897,15 +896,18 @@ for i = 1 to mc_bases do
                  ComMoveToArea(j, mc_parking[i]);
        end;
 
+    if tmp > 3 then
+       tmp := ShrinkArray(tmp, 4);
+           
     if not tmp then
        continue;
 
     for j in tmp do
         begin
 
-        if mc_need_heal[i] then
-           if j in mc_need_heal[i][1] or j in mc_need_heal[i][2] then
-              continue;
+        //if mc_need_heal[i] then
+           //if j in mc_need_heal[i][1] or j in mc_need_heal[i][2] then
+              //continue;
 
         if IsInUnit(j) then
            ComExitBuilding(j);
@@ -921,14 +923,14 @@ for i = 1 to mc_bases do
         to_repair_tmp := mc_building_need_repair[i];
 
         if mc_scan[i] then
-           to_repair_tmp := UnitFilter(mc_building_need_repair[i], [f_not, [f_or, [f_btype, b_bunker], [f_btype, b_turret], [f_btype, b_breastwork]]]);
+           to_repair_tmp := UnitFilter(mc_building_need_repair[i], [f_not, [f_btype, b_bunker], [f_btype, b_turret], [f_btype, b_breastwork]]);
 
         if not to_repair_tmp then
            continue;
 
         to_repair := NearestUnitToUnit(to_repair_tmp, j);
 
-        if DangerAtRange(to_repair, 14)[4] < 5 then
+        if DangerAtRange(to_repair, 16)[4] < 5 then
            ComRepairBuilding(j, to_repair);
         end;
     end;

@@ -1,0 +1,251 @@
+// artifact module
+{
+player_artifact_loaded := true;
+player_artifact_number := 6;
+player_artifact_icon := art_use_human;
+player_artifact_researched := false; // active when player researched main artifact technology
+player_artifact_active_distance := 5;
+player_artifact_icon_type := art_place;
+player_artifact_icon_2 := art_use_teleport;
+player_artifact_icon_res := art_exp_left;
+player_artifact_time_res := 300;
+player_artifact_ready := false; // active when player researched spec artifact technology
+player_artifact_time_refresh := 8500;
+}
+
+Export Function DebugArtifact;
+begin
+AddToLog('Artifact is loaded: ' & player_artifact_loaded);
+AddToLog('Artifact is active: ' & player_artifact_ready);
+AddToLog('Artifact is researched: ' & player_artifact_researched);
+AddToLog('Artifact coords ' & FindArtifact(player_artifact_number));
+End;
+
+
+Export Function InitArtifactsPos();
+var i, tmp, possible_pos;
+begin
+possible_pos := [ [100,185], [99,175], [117,191] ];
+
+for i = 1 to artifacts_type do
+    begin
+    tmp := possible_pos[rand(1, possible_pos)];
+    possible_pos := possible_pos diff tmp;
+    artifacts_pos := Insert(artifacts_pos, i, tmp);
+    CreateArtifact(artifacts_type[i], tmp[1], tmp[2]);
+    end;
+End;
+
+Export Function GetUseCost(dist);
+begin
+if dist < 30 then
+   result := 10;
+if dist >= 30 and dist < 50 then
+   result := 35;
+if dist >= 50 and dist < 80 then
+   result := 70;
+if dist >= 80 and dist < 120 then
+   result := 100;
+if dist >= 120 then
+   result := 150;
+End;
+
+// Artifact Technology researched
+On ArtifactResearchComplete(lab) do
+begin
+if GetSide(lab) = your_side then
+   player_artifact_researched := true;
+End;
+
+
+// Main body of artifact script
+Every 0$01 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]) and player_artifact_researched and not player_artifact_loaded do
+var lab, coords;
+begin
+enable;
+
+coords := FindArtifact(player_artifact_number);
+
+if not coords then
+   exit;
+
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), coords[1], coords[2]); // lab id
+
+if not lab then
+   begin
+   if debug then
+      AddToLog('Cannot find lab for artifact!');
+   exit;
+   end;
+
+if not player_artifact_ready then // artifact is not ready (u still need to research spec artifact technology!)
+   begin
+   if GetDistUnitXY(lab, coords[1], coords[2]) < player_artifact_active_distance then
+      begin
+      if BuildingStatus(lab) = bs_idle then
+         SetArtifactUse(your_side, player_artifact_icon_res, art_instant, lab)
+          else
+           SetArtifactUse(your_side, player_artifact_icon_res, art_gray, lab);
+      end
+       else
+        SetArtifactUse(your_side,  player_artifact_icon_res, art_gray, lab);
+   end
+else // artifact ready to use
+   if GetDistUnitXY(lab, coords[1], coords[2]) < player_artifact_active_distance then
+      begin
+      if BuildingStatus(lab) = bs_idle then
+         begin
+         SetArtifactUse(your_side, player_artifact_icon, art_unit, lab);
+
+         if player_artifact_selected_unit then
+            SetArtifactUse(your_side, player_artifact_icon_2, art_place, lab);
+         end
+          else
+           begin
+           SetArtifactUse(your_side, player_artifact_icon, art_gray, lab);
+           SetArtifactUse(your_side, player_artifact_icon_2, art_gray, lab);
+           end;
+      end
+       else
+        begin
+        SetArtifactUse(your_side, player_artifact_icon, art_gray, lab);
+        SetArtifactUse(your_side, player_artifact_icon_2, art_gray, lab);
+        end;
+End;
+
+
+// Action when player press the button
+On ArtifactUsed(s, icon, cr1, cr2) do
+var coords, i, lab, side, dist, cost;
+begin
+coords := FindArtifact(player_artifact_number);
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), coords[1], coords[2]);
+
+if not lab then
+   begin
+   if debug then
+      AddToLog('Cannot find lab!');
+   exit;
+   end;
+
+if icon = player_artifact_icon_res then // player click on research spec artifact technology
+   begin
+   SetSpecResearch(lab, player_artifact_time_res, true); // start research
+   SetArtifactUse(your_side, player_artifact_icon_res, art_no, lab); // hide button
+   end;
+
+if icon = player_artifact_icon then // player click on artifact button and active action
+   begin
+   // artifact action here
+   // select only human!
+   if GetType(cr1) = unit_human and not IsInUnit(cr1) then
+      player_artifact_selected_unit := cr1;
+   end;
+
+if icon = player_artifact_icon_2 then // teleport unit to selected place
+   begin
+   // check clicked hex
+   if HexInfo(cr1, cr2) <> 0 then
+      exit; // invalid hex!
+
+   // check sib rescoures
+   dist := GetDistXY(GetX(player_artifact_selected_unit), GetY(player_artifact_selected_unit), cr1, cr2);
+   cost := GetUseCost(dist);
+
+   if cost > GetSibResources(your_side) then
+      begin
+      HintSpec('ArtFrogJumpCost', 2);
+      exit;
+      end;
+
+   SetSibResources(your_side, cost);
+   TeleportUnit(player_artifact_selected_unit, cr1, cr2, 0, true);
+   CenterOnXY(cr1, cr2);
+
+   player_artifact_selected_unit := 0;
+
+   // block artifact
+   player_artifact_researched := false; // lock
+
+   SetArtifactUse(your_side, player_artifact_icon, art_gray, lab);
+   SetArtifactUse(your_side, player_artifact_icon_2, art_no, lab);
+
+   Wait(player_artifact_time_refresh); // refresh time
+
+   player_artifact_researched := true; // unlock
+   end;
+
+
+if debug then
+   DebugArtifact;
+End;
+
+On SpecResearchComplete(lab) do // special artifact tech is done
+begin
+if GetSide(lab) = your_side then
+   begin
+   SetArtifactUse(your_side, player_artifact_icon_res, art_no, lab); // hide button
+   player_artifact_ready := true; // artifact main body script active
+   Hint('ArtFrogJump'); // display hint
+   end;
+End;
+
+On SpecResearchCancel(lab, progress) do // someone cancel special artifact tech research
+begin
+SetArtifactUse(your_side, player_artifact_icon_res, art_instant, lab);  // unlock button
+End;
+
+
+// Artifact #1 - destroy siberit unit's
+Export Function ActiveArtifact1();
+var i, tmp, un;
+begin
+tmp := FilterAllUnits([[f_enemy, 7], [f_weapon, ru_siberium_rocket]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_btype, b_siberite_power]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_btype, b_siberite_mine]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_btype, b_ext_siberium]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_btype, b_teleport]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_bweapon, ru_time_lapser]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_bweapon, ru_rocket]])
+     ^ FilterAllUnits([[f_enemy, 7], [f_engine, engine_siberite]]);
+
+if not tmp then
+   exit;
+
+// destroy bomb siberite as high prio
+if UnitFilter(tmp, [f_weapon, ru_siberium_rocket]) then
+   un := UnitFilter(tmp, [f_weapon, ru_siberium_rocket])[1]
+  else
+   un := tmp[rand(1, tmp)];
+
+
+if not alliance_used_artifact_1 then
+   alliance_used_artifact_1 := [GetX(un), GetY(un)];
+
+KillUnit(un);
+End;
+
+
+// Artifact #2 - Hacking
+Export Function ActiveArtifact2();
+var i, un, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 6], [f_control, control_computer]]);
+
+if not tmp then
+   exit;
+
+un := tmp[rand(1, tmp)];
+
+if GetWeapon(un) = ru_siberium_rocket then
+   ComAttackPlace(un, 194, 19)
+  else
+   ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_enemy, 7]), un));
+
+if not alliance_used_artifact_2 then
+   alliance_used_artifact_2 := [GetX(un), GetY(un)];
+
+End;
+
+
+
