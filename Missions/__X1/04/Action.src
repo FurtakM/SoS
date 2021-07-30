@@ -1,0 +1,96 @@
+Export Function Action;
+var killScene, bonus, un, i, driver;
+begin
+bonus := 0;
+
+if hasAll then
+   bonus := 1;
+
+killScene := deadCounter > [4, 3, 2][Difficulty] + bonus;
+
+PlaceSeeing(118, 11, 2, -37963);
+
+if killScene then
+   begin
+   InGameOn;
+
+   CenterNowOnXY(81, 4);
+
+   PlaceUnitXY(Omar, 84, 6, false);
+   PlaceUnitXY(Heike, 81, 4, false);
+
+   SetLives(Heike, 251);
+   SetClass(Heike, 2);
+
+   ComTurnUnit(Heike, Omar);
+   ComTurnUnit(Omar, Heike);
+
+   for i := 1 to 3 do
+       begin
+       uc_side := 5;
+       uc_nation := 2;
+
+       PrepareHuman(false, 1, 1);
+       un := CreateHuman;
+       PlaceUnitXY(un, 86 + 1 * (i - 1), 3 + 2 * (i - 1), false);
+       ComTurnXY(un, 81, 4);
+       end;
+
+   wait(0$2);
+
+   Say(Omar, 'DO-death-1');
+   Say(Omar, 'DO-death-2');
+   Say(Omar, 'DO-death-3');
+
+   ComAttackUnit(Omar, Heike);
+
+   wait(0$2);
+
+   YouLost('Penalty');
+   end
+else // normal scene
+   begin
+   InGameOn;
+
+   CenterNowOnXY(124, 15);
+
+   PlaceHumanInUnit(Shariff, arBar1);
+   PlaceHumanInUnit(Omar, arBar1);
+
+   PlaceUnitXY(Heike, 124, 12, false);
+
+   PrepareHuman(false, 1, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 124, 17, false);
+   ComTurnXY(un, 124, 16);
+
+   PrepareHuman(false, 3, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 134, 13, false);
+   ComTurnXY(un, 136, 15);
+
+   PrepareHuman(false, 3, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 136, 15, false);
+   ComTurnXY(un, 134, 13);
+
+   PrepareHuman(false, 1, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 112, 36, false);
+
+   ComTurnUnit(un, flame);
+
+   PrepareHuman(false, 3, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 115, 33, false);
+
+   InGameOff;
+   end;
+End;
+
+// repair flamethrower
+Every 0$1 trigger GetLives(flame) < 1000 do
+begin
+enable;
+SetLives(flame, 777);
+End;
