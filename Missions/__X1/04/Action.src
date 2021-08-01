@@ -1,5 +1,5 @@
 Export Function Action;
-var killScene, bonus, un, i, driver;
+var killScene, bonus, un, i, driver, mechs;
 begin
 bonus := 0;
 
@@ -12,6 +12,8 @@ PlaceSeeing(118, 11, 2, -37963);
 
 if killScene then
    begin
+   RemoveUnit(flame);
+
    InGameOn;
 
    CenterNowOnXY(81, 4);
@@ -50,9 +52,13 @@ if killScene then
    end
 else // normal scene
    begin
+   mechs := [];
+
    InGameOn;
 
    CenterNowOnXY(124, 15);
+
+   ComTurnXY(Heike, 123, 16);
 
    PlaceHumanInUnit(Shariff, arBar1);
    PlaceHumanInUnit(Omar, arBar1);
@@ -69,10 +75,14 @@ else // normal scene
    PlaceUnitXY(un, 134, 13, false);
    ComTurnXY(un, 136, 15);
 
+   mechs := Replace(mechs, 1, un);
+
    PrepareHuman(false, 3, 1);
    un := CreateHuman;
    PlaceUnitXY(un, 136, 15, false);
    ComTurnXY(un, 134, 13);
+
+   mechs := Replace(mechs, 2, un);
 
    PrepareHuman(false, 1, 1);
    un := CreateHuman;
@@ -81,8 +91,39 @@ else // normal scene
    ComTurnUnit(un, flame);
 
    PrepareHuman(false, 3, 1);
-   un := CreateHuman;
-   PlaceUnitXY(un, 115, 33, false);
+   driver := CreateHuman;
+   PlaceUnitXY(driver, 115, 33, false);
+
+   for i := 1 to 3 do
+       begin
+       PrepareHuman(false, 4, 3);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, [arLab1, arLab2][i mod 2 + 1]);
+       end;
+
+   SetSpecResearch(arLab1, 100, false);
+   SetSpecResearch(arLab2, 100, false);
+
+   wait(0$2);
+
+   PlaceHumanInUnit(Schulz, schulzVeh);
+
+   ComMoveXY(Schulz, 115, 21);
+   AddComExitVehicle(Schulz);
+   AddComMoveXY(Schulz, 118, 14);
+   AddComTurnUnit(Schulz, Shariff);
+
+   ComExitBuilding([Omar, Shariff]);
+   AddComMoveXY(Omar, 124, 15);
+   AddComMoveXY(Shariff, 123, 15);
+   AddComTurnUnit([Omar, Shariff], Heike);
+
+   wait(0$1);
+
+   Say(Shariff, 'DShar-intro-1');
+   Say(Omar, 'DO-intro-1');
+   Say(Omar, 'DO-intro-2');
+   Say(Omar, 'DO-intro-3');
 
    InGameOff;
    end;
