@@ -1,5 +1,5 @@
 Export Function Action;
-var killScene, bonus, un, i, driver, mechs;
+var killScene, bonus, un, i, driver, mechs, eng;
 begin
 bonus := 0;
 
@@ -54,7 +54,7 @@ else // normal scene
    begin
    mechs := [];
 
-   InGameOn;
+   Video(true);
 
    CenterNowOnXY(124, 15);
 
@@ -67,7 +67,7 @@ else // normal scene
 
    PrepareHuman(false, 1, 1);
    un := CreateHuman;
-   PlaceUnitXY(un, 124, 17, false);
+   PlaceUnitXY(un, 124, 18, false);
    ComTurnXY(un, 124, 16);
 
    PrepareHuman(false, 3, 1);
@@ -77,7 +77,7 @@ else // normal scene
 
    mechs := Replace(mechs, 1, un);
 
-   PrepareHuman(false, 3, 1);
+   PrepareHuman(false, 3, 3);
    un := CreateHuman;
    PlaceUnitXY(un, 136, 15, false);
    ComTurnXY(un, 134, 13);
@@ -88,11 +88,23 @@ else // normal scene
    un := CreateHuman;
    PlaceUnitXY(un, 112, 36, false);
 
-   ComTurnUnit(un, flame);
+   ComTurnXY(un, 115, 39);
 
    PrepareHuman(false, 3, 1);
    driver := CreateHuman;
    PlaceUnitXY(driver, 115, 33, false);
+
+   PrepareHuman(false, 3, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 151, 37, false);
+
+   PrepareHuman(false, 3, 1);
+   un := CreateHuman;
+   PlaceUnitXY(un, 152, 33, false);
+
+   PrepareHuman(false, 2, 2);
+   eng := CreateHuman;
+   PlaceUnitXY(eng, 156, 13, false);
 
    for i := 1 to 3 do
        begin
@@ -108,14 +120,12 @@ else // normal scene
 
    PlaceHumanInUnit(Schulz, schulzVeh);
 
-   ComMoveXY(Schulz, 115, 21);
-   AddComExitVehicle(Schulz);
-   AddComMoveXY(Schulz, 118, 14);
-   AddComTurnUnit(Schulz, Shariff);
-
    ComExitBuilding([Omar, Shariff]);
-   AddComMoveXY(Omar, 124, 15);
    AddComMoveXY(Shariff, 123, 15);
+
+   wait(0$0.3);
+
+   AddComMoveXY(Omar, 124, 15);
    AddComTurnUnit([Omar, Shariff], Heike);
 
    wait(0$1);
@@ -123,9 +133,143 @@ else // normal scene
    Say(Shariff, 'DShar-intro-1');
    Say(Omar, 'DO-intro-1');
    Say(Omar, 'DO-intro-2');
+   Say(Heike, 'DH-intro-1');
    Say(Omar, 'DO-intro-3');
 
-   InGameOff;
+   ComEnterUnit(mechs, arFac);
+
+   AddComConstruct(arFac, ar_medium_trike, engine_combustion, control_manual, ar_double_machine_gun);
+   AddComConstruct(arFac, ar_medium_trike, engine_combustion, control_manual, ar_gun);
+
+   wait(0$1); 
+   
+   if Ibrahim then
+      begin
+      Say(Omar, 'DO-intro-a-1');
+      Say(Omar, 'DO-intro-a-2');
+      Say(Shariff, 'DShar-intro-a-3');
+      Say(Shariff, 'DShar-intro-a-4');
+      Say(Shariff, 'DShar-intro-a-5');
+      Say(Shariff, 'DShar-intro-a-6');
+      Say(Shariff, 'DShar-intro-a-7');
+      Say(Shariff, 'DShar-intro-a-8');
+      end
+   else if not IbrahimHasEscaped then
+      begin
+      Say(Omar, 'DO-intro-b-1');
+      Say(Omar, 'DO-intro-b-2');
+      Say(Heike, 'DH-intro-b-3');
+      Say(Shariff, 'DShar-intro-b-4');
+      Say(Shariff, 'DShar-intro-b-5');
+      Say(Shariff, 'DShar-intro-b-6');
+      end
+   else
+      begin
+      Say(Omar, 'DO-intro-c-1');
+      Say(Omar, 'DO-intro-c-2');
+      Say(Heike, 'DH-intro-c-3');
+      Say(Heike, 'DH-intro-c-4');
+      Say(Heike, 'DH-intro-c-5');
+      Say(Omar, 'DO-intro-c-6');
+      Say(Shariff, 'DShar-intro-c-7');
+      Say(Shariff, 'DShar-intro-c-8');
+      Say(Shariff, 'DShar-intro-c-9');
+      Say(Shariff, 'DShar-intro-c-10');
+      Say(Shariff, 'DShar-intro-c-11');
+      Say(Shariff, 'DShar-intro-c-12');
+      end;
+
+   CreateCratesXY(5, 117, 7, true);
+
+   ComMoveXY(eng, 119, 8);
+
+   PrepareHuman(false, 4, 1);
+   un := CreateHuman;
+   PlaceUnitXYR(un, 102, 52, 2, false);
+
+   ComMoveXY(un, 108, 16);
+   AddComEnterUnit(un, arLab1);
+
+   for i := 1 to 3 do
+       begin
+       uc_nation := 0;
+       uc_side := 5;
+
+       hc_class := class_apeman;
+       hc_gallery := '';
+
+       un := CreateHuman;
+       PlaceUnitXYR(un, 102, 52, 4, false);
+
+       ComMoveXY(un, 108, 16);
+       AddComEnterUnit(un, [arLab1, ar_dep_n][i mod 2 + 1]);
+       end;
+
+   Say(Shariff, 'DShar-intro-13');
+   Say(Shariff, 'DShar-intro-14');
+   Say(Shariff, 'DShar-intro-15');
+
+   ComMoveXY(Schulz, 115, 21);
+   AddComExitVehicle(Schulz);
+   AddComMoveXY(Schulz, 118, 14);
+   AddComTurnUnit(Schulz, Shariff);
+
+   AddComMoveXY(eng, 124, 9);
+   AddComMoveXY(eng, 144, 11);
+   AddComBuild(eng, b_solar_power, 147, 11, 3);
+
+   Say(Shariff, 'DShar-intro-16');
+   Say(Shariff, 'DShar-intro-17');
+   Say(Heike, 'DH-intro-18');
+   Say(Omar, 'DO-intro-19');
+
+   repeat
+    wait(0$1);
+   until IsAt(Schulz, 118, 14);
+
+   ComTurnUnit(Shariff, Schulz);
+
+   Say(Shariff, 'DShar-intro-18');
+
+   AddComEnterUnit([Shariff, Schulz], arBar2);
+
+   wait(0$2);
+
+   Say(Omar, 'DO-Flamer-1');
+   Say(Heike, 'DH-Flamer-2');
+   Say(Omar, 'DO-Flamer-3');
+   Say(Heike, 'DH-Flamer-4');
+   Say(Omar, 'DO-Flamer-5');
+
+   ComMoveXY(Heike, 114, 30);
+   ComMoveXY(Omar, 116, 31);
+
+   AddComTurnXY([Heike, Omar], 115, 35);
+
+   CenterOnXY(114, 30);
+
+   repeat
+    wait(0$1);
+   until IsAt(Heike, 114, 30);
+
+   wait(0$0.3);
+
+   ComEnterUnit(driver, flame);
+   AddComAttackPlace(driver, 115, 41);
+
+   wait(0$2);
+
+   Say(Heike, 'DH-Flamer-6');
+
+   wait(0$1);
+
+   ComTurnUnit(Omar, Heike);
+
+   Say(Omar, 'DO-Flamer-7');
+
+   ChangeMap(1, '%_cont');
+
+   Video(false);
    end;
 End;
 
