@@ -572,9 +572,7 @@ function getStreamItemsFromMission(normal, hardcore)
 	STREAM_ITEMS_NORMAL = {};
 	STREAM_ITEMS_HARDCORE = {};
 
-	if (#_normal == 0) then
-		STREAM_ITEMS_NORMAL = copy(STREAM_ITEMS_INIT_NORMAL, STREAM_ITEMS_NORMAL);
-	else
+	if (#_normal > 0) then
 		for i = 1, #STREAM_ITEMS_INIT_NORMAL do
 			if (parseInt(_normal[i]) == 1) then
 				STREAM_ITEMS_NORMAL = addToArray(STREAM_ITEMS_NORMAL, STREAM_ITEMS_INIT_NORMAL[i]);
@@ -582,9 +580,7 @@ function getStreamItemsFromMission(normal, hardcore)
 		end;
 	end;
 
-	if (#_hardcore == 0) then
-		STREAM_ITEMS_HARDCORE = copy(STREAM_ITEMS_INIT_HARDCORE, STREAM_ITEMS_HARDCORE);
-	else			
+	if (#_hardcore > 0) then		
 		for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
 			if (parseInt(_hardcore[i]) == 1) then
 				STREAM_ITEMS_HARDCORE = addToArray(STREAM_ITEMS_HARDCORE, STREAM_ITEMS_INIT_HARDCORE[i]);
@@ -792,10 +788,20 @@ function newStreamInstance()
 
 	setText(streamPanel.activeLabel, '');	
 
+	local tmp = {};
+
 	if (STREAM_HARDCORE_MODE == 0) then
-		STREAM_ITEMS = copy(STREAM_ITEMS_NORMAL, STREAM_ITEMS);
+		tmp = STREAM_ITEMS_NORMAL;
 	else
-		STREAM_ITEMS = copy(STREAM_ITEMS_HARDCORE, STREAM_ITEMS);
+		tmp = STREAM_ITEMS_HARDCORE;
+	end;
+
+	if (#tmp == 0) then
+		STREAM_ITEMS = {};
+	else
+		for i = 1, #tmp do
+			STREAM_ITEMS = addToArray(STREAM_ITEMS, tmp[i]);
+		end;
 	end;
 
 	if (#STREAM_ITEMS_ACTIVE == #STREAM_ITEMS_NORMAL + #STREAM_ITEMS_HARDCORE or #STREAM_ITEMS == 0) then
