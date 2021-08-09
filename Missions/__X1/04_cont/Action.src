@@ -1,0 +1,180 @@
+Export Function Action;
+var i, un, veh, tmp;
+begin
+InGameOn;
+
+CenterNowOnXY(179, 5);
+
+veh := PrepareTank(2, 2, ar_light_trike, engine_combustion, control_manual, ar_double_machine_gun, 33);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 178, 2, false);
+
+PlaceHumanInUnit(Heike, veh);
+
+if Kamil then
+   begin
+   PlaceUnitXY(Kamil, 207, 37, false);
+   ComTurnXY(Kamil, 211, 38);
+   end;
+
+if Sophia then
+   begin
+   PlaceUnitXY(Sophia, 209, 40, false);
+   ComTurnXY(Sophia, 211, 38);
+   end;
+
+if Givi then
+   begin
+   PlaceUnitXY(Givi, 201, 34, false);
+   ComTurnXY(Givi, 206, 36);
+   end;
+
+if Markov then
+   begin
+   veh := PrepareTank(2, 2, ar_medium_trike, engine_combustion, control_manual, ar_gatling_gun, 80 - 20 * Difficulty);
+   SetDir(veh, 2);
+   PlaceUnitXY(veh, 197, 35, false);
+
+   PlaceHumanInUnit(Markov, veh);
+   end;
+
+tmp := Kaia union heikeSecondSquad;
+
+for i in tmp do
+    begin
+    PlaceUnitXYR(i, 203, 41, 6, false);
+    ComHold(i);
+    end;
+
+if not FilterAllUnits([[f_side, 2], [f_class, 2]]) then
+   SetClass(Heike, 2);
+
+ComMoveXY(Heike, 183, 12);
+AddComMoveXY(Heike, 188, 20);
+AddComMoveXY(Heike, 191, 25);
+AddComMoveXY(Heike, 203, 29);
+AddComExitVehicle(Heike);
+
+repeat
+ wait(0$1);
+until not IsInUnit(Heike);
+
+CenterOnUnits(Heike);
+
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff [Heike, Markov];
+
+ComTurnUnit(tmp, Heike);
+
+if Givi then
+   ComTurnUnit(Heike, Givi)
+else
+   ComTurnUnit(Heike, tmp[1]);
+
+Say(Heike, 'DH-Start-1');
+
+if Givi then
+   begin
+   Say(Givi, 'DG-Start-2');
+
+   if not Mike then
+      begin
+      Say(Givi, 'DG-Start-b-3');
+      Say(Heike, 'DH-Start-b-4');
+      end;
+   end
+else
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Start-a-2') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Start-a-2');
+
+ComTurnXY(Heike, 211, 38);
+
+wait(0$1);
+
+Say(Heike, 'DH-Start-3');
+Say(Heike, 'DH-Start-4');
+
+InGameOff;
+
+ChangeMissionObjectives('Prepare');
+
+wait(0$10);
+
+if not Aviradze then
+   exit;
+
+SetDir(Aviradze, 4);
+PlaceUnitXY(Aviradze, 225, 33, false);
+
+for i := 1 to 2 do
+    begin
+    uc_side := 2;
+    uc_nation := 0;                       
+
+    PrepareHuman(false, class_apeman, 1);
+    hc_gallery := '';
+    hc_name := ['Artudito', 'Textur'][i];
+    un := CreateHuman;
+    PlaceUnitXY(un, [224, 226][i], [31, 35][i], false);
+    ComMoveXY(un, 215, 36);
+    end;
+
+ComMoveXY(Aviradze, 215, 36);
+End;
+
+Every 0$2 trigger baseConstructed do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-base-1');
+
+if Markov then
+   begin
+   Say(Markov, 'DMar-base-2');
+   Say(Markov, 'DMar-base-3');
+   Say(Heike, 'DH-base-4');
+   Say(Markov, 'DMar-base-5');
+   end
+else
+   begin
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-base-a-2') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-base-a-2');
+
+   Say(Heike, 'DH-base-a-3');
+   end;
+
+Say(Aviradze, 'DA-base-6');
+Say(Aviradze, 'DA-base-7');
+
+DialogueOff;
+
+ChangeMissionObjectives('Flamethrower');
+End;
+
+Every 0$2 trigger labConstructed and IsOk(Aviradze) do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-lab-1');
+Say(Aviradze, 'DA-lab-2');
+Say(Heike, 'DH-lab-3');
+
+DialogueOff;
+End;
+
+Every 0$2 trigger GetTech(tech_HidCam, 2) = state_researched do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-Cam-1');
+Say(Aviradze, 'DA-Cam-2');
+Say(Aviradze, 'DA-Cam-3');
+Say(Heike, 'DH-Cam-4');
+Say(Kaia, 'DK-Cam-5');
+Say(Kaia, 'DK-Cam-6');
+
+DialogueOff;
+
+Query('Camera');
+
+
+End;

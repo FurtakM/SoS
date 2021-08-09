@@ -210,11 +210,9 @@ function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
     for i = 1, #v1 do
         if (parseInt(v1[i]) < parseInt(v2[i])) then
             return false;
+        elseif (parseInt(v1[i] > parseInt(v2[i]))) then
+            return true;
         end;
-    end;
-
-    if (parseInt(v1[#v1]) == parseInt(v2[#v1])) then
-        return true;
     end;
 
     return true;
