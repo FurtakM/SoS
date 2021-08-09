@@ -162,6 +162,7 @@ DialogueOff;
 End;
 
 Every 0$2 trigger GetTech(tech_HidCam, 2) = state_researched do
+var i;
 begin
 DialogueOn;
 
@@ -176,5 +177,19 @@ DialogueOff;
 
 Query('Camera');
 
+hiddenCameraAllowed := true;
 
+for i in camAreas do
+    SetAreaMapShow(i, 1);
+End;
+
+Every 0$1 trigger cameraCounter = 0 and hiddenCameraAllowed do
+var i;
+begin
+stop_talking := true;
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, 2]]) do
+    AddExperience(i, 2, 450);
+
+stop_talking := false;
 End;
