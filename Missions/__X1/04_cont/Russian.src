@@ -1,1 +1,299 @@
-//
+Export Kurin, Grishko, Popov, Burlak;
+Export kirovBaseSquad, beriaBaseSquad, grishkoSquad, russianPatrol,
+       russianOmicronAttackers, russianCargo;
+Export Function PrepareRussian;
+var i, un, arm, bar, bun;
+begin
+SetBName(kirov, 'kirov');
+SetBName(beria, 'beria');
+SetBName(kagan, 'kagan');
+
+uc_side := 6;
+uc_nation := 3;
+
+bar := FilterAllUnits([[f_side, 6], [f_btype, b_barracks]])[1];
+arm := FilterAllUnits([[f_side, 6], [f_btype, b_armoury]])[1];
+
+kirovBaseSquad := [];
+beriaBaseSquad := [];
+russianPatrol := [];
+
+Kurin := PrepareUnit('Kurin', false, '');
+PlaceHumanInUnit(Kurin, kirov);
+
+Popov := PrepareUnit('Popov', false, '');
+PlaceHumanInUnit(Popov, kirov);
+
+Grishko := PrepareUnit('Grishko', false, '');
+PlaceUnitXY(Grishko, 207, 106, false);
+ComTurnXY(Grishko, 209, 106);
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 2, 2);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, kirov);
+    kirovBaseSquad := kirovBaseSquad union un;
+    end;
+
+for i := 1 to [5, 6, 6][Difficulty] do
+    begin
+    PrepareHuman(false, 1, [2, 3, 4][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, bar);
+    kirovBaseSquad := kirovBaseSquad union un;
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 3, 3);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ru_fac);
+    kirovBaseSquad := kirovBaseSquad union un;
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 4, 3);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ru_lab);
+    kirovBaseSquad := kirovBaseSquad union un;
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, 2);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, arm);
+    grishkoSquad := grishkoSquad union un;
+    end;
+
+russianCargo := [];
+
+for i := 1 to 2 do
+    begin
+    PrepareTank(6, 3, ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay, 100);
+    un := CreateVehicle;
+    russianCargo := russianCargo union un;
+    SetCargo(un, mat_oil, 100);
+    SetDir(un, 4);
+    PlaceUnitXYR(un, 147, 103, 4, false);
+
+    PrepareHuman(false, 1, Difficulty);
+    PlaceHumanInUnit(CreateHuman, un);
+    end;
+
+// beria
+uc_side := 3;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 1, Difficulty + 1);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, FilterAllUnits([[f_side, 3], [f_btype, b_bunker]])[i]);
+    beriaBaseSquad := beriaBaseSquad union un;
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 1, Difficulty + 1);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, FilterAllUnits([[f_side, 3], [f_btype, b_barracks]])[1]);
+    beriaBaseSquad := beriaBaseSquad union un;
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 4, Difficulty);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, FilterAllUnits([[f_side, 3], [f_btype, b_lab_half]])[1]);
+    beriaBaseSquad := beriaBaseSquad union un;
+    end;
+
+PrepareHuman(false, 2, Difficulty);
+un := CreateHuman;
+PlaceHumanInUnit(un, beria);
+beriaBaseSquad := beriaBaseSquad union un;
+
+// kagan
+for i := 1 to 3 do
+    begin
+    bun := FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]])[i];
+    PrepareHuman(false, 1, Difficulty);
+    un := CreateHuman;
+    SetDir(un, GetDir(bun) - 3 * -1);
+    PlaceHumanInUnit(un, bun);
+    beriaBaseSquad := beriaBaseSquad union un;
+    end;
+
+// omicron attackers
+russianOmicronAttackers := [];
+
+for i := 1 to 6 do
+    begin
+    PrepareTank(3, 3, [ru_medium_wheeled, ru_heavy_wheeled][i mod 2 + 1], engine_combustion, control_manual, [ru_gatling_gun, ru_gun, ru_heavy_machine_gun][i mod 3 + 1], 100);
+    un := CreateVehicle;
+    SetDir(un, [0, 5][rand(1, 2)]);
+    russianOmicronAttackers := russianOmicronAttackers union un;
+    PlaceUnitXYR(un, 127, 89, 7, false);
+
+    uc_side := 3;
+    PrepareHuman(false, 3, 3);
+    un := CreateHuman;
+    russianOmicronAttackers := russianOmicronAttackers union un;
+    PlaceHumanInUnit(un, russianOmicronAttackers[russianOmicronAttackers - 1]);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, Difficulty);
+    un := CreateHuman;
+    russianOmicronAttackers := russianOmicronAttackers union un;
+    PlaceUnitXYR(un, 91, 60, 3, false);
+    end;
+End;
+
+Every 0$3 do
+var i;
+begin
+ComExitBuilding(grishkoSquad);
+
+wait(3);
+
+AddComEnterUnit(grishkoSquad[1], NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_btype, b_breastwork]]), grishkoSquad[1]));
+
+ComMoveXY(grishkoSquad[2], 211, 107);
+AddComTurnXY(grishkoSquad[2], 209, 106);
+
+ComMoveXY(grishkoSquad[3], 209, 103);
+AddComTurnXY(grishkoSquad[3], 209, 106);
+
+repeat
+ wait(0$20);
+
+ for i := 3 downto 2 do
+     begin
+     AddComAgressiveMove(grishkoSquad[i], 200, 91);
+     AddComWait(grishkoSquad[i], 0$6);
+     AddComAgressiveMove(grishkoSquad[i], 224, 93);
+     AddComWait(grishkoSquad[i], 0$6);
+     AddComAgressiveMove(grishkoSquad[i], 239, 123);
+     AddComWait(grishkoSquad[i], 0$6);
+     AddComAgressiveMove(grishkoSquad[i], 212, 105);
+     AddComWait(grishkoSquad[i], 0$20);
+     wait(0$30);
+     end;
+
+until not activeGrishkoAI;
+
+ComMoveXY(grishkoSquad, 221, 110);
+AddComMoveXY(grishkoSquad, 228, 115);
+AddComHold(grishkoSquad);
+End;
+
+Every 0$1 trigger allowToPatrol do
+var un, i, j, patrol;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, [2, 3, 4][Difficulty]);
+    un := CreateHuman;
+    russianPatrol := russianPatrol union un;
+    SetTag(un, 1);
+    PlaceUnitArea(un, southRoadSpawn, false);
+    ComMoveXY(un, 210, 159);
+    wait(0$2);
+    end;
+
+patrol := [
+  [ [172,76], [150,38], [148,9], [165,38] ],
+  [ [191,77], [168,42], [166,11], [151,12] ],
+  [ [221,88], [217,64], [208,42] ]
+];
+
+repeat
+ wait(0$1);
+
+ for i := 1 to patrol do
+     begin
+     if GetLives(russianPatrol[i]) < 990 and GetTag(russianPatrol[i]) = 1 then
+        SetTag(russianPatrol[i], 2);
+
+     if GetTag(russianPatrol[i]) = 2 then
+        begin
+        ComMoveXY(russianPatrol[i], 166, 101);
+
+        if GetDistUnits(russianPatrol[i], kirov) < 10 then
+           russianAlert := true;
+
+        continue;
+        end;
+
+     if not HasTask(russianPatrol[i]) then
+        for j in patrol[i] do
+            begin
+            AddComWait(russianPatrol[i], rand(0$1, 0$5));
+            AddComAgressiveMove(russianPatrol[i], j[1], j[2]);
+            end;
+     end;
+
+until not russianPatrol;
+
+End;
+
+Every 0$5 trigger FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_see, 2]]) diff russianPatrol do
+russianAlert := true;
+
+Every 0$1 trigger startAttackOnOmicron and not omicronFall do
+var i, filter, tmp, enemy, x;
+begin
+enable;
+
+filter := UnitFilter(russianOmicronAttackers, [f_type, unit_vehicle]);
+enemy := FilterAllUnits([f_side, 4]);
+
+for i in filter do
+    begin
+    tmp := IsDrivenBy(i);
+
+    if not tmp then
+       continue;
+
+    if GetFuel(i) > 90 and GetTag(i) = 2 then
+       SetTag(i, 0)
+    else if GetTag(i) = 2 then
+       begin
+       x := rand(1, 2);
+       AddComMoveUnit(i, russianCargo[x]);
+       end;
+
+    if GetLives(i) >= 600 and not GetTag(i) then
+       ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+    if GetLives(i) < 600 and not GetTag(i) then
+       begin
+       SetTag(i, 1);
+       ComMoveXY(i, 62, 22);
+       end;
+
+      if GetTag(i) = 1 and GetDistUnitXY(i, 62, 22) < 6 and tmp then
+         begin
+         ComExitVehicle(tmp);
+         AddComRepairVehicle(tmp, i);
+
+         repeat
+          wait(0$1);
+         until GetLives(i) = 1000;
+
+         ComEnterUnit(tmp, i);
+
+         if GetFuel(i) <= 90 then
+            SetTag(i, 2)
+         else
+            SetTag(i, 0);
+         end;
+    end;
+End;

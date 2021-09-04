@@ -7,6 +7,44 @@ if GetBType(b) = b_lab and GetSide(b) = 2 then
    labConstructed := true;
 End;
 
+On UnitDestroyed(un) do
+begin
+if un = Heike then
+   YouLost('Heike');
+
+if un = omikron then
+   omicronFall := true;
+
+if un in russianPatrol then
+   russianPatrol := russianPatrol diff un;
+End;
+
+On UnitGoesToRed(un) do
+var i, sol, nearestBarracks;
+begin
+if un in FilterAllUnits([[f_or, [f_side, 3], [f_side, 4], [f_side, 6]], [f_btype, b_bunker]]) then
+   begin
+   sol := UnitsInside(un);
+
+   if not sol then
+      exit;
+
+   nearestBarracks := FilterAllUnits([[f_side, GetSide(un)], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+   if not nearestBarracks then
+      exit;
+
+   for i in nearestBarracks do
+       if UnitsInside(i) = 6 then
+          nearestBarracks := nearestBarracks diff i;
+
+   if not nearestBarracks then
+      exit;
+
+   ComEnterUnit(sol[1], nearestBarracks[1]);
+   end;
+End;
+
 On HiddenCameraPlaced(side, un, x, y) do
 var i;
 begin
@@ -17,7 +55,6 @@ for i in camAreas do
     if InArea(x, y, i) then
        begin
        SetAreaMapShow(i, 0);
-       cameraCounter := cameraCounter - 1;
        camAreas := camAreas diff i;
        break;
        end;

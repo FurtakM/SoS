@@ -1,1 +1,177 @@
-//
+Export omicronSquad;
+Export Function PrepareAmerican;
+var i, un;
+begin
+SetBName(omikron, 'omikron');
+
+uc_side := 4;
+uc_nation := 1;
+
+omicronSquad := [];
+
+for i in FilterAllUnits([[f_side, 4], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) do
+    begin
+    PrepareHuman(false, 1, 1);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 2, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, omikron);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareTank(4, 1, us_medium_wheeled, engine_solar, control_manual, us_light_gun, 100);
+    un := CreateVehicle;
+    omicronSquad := omicronSquad union un;
+    PlaceUnitXYR(un, 28, 37, 6, false);
+
+    PrepareHuman(false, 3, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, omicronSquad[omicronSquad - 1]);
+    end;
+End;
+
+Export Function SmallAmericanReinforcements;
+var i, un, tmp;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+tmp := [];
+
+PrepareTank(4, 1, us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun, 77);
+un := CreateVehicle;
+tmp := tmp union un;
+SetDir(un, 2);
+PlaceUnitXY(un, 106, 3, false);
+
+PrepareHuman(false, 3, 2);
+un := CreateHuman;
+tmp := tmp union un;
+PlaceHumanInUnit(un, tmp[tmp - 1]);
+
+ComMoveXY(un, 109, 9);
+
+wait(0$1);
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 1, 2);
+    un := CreateHuman;
+    tmp := tmp union un;
+    PlaceUnitXYR(un, 105, 2, 2, false);
+    end;
+
+ComAgressiveMove(tmp, 26, 35);
+
+repeat
+ wait(0$1);
+
+ if not UnitFilter(tmp, [f_ok]) then
+    exit;
+
+until UnitFilter(tmp, [f_dist, omikron, 12]) = tmp;
+
+omicronSquad := omicronSquad union tmp;
+
+for i in UnitFilter(tmp, [f_class, 1]) do
+    ComEnterUnit(i, NearestUnitToUnit(FilterAllUnits([[f_side, 4], [f_btype, b_armoury]]), i));
+End;
+
+Every 0$1 trigger not omicronFall do
+var i, filter, tmp, enemy;
+begin
+enable;
+
+filter := FilterAllUnits([[f_side, 4], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+tmp := UnitFilter(omicronSquad, [f_class, 2]);
+
+if filter and tmp then
+   begin
+   for i in tmp do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+        if not HasTask(i) then
+           ComRepairBuilding(i, filter[1]);
+   end
+else if UnitFilter(tmp, [f_not, [f_inside]]) then
+   begin
+   for i in UnitFilter(tmp, [f_not, [f_inside]]) do
+       ComEnterUnit(i, omikron);
+   end;
+
+filter := UnitFilter(omicronSquad, [f_type, unit_vehicle]);
+
+if not filter then
+   exit;
+
+enemy := FilterUnitsInArea(omicronDefendArea, [f_enemy, 4]);
+
+if enemy then
+   begin
+   for i in filter do
+       begin
+       tmp := IsDrivenBy(i);
+
+       if not tmp then
+          continue;
+
+       if GetLives(i) >= 600 and GetTag(i) <> 1 then
+          ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+       if GetLives(i) < 600 and GetTag(i) <> 1 then
+          begin
+          SetTag(i, 1);
+          ComMoveXY(i, 27, 35);
+          end;
+
+       if GetTag(i) = 1 and GetDistUnitXY(i, 27, 35) < 6 and tmp then
+          begin
+          ComExitVehicle(tmp);
+          AddComRepairVehicle(tmp, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(tmp, i);
+          SetTag(i, 0);
+          end;
+       end;
+   end;
+End;
+
+Every 0$1 trigger omicronFall do
+var i, tmp;
+begin
+tmp := UnitFilter(omicronSquad, [[f_type, unit_human], [f_ok]]);
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     ComExit(i);
+     AddComMoveToArea(i, omicronEscapeArea);
+
+     if IsInArea(i, omicronEscapeArea) then
+        begin
+        tmp := tmp diff i;
+        RemoveUnit(i);
+        end;
+    end;
+
+until not tmp;
+End;
