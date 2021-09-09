@@ -1,6 +1,6 @@
-Export Heike, Givi, Mike, Kamil, Kaia, Sophia, Markov,
-       Omar, Ibrahim, Kurt, Aviradze,
-       heikeSecondSquad, omarSquad;
+Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov,
+       Omar, Kurt, Aviradze,
+       heikeSecondSquad, omarSquad, aviradzeSquad;
 Export Function PrepareArabian;
 var i;
 begin
@@ -8,7 +8,7 @@ uc_side := 2;
 uc_nation := 2;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
-Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);  
+Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);
 Givi := PrepareUnit('Givi', (not debug), prefix);
 Kamil := PrepareUnit('Kamil', (not debug), prefix);
 Kaia := PrepareUnit('Kaia', (not debug), prefix);
@@ -16,6 +16,7 @@ Sophia := PrepareUnit('Sophia', (not debug), prefix);
 Markov := PrepareUnit('Markov', (not debug), prefix);
 Aviradze := PrepareUnit('Aviradze', (not debug), prefix);
 
+aviradzeSquad := [];
 heikeSecondSquad := CreateCharacterSet('03_others');
 
 uc_side := 5;
@@ -32,11 +33,62 @@ ComHold([Kurt, Mike]);
 End;
 
 Export Function PrepareOmarForces;
+var i, un, veh;
 begin
 uc_side := 5;
 uc_nation := 2;
 
 Omar := PrepareUnit('Omar', false, '');
 
+PlaceUnitXY(Omar, 284, 163, false);
+ComMoveXY(Omar, 256, 129);
+
+wait(0$2);
+
 omarSquad := [];
+
+for i := 1 to 5 do
+    begin
+    PrepareTank(5, 2, [ar_medium_trike, ar_half_tracked][i mod 2 + 1], engine_combustion, control_manual, [ar_gatling_gun, ar_gun, ar_flame_thrower][i mod 3 + 1], 100);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    omarSquad := omarSquad union veh;
+    PlaceUnitXY(veh, 284, 163, false);
+
+    PrepareHuman(false, 3, 3);
+    un := CreateHuman;
+    omarSquad := omarSquad union un;
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 271, 144);
+
+    wait(0$2);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, 3);
+    un := CreateHuman;
+    omarSquad := omarSquad union un;
+    PlaceUnitXY(un, 284, 163, false);
+
+    ComMoveXY(un, 257, 138);
+
+    wait(0$1);
+    end;
+
+for i := 1 to 6 do
+    begin
+    PrepareHuman(false, [1, 1, 4][i mod 3 + 1], 3);
+    un := CreateHuman;
+    omarSquad := omarSquad union un;
+    PlaceUnitXY(un, 225, 163, false);
+
+    if i = 1 then
+       SetAttr(un, attr_speed, 12);
+
+    ComMoveXY(un, 222, 157);
+
+    wait(0$1);
+    end;
 End;
