@@ -12,11 +12,38 @@ begin
 if un = Heike then
    YouLost('Heike');
 
+if un = Omar then
+   YouLost('Omar');
+
+if un in FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]) then
+   loseCounter := loseCounter + 1;
+
 if un = omikron then
    omicronFall := true;
 
+if un = kirov then
+   begin
+   ChangeMissionObjectives('KirovDone');
+   kirovDestroyed := true;
+   end;
+
+if un = beria then
+   begin
+   ChangeMissionObjectives('BeriaDone');
+   beriaDestroyed := true;
+   end;
+
+if un = kagan then
+   begin
+   ChangeMissionObjectives('KaganDone');
+   kaganDestroyed := true;
+   end;
+
 if un in russianPatrol then
    russianPatrol := russianPatrol diff un;
+
+if un in russianOmicronAttackers then
+   russianOmicronAttackers := russianOmicronAttackers diff un;
 End;
 
 On UnitGoesToRed(un) do
@@ -58,4 +85,10 @@ for i in camAreas do
        camAreas := camAreas diff i;
        break;
        end;
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 2 and s2 = 5 then
+   YouLost('Ally');
 End;

@@ -122,6 +122,7 @@ ComMoveXY(Aviradze, 215, 36);
 End;
 
 Every 0$2 trigger baseConstructed do
+var i, un, veh;
 begin
 DialogueOn;
 
@@ -245,6 +246,28 @@ SetSide([Kurt, Mike], 2);
 InGameOff;
 
 allowToPatrol := true;
+
+wait(1$30);
+
+for i := 1 to [3, 3, 2][Difficulty] do
+    begin
+    uc_side := 2;
+    uc_nation := 2;
+
+    PrepareHuman(false, [1, 3, 1][i mod 3 + 1], [3, 2, 2][Difficulty]);
+    un := CreateHuman;
+    heikeSecondSquad := heikeSecondSquad union un;
+
+    PrepareTank(2, 2, ar_medium_trike, [engine_solar, engine_combustion][i mod 2 + 1], control_manual, [ar_gun, ar_gatling_gun, ar_gun, ar_light_gun][Difficulty + rand(0, 1)], 77);
+    veh := CreateVehicle;
+    SetDir(veh, 2);
+    PlaceUnitXYR(veh, 178, 2, 2, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 183, 11);
+
+    wait(0$2);
+    end;
 End;
 
 Every 0$2 trigger labConstructed and IsOk(Aviradze) do
@@ -295,6 +318,55 @@ End;
 Every 0$2 trigger russianAlert and not allowHeikeAttack do
 YouLost('Spotted');
 
+Every 0$3 trigger FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_see, 2]]) diff russianPatrol do
+russianAlert := true;
+
+Every 0$1 trigger russianAlert do
+var i, tmp, towers, noncombat;
+begin
+tmp := UnitFilter(kirovBaseSquad, [[f_class, 1], [f_inside]]);
+towers := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
+
+for i := 1 to tmp do
+    begin
+    ComExitBuilding(tmp[i]);
+    AddComEnterUnit(tmp[i], towers[i]);
+    end;
+
+noncombat := Popov union UnitFilter(kirovBaseSquad union beriaBaseSquad, [f_not, [f_class, 1]]);
+
+for i in noncombat do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveToArea(i, westEscapeArea);
+    end;
+
+if not allowHeikeAttack then
+   exit;
+
+SayRadio(Kurin, 'D9a-Kur-1');
+SayRadio(Burlak, 'D9a-Bur-1');
+SayRadio(Kurin, 'D9a-Kur-2');
+
+omicronFall := true;
+retreatFromOmicron := true;
+End;
+
+// escapist
+Every 0$1 trigger FilterUnitsInArea(westEscapeArea, [[f_not, [f_side, 2]], [f_nation, 3]]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(westEscapeArea, [[f_not, [f_side, 2]], [f_nation, 3]]) do
+    begin
+    escapeCounter := escapeCounter + 1;
+    RemoveUnit(i);
+    end;
+End;
+
 // american reinforcements
 Every 0$1 trigger tick >= 6$30 + rand(0, 1$30) do
 SmallAmericanReinforcements;
@@ -310,12 +382,323 @@ wait(1$00);
 startAttackOnOmicron := true;
 End;
 
-// omar dialog
+// omar scene
 Every 0$2 trigger tick >= 20$00 do
+var i, driver, veh, un, tmp, tmp2, enemy;
 begin
+ChangeSideFog(5, 2);
+
 PrepareOmarForces;
 
-CenterOnUnits(Omar);
+wait(0$03);
 
 allowHeikeAttack := true;
+activeGrishkoAI := false;
+CenterOnUnits(Omar);
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_human]]) do
+    if HasTask(i) then
+       ComHold(i);
+
+DialogueOn;
+SayRadio(Omar, 'DO-assault-1');
+DialogueOff;
+
+for i in UnitFilter(grishkoSquad, [f_not, [f_inside]]) do
+    ComMoveXY(i, 226, 114);
+
+ComEnterUnit(Grishko, NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_btype, b_armoury]]), Grishko));
+
+ChangeMissionObjectives('Attack');
+
+music_class := music_combat;
+music_nat := 4;
+
+DoNotAttack(5, Grishko);
+DoNotAttack(6, UnitFilter(omarSquad, [f_class, 1])[4]);
+
+for i in UnitFilter(omarSquad, [f_not, [f_class, 4]]) do
+    ComAgressiveMove(i, 221, 110);
+
+ComMoveXY(UnitFilter(omarSquad, [f_class, 4]), 214, 124);
+
+ComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 214, 114, 0);
+
+SayRadio(Grishko, 'D9-Gri-1');
+SayRadio(Kurin, 'D9-Kur-1');
+
+wait(0$1);
+
+ComAgressiveMove(Omar, 233, 130);
+
+SayRadio(Grishko, 'D9-Gri-2');
+SayRadio(Kurin, 'D9-Kur-2');
+
+ComExitBuilding(Grishko);
+AddComMoveXY(Grishko, 211, 104);
+AddComHold(Grishko);
+
+repeat
+ wait(3);
+until not IsInUnit(Grishko);
+
+ComAttackUnit(UnitFilter(omarSquad, [f_weapon, ar_flame_thrower]), Grishko);
+AddComAgressiveMove(UnitFilter(omarSquad, [f_weapon, ar_flame_thrower]), 215, 106);
+
+repeat
+ wait(3);
+until GetLives(Grishko) < 1000;
+
+NormalAttack(5, Grishko);
+NormalAttack(6, UnitFilter(omarSquad, [f_class, 1])[4]);
+
+SayRadio(Grishko, 'D9-Gri-3');
+SayRadio(Kurin, 'D9-Kur-3');
+
+music_class := music_auto;
+music_nat := music_auto;
+
+for i in omarSquad do
+    begin
+    if GetType(i) = unit_vehicle and GetLives(i) < 1000 then
+       begin
+       driver := IsDrivenBy(i);
+       veh := i;
+       ComExitVehicle(driver);
+       AddComRepairVehicle(driver, veh);
+       AddComEnterUnit(driver, veh);
+       end
+    else if GetLives(i) < 500 then
+       begin
+       AddComHeal(UnitFilter(omarSquad, [f_class, 4]), i);
+       end;
+    end;
+
+repeat
+ wait(0$1);
+until not UnitFilter(omarSquad, [[f_not, [f_lives, 1000]], [f_type, unit_vehicle]]) and not UnitFilter(omarSquad, [f_not, [f_lives, 250]]);
+
+wait(0$2);
+
+tmp := UnitFilter(omarSquad, [[f_empty], [f_type, unit_vehicle]]);
+tmp2 := UnitFilter(omarSquad, [[f_class, 3], [f_not, [f_driving]]]);
+
+for i := 1 to tmp do
+    ComEnterUnit(tmp2[i], tmp[i]);
+
+wait(0$5);
+
+ComMoveXY(omarSquad, 199, 141);
+ComMoveXY(Omar, 190, 143);
+AddComHold(Omar);
+
+// attack on kirov
+AddComAgressiveMove(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 161, 130);
+AddComAgressiveMove(UnitFilter(omarSquad, [f_class, 1]), 163, 122);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 165, 118, 0);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 159, 116, 0);
+
+AddComAgressiveMove(UnitFilter(omarSquad, [f_type, unit_vehicle]), 169, 114);
+
+repeat
+ wait(0$1);
+
+ tmp := UnitFilter(omarSquad, [f_class, 1]);
+
+ for i in tmp do
+     begin
+     if GetLives(i) < 600 and GetDistUnitXY(i, 161, 130) > 6 then
+        ComMoveXY(i, 161, 130);
+
+     if GetLives(i) = 1000 and not HasTask(i) then
+        ComAgressiveMove(i, 160, 109);
+     end;
+
+ tmp := UnitFilter(omarSquad, [f_type, unit_vehicle]);
+
+ for i in tmp do
+     begin
+     tmp2 := IsDrivenBy(i);
+
+     if not tmp2 then
+        continue;
+
+     if GetLives(i) >= 600 and GetTag(i) = 1 then
+        SetTag(i, 0);
+
+     if GetLives(i) >= 600 and not GetTag(i) then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+     if GetLives(i) < 600 and not GetTag(i) then
+        begin
+        SetTag(i, 1);
+        ComMoveXY(i, 202, 150);
+        end;
+                                       
+     if GetTag(i) = 1 and GetDistUnitXY(i, 202, 150) < 6 and tmp2 then
+        begin
+        ComExitVehicle(tmp2);
+        AddComRepairVehicle(tmp2, i);
+        AddComWait(tmp2, 0$20);
+        AddComEnterUnit(tmp2, i);
+        end;
+     end;
+until kirovDestroyed;
+
+repeat
+ wait(0$1);
+
+ for i in omarSquad union Omar do
+     if IsInArea(i, southRoadArea) then
+        RemoveUnit(i)
+     else
+        ComMoveXY(i, 208, 162);
+until not FilterAllUnits([[f_side, 5], [f_type, unit_human]]);
 End;
+
+// see enemy lab
+Every 0$3 trigger See(2, ruLab) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) and not InBattle(2) do
+var i, tmp, q;
+begin
+DialogueOn;
+
+PlaceSeeing(111, 90, 2, -6);
+CenterNowOnXY(111, 90);
+
+Say(Aviradze, 'DA-Cap-1');
+Say(Heike, 'DH-Cap-2');
+
+tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
+
+if tmp < 2 then
+   q := 2
+else
+   q := Query('LabCap');
+
+case q of
+1: begin
+   DoNotAttack(2, ruLab);
+
+   labCaptured := true;
+   Say(Heike, 'DH-Cap-a-1');
+   Say(Aviradze, 'DA-Cap-a-2');
+
+   SetSide(ruLab, 5);
+   SetSide(Aviradze, 5);
+
+   aviradzeSquad := [Aviradze];
+
+   ComEnterUnit(Aviradze, ruLab);
+
+   for i := 1 to 2 do
+       begin
+       aviradzeSquad := aviradzeSquad union tmp[i];
+       SetSide(tmp[i], 5);
+       ComEnterUnit(tmp[i], ruLab);
+       end;
+   end;
+2: begin
+   Say(Heike, 'DH-Cap-b-1');
+   Say(Aviradze, 'DA-Cap-b-2');
+   end;
+End;
+
+DialogueOff;
+End;
+
+// go to west
+Every 0$1 trigger kirovDestroyed and beriaDestroyed and kaganDestroyed do
+var i, tmp, tmp2;
+begin
+ChangeMissionObjectives('GoToWest');
+SetAreaMapShow(goToWestArea, 1);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]])
+      =
+      FilterUnitsInArea(goToWestArea, [[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]);
+
+SaveCharacters(Heike, '04_1_Heike');
+
+if Aviradze and not Aviradze in aviradzeSquad then
+   SaveCharacters(Aviradze, '04_1_Aviradze')
+else if Aviradze then
+   SaveCharacters(Aviradze, '04_1_Aviradze_L');
+
+// Aviradze squad possible: [Ibrahim, Kamil, Sophia, Kaia]
+
+if Ibrahim and not Ibrahim in aviradzeSquad then
+   SaveCharacters(Ibrahim, '04_1_Ibrahim')
+else if Ibrahim then
+   SaveCharacters(Ibrahim, '04_1_Ibrahim_L');
+
+if Kamil and not Kamil in aviradzeSquad then
+   SaveCharacters(Kamil, '04_1_Kamil')
+else if Kamil then
+   SaveCharacters(Kamil, '04_1_Kamil_L');
+
+if Sophia and not Sophia in aviradzeSquad then
+   SaveCharacters(Sophia, '04_1_Sophia')
+else if Sophia then
+   SaveCharacters(Sophia, '04_1_Sophia_L');
+
+if Kaia and not Kaia in aviradzeSquad then
+   SaveCharacters(Kaia, '04_1_Kaia')
+else if Kaia then
+   SaveCharacters(Kaia, '04_1_Kaia_L');
+
+if Givi then
+   SaveCharacters(Givi, '04_1_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '04_1_Mike');
+
+if Markov then
+   SaveCharacters(Markov, '04_1_Markov');
+
+if Kurt then
+   SaveCharacters(Kurt, '04_1_Markov');
+
+if heikeSecondSquad diff aviradzeSquad then
+   SaveCharacters(heikeSecondSquad diff aviradzeSquad, '04_1_others');
+
+if aviradzeSquad and heikeSecondSquad then
+   begin
+   tmp := [];
+
+   for i in heikeSecondSquad do
+       if i in aviradzeSquad then
+          tmp := Replace(tmp, tmp + 1, i);
+
+   if tmp then
+      SaveCharacters(tmp, '04_1_others_L');
+   end;
+
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]]);
+
+if tmp then
+   SaveCharacters(tmp, '04_1_apes');
+
+tmp := FilterUnitsInArea(goToWestArea, [f_type, unit_vehicle]);
+
+if tmp then
+   begin
+   tmp2 := [];
+
+   for i in tmp do
+       tmp2 := Replace(tmp2, tmp2 + 1, [GetNation(i), GetLives(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)]);
+
+   SaveVariable(tmp2, '04_1_Vehicles');
+   end;
+
+SaveVariable(labCaptured, '04_1_RuLabCaptured');
+SaveVariable(escapeCounter, '04_1_EscapeCounter');
+SaveVariable(FilterUnitsInArea(hillArea, [[f_side, 2], [f_type, unit_building]]) > 0, '04_1_BaseHill');
+SaveVariable(tick, '04_1_Time');
+SaveVariable(loseCounter, '04_1_DeadCounter');
+SaveVariable(FilterAllUnits([[f_side, 2], [f_weapon, ar_flame_thrower]]) + 0, '04_1_Flamethrower');
+
+ChangeMap(1, '__x1\04_cont2');
+End;
+
