@@ -608,7 +608,7 @@ End;
 
 // go to west
 Every 0$1 trigger kirovDestroyed and beriaDestroyed and kaganDestroyed do
-var i, tmp, tmp2;
+var i, tmp, tmp2, cargo;
 begin
 ChangeMissionObjectives('GoToWest');
 SetAreaMapShow(goToWestArea, 1);
@@ -687,7 +687,13 @@ if tmp then
    tmp2 := [];
 
    for i in tmp do
-       tmp2 := Replace(tmp2, tmp2 + 1, [GetNation(i), GetLives(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)]);
+       if GetWeapon(i) in [ar_cargo_bay, us_cargo_bay, ru_cargo_bay] then
+          begin
+          cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
+          tmp2 := Replace(tmp2, tmp2 + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), cargo]);
+          end
+       else
+          tmp2 := Replace(tmp2, tmp2 + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), []]);
 
    SaveVariable(tmp2, '04_1_Vehicles');
    end;
