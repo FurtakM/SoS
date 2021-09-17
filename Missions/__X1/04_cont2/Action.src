@@ -1,0 +1,50 @@
+Export Function Action;
+begin
+
+End;
+
+// ibrahim betrayal
+Every 0$2 trigger FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 20]]) and ibrahimOnRuSide and IsOk(Ibrahim) do
+begin
+IbrahimBetrayal;
+
+repeat
+ wait(0$1);
+until IsDead(Ibrahim) or FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 6]]);
+
+if IsDead(Ibrahim) then
+   exit;
+
+SetSide(Ibrahim, 2);
+End;
+
+Export Function IbrahimBetrayal;
+var i, tmp;
+begin
+PlaceSeeing(122, 77, 2, -6);
+
+ComMoveXY(Ibrahim, 123, 79);
+AddComTurnXY(Ibrahim, 125, 82);
+
+wait(0$2);
+
+ComTurnUnit(ruSol, Ibrahim);
+
+Say(ruSol, 'DRum-outpost-b-3');
+
+tmp := [
+   HexInfo(125, 76),
+   HexInfo(125, 79),
+   HexInfo(125, 82)
+];
+
+for i in tmp do
+    SetLives(i, 200);
+
+Say(Ibrahim, 'DI-outpost-b-4');
+
+SetSide(Ibrahim, 5);
+ComFree([Ibrahim, ruSol]);
+
+RemoveSeeing(122, 77, 2);
+End;

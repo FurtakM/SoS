@@ -1,0 +1,125 @@
+Export Burlak, Gaidar, Kuzmov;
+Export ruForce, ruEng, ruMech, ruSci, ruMobile;
+Export ruSol;
+Export Function PrepareRussian;
+var base, blist, i, b, un, tmp;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+ruForce := [];
+ruMech := [];
+ruEng := [];
+ruSci := [];
+ruMobile := [];
+
+Burlak := PrepareUnit('Burlak', false, '');
+Gaidar := PrepareUnit('Gaydar', false, '');
+Kuzmov := PrepareUnit('Kuzmov', false, '');
+
+PlaceHumanInUnit(Kuzmov, ruMainBase);
+
+SetBName(ruMainBase, 'chuikov');
+
+if Difficulty > 1 then
+   begin
+   bc_type := b_bunker;
+
+   tmp := [
+       [121, 85, 5],
+       [93, 72, 1]
+   ];
+
+   for i in tmp do
+       CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+   end;
+
+base := GetBase(ruMainBase);
+blist := GetBuildList(base);
+
+for b in blist do
+    begin
+    if b[1] = b_factory then
+       begin
+       for i := 1 to 5 do
+           begin
+           PrepareHuman(false, 3, 1 + Difficulty);
+           un := CreateHuman;
+           ruMech := Replace(ruMech, ruMech + 1, un);
+           PlaceHumanInUnit(un, HexInfo(b[2], b[3]));
+           end;
+       end
+    else if b[1] in [b_lab, b_lab_half, b_lab_full, b_lab_weapon] then
+       begin
+       for i := 1 to 2 do
+           begin
+           PrepareHuman(false, 4, Difficulty);
+           un := CreateHuman;
+           ruSci := Replace(ruSci, ruSci + 1, un);
+           PlaceHumanInUnit(un, HexInfo(b[2], b[3]));
+           end;
+       end
+    else if b[1] = b_warehouse then
+       begin
+       for i := 1 to 3 do
+           begin
+           PrepareHuman(false, 2, Difficulty);
+           un := CreateHuman;
+           ruEng := Replace(ruEng, ruEng + 1, un);
+           PlaceHumanInUnit(un, HexInfo(b[2], b[3]));
+           end;
+       end;
+    end;
+
+blist := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+for b in blist do
+    SetBLevel(b, 3 + Difficulty);
+
+blist := FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]);
+
+for b in blist do
+    begin
+    PrepareHuman(false, 1, 1 + Difficulty);
+    un := CreateHuman;
+    ruForce := Replace(ruForce, ruForce + 1, un);
+    PlaceHumanInUnit(un, b);
+    PlaceWeaponTurret(b, [ru_gun, ru_gatling_gun][b mod 2 + 1]);
+    end;
+
+blist := FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]]);
+
+for b in blist do
+    begin
+    PrepareHuman(false, 1, 1 + Difficulty);
+    un := CreateHuman;
+    ruForce := Replace(ruForce, ruForce + 1, un);
+    SetDir(un, GetDir(b) + 3);
+    PlaceHumanInUnit(un, b);
+    end;
+
+blist := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+for b in blist do
+    begin
+    for i := 1 to 2 do
+        begin
+        PrepareHuman(false, 1, 1 + Difficulty);
+        un := CreateHuman;
+        ruForce := Replace(ruForce, ruForce + 1, un);
+        PlaceHumanInUnit(un, b);
+        end;
+    end;
+
+if ibrahimOnRuSide then
+   begin
+   Ibrahim := PrepareUnit('IbrahimRu', false, '');
+   PlaceUnitXY(Ibrahim, 121, 78, false);
+   ComHold(Ibrahim);
+
+   PrepareHuman(sex_male, 1, 1);
+   ruSol := CreateHuman;
+   PlaceUnitXY(ruSol, 121, 75, false);
+   ComHold(ruSol);
+   end;
+End;
