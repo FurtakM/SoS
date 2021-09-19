@@ -173,3 +173,78 @@ if state > -1 and state < 3 then
        if GetTech(i, side) <> state then
           result := result diff i;
 End;
+
+Export Function SortByDistanceXY(x, y, list, asc);
+var i, j, tmp;
+begin
+if not list then
+   exit;
+
+result := [];
+
+for i in list do
+    begin
+    tmp := GetDistUnitXY(i, x, y);
+
+    if not result then
+       result := [[i, tmp]]
+     else
+      begin
+       if result[result][2] < tmp then
+          result := Insert(result, result+1, [i, tmp])
+       else
+       for j = 1 to result do
+           begin
+           if tmp < result[j][2] then
+              begin
+              result := Insert(result, j, [i, tmp]);
+              break;
+              end;
+           end;
+      end;
+    end;
+
+if result and not asc then
+   begin
+   tmp := result;
+
+   for i = tmp downto 1 do
+       result := Replace(result, tmp - i + 1, tmp[i]);
+   end;
+End;
+
+Export Function SortByDistanceUnit(unit, list, asc);
+begin
+result := SortByDistanceXY(GetX(unit), GetY(unit), list, asc);
+End;
+
+Export Function NearestEmptyBuilding(unit, btype);
+var side, tmp, i, places;
+begin
+if not unit then
+   exit;
+
+side := GetSide(unit);
+tmp := FilterAllUnits([[f_side, side], [f_btype, btype]]);
+
+if not tmp then
+   exit;
+
+tmp := SortByDistanceUnit(unit, tmp, true);
+
+places := 1;
+
+if btype in [b_depot, b_warehouse, b_armoury, b_barracks, b_workshop, b_factory, b_lab, b_lab_half, b_lab_full] then
+   places := 6;
+
+for i in tmp do
+    begin
+    if UnitsInside(i) - places <= 0 then
+       continue
+    else
+       begin
+       result := i;
+       exit;
+       end;
+    end;
+End;

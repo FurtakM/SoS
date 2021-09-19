@@ -6,6 +6,7 @@ Starting
 begin
 ResetFog;
 Init;
+InitTag;
 
 PrepareNature(natureArea);
 PrepareRussian;
@@ -18,10 +19,36 @@ Action;
 End;
 
 Export debug, prefix;
-Export ibrahimOnRuSide;
+Export ibrahimOnRuSide, ruEscapeAllowed, gameTime, loseCounter, flamethrowers,
+       ruEscapeCounter, baseHill, explodeFirstDepot, explodeSecondDepot, gaidarKilled;
 Function Init;
 begin
-debug := true;
+debug := false;
 prefix := '04_1_';
 ibrahimOnRuSide := LoadVariable('03_IbrahimHasEscaped', false);
+ruEscapeCounter := LoadVariable('04_1_EscapeCounter', 0);
+loseCounter := LoadVariable('04_1_DeadCounter', 0);
+baseHill := LoadVariable('04_1_BaseHill', false);
+gameTime := LoadVariable('04_1_Time', 40$00);
+flamethrowers := LoadVariable('04_1_Flamethrower', 0);
+ruEscapeAllowed := false;
+explodeFirstDepot := false;
+explodeSecondDepot := false;
+gaidarKilled := false;
+End;
+
+Export tEscape;
+Function InitTag;
+begin
+tEscape := 10;
+End;
+
+Every 0$1 trigger debug do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 2], [f_not, [f_type, unit_building]]]) do
+    if GetLives(i) < 1000 then
+       SetLives(i, 1000);
 End;

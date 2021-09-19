@@ -1,6 +1,121 @@
 Export Function Action;
+var i, un, veh, tmp, rutmp;
 begin
+InGameOn;
 
+ChangeSideFog(5, 2);
+
+music_nat := 4;
+music_class := music_combat;
+
+PlaceSeeing(133, 2, 2, 10);
+CenterNowOnXY(133, 2);
+
+wait(0$1);
+
+// russian troops
+uc_side := 6;
+uc_nation := 3;
+
+rutmp := [];
+
+PrepareTank(6, 3, ru_medium_wheeled, engine_combustion, control_manual, ru_gun, 66);
+veh := CreateVehicle;
+SetDir(veh, 3);
+
+PlaceUnitArea(veh, spawnArea, false);
+SetLives(veh, 500);
+
+PrepareHuman(false, 3, 3);
+PlaceHumanInUnit(CreateHuman, veh);
+
+ComMoveXY(veh, 133, 11);
+
+rutmp := [veh];
+
+for i := 1 to 4 do
+    begin
+    PrepareHuman(false, i, 2);
+    un := CreateHuman;
+    SetDir(un, 3);
+
+    PlaceUnitArea(un, spawnArea, false);
+    rutmp := Replace(rutmp, rutmp + 1, un);
+
+    ComMoveXY(un, 133, 11);
+    wait(0$0.5);
+    end;
+
+for i in rutmp do
+    begin
+    AddComMoveXY(i, 99, 65);
+    AddComMoveXY(i, 76, 108);
+    AddComMoveXY(i, 92, 176);
+    end;
+
+wait(0$10);
+
+tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Kurt, Aviradze] union heikeSecondSquad;
+tmp := tmp diff 0;
+
+// [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), cargo]
+// cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
+for i in heikeVehicles do
+    begin
+
+    if not tmp then
+       continue;
+
+    PrepareTank(2, i[5], i[1], i[2], i[3], i[4], 34);
+    veh := CreateVehicle;
+
+    if i[4] in [ru_cargo_bay, ar_cargo_bay, us_cargo_bay] then
+       begin
+       if i[7][1] then
+          AddCargo(veh, mat_cans, i[7][1]);
+       if i[7][2] then
+          AddCargo(veh, mat_oil, i[7][2]);
+       end;
+
+    SetDir(veh, 3);
+    PlaceUnitArea(veh, spawnArea, false);
+    PlaceHumanInUnit(tmp[1], veh);
+    tmp := Delete(tmp, 1);
+
+    ComAgressiveMove(veh, 133, 7);
+    wait(0$0.5);
+    end;
+
+if tmp then
+   for i in tmp do
+       begin
+       PlaceUnitArea(i, spawnArea, false);
+       ComAgressiveMove(i, 134, 4);
+       wait(0$0.5);
+       end;
+
+if heikeApes then
+   for i in heikeApes do
+       begin
+       PlaceUnitArea(i, spawnArea, false);
+       ComAgressiveMove(i, 134, 4);
+       wait(0$0.5);
+       end;
+
+DialogueOn;    
+Say(Heike, 'DH-outpost-a-1'); 
+DialogueOff;
+
+RemoveSeeing(133, 2, 2);
+
+InGameOff;
+
+music_nat := 0;
+music_class := 0;
+
+ChangeMissionObjectives('Outposts');
+
+SaveForQuickRestart;
 End;
 
 // ibrahim betrayal
@@ -47,4 +162,174 @@ SetSide(Ibrahim, 5);
 ComFree([Ibrahim, ruSol]);
 
 RemoveSeeing(122, 77, 2);
+
+if Givi then
+   Say(Givi, 'DG-1-outpost-b-5')
+else
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-outpost-b-a-5') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-outpost-b-a-5');
+
+repeat
+ wait(0$1);
+until IsDead(Ibrahim) or (GetDistUnits(Heike, Ibrahim) < 6 and IsOk(Ibrahim));
+
+if IsDead(Ibrahim) then
+   begin
+   Say(Heike, 'DH-ibrahimdead-1');
+   exit;
+   end;
+
+CenterNowOnUnits(Ibrahim);
+
+Say(Ibrahim, 'DI-ibrahimlives-1');
+Say(Heike, 'DH-Ibrahimlives-2');
+
+SetSide(Ibrahim, 2);
+End;
+
+// second depot
+Every 0$2 trigger IsDead(ruSecBase) or GetSide(ruSecBase) = 2 do
+begin
+wait(0$20);
+
+DialogueOn;
+
+SayRadio(Shariff, 'DShar-radio-1');
+SayRadio(Shariff, 'DShar-radio-2');
+Say(Heike, 'DH-radio-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('Gaidar');
+
+wait(0$30 + rand(0$10, 0$20) * Difficulty);
+
+PlaceUnitXY(Gaidar, 2, 1, false);
+
+ComMoveXY(Gaidar, 19, 24);
+AddComWait(Gaidar, 0$6);
+AddComMoveXY(Gaidar, 38, 47);
+AddComMoveXY(Gaidar, 32, 59);
+AddComWait(Gaidar, 0$10);
+AddComMoveXY(Gaidar, 62, 116);
+AddComMoveXY(Gaidar, 92, 177);
+
+repeat
+ wait(0$1);
+until IsDead(Gaidar) or IsAt(Gaidar, 92, 177);
+
+if IsAt(Gaidar, 92, 177) then
+   begin
+   RemoveUnit(Gaidar);
+   exit;
+   end;
+
+gaidarKilled := true;
+ChangeMissionObjectives('GaidarKilled');
+End;
+
+// gaidar see arabs
+Every 0$1 trigger See(2, Gaidar) do
+Say(Gaidar, 'DT-objective-1');
+
+// heike near main base
+Every 0$5 trigger FilterAllUnits([[f_side, 2], [f_or, [f_inarea, zone2], [f_inarea, zone3], [f_inarea, zone4]]]) do
+begin
+Say(Heike, 'DH-outpost-last-1');
+SayRadio(Burlak, 'DB-outpost-last-2');
+End;
+
+Every 0$1 trigger GetLives(ruMainBase) < 999 or GetSide(ruMainBase) = 2 do
+var i, tmp;
+begin
+SayRadio(Burlak, 'DB-end-1');
+Say(Heike, 'DH-end-2');
+
+tmp := FilterAllUnits([[f_side, 3], [f_not, [f_type, unit_building]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    SetTag(i, tEscape);
+
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveXY(i, 92, 177);
+    end;
+End;
+
+// remove all escapist
+Every 0$1 trigger FilterUnitsInArea(escapeArea, [f_or, [f_side, 3], [f_side, 6]]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(escapeArea, [f_or, [f_side, 3], [f_side, 6]]) do
+    if GetTag(i) = tEscape or GetSide(i) = 6 then
+       RemoveUnit(i);
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]]) = 0 do
+var tmp;
+begin
+if tick + gameTime <= [60$00, 55$00, 50$00][Difficulty] then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if (flamethrowers >= 3) * baseHill * (loseCounter < [6, 5, 4][Difficulty]) then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if gaidarKilled then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+ 
+RewardPeople(FilterAllUnits([[f_side, 2], [f_not, [f_nation, 0]]]));
+
+SaveCharacters(Heike, '04_2_Heike');
+
+if Aviradze then
+   SaveCharacters(Aviradze, '04_2_Aviradze');
+
+if Ibrahim then
+   SaveCharacters(Ibrahim, '04_2_Ibrahim');
+
+if Kamil then
+   SaveCharacters(Kamil, '04_2_Kamil');
+
+if Sophia then
+   SaveCharacters(Sophia, '04_2_Sophia');
+
+if Kaia then
+   SaveCharacters(Kaia, '04_2_Kaia');
+
+if Givi then
+   SaveCharacters(Givi, '04_2_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '04_2_Mike');
+
+if Markov then
+   SaveCharacters(Markov, '04_2_Markov');
+
+if Kurt then
+   SaveCharacters(Kurt, '04_2_Kurt');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '04_2_others');
+
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]]);
+
+if tmp then                
+   SaveCharacters(tmp, '04_2_apes');
+
+YouWin;
 End;

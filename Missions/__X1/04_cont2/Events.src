@@ -2,4 +2,96 @@ On UnitDestroyed(un) do
 begin
 if un = Heike then
    YouLost('Heike');
+if un in ruEng then
+   ruEng := ruEng diff un;
+if un in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, 2]]) then
+   loseCounter := loseCounter + 1;
+End;
+
+On EvacuateVehicle(driver, un, p1, p2) do
+var weapon, fac;
+begin
+if un in ruMobile then
+   begin
+   ruMobile := ruMobile diff un;
+
+   weapon := GetWeapon(un);
+   fac := HexInfo(110, 126);
+
+   if not driver or not fac then
+      exit;
+
+   AddComMoveXY(driver, 111, 121);
+   AddComEnterUnit(driver, fac);
+
+   repeat
+    wait(0$1);
+   until IsDead(driver) or IsInUnit(driver);
+
+   if IsDead(driver) then
+      exit;
+
+   AddComConstruct(fac, ru_medium_wheeled, engine_combustion, control_manual, weapon);
+   end;
+End;
+
+On VehicleConstructed(veh, fac) do
+begin
+if GetSide(fac) = 3 then
+   begin
+   ruMobile := Replace(ruMobile, ruMobile + 1, veh);
+   AddComMoveXY(veh, 110, 117);
+   end;
+End;
+
+On LeaveBuilding(b, un) do
+var barracks;
+begin
+if b in [HexInfo(130, 17), HexInfo(138, 22), HexInfo(123, 17)] then
+   begin
+   AddComEnterUnit(un, HexInfo(135, 31));
+   exit;
+   end;
+
+if b = HexInfo(135, 31) then
+   begin
+   AddComEnterUnit(un, HexInfo(106, 51));
+
+   if not explodeFirstDepot then
+      begin
+      explodeFirstDepot := true;
+      wait(0$15);
+      MineExplosion(127, 27, 1);
+      MineExplosion(125, 29, 1);
+      end;
+   exit;
+   end;
+
+if b = HexInfo(106, 51) then
+   begin
+   AddComMoveXY(un, 106, 93);
+
+   if not explodeSecondDepot then
+      begin
+      explodeSecondDepot := true;
+      wait(0$12);
+      MineExplosion(111, 75, 1);
+      MineExplosion(111, 75, 1);
+      MineExplosion(108, 69, 1);
+
+      wait(0$2);
+      MineExplosion(94, 65, 1);
+      end;
+   exit;
+   end;
+
+if GetBType(b) = b_bunker then
+   begin
+   barracks := NearestEmptyBuilding(un, b_barracks);
+
+   if barracks then
+      AddComEnterUnit(un, barracks)
+   else
+      AddComMoveXY(un, 116, 110);
+   end;
 End;
