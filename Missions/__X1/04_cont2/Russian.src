@@ -2,7 +2,7 @@ Export Burlak, Gaidar, Kuzmov;
 Export ruForce, ruEng, ruMech, ruSci, ruMobile;
 Export ruSol;
 Export Function PrepareRussian;
-var base, blist, i, b, un, tmp;
+var base, blist, i, b, un, tmp, fac, oil;
 begin
 uc_side := 3;
 uc_nation := 3;
@@ -20,6 +20,32 @@ Kuzmov := PrepareUnit('Kuzmov', false, '');
 PlaceHumanInUnit(Kuzmov, ruMainBase);
 
 SetBName(ruMainBase, 'chuikov');
+
+SetResourceType(GetBase(ruMainBase), mat_cans, [800, 1000, 1250][Difficulty]);
+SetResourceType(GetBase(ruMainBase), mat_oil, 160);
+SetResourceType(GetBase(ruSecBase), mat_cans, 200);
+
+oil := 150;
+
+if gameTime >= [40$00, 35$00, 33$00][Difficulty] then
+   begin
+   oil := 450;
+
+   tmp := [
+       [123, 17, 3, b_breastwork],
+       [152, 38, 3, b_breastwork],
+       [81, 6, 4, b_breastwork],
+       [113, 67, 4, b_bunker]
+   ];
+
+   for i in tmp do
+       begin
+       bc_type := i[4];
+       CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+       end;
+   end;
+
+SetResourceType(GetBase(ruSecBase), mat_oil, oil);
 
 if Difficulty > 1 then
    begin
@@ -41,12 +67,14 @@ for b in blist do
     begin
     if b[1] = b_factory then
        begin
-       for i := 1 to 5 do
+       fac := HexInfo(b[2], b[3]);
+
+       for i := 1 to 2 + Difficulty do
            begin
            PrepareHuman(false, 3, 1 + Difficulty);
            un := CreateHuman;
            ruMech := Replace(ruMech, ruMech + 1, un);
-           PlaceHumanInUnit(un, HexInfo(b[2], b[3]));
+           PlaceHumanInUnit(un, fac);
            end;
        end
     else if b[1] in [b_lab, b_lab_half, b_lab_full, b_lab_weapon] then
@@ -121,5 +149,111 @@ if ibrahimOnRuSide then
    ruSol := CreateHuman;
    PlaceUnitXY(ruSol, 121, 75, false);
    ComHold(ruSol);
+   end; 
+
+for i := 1 to 2 + Difficulty do
+    AddComConstruct(fac, [ru_medium_wheeled, ru_heavy_wheeled, ru_heavy_tracked][i mod 3 + 1], engine_combustion, control_manual, [ru_gatling_gun, ru_gun][rand(1,2)]);
+End;
+
+// mobile defense
+Every 0$1 trigger ruMobile and not ruEscapeAllowed do
+var i, filter, tmp, enemy, x;
+begin
+enable;
+
+filter := UnitFilter(ruMobile, [f_type, unit_vehicle]);
+enemy := FilterAllUnits([[f_enemy, 3], [f_or, [f_inarea, zone1], [f_inarea, zone2], [f_inarea, zone3], [f_inarea, zone4]]]);
+
+for i in filter do
+    begin
+    tmp := IsDrivenBy(i);
+
+    if not tmp then
+       continue;
+
+    if GetFuel(i) > 90 and GetTag(i) = 2 then
+       SetTag(i, 0)
+    else if GetTag(i) = 2 then
+       begin
+       x := rand(1, 2);
+       AddComMoveUnit(i, ruMainBase);
+       end;
+
+    if GetLives(i) >= 600 and not GetTag(i) then
+       ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+    if GetLives(i) < 600 and not GetTag(i) then
+       begin
+       SetTag(i, 1);
+       ComMoveXY(i, 112, 119);
+       end;
+
+    if GetTag(i) = 1 and GetDistUnitXY(i, 112, 119) < 9 and tmp then
+       begin
+       ComExitVehicle(tmp);
+       AddComRepairVehicle(tmp, i);
+
+       repeat
+        wait(0$1);
+       until GetLives(i) = 1000;
+
+       ComEnterUnit(tmp, i);
+
+       if GetFuel(i) <= 50 then
+          SetTag(i, 2)
+        else
+          SetTag(i, 0);
+       end;
+    end;
+End;
+
+// repair base
+Every 0$1 trigger not ruEscapeAllowed and ruEng do
+var i, filter, tmp, enemy;
+begin
+enable;
+
+filter := FilterUnitsInArea(ruMainBaseArea, [[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+tmp := UnitFilter(ruEng, [f_ok]);
+
+if filter and tmp then
+   begin
+   for i in tmp do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+        if not HasTask(i) then
+           ComRepairBuilding(i, filter[1]);
+   end
+else if UnitFilter(tmp, [f_not, [f_inside]]) then
+   begin
+   for i in UnitFilter(tmp, [f_not, [f_inside]]) do
+       ComEnterUnit(i, ruMainBase);
+   end;
+End;
+
+// heal
+Every 0$1 trigger not ruEscapeAllowed and ruSci do
+var i, filter, tmp, lab;
+begin
+enable;
+
+filter := FilterUnitsInArea(ruMainBaseArea, [[f_side, 3], [f_type, unit_human], [f_not, [f_lives, 1000]]]);
+tmp := UnitFilter(ruSci, [f_ok]);
+lab := HexInfo(118, 121);
+
+if filter and tmp then
+   begin
+   for i in tmp do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+        if not HasTask(i) then
+           ComHeal(i, filter[1]);
+   end
+else if UnitFilter(tmp, [f_not, [f_inside]]) then
+   begin
+   for i in UnitFilter(tmp, [f_not, [f_inside]]) do
+       ComEnterUnit(i, lab);
    end;
 End;
