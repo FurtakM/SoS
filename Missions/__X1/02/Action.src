@@ -159,6 +159,8 @@ InGameOff;
 
 ChangeMissionObjectives('OEast');
 
+SaveForQuickRestart;
+
 wait(0$20);
 
 SendSciToForest;
@@ -301,6 +303,12 @@ if sciCounterKill < 3 then
    begin
    SetSide(Kaia, 2);
    ComFree(Kaia);
+
+   if Kamil then
+      begin
+      ComHold(Kamil);
+      SetSide(Kamil, 5);
+      end;
 
    ChangeMissionObjectives('OSci');
    end
@@ -561,7 +569,7 @@ if IsOk(Givi) and IsOk(Kaia) then
 End;
 
 // Capture Delta
-Every 0$1 trigger GetSide(Delta) = 2 do
+Every 0$1 trigger GetSide(Delta) = 2 and attackDeltaAllowed do
 begin
 if not IsOk(Kaia) then
    exit;
@@ -570,7 +578,7 @@ Say(Kaia, 'DK-1-capture');
 Say(Heike, 'DH-1-capture');
 End;
 
-Every 0$1 trigger GetSide(usLab) = 2 do
+Every 0$1 trigger GetSide(usLab) = 2 and attackDeltaAllowed do
 begin
 DialogueOn;
 Say(Aviradze, 'DA-1-capture');
@@ -580,7 +588,7 @@ ChangeMissionObjectives('OTame');
 End;
 
 // Research
-Every 0$1 trigger GetTech(tech_ApeLang, 2) = state_researched do
+Every 0$1 trigger GetTech(tech_ApeLang, 2) = state_researched and attackDeltaAllowed do
 begin
 DialogueOn;
 
@@ -606,7 +614,7 @@ End;
 
 
 // win
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) and IsOk(Aviradze) and GetSide(Aviradze) = 2 do
 var tmp;
 begin
 tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]])[1];
