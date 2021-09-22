@@ -80,7 +80,7 @@ for i in usSci do
     end;
 End;
 
-Every 0$5+0$10 trigger usSci and FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+Every 0$5+0$10 trigger usSci and not usAlert and FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
 var i, x, y, d, ape;
 begin
 enable;
@@ -110,19 +110,17 @@ for i in usSci do
        end;
 
     if GetLives(i) < 900 and GetDistUnitXY(i, 37, 23) > 10 then
-       begin
-
+       begin     
        if IsOk(Gladstone) and IsInUnit(Gladstone) then
           ComExitBuilding(Gladstone);
+
+       AddComHeal(Gladstone, i);
+       AddComEnterUnit(Gladstone, usLab);
 
        ComMoveXY(i, 37, 23);
        end
     else if GetLives(i) = 1000 then
        begin
-
-       if IsOk(Gladstone) then
-          ComEnterUnit(Gladstone, usLab);
-
        if SideShoot(i) = 2 then
           begin
           if not usAlert then
@@ -226,18 +224,18 @@ if veh and IsOk(Gladstone) then
    end;
 End;
 
-Every 0$1 trigger usAlert and FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]) diff (usForces union usSci) do
+Every 0$1 trigger usAlert and FilterUnitsInArea(deltaBaseArea, [[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]) do
 var i, tmp;
 begin
 enable;
 
-tmp := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]) diff (usForces union usSci);
+tmp := FilterUnitsInArea(deltaBaseArea, [[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 600]]]);
 
 if not tmp then
    exit;
 
 for i in tmp do
-    if IsInUnit(i) then
+    if IsInUnit(i) then   
        ComExitBuilding(i)
     else
        ComMoveXY(i, 48, 74);
@@ -358,4 +356,27 @@ else
 
    until not tmp;
    end;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(deltaBaseArea, [f_side, 2]) and not attackDeltaAllowed do
+var i, un, veh;
+begin
+for i := 1 to 2 do
+    begin
+    wait(0$3);
+
+    uc_side := 1;
+    uc_nation := 1;
+
+    PrepareTank(1, 1, us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun, 90);
+    veh := CreateVehicle;
+
+    PlaceUnitXY(veh, 29, 52, false);
+
+    PrepareHuman(false, 3, 3);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    ComAgressiveMove(veh, 36, 25);
+    end;
 End;
