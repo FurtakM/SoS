@@ -606,8 +606,25 @@ ChangeMissionObjectives('Retreat');
 End;
 
 Every 0$1 trigger retreatAllowed do
+var tmp, i;
 begin
 SetAreaMapShow(collectFarmerArea, 0);
+
+tmp := UnitFilter(farmerSquad, [f_class, 2]);
+
+if tmp and HexInfo(102, 69) = 0 then
+   begin
+   SetResourceType(GetBase(arDepot), mat_cans, GetResourceType(GetBase(arDepot), mat_cans) + 10);
+
+   for i in tmp do
+       if IsInUnit(i) then
+          ComExitBuilding(i);
+
+   AddComBuild(tmp, b_breastwork, 102, 69, 2);
+
+   wait(0$3);
+   end;
+
 StartCargoEvacuation;
 End;
 
@@ -799,9 +816,14 @@ Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
 
 // ibrahim
-Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not FilterAllUnits([f_side, 4]) and not retreatAllowed and farmerCrates > 160 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) do
-var randomMen, randomWomen, speaker, place;
+Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not FilterAllUnits([f_side, 4]) and not retreatAllowed and farmerCrates > 160 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) and FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) do
+var randomMen, randomWomen, speaker, place, depot;
 begin
+depot := usDepot;
+
+if not depot then
+   depot := FilterAllUnits([[f_side, 2], [f_btype, b_depot]])[1];
+
 randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
 randomWomen := UnitFilter(heikeSecondSquad, [f_sex, sex_female]);
 
@@ -863,19 +885,19 @@ AddComTurnUnit([Ibrahim, speaker[1]], Heike);
 repeat
  wait(0$2);
  CenterOnUnits(speaker[1]);
-until GetDistUnits(speaker[1], usDepot) < 8;
+until GetDistUnits(speaker[1], depot) < 8;
 
-CenterOnUnits(usDepot);
+CenterOnUnits(depot);
 
 Say(speaker[1], speaker[2] & '-3-land');
 Say(Heike, 'DH-1-land');
 
-if UnitsInside(usDepot) = 6 then
-   ComExitBuilding(UnitsInside(usDepot)[1]);
+if UnitsInside(depot) = 6 then
+   ComExitBuilding(UnitsInside(depot)[1]);
 
 SetSide(Ibrahim, 2);
 
-ComEnterUnit(Ibrahim, usDepot);
+ComEnterUnit(Ibrahim, depot);
 
 InGameOff;
 
