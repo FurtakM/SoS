@@ -455,8 +455,10 @@ Video(false);
 End;
 
 // farmer is ready
-Every 0$1 trigger farmerBaseReady do
+Every 0$1 trigger farmerBaseReady and americanBaseCaptured do
 begin
+wait(0$20);
+
 DialogueOn;
 
 CenterNowOnUnits(Farmer);
@@ -816,8 +818,8 @@ Every 0$1 trigger GetSide(arDepot) = 2 do
 YouLost('Attack');
 
 // ibrahim
-Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not FilterAllUnits([f_side, 4]) and not retreatAllowed and farmerCrates > 160 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) and FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) do
-var randomMen, randomWomen, speaker, place, depot;
+Every 0$30 trigger not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) and not FilterAllUnits([f_side, 4]) and not retreatAllowed and farmerCrates > 90 and FilterUnitsInArea(americanBaseArea, [[f_side, 2], [f_type, unit_human]]) and FilterAllUnits([[f_side, 2], [f_ok], [f_btype, b_depot]]) do
+var randomMen, randomWomen, speaker, place, depot, p;
 begin
 depot := usDepot;
 
@@ -882,10 +884,13 @@ ComMoveXY(speaker[1], 35, 22);
 
 AddComTurnUnit([Ibrahim, speaker[1]], Heike);
 
+p := 0;
+
 repeat
  wait(0$2);
+ p := p + 1;
  CenterOnUnits(speaker[1]);
-until GetDistUnits(speaker[1], depot) < 8;
+until GetDistUnits(speaker[1], depot) < 12 or p > 5;
 
 CenterOnUnits(depot);
 
@@ -962,10 +967,13 @@ wait(0$40);
 ibrahimIsFree := true;
 End;
 
-Every 0$10 trigger ibrahimIsFree and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
-var changeClass, b;
+Every 0$10 trigger ibrahimIsFree and FilterAllUnits([[f_side, 2], [f_ok], [f_btype, b_depot]]) and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+var changeClass, b, p, depot;
 begin
 allowConvoys := false;
+
+if not usDepot then
+   depot := FilterAllUnits([[f_side, 2], [f_ok], [f_btype, b_depot]])[1];
 
 InGameOn;
 
@@ -992,9 +1000,12 @@ case Query('IbrahimJoinQuery') of
 
    ComMoveXY(Ibrahim, 30, 1);
 
+   p := 0;
+
    repeat
+    p := p + 1;
     wait(0$1);
-   until IsAt(Ibrahim, 30, 1) or not FilterAllUnits([[f_side, 2], [f_see, 6]]);
+   until IsAt(Ibrahim, 30, 1) or not FilterAllUnits([[f_side, 2], [f_see, 6]]) or p > 10;
 
    RemoveUnit(Ibrahim);
    SaveVariable(1, '03_IbrahimHasEscaped');
@@ -1022,11 +1033,11 @@ if changeClass then
       Say(Givi, 'DG-2-agree');
       end;
 
-   if UnitsInside(usDepot) = 6 then
-      ComExitBuilding(UnitsInside(usDepot)[1]);
+   if UnitsInside(depot) = 6 then
+      ComExitBuilding(UnitsInside(depot)[1]);
 
    SetSide(Ibrahim, 2);
-   ComEnterUnit(Ibrahim, usDepot);
+   ComEnterUnit(Ibrahim, depot);
 
    repeat
     wait(0$1);
@@ -1052,7 +1063,7 @@ DialogueOn;
 
 Say(Heike, 'DH-1-final');
 
-if tick <= [68$00, 65$00, 63$00][Difficulty] then
+if tick <= [60$00, 55$00, 50$00][Difficulty] then
    AddMedal('med1', 1)
 else
    AddMedal('med1', -1);
