@@ -238,11 +238,12 @@ End;
 
 Export Function StartCargoEvacuation;
 begin
-while GetResourceType(GetBase(arDepot), mat_cans) > 0 and omarCargoCounter > 0 do
+while omarCargoCounter > 0 do
    begin
-   wait(1$20);
+   wait(0$40);
 
    omarCargo := PrepareCargo;
+   SetTag(omarCargo, 0);
 
    ComMoveXY(omarCargo, 107, 59);
 
@@ -255,10 +256,16 @@ while GetResourceType(GetBase(arDepot), mat_cans) > 0 and omarCargoCounter > 0 d
 
    until IsAt(omarCargo, 107, 59) or GetDistUnits(omarCargo, arDepot) < 6;
 
+   SetTag(omarCargo, 1);
+
    wait(0$05);
 
    ComTransport(omarCargo, arDepot, mat_cans);
    AddComMoveXY(omarCargo, 103, 9);
+
+   wait(0$1);
+
+   SetCargo(omarCargo, mat_cans, 100);
 
    repeat
     wait(0$1);
@@ -267,7 +274,7 @@ while GetResourceType(GetBase(arDepot), mat_cans) > 0 and omarCargoCounter > 0 d
     if not IsOk(omarCargo) or IsDead(omarCargo) then
        continue;
 
-   until (IsAt(omarCargo, 103, 9) or IsInArea(omarCargo, northRoad)) and GetCargo(omarCargo, mat_cans) > 0;
+   until (IsAt(omarCargo, 103, 9) or IsInArea(omarCargo, northRoad)) and GetTag(omarCargo) > 0;
 
    RemoveUnit(omarCargo);
    omarCargoCounter := omarCargoCounter - 1;
