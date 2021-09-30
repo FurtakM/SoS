@@ -5,18 +5,27 @@ side := GetSide(fac);
 
      Case side of
      7: begin
-        al_force := al_force ^ veh;
+        al_force := Replace(al_force, al_force + 1, veh);
         AddComMoveXY(veh, 112, 175);
         end;
      8: begin
         if GetWeapon(veh) = ar_control_tower then
            ComMoveXY(veh, 145, 66);
         if GetChassis(veh) = ar_hovercraft then
-           legion_force := Insert(legion_force, legion_force+1, veh);
+           legion_force := Replace(legion_force, legion_force + 1, veh);
         end;
 
      End;
 
+End;
+
+On UnitDestroyed(un) do
+begin
+if un in legion_force then
+   legion_force := legion_force diff un;
+
+if un in al_force then
+   al_force := al_force diff un;
 End;
 
 On UnitTeleported(b, un) do
