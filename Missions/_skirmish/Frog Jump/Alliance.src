@@ -119,10 +119,19 @@ AddComConstruct(fac, chassis, engine, control, weapon);
 End;
 
 // Teleport script
-Every 0$01 trigger FilterUnitsInArea(al_teleport_enter, [f_not, [f_type, unit_building]]) do
+Every 0$01 trigger FilterUnitsInArea(al_teleport_enter, [[f_side, 7], [f_not, [f_type, unit_building]]]) do
+var tmp, i, xy;
 begin
 enable;
-CheckBuildUpArea(al_teleport_enter, al_teleport_exit, FilterUnitsInArea(al_teleport_enter, [f_not, [f_type, unit_building]]));
+
+tmp := FilterUnitsInArea(al_teleport_enter, [[f_side, 7], [f_not, [f_type, unit_building]]]);
+xy := [225, 16];
+
+if FilterUnitsInArea(al_teleport_exit, [f_side, 6]) > 2 then
+   xy := [170, 13];
+
+for i in tmp do
+    TeleportUnit(i, xy[1], xy[2], 12, true);
 End;
 
 Every 12$00 trigger FilterAllUnits([f_side, 7]) and alliance_attack_active do
@@ -132,14 +141,14 @@ enable;
 
 alliance_attack_strength := alliance_attack_strength + 1;
 
-for i = 1 to ([4, 5, 6][Difficulty])+alliance_attack_strength do
+for i = 1 to ([4, 5, 5][Difficulty]) + alliance_attack_strength do
     begin
     ConstructAlVeh([1,3][rand(1,2)]);
     end;
 
 repeat
  wait(0$01);
-until al_force >= ([4, 5, 6][Difficulty])+alliance_attack_strength;
+until al_force >= ([4, 5, 5][Difficulty]) + alliance_attack_strength;
 
 AddComMoveXY(al_force, 143, 178);
 End;
