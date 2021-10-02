@@ -29,6 +29,12 @@ if Givi then
    ComTurnXY(Givi, 206, 36);
    end;
 
+if Ibrahim then
+   begin
+   PlaceUnitXY(Ibrahim, 202, 39, false);
+   ComTurnXY(Ibrahim, 206, 36);
+   end;
+
 if Markov then
    begin
    veh := PrepareTank(2, 2, ar_medium_trike, engine_combustion, control_manual, ar_gatling_gun, 80 - 20 * Difficulty);
@@ -117,6 +123,8 @@ for i := 1 to 2 do
     PlaceUnitXY(un, [224, 226][i], [31, 35][i], false);
     ComMoveXY(un, 215, 36);
     end;
+
+hc_name := '';
 
 InitHc;
 
@@ -219,7 +227,8 @@ if Kaia then
       end;
    end;
 
-ShowArea(2, scoutArea);
+PlaceSeeing(184, 100, 2, -12);
+RemoveSeeing(184, 100, 2);
 
 CenterOnXY(184, 100);
 
@@ -227,7 +236,8 @@ Say(Kurt, 'DKs-scout-10');
 
 wait(0$1);
 
-ShowArea(2, hillArea);
+PlaceSeeing(144, 65, 2, -12);
+RemoveSeeing(144, 65, 2);
 
 CenterOnXY(144, 65);
 
@@ -589,6 +599,12 @@ CenterNowOnXY(111, 90);
 Say(Aviradze, 'DA-Cap-1');
 Say(Heike, 'DH-Cap-2');
 
+DialogueOff;
+
+repeat
+ wait(0$1);
+until beriaDestroyed and IsOk(ruLab);
+
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
 
 if tmp < 2 then
@@ -604,8 +620,8 @@ case q of
    Say(Heike, 'DH-Cap-a-1');
    Say(Aviradze, 'DA-Cap-a-2');
 
-   SetSide(ruLab, 5);
-   SetSide(Aviradze, 5);
+   SetSide(ruLab, 8);
+   SetSide(Aviradze, 8);
 
    aviradzeSquad := [Aviradze];
 
@@ -614,7 +630,7 @@ case q of
    for i := 1 to 2 do
        begin
        aviradzeSquad := aviradzeSquad union tmp[i];
-       SetSide(tmp[i], 5);
+       SetSide(tmp[i], 8);
        ComEnterUnit(tmp[i], ruLab);
        end;
    end;
@@ -624,7 +640,6 @@ case q of
    end;
 End;
 
-DialogueOff;
 End;
 
 // go to west
@@ -636,9 +651,9 @@ SetAreaMapShow(goToWestArea, 1);
 
 repeat
  wait(0$1);
-until FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]])
-      =
-      FilterUnitsInArea(goToWestArea, [[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]);
+ tmp := FilterUnitsInArea(goToWestArea, [[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]);
+until FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]) + 0
+      = tmp + 0;
 
 SaveCharacters(Heike, '04_1_Heike');
 
