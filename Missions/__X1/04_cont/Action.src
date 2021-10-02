@@ -603,9 +603,10 @@ DialogueOff;
 
 repeat
  wait(0$1);
-until beriaDestroyed and IsOk(ruLab);
+until beriaDestroyed and IsOk(ruLab) and IsOk(Aviradze);
 
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
+tmp := UnitFilter(tmp, [f_ok]);
 
 if tmp < 2 then
    q := 2
@@ -642,8 +643,15 @@ End;
 
 End;
 
+Every 0$1 trigger debug do
+var i;
+begin
+for i in FilterAllUnits([f_enemy, 2]) do
+    RemoveUnit(i);
+End;
+
 // go to west
-Every 0$1 trigger kirovDestroyed and beriaDestroyed and kaganDestroyed do
+Every 0$1 trigger debug or (kirovDestroyed and beriaDestroyed and kaganDestroyed) do
 var i, tmp, tmp2, cargo;
 begin
 ChangeMissionObjectives('GoToWest');
@@ -652,8 +660,8 @@ SetAreaMapShow(goToWestArea, 1);
 repeat
  wait(0$1);
  tmp := FilterUnitsInArea(goToWestArea, [[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]);
-until FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]) + 0
-      = tmp + 0;
+ tmp2 := FilterAllUnits([[f_side, 2], [f_not, [f_driving]], [f_or, [f_type, unit_human], [[f_type, unit_vehicle], [f_not, [f_empty]]]]]);
+until tmp + 0 = tmp2 + 0;
 
 SaveCharacters(Heike, '04_1_Heike');
 
