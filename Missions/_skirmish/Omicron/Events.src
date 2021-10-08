@@ -1,0 +1,40 @@
+On UnitDestroyed(un) do
+begin
+if un = Sikorski then
+   YouLost('sik');
+
+if un in russianOmicronAttackers then
+   russianOmicronAttackers := russianOmicronAttackers diff un;
+
+if un in FilterAllUnits([[f_side, 3], [f_weapon, ru_cargo_bay]]) then
+   ProduceNew(1);
+
+if GetSide(un) in [1, 4] and GetType(un) = unit_human and GetNation(un) = nation_american then
+   usLoseCounter := usLoseCounter + 1;
+End;
+
+On VehicleConstructed(veh, factory) do
+begin
+if GetSide(factory) <> 3 then
+   exit;
+
+if GetWeapon(veh) = ru_cargo_bay then
+   exit;
+
+russianOmicronAttackers := russianOmicronAttackers union [veh, IsInUnit(veh)];
+
+AddComAgressiveMove(veh, 71, 37);
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+SOS_UnitExtraDestroyed(un, killerSide, killerUnit);
+
+if killerSide in [1, 4] and GetSide(un) in [3, 6] then
+   ruLoseCounter := ruLoseCounter + 1;
+End;
+
+On Command(cmd) do
+begin
+SOS_Command(cmd);
+End;

@@ -31,7 +31,7 @@ function FROMOW_SAVEGAME_LIST(DATA)
 	LOADGAME_DATA_ACTIVE = nil;
 	LOADGAME_DATA_SORT = nil;
 
-	clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
+	clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")', {});
 end;
 
 menu.window_loadgame = getElementEX(
@@ -355,7 +355,7 @@ function sortGameSave(ID, SORT)
 		LOADGAME_DATA = data;
 		LOADGAME_DATA_ACTIVE = nil;
 
-		clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")');
+		clSetListItems(menu.window_loadgame.panel.list, displayData, 0, 'selectSaveGame("INDEX")', {});
 		
 		setEnabled(menu.window_loadgame.panel.delete, false);
 		setEnabled(menu.window_loadgame.panel.ok, false);

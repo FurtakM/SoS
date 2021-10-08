@@ -481,14 +481,6 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
         PROPERTIES.clickSound = '"Effects/Interface/vyber.wav"';
     end;
 
-    if (PROPERTIES.scissor == nil) then
-        PROPERTIES.scissor = true;
-    end;
-
-    if (PROPERTIES.text_halign == nil) then
-        PROPERTIES.text_halign = ALIGN_MIDDLE;
-    end;
-
     return getImageButtonEX(
         PARENT, 
         anchorNone, 
@@ -503,9 +495,7 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
             texture = PROPERTIES.texture,
             texture2 = PROPERTIES.texture2,
             texture3 = PROPERTIES.texture3,
-            disabled = PROPERTIES.disabled,
-            scissor = PROPERTIES.scissor,
-            text_halign = PROPERTIES.text_halign 
+            disabled = PROPERTIES.disabled
         }
     );
 end;
@@ -643,6 +633,10 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.visible = true;
     end;
 
+    if PROPERTIES.disabled == nil then
+        PROPERTIES.disabled = false;
+    end;
+
     local ELEMENT = getElementEX(
         PARENT, 
         anchorNone, 
@@ -650,6 +644,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.visible,
         {
             colour1 = WHITEA(),
+            disabled = PROPERTIES.disabled
         }
     );
 
@@ -850,8 +845,8 @@ function clSetComboBoxSelectedItem(ID, INDEX)
     setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[COMBOBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
-function clSetComboBoxValue(LABELID, VALUE)
-    setText({ID=LABELID}, SGUI_widesub(VALUE, 1, 22));
+function clSetComboBoxValue(ID, VALUE)
+    setText({ID=ID}, SGUI_widesub(VALUE, 1, 22));
 end;
 
 function clShowComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
@@ -870,7 +865,7 @@ end;
 
 function clHoverItem(ID, MODE, SELECTED)
     if (MODE == 1 and SELECTED == 0) then
-        setColour1({ID=ID}, RGB(219, 219, 219));
+        setColour1({ID=ID}, RGB(202, 224, 218));
     else
         if (SELECTED == 1) then
             setColour1({ID=ID}, RGB(191, 191, 191));
@@ -946,23 +941,182 @@ function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         }
     );
 
-    clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK);    
+    clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES);    
 
     return ELEMENT.list.scroll;
 end;
 
-function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
+function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
+    if (PROPERTIES.autoHideScroll == nil) then
+        PROPERTIES.autoHideScroll = false;
+    end;
+
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/combobox-small-list.png';
+    end;
+
+    if (PROPERTIES.itemHeight == nil) then
+        PROPERTIES.itemHeight = 16;
+    end;
+
+    if (CALLBACKS.added == nil) then
+        CALLBACKS.added = '';
+    end;
+
+    if (CALLBACKS.updated == nil) then
+        CALLBACKS.updated = '';
+    end;
+
+    if (CALLBACKS.selected == nil) then
+        CALLBACKS.selected = '';
+    end;
+
+    if (CALLBACKS.unselected == nil) then
+        CALLBACKS.unselected = '';
+    end;
+
+    if (CALLBACKS.mouseDblClick == nil) then
+        CALLBACKS.mouseDblClick = '';
+    end;
+
+    local ELEMENT = getElementEX(
+        PARENT,
+        anchorNone,
+        POS,
+        PROPERTIES.visible,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.container = getElementEX(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            0, 
+            0,
+            ELEMENT.width - 20,
+            ELEMENT.height
+        ),
+        true,
+        {
+            texture = PROPERTIES.texture
+        }
+    );
+
+    ELEMENT.list = getElementEX(
+        ELEMENT.container,
+        anchorNone,
+        XYWH(
+            3, 
+            6,
+            ELEMENT.container.width - 6,
+            ELEMENT.container.height - 4
+        ),
+        true,
+        {
+            colour1 = WHITEA(),
+            type = TYPE_CUSTOMLISTBOX,
+            itemheight = PROPERTIES.itemHeight,
+            callback_itemadded = CALLBACKS.added,
+            callback_itemupdated = CALLBACKS.updated,
+            callback_itemselected = CALLBACKS.selected,
+            callback_itemunselected = CALLBACKS.unselected
+        }
+    );
+
+    ELEMENT.list.scrollBar = clScrollBarEX2(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            ELEMENT.container.x + ELEMENT.container.width + 1, 
+            ELEMENT.container.y, 
+            12,
+            ELEMENT.container.height
+        ), 
+        ELEMENT.list, 
+        SKINTYPE_NONE,
+        false,
+        {
+            visible = PROPERTIES.visible
+        }
+    ); 
+
+    return {
+        ELEMENT = ELEMENT,
+        LIST = ELEMENT.list,
+        SCROLL = ELEMENT.list.scroll,
+    };
+end;
+
+function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
+    local name = DATA.nick;
+
+    if (name == nil) then
+        name = DATA.name;
+    end;
+
+    local label = getLabelEX(
+        {ID = ROW_ID}, 
+        anchorNone, 
+        XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), 
+        nil, 
+        name, 
+        {
+            colour1 = WHITEA(),
+            font_name = ADMUI3L,
+            border_colour = WHITEA(),
+            font_colour = RGB(0, 0, 0),
+            nomouseevent = true
+        }
+    );
+
+    if (CUSTOM_LISTBOX_LIST[BOX_ID] == nil) then
+        CUSTOM_LISTBOX_LIST[BOX_ID] = {};
+    end;
+
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = {
+        DATA = DATA,
+        LABEL = label.ID
+    }
+end;
+
+function clListBoxCustomItemUpdate(BOX_ID, ROW_ID, INDEX, DATA)
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX].DATA = DATA; 
+    setTextID(CUSTOM_LISTBOX_LIST[BOX_ID][INDEX].LABEL, DATA.nick);
+end;
+
+function clListBoxCustomItemSelected(ROW_ID)
+    setColour1({ID = ROW_ID}, RGB(191, 191, 191));
+end;
+
+function clListBoxCustomItemUnselected(ROW_ID)
+    setColour1({ID = ROW_ID}, WHITEA());
+end;
+
+function clSetListItemHover(ID, MODE, STATIC, INDEX, SELECTED_ITEM)
+    if (not STATIC) then
+        return 'clHoverItem(%id,' .. MODE .. ', ' .. BoolToInt(INDEX == SELECTED_ITEM) .. ');';
+    end;
+
+    return '';
+end;
+
+function clSetListItems(PARENT, ITEMS, SELECTED_ITEM, CALLBACK, PROPERTIES)
     sgui_deletechildren(PARENT.ID);
 
     local tmpCallback = CALLBACK;
     local tmpElement = {};
 
-    if (#ITEMS == 0) then
-        LISTBOX_LIST[PARENT.ID] = {};
-        return;
+    if (PROPERTIES.static == nil) then
+        PROPERTIES.static = false;
     end;
 
-    for i = 1, #ITEMS do
+    for i = 1, table.getn(ITEMS) do
         if (CALLBACK ~= '') then
             tmpCallback = CALLBACK;
 
@@ -982,8 +1136,8 @@ function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
             true,
             {
                 colour1 = WHITEA(),
-                callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
-                callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
+                callback_mouseleave = clSetListItemHover('%id', 0, PROPERTIES.static, i, SELECTED_ITEM),
+                callback_mouseover = clSetListItemHover('%id', 1, PROPERTIES.static, i, SELECTED_ITEM),
                 callback_mousedown = tmpCallback,
             }
         );
@@ -1059,16 +1213,27 @@ function clPrompt(CALLBACK, PROPERTIES)
         PROPERTIES.text = '';
     end;
 
+    if (PROPERTIES.backgroundColor == nil) then
+        PROPERTIES.backgroundColor = BLACKA(50);
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/prompt.png';
+    end;
+
+    if (PROPERTIES.title ~= nil) then
+        PROPERTIES.texture = 'classic/edit/prompt_title.png';
+    end;
+
     local ELEMENT = getElementEX(
         nil,
-        anchorNone,
+        anchorLTRB,
         XYWH(0, 0, LayoutWidth, LayoutHeight),
         PROPERTIES.visible,
         {
-            colour1 = BLACKA(50)
+            colour1 = PROPERTIES.backgroundColor
         }
     );
-
     
     ELEMENT.prompt = getElementEX(
         ELEMENT, 
@@ -1076,9 +1241,23 @@ function clPrompt(CALLBACK, PROPERTIES)
         XYWH(LayoutWidth / 2 - 151, LayoutHeight / 2 - 48, 302, 96), 
         true,
         {
-            texture = 'classic/edit/prompt.png',
+            texture = PROPERTIES.texture,
         }
     );
+
+    if (PROPERTIES.title ~= nil) then
+        ELEMENT.title = getLabelEX(
+            ELEMENT.prompt,
+            anchorLTRB,
+            XYWH(6, 6, 298, 16),
+            nil,
+            PROPERTIES.title,
+            {
+                font_colour = BLACKA(255),
+                font_name = BankGotic_14
+            }
+        );
+    end;
 
     ELEMENT.prompt.input = getEditEX(
         ELEMENT.prompt,
@@ -1101,7 +1280,7 @@ function clPrompt(CALLBACK, PROPERTIES)
         139, 
         30,
         loc(TID_msg_Cancel), 
-        'setVisibleID(' .. ELEMENT.ID .. ', false);',
+        "clClosePrompt(".. ELEMENT.ID ..");",
         {}
     );
 
@@ -1116,6 +1295,10 @@ function clPrompt(CALLBACK, PROPERTIES)
         {}
     );
 
+
+	set_Callback(ELEMENT.prompt.input.ID,CALLBACK_KEYUP, 'if (%k == VK_ESC) then invokeCallback({ ID ='..ELEMENT.prompt.cancel.ID..'}, CALLBACK_MOUSECLICK) '..
+												'elseif (%k == VK_RETURN) then invokeCallback({ ID ='..ELEMENT.prompt.accept.ID..'}, CALLBACK_MOUSECLICK) end;');
+
     PROMPT_LIST[ELEMENT.ID] = {
         ID = ELEMENT.ID,
         INPUT = ELEMENT.prompt.input.ID,
@@ -1126,9 +1309,195 @@ end;
 
 function clOpenPrompt(ID, VALUE)
     setVisibleID(ID, true);
-    setTextID(PROMPT_LIST[ID].INPUT, VALUE);
+	setFocusID(PROMPT_LIST[ID].INPUT);
+	
+    if (VALUE ~= nil) then
+		setTextID(PROMPT_LIST[ID].INPUT, VALUE);
+	end;
 end;
 
 function clClosePrompt(ID)
     setVisibleID(ID, false);
+end;
+
+function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
+    PROPERTIES.type = TYPE_TEXTBOX;
+    
+    if PROPERTIES.font_name == nil then
+        PROPERTIES.font_name = ADMUI3L;
+    end;
+
+    PROPERTIES.text = TEXT;
+    PROPERTIES.wordwrap = true;
+    PROPERTIES.scissor = true;
+
+    return getElementEX(PARENT, ANCHOR, POSSIZE, true, PROPERTIES);
+end;
+
+function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/textbox.png';
+    end;
+
+    if (PROPERTIES.autoHideScroll == nil) then
+        PROPERTIES.autoHideScroll = false;
+    end;
+
+    if (PROPERTIES.font_colour == nil) then
+        PROPERTIES.font_colour = RGB(0, 0, 0);
+    end;
+
+    if (PROPERTIES.padding == nil) then
+        PROPERTIES.padding = {
+            x = 4,
+            y = 4
+        };
+    end;
+
+    ELEMENT = getElementEX(
+        PARENT, 
+        ANCHOR, 
+        XYWH(POSSIZE.X, POSSIZE.Y, POSSIZE.W, POSSIZE.H), 
+        PROPERTIES.visible,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.textbox = clTextBox(
+        ELEMENT,
+        anchorLTRB,
+        XYWH(
+            PROPERTIES.padding.x,
+            PROPERTIES.padding.y,
+            ELEMENT.width - 12 - PROPERTIES.padding.x,
+            ELEMENT.height - PROPERTIES.padding.y
+        ),
+        TEXT,
+        {
+            font_name = PROPERTIES.font_name,
+            font_colour = PROPERTIES.font_colour,
+            texture = PROPERTIES.texture
+        }
+    );
+
+    ELEMENT.textbox.scrollBar = clScrollBarEX2(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            ELEMENT.textbox.x + ELEMENT.textbox.width + 1, 
+            ELEMENT.textbox.y - PROPERTIES.padding.y, 
+            12,
+            ELEMENT.textbox.height + PROPERTIES.padding.y
+        ), 
+        ELEMENT.textbox, 
+        SKINTYPE_NONE,
+        false,
+        {
+            visible = PROPERTIES.visible
+        }
+    );
+
+    return {
+        ELEMENT = ELEMENT,
+        TEXTBOX = ELEMENT.textbox,
+    };
+end;
+
+function clEditText(PARENT, ANCHOR, POSSIZE, PROPERTIES)
+    if (PROPERTIES.font == nil) then
+        PROPERTIES.font = BankGotic_14;
+    end;
+
+    if (PROPERTIES.text == nil) then
+        PROPERTIES.text = '';
+    end;
+
+    if (PROPERTIES.notAllowedChars == nil) then
+        PROPERTIES.notAllowedChars = '';
+    end;
+
+    if (PROPERTIES.fontColour == nil) then
+        PROPERTIES.fontColour = BLACKA(255);
+    end;
+
+    if (PROPERTIES.colour == nil) then
+        PROPERTIES.colour = WHITEA(255);
+    end;
+
+    if (PROPERTIES.fontDefaultColour == nil) then
+        PROPERTIES.fontDefaultColour = RGB(191, 191, 191);
+    end;
+
+    if (PROPERTIES.defaultText == nil) then
+        PROPERTIES.defaultText = '';
+    end;
+
+    if (PROPERTIES.colors == nil) then
+        PROPERTIES.colors = {};
+    end;
+
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.disabled == nil) then
+        PROPERTIES.disabled = false;
+    end;
+
+    local ELEMENT = getEditEX(
+        PARENT, 
+        ANCHOR, 
+        POSSIZE,
+        PROPERTIES.font,
+        PROPERTIES.text,
+        PROPERTIES.notAllowedChars, 
+        PROPERTIES.colors,
+        {
+            font_colour = PROPERTIES.fontColour,
+            colour1 = PROPERTIES.colour,
+            visible = PROPERTIES.visible,
+            disabled = PROPERTIES.disabled
+        }  
+    );
+
+    if (strlen(PROPERTIES.defaultText) > 0) then
+        setVisible(ELEMENT, false);
+
+        local DEFAULT = getLabelEX(
+            PARENT,
+            anchorLTRB,
+            POSSIZE,
+            nil,
+            PROPERTIES.defaultText,
+            {
+                font_colour = PROPERTIES.fontDefaultColour,
+                font_name = PROPERTIES.font
+            }
+        ); 
+
+        set_Callback(DEFAULT.ID, CALLBACK_MOUSECLICK, 'setVisibleID(' .. DEFAULT.ID .. ', false); setVisibleID(' .. ELEMENT.ID .. ', true); setFocusID(' .. ELEMENT.ID .. ');');
+    end;
+
+    return ELEMENT;
+end;
+
+function filesInMod(mod, directory)
+    return OW_FILELIST('%ow%/mods/' .. mod .. '/' .. directory);
+end;
+
+function hasFilesInMod(mod, directory)
+    return (table.getn(filesInMod(mod, directory)) > 0);
+end;
+
+function hasCampaignInMod(mod, campaign)
+    return hasFilesInMod(mod, 'missions/__' .. campaign .. '/01') or hasFilesInMod(mod, 'Missions/__' .. string.lower(campaign) .. '/01');
+end;
+
+function hasSkirmishInMod(mod)
+    return hasFilesInMod(mod, 'missions/_skirmish') or hasFilesInMod(mod, 'Missions/_Skirmish');
 end;

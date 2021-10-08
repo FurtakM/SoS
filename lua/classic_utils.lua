@@ -7,6 +7,8 @@ TID_Main_Menu_User = 494;
 TID_Main_Menu_Play = 804;
 TID_Main_Menu_Skirmish = 539;
 TID_Main_Menu_Default = 419;
+TID_Main_Menu_Password = 1041;
+TID_Main_Menu_UsePassword = 1043;
 TID_Main_Menu_AllAchivs = 5000;
 TID_Main_Menu_SteamOverlay = 5001;
 TID_Main_Menu_Options_Old_Type_Graph_Short = 5002;
@@ -24,10 +26,21 @@ TID_Main_Menu_Options_Graphics_Windowed = 5013;
 TID_Main_Menu_Skirmish_ChangeMap = 5014;
 TID_Main_Menu_Mod_Old_Ver = 5015;
 TID_Main_Menu_Options_Switch_Interface = 5016;
+TID_Main_Menu_Back_To_Menu = 5017;
+TID_Main_Menu_Change_Name = 5018;
+TID_Main_Menu_Enter_IP = 5019;
+TID_Main_Menu_Filter_Achiv = 5020;
+TID_Main_Menu_Filter_Achiv_All = 5021;
+TID_Main_Menu_Filter_Achiv_Done = 5022;
+TID_Main_Menu_Filter_Achiv_Undone = 5023;
+
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
 TID_Main_Menu_Campaign_X2_Hint = 5104;
 
+VK_TAB = 9;
+VK_ENTER = 13;
+VK_ESC = 27;
 VK_F1 = 112;
 VK_F2 = 113;
 VK_F3 = 114;
@@ -36,7 +49,12 @@ VK_F5 = 116;
 VK_F6 = 117;
 VK_TILDE = 192;
 
+
 function parseInt(value)
+    if (type(value) == 'boolean') then
+        return value and 1 or 0;
+    end;
+
 	return tonumber(value);
 end;
 
@@ -138,6 +156,26 @@ function getAudioLanguages()
         'Polski',
         'Español',
     }
+end;
+
+function getAchivFilter()
+    return {
+        loc(TID_Main_Menu_Filter_Achiv_All),
+        loc(TID_Main_Menu_Filter_Achiv_Done),
+        loc(TID_Main_Menu_Filter_Achiv_Undone)
+    };
+end;
+
+function getAchivFilterMission() 
+    local tmp = {
+        loc(TID_Main_Menu_Filter_Achiv_All)
+    };
+
+    for i = 1, 20 do
+        tmp[i+1] = loc(417) .. ' ' .. i;
+    end;
+
+    return tmp;
 end;
 
 function setVisibleAll(ARRAY, MODE)
@@ -268,4 +306,21 @@ function stringToArray(str)
     end;
 
     return t;
+end;
+
+function setFocusID(ID)
+    setFocus({ID=ID});
+end;
+
+--keep this here untill it gets mereged into master utils
+function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
+	local str = get_Callback(ELEMENT.ID, _TYPE);
+	
+	if (REPLACE_TABLE) then
+		for k,v in pairs(REPLACE_TABLE) do
+			str = str:gsub('%%' .. k,v);
+		end;
+	end;
+
+	return runstring(str);
 end;

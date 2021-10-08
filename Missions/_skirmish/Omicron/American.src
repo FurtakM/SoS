@@ -1,0 +1,77 @@
+Export omicronSquad, Sikorski, Harrison;
+Export Function PrepareAmerican;
+var i, un, veh;
+begin
+SetBName(omikron, 'omikron');
+
+uc_side := 4;
+uc_nation := 1;
+
+Harrison := PrepareUnit('Harisson', false, '');
+
+omicronSquad := [];
+
+for i in FilterAllUnits([[f_side, 4], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) do
+    begin
+    PrepareHuman(sex_male, 1, 1);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    SetDir(un, GetDir(i) - 3);
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i := 1 to [3, 2, 2][Difficulty] do
+    begin
+    PrepareHuman(false, 2, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, omikron);
+
+    ComExitBuilding(un);
+    AddComMoveXY(un, 19, 23);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(us_medium_wheeled, engine_solar, control_manual, [us_light_gun, us_gatling_gun][i], 100);
+    veh := CreateVehicle;
+    PlaceUnitXYR(veh, 28, 37, 6, false);
+
+    PrepareHuman(false, 3, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, GetX(un) + 3, GetY(un));
+    end;
+End;
+
+Export Function PrepareSikorski;
+var veh;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+hc_importance := 100;
+hc_name := 'Jeremy Sikorski';
+hc_gallery := 'us';
+hc_face_number := 19;
+
+PrepareHuman(sex_male, 1, [4, 3, 3][Difficulty]);
+
+hc_attr := [10, 12];
+
+Sikorski := CreateHuman;
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_light_gun, 88);
+veh := CreateVehicle;
+SetDir(veh, 3);
+
+PlaceUnitXY(veh, 106, 2, false);
+PlaceHumanInUnit(Sikorski, veh);
+
+SetMark(veh, -1);
+
+InitHc;
+End;
+

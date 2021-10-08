@@ -8,6 +8,10 @@ function FROMOW_SHOW_GAMEDIALOG(DATA) -- OW CALLS THIS!
     dialog.game.FORMID = DATA.FORMID;
 
     if (interface.current.side == 'Alien') then
+        if classicDialog ~= nil then
+            sgui_delete(classicDialog.ID);
+        end;
+
         classicDialog = getDialog(DATA);
     else -- old code below
         sgui_deletechildren(dialog.game.panel.ID);
@@ -76,6 +80,14 @@ function FROMOW_SHOW_GAMEDIALOG(DATA) -- OW CALLS THIS!
         ShowDialog(dialog.game);
         OF_HideDialog(dialog.game.FORMID, 'dialog.game');
     end;
+end;
+
+function FROMOW_HIDE_GAMEDIALOG() -- OW CALLS THIS!
+    if classicDialog ~= nil then
+        setVisible(classicDialog, false);
+    end;
+    
+    HideDialog(dialog.game);
 end;
 
 function getDialog(DATA)
