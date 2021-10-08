@@ -1,0 +1,298 @@
+Export Function Action;
+begin
+InGameOn;
+CenterNowOnXY(106, 3);
+
+wait(0$2);
+
+ChangeMissionObjectives('target1');
+InGameOff;
+
+SaveForQuickRestart;
+End;
+
+Every 0$1 trigger IsDead(omikron) do
+begin
+omicronFall := true;
+YouLost('omi');
+End;
+
+// see omicron
+Every 0$1 trigger (See(4, Sikorski) or See(4, IsInUnit(Sikorski))) and IsOk(omikron) do
+var i, tmp, speaker, whereHeWas;
+begin
+InGameOn;
+
+tmp := FilterAllUnits([f_side, 4]);
+speaker := UnitFilter(tmp, [f_sex, sex_male])[1];
+
+for i in tmp do
+    SetSide(i, 1);
+
+ComMoveXY(Sikorski, 37, 40);
+
+wait(0$3);
+
+ComExit(Sikorski);
+AddComMoveXY(Sikorski, 37, 40);
+
+CenterOnUnits(Sikorski);
+
+wait(0$2);
+
+whereHeWas := ComExit(speaker);
+AddComMoveUnit(speaker, Sikorski);
+
+repeat
+ wait(0$1);
+until GetDistUnits(speaker, Sikorski) < 5 and not IsInUnit(Sikorski);
+
+ComTurnUnit(Sikorski, speaker);
+ComTurnUnit(speaker, Sikorski);
+
+CenterNowOnUnits(Sikorski);
+
+Say(Sikorski, 'DS-1');
+Say(speaker, 'DP-1');
+Say(Sikorski, 'DS-2');
+Say(speaker, 'DP-2');
+Say(Sikorski, 'DS-3');
+Say(speaker, 'DP-3');
+Say(Sikorski, 'DS-4');
+
+wait(0$1);
+
+if whereHeWas then
+   ComEnterUnit(speaker, whereHeWas);
+
+ComHold(Sikorski);
+
+wait(0$1);
+
+SayRadio(Harrison, 'DR-1');
+Say(Sikorski, 'DS-5');
+SayRadio(Harrison, 'DR-2');
+Say(Sikorski, 'DS-6');
+SayRadio(Harrison, 'DR-3');
+
+InGameOff;
+
+ChangeMissionObjectives('target2');
+sikorskiInOmicron := true;
+
+wait(0$2);
+
+Say(Sikorski, 'DS-7');
+End;
+
+Every 0$1 trigger GetLives(Sikorski) < 1000 and FilterAllUnits([[f_side, 1], [f_or, [f_see, 3], [f_see, 6]]]) do
+Say(Sikorski, 'DRus');
+
+// start attack on Omicron
+Every 0$1 trigger tick >= [11$00, 10$00, 9$20][Difficulty] do
+begin
+ComAgressiveMove(UnitFilter(russianOmicronAttackers, [f_type, unit_vehicle]), 62, 22);
+ComMoveXY(russianCargo, 69, 27);
+
+wait(1$00);
+
+startAttackOnOmicron := true;
+End;
+
+// first reinforcements
+Every 0$1 trigger tick >= [6$00, 7$00, 8$00][Difficulty] do
+var i, un, tmp, spotted, xy;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+tmp := [];
+
+InitHc;
+hc_importance := 0;
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun, 77);
+un := CreateVehicle;
+tmp := tmp union un;
+SetDir(un, 2);
+PlaceUnitXY(un, 106, 3, false);
+
+PrepareHuman(false, 3, 2);
+un := CreateHuman;
+tmp := tmp union un;
+PlaceHumanInUnit(un, tmp[tmp - 1]);
+
+ComMoveXY(un, 109, 9);
+
+wait(0$1);
+
+for i := 1 to [2, 2, 1][Difficulty] do
+    begin
+    PrepareHuman(false, 1, 2);
+    un := CreateHuman;
+    tmp := tmp union un;
+    PlaceUnitXYR(un, 105, 2, 2, false);
+    end;
+
+PrepareHuman(false, 4, 2);
+un := CreateHuman;
+tmp := tmp union un;
+PlaceUnitXYR(un, 105, 2, 2, false);
+
+ComAgressiveMove(tmp, 26, 35);
+
+spotted := false;
+xy := [0, 0];
+
+repeat
+ wait(0$1);
+
+ if UnitFilter(tmp, [f_not, [f_lives, 1000]]) and not spotted then
+    begin
+    spotted := true;
+    un := UnitFilter(tmp, [f_not, [f_lives, 1000]])[1];
+    xy := [GetX(un), GetY(un)];
+    PlaceSeeing(xy[1], xy[2], 1, -12);
+    CenterOnXY(xy[1], xy[2]);
+    end;
+
+ for i in tmp do
+     if not HasTask(i) then
+        ComAgressiveMove(i, 26, 35);
+
+ if not UnitFilter(tmp, [f_ok]) then
+    begin
+    if spotted then
+       RemoveSeeing(xy[1], xy[2], 1);
+
+    exit;
+    end;
+
+until UnitFilter(tmp, [f_dist, omikron, 12]) or See(4, Sikorski);
+
+omicronSquad := omicronSquad union tmp;
+
+if spotted then
+   RemoveSeeing(xy[1], xy[2], 1);
+
+for i in tmp do
+    SetSide(i, 1);
+
+if UnitFilter(tmp, [[f_sex, sex_male], [f_ok]]) then
+   Say(UnitFilter(tmp, [[f_sex, sex_male], [f_ok]])[1], 'Dcargo');
+End;
+
+// second reinforcements
+Every 0$1 trigger tick > 24$00 do
+var un, i;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+InitHc;
+
+PrepareHuman(sex_male, 1, 3);
+un := CreateHuman;
+
+PlaceUnitXYR(un, 83, 154, 10, false);
+
+for i := 1 to [4, 3, 3][Difficulty] do
+    begin
+    PrepareHuman(false, rand(1, 4), 3);
+    PlaceUnitXYR(CreateHuman, 83, 154, 10, false);
+    end;
+
+SayRadio(un, 'Dhelp');
+End;
+
+
+Every 0$1 trigger russianAlert do
+var i, tmp, towers, noncombat;
+begin
+tmp := UnitFilter(kirovBaseSquad, [[f_class, 1], [f_inside]]);
+towers := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
+
+for i := 1 to tmp do
+    begin
+    ComExitBuilding(tmp[i]);
+    AddComEnterUnit(tmp[i], towers[i]);
+    end;
+
+noncombat := Popov union UnitFilter(kirovBaseSquad union beriaBaseSquad, [f_not, [f_class, 1]]);
+
+for i in noncombat do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveToArea(i, westEscapeArea);
+    end;
+
+SayRadio(Kurin, 'D9a-Kur-1');
+SayRadio(Burlak, 'D9a-Bur-1');
+SayRadio(Kurin, 'D9a-Kur-2');
+
+retreatFromOmicron := true;
+End;
+
+// sci on swamp
+Every 0$1 trigger tick > rand(20$00, 30$00) do
+var un;
+begin
+uc_side := 4;
+uc_nation := 4;
+
+PrepareHuman(sex_male, 4, 3);
+un := CreateHuman;
+PlaceUnitXYR(un, 161, 162, 3, true);
+
+wait(0$3);
+
+SayRadio(un, 'Dun1');
+
+repeat
+ wait(0$1);
+
+ if IsDead(un) then
+    exit;
+until See(1, un);
+
+SetSide(un, 1);
+End;
+
+// end mission
+Every 0$1 trigger tick > rand(45$00, 52$00) do
+var un;
+begin
+PrepareArabian;
+
+uc_side := 4;
+uc_nation := 1;
+
+InitHc;
+
+un := CreateHuman;
+
+SayRadio(un, 'ar_come');
+
+repeat
+ wait(0$1);
+until retreatFromOmicron or IsDead(Kurin) or tick > 55$00;
+
+SayRadio(Harrison, 'you_win');
+
+AddMedal('med', 1);
+
+if ruLoseCounter > [25, 33, 45][Difficulty] then
+   AddMedal('ru', 1)
+else
+   AddMedal('ru', -1);
+
+if usLoseCounter < [4, 3, 2][Difficulty] then
+   AddMedal('pep', 1)
+else
+   AddMedal('pep', -1);
+
+GiveMedals('MAIN');
+YouWin;
+End;

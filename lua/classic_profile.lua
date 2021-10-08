@@ -27,7 +27,7 @@ DATA
 		end;
 	end;
 
-	clSetListItems(menu.window_profile.panel.list, profiles, selected, 'changeProfile("VALUE");');
+	clSetListItems(menu.window_profile.panel.list, profiles, selected, 'changeProfile("VALUE");', {});
 end;
 
 function FROMOW_SWITCHPROFILE(DATA)
