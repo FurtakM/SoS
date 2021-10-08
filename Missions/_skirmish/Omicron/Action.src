@@ -11,7 +11,7 @@ InGameOff;
 SaveForQuickRestart;
 End;
 
-Every 0$1 trigger IsDead(omikron) do
+Every 0$1 trigger IsDead(omikron) and not retreatFromOmicron do
 begin
 omicronFall := true;
 YouLost('omi');
@@ -228,7 +228,10 @@ for i in noncombat do
 
     AddComMoveToArea(i, westEscapeArea);
     end;
+End;
 
+Every 0$1 trigger russianAlert and FilterAllUnits([[f_side, 2], [f_see, 6]]) do
+begin
 SayRadio(Kurin, 'D9a-Kur-1');
 SayRadio(Burlak, 'D9a-Bur-1');
 SayRadio(Kurin, 'D9a-Kur-2');
@@ -279,15 +282,23 @@ un := CreateHuman;
 
 SayRadio(un, 'ar_come');
 
+wait(0$20);
+
+SayRadio(Harrison, 'DR-Back');
+
+ChangeMissionObjectives('target3');
+
+SetAreaMapShow(escapeArea, 1);
+
 repeat
  wait(0$1);
-until retreatFromOmicron or IsDead(Kurin) or tick > 55$00;
+until IsInArea(Sikorski, escapeArea) or FilterUnitsInArea(escapeArea, [f_side, 1]);
 
 SayRadio(Harrison, 'you_win');
 
 AddMedal('med', 1);
 
-if ruLoseCounter > [25, 33, 45][Difficulty] then
+if ruLoseCounter > [27, 35, 48][Difficulty] then
    AddMedal('ru', 1)
 else
    AddMedal('ru', -1);
