@@ -5,8 +5,7 @@
 ACHIV_CATEGORY = 0;
 ACHIV_FILTER = 0;
 ACHIV_FILTER_MISSION = 0;
-
-include('classic_achivs_filter');
+ACHIV_FILTER_MISSION_LIST = {};
 
 -- functions
 function showAchivs(mode)
@@ -73,8 +72,23 @@ function displayAchivs(category, filter, filterMission)
 
         if categoryCount > 0 then
             for j, k in pairs(achievsCategory[i]) do
-                if (ACHIV_FILTER_MISSION > 0) and (#ACHIV_FILTER_MISSION_LIST < i or (not inArray(ACHIV_FILTER_MISSION_LIST[i], k))) then
-                    goto continue;
+                if (ACHIV_FILTER_MISSION > 0) then
+                    if (ACHIV_FILTER_MISSION_LIST[i] == nil) then
+                        goto continue2;
+                    end; 
+
+                    if (ACHIV_FILTER_MISSION_LIST[i][ACHIV_FILTER_MISSION] == nil) then
+                        goto continue2;
+                    end;
+
+                    if (not inArray(ACHIV_FILTER_MISSION_LIST[i][ACHIV_FILTER_MISSION], k)) then
+                        goto continue2;
+                    end;
+                end;
+
+                if (achievements[k] == nil) then
+                    debug(k);
+                    goto continue2;
                 end;
 
                 achieved = checkAchieved(k, true);
@@ -256,6 +270,7 @@ function displayAchivs(category, filter, filterMission)
                 end;
 
                 index = index + 1;
+                ::continue2::
             end;  
 
             ::continue::        
@@ -266,7 +281,7 @@ function displayAchivs(category, filter, filterMission)
         updateAchievCounter(achievAllGained, achievAllTotal);
     else
         updateAchievCounter(achievGained, achievTotal);
-    end;  
+    end;
 end;
 
 function achivCategoryclButton(X, Y, CAPTION, EVENT, CATEGORY)

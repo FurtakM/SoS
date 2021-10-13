@@ -227,15 +227,27 @@ End;
 // see animals
 // tiger
 Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_tiger]), Heike)) < 6 do
+begin
+animalCounter := animalCounter + 1;
 Say(Heike, 'DH-tiger-1');
+End;
 
 // ape
 Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_apeman]), Heike)) < 6 do
+begin
+animalCounter := animalCounter + 1;
 Say(Heike, 'DH-ape-1');
+End;
 
 // bird
 Every 0$2 trigger missionStarted and not olafSpotted and not mercenariesSpotted and GetDistUnits(Heike, NearestUnitToUnit(FilterAllUnits([f_class, class_phororhacos]), Heike)) < 6 do
+begin
+animalCounter := animalCounter + 1;
 Say(Heike, 'DH-bird-1');
+End;
+
+Every 0$2 trigger animalCounter = 3 do
+SetAchievement('ACH_ZOOLIGST');
 
 // russian spotted
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_see, 3]]) do
@@ -264,6 +276,8 @@ until dogTagFound;
 CenterNowOnUnits(Heike);
 
 ComMoveXY(Heike, dogTagFound[1], dogTagFound[2]);
+
+SetAchievement('ACH_DOGTAG');
 
 if mercenariesQuestReady then
    Say(Heike, 'DH-dogtag-found-quest')
@@ -744,10 +758,17 @@ prisonFound := true;
 ChangeMissionObjectives('O6_prison_out');
 End;
 
+// heike get hurt
+Every 0$1 trigger GetLives(Heike) < 500 do
+heikeHurt := true;
+
 // end mission
 Every 0$1 trigger lastObjectiveActive and IsOk(Heike) and FilterUnitsExceptArea(escapeEast, [[f_type, unit_human], [f_side, 2], [f_ok]]) = 0 do
 var tmp;
 begin
+if not heikeHurt then
+   SetAchievement('ACH_INVINCIBLE');
+
 tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_ok]]);
 
 if prisonFound then

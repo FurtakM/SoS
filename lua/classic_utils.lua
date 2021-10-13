@@ -94,13 +94,18 @@ function addToArray(array, element)
 end;
 
 function inArray(array, element)
-   for i = 1, #array do
-      if array[i] == element then 
-         return true;
-      end;
-   end;
+    if (array == nil or #array == 0) then
+        return false;
+    end;
 
-   return false;
+
+    for i = 1, #array do
+        if array[i] == element then 
+            return true;
+        end;
+    end;
+
+    return false;
 end;
 
 function split(source, delimiters)

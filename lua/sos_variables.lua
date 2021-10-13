@@ -39,6 +39,7 @@ TID_Russians = 6042;
 TID_Alliance = 6043;
 TID_Legion = 6044;
 TID_Neptun = 6045;
+TID_Achievements_Ares = 6046;
 
 TID_Website = 6090;
 TID_Contact = 6091;
