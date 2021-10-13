@@ -5,8 +5,7 @@
 ACHIV_CATEGORY = 0;
 ACHIV_FILTER = 0;
 ACHIV_FILTER_MISSION = 0;
-
-include('classic_achivs_filter');
+ACHIV_FILTER_MISSION_LIST = {};
 
 -- functions
 function showAchivs(mode)
