@@ -159,6 +159,38 @@ TID_ACH_ASPEED_19 = 6452;
 TID_ACH_ASPEED_19_DESC = 6453;
 TID_ACH_HACK = 6454;
 TID_ACH_HACK_DESC = 6455;
+TID_ACH_DOGTAG = 6456;
+TID_ACH_DOGTAG_DESC = 6457;
+TID_ACH_ZOOLIGST = 6458;
+TID_ACH_ZOOLIGST_DESC = 6459;
+TID_ACH_INVINCIBLE = 6460;
+TID_ACH_INVINCIBLE_DESC = 6461;
+TID_ACH_TRAP = 6462;
+TID_ACH_TRAP_DESC = 6463;
+TID_ACH_SCRAP = 6464;
+TID_ACH_SCRAP_DESC = 6465;
+TID_ACH_DELTA = 6466;
+TID_ACH_DELTA_DESC = 6467;
+TID_ACH_ENG = 6468;
+TID_ACH_ENG_DESC = 6469;
+TID_ACH_CLEAN = 6470;
+TID_ACH_CLEAN_DESC = 6471;
+TID_ACH_APEGEN = 6472;
+TID_ACH_APEGEN_DESC = 6473;
+TID_ACH_IBRAHIM = 6474;
+TID_ACH_IBRAHIM_DESC = 6475;
+TID_ACH_BABY = 6476;
+TID_ACH_BABY_DESC = 6477;
+TID_ACH_KING = 6478;
+TID_ACH_KING_DESC = 6479;
+TID_ACH_LAB = 6480;
+TID_ACH_LAB_DESC = 6481;
+TID_ACH_COMMISAR = 6482;
+TID_ACH_COMMISAR_DESC = 6483;
+TID_ACH_FIST = 6484;
+TID_ACH_FIST_DESC = 6485;
+TID_ACH_CAMERA = 6486;
+TID_ACH_CAMERA_DESC = 6487;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -727,6 +759,118 @@ achievements = {
         0,
         0
     },
+    ['ACH_DOGTAG'] = {
+        loc(TID_ACH_DOGTAG), 
+        loc(TID_ACH_DOGTAG_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_INVINCIBLE'] = {
+        loc(TID_ACH_INVINCIBLE), 
+        loc(TID_ACH_INVINCIBLE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ZOOLIGST'] = {
+        loc(TID_ACH_ZOOLIGST), 
+        loc(TID_ACH_ZOOLIGST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_TRAP'] = {
+        loc(TID_ACH_TRAP), 
+        loc(TID_ACH_TRAP_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_DELTA'] = {
+        loc(TID_ACH_DELTA), 
+        loc(TID_ACH_DELTA_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ENG'] = {
+        loc(TID_ACH_ENG), 
+        loc(TID_ACH_ENG_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BABY'] = {
+        loc(TID_ACH_BABY), 
+        loc(TID_ACH_BABY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_CLEAN'] = {
+        loc(TID_ACH_CLEAN), 
+        loc(TID_ACH_CLEAN_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_APEGEN'] = {
+        loc(TID_ACH_APEGEN), 
+        loc(TID_ACH_APEGEN_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_IBRAHIM'] = {
+        loc(TID_ACH_IBRAHIM), 
+        loc(TID_ACH_IBRAHIM_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_FIST'] = {
+        loc(TID_ACH_FIST), 
+        loc(TID_ACH_FIST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_LAB'] = {
+        loc(TID_ACH_LAB), 
+        loc(TID_ACH_LAB_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_COMMISAR'] = {
+        loc(TID_ACH_COMMISAR), 
+        loc(TID_ACH_COMMISAR_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_KING'] = {
+        loc(TID_ACH_KING), 
+        loc(TID_ACH_KING_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_CAMERA'] = {
+        loc(TID_ACH_CAMERA), 
+        loc(TID_ACH_CAMERA_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SCRAP'] = {
+        loc(TID_ACH_SCRAP), 
+        loc(TID_ACH_SCRAP_DESC),
+        true,
+        0,
+        0
+    }
 };
 
 achievsCategory = {
@@ -812,13 +956,32 @@ achievsCategory = {
     },
     [2] = {
         'ACH_DESERT',
-        'ACH_HARD',
+        'ACH_HARD'
+    },
+    [3] = {
+        'ACH_DOGTAG',
+        'ACH_INVINCIBLE',
+        'ACH_ZOOLIGST',
+        'ACH_TRAP',
+        'ACH_SCRAP',
+        'ACH_DELTA',
+        'ACH_ENG',
+        'ACH_BABY',
+        'ACH_CLEAN',
+        'ACH_APEGEN',
+        'ACH_IBRAHIM',
+        'ACH_FIST',
+        'ACH_LAB',
+        'ACH_COMMISAR',
+        'ACH_KING',
+        'ACH_CAMERA'
     }
 };
 
 achievsCategoryName = { 
 	[1] = loc(TID_Achievements_US), 
     [2] = loc(TID_Achievements_Skir),
+    [3] = loc(TID_Achievements_Ares)
 	--[2] = loc(TID_Achievements_AR), 
 	--[3] = loc(TID_Achievements_RU), 
 	--[4] = loc(TID_Achievements_Ally), 

@@ -109,8 +109,7 @@ uc_nation := 1;
 
 tmp := [];
 
-InitHc;
-hc_importance := 0;
+ResetHc;
 
 PrepareVehicle(us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun, 77);
 un := CreateVehicle;
@@ -185,30 +184,41 @@ End;
 
 // second reinforcements
 Every 0$1 trigger tick > 24$00 do
-var un, i;
+var un, veh, i;
 begin
 uc_side := 1;
 uc_nation := 1;
 
-InitHc;
+ResetHc;
 
-PrepareHuman(sex_male, 1, 3);
+PrepareHuman(false, 3, 3);
 un := CreateHuman;
 
-PlaceUnitXYR(un, 83, 154, 10, false);
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_double_gun, 90);
+veh := CreateVehicle;
+SetDir(veh, 2);
+PlaceUnitXYR(veh, 83, 154, 10, false);
+PlaceHumanInUnit(un, veh);
 
 for i := 1 to [4, 3, 3][Difficulty] do
     begin
-    PrepareHuman(false, rand(1, 4), 3);
-    PlaceUnitXYR(CreateHuman, 83, 154, 10, false);
+    PrepareHuman(false, 1, 3);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 83, 154, 10, false);
     end;
 
+PrepareHuman(sex_male, 1, 3);
+un := CreateHuman;            
+PlaceUnitXYR(un, 83, 154, 10, false);
+
 SayRadio(un, 'Dhelp');
+
+ResetHc;
 End;
 
 
 Every 0$1 trigger russianAlert do
-var i, tmp, towers, noncombat;
+var i, tmp, towers;
 begin
 tmp := UnitFilter(kirovBaseSquad, [[f_class, 1], [f_inside]]);
 towers := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
@@ -218,6 +228,16 @@ for i := 1 to tmp do
     ComExitBuilding(tmp[i]);
     AddComEnterUnit(tmp[i], towers[i]);
     end;
+End;
+
+Every 0$1 trigger russianAlert and FilterAllUnits([[f_side, 2], [f_see, 6]]) do
+var i, noncombat;
+begin
+SayRadio(Kurin, 'D9a-Kur-1');
+SayRadio(Burlak, 'D9a-Bur-1');
+SayRadio(Kurin, 'D9a-Kur-2');
+
+retreatFromOmicron := true;
 
 noncombat := Popov union UnitFilter(kirovBaseSquad union beriaBaseSquad, [f_not, [f_class, 1]]);
 
@@ -228,15 +248,6 @@ for i in noncombat do
 
     AddComMoveToArea(i, westEscapeArea);
     end;
-End;
-
-Every 0$1 trigger russianAlert and FilterAllUnits([[f_side, 2], [f_see, 6]]) do
-begin
-SayRadio(Kurin, 'D9a-Kur-1');
-SayRadio(Burlak, 'D9a-Bur-1');
-SayRadio(Kurin, 'D9a-Kur-2');
-
-retreatFromOmicron := true;
 End;
 
 // sci on swamp
@@ -251,7 +262,7 @@ hc_name := 'Franciszek Paw³owski';
 un := CreateHuman;
 PlaceUnitXYR(un, 161, 162, 3, true);
 
-hc_name := '';
+ResetHc;
 
 wait(0$3);
 
@@ -276,7 +287,7 @@ PrepareArabian;
 uc_side := 4;
 uc_nation := 1;
 
-InitHc;
+ResetHc;
 
 un := CreateHuman;
 
