@@ -18,6 +18,8 @@ if un in FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) and not firstCo
    firstConvoyDestroyed := true;
 if un in usAttackers then
    usAttackers := usAttackers diff un;
+if un in FilterAllUnits([[f_side, 5], [f_type, unit_human]]) then
+   farmerHumanLoseCounter := farmerHumanLoseCounter + 1;
 End;
 
 On LeaveBuilding(building, unit) do
@@ -52,8 +54,13 @@ if oldId in usAttackers then
 if oldSide = 4 and not firstConvoyDestroyed then
    firstConvoyDestroyed := true;
 
-if GetWeapon(oldId) = us_cargo_bay and GetCargo(oldId, mat_cans) = 0 then
-   EmptyCargoDialog;
+if GetWeapon(oldId) = us_cargo_bay then
+   begin
+   capturedCargoCounter := capturedCargoCounter + 1;
+
+   if GetCargo(oldId, mat_cans) = 0 then
+      EmptyCargoDialog;
+   end;
 End;
 
 On Contact(s1, s2) do
