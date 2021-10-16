@@ -259,6 +259,8 @@ SetSide([Kurt, Mike], 2);
 
 InGameOff;
 
+ChangeMissionObjectives('Hill');
+
 allowToPatrol := true;
 
 wait(1$30);
@@ -348,8 +350,8 @@ dwait(0$2);
 YouLost('Spotted');
 End;
 
-Every 0$3 trigger FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_see, 2]]) diff russianPatrol do
-russianAlert := [FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_see, 2]]) diff russianPatrol][1];
+Every 0$3 trigger FilterAllUnits([[f_or, [f_see, 3], [f_see, 6]], [f_side, 2]]) diff russianPatrol do
+russianAlert := [FilterAllUnits([[f_or, [f_see, 3], [f_see, 6]], [f_side, 2]]) diff russianPatrol][1];
 
 Every 0$1 trigger russianAlert do
 var i, tmp, towers, noncombat;
@@ -424,6 +426,10 @@ wait(0$03);
 
 allowHeikeAttack := true;
 activeGrishkoAI := false;
+
+if not hillBase then
+   ChangeMissionObjectives('HillDone');
+
 CenterOnUnits(Omar);
 
 for i in FilterAllUnits([[f_side, 2], [f_type, unit_human]]) do
@@ -599,8 +605,8 @@ Every 0$1 trigger See(2, kagan) do
 Say(Heike, 'DH-1-Kagan');
 
 // see enemy lab
-Every 0$3 trigger See(2, ruLab) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) and not InBattle(2) do
-var i, tmp, q;
+Every 0$3 trigger debug and IsPlaced(Aviradze) do //See(2, ruLab) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) and not InBattle(2) do
+var i, tmp, tmp2, q, settings;
 begin
 DialogueOn;
 
@@ -632,18 +638,33 @@ case q of
    Say(Heike, 'DH-Cap-a-1');
    Say(Aviradze, 'DA-Cap-a-2');
 
+   settings := [Heike, sel_not_changeable] ^ tmp ^
+               [sel_not_hired, sel_not_changeable, Aviradze] ^ [];
+   tmp2 := CharacterSelection('Select two characters to go with Aviradze', 2, 2, settings, []);
+
    SetSide(ruLab, 8);
    SetSide(Aviradze, 8);
 
    aviradzeSquad := [Aviradze];
 
+   if IsInUnit(Aviradze) then
+      ComExit(Aviradze);
+
+   wait(3);
+
    ComEnterUnit(Aviradze, ruLab);
 
    for i := 1 to 2 do
        begin
-       aviradzeSquad := aviradzeSquad union tmp[i];
-       SetSide(tmp[i], 8);
-       ComEnterUnit(tmp[i], ruLab);
+       aviradzeSquad := aviradzeSquad union tmp2[i];
+       SetSide(tmp2[i], 8);
+
+       if IsInUnit(tmp2[i]) then
+          ComExit(tmp2[i]);
+
+       wait(3);
+
+       ComEnterUnit(tmp2[i], ruLab);
        end;
 
    SetAchievement('ACH_LAB');
@@ -656,15 +677,14 @@ End;
 
 End;
 
-Every 0$1 trigger debug do
-var i;
-begin
-for i in FilterAllUnits([f_enemy, 2]) do
-    RemoveUnit(i);
-End;
-
 Every 0$1 trigger FilterUnitsInArea(hillArea, [[f_side, 2], [f_btype, b_breastwork]]) >= 2 do
 SetAchievement('ACH_KING');
+
+Every 0$1 trigger not allowHeikeAttack and FilterUnitsInArea(hillArea, [[f_side, 2], [f_or, [f_btype, b_breastwork], [f_btype, b_armoury]]]) do
+begin
+hillBase := true;
+ChangeMissionObjectives('HillDone');
+End;
 
 // go to west
 Every 0$1 trigger debug or (kirovDestroyed and beriaDestroyed and kaganDestroyed) do
@@ -760,7 +780,7 @@ if tmp then
 
 SaveVariable(labCaptured, '04_1_RuLabCaptured');
 SaveVariable(escapeCounter, '04_1_EscapeCounter');
-SaveVariable(FilterUnitsInArea(hillArea, [[f_side, 2], [f_type, unit_building]]) > 0, '04_1_BaseHill');
+SaveVariable(hillBase, '04_1_BaseHill');
 SaveVariable(tick, '04_1_Time');
 SaveVariable(loseCounter, '04_1_DeadCounter');
 SaveVariable(FilterAllUnits([[f_side, 2], [f_weapon, ar_flame_thrower]]) + 0, '04_1_Flamethrower');
