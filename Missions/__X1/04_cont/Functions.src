@@ -173,3 +173,30 @@ for i := 1 to 2 do
     end;
 
 End;
+
+Export Function SeeEnemy(sideList, enemySide, exceptUnits);
+var i, s, tmp;
+begin
+result := false;
+
+if not sideList or not enemySide then
+   exit;
+
+tmp := FilterAllUnits([f_side, enemySide]);
+
+if not tmp then
+   exit;
+
+for s in sideList do
+    for i in tmp do
+        if See(s, i) then
+           begin
+           result := NearestUnitToUnit(FilterAllUnits([f_side, s]), i);
+
+           if exceptUnits then
+              if result in exceptUnits then
+                 continue
+              else
+                 exit;
+           end;
+End;
