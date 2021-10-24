@@ -334,14 +334,22 @@ End;
 
 // see scientist
 Every 0$1 trigger aviradzeSpotted and not sciSpotted and See(2, NearestUnitToUnit(usSci, Heike)) and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) > 1 and aviradzeSpotted and not aviradzeQuestDone do
+var un;
 begin
 sciSpotted := true;
+un := NearestUnitToUnit(usSci, Heike);
 
-CenterNowOnUnits(NearestUnitToUnit(usSci, Heike));
+DialogueOn;
+PlaceSeeing(GetX(un), GetY(un), 2, -3);
+CenterNowOnUnits(un);
+
 Say(Heike, 'DH-1-sci-a');
 
 if Mike then
    Say(Mike, 'DM-1-sci-a');
+
+RemoveSeeing(GetX(un), GetY(un), 2);
+DialogueOff;
 End;
 
 // quest done
@@ -439,6 +447,9 @@ if IsOk(Kamil) or IsOk(Sophia) then
 
    if trap = 1 then
       begin
+      PlaceSeeing(64, 32, 2, 8);
+      CenterOnXY(64, 32);
+
       tmp := [];
       k := 3;
 
@@ -469,6 +480,9 @@ if IsOk(Kamil) or IsOk(Sophia) then
           AddComWait(i, 0$3);
           AddComAgressiveMove(i, 42, 20);
           end;
+
+      wait(0$5);
+      RemoveSeeing(64, 32, 2);
 
       repeat
        wait(0$1);
@@ -576,6 +590,7 @@ End;
 
 // Capture Delta
 Every 0$1 trigger GetSide(Delta) = 2 and attackDeltaAllowed do
+var i, tmp;
 begin
 if not IsOk(Kaia) then
    exit;
@@ -585,6 +600,19 @@ if tick < 5$00 then
 
 Say(Kaia, 'DK-1-capture');
 Say(Heike, 'DH-1-capture');
+
+tmp := FilterAllUnits([[f_side, 1], [f_class, 1]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComAgressiveMove(i, 38, 23);
+    end;
 End;
 
 Every 0$1 trigger GetSide(usLab) = 2 and attackDeltaAllowed do
@@ -608,6 +636,15 @@ Say(Aviradze, 'DA-3-ape');
 Say(Heike, 'DH-3-ape');
 
 DialogueOff;
+
+if FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) then
+   SpawnApeman(forest, 2);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([f_class, class_apeman]) = 0;
+
+YouLost('Ape');
 End;
 
 // too many lost
@@ -626,7 +663,7 @@ End;
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) and IsOk(Aviradze) and GetSide(Aviradze) = 2 do
 var tmp;
 begin
-tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]])[1];
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]]);
 
 InGameOn;
 CenterNowOnUnits(tmp);
@@ -662,7 +699,7 @@ SayRadio(Farmer, 'DF-3-end');
 Say(Heike, 'DH-3-end');
 SayRadio(Farmer, 'DF-4-end');
 
-if tick <= [20$00, 15$00, 12$00][Difficulty] then
+if tick <= [25$00, 23$00, 21$00][Difficulty] then
    AddMedal('med1', 1)
 else
    AddMedal('med1', -1);

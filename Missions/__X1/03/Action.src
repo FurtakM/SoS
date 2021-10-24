@@ -238,7 +238,7 @@ End;
 Every 0$1 trigger GetSide(usDepot) = 2 or
                   FilterUnitsInArea(americanBaseArea, [[f_side, 1], [f_not, [f_ok]], [f_btype, b_breastwork]]) or
                   FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 1 or
-                  FilterUnitsInArea(upHillArea, [f_side, 2]) do
+                  usForces <= 4 do
 var i, p;
 begin
 wait(0$3);
@@ -246,11 +246,7 @@ wait(0$3);
 if IsOk(usCommander) then
    begin
    usForces := usForces union usCommander;
-
-   if FilterUnitsInArea(upHillArea, [f_side, 2]) then
-      Say(usCommander, 'DUsm-2-assault')
-   else
-      Say(usCommander, 'DUsm-1-assault');
+   Say(usCommander, 'DUsm-1-assault');
    end;
 
 for i in usForces do
@@ -399,12 +395,12 @@ DialogueOff;
 End;
 
 // first ape sold
-Every 0$1 trigger IsOk(Kaia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) do
+Every 0$1 trigger IsOk(Kaia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) and not FilterAllUnits([f_enemy, 2]) do
 var ape;
 begin
 ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]);
 
-Video(true);
+InGameOn;
 
 CenterNowOnUnits(ape[1]);
 
@@ -418,16 +414,16 @@ Say(Kaia, 'DK-2-apesol');
 Say(Aviradze, 'DA-2-apesol');
 Say(Kaia, 'DK-3-apesol');
 
-Video(false);
+InGameOff;
 End;
 
 // first ape eng
-Every 0$1 trigger IsOk(Sophia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) do
+Every 0$1 trigger IsOk(Sophia) and FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]) and not FilterAllUnits([f_enemy, 2]) do
 var ape;
 begin
 ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]);
 
-Video(true);
+InGameOn;
 
 CreateCratesXY(5, 35, 22, true);
 
@@ -448,7 +444,7 @@ if IsOk(Kamil) then
 
    if not IsOK(Kaia) then
       begin
-      Video(false);
+      InGameOff;
       exit;
       end;
 
@@ -464,12 +460,14 @@ if IsOk(Kamil) then
    Say(Kaia, 'DK-2-apeeng');
    end;
 
-Video(false);
+InGameOff;
 End;
 
 // farmer is ready
-Every 0$1 trigger farmerBaseReady and FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) do
+Every 0$10 trigger farmerBaseReady and FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) do
 begin
+wait(0$10);
+
 DialogueOn;
 
 CenterNowOnUnits(Farmer);
@@ -647,12 +645,12 @@ YouLost('FarmerDepot');
 End;
 
 // talk with Farmer
-Every 0$1 trigger retreatAllowed and GetDistUnits(Heike, Farmer) < 6 do
+Every 0$1 trigger retreatAllowed and GetDistUnits(Heike, Farmer) < 6 and not FilterAllUnits([f_enemy, 2]) do
 var i, max, tmp;
 begin
 allowConvoys := false;
 
-Video(true);
+InGameOn;
 
 ComTurnUnit(Heike, Farmer);
 ComTurnUnit(Farmer, Heike);
@@ -671,7 +669,7 @@ Say(Farmer, 'DF-4-end');
 Say(Heike, 'DH-5-end');
 Say(Farmer, 'DF-5-end');
 
-Video(false);
+InGameOff;
 
 max := [4, 3, 2][Difficulty];
 
@@ -712,12 +710,12 @@ if farmerHumanLoseCounter = 0 then
 wait(1$00);
 SendAttack;
 
-wait([5$00, 4$30, 4$00][Difficulty]);
+wait([2$00, 1$30, 1$00][Difficulty]);
 SendAttack;
 
 if Difficulty > 2 then
    begin
-   wait(4$00);
+   wait(2$30);
    SendAttack;
    end;
 End;
@@ -908,12 +906,16 @@ SetSide(Ibrahim, 2);
 CenterOnUnits(depot);
 
 ComEnterUnit(Ibrahim, depot);
+ComEnterUnit(speaker[1], depot);
 
 repeat
  wait(0$1);
-until IsInUnit(Ibrahim);
+until IsInUnit(Ibrahim) or not IsOk(Ibrahim);
 
 InGameOff;
+
+if not IsOk(Ibrahim) then
+   exit;
 
 ibrahimInDepot := true;
 allowConvoys := true;
@@ -960,9 +962,6 @@ case Query('IbrahimQuery') of
 
       ComExitBuilding(Heike);
       AddComMoveXY(Heike, 36, 21);
-
-      AddComWait(Ibrahim, 1$20);
-      AddComMoveXY(Ibrahim, 38, 28);
       end;
    end;
 
@@ -972,11 +971,14 @@ case Query('IbrahimQuery') of
 end;
 
 allowConvoys := true;
-wait(0$40);
+
+wait(2$40);
+
+ComMoveXY(Ibrahim, 38, 28);
 ibrahimIsFree := true;
 End;
 
-Every 0$10 trigger ibrahimIsFree and FilterAllUnits([[f_side, 2], [f_ok], [f_btype, b_depot]]) and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+Every 0$1 trigger ibrahimIsFree and IsOk(Ibrahim) and FilterAllUnits([[f_side, 2], [f_ok], [f_btype, b_depot]]) and IsInArea(Ibrahim, americanBaseArea) and See(6, Heike) and not FilterAllUnits([f_side, 4]) and not FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
 var changeClass, b, p, depot;
 begin
 allowConvoys := false;
