@@ -34,9 +34,12 @@ Shariff := PrepareUnit('Abdul', false, '');
 End;
 
 // Arab support
-Every 3$00 trigger HexInfo(124, 26) = 0 xor GetSide(HexInfo(124, 26)) = 2 do
-var un, veh;
+Export cargoDriver;
+Every 2$00 trigger LoadVariable('04_1_KaganCaptured', 0) and HexInfo(124, 26) = 0 xor GetSide(HexInfo(124, 26)) = 2 do
+var veh;
 begin
+enable;
+
 uc_side := 5;
 uc_nation := 2;
 
@@ -45,24 +48,26 @@ veh := CreateVehicle;
 SetDir(veh, 3);
 PlaceUnitArea(veh, spawnArea, false);
 
-PrepareHuman(false, 1, 3);
-un := CreateHuman;
-PlaceHumanInUnit(un, veh);
+if not cargoDriver then
+   begin
+   PrepareHuman(false, 1, 3);
+   cargoDriver := CreateHuman;
+   end;
+
+PlaceHumanInUnit(cargoDriver, veh);
 
 SetCargo(veh, mat_oil, 100);
 
-ComMoveXY(veh, 127, 23);
+ComMoveXY(veh, 142, 15);
 AddComUnload(veh);
 AddComMoveXY(veh, 133, 2);
 
 wait(0$5);
 
-CenterOnUnits(veh);
-
 repeat
  wait(0$1);
 until IsAt(veh, 133, 2) or IsInArea(veh, spawnArea);
 
-RemoveUnit(un);
+RemoveUnit(cargoDriver);
 RemoveUnit(veh);
 End;

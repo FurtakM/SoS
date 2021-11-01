@@ -602,7 +602,55 @@ Say(Heike, 'DH-1-Beria');
 
 // kagan
 Every 0$1 trigger See(2, kagan) do
+begin
+DialogueOn;
+CenterNowOnUnits(kagan);
+
 Say(Heike, 'DH-1-Kagan');
+
+if Kamil then
+   begin
+   Say(Kamil, 'DKam-Kagan-2');
+   Say(Givi, 'DG-Kagan-3');
+   Say(Givi, 'DG-Kagan-4');
+   end;
+
+case Query('KaganBase') of
+1: begin
+   Say(Heike, 'DH-Kagan-5');
+   Say(Heike, 'DH-Kagan-6');
+   SayRadio(Shariff, 'DShar-Kagan-7');
+   Say(Heike, 'DH-Kagan-8');
+   Say(Heike, 'DH-Kagan-9');
+   SayRadio(Shariff, 'DShar-Kagan-10');
+   Say(Heike, 'DH-Kagan-11');
+   kaganCaptured := true;
+   end;
+2: begin
+   Say(Heike, 'DH-Kagan-a-5');
+   Say(Heike, 'DH-Kagan-a-6');
+   Say(Heike, 'DH-Kagan-a-7');
+   Say(Givi, 'DG-Kagan-a-8');
+   end;
+end;
+
+DialogueOff;
+End;
+
+// see omicron attackers
+Every 0$1 trigger startAttackOnOmicron and UnitFilter(russianOmicronAttackers, [f_inarea, russianOmParkingArea]) do
+begin
+DialogueOn;
+
+CenterNowOnXY(63, 32);
+PlaceSeeing(63, 32, 2, -12);
+
+Say(Heike, 'DH-Omicron-1');
+Say(Mike, 'DM-Omicron-2');
+
+RemoveSeeing(63, 32, 2);
+DialogueOff;
+End;
 
 // see enemy lab
 Every 0$3 trigger See(2, ruLab) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) and not InBattle(2) do
@@ -687,8 +735,20 @@ hillBase := true;
 ChangeMissionObjectives('HillDone');
 End;
 
+Every 0$1 trigger Kaia and GetLives(Kaia) < 3 do
+begin
+DialogueOn;
+CenterNowOnUnits(Kaia);
+ForceSay(Kaia, 'DK-Kkilled-1');
+Say(Heike, 'DH-Kkilled-2');
+DialogueOff;
+End;
+
+Every 0$1 trigger kaiaKilledByRussian do
+Say(Heike, 'DH-Kkilled-3');
+
 // go to west
-Every 0$1 trigger debug or (kirovDestroyed and beriaDestroyed and kaganDestroyed) do
+Every 0$1 trigger debug or (kirovDestroyed and beriaDestroyed and (kaganDestroyed or (kaganCaptured and GetSide(kagan) = 2))) do
 var i, tmp, tmp2, cargo;
 begin
 ChangeMissionObjectives('GoToWest');
@@ -784,6 +844,7 @@ SaveVariable(escapeCounter, '04_1_EscapeCounter');
 SaveVariable(hillBase, '04_1_BaseHill');
 SaveVariable(tick, '04_1_Time');
 SaveVariable(loseCounter, '04_1_DeadCounter');
+SaveVariable(kaganCaptured * GetSide(kagan) = 2, '04_1_KaganCaptured');
 SaveVariable(FilterAllUnits([[f_side, 2], [f_weapon, ar_flame_thrower]]) + 0, '04_1_Flamethrower');
 
 ChangeMap(1, '__x1\04_cont2');
