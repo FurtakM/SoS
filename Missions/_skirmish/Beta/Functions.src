@@ -1,3 +1,5 @@
+export rows;
+
 Export Function CutTreeInArea(bulldozer, area);
 var i;
 begin
@@ -11,16 +13,98 @@ if bulldozer > 0 then
 End;
 
 Export Function ComMeeting(team, area);
-var i, tmp;
+var i, x, tmp, offset, sold_team, civil_team;
 begin
-tmp := AreaToList(area, 0);
 
-for i = 1 to team do
-    begin
-    if IsInUnit(team[i]) then
-       ComExitBuilding(team[i]);
+   
+   // Split team into soldiers and civils (eng, mech..) 
+   sold_team = UnitFilter(team, [[f_side, 1], [f_type, unit_human], [f_class, class_soldier]]);
+   civil_team = UnitFilter(team, [[f_side, 1], [f_type, unit_human], [f_not, [f_class, class_soldier]]]);
 
-    AddComMoveXY(team[i], tmp[1][i], tmp[2][i]);
-    AddComTurnUnit(team[i], Brighton);
-    end;
-End;
+   rows = MakeRows(sold_team, civil_team);
+
+   offset = 0;
+
+   for i := 1 to sold_team do
+   begin
+      if IsInUnit(sold_team[i]) then
+         ComExitBuilding(sold_team[i]);
+
+      AddComMoveXY(sold_team[i], rows[1][i + offset], rows[1][i + 1 + offset]);
+      AddComTurnUnit(sold_team[i], Brighton);
+      
+      offset = offset + 1;
+   end;
+
+   offset = 0;
+   tmp = 1;
+
+   for i := 2 to rows do
+   begin
+      for x := 1 to sold_team do
+      begin
+         if IsInUnit(civil_team[tmp]) then
+            ComExitBuilding(civil_team[tmp]);
+
+         AddComMoveXY(civil_team[tmp], rows[i][x + offset], rows[i][x + 1 + offset]);
+         AddComTurnUnit(civil_team[tmp], Brighton);
+
+         offset = offset + 1;
+
+         if not (tmp = civil_team) then
+            tmp = tmp + 1;
+      end;
+
+      offset = 0;
+   end;
+end;
+// Summary: Generate a rows where the size is determined by the number of soldiers that are in the first line, soldiers amount = 1 row
+// Input: sold_team, civil_team list
+// Output: row list with struct: [[x,y, x,y, x,y], [x,y, x,y,x,y]]
+Export function MakeRows(sold_team, civil_team);
+var i, x, start_pos, row_size, new_row, result_rows, civil_rows, offsetX, offsetY;
+begin
+   start_pos = [65, 34]; 
+
+   row_size = 0;
+
+   result_rows = [];
+   new_row = [];
+
+   for i := 1 to sold_team do
+   begin
+      new_row = new_row ^ start_pos[1] ^ start_pos[2] + i;
+      row_size = row_size + 1;
+   end;
+
+   result_rows = result_rows ^ [new_row];
+
+   civil_rows = civil_team div sold_team;
+
+   if(civil_rows mod sold_team > 0) then
+      civil_rows = civil_rows + 1;
+
+   offsetX = 2;
+   offsetY = 1;
+
+
+   for i := 1 to civil_rows do
+   begin
+
+      new_row = [];
+
+      for x := 1 to row_size do
+      begin
+         new_row = new_row^ start_pos[1] + offsetX ^ start_pos[2] + offsetY + x;
+      end;
+
+      result_rows = result_rows ^ [new_row];
+
+      offsetX = offsetX + 2;
+      offsetY = offsetY + 1;
+      
+   end;
+ 
+   result = result_rows;
+
+end;
