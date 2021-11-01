@@ -1,11 +1,17 @@
 // Sand of Siberia - Beta
 // map by ALTAR, expanded by Serpent
-// SAIL by Pra¿anin
-// Idea, scenario and dialogs by Pra¿anin
+// SAIL by Prazanin
+// Idea, scenario and dialogs by Prazanin
+// Edit: Nefarem
+
 export MissionStart;
+export southAreaBlocker;
 
 starting
 begin
+
+  southAreaBlocker = true;
+
   ResetFog;
   AnimateTrees(true);
   RevealFogArea(1, BetaArea);
@@ -15,10 +21,17 @@ begin
   SetBName(BetaA, 'beta');
   SetBName(BetaB, 'beta');
 
+  SetResourceType(GetBase(BetaA), mat_cans, startCrates[1]);
+  SetResourceType(GetBase(BetaB), mat_cans, startCrates[2]);
+
+
   PrepareHeroes;
   PrepareBeta;
 
+  HideArea(1, SouthArea);
+
   InGameOn;
+  ComHold(Brighton);
   CenterNowOnUnits(Brighton);
 
   ComMoveXY(Megan, 50, 42);
@@ -100,14 +113,37 @@ begin
 
   MissionStart := true;
 
+  PrepareRUBase_v2;
+  mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+  mc_bases := Replace(mc_bases, 2, RU_SecondPersonnel);
+  MC_Start();
+
   music_nat := 1;
 end;
+
+// Return units from "block" area
+every 1 trigger southAreaBlocker do
+var unit;
+begin
+
+  enable;
+
+  if FilterUnitsInArea(SouthArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) = 0 then
+    exit;
+
+  for unit in FilterUnitsInArea(SouthArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+  begin
+    ComMoveXY(unit, GetX(unit), GetY(unit) - 2);
+  end;
+
+end;
+
 
 export ArmadaArrived, FirstAssaultRepelled;
 export RuSpeaker;
 
 every 0$1 trigger MissionStart do
-var tmp, i;
+var i, tmp;
 begin
   wait(ruArrival);
 
@@ -127,19 +163,16 @@ begin
 
   wait(0$20);
   PrepareRUBase;
-  PrepareRUBase_v2;
-//  ComBuild(FilterAllUnits([f_side,3]), b_depot, 127, 125, 5);
-  mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
-  mc_bases := Replace(mc_bases, 2, RU_SecondPersonnel);
-  MC_Start();
 
-  wait(0$30);
+  wait(1$20);
   PrepareRUBulldozers;
   CutTreeInArea(Bulldozers[1], BulldozerArea);
   CutTreeInArea(Bulldozers[2], BulldozerArea2);
   DoNotAttack(1, Bulldozers[1]);
   DoNotAttack(1, Bulldozers[2]);
   wait(0$30);
+
+  ShowArea(1, SouthArea);
 
   InGameOn;
   PlaceSeeing(95, 93, 1, -30);
@@ -171,6 +204,8 @@ begin
 
   RemoveSeeing(95, 93, 1);
 
+  southAreaBlocker = false;
+
   Say(Yashin, 'DDeath-Yas-1');
   
   SayEffect('DRuSol-A1');
@@ -179,7 +214,7 @@ begin
 
   InGameOff;
 
-  ComMoveXY(RUArmada, 66, 40);
+  AssaultStarted := true;
 
   wait(0$2);
 
@@ -187,32 +222,35 @@ begin
 
   wait(0$20);
 
-  AssaultStarted := true;
-
   Say(Popov, 'DDeath-Pop-1');
   Say(Gaydar, 'DDeath-Gay-1');
 
   wait(0$5);
   Say(Sevi, 'DDeath-Vse-1');
+end;
+
+
+every 0$1 trigger AssaultStarted do
+var i, tmp;
+begin
 
   PriorityAttack(6, BetaA);
   PriorityAttack(6, BetaB);
 
   repeat
-   for i in RuArmada do
-       if not HasTask(i) then
-          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+    for i in RuArmada do
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
 
-  wait(0$1)
-  until FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human] ]) < 10
-  and IsDead(Yashin)
-  and IsDead(Popov)
-  and IsDead(Gaydar)
-  and IsDead(Sevi);
+    wait(0$1)
+    until FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human] ]) < 10
+    and IsDead(Yashin)
+    and IsDead(Popov)
+    and IsDead(Gaydar)
+    and IsDead(Sevi);
 
-  AssaultStarted := false;
+    AssaultStarted := false;
 
-  ComMoveXY(FilterAllUnits([f_side, 6]), 120, 131);
+  ComMoveToArea(FilterAllUnits([f_side, 6]), RUArrivalArea);
   RuSpeaker := FilterAllUnits([f_and, [f_side, 6], [f_sex, sex_male], [f_type, unit_human], [f_lives, 500] ]);
 
   if RuSpeaker then
@@ -236,9 +274,28 @@ begin
   RemoveUnit(Bulldozers[1]);
   RemoveUnit(Bulldozers[2]);
   AddComExitVehicle(FilterAllUnits([f_side, 6]));
-  SetSide(FilterAllUnits([f_side, 6]), 3);
+  SetSide(FilterAllUnits([[f_side, 6], [f_lives, 251]]), 3);
 //  mc_bases := Replace(mc_bases, 1, FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
   mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+end;
+
+every 0$1 trigger FirstAssaultRepelled do
+var unit, insideUnit;
+begin
+    enable;
+
+    if FilterUnitsInArea(RUArrivalArea, [[f_side, 6]]) = 0 then
+        exit;
+
+    for unit in FilterUnitsInArea(RUArrivalArea, [[f_side, 6]]) do
+    begin
+        SetSide(unit, 3);
+        if (GetType(unit) = unit_vehicle) then
+            for insideUnit in UnitsInside(unit) do
+                SetSide(insideUnit, 3);
+
+        mc_bases := Replace(mc_bases, 1, FilterAllUnits([f_side, 3]));
+    end;
 end;
 
 every 0$1 trigger FirstAssaultRepelled and jmmArrival > 0$00 do
@@ -310,5 +367,5 @@ Every 0$1 trigger MissionStart do
 begin
 enable;
 
-display_Strings := ['#tick', tick];
+//display_Strings := ['#tick', tick];
 End;
