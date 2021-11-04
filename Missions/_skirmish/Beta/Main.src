@@ -170,7 +170,7 @@ begin
   CutTreeInArea(Bulldozers[2], BulldozerArea2);
   DoNotAttack(1, Bulldozers[1]);
   DoNotAttack(1, Bulldozers[2]);
-  wait(0$30);
+  wait(0$50);
 
   ShowArea(1, SouthArea);
 
@@ -206,27 +206,26 @@ begin
 
   southAreaBlocker = false;
 
-  Say(Yashin, 'DDeath-Yas-1');
+  wait(0$3);
+  InGameOff;
   
   SayEffect('DRuSol-A1');
-
-  wait(0$2);
-
-  InGameOff;
 
   AssaultStarted := true;
 
   wait(0$2);
 
+  Say(Yashin, 'DDeath-Yas-1'); 
   Say(Gaydar, 'DDeath-Gay-2');
 
-  wait(0$20);
+  wait(0$2);
 
   Say(Popov, 'DDeath-Pop-1');
   Say(Gaydar, 'DDeath-Gay-1');
 
   wait(0$5);
-  Say(Sevi, 'DDeath-Vse-1');
+  Say(Sevi, 'DDeath-Vse-1'); 
+  Say(Popov, 'DDeath-Pop-2');
 end;
 
 
@@ -326,15 +325,13 @@ end;
 
 every 0$1 trigger JMM_Arrived and See(1,Burlak) do
 begin
-  Say(Burlak, 'DBurlak');
-  Say(JMM, 'DJMM');
+Say(Burlak, 'DBurlak');
+Say(JMM, 'DJMM');
 end;
 
 export LaserBuilt;
 every 0$1 trigger FilterAllUnits([f_and, [f_side, 1], [f_or, [f_weapon, us_laser], [f_bweapon, us_laser] ] ]) > 1 do
-begin
- LaserBuilt := true;
-end;
+LaserBuilt := true;
 
 export AssaultStarted;
 every 0$1 trigger
@@ -342,18 +339,11 @@ every 0$1 trigger
  See(6, NearestUnitToUnit( FilterAllUnits([f_and, [[f_side, 1], [f_bweapon, us_laser]] ]), IsInUnit(Sevi)))
  do
 begin
-  wait(0$5);
   Say(Sevi, 'DDeath-Vse-2');
   Say(Yashin, 'DDeath-Yas-2');
 end;
 
-every 0$1 trigger AssaultStarted do
-begin
-wait(0$20);
-Say(Popov, 'DDeath-Pop-2');
-end;
-
-every 0$1 trigger MissionStart do
+every 0$1 trigger MissionStart and GetResourceArea(CratesArea, mat_cans) < 20 do
 Begin
 wait(rand(0$50, 2$20));
 CreateCratesArea(Rand(2, 5), CratesArea,true);
