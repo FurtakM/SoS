@@ -162,7 +162,34 @@ repeat
   wait(0$1);
  until not UnitFilter(attackers, [f_hastask]);
 
- MC_PrepareAttack(base, attackers, _target, flags);
+ repeat
+  wait(0$1);
+
+  for i in attackers do
+      begin
+      if IsDead(i) then
+         attackers := attackers diff i;
+      if not HasTask(i) then
+         begin
+         if not GetTag(i) then
+            begin
+            ComAgressiveMove(i, _target[1][1], _target[1][2]);
+
+            if GetDistUnitXY(i, _target[1][1], _target[1][2]) < 8 then
+               SetTag(i, 1);
+            end
+         else if GetTag(i) = 1 then
+            begin
+            ComAgressiveMove(i, _target[2][1], _target[2][2]);
+
+            if GetDistUnitXY(i, _target[2][1], _target[2][2]) < 8 then
+               SetTag(i, 2);
+            end
+         else
+            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+         end;
+      end;
+ until not attackers;
 until not UnitFilter(mc_bases[base], [f_ok]);
 End;
 
@@ -238,7 +265,34 @@ repeat
   wait(0$1);
  until not UnitFilter(attackers, [f_hastask]);
 
- MC_PrepareAttack(base, attackers, _target, flags);
+ repeat
+  wait(0$1);
+
+  for i in attackers do
+      begin
+      if IsDead(i) then
+         attackers := attackers diff i;
+      if not HasTask(i) then
+         begin
+         if not GetTag(i) then
+            begin
+            ComAgressiveMove(i, _target[1][1], _target[1][2]);
+
+            if GetDistUnitXY(i, _target[1][1], _target[1][2]) < 8 then
+               SetTag(i, 1);
+            end
+         else if GetTag(i) = 1 then
+            begin
+            ComAgressiveMove(i, _target[2][1], _target[2][2]);
+
+            if GetDistUnitXY(i, _target[2][1], _target[2][2]) < 8 then
+               SetTag(i, 2);
+            end
+         else
+            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+         end;
+      end;
+ until not attackers;
 until not UnitFilter(mc_bases[base], [f_ok]);
 End;
 
@@ -311,10 +365,51 @@ begin
   end;
 
   attackers := filter;
-  flags := [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
-  MC_PrepareAttack(1, attackers, _target, flags);
 
-  enable;
+ repeat
+  wait(0$1);
+
+  for i in attackers do
+      begin
+      if IsDead(i) then
+         attackers := attackers diff i;
+      if not HasTask(i) then
+         begin
+         if not GetTag(i) then
+            begin
+            ComAgressiveMove(i, _target[1][1], _target[1][2]);
+
+            if GetDistUnitXY(i, _target[1][1], _target[1][2]) < 8 then
+               SetTag(i, 1);
+            end
+         else if GetTag(i) = 1 then
+            begin
+            ComAgressiveMove(i, _target[2][1], _target[2][2]);
+
+            if GetDistUnitXY(i, _target[2][1], _target[2][2]) < 8 then
+               SetTag(i, 2);
+            end
+         else if GetTag(i) = 2 then
+            begin
+            ComAgressiveMove(i, _target[3][1], _target[3][2]);
+
+            if GetDistUnitXY(i, _target[3][1], _target[3][2]) < 8 then
+               SetTag(i, 3);
+            end
+         else if GetTag(i) = 3 then
+            begin
+            ComAgressiveMove(i, _target[4][1], _target[4][2]);
+
+            if GetDistUnitXY(i, _target[4][1], _target[4][2]) < 8 then
+               SetTag(i, 4);
+            end
+         else
+            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+         end;
+      end;
+ until not attackers;
+
+enable;
 end;
 
 // oil
