@@ -1,0 +1,71 @@
+Export Burlak, Gnyevko, Belkov, Kirilenkova; // Heroes with Burlak
+Export other_survivors; // Other survivors from 01
+
+Export Kurin, otherKirovUnits;
+Export Kovalyuk, randomMech;
+
+Export Function PrepareRussian;
+begin
+    PrepareCharactersFromPreviousMission;
+    PrepareKirovBase;
+end;
+
+Function PrepareCharactersFromPreviousMission;
+var i;
+begin
+    uc_side = 3;
+    
+    Burlak = PrepareUnit('Burlak', true);
+    Gnyevko = PrepareUnit('Gnyevko', true);
+    Belkov = PrepareUnit('Belkov', true);
+    Kirilenkova = PrepareUnit('Kirilenkova', true);
+
+    PlaceUnitArea(Burlak, BurlakSpawnArea, false);
+    PlaceUnitArea(Gnyevko, BurlakTeamSpawnArea, false);
+    PlaceUnitArea(Belkov, BurlakTeamSpawnArea, false);
+    PlaceUnitArea(Kirilenkova, BurlakTeamSpawnArea, false);
+
+    other_survivors = CreateCharacterSet('01_other_survivors');
+
+    for i in other_survivors do
+        PlaceUnitArea(i, BurlakTeamSpawnArea,  false); 
+end;
+
+Function PrepareKirovBase;
+var i, un;
+begin
+    uc_side = 6;
+
+    Kurin = PrepareUnit('Kurin', false);
+    Kovalyuk = PrepareUnit('Kovalyuk', false);
+
+    PlaceUnitArea(Kurin, KurinSpawnArea, false);
+    PlaceUnitXYR(Kovalyuk, 161, 108, 6,  false);
+
+    ComHold(Kurin);
+
+    otherKirovUnits = [];
+
+    for i := 1 to 7 do
+    begin
+        uc_nation = 3;
+
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(3, 5));
+
+        un = CreateHuman;
+
+        otherKirovUnits = otherKirovUnits ^ un;
+
+        PlaceUnitXYR(un, 161, 108, 6,  false);
+    end;
+
+    if NOT TestCharacters('Gnyevko') then
+    begin
+        PrepareMechanic(sex_male, 3);
+        randomMech = CreateHuman;
+
+        PlaceUnitXYR(randomMech, 161, 108, 6,  false);
+    end;
+end;

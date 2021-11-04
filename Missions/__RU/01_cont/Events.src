@@ -1,0 +1,32 @@
+On UnitGoesToRed(unit) do
+begin
+    if unit = Burlak AND NOT GetSide(Kirilenkova) = 3 AND NOT IsOK(Kirilenkova) then
+        BurlakDying;
+
+    if unit = Gladstone then
+        gladstoneStatus = 0;
+
+    if unit = Johanna then
+        johannaStatus = 0;
+end;
+
+On UnitDestroyed(unit) do
+begin
+    if unit = Burlak then
+        BurlakDying;
+    
+    if GetSide(unit) = 3 then
+        lostComradesCounter = lostComradesCounter + 1;
+
+    if unit in kirovSolds then
+        kirovSolds = kirovSolds diff unit;
+end;
+
+On Contact(side1, side2) do
+begin
+    if (side1 = 3 AND side2 = 1) OR (side1 = 1 AND side2 = 3) AND secondAttack = 1 then
+        Dial_SecondAttack;
+
+    if side1 = 3 AND side2 = 6 AND NOT traitor then
+        Dialogue_AttackComrade;
+end;

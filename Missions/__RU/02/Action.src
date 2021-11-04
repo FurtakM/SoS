@@ -1,0 +1,46 @@
+Export Function MissionIntro;
+var yourSolds, nearUnit;
+var i;
+begin
+    CenterNowOnUnits(Burlak);
+
+    ComMoveXY(Burlak, 166, 110);
+    AddComTurnUnit(Burlak, Kurin);
+
+    yourSolds = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff Burlak;
+
+    for i := 1 to meetWithKurinPositions do
+    begin
+        nearUnit = NearestUnitToXY(yourSolds, meetWithKurinPositions[i][1], meetWithKurinPositions[i][2]);
+        ComMoveXY(nearUnit, meetWithKurinPositions[i][1], meetWithKurinPositions[i][2]);
+        AddComTurnUnit(nearUnit, Kurin);
+
+        yourSolds = yourSolds diff nearUnit;
+    end;
+
+    repeat
+        CenterNowOnUnits(Burlak);
+        wait(0$1);
+    until GetDistUnits(Burlak, Kurin) < 4;
+
+    CenterNowOnUnits([Burlak, Kurin]);
+
+    ComTurnUnit(Kurin, Burlak);
+
+    Say(Kurin, 'D1-Kur-1');
+    Say(Burlak, 'D1-Bur-1');
+    Say(Kurin, 'D1-Kur-2');
+    Say(Burlak, 'D1-Bur-2');
+    Say(Kurin, 'D1-Kur-3');
+
+    if IsOK(Gnyevko) then
+        Say(Kurin, 'D1-Kur-3a');
+
+    InGameOff;
+
+    SetSide(FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko], 6);
+    SetSide(Kovalyuk, 3);
+    
+    if NOT IsOK(Gnyevko) then
+        SetSide(randomMech, 3);
+end;
