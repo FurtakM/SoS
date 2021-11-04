@@ -27,6 +27,7 @@ TID_Sniper = 6025;
 TID_AnimalsAmount = 6026;
 TID_Side = 6027;
 TID_AchivUnlocked = 6028;
+TID_Sheik = 6029;
 
 TID_Burlak = 6030;
 TID_Gladkov = 6031;
