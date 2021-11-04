@@ -1,0 +1,92 @@
+// Prepare Hero for use
+// ident - ident from start.txt - 'JMM' for example
+// exist_mode
+//   - false if unit not exist in save
+//   - true if unit already exist in save
+// example: JMM := PrepareUnit('JMM', false);
+Export Function PrepareUnit(ident, exist_mode);
+var unit;
+begin
+
+if exist_mode then
+   unit := CreateCharacter(previousMissionPrefix&ident)
+  else
+   unit := NewCharacter(ident);
+
+result := unit;
+End;
+
+Export function DialogRandom(characters, dialogMID, dialogFID, radio);
+var i, speaker;
+begin
+   characters := characters diff [Burlak, Gnyevko, Belkov, Kirilenkova];
+   speaker := characters[rand(1, characters)];
+
+   if radio then
+   begin
+      if GetSex(speaker) = sex_male then
+         SayRadio(speaker, dialogMID)
+      else
+         SayRadio(speaker, dialogFID);
+   end
+   else
+   begin
+      if GetSex(speaker) = sex_male then
+         Say(speaker, dialogMID)
+      else
+         Say(speaker, dialogFID);  
+   end;
+
+   result := speaker;
+end;
+
+// Summary: Before calling the SaveCharacters function, checks if the character given in the argument is OK and if it is on the player's side 
+// Input: Character, characterStringID
+// Example: ExtSaveCharacter(Burlak, MyBurlak);
+Export Function ExtSaveCharacter(character, characterStringID);
+begin
+   if GetSide(character) = your_side AND IsOK(character) then
+      SaveCharacters(character, missionPrefix&characterStringID);
+end;
+
+// Summary: Before calling the SaveCharacters function, checks if the characters list given in the argument is OK and if it is on the player's side 
+// Input: Characters, characterStringID
+// Example: ExtSaveCharacter([FilterAllUnits...], MySavedTeam);
+Export Function ExtSaveCharacters(characters, charactersStringID);
+var unit, resultCharactersToSave;
+begin
+   resultCharactersToSave = [];
+
+   for unit in characters do
+      if GetSide(unit) = your_side AND IsOK(unit) then
+         resultCharactersToSave = resultCharactersToSave ^ unit;
+
+   SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
+end;
+
+Export Function MoveToHill;
+begin
+    ComMoveXY(Pokryshkin, 65, 59);
+    AddComCrawl(Pokryshkin);
+
+    ComMoveXY(Saseda, 65, 58);
+    AddComCrawl(Saseda);
+
+    ComMoveXY(Jaworska, 64, 57);
+    AddComCrawl(Jaworska);
+
+    ComMoveXY(Balei, 64, 56);
+    AddComCrawl(Balei);
+
+    ComMoveXY(Belkov, 63, 55);
+    AddComCrawl(Belkov);
+
+   ComMoveXY(Jaunzeme, 66, 58);
+    AddComCrawl(Jaunzeme);
+
+    if (GetSide(Gnyevko) = 6 AND gnyevkoSaved) then
+    begin
+        ComMoveXY(Gnyevko, 63, 54);
+        AddComCrawl(Gnyevko);   
+    end;
+end;
