@@ -1,107 +1,57 @@
-EXPORT
-  you,russians,americans,americans2;
+// Russian mission 1
+// Map by Altar
+// SAIL by Nefarem
 
-EXPORT
-  pokryshkin_met,gnyevko_met,kirilenkova_met,follow_pokryshkin,gladstone_escaped, soldier_escaped,
-  preparing_trap,attacking_brown,attacking_bunker,retreating, returning,
-  betrayed,it_is_your,start_to_run,kirilenkova_appears,
+Starting
+begin
+    InitMission;
+end;
 
-  saw_apeman,
-  radio_found,burlak_killed_apeman,soldiers_killed_apeman;
+Export introEnd, apemansContact, attackedByApeman;
+Export spotWaterfall;
+Export apemanAttackedBurlak, apemanWithRadio, radioDropPosition;
+Export gnyevkoSaved, gnyevkoWaitWithPokryshkin, meetPokryshkin, goToHill;
+Export belkovWaitForGorky, secondAttack;
+Export traitor;
+Export gladstoneEscape, amSolEscape;
+Export evacuationAvailable;
+Function InitMission;
+begin
+    // Init map config
+    InitMapConfig;
 
-EXPORT
-  rus_soldiers,
-  number_of_gladstones_apemen,
-  number_of_wild_apemen,
+    // Init units
+    PrepareNature;
+    PrepareRussian;
+    PrepareAmericans;
 
-  browns_combat_level,
-  am1_combat_skill,
-  gladstone_speed,
-  bunker_level,
+    // Mission variables init values
+    introEnd = false;
+    apemansContact = false;
+    attackedByApeman = false;
 
-  gladstones_running_idle,
+    spotWaterfall = false;
 
-  bunker_see,
+    gnyevkoSaved = false;
 
-  bunker_lives,
+    meetPokryshkin = false;
+    goToHill = false;
+    gnyevkoWaitWithPokryshkin = false;
 
-  apemen_range,apemen_time,apeman_braveness;
+    traitor = false;
 
-{function prepare_difficulty;
-  begin
-    number_of_wild_apemen= [ 4, 5, 6 ] [difficulty];
-    number_of_gladstones_apemen= [ 3, 4, 5 ] [difficulty];
+    gladstoneEscape = false;
+    amSolEscape = false;
 
-      // levels of pokryshkins soldier except pokryshkin and belkov, 1st is a woman
-    rus_soldiers=[ [3,3,2,2], [2,3,2,1], [2,3,1] ] [difficulty];
+    belkovWaitForGorky = false;
 
-    browns_combat_level = [ 2, 2, 3 ] [difficulty];
-    am1_combat_skill = [ 1, 1, 2 ] [difficulty];
-    gladstone_speed = [ 9, 10, 11 ] [difficulty];
-    bunker_level = [0, 2, 4 ] [difficulty];
-    bunker_lives = [850, 925, 1000 ] [difficulty];
+    evacuationAvailable = false;
 
-    gladstones_running_idle = [0$6, 0$4, 0$2];
+    radioDropPosition = [];
 
-    if difficulty<>1 then
-      RemoveEnvironment(48,26);
-    if difficulty<>2 then
-      RemoveEnvironment(48,27);
-    bunker_see = [ See1, See2, See3 ] [difficulty];
+    apemanWithRadio = FilterAllUnits([[f_side, 0], [f_class, class_apeman]])[Rand(1, FilterAllUnits([[f_side, 0], [f_class, class_apeman]]))];
 
-    apemen_range = [ 1, 2, 3 ] [difficulty];
-    apemen_time = [ 0$2, 0$4, 0$6] [difficulty];
-    apeman_braveness= [150,120,90] [difficulty];
-  end;
-}
-function prepare_difficulty;
-  begin
-    number_of_wild_apemen= [ 4, 5, 6 ] [difficulty];
-    number_of_gladstones_apemen= [ 3, 4, 5 ] [difficulty];
-
-      // levels of pokryshkins soldier except pokryshkin and belkov, 1st is a woman
-    rus_soldiers=[ [3,3,2,2], [2,3,2,1], [2,3,1] ] [difficulty];
-
-    browns_combat_level = [ 2, 3, 4 ] [difficulty];
-    am1_combat_skill = [ 0, 1, 2 ] [difficulty];
-    gladstone_speed = [ 8, 10, 12 ] [difficulty];
-    bunker_level = [0, 2, 4 ] [difficulty];
-    bunker_lives = [850, 900, 1000 ] [difficulty];
-
-    gladstones_running_idle = [0$6, 0$3, 0$1];
-
-    if difficulty<>1 then
-      RemoveEnvironment(48,26);
-    if difficulty<>2 then
-      RemoveEnvironment(48,27);
-    bunker_see = [ See1, See2, See3 ] [difficulty];
-
-    apemen_range = [ 1, 2, 3 ] [difficulty];
-    apemen_time = [ 0$2, 0$4, 0$6] [difficulty];
-    apeman_braveness= [240,150,90] [difficulty];
-  end;
-
-
-function prepare_sides;
-  begin
-    americans=1;
-    americans2=4;
-    you=3;
-    russians=6;
-  end;
-
-starting
-  begin
-    disable(666);  //by jam
-
-    prepare_sides;
-    prepare_difficulty;
-
-    prepare_people;
-    place_wild_apemen;
-    place_americans;
-    place_team;
-    burlak_appears;
-
-  end;
+    // Init mission intro
+    MissionIntro;
+end;
 
