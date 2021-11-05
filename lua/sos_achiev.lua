@@ -196,6 +196,26 @@ TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
 TID_ACH_HARD = 6602;
 TID_ACH_HARD_DESC = 6603;
+TID_ACH_SAFECARGO = 6604;
+TID_ACH_SAFECARGO_DESC = 6605;
+TID_ACH_SAFE = 6606;
+TID_ACH_SAFE_DESC = 6607;
+TID_ACH_DAVIDOV = 6608;
+TID_ACH_DAVIDOV_DESC = 6609;
+TID_ACH_GLADKOV = 6610;
+TID_ACH_GLADKOV_DESC = 6611;
+TID_ACH_STOLYP = 6612;
+TID_ACH_STOLYP_DESC = 6613;
+TID_ACH_GORKI = 6614;
+TID_ACH_GORKI_DESC = 6615;
+TID_ACH_NOSUPP = 6616;
+TID_ACH_NOSUPP_DESC = 6617;
+TID_ACH_HUNT = 6618;
+TID_ACH_HUNT_DESC = 6619;
+TID_ACH_BEH = 6620;
+TID_ACH_BEH_DESC = 6621;
+TID_ACH_NODEPOT = 6622;
+TID_ACH_NODEPOT_DESC = 6623;
 
 
 achievements = {
@@ -870,6 +890,76 @@ achievements = {
         true,
         0,
         0
+    },
+    ['ACH_SAFECARGO'] = {
+        loc(TID_ACH_SAFECARGO), 
+        loc(TID_ACH_SAFECARGO_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SAFE'] = {
+        loc(TID_ACH_SAFE), 
+        loc(TID_ACH_SAFE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_DAVIDOV'] = {
+        loc(TID_ACH_DAVIDOV), 
+        loc(TID_ACH_DAVIDOV_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_GLADKOV'] = {
+        loc(TID_ACH_GLADKOV), 
+        loc(TID_ACH_GLADKOV_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_STOLYP'] = {
+        loc(TID_ACH_STOLYP), 
+        loc(TID_ACH_STOLYP_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_GORKI'] = {
+        loc(TID_ACH_GORKI), 
+        loc(TID_ACH_GORKI_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_NOSUPP'] = {
+        loc(TID_ACH_NOSUPP), 
+        loc(TID_ACH_NOSUPP_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_HUNT'] = {
+        loc(TID_ACH_HUNT), 
+        loc(TID_ACH_HUNT_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BEH'] = {
+        loc(TID_ACH_BEH), 
+        loc(TID_ACH_BEH_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_NODEPOT'] = {
+        loc(TID_ACH_NODEPOT), 
+        loc(TID_ACH_NODEPOT_DESC),
+        true,
+        0,
+        0
     }
 };
 
@@ -988,7 +1078,17 @@ achievsCategory = {
     },
     [2] = {
         'ACH_DESERT',
-        'ACH_HARD'
+        'ACH_HARD',
+        'ACH_SAFECARGO',
+        'ACH_SAFE',
+        'ACH_DAVIDOV',
+        'ACH_GLADKOV',
+        'ACH_STOLYP',
+        'ACH_GORKI',
+        'ACH_NOSUPP',
+        'ACH_HUNT',
+        'ACH_BEH',
+        'ACH_NODEPOT'
     },
     [3] = {
         'ACH_DOGTAG',
