@@ -264,6 +264,7 @@ begin
 if call and tick < 15$00 then
    case query('call1') of
    1: begin
+      callUsed := true;
       // surowce
       SetArtifactUse(3, art_use_exclamation, art_gray, player_depot);
       call := false;
@@ -280,6 +281,7 @@ if call and tick < 15$00 then
 if call and tick >= 15$00 then
    case query('call2') of
    1: begin
+      callUsed := true;
       // atak
       call := false;
       if MCF_Get(1, [f_type, unit_building]) and MCF_Get(4, [f_type, unit_building]) then
@@ -294,6 +296,7 @@ if call and tick >= 15$00 then
       SetArtifactUse(3, art_use_exclamation, art_instant, player_depot);
       end;
    2: begin
+      callUsed := true;
       // surowce
       SetArtifactUse(3, art_use_exclamation, art_gray, player_depot);
       call := false;
@@ -315,6 +318,16 @@ Every 0$01 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human]]) = 0 and
 begin
 DialogueOn;
 SayRadio(Popov, 'DR7');
+
+case player_com of
+Gorki: SetAchievement('ACH_GORKI');
+Stolypin: SetAchievement('ACH_STOLYP');
+Davidov: SetAchievement('ACH_DAVIDOV');
+Gladkov: SetAchievement('ACH_GLADKOV');
+end;
+
+if not callUsed then
+   SetAchievement('ACH_NOSUPP');
 
 if (tick < [55$30, 45$30, 42$30][Difficulty]) then
    AddMedal('med1', 1)

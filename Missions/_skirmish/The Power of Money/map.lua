@@ -1,5 +1,5 @@
 function FROMOW_MAP_START(MAPPATH)
-    registryAchievs({'ACH_HARD', 'ACH_BEH', 'ACH_NODEPOT'});
+    registryAchievs({'ACH_SAFE'});
 end;
 
 function FROMOW_MAP_END()
