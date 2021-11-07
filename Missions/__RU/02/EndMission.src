@@ -1,0 +1,97 @@
+every 0$5 trigger backToBeria2 AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+    enable;
+
+    if NOT saveBelkovObjective then
+    begin
+        case Query('QContMission') of
+            1:begin
+                FinishMission;
+            end;
+
+            2:begin
+                saveBelkovObjective = true;
+            end;
+        end;
+    end;
+
+    if belkovSaved then
+        FinishMission;
+end;
+
+Function FinishMission;
+begin
+    SetRewards;
+    SavePlayerCharacters;
+    SaveGlobalVariables;
+
+    YouWin;
+end;
+
+Function SetRewards;
+begin
+
+    // Medals
+    case initiative of
+        1:AddMedal('Initiative',1);    
+        2:AddMedal('Initiative',-2);   
+        3:AddMedal('Initiative',-1);  
+    end;
+
+    if belkovSaved AND (IsOK(Belkov) OR IsOK(Belkov2)) then
+        AddMedal('Belkov',1);   
+
+    if NOT belkovSaved AND NOT saveBelkovObjective then
+        AddMedal('Belkov',-1);   
+
+    if NOT belkovSaved AND saveBelkovObjective then
+        AddMedal('Belkov',-2);   
+
+    if belkovSaved AND (belkovReturn AND IsDead(Belkov)) OR (NOT belkovReturn AND IsDead(Belkov2)) then
+        AddMedal('Belkov',-2);  
+
+    if lostComradesCounter = 0 then
+        AddMedal('NoLosses', 1)
+    else
+        AddMedal('NoLosses', 0);
+
+    GiveMedals('Main');
+
+    RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+end;
+
+Function SavePlayerCharacters;
+var othersYour;
+begin
+    ExtSaveCharacter(Burlak, 'Burlak', 3);
+    ExtSaveCharacter(Gnyevko, 'Gnyevko', 3);
+    ExtSaveCharacter(Kovalyuk, 'Kovalyuk', 3);
+
+    if belkovReturn then
+        ExtSaveCharacter(Belkov, 'Belkov', 3)
+    else
+        ExtSaveCharacter(Belkov2, 'Belkov2', 3);
+
+    othersYour = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Belkov, Belkov2, Kovalyuk];
+
+    ExtSaveCharacters(othersYour, 'other_survivors', 3);
+    ExtSaveCharacters(platSoldiers, 'other_beria', 6);
+    ExtSaveCharacters(otherKirovUnits, 'other_kirov', 6);
+end;
+
+
+Function SaveGlobalVariables;
+var vehicles;
+begin
+    vehicles = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok]]);
+
+    if vehicles then
+       SaveVehicles(vehicles, '02_Vehicles_1');
+
+    SaveBase(FilterUnitsInArea(BeriaBaseArea, [[f_side, 6], [f_type, unit_building]]), '02_BeriaBase_2');
+    SaveBase(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building]]), '02_KirovBase_3');
+    SaveBase(FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok], [f_nation, nation_american]]), '02_PlayerAmericanBuildings_4');
+    SaveBase(FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_btype, b_breastwork], [f_ok], [f_nation, nation_american]]), '02_AmericanBunkers_5');
+
+    SaveVariable(meetBelkovBrother, '02_MeetBelkovBrother_6');
+end;
