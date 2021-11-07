@@ -1,94 +1,76 @@
 On UnitGoesToRed(un) do
+var i;
 begin
-if un = player then
+if GetSide(un) = 1 then
    YouLost('hunt2');
+if GetSide(un) > 1 then
+   begin
+   for i := 1 to 6 do
+       begin
+       wait(0$1);
+       SetLives(un, 249);
+       end;
+
+   SetLives(un, 1000);
+   end;
 End;
-
-On UnitDestroyed_Extra(un, killer_side, killer_unit) do
-var players, score, play;
-begin
-
-     players := [player, player_1, player_2, player_3, player_4, player_5, player_6, player_7];
-
-     if GetSide(un) = 0 and GetTag(un) <> -100 then
-        begin
-        play := killer_unit;
-
-        Case GetClass(un) of
-        18:          score := PB;
-        class_tiger: score := PT;
-        class_fish:  score := PF;
-        21:          score := PH;
-        13:          score := PE;
-        class_apeman:score := PA;
-        end;
-
-        if GetChassis(un) = 31 then
-           score := PM;
-
-        if play = player then
-           score_player := score_player + score;
-        if play = player_1 then
-           score_enemy1 := score_enemy1 + score;
-        if play = player_2 then
-           score_enemy2 := score_enemy2 + score;
-        if play = player_3 then
-           score_enemy3 := score_enemy3 + score;
-        if play = player_4 then
-           score_enemy4 := score_enemy4 + score;
-        if play = player_5 then
-           score_enemy5 := score_enemy5 + score;
-        if play = player_6 then
-           score_enemy6 := score_enemy6 + score;
-        if play = player_7 then
-           score_enemy7 := score_enemy7 + score;
-
-        // SetTag(un, -100);
-        end;
-End;
-
-
-Every 10 do
-begin
-enable;
-
-       Display_Strings := ['#player1', score_player,
-                           '#player2', score_enemy1,
-                           '#player3', score_enemy2,
-                           '#player4', score_enemy3,
-                           '#player5', score_enemy4,
-                           '#player6', score_enemy5,
-                           '#player7', score_enemy6,
-                           '#player8', score_enemy7];
-
-
-End;
-
 
 On Contact(s1, s2) do
 begin
-
-     if s1 = your_side and s2 > 0 then
-        YouLost('hunt1');
-
+if s1 = 1 and s2 > 1 then
+   YouLost('hunt1');
 End;
 
-
-
-Every 0$01 trigger FilterAllUnits([f_side, 0]) = 0 do
+On UnitDestroyed_Extra(un, killer_side, killer_unit) do
+var point;
 begin
+point := 0;
 
-     Wait(0$03);
+     case GetClass(un) of
+          class_fish: point := 10;
+          class_horse: point := 10;
+          class_baggie: point := 5;
+          class_phororhacos: point := 10;
+          class_tiger: point := 20;
+          class_apeman: point := 30;
+          class_apeman_soldier: point := 50;
+          class_frog: point := 10;
+     end;
 
-     if score_player > score_enemy1 and
-        score_player > score_enemy2 and
-        score_player > score_enemy3 and
-        score_player > score_enemy4 and
-        score_player > score_enemy5 and
-        score_player > score_enemy6 and
-        score_player > score_enemy7 then
-        YouWin
-     else
-        YouLost('hunt3');
+if point then
+   points := Replace(points, killer_side, points[killer_side] + point);
+End;
 
+Every 0$20 trigger FilterAllUnits([f_side, 0]) < 10 do
+begin
+enable;
+PrepareNature(nat_area, wat_area, [rand(0, 4), rand(0, 2), rand(0, 4), rand(2, 4), rand(2, 4), rand(0, 2), rand(0, 4)]);
+End;
+
+Every 0$1 do
+var i;
+begin
+enable;
+
+display_strings := [];
+
+for i := 1 to huntersAmount do
+    begin
+    display_strings := display_strings ^ ['#player' & i, i, points[i]];
+
+    if points[i] >= [750, 1250, 2000][Difficulty] then
+       begin
+       if i = 1 then
+          begin
+          DialogueOn;
+          SetAchievement('ACH_HUNT');
+          display_strings := ['#hunting-win'];
+          dwait(0$5);
+          YouWin;
+          DialogueOff;
+          end
+       else
+          YouLost('hunt3');
+       end;
+    end;
 End;

@@ -1,86 +1,36 @@
 // animals
-Export Function PrepareNature;
-var i, animal;
+Export Function PrepareNature(area, waterArea, numbers);
+var i, j, classes, waterClass;
 begin
+uc_side = 0;
+uc_nation = 0;
 
-     uc_side = 0;
-     uc_nation = 0;
+classes := [class_apeman, class_apeman_soldier, class_baggie, class_phororhacos, class_tiger, class_horse];
+waterClass := [class_fish{, class_frog}];
 
-     // birds
-     For i = 1 to B1 do
-     begin
-     hc_class = 18;
-     hc_gallery = 'sandnature';
-     hc_face_number = 1;
+InitHc_All();
 
-     animal := CreateHuman;
-     PlaceUnitArea(animal, nat_area, false);
-     end;
+for i := 1 to numbers - 2 do
+    begin
 
-     // tigers
-     For i = 1 to T1 do
-     begin
-     hc_class = class_tiger;
-     hc_gallery = 'sandnature';
-     hc_agressivity = Rand(0, 50);
-     hc_face_number = 3;
+    if numbers[i] = 0 then
+       continue;
 
-     animal := CreateHuman;
-     PlaceUnitArea(animal, nat_area, false);
-     end;
+    hc_class := classes[i];
+    hc_attr := [rand(8, 12), rand(8, 12)];
+    hc_agressivity := rand(-5, 5) + Difficulty * 5;
 
-     // horses
-     For i = 1 to T1 do
-     begin
-     hc_class = 21;
-     hc_gallery = 'sandnature';
-     hc_agressivity = 0;
-     hc_face_number = 5;
+    for j := 1 to numbers[i] do
+        PlaceUnitArea(CreateHuman, area, false);
+    end;
 
-     animal := CreateHuman;
-     PlaceUnitArea(animal, nat_area, false);
-     end;
+if not waterArea then
+   exit;
 
+hc_class := waterClass[1];
+hc_attr := [10, 10];
+hc_agressivity := 0;
 
-     // enhidna
-     For i = 1 to E1 do
-     begin
-     hc_class = 13;
-     hc_gallery = 'sandnature';
-     hc_face_number = 4;
-
-     animal := CreateHuman;
-     PlaceUnitArea(animal, nat_area, false);
-     end;
-
-     // fish
-     For i = 1 to F1 do
-     begin
-     hc_class = 20;
-     hc_gallery = 'sandnature';
-     hc_face_number = 2;
-
-     animal := CreateHuman;
-     PlaceUnitArea(animal, wat_area, false);
-     end;
-
-     // mastodonts
-     For i = 1 to M1 do
-     begin
-     vc_chassis := 31;
-     vc_control := control_rider;
-     animal := CreateVehicle;
-     PlaceUnitArea(animal, nat_area, false);
-     end;
-
-     // apeman
-     hc_gallery := '';
-     hc_class := class_apeman;
-     hc_attr := [15, 15];
-     hc_skills := [10, 10, 10, 10];
-     hc_name := 'White Apeman'; 
-     animal := CreateHuman;
-     PlaceUnitArea(animal, spawn_extra, false);
-     
-
+for j := 1 to numbers[7] do
+    PlaceUnitArea(CreateHuman, waterArea, false);
 End;

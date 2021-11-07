@@ -1,63 +1,56 @@
-// Skrimish Mission Hunting by Serpent 17-05-2015
+// Skrimish Mission Hunting by Serpent 15-05-2015
 // Thx Morphid for map ;)
+// Anim by Serpent
+// Reworked 4.11.2021
 Starting
 begin
 ResetFog;
-RandomizeAll;
-Your_Side := 1;
 
-test := false;
+CenterNowOnXY(136, 106);
 
-if test then
+Init;
+PrepareNature(nat_area, wat_area, [10, 2 * Difficulty, 6, 6, 3 * Difficulty, 6, 4]);
+PrepareHunters();
+End;
+
+Export debug, hunterClass, huntersAmount, animalAmount;
+Export class_horse;
+Export points, hunters;
+Function Init;
+begin
+debug := 0;
+
+class_horse := 21;
+
+if debug then
    begin
    FogOff(1);
-   difficulty := 2;
-   level := 2;
-   class_1 := class_sniper;
-   class_2 := class_1;
+   Difficulty := 2;
+   hunterClass := 3;
+   animalAmount := 2;
    end
 else
    begin
-   difficulty := GetMultiplayerSetting(0);
-   level := GetMultiplayerSetting(1);
-   class_1 := [class_soldier, class_sniper][GetMultiplayerSetting(2)];
+   Difficulty := GetMultiplayerSetting(0);
+   hunterClass := GetMultiplayerSetting(2);
+   animalAmount := GetMultiplayerSetting(1);
    end;
 
-Counter;
-PrepareNature;
-InitPlayers;
+huntersAmount := [4, 6, 8][Difficulty];
+points := [0, 0, 0, 0, 0, 0, 0, 0];
 End;
 
-Export level, test;
-
-{
-POINTS:
-- Enchidna 5 pts
-- Bird    10 pts
-- Tiger   50 pts
-- Fish   100 pts
-- Horse  120 pts
-- Mast.  300 pts
-- Ape.  1000 pts
-}
-
-Export E1, B1, T1, F1, H1, M1, A1; // 64
-Export PE, PB, PT, PF, PH, PM, PA;
-Function Counter;
+Export Function PrepareHunters;
+var i, un;
 begin
-level := 3;
-E1 := [10, 15, 20][level];
-B1 := [8, 12, 16][level];
-T1 := [5, 10, 15][level];
-F1 := [2, 3, 5][level];
-H1 := [4, 7, 10][level];
-M1 := [1, 2, 3][level];
-PA := [1, 1, 1][level];
-PE := 5;
-PB := 10;
-PT := 50;
-PF := 100;
-PH := 120;
-PM := 300;
-PA := 1000;
+for i := 1 to huntersAmount do
+    begin
+    uc_side := i;
+    uc_nation := i mod 3 + 1;
+
+    PrepareHuman(false, [class_soldier, class_sniper, class_desert_warior][hunterClass], 10 - Difficulty * 2);
+    un := CreateHuman;
+    hunters := Replace(hunters, hunters + 1, un);
+    PlaceUnitArea(un, startArea, false);
+    end;
 End;
