@@ -6,7 +6,7 @@ begin
     begin
         case Query('QContMission') of
             1:begin
-                // end;
+                FinishMission;
             end;
 
             2:begin
@@ -16,9 +16,16 @@ begin
     end;
 
     if belkovSaved then
-    begin
-        //end;
-    end;
+        FinishMission;
+end;
+
+Function FinishMission;
+begin
+    SetRewards;
+    SavePlayerCharacters;
+    SaveGlobalVariables;
+
+    YouWin;
 end;
 
 Function SetRewards;
@@ -54,14 +61,37 @@ begin
 end;
 
 Function SavePlayerCharacters;
-var others;
+var othersYour;
 begin
-    ExtSaveCharacter(Burlak, 'Burlak');
-    ExtSaveCharacter(Gnyevko, 'Gnyevko');
-    ExtSaveCharacter(Belkov, 'Belkov');
-    ExtSaveCharacter(Kirilenkova, 'Kirilenkova');
+    ExtSaveCharacter(Burlak, 'Burlak', 3);
+    ExtSaveCharacter(Gnyevko, 'Gnyevko', 3);
+    ExtSaveCharacter(Kovalyuk, 'Kovalyuk', 3);
 
-    others = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Belkov, Kirilenkova];
+    if belkovReturn then
+        ExtSaveCharacter(Belkov, 'Belkov', 3)
+    else
+        ExtSaveCharacter(Belkov2, 'Belkov2', 3);
 
-    ExtSaveCharacters(others, 'other_survivors');
+    othersYour = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Belkov, Belkov2, Kovalyuk];
+
+    ExtSaveCharacters(othersYour, 'other_survivors', 3);
+    ExtSaveCharacters(platSoldiers, 'other_beria', 6);
+    ExtSaveCharacters(otherKirovUnits, 'other_kirov', 6);
+end;
+
+
+Function SaveGlobalVariables;
+var vehicles;
+begin
+    vehicles = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok]]);
+
+    if vehicles then
+       SaveVehicles(vehicles, '02_Vehicles_1');
+
+    SaveBase(FilterUnitsInArea(BeriaBaseArea, [[f_side, 6], [f_type, unit_building]]), '02_BeriaBase_2');
+    SaveBase(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building]]), '02_KirovBase_3');
+    SaveBase(FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok], [f_nation, nation_american]]), '02_PlayerAmericanBuildings_4');
+    SaveBase(FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_btype, b_breastwork], [f_ok], [f_nation, nation_american]]), '02_AmericanBunkers_5');
+
+    SaveVariable(meetBelkovBrother, '02_MeetBelkovBrother_6');
 end;

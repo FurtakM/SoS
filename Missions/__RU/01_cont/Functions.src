@@ -64,6 +64,150 @@ begin
    SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
 end;
 
+//Summary: Function which makes "unit1" (only 1 unit - not list of units) move "dist" distance away from hex [x,y] (the fastest way)
+//"add" is boolean - if "true" then its an AddComMoveXY, else ComMoveXY
+Export Function GetAwayFromXY(unit1, x, y, dist, add);
+var list_nearest, list_coords, temp_dir, dir_list, b, min_dist, temp_dist, c, rand_num, rand_near_hex, attempts;
+begin
+      if not IsOk(unit1) or dist = 1 or not ValidHex(x,y) or GetDistUnitXY(unit1,x,y) >= dist or not add in [true,false] then Exit;
+
+      attempts = 0;
+
+      repeat
+      list_nearest = [];
+      list_coords = [];
+
+      temp_dir = GetTurnDirection(x,y,GetX(unit1),GetY(unit1));
+
+      if attempts = 0 then
+         begin
+               //find those coordinates that have distance "dist" to "[x,y]" and are in direction unit on [x,y] would turn if asked to face [GetX(unit1),GetY(unti1)]
+               //this is optimized version but causes 'apathy' (no movement) if "unit1" is cornered
+               dir_list = [temp_dir,temp_dir+1,temp_dir-1];
+               if dir_list[2] = 6 then
+                     dir_list = Replace(dir_list,2,0);
+               if dir_list[3] = -1 then
+                     dir_list = Replace(dir_list,3,5);
+         end
+      else  //if attempts = 1
+         //find all other coordinates that have distance "dist" to "[x,y]" and put them in "list_coords"
+         dir_list = [0,1,2,3,4,5] diff temp_dir;
+
+      //this is the 'corner hexes'
+      for c = 1 to (dir_list+0) do
+         case dir_list[c] of
+               0: list_coords = Insert(list_coords,1,[x,y-dist]);
+               1: list_coords = Insert(list_coords,1,[x+dist,y]);
+               2: list_coords = Insert(list_coords,1,[x+dist,y+dist]);
+               3: list_coords = Insert(list_coords,1,[x,y+dist]);
+               4: list_coords = Insert(list_coords,1,[x-dist,y]);
+               5: list_coords = Insert(list_coords,1,[x-dist,y-dist]);
+         end;
+
+      //this is all the hexes in between the 'corner hexes'
+      //if distance "dist" is >= 30 then we take only every 2. hexes in between (to consume less cpu power)
+      if dist < 30 then
+         c = 1
+      else c = 2;
+
+      b = 1;
+      while b <= (dist - 1) do
+         begin
+               if 0 in dir_list and 1 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x+b, y-dist+b]);
+               if 1 in dir_list and 2 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x+dist, y+b]);
+               if 2 in dir_list and 3 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x+dist-b, y+dist]);
+               if 3 in dir_list and 4 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x-b, y+dist-b]);
+               if 4 in dir_list and 5 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x-dist, y-b]);
+               if 5 in dir_list and 0 in dir_list then
+                     list_coords = Insert(list_coords, 1, [x-dist+b, y-dist]);
+
+               b = b + c
+         end;
+
+      if list_coords = 0 then exit;
+
+      repeat
+      min_dist = 5000;
+      for b in list_coords do
+         begin
+               temp_dist = GetDistUnitXY(unit1,b[1],b[2]);
+               if temp_dist < min_dist then min_dist = temp_dist;
+         end;
+
+      c = 0;
+      repeat
+      c = c + 1;
+
+      //make a new list ("list_nearest") containing those coordiates which have the least distance to "unit1", and remove these coordinates from "list_coords"
+      if GetDistUnitXY(unit1, list_coords[c][1], list_coords[c][2]) = min_dist then
+         begin
+               list_nearest = Insert(list_nearest, 1, list_coords[c]);
+               list_coords = Delete(list_coords, c);
+               c = c - 1;
+         end;
+      until c = list_coords;
+
+      c = 0;
+
+      if list_nearest > 0 then
+         begin
+               repeat
+               rand_num = Rand(1,list_nearest);
+               rand_near_hex = list_nearest[rand_num];
+
+               if ValidHex(rand_near_hex[1], rand_near_hex[2]) > 0 and HexInfo(rand_near_hex[1], rand_near_hex[2]) = 0 then
+                     c = 1
+               else
+                     list_nearest = Delete(list_nearest, rand_num);
+               until c = 1 or list_nearest = 0;
+         end;
+
+      until c = 1 or list_coords = 0;
+
+      attempts = attempts + 1;
+      until c = 1 or attempts > 1;
+
+      //if attempts <= 2 then  //because we don't use "break" "attempts = attempts + 1" will still be executed even if the function actually has found a good hex
+      if c = 1 then
+         if add then
+               AddComMoveXY(unit1,rand_near_hex[1],rand_near_hex[2])
+         else ComMoveXY(unit1, rand_near_hex[1], rand_near_hex[2]);
+end;
+
+//Function which returns the direction in which the unit one the specified hex ([x1,y1]) would turn if it was asked to face
+//the other specified hex ([x,y]) (ComTurnXY)
+Export Function GetTurnDirection(x1,y1,x,y);
+     var dist_1, dist_2, b, temp_dist, dir;
+     begin
+          if not ValidHex(x1,y1) or not ValidHex(x,y) then
+               begin
+                    result = -1;
+                    exit;
+               end;
+
+          dist_1 = GetDistXY(x1,y1,x,y);
+          dist_2 = 99999;
+
+          //this is the algorithm
+          for b = 0 to 5 do
+               begin
+                    temp_dist = GetDistXY(ShiftX(x1,b,dist_1),ShiftY(y1,b,dist_1),x,y);
+                    if temp_dist < dist_2 then
+                         begin
+                              dist_2 = temp_dist;
+                              dir = b;
+                         end;
+               end;
+
+          result = dir;
+end;
+
+
 Export Function MoveToHill;
 begin
     ComMoveXY(Pokryshkin, 65, 59);

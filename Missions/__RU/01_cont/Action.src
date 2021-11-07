@@ -205,6 +205,35 @@ begin
     end;
 end;
 
+// Block attack Gnyevko and Jelena by ape before time end
+every 1 trigger NOT gnyevkoSaved AND NOT jelenaSaved do
+var ape;
+begin
+    enable;
+
+    if NOT gnyevkoSaved AND apeAttackGnyevkoTime > 0$02 then
+        for ape in FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+            GetAwayFromXY(ape, GetX(Gnyevko), GetY(Gnyevko), 10, false);
+
+    if NOT jelenaSaved AND apeAttackJelenaTime > 0$02 then
+        for ape in FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+            GetAwayFromXY(ape, GetX(Kirilenkova), GetY(Kirilenkova), 10, false);
+
+end;
+
+// Count time
+every 0$1 trigger NOT gnyevkoSaved AND NOT jelenaSaved do
+begin
+
+    enable;
+
+    if NOT gnyevkoSaved AND apeAttackGnyevkoTime > 0$00 then
+        apeAttackGnyevkoTime = apeAttackGnyevkoTime - 0$01;
+
+    if IsPlaced(Kirilenkova) AND NOT jelenaSaved AND apeAttackJelenaTime > 0$00 then
+        apeAttackJelenaTime = apeAttackJelenaTime - 0$01;
+end;
+
 // Meet Pokryshkin
 every 0$1 trigger See(3, Pokryshkin) AND NOT meetPokryshkin do
 begin
@@ -612,8 +641,10 @@ begin
 end;
 
 // Destroy bunker
-every 0$1 trigger IsDying(am_bun) AND IsOK(am_lab) do
+every 0$1 trigger IsDying(am_bun) AND IsOK(am_lab) AND NOT amRetreat do
 begin
+    amRetreat = true;
+
     Say(Johanna, 'D8-FSol1-2a');
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
@@ -623,8 +654,23 @@ begin
 end;
 
 // Destroy lab
-every 0$1 trigger IsDying(am_lab) AND IsOK(am_bun) do
+every 0$1 trigger IsDying(am_lab) AND IsOK(am_bun) AND NOT amRetreat do
 begin
+    amRetreat = true;
+
+    Say(Johanna, 'D8-FSol1-2a');
+
+    ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
+
+    Say(Gladstone, 'D8-Glad-2');
+    Say(Burlak, 'D8-Bur-2');
+end;
+
+// Retreat if bunker have less than 50% HP - only hard difficulty
+every 0$1 trigger GetLives(am_bun) < 500 AND NOT amRetreat do
+begin
+    amRetreat = true;
+
     Say(Johanna, 'D8-FSol1-2a');
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
