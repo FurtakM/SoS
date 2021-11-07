@@ -1,1 +1,138 @@
-//
+Export trapCommander;
+Export trapTeam;
+Export leftBunkers, rightBunkers;
+Export amLeftDepot, amRightDepot;
+Export amLeftEngs, amRightEngs;
+
+Export Function PrepareAmerican;
+begin
+    PrepareTrap;
+    PrepareBunkiers;
+end;
+
+Function PrepareTrap;
+var i, un;
+begin
+    trapTeam = [];
+
+    // Commander
+    uc_nation = 1;
+    uc_side = 1;
+
+    hc_gallery = '';
+    hc_name = profile_name; // todo: change to random but currently stay to watch streamer's reaction :D
+    hc_importance = 100;
+    PrepareHuman(sex_male, 1, enemySkillLevel + 1);
+
+    trapCommander = CreateHuman;
+
+    PlaceUnitArea(trapCommander, AmCommanderSpawn, false);
+    ComCrawl(trapCommander);
+
+    trapTeam = trapTeam ^ trapCommander;
+
+    hc_importance = 0;
+    
+    // Group 1
+    for i := 1 to trapAmountPeople[1] do
+    begin
+        
+        hc_name = '';
+        PrepareHuman(false, 1, enemySkillLevel);
+
+        un = CreateHuman;
+
+        PlaceUnitArea(un, AmTrapSpawn1, false);
+        ComCrawl(un);
+        AddComTurnXY(un, 116, 21);
+
+        trapTeam = trapTeam ^ un;
+    end;
+
+    // Group 2
+    for i := 1 to trapAmountPeople[2] do
+    begin
+        
+        hc_name = '';
+        PrepareHuman(false, 1, enemySkillLevel);
+
+        un = CreateHuman;
+
+        PlaceUnitArea(un, AmTrapSpawn2, false);
+        ComCrawl(un);
+        AddComTurnXY(un, 116, 21);
+        
+        trapTeam = trapTeam ^ un;
+    end;
+end;
+
+Function PrepareBunkiers;
+var i, un, bunker;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;
+    bc_level = 1;
+    bc_type = b_breastwork;
+    bunker = CreateAndPlaceBuildingXYD(104, 59, 4);
+    
+    leftBunkers = leftBunkers ^ bunker;
+    PrepareSolBun(enemySkillLevel, bunker);
+
+    bunker = CreateAndPlaceBuildingXYD(101, 55, 4);
+
+    leftBunkers = leftBunkers ^ bunker;
+    PrepareSolBun(enemySkillLevel, bunker);
+
+    bunker = CreateAndPlaceBuildingXYD(132, 62, 1);
+
+    rightBunkers = rightBunkers ^ bunker;
+    PrepareSolBun(enemySkillLevel, bunker);
+
+    bunker = CreateAndPlaceBuildingXYD(134, 66, 1);
+
+    rightBunkers = rightBunkers ^ bunker;
+    PrepareSolBun(enemySkillLevel, bunker);
+
+    bc_type = b_depot;
+    amLeftDepot = CreateAndPlaceBuildingXYD(92, 51, 2);
+
+    amRightDepot = am_dep1;
+
+    amLeftEngs = [];
+
+    for i := 1 to [1, 1, rand(1, 2)][Difficulty] do
+    begin
+        uc_nation = 1;
+        uc_side = 1;
+
+        hc_gallery = '';
+        hc_name = '';
+        PrepareHuman(false, 2, enemySkillLevel);
+
+        un = CreateHuman;
+        amLeftEngs = amLeftEngs ^ un;
+
+        PlaceHumanInUnit(un, amLeftDepot);
+    end;
+ 
+    if Difficulty = 3 then
+    begin
+        amRightEngs = [];
+
+        for i := 1 to rand(1, 2) do
+        begin
+            uc_nation = 1;
+            uc_side = 1;
+
+            hc_gallery = '';
+            hc_name = '';
+            PrepareHuman(false, 2, enemySkillLevel);
+
+            un = CreateHuman;
+            amRightEngs = amRightEngs ^ un;
+
+            PlaceHumanInUnit(un, amRightDepot);
+        end;
+    end;
+
+end;
