@@ -1,0 +1,26 @@
+every 0$1 trigger spawnCrates do
+var i, unit, carryCratesEngs, playerEngs, spawnNextCrates;
+begin
+
+    repeat
+    playerEngs = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_engineer]]);
+
+    wait(0$40);
+
+    carryCratesEngs = 0;
+
+    for unit in playerEngs do
+        carryCratesEngs = carryCratesEngs + GetCargo(unit, mat_cans);
+
+    if GetResourceType(GetBase(beria), mat_cans) < 50 
+    AND (GetResourceArea(beriaBaseArea, mat_cans) * 10) + GetResourceType(GetBase(beria), mat_cans) + carryCratesEngs < 50 then
+        spawnNextCrates = true
+    else
+        spawnNextCrates = false;
+
+    if spawnNextCrates then
+        CreateCratesArea(rand(1,5), BeriaBaseArea, true);
+
+    until NOT spawnCrates;
+
+end;  

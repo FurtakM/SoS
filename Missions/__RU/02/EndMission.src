@@ -1,0 +1,67 @@
+every 0$5 trigger backToBeria2 AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+    enable;
+
+    if NOT saveBelkovObjective then
+    begin
+        case Query('QContMission') of
+            1:begin
+                // end;
+            end;
+
+            2:begin
+                saveBelkovObjective = true;
+            end;
+        end;
+    end;
+
+    if belkovSaved then
+    begin
+        //end;
+    end;
+end;
+
+Function SetRewards;
+begin
+
+    // Medals
+    case initiative of
+        1:AddMedal('Initiative',1);    
+        2:AddMedal('Initiative',-2);   
+        3:AddMedal('Initiative',-1);  
+    end;
+
+    if belkovSaved AND (IsOK(Belkov) OR IsOK(Belkov2)) then
+        AddMedal('Belkov',1);   
+
+    if NOT belkovSaved AND NOT saveBelkovObjective then
+        AddMedal('Belkov',-1);   
+
+    if NOT belkovSaved AND saveBelkovObjective then
+        AddMedal('Belkov',-2);   
+
+    if belkovSaved AND (belkovReturn AND IsDead(Belkov)) OR (NOT belkovReturn AND IsDead(Belkov2)) then
+        AddMedal('Belkov',-2);  
+
+    if lostComradesCounter = 0 then
+        AddMedal('NoLosses', 1)
+    else
+        AddMedal('NoLosses', 0);
+
+    GiveMedals('Main');
+
+    RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+end;
+
+Function SavePlayerCharacters;
+var others;
+begin
+    ExtSaveCharacter(Burlak, 'Burlak');
+    ExtSaveCharacter(Gnyevko, 'Gnyevko');
+    ExtSaveCharacter(Belkov, 'Belkov');
+    ExtSaveCharacter(Kirilenkova, 'Kirilenkova');
+
+    others = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Belkov, Kirilenkova];
+
+    ExtSaveCharacters(others, 'other_survivors');
+end;

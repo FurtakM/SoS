@@ -1,0 +1,61 @@
+// Kirov
+every 0$1 do
+var engs;
+begin
+    engs = UnitFilter(otherKirovUnits, [f_class, class_engineer]);
+
+    AddComBuild(engs, b_breastwork, 144, 96, 1);
+    AddComBuild(engs, b_breastwork, 146, 107, 1);
+    AddComBuild(engs, b_breastwork, 180, 118, 5);
+    AddComBuild(engs, b_breastwork, 176, 123, 5);
+
+    AddComEnterUnit(engs, kirov);
+end;
+
+// Americans
+every 0$1 trigger activateAMAI do
+begin
+    enable;
+    RepairDamageLeftBunkers;
+
+    if Difficulty = 3 then
+        RepairDamageRightBunkers;
+end;
+
+Function RepairDamageLeftBunkers;
+var eng, bunker, leftBunker;
+begin
+    if amLeftEngs = 0 OR FilterUnitsInArea(LeftHillArea, [[f_side, 1], [f_type, unit_building], [f_not, [f_ok]]]) = 0 then
+        exit;
+
+    for eng in amLeftEngs do
+        if HasTask(eng) then
+            exit;
+
+    ComExitBuilding(amLeftEngs);
+
+    for bunker in leftBunkers do
+        if GetLives(bunker) < 1000 then
+            AddComRepairBuilding(amLeftEngs, bunker);
+
+    AddComEnterUnit(amLeftEngs, amLeftDepot);
+end;
+
+Function RepairDamageRightBunkers;
+var eng, bunker, rightBunker;
+begin
+    if amRightEngs = 0 OR FilterUnitsInArea(RightHillArea, [[f_side, 1], [f_type, unit_building], [f_not, [f_ok]]]) = 0 then
+        exit;
+
+    for eng in amRightEngs do
+        if HasTask(eng) then
+            exit;
+
+    ComExitBuilding(amRightEngs);
+
+    for bunker in rightBunker do
+        if GetLives(bunker) < 1000 then
+            AddComRepairBuilding(amRightEngs, bunker);
+
+    AddComEnterUnit(amRightEngs, amRightDepot);
+end;
