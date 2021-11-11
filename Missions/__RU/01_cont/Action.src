@@ -80,6 +80,21 @@ begin
             end;
 end;
 
+// Burlak attack near lake where will spawn Jelena
+every 0$1 trigger NOT attackedByApemanNearLake do
+var un, apeman;
+begin
+    enable;
+
+    for apeman in FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) do
+        if Attacks(apeman) then
+            if GetSide(Attacks(apeman)) = 3 then
+            begin
+                attackedByApemanNearLake = true;
+                exit;
+            end;
+end;
+
 // Save radio position if apeman with radio is dying
 every 1 trigger IsDying(apemanWithRadio) do
     radioDropPosition = [GetX(apemanWithRadio), GetY(apemanWithRadio)];
@@ -133,6 +148,8 @@ end;
 every 0$1 trigger See(3, Gnyevko) do
 var nearUnit, randomUnit;
 begin
+    SetLives(Gnyevko, gnyevkoStartHP);
+
     CenterNowOnUnits(Gnyevko);
 
     DialogueOn;
@@ -234,6 +251,17 @@ begin
         apeAttackJelenaTime = apeAttackJelenaTime - 0$01;
 end;
 
+// Pokryshkin detect your solds near river
+every 0$1 trigger NOT meetPokryshkin AND FilterUnitsInArea(PokryshkinSpotArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
+var unitInArea;
+begin
+    enable;
+
+    unitInArea = FilterUnitsInArea(PokryshkinSpotArea, [[f_side, 3], [f_type, unit_human]]);
+
+    ComMoveXY(Pokryshkin, GetX(unitInArea[1]), GetY(unitInArea[1]));
+end;
+
 // Meet Pokryshkin
 every 0$1 trigger See(3, Pokryshkin) AND NOT meetPokryshkin do
 begin
@@ -241,7 +269,8 @@ begin
 
     InGameOn;
     CenterNowOnUnits(Pokryshkin);
-    ComHold([Burlak, Gnyevko]);
+    ComWalk(Gnyevko);
+    AddComHold([Burlak, Gnyevko]);
 
     DialogueOn;
 
@@ -293,6 +322,8 @@ begin
 
     if GetDistUnits(Burlak, Gnyevko) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
     begin
+        ComWalk(Gnyevko);
+
         Say(Pokryshkin, 'D4-Pok-2');
         Say(Gnyevko, 'D4-Gny-2');
         Say(Pokryshkin, 'D4-Pok-3');
@@ -301,7 +332,7 @@ begin
 
         SetSide(Gnyevko, 6);
 
-        ComMoveXY(Gnyevko, GetX(Pokryshkin), GetY(Pokryshkin));
+        AddComMoveXY(Gnyevko, GetX(Pokryshkin), GetY(Pokryshkin));
     end
     else
     begin
@@ -635,10 +666,9 @@ begin
 end;
 
 // Dialog about camp in trees
-every 0$1 trigger GetLives(am_bun) < 350 AND GetLives(am_bun) > 250 AND FilterUnitsInArea(TreeArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
-begin
+every 0$1 trigger GetLives(am_bun) < 350 AND GetLives(am_bun) > 250 AND FilterUnitsInArea(TreeArea, [[f_side, 3], [f_type, unit_human]]) > 0  AND NOT amRetreat do
     Say(Johanna, 'D8-FSol1-2');
-end;
+
 
 // Destroy bunker
 every 0$1 trigger IsDying(am_bun) AND IsOK(am_lab) AND NOT amRetreat do
@@ -753,6 +783,7 @@ end;
 
 // Spawn Jelena
 every 0$15 trigger evacuationAvailable do
+var randomSold;
 begin
     PlaceUnitArea(Kirilenkova, JelenaSpawnArea, true);
     wait(0$3);
@@ -767,28 +798,28 @@ begin
     end
     else
     begin
-        DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), 'D11b-RSol1-1', 'D11b-RFSol1-1', true);
+        randomSold = DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), 'D11b-RSol1-1', 'D11b-RFSol1-1', false);
     end;
 
-    if FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) > 0 then
+    if FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
         SayRadio(Kirilenkova, 'D11b1-Kir-1')
     else
         SayRadio(Kirilenkova, 'D11b2-Kir-1');
 
-    if attackedByApeman AND FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) > 0 then
+    if attackedByApemanNearLake AND FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
     begin
         Say(Burlak, 'D11b1-Bur-1');
 
         if IsOk(Belkov) then
             Say(Belkov, 'D11b2-Bel-1')
         else
+        begin
+            if GetSex(randomSold) = sex_male then
+                Say(randomSold, 'D11b1-RSol1-1')
+            else
+                Say(randomSold, 'D11b1-RFSol1-1');
+        end;
             DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]), 'D11b1-RSol1-1', 'D11b1-RFSol1-1', false);
-
-        if IsOk(Belkov) then
-            Say(Belkov, 'D11b1-Bel-1')
-        else
-            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]), 'D11b1-RSol1-1', 'D11b1-RFSol1-1', false);
-
 
         DialogueOff;
         exit;
@@ -801,7 +832,12 @@ begin
         if IsOk(Belkov) then
             Say(Belkov, 'D11b2-Bel-1')
         else
-            DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]), 'D11b1-RSol1-1', 'D11b1-RFSol1-1', false);
+        begin
+            if GetSex(randomSold) = sex_male then
+                Say(randomSold, 'D11b1-RSol1-1')
+            else
+                Say(randomSold, 'D11b1-RFSol1-1');
+        end;
 
         DialogueOff;
         exit;    
@@ -810,7 +846,12 @@ begin
     if IsOk(Belkov) then
         Say(Belkov, 'D11b1-Bel-1')
     else
-        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]), 'D11b1-RSol1-1', 'D11b1-RFSol1-1', false);
+    begin
+        if GetSex(randomSold) = sex_male then
+            Say(randomSold, 'D11b1-RSol1-1')
+        else
+            Say(randomSold, 'D11b1-RFSol1-1');
+    end;
 
     DialogueOff;
     exit;
