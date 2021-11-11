@@ -251,15 +251,21 @@ function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
     local v2 = split(VERSION_TO_COMPARE, '.');
 
     for i = 1, #v1 do
-        if (parseInt(v1[i]) < parseInt(v2[i])) then
-            return false;
-        elseif (parseInt(v1[i]) > parseInt(v2[i])) then
-            return true;
+        if (parseInt(v1[i]) ~= parseInt(v2[i])) then
+            return (parseInt(v1[i]) > parseInt(v2[i]));
         end;
     end;
 
     return true;
 end;
+
+--[[function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
+    if (not VERSION or not VERSION_TO_COMPARE) then
+        return true;
+    end;
+
+    return OW_VERSION_LOWER(VERSION_TO_COMPARE,VERSION) or OW_VERSION_SAME(VERSION_TO_COMPARE,VERSION);
+end;--]]
 
 function setCheckedID(ELEMENT_ID, VALUE)
     return sgui_set(ELEMENT_ID, PROP_CHECKED, VALUE);
