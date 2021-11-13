@@ -1,0 +1,235 @@
+Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2; // Heroes with Burlak
+Export Scholtze; // Other heroes
+Export other_survivors; // Other survivors from 02
+Export playerVehicles; // Vehicles from mission 02  -> [Chassis, Engine, Control, Weapon, HP, Fuel]
+Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 ->  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+
+Export Kurin, Popov, BelkovDialog;
+Export ruScout;
+Export otherKirovUnits;
+Export kirovBase, kirovDepot; // Beria base buildings from 02 >  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+
+
+Export Function PrepareRussians;
+begin
+    PrepareKirovBase;
+    PrepareHeroes;
+    PrepareBeriaBase;
+end;
+
+Function PrepareHeroes;
+begin
+    uc_side = 3;
+
+    Burlak := PrepareUnitExt('Burlak', false);
+    Gnyevko := PrepareUnitExt('Gnyevko', false);
+    Kovalyuk := PrepareUnitExt('Kovalyuk', false);
+    Kirilenkova = CreateCharacter('01_Kirilenkova');
+
+    uc_side = 6;
+
+    if NOT meetBelkovBrother AND TestCharacters('02_Belkov') then
+    begin
+        Belkov := PrepareUnitExt('Belkov', false);
+        BelkovDialog = Belkov;
+        PlaceUnitXY(Belkov, 165, 110, false);
+        ComHold(Belkov);
+    end;
+        
+
+    if meetBelkovBrother AND TestCharacters('02_Belkov2') then
+    begin
+        Belkov2 := PrepareUnitExt('Belkov2', false);
+        BelkovDialog = Belkov2;
+        PlaceUnitXY(Belkov2, 165, 110, false);
+        ComHold(Belkov2);
+    end;
+        
+    PlaceUnitXY(Burlak, 164, 108, false);
+    ComHold(Burlak);
+
+    PlaceUnitXYR(Gnyevko, 178, 108, 5, false);
+    PlaceUnitXYR(Kovalyuk, 178, 108, 5, false);
+    PlaceUnitXYR(Kirilenkova, 178, 108, 5, false);
+end;
+
+Function PrepareBeriaBase;
+var i, bonusResources;
+begin
+    beriaBase = LoadVariable('02_BeriaBase_2', []);
+    
+    otherBeriaUnits = CreateCharacterSet('02_other_beria');
+    other_survivors = CreateCharacterSet('02_other_survivors');
+
+    uc_side = 3;
+    uc_nation = 3;
+
+    for i := 1 to beriaBase do
+    begin
+
+        bc_type = beriaBase[i][1];
+        bc_level = beriaBase[i][5]; 
+
+        if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+        if bc_type = b_lab_half or bc_type = b_lab_full then
+            begin
+            if beriaBase[i][7] then
+                bc_kind1 = beriaBase[i][7];
+
+            if beriaBase[i][8] then
+                bc_kind2 = beriaBase[i][8];
+
+            if not beriaBase[i][7] and not beriaBase[i][8] then
+                bc_type := b_lab;
+            end;
+
+        CreateAndPlaceBuildingXYD(beriaBase[i][2], beriaBase[i][3], beriaBase[i][4]);
+    end;
+
+    beriaDepot = FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1];
+
+    SetBName(beriaDepot, 'beria');
+
+    SetResourceType(GetBase(beriaDepot), mat_cans, cratesResources);
+    SetResourceType(GetBase(beriaDepot), mat_oil, oilResources); 
+
+    SetResourceType(GetBase(beriaDepot), mat_cans, GetResourceType(GetBase(beriaDepot), mat_oil) + bonusResourcesCrates);
+    SetResourceType(GetBase(beriaDepot), mat_oil, GetResourceType(GetBase(beriaDepot), mat_oil) + bonusResourcesOil);
+
+    uc_side = 6;
+
+    for i in otherBeriaUnits do
+        PlaceUnitXYR(i, 159, 107, 10, false); 
+        
+
+    for i in other_survivors do
+        PlaceUnitXYR(i, 159, 107, 10, false); 
+
+end;
+
+Function PrepareKirovBase;
+var i;
+begin
+    kirovBase = LoadVariable('02_KirovBase_3', []);
+    
+    otherKirovUnits = CreateCharacterSet('02_other_kirov');
+
+    uc_side = 6;
+    uc_nation = 3;
+
+    for i := 1 to kirovBase do
+    begin
+        bc_type = kirovBase[i][1];
+        bc_level = kirovBase[i][5]; 
+
+        if bc_type = b_depot then
+            bc_type = b_warehouse;
+
+        if bc_type = b_armoury then
+            bc_type = b_barracks;
+
+        if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+        if bc_type = b_lab_half or bc_type = b_lab_full then
+            begin
+            if kirovBase[i][7] then
+                bc_kind1 = kirovBase[i][7];
+
+            if kirovBase[i][8] then
+                bc_kind2 = kirovBase[i][8];
+
+            if not kirovBase[i][7] and not kirovBase[i][8] then
+                bc_type := b_lab;
+            end;
+
+        CreateAndPlaceBuildingXYD(kirovBase[i][2], kirovBase[i][3], kirovBase[i][4]);
+    end;
+
+    kirovDepot = FilterAllUnits([[f_side, 6], [f_btype, b_warehouse]])[1];
+
+    SetBName(kirovDepot, 'kirov');
+
+    Kurin = PrepareUnitExt('Kurin', false);
+    PlaceUnitXY(Kurin, 166, 109, false);
+    ComHold(Kurin);
+
+    Popov = PrepareUnitExt('Popov', false);
+    PlaceUnitArea(Popov, PopovSpawnArea, false);
+    ComTurnXY(Popov, 98, 36);
+
+    hc_name := '';
+    hc_gallery := '';
+
+    PrepareSoldier(false, 2);
+
+    ruScout = CreateHuman;
+    PlaceUnitArea(ruScout, RuScoutSpawnArea, false);
+
+    ComCrawl(ruScout);
+    AddComTurnXY(ruScout, 98, 36);
+
+    uc_side = 6;
+
+    for i in otherKirovUnits do
+    begin
+        SetSide(i, 6);
+        PlaceUnitXYR(i, 159, 107, 10, false); 
+    end;
+end;
+
+Export Function PrepareScholtze;
+var rndPos, x, y;
+begin
+    uc_side = 8;
+
+    Scholtze = PrepareUnitExt('Scholtze', false);
+
+    case Difficulty of
+        1: PlaceUnitXYR(Scholtze, scholtzeSpawnPositions[1], scholtzeSpawnPositions[2], 3, true);
+
+        2:begin
+            scholtzeSpawnNearAmericans = true;
+
+            rndPos = rand(1, scholtzeSpawnPositions / 2);
+
+            x = scholtzeSpawnPositions[rndPos[1]];
+            y = scholtzeSpawnPositions[rndPos[2]];
+
+            if rndPos > 1 then
+            begin
+                x = scholtzeSpawnPositions[rndPos + 1];
+                y = scholtzeSpawnPositions[rndPos + 2];
+            end;
+
+            PlaceUnitXYR(Scholtze, x, y, 3, true);
+        end;
+
+        3:begin
+            rndPos = rand(1, scholtzeSpawnPositions / 2);
+
+            x = scholtzeSpawnPositions[rndPos];
+            y = scholtzeSpawnPositions[rndPos + 1];
+
+            if rndPos > 1 then
+            begin
+                scholtzeSpawnNearAmericans = true;
+                
+                x = scholtzeSpawnPositions[rndPos + 1];
+                y = scholtzeSpawnPositions[rndPos + 2];
+            end;
+
+            PlaceUnitXYR(Scholtze, x, y, 3, true);
+        end;
+    end;
+end;

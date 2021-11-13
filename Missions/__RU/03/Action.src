@@ -1,0 +1,285 @@
+Export Function MissionIntro;
+var unit;
+begin
+    CenterNowOnUnits([Burlak, Kurin]);
+
+    ComTurnUnit([Burlak, BelkovDialog], Kurin);
+    ComTurnUnit(Kurin, Burlak);
+
+    if NOT IsPlaced(Belkov) AND NOT IsPlaced(Belkov2) then
+    begin
+        Say(Kurin, 'D1a-Kur-1');
+        Say(Burlak, 'D1a-Bur-1');
+        Say(Kurin, 'D1a-Kur-2');
+        Say(Burlak, 'D1a-Bur-2');
+    end
+    else
+    begin
+        Say(Kurin, 'D1b-Kur-1');
+        Say(BelkovDialog, 'D1b-Bel-1');
+        Say(Kurin, 'D1b-Kur-2');
+    end;
+
+    Say(Kurin, 'D2-Kur-1');
+    Say(Burlak, 'D2-Bur-1');
+    Say(Kurin, 'D2-Kur-2');
+    Say(Burlak, 'D2-Bur-2');
+    Say(Kurin, 'D2-Kur-3');
+
+    SetAttitude(1, 6, att_friend, true);
+
+    PrepareAmericansMissionIntro;
+    ComMoveXY(amIntroUnits, 28, 35);
+
+    CenterOnXY(93, 36);
+    PlaceSeeing(93, 36, 3, -9);
+
+    wait(0$6);
+
+    CenterOnUnits(Popov);
+    wait(0$1);
+
+    SayRadio(Popov, 'D2-Pop-3');
+
+    CenterNowOnUnits([Burlak, Kurin]);
+    wait(0$1);
+
+    for unit in amIntroUnits do
+        RemoveUnit(unit);
+
+    Say(Kurin, 'D2-Kur-4');
+    Say(Burlak, 'D2-Bur-4');
+    Say(Kurin, 'D2-Kur-5');
+    Say(Burlak, 'D2-Bur-5');
+    Say(Kurin, 'D2-Kur-6');
+
+    if IsPlaced(Gnyevko) then
+        baseUnitsToChoose = baseUnitsToChoose - 1;
+
+    if IsPlaced(Kovalyuk) then
+        baseUnitsToChoose = baseUnitsToChoose - 1;
+
+    if IsPlaced(Kirilenkova) then
+        baseUnitsToChoose = baseUnitsToChoose - 1;
+
+    SelectCharacters(baseUnitsToChoose);
+
+    RemoveSeeing(93, 36, 3);
+    Resetfog;
+
+    ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(beriaDepot), GetY(beriaDepot));
+
+    repeat
+        wait(0$1);
+        CenterNowOnUnits(Burlak);
+    until GetDistUnits(Burlak, beriaDepot) < 6;
+
+    InGameOff;
+
+    ChangeMissionObjectives('M1');
+
+    SaveForQuickRestart;
+
+    ComWalk(ruScout);
+    wait(0$1);
+    AddComMoveXY([ruScout, Popov], 99, 37);
+    AddComMoveXY([ruScout, Popov], 88, 60);
+    AddComMoveXY([ruScout, Popov], 129, 99);
+    AddComEnterUnit([Popov, ruScout], kirovDepot);
+
+    PrepareAmericanSupportTroops(3, 2, 2, SouthAmericanSpawnArea1);
+end;
+
+// Find oil deposit
+Every 0$1 trigger GetResourceVisibility(78, 112, 3) do
+begin
+    CenterOnXY(78, 112);
+    DialogueOn;
+    Say(Burlak, 'D2a-Bur-1');
+    SayRadio(Kurin, 'D2a-Kur-1');
+    DialogueOff;
+
+    ChangeMissionObjectives('M2');
+end;
+
+// Spawn Scholtze
+every 5$30 do
+begin
+    PrepareScholtze;
+
+    DialogueOn;
+    SayRadio(Scholtze, 'D4-Sch-1');
+    Say(Burlak, 'D4-Bur-1');
+    DialogueOff;
+
+    ChangeMissionObjectives('M4');
+
+    ComHold(Scholtze);
+end;
+
+// Contact with Scholtze
+every 0$1 trigger See(3, Scholtze) AND NOT scholtzeSaved do
+begin
+    scholtzeSaved = true;
+
+    CenterNowOnUnits(Scholtze);
+    
+    SetSide(Scholtze, 3);
+
+    DialogueOn;
+
+    Say(Scholtze, 'D4a-Sch-1');
+    Say(Burlak, 'D4a-Bur-1');
+    Say(Scholtze, 'D4a-Sch-2');
+    
+    DialogueOff;
+
+    ComMoveXY(amPatrol, 28, 36);
+end;
+
+// Spawn american patrol to kill Scholtze
+every 3$30 trigger IsPlaced(Scholtze) AND scholtzeSpawnNearAmericans AND NOT scholtzeSaved do
+    PrepareAmericanPatrol;
+
+// American patrol see Scholtze
+every 0$1 trigger See(1, Scholtze) do
+begin
+    DialogueOn;
+
+    Say(Scholtze, 'D4b-Sch-1');
+    Say(amPatrol[2], 'D4b-Sol1-1');
+    Say(amPatrol[1], 'D4b-Sol2-1');
+    Say(Scholtze, 'D4b-Sch-2');
+    Say(Burlak, 'D4b-Bur-2');
+
+    DialogueOff;
+end;
+
+
+// Upgrade workshop to factory - execute in event
+Export Function Dial_UpgradeWorkshop(building);
+var maleSci, maleOthers;
+begin
+    dialog_workshop = true;
+
+    CenterNowOnUnits(building);
+
+    DialogueOn;
+
+    Say(Burlak, 'D3aa-Bur-1');
+
+    if IsOk(Scholtze) AND GetSide(Scholtze) = 3 then
+        Say(Scholtze, 'D3aa-Sch-1')
+    else
+    begin
+        maleSci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_scientistic], [f_sex, sex_male], [f_ok]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Belkov2];
+
+        if maleSci then
+            Say(maleSci[1], 'D3aa-Sci1-1')
+        else
+        begin
+            maleOthers = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Belkov2];
+
+            if maleOthers then
+                Say(maleOthers[1], 'D3aa-Sci1-1')
+        end;
+    end;
+
+    Say(Burlak, 'D3aa-Bur-2');
+
+    DialogueOff;
+end;
+
+// Contact with american support troops
+every 0$1 trigger NOT dialog_amSupportTroops do
+var amUnit;
+begin
+    enable;
+
+    for amUnit in amSupportTroops do
+    begin
+        if See(3, amUnit) then
+        begin
+            dialog_amSupportTroops = true;
+
+            CenterNowOnUnits(amUnit);
+            DialogueOn;
+
+            DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]), 'D3b-RSol1-1', '', false);
+
+            if IsOK(Gnyevko) then
+                Say(Gnyevko, 'D3b-Gny-1');
+
+            Say(Burlak, 'D3b-Bur-1');
+
+            DialogueOff;
+
+            exit;
+        end;
+    end;
+end;
+
+// Ask Burlak with decision how stop americans troops with help to Omicron base
+every 2$0 trigger dialog_amSupportTroops do
+begin
+    if IsOK(Kovalyuk) then
+        Say(Kovalyuk, 'D3b-Kov-1');
+
+    DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]), 'D3b-RSol1-2', '', false);
+
+end;
+
+// Kurin ask about preparation to attack 
+every 0$1 trigger timeToPrepareAttack < 0$01 do
+begin
+    CenterNowOnUnits(Kurin);
+    InGameOn;
+    DialogueOn;
+    
+    SayRadio(Kurin, 'D5-Kur-1');
+
+    case Query('QVehicles') of
+        1:begin
+            Say(Burlak, 'D6a-Bur-1');
+            SayRadio(Kurin, 'D6a-Kur-1');
+
+            meetNearOmicronBase = true;
+        end;
+
+        2:begin
+            Say(Burlak,'D6b-Bur-1');
+            Say(Kurin,'D6b-Kur-1');
+            Say(Burlak,'D6b-Bur-2');
+
+            meetNearOmicronBase = true;
+        end;
+
+        3:begin
+            Say(Burlak,'D6c-Bur-1');
+            Say(Kurin,'D6c-Kur-1');
+            Say(Burlak,'D6c-Bur-2');
+
+            kurinGiveMoreTime = true;
+        end;
+    end;
+
+    InGameOff;
+    DialogueOff;
+end;
+
+// End more time
+every 0$1 trigger extraTime < 0$01 AND kurinGiveMoreTime do
+begin
+    DialogueOn;
+    SayRadio(Kurin, 'D6c-Kur-2');
+    DialogueOff;
+
+    meetNearOmicronBase = true;
+end;
+// Meet with others near Omicron base
+every 0$1 trigger meetNearOmicronBase do
+begin
+    ChangeMissionObjectives('M5');
+
+    // todo: send kirov vehicles to attack
+end;
