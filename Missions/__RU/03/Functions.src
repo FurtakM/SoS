@@ -67,21 +67,23 @@ end;
 Export function SelectCharacters(maxUnitToChoose);
 var i, charsToChoose, selectedPeople;
 begin
-    charsToChoose = otherKirovUnits;
-    charsToChoose = charsToChoose ^ otherBeriaUnits;
-    charsToChoose = charsToChoose ^ other_survivors;
-    charsToChoose = charsToChoose ^ Belkov;
-    charsToChoose = charsToChoose ^ Belkov2;
+   charsToChoose = otherKirovUnits;
+   charsToChoose = charsToChoose ^ otherBeriaUnits;
+   charsToChoose = charsToChoose ^ other_survivors;
+   charsToChoose = charsToChoose ^ Belkov;
+   charsToChoose = charsToChoose ^ Belkov2;
 
-    selectedPeople = CharacterSelection('text', maxUnitToChoose, maxUnitToChoose,
+   selectedPeople = CharacterSelection('text', maxUnitToChoose, maxUnitToChoose,
                                 [sel_change_class, Burlak, Gnyevko, Kovalyuk, Kirilenkova,
                                  sel_dont_change_class,
                                  sel_not_hired,sel_changeable, sel_change_class]^charsToChoose^
                                 [sel_dont_change_class, sel_not_changeable, Kurin],
                                 [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1]]);
 
-    SetSide(charsToChoose, 6);
-    SetSide(selectedPeople, 3);
+   SetSide(charsToChoose, 6);
+   SetSide(selectedPeople, 3);
+
+   SetSurvivorsArabianAttack;
 end;
 
 // Summary: Looks for a building that has free slots.
@@ -103,12 +105,71 @@ begin
    result = 0;
 end;
 
+Export Function PlaceHumanInBunker(un, bunker);
+var dir;
+begin
+     dir := GetDir(bunker)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, bunker);
+
+     result = un;
+End;
+
+Export Function PrepareSolBun(skill, b);
+var un, dir;
+begin
+     uc_side := GetSide(b);
+     uc_nation := GetNation(b);
+
+     PrepareHuman(false, 1, skill);
+     un = CreateHuman;
+
+     dir := GetDir(b)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, b);
+
+     result = un;
+End;
+
+// Summary: Engineers from the units list will approach the buildings which is a breastwork and start to dismantle it, and after then start to build a bunker or an automated turret in its place from upgradeBType
+// Input: units, buildings, upgradeBType
+// Example: AddComUpgradeBreastwork([FilterAllUnits.... f_class, class_engineer], [b1, b2, b3], b_bunker)
+Export Function AddComUpgradeBreastwork(units, buildings, upgradeBType);
+var building, x, y, dir;
+begin
+   for building in buildings do
+   begin
+      x = GetX(building);
+      y = GetY(building);
+      dir = GetDir(building);
+
+      AddComDismantle(units, building);
+      AddComBuild(units, upgradeBType, x, y, dir);
+   end;
+end;
+
+Export function ResAllTechs(side, lab, nation);
+var i, tech, cout, ru_tech_list;
+begin
+
+   ru_tech_list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+
+  For i = 1 to ru_tech_list do
+    If GetTech(ru_tech_list[i], side) = state_enabled and TechNationAvailable(ru_tech_list[i], nation) = true then AddComResearch(lab, ru_tech_list[i]);
+
+end;
 
 // Summary: Units will proceed to the base attacking everything in their path. Additionally, it includes a small AI medics module that will heal damage units.
 // Input: unitsList, roadArea
 // Example: MoveToBase([Burlak, Platonov, Kurin], MyWonderfullRoad);
 Export Function MoveToBase(units, roadArea);
-var unit, playerUnits, playerUnit, enemyUnitsOnRoad, nearUnit, attackUnits, medics, damageUnits, inBase, newBase;
+var i, unit, playerUnits, playerUnit, enemyUnitsOnRoad, nearUnit, attackUnits, medics, damageUnits, inBase, newBase;
 begin
 
    inBase = false;
@@ -167,6 +228,10 @@ begin
    until UnitFilter(units, [f_ok]) = 0 OR inBase;
 
    ComMoveXY(units, 27, 34);
+
+   for i := 1 to units do
+      if IsOk(units[i]) then
+         americanTroopsArriveOmicronCounter = americanTroopsArriveOmicronCounter + 1;
 
    amSupportTroops = amSupportTroops diff units;
 

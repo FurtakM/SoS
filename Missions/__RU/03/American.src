@@ -15,20 +15,31 @@ Function PrepareOmicronBase;
 var base;
 begin
 
-//PrepareBase(baseDep, area, name, skill, sources, personel);
-amBase := PrepareBase(omikron,
-                    OmicronBaseArea,
-                    'omikron', // <---- base name here
-                    [1, 2, 2][Difficulty],
-                    [
-                     3000,
-                     300,
-                     0
-                    ],
-                    [14, 6, 6, 5]
-                   );
+    //PrepareBase(baseDep, area, name, skill, sources, personel);
+    amBase := PrepareBase(omikron,
+                        OmicronBaseArea,
+                        'omikron',
+                        [1, 2, 2][Difficulty],
+                        [
+                        3000,
+                        3000,
+                        0
+                        ],
+                        [6, 2, 3, 1]
+                    );
 
-mc_bases := Replace(mc_bases, 1, amBase);
+    mc_bases := Replace(mc_bases, 1, amBase);
+
+    case Difficulty of
+        2: begin
+            SetTech(tech_Weap1, 1, state_enabled);
+        end;
+
+        3: begin
+            SetTech(tech_Tech2, 1, state_enabled);
+            SetTech(tech_Weap1, 1, state_enabled);
+        end;
+    end;
 end;
 
 Export Function PrepareAmericansMissionIntro;
@@ -88,7 +99,7 @@ begin
     end;
 
     // Scientists
-    for i := 1 to soldiersAmount do
+    for i := 1 to scientistsAmount do
     begin
         PrepareScientist(false, enemySkillLevel);
         un = CreateHuman;
@@ -101,7 +112,7 @@ begin
     for i := 1 to vehiclesAmount do
     begin
 
-        vc_weapon = [us_machine_gun, us_gatling_gun, us_light_gun, us_double_gun][Rand(1, 4)];
+        vc_weapon = [us_machine_gun, us_gatling_gun, us_light_gun][Rand(1, 3)];
         vc_chassis = us_medium_tracked;
         vc_control = control_manual;
         vc_engine = engine_combustion;

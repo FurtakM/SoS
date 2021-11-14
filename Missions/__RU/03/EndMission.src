@@ -1,1 +1,65 @@
-//
+Export Function FinishMission;
+begin
+    SetRewards;
+    SavePlayerCharacters;
+    SaveGlobalVariables;
+
+    YouWin;
+end;
+
+
+Function SetRewards;
+var unitsToReward;
+begin
+
+    // Medals
+    if produceMoreVehicles then
+        AddMedal('Surplus',1)
+    else if produceOnlyForYou then
+        AddMedal('Surplus',-1)
+    else
+        AddMedal('Surplus',-2); 
+
+    if americanTroopsArriveOmicronCounter < maxAmericanTroopsIgnore then
+        AddMedal('PreventReinforcements',1)
+    else
+        AddMedal('PreventReinforcements', -1);
+
+    if scholtzeSaved AND IsOK(Scholtze) then
+        AddMedal('Scholtze',1)
+    else
+        AddMedal('Scholtze', -1);
+
+    GiveMedals('Main');
+
+    unitsToReward = FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
+    unitsToReward = unitsToReward ^ survivorsArabianAttack;
+    unitsToReward = unitsToReward diff Popov;
+
+    RewardPeople(unitsToReward);
+end;
+
+Function SavePlayerCharacters;
+var othersYour, othersKirov;
+begin
+    ExtSaveCharacter(Burlak, 'Burlak', 3);
+    ExtSaveCharacter(Gnyevko, 'Gnyevko', 3);
+    ExtSaveCharacter(Kovalyuk, 'Kovalyuk', 3);
+    ExtSaveCharacter(Kirilenkova, 'Kirilenkova', 3);
+    ExtSaveCharacter(Scholtze, 'Scholtze', 3);
+    ExtSaveCharacter(Belkov, 'Belkov', 3);
+    ExtSaveCharacter(Belkov2, 'Belkov2', 3);
+
+    othersYour = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Belkov, Belkov2, Kovalyuk, Kirilenkova, Scholtze];
+
+    ExtSaveCharacters(othersYour, 'other_survivors', 3);
+
+    othersKirov = FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff [Kurin, Popov];
+    ExtSaveCharacters(othersKirov, 'other_kirov', 6);
+end;
+
+
+Function SaveGlobalVariables;
+begin
+    SaveVariable(kurinOpinion, '03_KurinOpinion_1');
+end;

@@ -3,5 +3,121 @@ every 0$1 do
 
 Export Function CustomInitMacro;
 begin
-    //todo
+    // Americans
+    MC_SetParkingArea(1, OmicronParkingArea);
+
+    case Difficulty of
+        1:  MC_SetProduceList(1, [
+            [us_medium_tracked, engine_combustion, control_manual, us_machine_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun]
+            ]);
+
+        2:  MC_SetProduceList(1, [
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun]
+            ]);
+
+        3:  MC_SetProduceList(1, [
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+            [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun]
+            ]);
+    end;
+end;
+
+Export Function KirovUpgradeBase;
+var lab, workshop, turret;
+begin
+    lab = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_lab]])[1];
+    workshop = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_workshop]])[1];
+
+    AddComUpgradeLab(lab, b_lab_weapon);
+    AddComUpgrade(workshop);
+end;
+
+Export Function MountWeaponTurrent;
+var turret, weapons;
+begin
+    weapons = [ru_heavy_machine_gun, ru_gatling_gun, ru_gun];
+
+    for turret in kirovBunkersToMountWeapon do
+        AddComPlaceWeapon(turret, weapons[rand(1, weapons)]);
+end;
+
+Export Function KirovProduceVehicles(factory);
+begin
+
+    AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay);
+    AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay);
+    AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay);
+
+    case Difficulty of
+        1:begin
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gun);
+        end;
+
+        2:begin
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+        end;
+
+        3:begin
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+        end;
+    end;  
+end;
+
+Export Function KirovAttackOmicron;
+var i, vehicle, vehicles, goodVehs; 
+begin
+    vehicles = []; // [[vehicle, driver, stan], [vehicle, driver, stan]] stan: 1 - attack, 2 - retreat and repair
+
+    for vehicle in kirovAttackVehicles do
+        vehicles = Insert(vehicles, 1, [vehicle, UnitsInside(vehicle)[1], 1]);
+
+    repeat
+        // Count ready to fight vehicles(with stan attack)
+        for i := 1 to vehicles do
+            if vehicles[i][3] = 1  then
+                goodVehs = goodVehs + 1;
+
+        // if good vehs = all vehs - attack
+        if goodVehs = vehicles then
+            for i := 1 to vehicles do
+                ComAgressiveMove(vehicles[i][1], 26, 35);
+
+        goodVehs = 0;
+
+        // if damaged - change stan and retreat
+        // if full HP - change stan - attack
+        // if red HP - delete from list
+        for i := 1 to vehicles do
+        begin
+           if GetLives(vehicles[i][1]) < 500 then
+           begin
+                vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 2);
+                ComMoveXY(vehicles[i][1], 78, 39);
+                AddComExitVehicle(vehicles[i][2]);
+                AddComRepairVehicle(vehicles[i][2], vehicles[i][1]);
+           end;
+
+            if GetLives(vehicles[i][1]) = 1000 AND vehicles[i][3] = 2 then
+            begin
+                vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 1);
+                ComEnterUnit(vehicles[i][2], vehicles[i][1]);
+            end;
+                
+            if GetLives(vehicles[i][1]) < 250 then     
+                vehicles = vehicles diff [vehicles[i]];
+        end;
+
+        wait(0$1);
+    until omicronSurrender;
 end;
