@@ -1,0 +1,202 @@
+Export Function CustomEvent(event);
+begin
+
+End;
+
+On Command(com) do
+var i, j, temp, order, x, y, building;
+begin
+
+    for i in FilterAllUnits([[f_side,3],[f_type,unit_human]]) do
+        if GetTaskList(i) > 0 then
+            for j = 1 to GetTaskList(i) do
+            begin
+                temp = GetTaskList(i)[j][4];
+                building = GetTaskList(i)[j][5];
+                x = GetTaskList(i)[j][2];
+                y = GetTaskList(i)[j][3];
+
+                if (GetSide(temp) = 6 and GetTaskList(i)[j][1] = '<') then
+                    SetTaskList(i, []);
+
+                if InArea(x, y, HideMapPartArea) then
+                    SetTaskList(i, []);
+            end;
+
+end;
+
+On BuildingCaptured(building, side, human) Do
+begin
+    if side = 6 then
+        SetSide(building, 6);
+end;
+
+On BuildingComplete(building) Do
+var diffUnits, canTakeUnits;
+begin
+    diffUnits = [];
+
+    if GetSide(building) = 3 AND GetBType(building) = b_depot AND IsInArea(building, SecondBurlakBase) then
+        SetBName(building, 'kagan');
+
+    if GetSide(building) = 6 then
+    begin
+        diffUnits = diffUnits ^ Kurin;
+        diffUnits = diffUnits ^ survivorsArabianAttack;
+        diffUnits = diffUnits ^ kirovEng;
+
+        if GetBType(building) = b_bunker then
+        begin
+            kirovBunkersToMountWeapon = kirovBunkersToMountWeapon ^ building;
+
+            canTakeUnits = FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_not, [f_hastask]]]) diff diffUnits;
+
+            if canTakeUnits then
+            begin
+                if GetClass(canTakeUnits[1]) <> 1 then
+                begin
+                    ComEnterUnit(canTakeUnits[1], FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_barracks]])[1]);
+                    AddComChangeProfession(canTakeUnits[1], 1);
+                    AddComExitBuilding(canTakeUnits[1]);
+                    wait(0$1);
+                end;
+                 ComEnterUnit(canTakeUnits[1], building);
+            end
+            else
+            begin
+                kirovBunkersToOccupy = kirovBunkersToOccupy ^ building;
+                neededUnitsSpawn = Replace(neededUnitsSpawn, 1, neededUnitsSpawn[1] + 1);
+            end;
+        end;
+
+        if GetBType(building) = b_ext_noncombat then
+        begin
+            SpawnKirovSupport;
+            MountWeaponTurrent;
+            wait(3$30);
+            KirovProduceVehicles(kirovFactory);  
+        end;
+
+        if GetBType(building) = b_depot then
+        begin
+            kirovOilDepot = building;
+            SetResourceType(GetBase(kirovOilDepot), mat_oil, 3000);
+        end;
+            
+
+        if (GetBType(building) = b_breastwork OR GetBType(building) = b_armoury) AND IsInArea(building, SecondKurinBase) then
+            ComEnterUnit(UnitFilter(secondBaseTeam, [[f_class, class_soldier], [f_outside], [f_not, [f_hastask]]])[1], building);
+    end;
+end;
+
+On UpgradeComplete(building) Do
+var i, tmp;
+begin
+    if GetSide(building) = 3 AND GetBType(building) = b_factory AND NOT dialog_workshop then
+        Dial_UpgradeWorkshop(building);
+
+    if Getside(building) = 6 then
+    begin
+        if GetBType(building) = b_lab_half then
+        begin
+            if FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_class, class_scientistic]]) then
+                ComEnterUnit(FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_class, class_scientistic]]), building)
+            else
+            begin
+                tmp = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_not, [f_hastask]]]) diff Kurin;
+
+                if tmp > 2 then
+                begin        
+                    for i := 1 to rand(1, 2) do
+                    begin
+                        ComEnterUnit(tmp[i], building);
+                        AddComChangeProfession(tmp[i], class_scientistic);
+                    end;
+                end
+                else
+                begin
+                    for i := 1 to rand(1, tmp) do
+                    begin
+                        ComEnterUnit(tmp[i], building);
+                        AddComChangeProfession(tmp[i], class_scientistic);
+                    end;
+                end;
+            end;
+
+            ResAllTechs(6, building, 3);   
+        end;
+
+        if GetBType(building) = b_factory then
+        begin
+            kirovFactory = building;
+            kirovCompleteFactory = true;
+        end;
+            
+
+    end;
+end;
+
+On UnitDestroyed(un) do
+begin
+   MCE_UnitDestroyed(un);
+
+   if un = Burlak then
+    Lose_Burlak;
+
+   if un = beriaDepot AND NOT canDestroyBeriaBase then
+    Lose_Omicron;
+end;
+
+On Contact(side1, side2) do
+begin
+    if side1 = 3 AND side2 = 6 then
+        Lose_SelfAttack;
+end;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+    MCE_VehicleConstructed(vehicle, factory);
+
+    if GetSide(vehicle) = 6 then
+    begin
+        if GetWeapon(vehicle) = ru_cargo_bay AND NOT kirovTransportCargo then
+            kirovTransportCargo = vehicle
+        else
+        begin
+            if GetWeapon(vehicle) = ru_cargo_bay then
+            begin
+                ComTransport(vehicle, kirovOilDepot, mat_oil);
+                AddComMoveXY(vehicle, 137, 99);
+                AddComHold(vehicle);
+
+                kirovAttackCargo = kirovAttackCargo ^ vehicle;
+            end;
+                
+        end;
+        
+        if GetWeapon(vehicle) in [ru_heavy_machine_gun, ru_gatling_gun, ru_gun] then
+        begin
+            kirovAttackVehicles = kirovAttackVehicles ^ vehicle;
+            ComMoveXY(vehicle, 137, 99);
+        end;
+            
+    end;
+End;
+
+On VehicleCaptured(new, old, side, capturing_unit) do
+begin
+    MCE_VehicleCaptured(new, old, side, capturing_unit);
+
+    if side = 6 then
+    begin
+        ComExitVehicle(capturing_unit);
+        SetSide(new, 6);
+    end;
+End;
+
+On EnterVehicle(vehicle, human) Do
+begin
+    if GetSide(vehicle) = 6 then
+        AddComAgressiveMove(vehicle, 28, 35);
+end;
+

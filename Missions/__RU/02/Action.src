@@ -43,8 +43,11 @@ begin
     
     ComFree(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human]]) diff Kurin);
 
-    ComEnterUnit(other_survivors, ru2_arm);
-    ComEnterUnit(Belkov, ru2_arm);
+    ComEnterUnit(other_survivors, ru2_arm1);
+    ComEnterUnit(Belkov, ru2_arm1);
+
+    if IsPlaced(Kirilenkova) then
+       ComEnterUnit(Kirilenkova, ru_lab);
 
     if NOT TestCharacters('01_Gnyevko') then
         SetSide(randomMech, 3);
@@ -430,7 +433,10 @@ end;
 
 // Back to Beria base
 every 0$1 trigger FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_human]]) = 0 AND backToBeria1 do
+var engs;
 begin
+    engs = UnitFilter(otherKirovUnits, [f_class, class_engineer]);
+
     backToBeria1 = false;
 
     Say(Platonov, 'D11-Pla-1');
@@ -444,6 +450,11 @@ begin
 
     construcMoreVehicles = true;
     spawnCrates = true;
+
+    ComExitBuilding(engs);
+    wait(0$1);
+    AddComBuild(engs, b_workshop, 159, 112, 0);
+    AddComEnterUnit(engs, kirov);
 end;
 
 // Constructed vehicles for your solds
@@ -590,6 +601,7 @@ begin
     begin
         if See(3, bunker) then
         begin
+           // Left bunkers
             if bunker IN leftBunkers AND NOT sawLeftBunker then
             begin
                 sawLeftBunker = true;
@@ -622,6 +634,7 @@ begin
                 exit;
             end;
 
+            // Right bunkers
             if bunker IN rightBunkers AND NOT sawRightBunker then
             begin
                 sawRightBunker = true;
@@ -632,9 +645,9 @@ begin
                 if IsOK(Kovalyuk) then
                 begin
                     if sawLeftBunker then
-                        Say(Kovalyuk, 'D15-Kov-2a')
+                        Say(Kovalyuk, 'D16-Kov-1a')
                     else
-                        Say(Kovalyuk, 'D15-Kov-2');
+                        Say(Kovalyuk, 'D16-Kov-1');
                 end;
                     
 
@@ -701,7 +714,10 @@ begin
             DialogueOff;
 
             if NOT (initiative in [2, 3]) then
+            begin
                 initiative = 1;
+                platonovOpinion = 2;
+            end;
         end;
 
         2:begin
@@ -719,10 +735,16 @@ begin
             PlatonovSendSupport;
 
             if initiative <> 3 then
+            begin
                 initiative = 1;
+                platonovOpinion = 2;
+            end;
         end;
 
-        3: initiative = 3;
+        3: begin
+          initiative = 3;
+          platonovOpinion = 0;
+        end;
     end;
 
     if IsOK(Gnyevko) then
@@ -819,7 +841,10 @@ begin
                         DialogueOff;
 
                         if NOT (initiative in [2, 3]) then
+                        begin
                             initiative = 1;
+                             platonovOpinion = 2;
+                        end;
                     end;
 
                     2:begin
@@ -845,10 +870,16 @@ begin
                         DialogueOff;
                         
                         if initiative <> 3 then
+                        begin
                             initiative = 2;
+                            platonovOpinion = 1;
+                        end;
                     end;
 
-                    3: initiative = 3;
+                    3: begin
+                         initiative = 3;
+                         platonovOpinion = 0;
+                    end;
                 end;
 
                 if IsOK(Gnyevko) then

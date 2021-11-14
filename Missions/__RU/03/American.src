@@ -1,0 +1,161 @@
+Export amIntroUnits;
+Export amSupportTroops;
+Export amPatrol;
+Export amBase;
+
+Export Function PrepareAmericans;
+begin
+    amSupportTroops = [];
+
+    PrepareOmicronBase;
+    
+end;
+
+Function PrepareOmicronBase;
+var base;
+begin
+
+    //PrepareBase(baseDep, area, name, skill, sources, personel);
+    amBase := PrepareBase(omikron,
+                        OmicronBaseArea,
+                        'omikron',
+                        [1, 2, 2][Difficulty],
+                        [
+                        3000,
+                        3000,
+                        0
+                        ],
+                        [6, 2, 3, 1]
+                    );
+
+    mc_bases := Replace(mc_bases, 1, amBase);
+
+    case Difficulty of
+        2: begin
+            SetTech(tech_Weap1, 1, state_enabled);
+        end;
+
+        3: begin
+            SetTech(tech_Tech2, 1, state_enabled);
+            SetTech(tech_Weap1, 1, state_enabled);
+        end;
+    end;
+end;
+
+Export Function PrepareAmericansMissionIntro;
+var i, veh, human;
+begin
+    amIntroUnits = [];
+
+    uc_side = 1;
+    uc_nation = nation_american;
+
+    vc_chassis = us_medium_tracked;
+    vc_control = control_manual;
+    vc_engine = engine_combustion;
+    vc_weapon = us_double_gun;
+    veh = CreateVehicle; 
+
+    SetDir(veh, 4);
+    amIntroUnits = amIntroUnits ^ veh;
+    PlaceUnitArea(veh, CutsceneAmSupportSpawnArea, false);
+
+    for i := 1 to 5 do
+    begin
+        hc_name := '';
+        hc_gallery := '';
+
+        PrepareSoldier(false, 1);
+
+        human = CreateHuman;
+        amIntroUnits = amIntroUnits ^ human;
+
+        if i < 5 then
+            PlaceUnitArea(human, CutsceneAmSupportSpawnArea, false)
+        else
+        begin
+            PlaceHumanInUnit(human, veh);
+        end;
+    end;
+end;
+
+Export Function PrepareAmericanSupportTroops(soldiersAmount, scientistsAmount, vehiclesAmount, area);
+var i, un, veh, road;
+begin
+    uc_side := 1;
+    uc_nation := 1;
+
+    hc_name := '';
+    hc_gallery := '';
+
+    // Soldiers
+    for i := 1 to soldiersAmount do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        un = CreateHuman;
+        amSupportTroops = amSupportTroops ^ un;
+
+        PlaceUnitArea(un, area, false);
+    end;
+
+    // Scientists
+    for i := 1 to scientistsAmount do
+    begin
+        PrepareScientist(false, enemySkillLevel);
+        un = CreateHuman;
+        amSupportTroops = amSupportTroops ^ un;
+
+        PlaceUnitArea(un, area, false);
+    end;
+
+    // Vehicles
+    for i := 1 to vehiclesAmount do
+    begin
+
+        vc_weapon = [us_machine_gun, us_gatling_gun, us_light_gun][Rand(1, 3)];
+        vc_chassis = us_medium_tracked;
+        vc_control = control_manual;
+        vc_engine = engine_combustion;
+        veh = CreateVehicle; 
+        amSupportTroops = amSupportTroops ^ veh;
+
+        PlaceUnitArea(veh, area, false);
+
+        PrepareMechanic(false, enemySkillLevel);
+        un = CreateHuman;
+        amSupportTroops = amSupportTroops ^ un;
+
+        PlaceHumanInUnit(un, veh);
+    end;
+
+    case area of
+        NorthAmericanSpawnArea: road = NorthRoadArea;
+        SouthAmericanSpawnArea1: road = SouthRoadArea1;
+        SouthAmericanSpawnArea2: road = SouthRoadArea2;
+    end;
+
+    MoveToBase(amSupportTroops, road);
+end;
+
+Export Function PrepareAmericanPatrol;
+var un;
+begin
+    amPatrol = [];
+
+    uc_side = 1;
+    uc_nation = 1;
+
+    un = PrepareUnitExt('Campell', false);
+    amPatrol = amPatrol ^ un;
+    PlaceUnitArea(un, OmicronSpawnArea, false);
+    SetClass(un, 1);
+
+    PrepareSoldier(sex_male, enemySkillLevel);
+
+    un = CreateHuman;
+    amPatrol = amPatrol ^ un;
+    PlaceUnitArea(un, OmicronSpawnArea, false);
+
+
+    ComAttackUnit(amPatrol, Scholtze);
+end;

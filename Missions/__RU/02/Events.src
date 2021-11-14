@@ -8,6 +8,7 @@ begin
 end;
 
 On BuildingComplete(building) Do
+var sold, platSold;
 begin
     if GetSide(building) = 3 AND GetBType(building) = b_lab AND NOT labConstructed then
         Dial_LabConstructed;
@@ -17,18 +18,25 @@ begin
 
     if GetSide(building) = 6 then
     begin
-        if GetBType(building) = b_breastwork then
-            ComEnterUnit(UnitFilter(otherKirovUnits, [[f_class, class_soldier], [f_outside]])[1], building);
-
-        if GetBType(building) = b_lab then
+        if GetBType(building) = b_breastwork AND IsInArea(building, KirovBaseArea) then
         begin
-            ResAllTechs(6, building, 3);
-            ComEnterUnit(UnitFilter(otherKirovUnits, [f_class, class_scientistic]), building);
-            ComEnterUnit(Kirilenkova, building);
-        end;
+            sold = UnitsInside(ru2_arm2)[1];
+            ComExitBuilding(sold);
+            AddComEnterUnit(sold, building);
+       end;
+
+        if GetBType(building) = b_breastwork AND IsInArea(building, BeriaBaseArea) then
+        begin
+            sold = NearestUnitToUnit(platSoldiers, building);
+
+            ComEnterUnit(sold, building);
+       end;
 
         if GetBType(building) = b_workshop then
-            ComEnterUnit(UnitFilter(otherKirovUnits, [f_class, class_mechanic]), building);
+        begin
+            ComExitBuilding(UnitFilter(otherKirovUnits, [f_class, class_mechanic]));
+            AddComEnterUnit(UnitFilter(otherKirovUnits, [f_class, class_mechanic]), building);
+        end;
     end;
 end;
 
@@ -56,6 +64,7 @@ end;
 On Command(com) do
 var i, j, temp, order, destiny;
 begin
+
     for i in FilterAllUnits([[f_side,3],[f_type,unit_human]]) do
         if GetTaskList(i) > 0 then
             for j = 1 to GetTaskList(i) do
@@ -64,20 +73,11 @@ begin
 
                 if temp = kirov or (GetSide(temp) = 6 and GetTaskList(i)[j][1] = 'e' and GetType(temp) = unit_vehicle) then
                     SetTaskList(i, []);
+
+                if temp = beria and GetTaskList(i)[j][1] = 'Y' then
+                    SetTaskList(i, []);
             end;
 
-    destiny = [];
-    for i in FilterAllUnits([[f_side,3], [f_or,[f_type,unit_human], [f_type, unit_vehicle]]]) do
-            if GetTaskList(i) > 0 then
-                for j = 1 to GetTaskList(i) do
-                begin
-                    order = GetTaskList(i)[j][1];
-                    destiny = destiny ^ GetTaskList(i)[j][2];
-                    destiny = destiny ^ GetTaskList(i)[j][3];
-
-                    if order = 'M' and NOT InArea(destiny[1], destiny[2], VisibleMapPartArea)then
-                        SetTaskList(i, []);
-                end;
 end;
 
 

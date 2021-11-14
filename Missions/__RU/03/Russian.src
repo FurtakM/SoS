@@ -1,0 +1,530 @@
+Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2; // Heroes with Burlak
+Export Scholtze; // Other heroes
+Export other_survivors; // Other survivors from 02
+Export playerVehicles; // Vehicles from mission 02  -> [Chassis, Engine, Control, Weapon, HP, Fuel]
+Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 ->  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+
+Export Kurin, Popov, BelkovDialog;
+Export ruScout;
+Export otherKirovUnits;
+Export kirovBase, kirovDepot, kirovOilDepot; // Beria base buildings from 02 >  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+Export ru2_bar1, ru2_bar2;
+Export kirovEng;
+Export kirovBunkersToMountWeapon, kirovBunkersToOccupy;
+Export kirovTransportCargo;
+Export kirovAttackCargo, kirovAttackVehicles;
+
+Export secondBaseTeam;
+
+Export survivorsArabianAttack; // Characters which survive arabian attack in Kirov base, 9 randoms + Popov, prio have heroes
+Export survivorsToSpawn;
+Export neededUnitsSpawn; // [sold, eng, mech, sci]
+
+Export Grishko;
+
+Export Function PrepareRussians;
+begin
+
+    neededUnitsSpawn = [0, 0, 0, 0];
+    kirovAttackCargo = [];
+
+    PrepareKirovBase;
+    KirovUpgradeBase;
+    PrepareHeroes;
+    PrepareBeriaBase;
+    PrepareSecondBaseTeam;
+    PrepareDzerzhinskyBase;
+    PrepareOtherBuildings;
+    PrepareVehicles;
+end;
+
+Function PrepareHeroes;
+begin
+    uc_side = 3;
+
+    Burlak := PrepareUnitExt('Burlak', true);
+    Gnyevko := PrepareUnitExt('Gnyevko', true);
+    Kovalyuk := PrepareUnitExt('Kovalyuk', true);
+    Kirilenkova = CreateCharacter('01_Kirilenkova');
+
+    uc_side = 6;
+
+    if NOT meetBelkovBrother AND TestCharacters('02_Belkov') then
+    begin
+        Belkov := PrepareUnitExt('Belkov', true);
+        Belkov2 := PrepareUnitExt('Belkov2', false);
+        BelkovDialog = Belkov;
+        PlaceUnitXY(Belkov, 165, 110, false);
+        PlaceUnitXYR(Belkov2, 159, 107, 5, false);
+        ComHold(Belkov);
+    end;
+        
+
+    if meetBelkovBrother AND TestCharacters('02_Belkov2') then
+    begin
+        Belkov2 := PrepareUnitExt('Belkov2', true);
+        BelkovDialog = Belkov2;
+        PlaceUnitXY(Belkov2, 165, 110, false);
+        ComHold(Belkov2);
+    end;
+        
+    PlaceUnitXY(Burlak, 164, 108, false);
+    ComHold(Burlak);
+
+    PlaceUnitXYR(Gnyevko, 159, 107, 5, false);
+    PlaceUnitXYR(Kovalyuk, 159, 107, 5, false);
+    PlaceUnitXYR(Kirilenkova, 159, 107, 5, false);
+end;
+
+Function PrepareBeriaBase;
+var i, bonusResources;
+begin
+    beriaBase = LoadVariable('02_BeriaBase_2', []);
+    
+    otherBeriaUnits = CreateCharacterSet('02_other_beria');
+    other_survivors = CreateCharacterSet('02_other_survivors');
+
+    uc_side = 3;
+    uc_nation = 3;
+
+    for i := 1 to beriaBase do
+    begin
+
+        bc_type = beriaBase[i][1];
+        bc_level = beriaBase[i][5]; 
+
+        if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+        if bc_type = b_lab_half or bc_type = b_lab_full then
+            begin
+            if beriaBase[i][7] then
+                bc_kind1 = beriaBase[i][7];
+
+            if beriaBase[i][8] then
+                bc_kind2 = beriaBase[i][8];
+
+            if not beriaBase[i][7] and not beriaBase[i][8] then
+                bc_type := b_lab;
+            end;
+
+        CreateAndPlaceBuildingXYD(beriaBase[i][2], beriaBase[i][3], beriaBase[i][4]);
+    end;
+
+    beriaDepot = FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1];
+
+    SetBName(beriaDepot, 'beria');
+
+    SetResourceType(GetBase(beriaDepot), mat_cans, cratesResources);
+    SetResourceType(GetBase(beriaDepot), mat_oil, oilResources); 
+
+    SetResourceType(GetBase(beriaDepot), mat_cans, GetResourceType(GetBase(beriaDepot), mat_oil) + bonusResourcesCrates);
+    SetResourceType(GetBase(beriaDepot), mat_oil, GetResourceType(GetBase(beriaDepot), mat_oil) + bonusResourcesOil);
+
+    uc_side = 6;
+
+    for i in otherBeriaUnits do
+        PlaceUnitXYR(i, 159, 107, 10, false); 
+        
+
+    for i in other_survivors do
+        PlaceUnitXYR(i, 159, 107, 10, false); 
+
+end;
+
+Function PrepareKirovBase;
+var i, bunkerCounter;
+begin
+    kirovBase = LoadVariable('02_KirovBase_3', []);
+    
+    otherKirovUnits = CreateCharacterSet('02_other_kirov');
+
+    uc_side = 6;
+    uc_nation = 3;
+
+    for i := 1 to kirovBase do
+    begin
+        bc_type = kirovBase[i][1];
+        bc_level = kirovBase[i][5]; 
+
+        if bc_type = b_depot then
+            bc_type = b_warehouse;
+
+        if bc_type = b_armoury then
+            bc_type = b_barracks;
+
+        if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+        if bc_type = b_lab_half or bc_type = b_lab_full then
+            begin
+            if kirovBase[i][7] then
+                bc_kind1 = kirovBase[i][7];
+
+            if kirovBase[i][8] then
+                bc_kind2 = kirovBase[i][8];
+
+            if not kirovBase[i][7] and not kirovBase[i][8] then
+                bc_type := b_lab;
+            end;
+
+        if bc_type = b_breastwork then
+            bunkerCounter = bunkerCounter + 1;
+
+        CreateAndPlaceBuildingXYD(kirovBase[i][2], kirovBase[i][3], kirovBase[i][4]);
+    end;
+
+    kirovDepot = FilterAllUnits([[f_side, 6], [f_btype, b_warehouse]])[1];
+
+    SetBName(kirovDepot, 'kirov');
+
+    SetResourceType(GetBase(kirovDepot), mat_cans, 5000);
+    SetResourceType(GetBase(kirovDepot), mat_oil, 2000);
+
+    ru2_bar1 = NearestUnitToXY(FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_barracks]]), 145, 102);
+    ru2_bar2 = FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_barracks]]) diff ru2_bar1;
+    ru2_bar2 = ru2_bar2[1];
+
+    Kurin = PrepareUnitExt('Kurin', false);
+    PlaceUnitXY(Kurin, 166, 109, false);
+    ComHold(Kurin);
+
+    PrepareEngineer(false, 7);
+    kirovEng = CreateHuman;
+    PlaceUnitXYR(kirovEng, 159, 107, 10, false); 
+
+    Popov = PrepareUnitExt('Popov', false);
+    PlaceUnitArea(Popov, PopovSpawnArea, false);
+    ComTurnXY(Popov, 98, 36);
+
+    hc_name := '';
+    hc_gallery := '';
+
+    PrepareSoldier(false, 2);
+
+    ruScout = CreateHuman;
+    PlaceUnitArea(ruScout, RuScoutSpawnArea, false);
+
+    ComCrawl(ruScout);
+    AddComTurnXY(ruScout, 98, 36);
+
+    uc_side = 6;
+
+    for i in otherKirovUnits do
+    begin
+        SetSide(i, 6);
+
+        if GetClass(i) = class_soldier AND bunkerCounter > 0 then
+        begin
+            PlaceHumanInBunker(i, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_breastwork]])[bunkerCounter]);
+            bunkerCounter = bunkerCounter - 1;
+        end
+        else
+        begin
+            PlaceUnitXYR(i, 159, 107, 10, false); 
+        end;       
+    end;
+end;
+
+// Grishko base
+Export Function PrepareDzerzhinskyBase;
+var i, un, turret;
+begin
+
+    SetBName(ru3_depot, 'dzerzhinsky');
+
+    uc_side = 8;
+    uc_nation = 3;
+
+    Grishko = PrepareUnitExt('Grishko', false);
+    PlaceUnitXYR(Grishko, 210, 39, 3, false);
+
+    ComHold(Grishko);
+
+    hc_name := '';
+    hc_gallery := '';
+
+    for i := 1 to 3 do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, ru3_bar);
+    end;
+        
+
+    for i := 1 to 2 do
+    begin
+        PrepareScientist(false, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, ru3_lab);
+    end;
+        
+
+    for i := 1 to 3 do
+    begin
+        PrepareMechanic(false, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, ru3_fac);
+    end;
+        
+
+    for turret in FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_btype, b_bunker]]) do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, turret);
+    end;
+        
+end;
+
+// Vehicles from previous mission
+// [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetFuel(i), GetLives(i)]
+Export Function PrepareVehicles;
+var i, vehicle;
+begin
+    uc_side = 3;
+    uc_nation = 3;
+
+    for i := 1 to vehiclesPreviousMission do
+    begin
+        PrepareVehicle(vehiclesPreviousMission[i][1], vehiclesPreviousMission[i][2], vehiclesPreviousMission[i][3], vehiclesPreviousMission[i][4], vehiclesPreviousMission[i][5]);
+    
+        vehicle = CreateVehicle;
+        PlaceUnitXYR(vehicle, GetX(beriaDepot), GetY(beriaDepot), 7, false);
+        SetLives(vehicle, vehiclesPreviousMission[i][6]);
+        
+    end;
+end;
+
+Export Function PrepareOtherBuildings;
+var i, otherBuildings, building;
+begin
+    otherBuildings = LoadVariable('02_PlayerAmericanBuildings_4', []);
+    
+    uc_side = 3;
+    uc_nation = 1;
+
+    // Capture by player
+    for i := 1 to otherBuildings do
+    begin
+        bc_type = otherBuildings[i][1];
+        bc_level = otherBuildings[i][5]; 
+
+        building = CreateAndPlaceBuildingXYD(otherBuildings[i][2], otherBuildings[i][3], otherBuildings[i][4]);
+
+        SetLives(building, otherBuildings[i][7]);
+    end;
+
+    otherBuildings = LoadVariable('02_AmericanBuildings_5', []);
+
+    uc_side = 1;
+
+    // Stay in americans
+    for i := 1 to otherBuildings do
+    begin
+        bc_type = otherBuildings[i][1];
+        bc_level = otherBuildings[i][5]; 
+
+        if bc_type = b_breastwork then
+        begin
+            building = CreateAndPlaceBuildingXYD(otherBuildings[i][2], otherBuildings[i][3], otherBuildings[i][4]);
+            PrepareSolBun(enemySkillLevel, building);
+        end
+        else
+        begin
+            building = CreateAndPlaceBuildingXYD(otherBuildings[i][2], otherBuildings[i][3], otherBuildings[i][4]);
+        end;
+
+        SetLives(building, otherBuildings[i][7]);
+    end;
+end;
+
+Export Function PrepareSecondBaseTeam;
+var i;
+begin
+    secondBaseTeam = [];
+
+    uc_side = 6;
+    uc_nation = 3;
+
+    hc_name = '';
+    hc_gallery = '';
+
+    for i := 1 to 3 do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        secondBaseTeam = secondBaseTeam ^ CreateHuman;
+        PlaceUnitArea(secondBaseTeam[i], KirovSupportSpawnArea, false);
+    end;
+
+    PrepareEngineer(false, enemySkillLevel);
+    secondBaseTeam = secondBaseTeam ^ CreateHuman;
+    PlaceUnitArea(secondBaseTeam[4], KirovSupportSpawnArea, false);
+
+    PrepareScientist(false, enemySkillLevel);
+    secondBaseTeam = secondBaseTeam ^ CreateHuman;
+    PlaceUnitArea(secondBaseTeam[5], KirovSupportSpawnArea, false);
+
+    ComMoveXY(secondBaseTeam, 214, 105);
+
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_depot, 222, 115, 0);
+    AddComCollect(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 224, 107);
+    AddComCollect(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 228, 110);
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_armoury, 216, 114, 0);
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_breastwork, 215, 103, 3);
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_breastwork, 227, 116, 5);
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_oil_mine, 226, 109, 3);
+    AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 208, 106);
+    AddComTurnXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 209, 105);
+
+    AddComMoveXY(secondBaseTeam[5], 209, 105);
+    AddComTurnXY(secondBaseTeam[5], 208, 106);
+end;
+
+Export Function SpawnKirovSupport;
+var i, un;
+begin
+    uc_side = 6;
+    uc_nation = 3;
+
+    hc_name = '';
+    hc_gallery := '';
+
+    for i := 1 to survivorsToSpawn do
+    begin
+        PrepareHuman(false, rand(1, 4), rand(1, 2));
+
+        un = CreateHuman;
+        survivorsArabianAttack = survivorsArabianAttack ^ un;
+
+        PlaceUnitArea(un, KirovSupportSpawnArea, false);
+        ComEnterUnit(un, ru2_bar1);
+    end;
+
+    for i := 1 to neededUnitsSpawn[1] + 4 do
+    begin
+        PrepareHuman(false, 1, rand(1, 3));
+
+        un = CreateHuman;
+
+        PlaceUnitArea(un, KirovSupportSpawnArea, false);
+
+        if i > kirovBunkersToOccupy then
+            ComEnterUnit(un, ru2_bar2)
+        else
+            ComEnterUnit(un, kirovBunkersToOccupy[i]);
+    end;
+
+    for i := 1 to neededUnitsSpawn[3] do
+    begin
+        PrepareHuman(false, 3, rand(1, 3));
+
+        un = CreateHuman;
+
+        PlaceUnitArea(un, KirovSupportSpawnArea, false);
+        ComEnterUnit(un, kirovFactory);
+    end;
+
+   for i := 1 to neededUnitsSpawn[4] do
+    begin
+        PrepareHuman(false, 4, rand(1, 3));
+
+        un = CreateHuman;
+
+        PlaceUnitArea(un, KirovSupportSpawnArea, false);
+        ComEnterUnit(un, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_lab_half]])[1]);
+    end;
+end;
+
+// Characters which survive arabian attack Kirov base, 9 randoms + Popov, prio have heroes and survivors from 02
+Export Function SetSurvivorsArabianAttack;
+var limit, unit;
+begin
+    survivorsArabianAttack = [];
+    limit = 9;
+
+    survivorsArabianAttack = survivorsArabianAttack ^ Popov;
+
+    if IsOK(Belkov) AND GetSide(Belkov) = 6 then
+    begin
+        survivorsArabianAttack = survivorsArabianAttack ^ Belkov;
+        limit = limit - 1;
+    end;
+
+    if IsOK(Belkov2) AND GetSide(Belkov2) = 6 then
+    begin
+        survivorsArabianAttack = survivorsArabianAttack ^ Belkov2;
+        limit = limit - 1;
+    end;
+       
+    for unit in other_survivors do
+    begin
+        if IsOK(unit) AND GetSide(unit) = 6 then
+        begin
+            survivorsArabianAttack = survivorsArabianAttack ^ unit;
+            limit = limit - 1;   
+        end;
+    end;
+
+    for unit in otherBeriaUnits do
+    begin
+        if IsOK(unit) AND GetSide(unit) = 6 then
+        begin
+            survivorsArabianAttack = survivorsArabianAttack ^ unit;
+            limit = limit - 1;
+        end;
+    end;
+
+    if limit > 0 then
+        survivorsToSpawn = limit;
+end;
+
+Export Function PrepareScholtze;
+var rndPos, x, y;
+begin
+    uc_side = 8;
+
+    Scholtze = PrepareUnitExt('Scholtze', false);
+
+    case Difficulty of
+        1: PlaceUnitXYR(Scholtze, scholtzeSpawnPositions[1], scholtzeSpawnPositions[2], 3, true);
+
+        2:begin
+            scholtzeSpawnNearAmericans = true;
+
+            rndPos = rand(1, scholtzeSpawnPositions / 2);
+
+            x = scholtzeSpawnPositions[rndPos[1]];
+            y = scholtzeSpawnPositions[rndPos[2]];
+
+            if rndPos > 1 then
+            begin
+                x = scholtzeSpawnPositions[rndPos + 1];
+                y = scholtzeSpawnPositions[rndPos + 2];
+            end;
+
+            PlaceUnitXYR(Scholtze, x, y, 3, true);
+        end;
+
+        3:begin
+            rndPos = rand(1, scholtzeSpawnPositions / 2);
+
+            x = scholtzeSpawnPositions[rndPos];
+            y = scholtzeSpawnPositions[rndPos + 1];
+
+            if rndPos > 1 then
+            begin
+                scholtzeSpawnNearAmericans = true;
+                
+                x = scholtzeSpawnPositions[rndPos + 1];
+                y = scholtzeSpawnPositions[rndPos + 2];
+            end;
+      
+            PlaceUnitXYR(Scholtze, x, y, 3, true);
+        end;
+    end;
+end;

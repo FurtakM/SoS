@@ -9,6 +9,7 @@ Export removedBelkovUntisSaved;
 Export removedBelkovVehicleSaved; // [Chassis, Engine, Control, Weapon, Fuel]
 
 Export Platonov, platSoldiers;
+Export Kuklajs, Benko;
 Export Function PrepareRussian;
 begin
     PrepareCharactersFromPreviousMission;
@@ -120,7 +121,7 @@ begin
 
         otherKirovUnits = otherKirovUnits ^ un;
 
-        PlaceUnitXYR(un, 161, 108, 6,  false);
+        PlaceHumanInUnit(un, ru2_arm2);
     end;
 
     for i := 1 to kirovAmountPeople[2] do
@@ -135,7 +136,7 @@ begin
 
         otherKirovUnits = otherKirovUnits ^ un;
 
-        PlaceUnitXYR(un, 161, 108, 6,  false);
+        PlaceHumanInUnit(un, kirov);
     end;
 
     for i := 1 to kirovAmountPeople[3] do
@@ -150,7 +151,7 @@ begin
 
         otherKirovUnits = otherKirovUnits ^ un;
 
-        PlaceUnitXYR(un, 161, 108, 6,  false);
+        PlaceHumanInUnit(un, kirov);
     end;
 
     for i := 1 to kirovAmountPeople[4] do
@@ -165,8 +166,10 @@ begin
 
         otherKirovUnits = otherKirovUnits ^ un;
 
-        PlaceUnitXYR(un, 161, 108, 6,  false);
+        PlaceHumanInUnit(un, ru_lab);
     end;
+
+    ResAllTechs(6, ru_lab, 3);
 
     if NOT TestCharacters('01_Gnyevko') then
     begin
@@ -177,12 +180,12 @@ begin
     end;
 
     if NOT belkovReturn then
-        PlaceHumanInUnit(Belkov2, ru2_arm);
+        PlaceHumanInUnit(Belkov2, ru2_arm1);
 
 end;
 
 Function PrepareBeriaBase;
-var i, un;
+var i, un, unitsTemp, bunker;
 begin
     SetBName(beria, 'beria');
 
@@ -195,23 +198,33 @@ begin
     ComHold(Platonov);
 
     platSoldiers = [];
+    unitsTemp = [];
 
-    hc_gallery = '';
-    hc_name = '';
+    Kuklajs = PrepareUnit('Kuklajs', false);
 
-    PrepareHuman(sex_male, 1, rand(1, 3));
+    platSoldiers = platSoldiers ^ Kuklajs;
 
-    un = CreateHuman;
+    PlaceUnitXYR(Kuklajs, 110, 97, 6,  false);
 
-    platSoldiers = platSoldiers ^ un;
+    Benko = PrepareUnit('Benko', false);
 
-    PlaceUnitXYR(un, 110, 97, 6,  false);
+    platSoldiers = platSoldiers ^ Benko;
+    unitsTemp = unitsTemp ^ Benko;
 
-    for i := 1 to 3 do
+    for i := 1 to 2 do
     begin
-        un = PrepareSolBun(rand(1, 3), FilterUnitsInArea(BeriaBaseArea, [[f_side, 6], [f_btype, b_breastwork]])[i]);
+       PrepareHuman(false, 1, rand(1, 3));
+       un = CreateHuman;
 
-        platSoldiers = platSoldiers ^ un;
+       platSoldiers = platSoldiers ^ un;
+       unitsTemp = unitsTemp ^ un;
+    end;
+
+    for i := 1 to unitsTemp do
+    begin
+        bunker = FilterUnitsInArea(BeriaBaseArea, [[f_side, 6], [f_btype, b_breastwork]])[i];
+
+        PlaceUnitXYR(unitsTemp[i], GetX(bunker), GetY(bunker), 2, false);
     end;
 end;
 

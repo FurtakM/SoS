@@ -1,0 +1,80 @@
+// InitMapConfig execute three func base config and with specific for current mission and develop mode.
+export Function InitMapConfig;
+begin
+    BaseMapConfig;
+    MissionMapConfig;
+end;
+
+export animalsAmount, animalsStats, animalsAgression, missionPrefix, previousMissionPrefix, debugMode;
+Function BaseMapConfig;
+begin
+    // Base config
+    // Amount of animals: ape, phororhacos, tiger, eohippus
+    animalsAmount = [8, 12, 6, 6];
+
+    // Animals stats
+    animalsStats = [2, 2, 2, 2];
+
+    // Animals agression
+    animalsAgression = [rand(-5, 5)];
+
+    // Develop mode
+    debugMode = 0;
+
+    //Current and previous map prefix, if its mission 1 set for previous ''
+    missionPrefix = '03_';
+    previousMissionPrefix = '02_';
+end;
+
+Export baseUnitsToChoose, scholtzeSpawnPositions;
+Export timeToPrepareAttack;
+Export bonusResourcesCrates, bonusResourcesOil;
+Export enemySkillLevel;
+Export americanWeapons, russianWeapons;
+Export maxAmericanTroopsIgnore;
+Function MissionMapConfig;
+begin
+    // Specific for current mission
+
+    baseUnitsToChoose = [7, 6, 6][Difficulty];
+
+    // Spawn position Schotlze [x, y]
+    // Easy - swamp
+    // Medium - north terrains
+    // Hard - swamp + north terrains
+    scholtzeSpawnPositions = [ [150, 144],
+                               [51, 7, 89, 19, 118, 9],
+                               [150, 144, 51, 7, 89, 19, 118, 9] ][Difficulty];
+
+
+    //  Time to prepare vehicles to attack
+    timeToPrepareAttack = [40$0, 35$0, 30$0][Difficulty];
+
+    // Bonus resources
+    bonusResourcesCrates = [150, 100, 50][Difficulty];
+    bonusResourcesOil = [100, 50, 0][Difficulty];
+
+    // Enemy skill level
+    enemySkillLevel = [1, 2, 2][Difficulty];
+
+    // How many american troops can ignore player to lose medal
+    maxAmericanTroopsIgnore = [8, 6, 5][Difficulty];
+end;
+
+every 0$1 trigger debugMode do
+var i;
+begin
+    enable;
+
+    FogOff(your_side);
+
+    for i in FilterAllUnits([[f_side, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        SetLives(i, 1000);
+
+    for i in FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    begin
+        SetResourceType(GetBase(i), mat_cans, 9999);
+        SetResourceType(GetBase(i), mat_oil, 9999);
+        SetResourceType(GetBase(i), mat_siberit, 9999);
+    end;
+end;
