@@ -191,6 +191,8 @@ TID_ACH_FIST = 6484;
 TID_ACH_FIST_DESC = 6485;
 TID_ACH_CAMERA = 6486;
 TID_ACH_CAMERA_DESC = 6487;
+TID_ACH_TACT = 6488;
+TID_ACH_TACT_DESC = 6489;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -496,6 +498,13 @@ achievements = {
         loc(TID_ACH_ARCH), 
         loc(TID_ACH_ARCH_DESC),
         true,
+        0,
+        0
+    },
+    ['ACH_TACT'] = {
+        loc(TID_ACH_TACT), 
+        loc(TID_ACH_TACT_DESC),
+        false,
         0,
         0
     },
@@ -974,7 +983,7 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_COMMANDO', 'ACH_TANKACE', 'ACH_HITMAN', 'ACH_ASPEED_7'},
         {'ACH_HEAVYGUN', 'ACH_BLITZKRIEG', 'ACH_ARMOR', 'ACH_ASPEED_8'},
         {'ACH_BULLDOZER', 'ACH_COUNTERSTRIKE', 'ACH_SIBMINE', 'ACH_ASPEED_9'},
-        {'ACH_POWER', 'ACH_SNIPER', 'ACH_ARCH', 'ACH_ASPEED_10'},
+        {'ACH_POWER', 'ACH_SNIPER', 'ACH_ARCH', 'ACH_TACT', 'ACH_ASPEED_10'},
         {'ACH_ARABTECH', 'ACH_FRIEND', 'ACH_EAST', 'ACH_GENERAL', 'ACH_ASPEED_11'},
         {'ACH_PATH', 'ACH_LASER', 'ACH_ROCKET', 'ACH_ASPEED_12'},
         {'ACH_MASHA', 'ACH_REMOTE', 'ACH_DEFMASTER', 'ACH_ASPEED_13'},
@@ -986,13 +995,13 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_ARTIFACT', 'ACH_OMAR', 'ACH_ECONOMY', 'ACH_ASPEED_19'},
         {}
     },
-    {},
     {
         {'ACH_DOGTAG', 'ACH_INVINCIBLE', 'ACH_ZOOLIGST'},
         {'ACH_TRAP', 'ACH_SCRAP', 'ACH_DELTA'},
         {'ACH_ENG', 'ACH_BABY', 'ACH_CLEAN', 'ACH_APEGEN', 'ACH_IBRAHIM'},
         {'ACH_FIST', 'ACH_LAB', 'ACH_COMMISAR', 'ACH_KING', 'ACH_CAMERA'}
-    }
+    },
+    {}
 };
 
 achievsCategory = {
@@ -1037,6 +1046,7 @@ achievsCategory = {
         'ACH_POWER',
         'ACH_SNIPER',
         'ACH_ARCH',
+        'ACH_TACT',
         'ACH_ASPEED_10',
         'ACH_ARABTECH',
         'ACH_FRIEND',
@@ -1077,20 +1087,6 @@ achievsCategory = {
         'ACH_ASPEED_19'
     },
     [2] = {
-        'ACH_DESERT',
-        'ACH_HARD',
-        'ACH_SAFECARGO',
-        'ACH_SAFE',
-        'ACH_DAVIDOV',
-        'ACH_GLADKOV',
-        'ACH_STOLYP',
-        'ACH_GORKI',
-        'ACH_NOSUPP',
-        'ACH_HUNT',
-        'ACH_BEH',
-        'ACH_NODEPOT'
-    },
-    [3] = {
         'ACH_DOGTAG',
         'ACH_INVINCIBLE',
         'ACH_ZOOLIGST',
@@ -1107,13 +1103,27 @@ achievsCategory = {
         'ACH_COMMISAR',
         'ACH_KING',
         'ACH_CAMERA'
+    },
+    [3] = {
+        'ACH_DESERT',
+        'ACH_HARD',
+        'ACH_SAFECARGO',
+        'ACH_SAFE',
+        'ACH_DAVIDOV',
+        'ACH_GLADKOV',
+        'ACH_STOLYP',
+        'ACH_GORKI',
+        'ACH_NOSUPP',
+        'ACH_HUNT',
+        'ACH_BEH',
+        'ACH_NODEPOT'
     }
 };
 
 achievsCategoryName = { 
 	[1] = loc(TID_Achievements_US), 
-    [2] = loc(TID_Achievements_Skir),
-    [3] = loc(TID_Achievements_Ares)
+    [2] = loc(TID_Achievements_Ares),
+    [3] = loc(TID_Achievements_Skir)
 	--[2] = loc(TID_Achievements_AR), 
 	--[3] = loc(TID_Achievements_RU), 
 	--[4] = loc(TID_Achievements_Ally), 
