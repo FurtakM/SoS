@@ -218,6 +218,8 @@ TID_ACH_BEH = 6620;
 TID_ACH_BEH_DESC = 6621;
 TID_ACH_NODEPOT = 6622;
 TID_ACH_NODEPOT_DESC = 6623;
+TID_ACH_PANZERKNACKER = 6624;
+TID_ACH_PANZERKNACKER_DESC = 6625;
 
 
 achievements = {
@@ -969,6 +971,13 @@ achievements = {
         true,
         0,
         0
+    },
+    ['ACH_PANZERKNACKER'] = {
+        loc(TID_ACH_PANZERKNACKER), 
+        loc(TID_ACH_PANZERKNACKER_DESC),
+        true,
+        0,
+        0
     }
 };
 
@@ -1116,7 +1125,8 @@ achievsCategory = {
         'ACH_NOSUPP',
         'ACH_HUNT',
         'ACH_BEH',
-        'ACH_NODEPOT'
+        'ACH_NODEPOT',
+        'ACH_PANZERKNACKER'
     }
 };
 
