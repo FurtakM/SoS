@@ -255,7 +255,7 @@ patrol := [
 ];
 
 repeat
- wait(0$1);
+ wait(0$5);
 
  for i := 1 to patrol do
      begin
@@ -364,7 +364,7 @@ PlaceHumanInUnit(un, ruBeriaFac);
 if type = 1 then
    AddComConstruct(ruBeriaFac, ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay)
 else
-   AddComConstruct(ruBeriaFac, [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled][rand(1,3)], engine_combustion, control_manual, [ru_gun, ru_gun, ru_gatling_gun, ru_heavy_machine_gun][rand(1,4)]);
+   AddComConstruct(ruBeriaFac, [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked][rand(1, Difficulty + 1)], engine_combustion, control_manual, [ru_gun, ru_gun, ru_gatling_gun, ru_heavy_machine_gun][rand(1,4)]);
 End;
 
 Every 0$2 trigger retreatFromOmicron do
@@ -405,8 +405,52 @@ End;
 Every 0$2 trigger FilterUnitsInArea(eastKirovArea, [f_enemy, 6]) do
 russianAlert := true;
 
-Every 0$03 do
-var i, c, p, skr, cargo, dep;
+Every 0$1 trigger IsOk(Beria) and GetSide(Beria) = 3 and GetResourceType(GetBase(Beria), mat_cans) < 100 do
+begin
+enable;
+AddResourceType(GetBase(beria), mat_cans, 200);
+End;
+
+// transport
+Every 0$1 do
+var i, un, tmp;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+tmp := [];
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 2, 2);
+    un := CreateHuman;
+
+    tmp := Replace(tmp, tmp + 1, un);
+
+    PlaceUnitXYR(un, 74, 112, 3, false);
+    end;
+
+AddResourceType(GetBase(kagan), mat_oil, 100);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if IsDead(i) then
+        tmp := tmp diff i;
+
+     if not HasTask(i) and not Carry(i) then
+        begin
+        ComTransport(i, kagan, mat_oil);
+        AddComGive(i, beria);
+        end;
+     end;
+until not tmp or IsDead(kagan) or IsDead(beria);
+End;
+
+Every 0$01 do
+var i, j, skr, cargo, dep;
 begin
 enable;
 
@@ -415,42 +459,25 @@ dep := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_wareh
 
 skr = GetListOfCratesInArea(ruCratesCollectArea);
 
-c = 1;
-
-if not cargo then
+if not cargo or not skr or not dep then
    exit;
 
-while c < skr do
-   begin
+for i in cargo do
+    begin
+    if not skr then
+       exit;
 
-   for i in cargo do
+    if not HasTask(i) then
        begin
+       ComCollect(i, skr[1], skr[2]);
 
-       if not IsOk(i) or not skr then
-          continue;
-
-       if c > skr then
-          continue;
-           
-       if GetFuel(i) > 40 then
-          ComCollect(i, skr[c], skr[c+1]);
-
-       if GetFuel(i) <= 40 then
-           begin
-
-           repeat
-             begin
-             ComMoveXY(i, GetX(NearestUnitToUnit(dep, i)), GetY(NearestUnitToUnit(dep, i)));
-             wait(0$01);
-             end
-           until GetDistUnits(i, NearestUnitToUnit(dep, i)) < 5;
-
+       for j := 1 to 2 do
+           skr := Delete(skr, 1);
+       end
+    else
+       if GetFuel(i) < 3 and GetDistUnits(i, NearestUnitToUnit(dep, i)) < 6 then
           SetFuel(i, 100);
-          end;
-       end;
-
-   c = c + 2;
-   end;
+    end;
 End;
 
 Export Function SendSupport;
