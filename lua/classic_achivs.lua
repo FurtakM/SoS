@@ -87,18 +87,17 @@ function displayAchivs(category, filter, filterMission)
                 end;
 
                 if (achievements[k] == nil) then
-                    debug(k);
                     goto continue2;
                 end;
 
                 achieved = checkAchieved(k, true);
 
                 if (filter == 1 and (not achieved)) then -- done
-                    goto continue;
+                    goto continue2;
                 end;
 
                 if (filter == 2 and achieved) then -- undone
-                    goto continue;
+                    goto continue2;
                 end;
 
                 achievAllTotal = achievAllTotal + 1;

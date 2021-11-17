@@ -1,0 +1,59 @@
+Export Function Action;
+var i, un, veh, tmp;
+begin
+InGameOn;
+
+music_nat := 2;
+music_class := 0;
+
+CenterNowOnXY(7, 6);
+
+
+tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Kurt, Aviradze] union heikeSecondSquad;
+tmp := tmp diff 0;
+tmp := SortBySkill(tmp, 3);
+
+// [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), cargo]
+// cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
+for i in heikeVehicles do
+    begin
+
+    if not tmp then
+       continue;
+
+    PrepareTank(2, i[5], i[1], i[2], i[3], i[4], 34);
+    veh := CreateVehicle;
+
+    if i[4] in [ru_cargo_bay, ar_cargo_bay, us_cargo_bay] then
+       begin
+       if i[7][1] then
+          AddCargo(veh, mat_cans, i[7][1]);
+       if i[7][2] then
+          AddCargo(veh, mat_oil, i[7][2]);
+       end;
+
+    SetDir(veh, 2);
+    PlaceUnitArea(veh, spawnArea, false);
+    PlaceHumanInUnit(tmp[1], veh);
+    tmp := Delete(tmp, 1);
+    end;
+
+if tmp then
+   for i in tmp union heikeApes do
+       begin
+       SetDir(i, 2);
+       PlaceUnitArea(i, spawnHumanArea, false);
+       end;
+
+DialogueOn;
+
+
+
+DialogueOff;
+
+InGameOff;
+
+ChangeMissionObjectives('Road');
+
+SaveForQuickRestart;
+End;

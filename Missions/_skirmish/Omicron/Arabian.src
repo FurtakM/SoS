@@ -44,11 +44,15 @@ for i := 1 to 10 do
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_ok]]) do
-var i;
+var i, enemy;
 begin
 enable;
 
+enemy := FilterAllUnits([f_or, [f_side, 3], [f_side, 6]]);
+
+if not enemy then
+   enemy := FilterAllUnits([f_side, 1]);
+
 for i in FilterAllUnits([[f_side, 2], [f_ok]]) do
-    if not HasTask(i) then
-       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 2]), i));
+    ComAttackUnit(i, NearestUnitToUnit(enemy, i));
 End;
