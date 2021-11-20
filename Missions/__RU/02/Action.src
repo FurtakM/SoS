@@ -63,7 +63,7 @@ begin
 end;
 
 // Block move in far north
-every 0$1 trigger NOT canExitBase AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
+every 0$1 trigger NOT canExploreMap AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
 var unit;
 begin
     enable;
@@ -72,13 +72,54 @@ begin
     begin
         ComMoveXY(unit, GetX(unit), GetY(unit) + 5);
 
-        if unit <> Burlak AND IsOk(Kovalyuk) then
-            Say(Kovalyuk, 'D1b-Kov-1');
-        
-        if unit = Burlak then
-            Say(Burlak, 'D1b-Bur-1');
+        if dialogLoopBlocker then
+            exit;
+
+        dialogLoopBlocker = true;
+
+        if NOT meetPlatonov then
+        begin
+            if unit <> Burlak AND IsOk(Kovalyuk) then
+                Say(Kovalyuk, 'D1b-Kov-1');
+            
+            if unit = Burlak then
+                Say(Burlak, 'D1b-Bur-1');        
+        end
+        else
+            Say(Platonov, 'D8-Pla-1');
+
+        exit;
     end;
+
+    wait(0$5);
+
+    dialogLoopBlocker = false;
 end;
+
+// Block exit Beria base
+every 0$1 trigger NOT canExitBase AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
+var unit;
+begin
+    enable;
+
+    for unit in FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+    begin
+        ComMoveXY(unit, 114, 98);
+
+        if dialogLoopBlocker then
+            exit;
+
+        dialogLoopBlocker = true;
+
+        Say(Platonov, 'D8-Pla-1');
+        exit;
+    end;
+
+    wait(0$5);
+    
+    dialogLoopBlocker = false;
+end;
+
 
 // Kurin dialog if player stay in Kirov base
 every 1$30 trigger NOT meetPlatonov and FilterUnitsInArea(KirovBaseArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
@@ -140,6 +181,8 @@ begin
 
             SetSide(beria, 3);
 
+            canExitBase = false;
+
             exit;
         end;
 end;
@@ -182,9 +225,11 @@ begin
     ChangeMissionObjectives('M2c');
 end;
 
-// Dialog after start construct again same building - executed in event
+// Dialog after start construct again same building or other buildings - executed in event
 Export Function Dial_StopConstructAgainSameBuilding(building);
 begin
+    wait(0$1);
+    
     CenterNowOnUnits(building);
 
     ComStop(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
@@ -196,10 +241,13 @@ begin
 
     DialogueOff;
 
-    if GetBType(building) = b_lab then
-        SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + labCratesRefund)
-    else
-        SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + workshopCratesRefund);
+    case GetBType(building) of
+        b_lab: SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + labCratesRefund);
+        b_workshop: SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + workshopCratesRefund);
+        b_oil_power: SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + oilPowerCratesRefund);
+        b_armoury: SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + armouryCratesRefund);
+        b_breastwork: SetResourceType(GetBase(beria), mat_cans, GetResourceType(GetBase(beria), mat_cans) + bunkerCratesRefund);
+    end;
 
     RemoveUnit(building);
 end;
@@ -263,6 +311,8 @@ begin
     InGameOff;
 
     ChangeMissionObjectives('M3');
+
+    canExitBase = true;
 
     ComMoveXY(Platonov, 112, 97);
 end;
@@ -438,6 +488,7 @@ begin
     engs = UnitFilter(otherKirovUnits, [f_class, class_engineer]);
 
     backToBeria1 = false;
+    canExitBase = false;
 
     Say(Platonov, 'D11-Pla-1');
 
@@ -462,6 +513,7 @@ every 0$1 trigger constructedVehiclesCounter >= FilterAllUnits([[f_side, 3], [f_
 var tmpBelkov, nearRuUnit;
 begin
     canRemoveBelkovUnits = false;
+    spawnCrates = false;
 
     ComStop(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]));
 
@@ -560,8 +612,8 @@ begin
     immortalBelkovTeam = false;
     activateAMAI = true;
     canExitBase = true;
+    canExploreMap = true;
     construcMoreVehicles = false;
-    spawnCrates = false;
 
     ChangeMissionObjectives('M6');
 
@@ -576,11 +628,22 @@ begin
 end;
 
 // Start counter
-every 0$1 trigger canExitBase AND NOT belkovSaved AND belkovAttackTime > 0$00 do
+every 0$1 trigger canExploreMap AND NOT belkovSaved AND belkovAttackTime > 0$00 do
 begin
     enable;
 
     belkovAttackTime = belkovAttackTime - 0$01;
+end;
+
+// Some americans attack Belkov
+every 0$15 trigger canExploreMap do
+var i, tmp;
+begin
+    tmp = trapTeam;
+    tmp = tmp diff trapCommander;
+
+    for i := 1 to rand(3, 4) do
+        ComAgressiveMove(tmp[i], 87, 18);
 end;
 
 // Belkvo attack american forces
@@ -602,7 +665,7 @@ begin
         if See(3, bunker) then
         begin
            // Left bunkers
-            if bunker IN leftBunkers AND NOT sawLeftBunker then
+            if bunker IN leftBunkers AND NOT sawLeftBunker AND NOT FilterUnitsInArea(WeakPositionArea, [[f_side, 3]]) then
             begin
                 sawLeftBunker = true;
 
@@ -627,7 +690,10 @@ begin
 
                 DialogueOff;
 
-                raportForPlatonov = 3;
+                if raportForPlatonov = 2 then
+                    raportForPlatonov = 1
+                else
+                    raportForPlatonov = 3;
 
                 ChangeMissionObjectives('M7');
 
@@ -658,7 +724,10 @@ begin
 
                 DialogueOff;      
 
-                raportForPlatonov = 2;
+                if raportForPlatonov = 3 then
+                    raportForPlatonov = 1
+                else
+                    raportForPlatonov = 2;
 
                 exit;     
             end;
@@ -693,9 +762,11 @@ begin
 end;
 
 // Dialog on hill
-every 0$3 trigger FilterUnitsInArea(WeakPositionArea, [[f_side, 3]]) do
+every 0$3 trigger FilterUnitsInArea(WeakPositionArea, [[f_side, 3]]) AND NOT sawLeftBunker do
 var decsToChoose;
 begin
+
+    sawLeftBunker = true;
 
     if playerGetSupport then
         decsToChoose = [1, 3]
@@ -789,8 +860,10 @@ begin
 end;
 
 // Destroy left bunkers
-every 0$1 trigger NOT leftBunkers AND canExitBase do
+every 0$1 trigger (NOT leftBunkers OR FilterUnitsInArea(LeftHillArea, [[f_side, 1], [f_type, unit_building], [f_btype, b_breastwork], [f_ok]]) = 0) AND canExploreMap do
 begin
+    leftBunkers = [];
+
     DialogueOn;
 
     Say(Burlak,'D20-Bur-1');
@@ -803,8 +876,10 @@ begin
 end;
 
 // Destroy right bunkers
-every 0$1 trigger NOT rightBunkers AND canExitBase do
+every 0$1 trigger (NOT rightBunkers OR FilterUnitsInArea(rightHillArea, [[f_side, 1], [f_type, unit_building], [f_btype, b_breastwork], [f_ok]]) = 0) AND canExploreMap do
 begin
+    rightBunkers = [];
+
     DialogueOn;
 
     Say(Burlak,'D20a-Bur-1');
@@ -814,7 +889,7 @@ begin
 end;
 
 // Near the americans who surrounded Belkov
-every 0$1 trigger NOT saveBelkovDecision do
+every 0$1 trigger NOT saveBelkovDecision AND belkovTeam do
 var yourUnit, trapUnit, decsToChoose;
 begin
     enable;
@@ -896,12 +971,19 @@ begin
 end;
 
 // Save Belkov
-every 0$1 trigger canExitBase AND NOT trapTeam AND NOT belkovSaved do
+every 0$1 trigger canExploreMap AND NOT trapTeam AND NOT belkovSaved do
 begin
     belkovSaved = true;
     SetSide(belkovTeam, 3);
 
     ChangeMissionObjectives('M9a');
+end;
+
+// No save Belkov
+every 0$1 trigger saveBelkovDecision AND (IsDead(Belkov) OR IsDead(Belkov2) AND (GetSide(Belkov) = 6 OR GetSide(Belkov2) = 6)) do
+begin
+    ChangeMissionObjectives('M9a');
+    saveBelkovObjective = false;
 end;
 
 // Dialog with Belkov
@@ -944,18 +1026,40 @@ begin
     InGameOff;
 end;
 
+// Track dialog
+every 0$1 trigger FilterUnitsInArea(TrackDialogArea, [[f_side, 3], [f_type, unit_vehicle]]) AND (IsOk(Kovalyuk) OR IsOK(Gnyevko) ) do
+begin
+    DialogueOn;
+
+    Say(Burlak, 'D26-Bur-1');
+
+    if IsOk(Kovalyuk) then
+        Say(Kovalyuk, 'D26-Kov-1');
+
+    if IsOk(Gnyevko) then
+        Say(Gnyevko, 'D26-Gny-1');
+
+    Say(Burlak, 'D26-Bur-2');
+
+    DialogueOff;
+end;
+
 // Raport for Platonov, change value from -1 to 0
-every 0$1 trigger canExitBase AND NOT IsInArea(Burlak, BeriaBaseArea) AND raportForPlatonov = -1 do
+every 0$1 trigger canExploreMap AND ( NOT IsInArea(Burlak, BeriaBaseArea) AND NOT IsInArea(IsInUnit(IsInUnit(Burlak)), BeriaBaseArea) ) AND raportForPlatonov = -1 do
 begin
     enable;
-
     raportForPlatonov = 0;
 end;
 
 // Raports for Platonov
 // 0 - nothing, 1- Explore two bunkers, 2 - explore right bunkers, 3 - explore left bunkers
-every 0$1 trigger canExitBase AND raportForPlatonov >= 0 AND NOT backToBeria2 do
+every 0$1 trigger canExploreMap AND raportForPlatonov >= 0 AND
+NOT backToBeria2 AND
+(IsInArea(Burlak, BeriaBaseArea) OR IsInArea(IsInUnit(IsInUnit(Burlak)), BeriaBaseArea) AND
+NOT backToBeria2 ) do
 begin
+    enable;
+
     DialogueOn;
 
     case raportForPlatonov of
@@ -967,6 +1071,11 @@ begin
         1: begin
             Say(Platonov, 'D25-Pla-1');
             Say(Burlak, 'D25-Bur-1');
+            Say(Burlak, 'D25b-Bur-1');
+            Say(Platonov, 'D25b-Pla-1');
+
+            playerGetSupport = true;
+            PlatonovSendSupport;
         end;
 
         2: begin
@@ -991,6 +1100,8 @@ begin
 
         end;
     end;
+
+    raportForPlatonov = -1;
 
     Say(Platonov, 'D25c-Pla-1a');
 

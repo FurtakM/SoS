@@ -2,7 +2,7 @@ every 0$5 trigger backToBeria2 AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side
 begin
     enable;
 
-    if NOT saveBelkovObjective then
+    if NOT saveBelkovObjective AND (IsOk(Belkov) OR IsOk(Belkov2)) then
     begin
         case Query('QContMission') of
             1:begin
@@ -13,7 +13,9 @@ begin
                 saveBelkovObjective = true;
             end;
         end;
-    end;
+    end
+    else if NOT belkovSaved then
+        FinishMission;
 
     if belkovSaved then
         FinishMission;
@@ -90,7 +92,7 @@ begin
 
     SaveBase(FilterUnitsInArea(BeriaBaseArea, [[f_type, unit_building]]), '02_BeriaBase_2');
     SaveBase(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building]]), '02_KirovBase_3');
-    SaveBase(FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok], [f_nation, nation_american]]), '02_PlayerAmericanBuildings_4');
+    SaveBase(FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok], [f_not, [f_inarea, BeriaBaseArea]]]), '02_OtherBuildings_4');
     SaveBase(FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_ok], [f_nation, nation_american]]), '02_AmericanBuildings_5');
 
     SaveVariable(meetBelkovBrother, '02_MeetBelkovBrother_6');

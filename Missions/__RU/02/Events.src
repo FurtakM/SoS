@@ -5,6 +5,9 @@ begin
 
     if GetBType(building) = b_workshop AND FilterAllUnits([[f_side, 3], [f_btype, b_workshop]]) > 1 AND NOT canBuildSameBuilding then
         Dial_StopConstructAgainSameBuilding(building);
+
+    if GetSide(building) = 3 AND GetBType(building) in [b_oil_power, b_armoury, b_breastwork] AND IsInArea(building, BeriaBaseArea) then
+        Dial_StopConstructAgainSameBuilding(building);
 end;
 
 On BuildingComplete(building) Do
@@ -44,6 +47,12 @@ On ResearchComplete(tech, building) Do
 begin
     if tech = tech_oilEng AND GetSide(building) = 3 then
         engineResearched = true;
+
+   if tech = tech_Tech1 then
+   begin
+      wait(0$5);
+      SetSpecResearch(ru_lab, 1500, false);
+   end;
 end;
 
 On VehicleConstructed(vehicle, factory) Do
@@ -57,7 +66,7 @@ end;
 
 On CrateSpawn(unit, x, y, amount, mode) Do
 begin
-    if NOT canExitBase then
+    if NOT canExitBase AND mode = true then
         Dial_NewCrates(x, y);
 end;
 
@@ -86,9 +95,6 @@ begin
 
     if GetSide(unit) = 1 AND GetType(unit) = unit_human then
     begin
-        if unit in trapTeam then
-            trapTeam = trapTeam diff unit;
-
         if unit in amLeftEngs then
             amLeftEngs = amLeftEngs diff unit;
 
@@ -121,12 +127,19 @@ begin
             rightBunkers = rightBunkers diff unit;
     end;
 
+    if GetSide(unit) = 1 AND GetType(unit) = unit_human then
+        if unit in trapTeam then
+            trapTeam = trapTeam diff unit;
+
 end;
 
 On VehicleCaptured(new_vehicle, old_vehicle, original_side, human) Do
 begin
     if original_side = 1 then
         captureBelkovVehicle = true;
+
+    if original_side = 6 then
+        ComFree([new_vehicle, old_vehicle]);
 end;
 
 On Contact(side1, side2) Do
