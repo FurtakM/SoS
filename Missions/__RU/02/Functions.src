@@ -183,6 +183,9 @@ begin
       if GetBType(i) in [b_bunker, b_turret] then
             buildingsToSave = buildingsToSave ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i), GetBWeapon(i)] ]
       else
+      if GetBType(i) in [b_depot, b_warehouse] then
+            buildingsToSave = buildingsToSave ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i), GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit)] ]
+      else
             buildingsToSave = buildingsToSave ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)] ];
     end;
 
@@ -191,7 +194,7 @@ begin
 end;
 
 Export Function CreateBelkovTeam;
-var i, unit, restRandSolds;
+var i, unit, restRandSolds, tmp;
 begin
    belkovTeam = [];
 
@@ -210,15 +213,30 @@ begin
       restRandSolds =  5 - belkovTeam;
 
       for i := 1 to restRandSolds do
-         for unit in UnitFilter(otherKirovUnits, [[f_class, class_soldier]]) do
+         for unit in UnitFilter(otherKirovUnits, [[f_class, class_soldier]]) diff Kurin do
             if NOT unit in belkovTeam then
-               if NOT IsInUnit(unit) OR GetBType(IsInUnit(unit)) = b_armoury then
-               begin
-                  belkovTeam = belkovTeam ^ unit;
-                  otherKirovUnits = otherKirovUnits diff unit;
-                  break;
-               end;
+            begin
+               belkovTeam = belkovTeam ^ unit;
+               otherKirovUnits = otherKirovUnits diff unit;
+               break;
+            end;
       
+   end;
+
+   tmp = belkovTeam diff Belkov;
+
+   if tmp < 4 then
+   begin
+      for i := 1 to 4 - tmp do
+      begin
+         PrepareSoldier(false, rand(1, 2));
+
+         unit = CreateHuman;
+
+         belkovTeam = belkovTeam ^ unit;
+
+         PlaceHumanInUnit(unit, ru2_arm2);
+      end;
    end;
 
    belkovTeam = belkovTeam ^ UnitFilter(otherKirovUnits, [[f_class, class_scientistic]])[1];
@@ -227,18 +245,9 @@ begin
 end;
 
 Export Function PlatonovSendSupport;
-var i, randValue;
 begin
-   for i := 1 to 2 do
-   begin
-      randValue = rand(1, platSoldiers);
-      SetSide(platSoldiers[randValue], 3);
-      
-      if IsInUnit(platSoldiers[randValue]) then
-         ComExitBuilding(platSoldiers[randValue]);
+   ComExitBuilding([Kuklajs, Benko]);
+   AddComMoveXY([Kuklajs, Benko], 112, 96);
 
-      AddComMoveXY(platSoldiers[randValue], 112, 96);
-
-      platSoldiers = platSoldiers diff platSoldiers[randValue];
-   end;
+   SetSide([Kuklajs, Benko], 3);
 end;

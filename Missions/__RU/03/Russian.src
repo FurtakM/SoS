@@ -3,13 +3,15 @@ Export Scholtze; // Other heroes
 Export other_survivors; // Other survivors from 02
 Export playerVehicles; // Vehicles from mission 02  -> [Chassis, Engine, Control, Weapon, HP, Fuel]
 Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 ->  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
-                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+                                               // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
+                                               // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
 
 Export Kurin, Popov, BelkovDialog;
 Export ruScout;
 Export otherKirovUnits;
 Export kirovBase, kirovDepot, kirovOilDepot; // Beria base buildings from 02 >  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
-                                                    // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+                                             // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
+                                             // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
 Export ru2_bar1, ru2_bar2;
 Export kirovEng;
 Export kirovBunkersToMountWeapon, kirovBunkersToOccupy;
@@ -35,7 +37,7 @@ begin
     PrepareHeroes;
     PrepareBeriaBase;
     PrepareSecondBaseTeam;
-    PrepareDzerzhinskyBase;
+    PrepareGrishko;
     PrepareOtherBuildings;
     PrepareVehicles;
 end;
@@ -234,51 +236,16 @@ begin
     end;
 end;
 
-// Grishko base
-Export Function PrepareDzerzhinskyBase;
+Export Function PrepareGrishko;
 var i, un, turret;
 begin
-
-    SetBName(ru3_depot, 'dzerzhinsky');
-
-    uc_side = 8;
+    uc_side = 6;
     uc_nation = 3;
 
     Grishko = PrepareUnitExt('Grishko', false);
-    PlaceUnitXYR(Grishko, 210, 39, 3, false);
+    PlaceUnitXYR(Grishko, 218, 108, 3, false);
 
-    ComHold(Grishko);
-
-    hc_name := '';
-    hc_gallery := '';
-
-    for i := 1 to 3 do
-    begin
-        PrepareSoldier(false, enemySkillLevel);
-        PlaceHumanInUnit(CreateHuman, ru3_bar);
-    end;
-        
-
-    for i := 1 to 2 do
-    begin
-        PrepareScientist(false, enemySkillLevel);
-        PlaceHumanInUnit(CreateHuman, ru3_lab);
-    end;
-        
-
-    for i := 1 to 3 do
-    begin
-        PrepareMechanic(false, enemySkillLevel);
-        PlaceHumanInUnit(CreateHuman, ru3_fac);
-    end;
-        
-
-    for turret in FilterAllUnits([[f_side, 8], [f_type, unit_building], [f_btype, b_bunker]]) do
-    begin
-        PrepareSoldier(false, enemySkillLevel);
-        PlaceHumanInUnit(CreateHuman, turret);
-    end;
-        
+    ComHold(Grishko);        
 end;
 
 // Vehicles from previous mission
@@ -303,26 +270,36 @@ end;
 Export Function PrepareOtherBuildings;
 var i, otherBuildings, building;
 begin
-    otherBuildings = LoadVariable('02_PlayerAmericanBuildings_4', []);
-    
+    otherBuildings = LoadVariable('02_OtherBuildings_4', []);
+
     uc_side = 3;
-    uc_nation = 1;
 
     // Capture by player
     for i := 1 to otherBuildings do
     begin
+
+        uc_nation = otherBuildings[i][6];
+
         bc_type = otherBuildings[i][1];
         bc_level = otherBuildings[i][5]; 
 
         building = CreateAndPlaceBuildingXYD(otherBuildings[i][2], otherBuildings[i][3], otherBuildings[i][4]);
 
         SetLives(building, otherBuildings[i][7]);
+
+        if GetBType(building) in [b_depot, b_warehouse] then
+        begin
+            SetResourceType(GetBase(building), mat_cans, otherBuildings[i][8]);
+            SetResourceType(GetBase(building), mat_cans, otherBuildings[i][9]);
+            SetResourceType(GetBase(building), mat_cans, otherBuildings[i][10]);
+        end;
     end;
 
     otherBuildings = LoadVariable('02_AmericanBuildings_5', []);
 
     uc_side = 1;
-
+    uc_nation = 1;
+    
     // Stay in americans
     for i := 1 to otherBuildings do
     begin
@@ -347,6 +324,8 @@ Export Function PrepareSecondBaseTeam;
 var i;
 begin
     secondBaseTeam = [];
+
+    SetResourceVisibility(226, 109, 6);
 
     uc_side = 6;
     uc_nation = 3;
