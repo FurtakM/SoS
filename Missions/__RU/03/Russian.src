@@ -1,5 +1,5 @@
 Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2; // Heroes with Burlak
-Export Scholtze; // Other heroes
+Export Scholtze, fakeScholtze; // Other heroes
 Export other_survivors; // Other survivors from 02
 Export playerVehicles; // Vehicles from mission 02  -> [Chassis, Engine, Control, Weapon, HP, Fuel]
 Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 ->  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
@@ -33,7 +33,6 @@ begin
     kirovAttackCargo = [];
 
     PrepareKirovBase;
-    KirovUpgradeBase;
     PrepareHeroes;
     PrepareBeriaBase;
     PrepareSecondBaseTeam;
@@ -140,7 +139,7 @@ begin
 end;
 
 Function PrepareKirovBase;
-var i, bunkerCounter;
+var i, tmp, building, bunkerCounter;
 begin
     kirovBase = LoadVariable('02_KirovBase_3', []);
     
@@ -162,9 +161,12 @@ begin
 
         if bc_type = b_lab then
         begin
-            bc_kind1 = b_lab_basic;
+            bc_kind1 = b_lab_weapon;
             bc_kind2 = b_lab_basic;
         end;
+
+        if bc_type = b_workshop then
+            bc_type = b_factory;
 
         if bc_type = b_lab_half or bc_type = b_lab_full then
             begin
@@ -179,9 +181,21 @@ begin
             end;
 
         if bc_type = b_breastwork then
+        begin
+            bc_type = b_bunker;
             bunkerCounter = bunkerCounter + 1;
+        end;
+            
 
-        CreateAndPlaceBuildingXYD(kirovBase[i][2], kirovBase[i][3], kirovBase[i][4]);
+        building = CreateAndPlaceBuildingXYD(kirovBase[i][2], kirovBase[i][3], kirovBase[i][4]);
+
+        if tmp < 4 AND bc_type = b_bunker then
+        begin
+            PlaceWeaponTurret(building, [ru_heavy_machine_gun, ru_gatling_gun][rand(1, 2)]);
+            tmp = tmp + 1;
+        end
+        else if bc_type = b_bunker then
+            kirovBunkersToMountWeapon = kirovBunkersToMountWeapon ^ building;
     end;
 
     kirovDepot = FilterAllUnits([[f_side, 6], [f_btype, b_warehouse]])[1];
@@ -226,7 +240,7 @@ begin
 
         if GetClass(i) = class_soldier AND bunkerCounter > 0 then
         begin
-            PlaceHumanInBunker(i, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_breastwork]])[bunkerCounter]);
+            PlaceHumanInBunker(i, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_bunker]])[bunkerCounter]);
             bunkerCounter = bunkerCounter - 1;
         end
         else
@@ -261,7 +275,7 @@ begin
         PrepareVehicle(vehiclesPreviousMission[i][1], vehiclesPreviousMission[i][2], vehiclesPreviousMission[i][3], vehiclesPreviousMission[i][4], vehiclesPreviousMission[i][5]);
     
         vehicle = CreateVehicle;
-        PlaceUnitXYR(vehicle, GetX(beriaDepot), GetY(beriaDepot), 7, false);
+        PlaceUnitXYR(vehicle, GetX(beriaDepot), GetY(beriaDepot), 13, false);
         SetLives(vehicle, vehiclesPreviousMission[i][6]);
         
     end;
@@ -405,7 +419,7 @@ begin
         un = CreateHuman;
 
         PlaceUnitArea(un, KirovSupportSpawnArea, false);
-        ComEnterUnit(un, kirovFactory);
+        ComEnterUnit(un, FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_factory]])[1]);
     end;
 
    for i := 1 to neededUnitsSpawn[4] do
@@ -415,7 +429,7 @@ begin
         un = CreateHuman;
 
         PlaceUnitArea(un, KirovSupportSpawnArea, false);
-        ComEnterUnit(un, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_lab_half]])[1]);
+        ComEnterUnit(un, FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_building], [f_btype, b_lab]])[1]);
     end;
 end;
 
@@ -468,6 +482,7 @@ begin
     uc_side = 8;
 
     Scholtze = PrepareUnitExt('Scholtze', false);
+    fakeScholtze = PrepareUnitExt('Scholtze', false);
 
     case Difficulty of
         1: PlaceUnitXYR(Scholtze, scholtzeSpawnPositions[1], scholtzeSpawnPositions[2], 3, true);

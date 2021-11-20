@@ -27,20 +27,10 @@ begin
     end;
 end;
 
-Export Function KirovUpgradeBase;
-var lab, workshop, turret;
-begin
-    lab = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_lab]])[1];
-    workshop = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_workshop]])[1];
-
-    AddComUpgradeLab(lab, b_lab_weapon);
-    AddComUpgrade(workshop);
-end;
-
 Export Function MountWeaponTurrent;
 var turret, weapons;
 begin
-    weapons = [ru_heavy_machine_gun, ru_gatling_gun, ru_gun];
+    weapons = [ru_gatling_gun, ru_gun];
 
     for turret in kirovBunkersToMountWeapon do
         AddComPlaceWeapon(turret, weapons[rand(1, weapons)]);
@@ -55,27 +45,27 @@ begin
 
     case Difficulty of
         1:begin
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gun);
         end;
 
         2:begin
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gatling_gun);
         end;
 
         3:begin
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
-            AddComConstruct(factory, ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_heavy_machine_gun);
+            AddComConstruct(factory, [ru_medium_wheeled, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, ru_gatling_gun);
         end;
     end;  
 end;
 
 Export Function KirovAttackOmicron;
-var i, vehicle, vehicles, goodVehs; 
+var i, vehicles, vehicle, goodVehs; 
 begin
     vehicles = []; // [[vehicle, driver, stan], [vehicle, driver, stan]] stan: 1 - attack, 2 - retreat and repair
 
@@ -83,6 +73,7 @@ begin
         vehicles = Insert(vehicles, 1, [vehicle, UnitsInside(vehicle)[1], 1]);
 
     repeat
+
         // Count ready to fight vehicles(with stan attack)
         for i := 1 to vehicles do
             if vehicles[i][3] = 1  then
@@ -100,10 +91,14 @@ begin
         // if red HP - delete from list
         for i := 1 to vehicles do
         begin
-           if GetLives(vehicles[i][1]) < 500 then
+           if GetLives(vehicles[i][1]) < 500 AND NOT GetDistUnitXY(vehicles[i][1], 78, 39) < 9 then
            begin
                 vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 2);
                 ComMoveXY(vehicles[i][1], 78, 39);
+           end;
+
+           if GetLives(vehicles[i][1]) < 500 AND GetDistUnitXY(vehicles[i][1], 78, 39) < 9 then
+           begin
                 AddComExitVehicle(vehicles[i][2]);
                 AddComRepairVehicle(vehicles[i][2], vehicles[i][1]);
            end;
@@ -120,4 +115,88 @@ begin
 
         wait(0$1);
     until omicronSurrender;
+end;
+
+
+
+// Summary: Units will proceed to the base attacking everything in their path. Additionally, it includes a small AI medics module that will heal damage units.
+// Input: unitsList, roadArea
+// Example: MoveToBase([Burlak, Platonov, Kurin], MyWonderfullRoad);
+Export Function MoveToBase(units, roadArea);
+var i, unit, playerUnits, playerUnit, enemyUnitsOnRoad, cratesOnRoad, nearUnit, nearCrates, attackUnits, medics, damageUnits, inBase, newBase;
+begin
+
+   inBase = false;
+
+   repeat
+      enemyUnitsOnRoad = FilterUnitsInArea(roadArea, [[f_side, 3]]);
+      cratesOnRoad = GetListOfCratesInArea(roadArea); // struct: [x1, y1, x2, y2]
+      attackUnits = UnitFilter(units, [[f_ok], [f_or, [f_class, class_soldier], [f_class, class_mechanic], [f_type, unit_vehicle]]]);
+      medics = UnitFilter(units, [[f_ok], [f_class, class_scientistic]]);
+      damageUnits = UnitFilter(units, [f_not, [f_lives, 1000]]);
+      playerUnits = FilterAllUnits([[f_side, 3]]);
+
+      for unit in UnitFilter(units, [[f_ok]]) do
+      begin
+
+         if attackUnits AND medics then
+         begin
+            if damageUnits then
+               ComHeal(medics, damageUnits[1])
+            else
+               ComMoveXY(medics, GetX(attackUnits[1]), GetY(attackUnits[1]));
+
+         end
+         else
+         begin
+            if NOT attackUnits AND medics then
+               attackUnits = attackUnits ^ medics;
+         end;
+
+        for i := 1 to cratesOnRoad / 2 do
+            AddComAttackPlace(attackUnits, cratesOnRoad[i], cratesOnRoad[i+1]);
+
+         if enemyUnitsOnRoad then
+         begin
+
+            for playerUnit in playerUnits do
+            begin
+               if Attacks(playerUnit) then
+               begin
+                  if Attacks(playerUnit) in units AND GetDistUnits(playerUnit, unit) < 13 then
+                     ComAttackUnit(attackUnits, playerUnit) 
+               end
+               else
+               begin        
+                  nearUnit = NearestUnitToUnit(enemyUnitsOnRoad, unit);
+                  ComAttackUnit(attackUnits, nearUnit);
+               end;  
+            end;
+         end
+         else
+         begin
+            ComMoveXY(unit, 27, 34);
+         end; 
+
+         if GetDistUnitXY(unit, 27, 34) < 5 then
+            inBase = true;    
+      end;
+
+      wait(0$1);
+   until UnitFilter(units, [f_ok]) = 0 OR inBase;
+
+   ComMoveXY(units, 27, 34);
+
+   for i := 1 to units do
+      if IsOk(units[i]) then
+         americanTroopsArriveOmicronCounter = americanTroopsArriveOmicronCounter + 1;
+
+   amSupportTroops = amSupportTroops diff units;
+
+   newBase = amBase;
+   newBase = newBase ^ UnitFilter(units, [f_ok]);
+
+   amBase = newBase;
+
+   mc_bases := Replace(mc_bases, 1, newBase);
 end;
