@@ -7,9 +7,9 @@ music_nat := 2;
 music_class := 0;
 
 CenterNowOnXY(7, 6);
+RevealFogOnXY(7, 6, 2, -20);
 
-
-tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Kurt, Aviradze] union heikeSecondSquad;
+tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Aviradze];
 tmp := tmp diff 0;
 tmp := SortBySkill(tmp, 3);
 
@@ -17,7 +17,7 @@ tmp := SortBySkill(tmp, 3);
 // cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
 for i in heikeVehicles do
     begin
-    PrepareTank(2, i[5], i[1], i[2], i[3], i[4], 34);
+    PrepareTank(5, i[5], i[1], i[2], i[3], i[4], 34);
     veh := CreateVehicle;
 
     if i[4] in [ru_cargo_bay, ar_cargo_bay, us_cargo_bay] then
@@ -39,15 +39,209 @@ if tmp then
        ComTurnXY(i, 26, 9);
        end;
 
-DialogueOn;
+if heikeSecondSquad then
+   for i in heikeSecondSquad do
+       begin
+       PlaceUnitArea(i, spawnHumanArea2, false);
+       ComTurnXY(i, 26, 9);
+       end;
 
+if heikeApes then
+   for i in heikeApes do
+       begin
+       PlaceUnitArea(i, spawnApeArea, false);
+       ComHold(i);
+       end;
 
+if Kurt then
+   begin
+   PlaceUnitArea(Kurt, spawnGuardArea, false);
+   ComTurnXY(Kurt, 42, 32);
+   end;
 
-DialogueOff;
+Say(Heike, 'DH-Start-1');
+
+if Givi then
+   begin
+   Say(Givi, 'DG-Start-2-5');
+   Say(Heike, 'DH-Start-3');
+   Say(Heike, 'DH-Start-4');
+   Say(Givi, 'DG-Start-5');
+   Say(Heike, 'DH-Start-6');
+   Say(Givi, 'DG-Start-7');
+
+   if Mike then
+      begin
+      Say(Mike, 'DM-Start-8');
+      Say(Mike, 'DM-Start-9');
+      Say(Givi, 'DG-Start-10');
+      Say(Givi, 'DG-Start-11');
+      Say(Heike, 'DH-Start-12');
+      Say(Givi, 'DG-Start-13');
+      Say(Givi, 'DG-Start-14');
+
+      if Kaia then
+         begin
+         Say(Kaia, 'DK-Start-15');
+         Say(Kaia, 'DK-Start-16');
+         Say(Kaia, 'DK-Start-17');
+
+         wait(0$0.3);
+         ComTurnUnit(Givi, Kaia);
+
+         Say(Givi, 'DG-Start-18');
+         Say(Kaia, 'DK-Start-19');
+         end;
+      end;
+
+   Say(Heike, 'DH-Start-20');
+   end;
+
+wait(0$2);
+
+SayRadio(Shariff, 'DShar-Start-21');
+Say(Heike, 'DH-Start-22');
+SayRadio(Shariff, 'DShar-Start-23');
+SayRadio(Shariff, 'DShar-Start-24');
+SayRadio(Shariff, 'DShar-Start-25');
+SayRadio(Shariff, 'DShar-Start-26');
+Say(Heike, 'DH-Start-27');
+
+if Kaia then
+   begin
+   ComTurnUnit(Heike, Kaia);
+   Say(Kaia, 'DK-Start-28');
+   Say(Heike, 'DH-Start-29');
+   end;
+
+if Givi then
+   begin
+   ComTurnUnit(Heike, Givi);
+   ComTurnUnit(Givi, Heike);
+
+   Say(Heike, 'DH-Start-30');
+   Say(Heike, 'DH-Start-31');
+   Say(Givi, 'DG-Start-32');
+   Say(Heike, 'DH-Start-33');
+   Say(Givi, 'DG-Start-34');
+   Say(Givi, 'DG-Start-35');
+
+   if Kurt and not dialogue_skipped then
+      begin
+      ComMoveXY(Kurt, 28, 13);
+      AddComTurnUnit(Kurt, Heike);
+      end;
+
+   Say(Givi, 'DG-Start-36');
+
+   if Kurt then
+      begin
+      Say(Kurt, 'DKs-Start-37');
+      Say(Kurt, 'DKs-Start-38');
+
+      ComTurnUnit(Heike, Kurt);
+
+      Say(Heike, 'DH-Start-39');
+      end;
+   end;
+
+if HexInfo(44, 25) then
+   RemoveUnit(HexInfo(44, 25));
+
+SetDir(Olaf, 5);
+PlaceUnitXY(Olaf, 44, 25, false);
+ComMoveXY(Olaf, 29, 12);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Heike, Olaf) < 8 or GetDistUnitXY(Olaf, 26, 9) < 6;
+
+Say(Olaf, 'DO-Scout-1');
+
+ComTurnUnit(Olaf, Heike);
+
+for i in tmp union heikeSecondSquad do
+    ComTurnUnit(i, Olaf);
+
+wait(0$0.3);
+
+ComMoveUnit(Heike, Olaf);
+AddComTurnUnit(Heike, Olaf);
+
+Say(Heike, 'DH-Scout-2');
+Say(Olaf, 'DO-Scout-3');
+
+if Mike and Givi then // both alive
+   Say(Olaf, 'DO-Scout-4')
+else
+   begin
+   if Mike then // only mike
+      begin
+      Say(Olaf, 'DO-Scout-a-4');
+      Say(Heike, 'DH-Scout-a-5');
+      end
+   else if Givi then // only givi
+      begin
+      Say(Olaf, 'DO-Scout-b-4');
+      Say(Heike, 'DH-Scout-b-5');
+      end
+   else
+      begin  // none
+      Say(Olaf, 'DO-Scout-f-4');
+      Say(Heike, 'DH-Scout-f-5');
+      Say(Olaf, 'DO-Scout-f-6');
+      end;
+   end;
+
+Say(Heike, 'DH-Scout-5');
+Say(Olaf, 'DO-Scout-6');
+Say(Olaf, 'DO-Scout-7');
+Say(Heike, 'DH-Scout-8');
+Say(Heike, 'DH-Scout-9');
+Say(Olaf, 'DO-Scout-10');
+Say(Olaf, 'DO-Scout-12');
+Say(Olaf, 'DO-Scout-13');
+Say(Olaf, 'DO-Scout-14');
+
+if Givi then
+   begin
+   Say(Givi, 'DG-Scout-15');
+   Say(Kaia, 'DK-Scout-16');
+   end;
+
+async;
+Say(Olaf, 'DO-Scout-17');
+
+RevealFogOnXY(55, 77, 2, -6);
+wait(10);
+CenterOnXY(55, 77);
+
+wait(0$5);
+
+Say(Olaf, 'DO-Scout-18');
+
+RevealFogOnXY(204, 107, 2, -12);
+wait(10);
+CenterOnXY(204, 107);
+
+wait(0$5);
+sync;
+
+CenterNowOnUnits(Heike);
+
+Say(Olaf, 'DO-Scout-19');
+Say(Olaf, 'DO-Scout-20');
+Say(Heike, 'DH-Scout-21');
+Say(Heike, 'DH-Scout-22');
 
 InGameOff;
 
 ChangeMissionObjectives('Road');
 
+for i in FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]) do
+    SetSide(i, 2);
+
 SaveForQuickRestart;
 End;
+
+// see crossroad
