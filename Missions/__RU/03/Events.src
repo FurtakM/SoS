@@ -18,9 +18,6 @@ begin
 
                 if (GetSide(temp) = 6 and GetTaskList(i)[j][1] = '<') then
                     SetTaskList(i, []);
-
-                if InArea(x, y, HideMapPartArea) then
-                    SetTaskList(i, []);
             end;
 
 end;
@@ -41,49 +38,21 @@ begin
 
     if GetSide(building) = 6 then
     begin
-        diffUnits = diffUnits ^ Kurin;
-        diffUnits = diffUnits ^ survivorsArabianAttack;
-        diffUnits = diffUnits ^ kirovEng;
-
-        if GetBType(building) = b_bunker then
-        begin
-            kirovBunkersToMountWeapon = kirovBunkersToMountWeapon ^ building;
-
-            canTakeUnits = FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_not, [f_hastask]]]) diff diffUnits;
-
-            if canTakeUnits then
-            begin
-                if GetClass(canTakeUnits[1]) <> 1 then
-                begin
-                    ComEnterUnit(canTakeUnits[1], FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_barracks]])[1]);
-                    AddComChangeProfession(canTakeUnits[1], 1);
-                    AddComExitBuilding(canTakeUnits[1]);
-                    wait(0$1);
-                end;
-                 ComEnterUnit(canTakeUnits[1], building);
-            end
-            else
-            begin
-                kirovBunkersToOccupy = kirovBunkersToOccupy ^ building;
-                neededUnitsSpawn = Replace(neededUnitsSpawn, 1, neededUnitsSpawn[1] + 1);
-            end;
-        end;
-
         if GetBType(building) = b_ext_noncombat then
         begin
             SpawnKirovSupport;
             MountWeaponTurrent;
             wait(3$30);
-            KirovProduceVehicles(kirovFactory);  
+            KirovProduceVehicles(FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_factory]])[1]);  
         end;
 
         if GetBType(building) = b_depot then
         begin
             kirovOilDepot = building;
             SetResourceType(GetBase(kirovOilDepot), mat_oil, 3000);
+            ComEnterUnit(Grishko, building);
         end;
             
-
         if (GetBType(building) = b_breastwork OR GetBType(building) = b_armoury) AND IsInArea(building, SecondKurinBase) then
             ComEnterUnit(UnitFilter(secondBaseTeam, [[f_class, class_soldier], [f_outside], [f_not, [f_hastask]]])[1], building);
     end;
@@ -94,46 +63,6 @@ var i, tmp;
 begin
     if GetSide(building) = 3 AND GetBType(building) = b_factory AND NOT dialog_workshop then
         Dial_UpgradeWorkshop(building);
-
-    if Getside(building) = 6 then
-    begin
-        if GetBType(building) = b_lab_half then
-        begin
-            if FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_class, class_scientistic]]) then
-                ComEnterUnit(FilterUnitsInArea(KirovBaseArea, [[f_side, 6],  [f_type, unit_human], [f_class, class_scientistic]]), building)
-            else
-            begin
-                tmp = FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_not, [f_hastask]]]) diff Kurin;
-
-                if tmp > 2 then
-                begin        
-                    for i := 1 to rand(1, 2) do
-                    begin
-                        ComEnterUnit(tmp[i], building);
-                        AddComChangeProfession(tmp[i], class_scientistic);
-                    end;
-                end
-                else
-                begin
-                    for i := 1 to rand(1, tmp) do
-                    begin
-                        ComEnterUnit(tmp[i], building);
-                        AddComChangeProfession(tmp[i], class_scientistic);
-                    end;
-                end;
-            end;
-
-            ResAllTechs(6, building, 3);   
-        end;
-
-        if GetBType(building) = b_factory then
-        begin
-            kirovFactory = building;
-            kirovCompleteFactory = true;
-        end;
-            
-
-    end;
 end;
 
 On UnitDestroyed(un) do
@@ -196,7 +125,11 @@ End;
 
 On EnterVehicle(vehicle, human) Do
 begin
-    if GetSide(vehicle) = 6 then
-        AddComAgressiveMove(vehicle, 28, 35);
+    if GetSide(vehicle) = 6 AND meetNearOmicronBase then
+    begin
+        wait(0$2);
+        AddComAgressiveMove(vehicle, 78, 39);
+        KirovAttackOmicron;
+    end;
 end;
 

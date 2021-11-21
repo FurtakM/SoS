@@ -96,13 +96,13 @@ begin
 
     RevealFogArea(3, RevealMapPartArea);
 
-    ComEnterUnit(survivorsArabianAttack diff Popov, ru2_bar1);
+    ResAllTechs(6, FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_lab]])[1], 3);   
 
-    AddComUpgradeBreastwork(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_breastwork]]), b_bunker);
-    AddComBuild(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), b_oil_power, 158, 98, 2);
-    AddComBuild(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), b_oil_power, 163, 98, 2);
     AddComBuild(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), b_ext_gun, 159, 116, 0);
     AddComBuild(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), b_ext_noncombat, 161, 115, 5);
+    AddComEnterUnit(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), kirovDepot);
+
+    ComEnterUnit(survivorsArabianAttack diff Popov, ru2_bar1);
 
     ComFree([Belkov, Belkov2]);
     ComWalk(ruScout);
@@ -177,21 +177,24 @@ begin
   for vehicle in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_or, [f_chassis, ru_medium_wheeled], [f_chassis, ru_heavy_wheeled]]]) do
     if GetDistUnitXY(vehicle, 48, 81) < 7 then
     begin
-     dialog_track = true;
-     CenterNowOnXY(48, 81);
-     DialogueOn;
-     Say(Burlak, 'D5a-Bur-1');
-     DialogueOff;
-     exit;
+        dialog_track = true;
+
+        CenterNowOnXY(48, 81);
+
+        DialogueOn;
+        Say(Burlak, 'D5a-Bur-1');
+        DialogueOff;
+
+        // 82 - basic tools
+        SetTech(82, 3, state_enabled);
+
+        // 84 - track
+        SetTech(84, 3, state_enabled);
+
+        SetRestrict(b_ext_track, 3, state_enabled);
+
+        exit;
     end;
-
-    // 82 - basic tools
-    SetTech(82, 3, state_enabled);
-
-    // 84 - track
-    SetTech(84, 3, state_enabled);
-
-    SetRestrict(b_ext_track, 3, state_enabled);
 end;
 
 // Spawn Scholtze
@@ -200,7 +203,7 @@ begin
     PrepareScholtze;
 
     DialogueOn;
-    SayRadio(Scholtze, 'D4-Sch-1');
+    SayRadio(fakeScholtze, 'D4-Sch-1');
     Say(Burlak, 'D4-Bur-1');
     DialogueOff;
 
@@ -237,6 +240,21 @@ end;
 // Spawn american patrol to kill Scholtze
 every 8$30 trigger IsPlaced(Scholtze) AND scholtzeSpawnNearAmericans AND NOT scholtzeSaved do
     PrepareAmericanPatrol;
+
+// Animals get away from Scholtze position
+every 0$1 trigger IsPlaced(Scholtze) AND GetSide(Scholtze) = 6 AND animalsSafeTime > 0$01 do
+var ape, tiger;
+begin
+    enable;
+
+    animalsSafeTime = animalsSafeTime - 0$01;
+
+    for ape in FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+        GetAwayFromXY(ape, GetX(Scholtze), GetY(Scholtze), 12, false);
+
+    for tiger in FilterAllUnits([[f_side, 0], [f_class, class_tiger]]) do
+        GetAwayFromXY(tiger, GetX(Scholtze), GetY(Scholtze), 12, false);
+end;
 
 // American patrol see Scholtze
 every 0$1 trigger See(1, Scholtze) AND amPatrol AND NOT scholtzeSaved do
@@ -395,6 +413,8 @@ begin
     DialogueOff;
 
     meetNearOmicronBase = true;
+
+    ComEnterUnit(Sikorski, omikron);
 end;
 
 // Kurin check amount vehicles
@@ -430,6 +450,8 @@ begin
         vehs = vehs ^ FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_occupied]]])[1];
         vehs = vehs ^ FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_occupied]]])[2];
 
+        kirovAttackVehicles = kirovAttackVehicles ^ vehs;
+
         SetSide(vehs, 6);
 
         produceMoreVehicles = true;
@@ -457,6 +479,8 @@ end;
 every 0$1 trigger meetNearOmicronBase do
 begin
     spawnCrates = false;
+
+    MC_SetScanArea(1, OmicronScanArea);
 
     SetAttitude(6, 1, att_enemy, true);
 
@@ -497,7 +521,7 @@ every 0$1 trigger timeToArrive < 0$01 AND counterIndex = 3 do
 every 0$1 trigger meetNearOmicronBase AND FilterUnitsExceptArea(MeetArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
 begin
     counterEnable = false;
-    Display_Strings := [];
+    Display_strings = [];
 
     SetAreaMapShow(MeetArea, 0);
 
@@ -507,9 +531,6 @@ begin
     Say(Burlak, 'D7-Bur-1');
     SayRadio(Kurin, 'D7-Kur-1');
     DialogueOff;
-
-    MC_SetScanArea(1, OmicronScanArea);
-    MC_SetDefenderLimit(1, 8);
 
     ChangeMissionObjectives('M5a');
 
@@ -561,7 +582,7 @@ begin
 end;
 
 // Stop move near Omicron base
-every 0$1 trigger canExitBattlefield AND IsOK(Sikorski) do
+every 0$1 trigger NOT meetNearOmicronBase AND IsOK(Sikorski) do
 var unit, randDialog;
 begin
     enable;
@@ -587,13 +608,14 @@ begin
 end;
 
 // Omicron surrender
-every 0$1 trigger IsDead(Sikorski) AND FilterUnitsInArea(OmicronBaseArea, [[f_side, 1], [f_type, unit_human]]) < 3 do
+every 0$1 trigger IsDead(Sikorski) AND FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 do
 var tmpUs, tmpRu, building;
 begin
     omicronSurrender = true;
     canExitBattlefield = true;
 
     SetAttitude(1, 3, att_friend, false);
+    SetAttitude(2, 3, att_friend, true);
 
     CenterNowOnUnits(Burlak);
 
@@ -628,21 +650,19 @@ begin
 
     DialogueOff;
 
-    if IsPlaced(Scholtze) AND GetSide(Scholtze) = 8 then
-       SetSide(Scholtze, 0);
-
-    SetSide(FilterAllUnits([f_side, 8]), 6);
-
     PrepareArabian;
 
-    CenterNowOnXY(200, 32);
+    CenterNowOnXY(234, 122);
 
-    ComAgressiveMove(northGroup, 207, 37);
-    AddComAgressiveMove(northGroup, 216, 62);
-
+    ComAgressiveMove(northGroup, 221, 110);
+    ComAgressiveMove(UnitFilter(southGroup, [f_type, unit_human]), 221, 110);
     wait(0$7);
+    AddComAgressiveMove(southGroup, 221, 110);
+
+    wait(0$8);
 
     music_nat = nation_arabian;
+    music_class = music_combat;
     game_speed = 4;
 
     DialogueOn;
@@ -650,7 +670,7 @@ begin
     SayRadio(Kurin, 'D9-Kur-1');
     DialogueOff;
 
-    wait(0$3);
+    wait(0$2.5);
 
     DialogueOn;
     SayRadio(Grishko, 'D9-Gri-2');
@@ -673,19 +693,14 @@ begin
 
     SayRadio(Kurin, 'D9-Kur-3');
 
-    CenterNowOnXY(218, 109);
+    CenterNowOnXY(176, 110);
 
-    ComAgressiveMove(southGroup, 218, 109);
-
-    wait(0$25);
-
-    CenterOnXY(169, 109);
-
-    AddComAgressiveMove(northGroup, 161, 109);
-
-    wait(0$25);
-
+    ComAgressiveMove(UnitFilter(southGroup, [f_type, unit_human]), 221, 110);
+    ComAgressiveMove(northGroup, 161, 109);
+    wait(0$7);
     ComAgressiveMove(southGroup, 161, 109);
+
+    wait(0$11);
 
     ComEnterUnit(Kurin, kirovDepot);
 
@@ -700,6 +715,9 @@ begin
     ComMoveXY(survivorsArabianAttack, GetX(beriaDepot), GetY(beriaDepot));
 
     immortalSurvivors = true;
+
+    for tmpUS in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]) do
+        RemoveUnit(tmpUS);
 
     wait(0$33);
 
