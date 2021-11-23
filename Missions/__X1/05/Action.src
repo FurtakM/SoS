@@ -29,7 +29,7 @@ for i in heikeVehicles do
        end;
 
     SetDir(veh, 2);
-    PlaceUnitArea(veh, spawnArea, false);
+    PlaceUnitArea(veh, spawnStartArea, false);
     end;
 
 if tmp then
@@ -467,6 +467,7 @@ wait(10$00 + rand(-0$30, 0$30));
 PrepareReinforcements;
 End;
 
+
 // drugs
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_lab_biological]]) do
 begin
@@ -585,3 +586,130 @@ Say(Heike, 'DH-Obj-1');
 
 Every 0$1 trigger SeeGroup(2, ruSouthGroup) do
 Say(Heike, 'DH-Obj-a-1');
+
+Every 5$30 trigger eastBaseCaptured do
+begin
+wait(rand(2$00, 2$30));
+convoyStarted := true;
+End;
+
+Every 0$1 trigger convoyStarted do
+begin
+DialogueOn;
+SayRadio(Shariff, 'DShar-Convoy-1');
+Say(Heike, 'DH-Convoy-2');
+DialogueOff;
+
+PrepareConvoy;
+
+repeat
+ wait(rand(3$30, 6$30));
+ PrepareConvoy;
+ convoyCounter := convoyCounter - 1;
+until convoyCounter = 0;
+End;
+
+Every 0$1 trigger convoySavedCounter >= 10 do
+SayRadio(Omar, 'DOm-Fail-1');
+
+Every 0$1 trigger not ruNorthGroup and not ruSouthGroup do
+ChangeMissionObjectives('RaiderDone');
+
+Every 0$1 trigger convoyCounter = 0 and not ruConvoySquad do
+var tmp;
+begin
+ChangeMissionObjectives('ReinforcementsDone');
+
+InGameOn;
+
+Say(Heike, 'DH-end-1');
+
+wait(0$2);
+
+SayRadio(Shariff, 'DShar-end-2');
+
+if not ruNorthGroup and not ruSouthGroup then
+   begin
+   Say(Heike, 'DH-end-3');
+   end
+else
+   begin
+   Say(Heike, 'DH-end-a-3');
+   SayRadio(Shariff, 'DShar-end-a-4');
+   Say(Heike, 'DH-end-a-5');
+   InGameOff;
+
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0;
+
+   InGameOn;
+
+   Say(Heike, 'DH-end-a-6');
+   end;
+
+SayRadio(Shariff, 'DShar-end-3');
+
+if drugsTested then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 3 and FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) >= 2 then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if convoySavedCounter < [10, 8, 6][Difficulty] then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+SaveVariable(convoySavedCounter, '05_ConvoySavedCounter');
+SaveVariable(radarConstructed, '05_Radar');
+SaveVariable(drugsTested, '05_DrugsTested');
+SaveVariable(FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 3 and FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) >= 2, '05_RemoteControl');
+
+SaveCharacters(Heike, '05_Heike');
+
+if Aviradze then
+   SaveCharacters(Aviradze, '05_Aviradze');
+
+if Ibrahim  then
+   SaveCharacters(Ibrahim, '05_Ibrahim');
+
+if Kamil then
+   SaveCharacters(Kamil, '05_Kamil');
+
+if Sophia then
+   SaveCharacters(Sophia, '05_Sophia');
+
+if Kaia then
+   SaveCharacters(Kaia, '05_Kaia');
+
+if Givi then
+   SaveCharacters(Givi, '05_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '05_Mike');
+
+if Markov then
+   SaveCharacters(Markov, '05_Markov');
+
+if Kurt then
+   SaveCharacters(Kurt, '05_Kurt');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '05_others');
+
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]]);
+
+if tmp then
+   SaveCharacters(tmp, '05_apes');
+
+YouWin;
+End;

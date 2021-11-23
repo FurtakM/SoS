@@ -1,4 +1,4 @@
-Export crossRoadGuard, oilBaseGuard, ruNorthGroup, ruSouthGroup;
+Export crossRoadGuard, oilBaseGuard, ruNorthGroup, ruSouthGroup, ruConvoySquad;
 Export Function PrepareRussian;
 var i, un;
 begin
@@ -7,6 +7,7 @@ uc_nation := 3;
 
 crossRoadGuard := [];
 oilBaseGuard := [];
+ruConvoySquad := [];
 
 for i := 1 to 2 do
     begin
@@ -44,7 +45,23 @@ for i := 1 to [4, 6, 7][Difficulty] do
     un := CreateHuman;
     ruNorthGroup := Replace(ruNorthGroup, ruNorthGroup + 1, un);
     PlaceUnitArea(un, northGroupArea, false);
-    ComHold(un);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, [3, 4, 5][Difficulty]);
+    un := CreateHuman;
+    ruNorthGroup := Replace(ruNorthGroup, ruNorthGroup + 1, un);
+    PlaceUnitArea(un, northGroupArea, false);
+    end;
+
+// south
+for i := 1 to [6, 7, 7][Difficulty] do
+    begin
+    PrepareHuman(false, [1, 1, 2, 4, 1][rand(1, 5)], [3, 4, 5][Difficulty]);
+    un := CreateHuman;
+    ruSouthGroup := Replace(ruSouthGroup, ruSouthGroup + 1, un);
+    PlaceUnitArea(un, southGroupArea, false);
     end;
 End;
 
@@ -103,4 +120,136 @@ Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_distxy, 54, 77, 8]]) do
 begin
 ComExitBuilding(apeEngGroup);
 AddComAttackUnit(apeEngGroup, FilterAllUnits([[f_side, 2], [f_distxy, 54, 77, 8]])[1]);
+End;
+
+Export Function PrepareConvoy;
+var i, spawnPoint, dir, spawnArea, movePoints, un, tag;
+begin
+spawnPoint := rand(1, 2);
+spawnArea := [eastNorthSpawnArea, eastSouthSpawnArea][spawnPoint];
+movePoints := [
+   [ [159,25], [137,37], [123,55], [115,71], [106,88], [97,114], [75,146] ],
+   [ [206,135], [184,111], [154,97], [122,80], [109,78], [97,113], [75,147] ]
+][spawnPoint];
+dir := [4, 5][spawnPoint];
+
+case convoyCounter of
+     1..3: begin
+           uc_side := 3;
+           uc_nation := 3;
+
+           for i := 1 to [5, 6, 7][Difficulty] - convoyCounter do
+               begin
+               PrepareHuman(false, [1, 1, 1, 4][rand(1, 4)], [4, 5, 6][Difficulty]);
+               un := CreateHuman;
+               SetDir(un, dir);
+               PlaceUnitArea(un, spawnArea, false);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               SetTag(un, 1);
+
+               ComMoveXY(un, movePoints[1][1], movePoints[1][2]);
+
+               wait(0$2);
+               end;
+
+           for i := 1 to [3, 4, 4][Difficulty] do
+               begin
+               PrepareTank(3, 3, [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked, ru_heavy_tracked][rand(Difficulty, Difficulty + 2)], engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_gun, ru_heavy_gun][rand(1, Difficulty + 2)], 90);
+               un := CreateVehicle;
+               SetDir(un, dir);
+               PlaceUnitArea(un, spawnArea, false);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               PrepareMechanic(false, [3, 4, 5][Difficulty]);
+               un := CreateHuman;
+               PlaceHumanInUnit(un, ruConvoySquad[ruConvoySquad]);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               SetTag(un, 1);
+
+               ComMoveXY(un, movePoints[1][1], movePoints[1][2]);
+
+               wait(0$2);
+               end;
+           end;
+     4..7: begin
+           uc_side := 3;
+           uc_nation := 3;
+
+           for i := 1 to [2, 3, 4][Difficulty] do
+               begin
+               PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+               un := CreateHuman;
+               SetDir(un, dir);
+               PlaceUnitArea(un, spawnArea, false);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               SetTag(un, 1);
+
+               ComMoveXY(un, movePoints[1][1], movePoints[1][2]);
+
+               wait(0$2);
+               end;
+
+           for i := 1 to [2, 3, 3][Difficulty] do
+               begin
+               PrepareTank(3, 3, [ru_medium_wheeled, ru_medium_tracked][rand(1,2)], engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_gun][rand(1, Difficulty + 1)], 90);
+               un := CreateVehicle;
+               SetDir(un, dir);
+               PlaceUnitArea(un, spawnArea, false);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               PrepareMechanic(false, [3, 4, 5][Difficulty]);
+               un := CreateHuman;
+               PlaceHumanInUnit(un, ruConvoySquad[ruConvoySquad]);
+               ruConvoySquad := Replace(ruConvoySquad, ruConvoySquad + 1, un);
+
+               SetTag(un, 1);
+
+               ComMoveXY(un, movePoints[1][1], movePoints[1][2]);
+
+               wait(0$2);
+               end;
+           end;
+     end;
+
+
+repeat
+ wait(0$1);
+
+ for un in ruConvoySquad do
+     begin
+     if IsInArea(un, westSouthOutArea) then
+        begin
+        convoySavedCounter := convoySavedCounter + 1;
+        RemoveUnit(un);
+        ruConvoySquad := ruConvoySquad diff un;
+        break;
+        end;
+
+     if IsOk(un) and not HasTask(un) then
+        begin
+        tag := GetTag(un);
+
+        if GetDistUnitXY(un, movePoints[tag + 1][1], movePoints[tag + 1][2]) < 6 then
+           begin
+           SetTag(un, tag + 1);
+
+           if GetType(un) = unit_vehicle or GetClass(un) = 3 then
+              begin
+              AddComWait(un, 0$4);
+              AddComAgressiveMove(un, movePoints[tag + 1][1], movePoints[tag + 1][2]);
+              end;
+           end
+        else
+           begin             
+           if GetClass(un) = 4 and UnitFilter(ruConvoySquad, [[f_type, unit_human], [f_not, [f_lives, 1000]]]) then
+              ComHeal(un, UnitFilter(ruConvoySquad, [[f_type, unit_human], [f_not, [f_lives, 1000]]])[1])
+           else
+              ComAgressiveMove(un, movePoints[tag + 1][1], movePoints[tag + 1][2]);
+           end;
+        end;
+     end;
+until not ruConvoySquad;
 End;
