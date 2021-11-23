@@ -47,3 +47,60 @@ for i := 1 to [4, 6, 7][Difficulty] do
     ComHold(un);
     end;
 End;
+
+Export apeSoldGroup, apeEngGroup;
+Export Function PrepareWestBase;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+for i := 1 to 6 do
+    begin
+    PrepareHuman(false, [1, 4][rand(1, 2)], 0);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 54, 88, 12, false);
+    SetLives(un, 1);
+    end;
+
+uc_side := 3;
+uc_nation := 0;
+
+apeSoldGroup := [];
+apeEngGroup := [];
+
+for i := 1 to [4, 5, 6][Difficulty] do
+    begin
+    PrepareHuman(false, class_apeman_soldier, [3, 4, 5][Difficulty]);
+    un := CreateHuman;
+    apeSoldGroup := Replace(apeSoldGroup, apeSoldGroup + 1, un);
+
+    SetDir(un, rand(0, 5));
+
+    PlaceUnitXYR(un, 56, 82, 6, false);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, class_apeman_engineer, 4);
+    un := CreateHuman;
+    apeEngGroup := Replace(apeEngGroup, apeEngGroup + 1, un);
+
+    PlaceHumanInUnit(un, HexInfo(51, 77));
+    end;
+End;
+
+Every 0$1 trigger UnitFilter(apeSoldGroup, [[f_not, [f_lives, 600]], [f_not, [f_inside]]]) and IsOk(HexInfo(66, 89)) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(apeSoldGroup, [[f_not, [f_lives, 600]], [f_not, [f_inside]]]) do
+    ComEnterUnit(i, HexInfo(66, 89));
+End;
+                  
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_distxy, 54, 77, 8]]) do
+begin
+ComExitBuilding(apeEngGroup);
+AddComAttackUnit(apeEngGroup, FilterAllUnits([[f_side, 2], [f_distxy, 54, 77, 8]])[1]);
+End;

@@ -305,7 +305,283 @@ spottedCrossRoad := true;
 End;
 
 // dialog about radar
-Every 0$10 trigger FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+Every 0$10 trigger FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) and (IsOk(Kaia) or heikeSecondSquad) do
 begin
+DialogueOn;
 
+if Kaia then
+   CenterNowOnUnits(Kaia)
+else
+   CenterNowOnUnits(Heike);
+
+if IsOk(Kaia) then
+   Say(Kaia, 'DK-Cam-1')
+else
+   SayRandom(heikeSecondSquad, 'DArm-Cam-1', 'DArf-Cam-1');
+
+Say(Heike, 'DH-Cam-2');
+Say(Heike, 'DH-Cam-3');
+Say(Heike, 'DH-Cam-4');
+
+if IsOk(Kaia) then
+   Say(Kaia, 'DK-Cam-5')
+else
+   SayRandom(heikeSecondSquad, 'DArm-Cam-5', 'DArf-Cam-5');
+
+Say(Olaf, 'DO-Cam-6');
+Say(Olaf, 'DO-Cam-7');
+
+DialogueOff;
+
+ChangeMissionObjectives('Radar');
+
+SetTech(tech_radar, 2, state_enabled);
 End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_radar], [f_bweapon, ar_radar]]) do
+ChangeMissionObjectives('RadarDone');
+
+// dialog about remote control
+Every 0$30 trigger IsOk(Olaf) and IsOk(Aviradze) and GetTech(tech_radar, 2) = state_researched and (GetDistUnits(Aviradze, Heike) < 10 or IsInUnit(Aviradze)) do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-RC-1');
+Say(Aviradze, 'DA-RC-2');
+
+if IsOk(Kaia) then
+   begin
+   Say(Kaia, 'DK-RC-3');
+   Say(Aviradze, 'DA-RC-4');
+   Say(Kaia, 'DK-RC-5');
+   Say(Aviradze, 'DA-RC-6');
+   Say(Kaia, 'DK-RC-7');
+   Say(Aviradze, 'DA-RC-8');
+   end;
+
+Say(Heike, 'DH-RC-9');
+
+if IsOk(Markov) then
+   begin
+   Say(Markov, 'DMar-RC-10');
+   Say(Markov, 'DMar-RC-11');
+   end
+else
+   begin
+   Say(Olaf, 'DO-RC-a-10');
+   end;
+
+DialogueOff;
+
+ChangeMissionObjectives('RemoteControl');
+
+SetTech(tech_remCont, 2, state_enabled);
+End;
+
+// west base
+Every 0$1 trigger FilterUnitsInArea(westBaseArea, [f_side, 2]) do
+var i;
+begin
+PrepareWestBase;
+westBaseSpotted := true;
+
+wait(0$2);
+
+InGameOn;
+
+CenterOnXY(56, 77);
+PlaceSeeing(56, 77, 2, -12);
+
+wait(0$2);
+
+DialogueOn;
+
+Say(Heike, 'DH-Rbase-1');
+Say(Kaia, 'DK-Rbase-2');
+Say(Kaia, 'DK-Rbase-3');
+Say(Kaia, 'DK-Rbase-4');
+
+DialogueOff;
+
+RemoveSeeing(56, 77, 2);
+InGameOff;
+
+repeat
+ wait(0$1);
+until not apeSoldGroup and not apeEngGroup;
+
+wait(0$2);
+
+if IsOk(Kaia) then
+   begin
+   DialogueOn;  
+   CenterNowOnXY(56, 81);
+
+   Say(Kaia, 'DK-Rbase-5');
+
+   if IsOk(Givi) then
+      begin
+      Say(Givi, 'DG-Rbase-6');
+      Say(Givi, 'DG-Rbase-7');
+      Say(Kaia, 'DK-Rbase-8');
+      Say(Givi, 'DG-Rbase-9');
+      Say(Givi, 'DG-Rbase-10');
+      Say(Kaia, 'DK-Rbase-11');
+      end;
+
+   DialogueOff;
+   end;
+
+for i in FilterUnitsInArea(westBaseArea, [[f_side, 3], [f_type, unit_building]]) do
+    SetSide(i, 2);
+
+westBaseCaptured := true;
+End;
+
+// east base
+Every 0$1 trigger not oilBaseGuard or GetSide(ruEastBase) = 2 do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Goal-1');
+SayRadio(Shariff, 'DShar-Goal-2');
+Say(Heike, 'DH-Goal-3');
+
+if reinforcementsAllowed then
+   begin
+   SayRadio(Shariff, 'DShar-Goal-4');
+   Say(Heike, 'DH-Goal-5');
+   end;
+
+DialogueOff;
+
+eastBaseCaptured := true;
+
+ChangeMissionObjectives('BaseCaptured');
+
+if not reinforcementsAllowed then
+   exit;
+
+wait(10$00 + rand(-0$30, 0$30));
+
+PrepareReinforcements;
+End;
+
+// drugs
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_lab_biological]]) do
+begin
+Say(Givi, 'DG-Lab-1');
+End;
+
+Every 0$1 trigger GetTech(tech_StimDrugs, 2) = state_researched do
+begin
+Say(Givi, 'DG-Stim-1');
+Say(Heike, 'DH-Stim-2');
+Say(Givi, 'DG-Stim-3');
+Say(Heike, 'DH-Stim-4');
+
+drugsResearched := true;
+End;
+
+Every 0$1 trigger drugsResearched do
+var i, tmp, tag;
+begin
+tmp := [Heike, Givi, Olaf, Markov, Kaia, Sophia, Kurt, Kamil, Mike, Ibrahim, Aviradze];
+tag := ['H', 'G', 'O', 'Mar', 'K', 'S', 'Ks', 'Kam', 'M', 'I', 'A'];
+
+repeat
+ wait(0$1);
+
+ for i := tmp downto 1 do
+     if IsDying(tmp[i]) then
+        begin
+        DialogueOn;
+
+        CenterNowOnUnits(tmp[i]);
+        ForceSay(tmp[i], 'D' & tag[i] & '-Stim-a-1');
+
+        tmp := Delete(tmp, i);
+        tag := Delete(tag, i);
+
+        drugsTested := true;
+        DialogueOff;
+        end;
+until not tmp;
+End;
+
+// remote control
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) and FilterAllUnits([[f_side, 2], [f_weapon, control_remote]]) do
+remoteControlConstructed := true;
+
+Every 0$1 trigger remoteControlConstructed do
+var i, tmp, tag;
+begin
+tmp := [Heike, Givi, Olaf, Markov, Kaia, Sophia, Kurt, Kamil, Mike, Ibrahim, Aviradze];
+tag := ['H', 'G', 'O', 'Mar', 'K', 'S', 'Ks', 'Kam', 'M', 'I', 'A'];
+
+repeat
+ wait(0$1);
+
+ for i := tmp downto 1 do
+     if UnitsLinked(tmp[i]) then
+        begin
+        DialogueOn;
+        Say(tmp[i], 'D' & tag[i] & '-RC-a-1');
+
+        tmp := Delete(tmp, i);
+        tag := Delete(tag, i);
+        DialogueOff;
+
+        remoteControlTested := true;
+        end;
+until not tmp;
+End;
+
+Every 0$1 trigger remoteControlTested and IsOk(Markov) and not InBattle(2) do
+begin
+Say(Markov, 'DMar-RC-a-2');
+Say(Markov, 'DMar-RC-a-3');
+End;
+
+// Heike & Aviradze after Beria
+Every 0$1 trigger reinforcementsAllowed and GetDistUnits(Heike, Aviradze) < 8 and not InBattle(2) and IsOk(Aviradze) and IsOk(Heike) do
+begin
+if not IsInUnit(Aviradze) then
+   ComTurnUnit(Aviradze, Heike);
+
+if not IsInUnit(Heike) then
+   ComTurnUnit(Heike, Aviradze);
+
+wait(0$1);
+
+DialogueOn;
+
+CenterNowOnUnits(Aviradze);
+
+Say(Heike, 'DH-Beria-1');
+Say(Aviradze, 'DA-Beria-2');
+Say(Heike, 'DH-Beria-3');
+Say(Aviradze, 'DA-Beria-4');
+Say(Aviradze, 'DA-Beria-5');
+Say(Aviradze, 'DA-Beria-6');
+Say(Heike, 'DA-Beria-7');
+
+DialogueOff;
+
+SetTech(tech_weap2, 2, state_enabled);
+End;
+
+// Kaia Death
+Every 0$1 trigger GetLives(Kaia) < 10 do
+begin
+DialogueOn;
+ForceSay(Kaia, 'DK-Kdeath-1');
+Say(Heike, 'DH-Kdeath-2');
+DialogueOff;
+End;
+
+Every 0$1 trigger SeeGroup(2, ruNorthGroup) do
+Say(Heike, 'DH-Obj-1');
+
+Every 0$1 trigger SeeGroup(2, ruSouthGroup) do
+Say(Heike, 'DH-Obj-a-1');
