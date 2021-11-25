@@ -131,6 +131,10 @@ hc_name := '';
 InitHc;
 
 ComMoveXY(Aviradze, 215, 36);
+
+Say(Aviradze, 'DA-Arrive-1');
+Say(Heike, 'DH-Arrive-2');
+Say(Aviradze, 'DA-Arrive-3');
 End;
 
 Every 0$2 trigger baseConstructed do
@@ -656,7 +660,7 @@ DialogueOff;
 End;
 
 // see enemy lab
-Every 0$3 trigger See(2, ruLab) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) and not InBattle(2) do
+Every 0$3 trigger (See(2, ruLab) or GetSide(ruLab) = 2 or GetSide(beria) = 2) and IsOk(ruLab) and IsOk(Heike) and IsOk(Aviradze) do
 var i, tmp, tmp2, q, settings;
 begin
 DialogueOn;
@@ -667,11 +671,13 @@ CenterNowOnXY(111, 90);
 Say(Aviradze, 'DA-Cap-1');
 Say(Heike, 'DH-Cap-2');
 
+RemoveSeeing(111, 90, 2);
+
 DialogueOff;
 
 repeat
  wait(0$1);
-until (beriaDestroyed or GetSide(beria) = 2) and IsOk(ruLab) and IsOk(Aviradze);
+until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze);
 
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
 tmp := UnitFilter(tmp, [f_ok]);
