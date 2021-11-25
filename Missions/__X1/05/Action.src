@@ -336,6 +336,7 @@ DialogueOff;
 ChangeMissionObjectives('Radar');
 
 SetTech(tech_radar, 2, state_enabled);
+SetRestrict(b_ext_radar, 2, true);
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_radar], [f_bweapon, ar_radar]]) do
@@ -376,6 +377,7 @@ DialogueOff;
 ChangeMissionObjectives('RemoteControl');
 
 SetTech(tech_remCont, 2, state_enabled);
+SetRestrict(b_ext_radio, 2, true);
 End;
 
 // west base
@@ -436,6 +438,8 @@ for i in FilterUnitsInArea(westBaseArea, [[f_side, 3], [f_type, unit_building]])
     SetSide(i, 2);
 
 westBaseCaptured := true;
+
+SetRestrict(b_depot, 2, true);
 End;
 
 // east base
@@ -494,7 +498,7 @@ repeat
  wait(0$1);
 
  for i := tmp downto 1 do
-     if IsDying(tmp[i]) then
+     if GetLives(tmp[i]) < 250 then
         begin
         DialogueOn;
 
@@ -506,12 +510,13 @@ repeat
 
         drugsTested := true;
         DialogueOff;
+        break;
         end;
 until not tmp;
 End;
 
 // remote control
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) and FilterAllUnits([[f_side, 2], [f_weapon, control_remote]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) and FilterAllUnits([[f_side, 2], [f_control, control_remote]]) do
 remoteControlConstructed := true;
 
 Every 0$1 trigger remoteControlConstructed do
@@ -524,7 +529,7 @@ repeat
  wait(0$1);
 
  for i := tmp downto 1 do
-     if UnitsLinked(tmp[i]) then
+     if GetClass(tmp[i]) = 3 and UnitsLinked(tmp[i]) then
         begin
         DialogueOn;
         Say(tmp[i], 'D' & tag[i] & '-RC-a-1');
@@ -534,11 +539,12 @@ repeat
         DialogueOff;
 
         remoteControlTested := true;
+        break;
         end;
 until not tmp;
 End;
 
-Every 0$1 trigger remoteControlTested and IsOk(Markov) and not InBattle(2) do
+Every 0$1 trigger remoteControlTested and IsOk(Markov) do
 begin
 Say(Markov, 'DMar-RC-a-2');
 Say(Markov, 'DMar-RC-a-3');
@@ -587,7 +593,7 @@ Say(Heike, 'DH-Obj-1');
 Every 0$1 trigger SeeGroup(2, ruSouthGroup) do
 Say(Heike, 'DH-Obj-a-1');
 
-Every 5$30 trigger eastBaseCaptured do
+Every 0$1 trigger eastBaseCaptured or tick >= [7$00, 6$30, 6$00][Difficulty] do
 begin
 wait(rand(2$00, 2$30));
 convoyStarted := true;
@@ -603,10 +609,10 @@ DialogueOff;
 PrepareConvoy;
 
 repeat
- wait(rand(3$30, 6$30));
+ wait(rand(3$30, 5$30));
  PrepareConvoy;
  convoyCounter := convoyCounter - 1;
-until convoyCounter = 0;
+until convoyCounter <= 0;
 End;
 
 Every 0$1 trigger convoySavedCounter >= 10 do
