@@ -5,6 +5,200 @@ setTexture(menu, 'mainbackground-l.png');
 logoVisible(false);
 setVisible(classic_logo, false);
 
+-- override menu
+sgui_deletechildren(menu.window.ID);
+
+menu.window2 = getElementEX(
+    menu,
+    anchorNone,
+    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 92, 194, 184),
+    true,
+    {}
+);
+
+setTexture(menu.window2, 'classic/edit/mainmenu2.png');
+setVisible(menu.window2, false);
+
+menu.window3 = getElementEX(
+    menu,
+    anchorNone,
+    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 92, 194, 184),
+    true,
+    {}
+);
+
+setTexture(menu.window3, 'classic/edit/mainmenu2.png');
+setVisible(menu.window3, false);
+
+-- buttons
+menu.window.user = clButton(
+    menu.window, 
+    12, 
+    19, 
+    170,
+    30,
+    loc(TID_Main_Menu_User) .. ': ' .. PROFILE_NAME,
+    'showProfile(1);',
+    {}
+);
+
+menu.window.play = clButton(
+    menu.window, 
+    12, 
+    61, 
+    170,
+    30,
+    loc(TID_Main_Menu_Play), 
+    'showMenuButton(2);',
+    {}
+);
+
+menu.window.options = clButton(
+    menu.window, 
+    12, 
+    145, 
+    170,
+    30, 
+    loc(TID_Main_Menu_Options), 
+    'showOptions(1);',
+    {}
+);
+
+menu.window.mods = clButton(
+    menu.window, 
+    12, 
+    187,
+    170,
+    30, 
+    loc(TID_MODS), 
+    'showMods(1);',
+    {}
+);
+
+menu.window.sospedia = clButton(
+    menu.window, 
+    12, 
+    103, 
+    170,
+    30, 
+    'Sospedia', 
+    'showMenuButton(3);',
+    {}
+);
+
+menu.window.credits = clButton(
+    menu.window, 
+    12, 
+    229, 
+    170,
+    30, 
+    loc(TID_Main_Menu_Extras_Credits), 
+    'showCredits();',
+    {}
+);
+
+menu.window.quit = clButton(
+    menu.window, 
+    12, 
+    271,
+    170,
+    30,  
+    loc(TID_Main_Menu_Quit), 
+    'exit();',
+    {}
+);
+
+menu.window2.campaign = clButton(
+    menu.window2, 
+    12, 
+    19,
+    170,
+    30,  
+    loc(TID_Main_Menu_Campaign), 
+    'showCampaign(1)',
+    {}
+);
+
+menu.window2.multiplayer = clButton(
+    menu.window2, 
+    12, 
+    61, 
+    170,
+    30, 
+    loc(TID_Main_Menu_Multiplayer), 
+    'showMultiplayer(1);',
+    {
+        disabled = true
+    }
+);
+
+menu.window2.skirmish = clButton(
+    menu.window2, 
+    12, 
+    103,
+    170,
+    30,  
+    loc(TID_Main_Menu_Skirmish), 
+    'showSkirmishWindow(1);',
+    {}
+);
+
+menu.window2.back = clButton(
+    menu.window2, 
+    12, 
+    145,
+    170,
+    30,  
+    loc(TID_Main_Menu_Campaign_Back), 
+    'showMenuButton(1);',
+    {}
+);
+
+menu.window3.web = clButton(
+    menu.window3, 
+    12, 
+    19, 
+    170,
+    30, 
+    loc(TID_Website), 
+    'OW_SOS_CLICKED("");',
+    {}
+);
+
+menu.window3.biographies = clButton(
+    menu.window3, 
+    12, 
+    61, 
+    170,
+    30, 
+    loc(TID_Biographies), 
+    '',
+    {}
+);
+
+menu.window3.achivs = clButton(
+    menu.window3, 
+    12, 
+    103, 
+    170,
+    30, 
+    loc(TID_ACHIEVEMENTS), 
+    'showAchivs(1);',
+    {}
+);
+
+menu.window3.back = clButton(
+    menu.window3, 
+    12, 
+    145,
+    170,
+    30,  
+    loc(TID_Main_Menu_Campaign_Back), 
+    'showMenuButton(1);',
+    {}
+);
+
+
 -- footer
 footer = getElementEX(
     menu,
@@ -52,7 +246,7 @@ footer.modVer = getLabelEX(
     }
 );
 
-footer.website = getLabelEX(
+--[[footer.website = getLabelEX(
 	footer,
 	anchorL,
 	XYWH(10, 0, 320, 14),
@@ -86,12 +280,13 @@ footer.contact = getLabelEX(
         scissor = true,
         font_size = 14
 	}
-);
+);--]]
 
 -- @override
 function showMenuButton(windowNumber)
     setVisible(menu.window, false);
     setVisible(menu.window2, false);
+    setVisible(menu.window3, false);
     setVisible(profilebar, false);
 
     if (windowNumber == 0) then
@@ -111,5 +306,9 @@ function showMenuButton(windowNumber)
 
     if (windowNumber == 2) then
         setVisible(menu.window2, true);
+    end;
+
+    if (windowNumber == 3) then
+        setVisible(menu.window3, true);
     end;
 end;

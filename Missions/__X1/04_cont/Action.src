@@ -105,7 +105,7 @@ ChangeMissionObjectives('Prepare');
 
 SaveForQuickRestart;
 
-wait(0$30);
+wait(0$10);
 
 if not Aviradze then
    exit;
@@ -343,32 +343,19 @@ Every 0$1 trigger russianAlert and not allowHeikeAttack do
 begin
 PlaceSeeing(GetX(russianAlert), GetY(russianAlert), 2, -6);
 CenterNowOnUnits(russianAlert);
-
-DialogueOn;
-
-if spottedByPatrol then
-   Say(Heike, 'DH-Spot-f-3');
-
-dwait(0$2);
-
+wait(0$1);
 YouLost('Spotted');
 End;
 
 Every 0$5 trigger SeeEnemy([3, 6], 2, russianPatrol) do
 russianAlert := SeeEnemy([3, 6], 2, russianPatrol);
 
+Every 0$1 trigger FilterAllUnits([[f_side, 6], [f_btype, b_bunker], [f_not, [f_lives, 1000]]]) do
+russianAlert := FilterAllUnits([[f_side, 6], [f_btype, b_bunker], [f_not, [f_lives, 1000]]])[1];
+
 Every 0$1 trigger russianAlert do
 var i, tmp, towers, noncombat;
 begin
-tmp := UnitFilter(kirovBaseSquad, [[f_class, 1], [f_inside]]);
-towers := FilterAllUnits([[f_side, 6], [f_btype, b_bunker]]);
-
-for i := 1 to tmp do
-    begin
-    ComExitBuilding(tmp[i]);
-    AddComEnterUnit(tmp[i], towers[i]);
-    end;
-
 noncombat := Popov union UnitFilter(kirovBaseSquad union beriaBaseSquad, [f_not, [f_class, 1]]);
 
 for i in noncombat do
@@ -376,6 +363,10 @@ for i in noncombat do
     if IsInUnit(i) then
        ComExitBuilding(i);
 
+    AddComMoveXY(i, 114, 97);
+    AddComMoveXY(i, 99, 128);
+    AddComMoveXY(i, 91, 145);
+    AddComMoveXY(i, 82, 153);
     AddComMoveToArea(i, westEscapeArea);
     end;
 
@@ -387,6 +378,9 @@ SayRadio(Burlak, 'D9a-Bur-1');
 SayRadio(Kurin, 'D9a-Kur-2');
 
 omicronFall := true;
+
+wait(0$3);
+
 retreatFromOmicron := true;
 End;
 
@@ -592,7 +586,12 @@ repeat
      if IsInArea(i, southRoadArea) then
         RemoveUnit(i)
      else
-        ComMoveXY(i, 208, 162);
+        begin
+        if GetClass(i) = 3 and not IsInUnit(i) and FilterAllUnits([[f_side, 5], [f_lives, 251], [f_type, unit_vehicle], [f_empty]]) then
+           ComEnterUnit(i, FilterAllUnits([[f_side, 5], [f_type, unit_vehicle], [f_empty]])[1])
+        else
+           ComMoveXY(i, 208, 162);
+        end;
 until not FilterAllUnits([[f_side, 5], [f_type, unit_human]]);
 End;
 
@@ -677,7 +676,7 @@ DialogueOff;
 
 repeat
  wait(0$1);
-until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze);
+until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze) and not InBattle(2);
 
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
 tmp := UnitFilter(tmp, [f_ok]);
