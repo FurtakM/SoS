@@ -33,6 +33,20 @@ TID_Main_Menu_Filter_Achiv = 5020;
 TID_Main_Menu_Filter_Achiv_All = 5021;
 TID_Main_Menu_Filter_Achiv_Done = 5022;
 TID_Main_Menu_Filter_Achiv_Undone = 5023;
+TID_Main_Menu_Options_Sound_Label = 5024;
+TID_Main_Menu_Options_Main_Screen = 5025;
+TID_Main_Menu_Options_Graphics_Label = 5026;
+TID_Main_Menu_Options_Controls_Options = 5027;
+TID_Main_Menu_Options_Controls_Label = 5028;
+TID_Main_Menu_Options_Game_Label = 5029;
+TID_Main_Menu_Options_Game_HoldGround = 5030;
+TID_Main_Menu_Options_Game_Wounded = 5031;
+TID_Main_Menu_Options_Game_NonCombat = 5032;
+TID_Main_Menu_Options_Game_Vehicles = 5033;
+TID_Main_Menu_Options_Interface_Options = 5034;
+TID_Main_Menu_Options_Interface_Label = 5035;
+TID_Main_Menu_Options_Objectives_Desc = 5036;
+TID_Main_Menu_SteamOverlay_Desc = 5037;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -94,18 +108,13 @@ function addToArray(array, element)
 end;
 
 function inArray(array, element)
-    if (array == nil or #array == 0) then
-        return false;
-    end;
+   for i = 1, #array do
+      if array[i] == element then 
+         return true;
+      end;
+   end;
 
-
-    for i = 1, #array do
-        if array[i] == element then 
-            return true;
-        end;
-    end;
-
-    return false;
+   return false;
 end;
 
 function split(source, delimiters)
@@ -161,6 +170,23 @@ function getAudioLanguages()
         'Polski',
         'Español',
     }
+end;
+
+function getSubtitles()
+    return {
+        loc(TID_Options_Subtitles_Off),
+        loc(TID_Options_Subtitles_Video),
+        loc(TID_Options_Subtitles_Audio),
+        loc(TID_Options_Subtitles_Both)
+    };
+end;
+
+function getWindowedList()
+    return {
+        loc(TID_Options_Windowed_Fullscreen),
+        loc(TID_Options_Windowed_Window),
+        loc(TID_Options_Windowed_Bordeless)
+    };
 end;
 
 function getAchivFilter()
