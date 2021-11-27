@@ -58,3 +58,5 @@ TID_Credits_Thanks_2 = 6109;
 TID_Credits_Thanks_3 = 6110;
 TID_Credits_Thanks_4 = 6111;
 TID_Credits_Thanks_5 = 6112;
+
+TID_Biographies = 8000;

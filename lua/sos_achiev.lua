@@ -1380,3 +1380,23 @@ function showAchievment(name, hidden, cP, gP)
         -- displayAchivementWindow(name);
     end;
 end;
+
+function showAchivs(mode)
+    if mode > 0 then
+        -- categories
+        achivCategoryclButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'changeCategory(' .. 0 .. ')', 0);
+
+        -- achievsCategoryName = { [1] = loc(TID_Achievements_US), [2] = loc(TID_Achievements_AR), [3] = loc(TID_Achievements_RU), [4] = loc(TID_Achievements_Ally), [5] = loc(TID_Achievements_Leg), [6] = loc(TID_Achievements_ACamp), [7] = loc(TID_Achievements_MP), [8] = loc(TID_Achievements_Skir) ,[9] = loc
+        for i = 1, table.getn(achievsCategoryName) do
+            achivCategoryclButton(10, 30 + i * 40, achievsCategoryName[i], 'changeCategory(' .. i .. ')', i);
+        end;
+
+        displayAchivs(0, 0, 0);
+
+        showMenuButton(0);
+        setVisible(menu.window_achivs, true);
+    else
+        showMenuButton(3);
+        setVisible(menu.window_achivs, false);
+    end;
+end;

@@ -586,7 +586,12 @@ repeat
      if IsInArea(i, southRoadArea) then
         RemoveUnit(i)
      else
-        ComMoveXY(i, 208, 162);
+        begin
+        if GetClass(i) = 3 and not IsInUnit(i) and FilterAllUnits([[f_side, 5], [f_lives, 251], [f_type, unit_vehicle], [f_empty]]) then
+           ComEnterUnit(i, FilterAllUnits([[f_side, 5], [f_type, unit_vehicle], [f_empty]])[1])
+        else
+           ComMoveXY(i, 208, 162);
+        end;
 until not FilterAllUnits([[f_side, 5], [f_type, unit_human]]);
 End;
 
@@ -671,7 +676,7 @@ DialogueOff;
 
 repeat
  wait(0$1);
-until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze);
+until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze) and not InBattle(2);
 
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
 tmp := UnitFilter(tmp, [f_ok]);
