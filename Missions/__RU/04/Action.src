@@ -1,0 +1,84 @@
+Export Function MissionIntro;
+var i, unit;
+begin
+    CenterNowOnUnits(Burlak);
+
+    SayRadio(dialogRus, 'D1-RSol1-1');
+    SayRadio(Platonov, 'D1-Pla-1');
+    Say(Burlak, 'D1-Bur-1');
+    SayRadio(Platonov, 'D1-Pla-2');
+    Say(Burlak, 'D1-Bur-2');
+
+    SelectCharacters;
+
+    InGameOff;
+
+    ChangeMissionObjectives('M1');
+
+    SaveForQuickRestart;
+
+    for unit in popovTeam do
+    begin
+        for i := 3 to russianCargoPath1 do
+            AddComMoveXY(unit, russianCargoPath1[i][1], russianCargoPath1[i][2]);
+        wait(0$01);   
+    end;
+
+
+end;
+
+// Remove russian units from map
+every 0$1 do
+var unit, driver;
+begin
+    enable;
+    Display_strings = ['ewakuacja', ewakuowane];
+    if NOT FilterUnitsInArea(ExitMapArea, [f_side, 6]) AND NOT FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) then
+        exit;
+
+    for unit in FilterUnitsInArea(ExitMapArea, [f_side, 6]) do
+    begin
+        RemoveUnit(unit);
+
+        if NOT unit IN popovTeam then
+            ewakuowane = ewakuowane + 1;
+    end;
+        
+    
+    if canExitMap then
+        for unit in FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        begin
+            // save units
+        end;
+end;
+
+// Dialog if player start build depot in wrong place - dialog execute in event
+Export Function Dial_DepotInWrongPlace(building);
+begin
+    CenterNowOnUnits(building);
+    DialogueOn;
+    SayRadio(Platonov, 'D2a-Pla-1');
+    DialogueOff;
+
+    RemoveUnit(building);
+end;
+
+// Near Kuzmov
+every 0$1 trigger GetSide(Kuzmov) = 6 do
+var unit;
+begin
+    enable;
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+        if GetDistUnits(unit, Kuzmov) < 9 then
+            SetSide(Kuzmov, 3);
+end;
+
+// Dialog after build depot - dialog execute in event
+Export Function Dial_FinishDepot;
+begin
+    startEvacuation = true;
+    
+    Say(Burlak, 'D2-Bur-1');
+    SayRadio(Platonov, 'D2-Pla-1');
+end;
