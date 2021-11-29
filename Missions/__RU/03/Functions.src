@@ -106,6 +106,54 @@ begin
    result = 0;
 end;
 
+// Summary: Get available weapons to construct vehicles or place weapon on turret, return only researched weapons.
+// Input: (int)side, (int)nation
+// Output: (int[]) availableWeaponsForCurrentNation
+// Example: GetAvailableWeapons(3, 2);
+Export Function GetAvailableWeapons(side, nation);
+var i, resultWeapons, weaponTechs;
+begin
+    weaponTechs = [tech_AdvMet, tech_AdvRocket, tech_Flame, tech_Gatling, tech_Gun, tech_Lapser, tech_LasDouble, tech_Laser, tech_Rocket];
+    resultWeapons = [];
+
+    for i := 1 to weaponTechs do
+    begin
+        if TechNationAvailable(weaponTechs[i], nation) AND GetTech(weaponTechs[i], side) = state_researched then
+            case nation of
+                nation_american:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_arabian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_russian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+            end;
+            
+    end;
+
+    result = resultWeapons;
+end;
+
+// Summary: Get weapon name for current nation using tech name.
+// Input: (int)tech, (int)nation
+// Output: (int)weapon
+// Example: GetNationWeaponByTech(tech_gun, 3);
+Export Function GetNationWeaponByTech(tech, nation);
+begin
+    case tech of
+        tech_AdvMet: result = [us_heavy_gun, '', ru_heavy_gun][nation];
+        tech_AdvRocket: result = ['', '', ru_rocket][nation];
+        tech_Flame: result = ['', ar_flame_thrower, ''][nation];
+        tech_Gatling: result = [us_gatling_gun, ar_gatling_gun, ru_gatling_gun][nation];
+        tech_Gun: result = [us_double_gun, ar_gun, ru_gun][nation];
+        tech_Lapser: result = ['', '', ru_time_lapser][nation];
+        tech_LasDouble: result = [us_double_laser, '', ''][nation];
+        tech_Laser: result = [us_laser, '', ''][nation];
+        tech_Rocket: result = [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nation];
+    end;
+end;
+
 Export Function PlaceHumanInBunker(un, bunker);
 var dir;
 begin
@@ -156,13 +204,17 @@ begin
 end;
 
 Export function ResAllTechs(side, lab, nation);
-var i, tech, cout, ru_tech_list;
+var i, tech, cout, ru_tech_list, am_tech_list;
 begin
 
    ru_tech_list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+   am_tech_list = GetTechNation(1, 1, state_enabled);
 
   For i = 1 to ru_tech_list do
     If GetTech(ru_tech_list[i], side) = state_enabled and TechNationAvailable(ru_tech_list[i], nation) = true then AddComResearch(lab, ru_tech_list[i]);
+
+  For i = 1 to am_tech_list do
+    If GetTech(am_tech_list[i], side) = state_enabled and TechNationAvailable(am_tech_list[i], nation) = true then AddComResearch(lab, am_tech_list[i]);
 
 end;
 

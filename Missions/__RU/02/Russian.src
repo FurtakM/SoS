@@ -4,7 +4,7 @@ Export other_survivors; // Other survivors from 01
 Export Kurin, Belkov2, otherKirovUnits;
 Export Kovalyuk, randomMech;
 Export kirovVehicle;
-Export belkovTeam; // 4 sold + Belkov + 1 sci (no Jelena)
+Export belkovTeam; // 4 sold + Belkov + 1 sci (Jelena or random)
 Export removedBelkovUntisSaved;
 Export removedBelkovVehicleSaved; // [Chassis, Engine, Control, Weapon, Fuel]
 
@@ -53,7 +53,15 @@ begin
 
         belkovTeam = belkovTeam ^ Belkov2;
     end;
-        
+
+    if TestCharacters('02_TmpKirilenkova') then
+    begin
+        Kirilenkova = CreateCharacter('02_TmpKirilenkova');
+        PlaceUnitArea(Kirilenkova, BelkovReturnArea, false);
+
+        belkovTeam = belkovTeam ^ Kirilenkova;
+    end;
+
     others = CreateCharacterSet('02_TmpBelkovTeam');
 
     for unit in others do
@@ -121,7 +129,10 @@ begin
 
         otherKirovUnits = otherKirovUnits ^ un;
 
-        PlaceHumanInUnit(un, ru2_arm2);
+        if FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_breastwork], [f_empty]]) then
+            PlaceSolBun(un, FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_breastwork], [f_empty]])[1])
+        else
+            PlaceHumanInUnit(un, ru2_arm2);
     end;
 
     PrepareHuman(false, 1, rand(1, 3));

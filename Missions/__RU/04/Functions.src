@@ -4,7 +4,7 @@
 //   - false if unit not exist in save
 //   - true if unit already exist in save
 // example: JMM := PrepareUnitExt('JMM', false);
-Export Function PrepareUnitExt(ident, exist_mode);
+Export Function PrepareUnitExt(ident, exist_mode, class);
 var unit;
 begin
 
@@ -13,5 +13,87 @@ if exist_mode then
   else
    unit := NewCharacter(ident);
 
+   if class then
+      SetClass(unit, class);
+
 result := unit;
 End;
+
+// Place units from list on area with spawnMode (materialize)
+// Input: [list] units, [name] area, [bool] spawnMode
+// Example: PlaceUnitsArea([Burlak, Gnyevko, Kovalyuk], SpawnArea, false);
+Export Function PlaceUnitsArea(units, area, spawnMode);
+var unit;
+begin
+   for unit in units do
+      PlaceUnitArea(unit, area, spawnMode);
+end;
+
+// Summary: Before calling the SaveCharacters function, checks if the character given in the argument is OK and if it is on the side 
+// Input: Character, characterStringID
+// Example: ExtSaveCharacter(Burlak, 'MyBurlak');
+Export Function ExtSaveCharacter(character, characterStringID, side);
+begin
+   if GetSide(character) = side AND IsOK(character) then
+      SaveCharacters(character, missionPrefix&characterStringID);
+end;
+
+// Summary: Before calling the SaveCharacters function, checks if the characters list given in the argument is OK and if it is on the side 
+// Input: Characters, characterStringID
+// Example: ExtSaveCharacter([FilterAllUnits...], 'MySavedTeam');
+Export Function ExtSaveCharacters(characters, charactersStringID, side);
+var unit, resultCharactersToSave;
+begin
+   resultCharactersToSave = [];
+
+   for unit in characters do
+      if GetSide(unit) = side AND IsOK(unit) then
+         resultCharactersToSave = resultCharactersToSave ^ unit;
+
+   SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
+end;
+
+Export function SelectCharacters;
+var i, charsToChoose, selectedPeople, others;
+begin
+   charsToChoose = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]);
+   charsToChoose = charsToChoose diff Burlak;
+   charsToChoose = charsToChoose diff Popov;
+
+   selectedPeople = CharacterSelection('text', 8, 8,
+                                [sel_change_class, Burlak,
+                                 sel_dont_change_class,
+                                 sel_not_hired,sel_changeable, sel_change_class]^charsToChoose^
+                                [sel_dont_change_class, sel_not_changeable, Popov],
+                                [class_soldier, class_mechanic, [class_engineer, 1], class_scientistic ]);
+
+   SetSide(charsToChoose, 6);
+   SetSide(Popov, 6);
+   SetSide(selectedPeople, 3);
+
+   burlakTeam = selectedPeople;
+   popovTeam = FilterAllUnits([[f_side, 6], [f_type, unit_human]]);
+   popovTeam = popovTeam diff Kuzmov;
+
+   if NOT Gnyevko IN selectedPeople then
+      ExtSaveCharacter(Gnyevko, 'Gnyevko', 6);
+
+   if NOT Kovalyuk IN selectedPeople then   
+      ExtSaveCharacter(Kovalyuk, 'Kovalyuk', 6);
+
+   if NOT Kirilenkova IN selectedPeople then
+      ExtSaveCharacter(Kirilenkova, 'Kirilenkova', 6);
+
+   if NOT Scholtze IN selectedPeople then
+      ExtSaveCharacter(Scholtze, 'Scholtze', 6);
+
+   if NOT Belkov IN selectedPeople then
+      ExtSaveCharacter(Belkov, 'Belkov', 6);
+
+   if NOT Belkov2 IN selectedPeople then
+      ExtSaveCharacter(Belkov2, 'Belkov2', 6);
+
+   others = popovTeam diff Popov;
+
+   ExtSaveCharacters(others, 'other_survivors_with_popov', 6);
+end;

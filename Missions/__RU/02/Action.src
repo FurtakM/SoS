@@ -449,11 +449,17 @@ begin
     for unit in FilterUnitsInArea(BelkovExitArea, [f_side, 6]) do
     begin
 
-        if GetType(unit) = unit_human AND (NOT unit = Belkov AND NOT unit = Belkov2) then
+        if GetType(unit) = unit_human AND (NOT unit = Belkov AND NOT unit = Belkov2 AND NOT unit = Kirilenkova) then
         begin
             removedBelkovUntis = removedBelkovUntis + 1;
             removedBelkovUntisSaved = removedBelkovUntisSaved ^ unit;
 
+            RemoveUnit(unit);
+        end;
+
+        if unit = Kirilenkova then
+        begin
+            SaveCharacters(Kirilenkova, '02_TmpKirilenkova');
             RemoveUnit(unit);
         end;
 
@@ -570,26 +576,44 @@ begin
     ComStop(belkovTeam);
     AddComTurnUnit(belkovTeam, trapCommander);
 
+    AddComMoveXY(FilterUnitsInArea(TrapNorthGroupArea, [[f_side, 1], [f_type, unit_human]]), 111, 13);
+
     music_class = music_combat;
 
+    wait(0$1);
+
+    DialogueOn;
     Say(trapCommander, 'D14-Sol1-1');
     Say(tmpBelkov, 'D14-Bel-1');
+    DialogueOff;
 
     immortalBelkovTeam = true;
+
+    SetAttitude(6, 1, att_enemy, true);
+
+    ComMoveXY(belkovTeam, 107, 5);
+    ComMoveXY(kirovVehicle, 107, 5);
+
+    wait(0$2);
+
+    ComMoveXY(belkovTeam, 101, 19);
+    ComMoveXY(kirovVehicle, 101, 19);
+
+    wait(0$5);
 
     ComExitVehicle(tmpBelkov);
     wait(0$1);
     ComEnterUnit(trapCommander, kirovVehicle);
     AddComHold(trapTeam);
 
-    SetAttitude(6, 1, att_enemy, true);
-
-    ComMoveToArea(belkovTeam, BelkovRetreatArea);
+    ComMoveXY(belkovTeam, 88, 18);
 
     repeat
         wait(0$1);
         CenterNowOnUnits(tmpBelkov);
     until IsInArea(tmpBelkov, BelkovRetreatArea);
+
+    ComMoveXY(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 118, 25);
 
     SayRadio(tmpBelkov, 'D14-Bel-1a');
     SayRadio(Kurin, 'D14-Kur-1');

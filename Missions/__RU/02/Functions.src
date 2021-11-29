@@ -151,6 +151,20 @@ begin
      result = un;
 End;
 
+
+Export Function PlaceSolBun(un, b);
+var dir;
+begin
+     dir := GetDir(b)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, b);
+
+     result = un;
+End;
+
 // SaveVariable([GetChassis(tmp[2]),GetEngine(tmp[2]),GetControl(tmp[2]),GetWeapon(tmp[2]), GetLives(tmp[2])], '02_vehicles_1');
 Export Function SaveVehicles(vehicles, ident);
 var i, tmp;
@@ -237,11 +251,15 @@ begin
 
          PlaceHumanInUnit(unit, ru2_arm2);
       end;
+   end; 
+
+   if TestCharacters('01_Kirilenkova') then
+      belkovTeam = belkovTeam ^ Kirilenkova
+   else
+   begin
+      belkovTeam = belkovTeam ^ UnitFilter(otherKirovUnits, [[f_class, class_scientistic]])[1];
+      otherKirovUnits = otherKirovUnits diff UnitFilter(otherKirovUnits, [[f_class, class_scientistic]])[1];
    end;
-
-   belkovTeam = belkovTeam ^ UnitFilter(otherKirovUnits, [[f_class, class_scientistic]])[1];
-   otherKirovUnits = otherKirovUnits diff UnitFilter(otherKirovUnits, [[f_class, class_scientistic]])[1];
-
 end;
 
 Export Function PlatonovSendSupport;
