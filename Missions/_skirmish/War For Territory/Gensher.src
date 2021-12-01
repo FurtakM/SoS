@@ -1,6 +1,6 @@
 Export Gensher, gensher_side;
 Export Function PrepareGensher;
-var i, tmp;
+var i, tmp, un;
 begin
 gensher_side := 2;
 
@@ -9,6 +9,26 @@ uc_nation := 2;
 
 tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [1500, 300, 30], [4, 4, 4, 4]);
 mc_bases := Replace(mc_bases, 2, tmp);
+
+// hill
+tmp := FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]]);
+
+for i in tmp do
+    begin
+    PrepareHuman(false, 1, [4, 3, 3][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, 1);
+    PlaceHumanInUnit(un, i);
+    end;
+
+// mines
+tmp := AreaToList(gensher_mines, 0);
+
+for i = 1 to tmp[1] do
+    begin
+    PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
+    staticMines := Insert(staticMines, staticMines + 1, [tmp[1][i], tmp[2][i]]);
+    end;
 End;
 
 
@@ -58,4 +78,34 @@ MC_SetBuildingList(2, [
 MC_SetLabKind(2, [b_lab_weapon, b_lab_opto, b_lab_biological, b_lab_siberium]);
 MC_SetFactoryExtension(2, 11, 7, 2, [b_ext_stitch, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
 MC_SetUpgradeBuilding(2, b_depot);
+End;
+
+// Trigger explosion of static mines
+Every 10 trigger staticMines and FilterUnitsInArea(gensher_mines, [f_enemy, 2]) do
+var i, j, tmp, x, y;
+begin
+enable;
+
+tmp := FilterUnitsInArea(gensher_mines, [f_enemy, 2]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    x := GetX(i);
+    y := GetY(i);
+
+    if MineAtPos(x, y) then
+       begin
+       LaunchMineAtPos(x, y, 8);
+
+       for j = 1 to staticMines do
+           if staticMines[j][1] = x and staticMines[j][2] = y then
+              begin
+              staticMines := Delete(staticMines, j);
+              break;
+              end;
+       end;
+    end;
 End;
