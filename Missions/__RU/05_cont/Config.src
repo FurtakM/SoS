@@ -1,0 +1,67 @@
+// InitMapConfig execute three func base config and with specific for current mission and develop mode.
+export Function InitMapConfig;
+begin
+    BaseMapConfig;
+    MissionMapConfig;
+end;
+
+export animalsAmount, animalsStats, animalsAgression, missionPrefix, previousMissionPrefix, debugMode;
+Function BaseMapConfig;
+begin
+    // Base config
+    // Amount of animals: ape, phororhacos, tiger, eohippus, mastodonts
+    animalsAmount = [4, 3, 1, 0, 0];
+
+    // Animals stats
+    animalsStats = [2, 2, 2, 2];
+
+    // Animals agression
+    animalsAgression = [rand(-5, 5)];
+
+    // Develop mode
+    debugMode = 0;
+
+    //Current and previous map prefix, if its mission 1 set for previous ''
+    missionPrefix = '05_';
+    previousMissionPrefix = '04_';
+end;
+
+Export enemySkillLevel, arabBreakthrough;
+Function MissionMapConfig;
+begin
+    // Specific for current mission
+
+    // Enemy skill level
+    enemySkillLevel = [1, 2, 3][Difficulty];
+
+    // Time to break through arabian def
+    arabBreakthrough = [100$0, 100$0, 100$0];
+end;
+
+every 0$1 trigger debugMode do
+var i;
+begin
+    enable;
+    Display_strings = ['#Ru03-1', counter_test];
+    counter_test = counter_test + 0$01;
+    FogOff(your_side);
+     
+   for i in FilterAllUnits([[f_side, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        SetLives(i, 1000);
+  
+    for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
+    begin
+        SetSkill(i, skill_combat, 10);
+        SetSkill(i, skill_engineering, 10);
+        SetSkill(i, skill_mechanical, 10);
+        SetSkill(i, skill_scientistic, 10);
+    end;
+
+    for i in FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    begin
+        SetResourceType(GetBase(i), mat_cans, 9999);
+        SetResourceType(GetBase(i), mat_oil, 9999);
+        SetResourceType(GetBase(i), mat_siberit, 9999);
+    end;
+     
+end;

@@ -1,1 +1,73 @@
-//
+Export Function FinishMission;
+begin
+    SetRewards;
+    SavePlayerCharacters;
+    SaveGlobalVariables;
+
+    YouWin;
+end;
+
+
+Function SetRewards;
+var unitsToReward;
+begin
+
+    // Medals
+    if NOT FilterAllUnits([[f_side, 3], [f_type, unit_building]])  then
+        AddMedal('Dismantle',1)
+    else
+        AddMedal('Dismantle',-1);
+
+    if killedArabianUnits > 30 then
+    begin
+        AddMedal('EnemyLosses',1);
+        heikeHeavyLosses = true;
+    end    
+    else
+        AddMedal('EnemyLosses', -1);
+
+    if NOT lostUnits then
+        AddMedal('lostUnits',1)
+    else
+        AddMedal('lostUnits', -1);
+
+    GiveMedals('Main');
+
+    unitsToReward = [];
+    
+    if GetSide(Burlak) = 3 then unitsToReward = unitsToReward ^ Burlak;
+    if GetSide(Gnyevko) = 3 then unitsToReward = unitsToReward ^ Gnyevko;
+    if GetSide(Kirilenkova) = 3 then unitsToReward = unitsToReward ^ Kirilenkova;
+    if GetSide(Kovalyuk) = 3 then unitsToReward = unitsToReward ^ Kovalyuk;
+    if GetSide(Belkov) = 3 then unitsToReward = unitsToReward ^ Belkov;
+    if GetSide(Belkov2) = 3 then unitsToReward = unitsToReward ^ Belkov2;
+    if GetSide(Scholtze) = 3 then unitsToReward = unitsToReward ^ Scholtze;
+    if GetSide(Kuzmov) = 3 then unitsToReward = unitsToReward ^ Kuzmov;
+
+    unitsToReward = unitsToReward ^ randomsToSave;
+
+    RewardPeople(unitsToReward);
+end;
+
+Function SavePlayerCharacters;
+var othersYour;
+begin
+    SaveCharacters(Burlak, '04_Burlak');
+    if GetSide(Gnyevko) = 3 then SaveCharacters(Gnyevko, '04_Gnyevko');
+    if GetSide(Kovalyuk) = 3 then  SaveCharacters(Kovalyuk, '04_Kovalyuk');
+    if GetSide(Kirilenkova) = 3 then  SaveCharacters(Kirilenkova, '04_Kirilenkova');
+    if GetSide(Scholtze) = 3 then  SaveCharacters(Scholtze, '04_Scholtze');
+    if GetSide(Belkov) = 3 then  SaveCharacters(Belkov, '04_Belkov');
+    if GetSide(Belkov2) = 3 then  SaveCharacters(Belkov2, '04_Belkov2');
+    if IsOK(Kuzmov) then SaveCharacters(Kuzmov, '04_Kuzmov');
+
+    othersYour = randomsToSave;
+
+    SaveCharacters(randomsToSave, '04_other_survivors');
+end;
+
+
+Function SaveGlobalVariables;
+begin
+    SaveVariable(heikeHeavyLosses, '04_HeikeHeavyLosses_1');
+end;

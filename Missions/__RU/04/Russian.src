@@ -1,19 +1,24 @@
-Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze; // Heroes with Burlak, last mission with this team
-Export Kuzmov;
+Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze; // Heroes with Burlak, last mission with this team, next episode in mission 8
+Export Kuzmov; // Other heroes
 Export other_survivors; // Other survivors from 02
 Export other_kirov_survivors; // Other kirov survivors from 02
 
 Export Popov, Platonov, Gaydar;
 Export burlakTeam, popovTeam;
 Export dialogRus;
+Export firstCargo;
+
+Export randomsToSave;
 
 Export Function PrepareRussians;
 begin
+    randomsToSave = [];
+
     PrepareHeroes;
 end;
 
 Function PrepareHeroes;
-var i;
+var i, current;
 begin
     uc_side = 3;
     uc_nation = 3;
@@ -27,11 +32,12 @@ begin
     Scholtze := PrepareUnitExt('Scholtze', true, class_scientistic);
 
     Popov := PrepareUnitExt('Popov', false, 0);
-    Gaydar := PrepareUnitExt('Gaydar', false, 0);
     Platonov := PrepareUnitExt('Platonov', false, 0);
 
     uc_side = 6;
     
+    Gaydar := PrepareUnitExt('Gaydar', false, 0);
+
     Kuzmov := PrepareUnitExt('Kuzmov', false, 0);
     PlaceUnitXYR(Kuzmov, 109, 108, 5, false);
     ComHold(Kuzmov);
@@ -52,4 +58,89 @@ begin
     PrepareSoldier(sex_male, 1);
 
     dialogRus = CreateHuman;
+
+    if other_survivors + other_kirov_survivors + [Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze] < 8 then
+    begin
+        current = other_survivors + other_kirov_survivors + [Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze];
+
+        current = 8 - current;
+
+        for i := 1 to current do
+        begin
+            uc_nation = 3;
+            uc_side = 6;
+            
+            PrepareHuman(false, rand(1, 4), rand(1, 3));
+            PlaceUnitArea(CreateHuman, RussianSpawnArea1, false);    
+        end;     
+    end;
+end;
+
+Export Function CreateEvacuateUnit;
+var i, rnd, rnd2, rnd3, unit, vehicle;
+begin
+    rnd = rand(1, 2); // 1 - veh, 2 - troops group AND 1 - road1, 2 - road2
+
+    uc_side = 6;
+    uc_nation = 3;
+
+    if rnd = 1 then
+    begin
+        vc_chassis = ru_medium_wheeled;
+        vc_control = control_manual;
+        vc_engine = engine_combustion;
+
+        rnd3 = rand(1, 100); // 1 - cargoChanceSpawn (config module) - cargo, cargoChanceSpawn + 1 - 100 - rest
+
+        if rnd3 < cargoChanceSpawn + 1 then
+            vc_weapon = ru_cargo_bay
+        else
+            vc_weapon = [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][Rand(1, 3)];
+
+        vehicle = CreateVehicle;
+        SetDir(vehicle, 3);
+
+        PlaceUnitArea(vehicle, RussianSpawnArea2, false);
+
+        PrepareHuman(false, rand(1, 4), rand(2, 3));
+        PlaceHumanInUnit(CreateHuman, vehicle);
+
+        if vc_weapon = ru_cargo_bay then
+            AddCargo(vehicle, mat_cans, 100);
+
+        SetLives(vehicle, rand(500, 1000));
+
+        rnd = rand(1, 2);
+
+        if rnd = 1 then
+            for i := 3 to russianCargoPath1 do
+                AddComMoveXY(vehicle, russianCargoPath1[i][1], russianCargoPath1[i][2])
+        else
+            for i := 3 to russianCargoPath2 do
+                AddComMoveXY(vehicle, russianCargoPath2[i][1], russianCargoPath2[i][2]);
+    end
+    else
+    begin
+
+        for i := 1 to rand(3, 6) do
+        begin
+            PrepareHuman(false, rand(1,4), rand(2, 3));
+
+            unit = CreateHuman;
+            PlaceUnitArea(unit, RussianSpawnArea2, false);
+
+            SetLives(unit, rand(500, 1000));
+
+        end;
+
+        rnd2 = rand(1, 2);
+
+        if rnd2 = 1 then
+            for i := 3 to russianCargoPath1 do
+                AddComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_outside], [f_not, [f_hastask]]]) diff popovTeam, russianCargoPath1[i][1], russianCargoPath1[i][2])
+        else
+            for i := 3 to russianCargoPath2 do
+                AddComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_outside], [f_not, [f_hastask]]]) diff popovTeam, russianCargoPath2[i][1], russianCargoPath2[i][2]);
+
+    end;
 end;
