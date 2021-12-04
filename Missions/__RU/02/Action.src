@@ -64,7 +64,7 @@ begin
 end;
 
 // Block move in far north
-every 0$1 trigger NOT canExploreMap AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
+every 1 trigger NOT interface_hidden AND NOT canExploreMap AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
 var unit;
 begin
     enable;
@@ -98,7 +98,7 @@ begin
 end;
 
 // Block exit Beria base
-every 0$1 trigger NOT canExitBase AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
+every 1 trigger NOT canExitBase AND FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
 var unit;
 begin
     enable;
@@ -137,6 +137,7 @@ begin
         if See(6, unit) then
         begin
             meetPlatonov = true;
+            interface_hidden = true;
 
             InGameOn;
             DialogueOn;
@@ -183,6 +184,7 @@ begin
             SetSide(beria, 3);
 
             canExitBase = false;
+            interface_hidden = false;
 
             exit;
         end;
@@ -361,6 +363,9 @@ begin
     repeat
         wait(0$1);
     until GetLives(firstVeh) = 1000 AND GetFuel(firstVeh) > 90;
+
+    if UnitsInside(firstVeh) then
+       ComExitVehicle(UnitsInside(firstVeh)[1]);
 
     ComEnterUnit(eng, kirov);
     SetSide(firstVeh, 6);
