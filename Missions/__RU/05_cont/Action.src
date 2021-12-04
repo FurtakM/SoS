@@ -1,0 +1,42 @@
+Export Function MissionIntro;
+var unit, meetPositions, x;
+begin
+
+    meetPositions = [ [66, 87], [66, 86], [67, 86], [69, 87], [70, 88], [71, 89], [72, 90], [72, 91] ];
+
+    wait(0$8);
+    Say(Burlak, 'DStart-Bur-1');
+    SayRadio(Platonov, 'DStart-Pla-1');
+    Say(Burlak, 'DStart-Bur-2');
+    SayRadio(Platonov, 'DStart-Pla-2');
+
+    x = 0;
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+    begin
+        ComExitVehicle(unit);
+        wait(0$1);
+        AddComMoveXY(unit, meetPositions[x][1], meetPositions[x][2]);
+        AddComTurnXY(unit, 69, 96);
+
+        x = x + 1;
+    end;
+
+    repeat
+        CenterNowOnUnits(Burlak);
+        wait(10);
+    until GetDistUnitXY(Burlak, 70, 90) < 7;
+
+    Say(Karamazov, 'DDoubts-Kar-1');
+    Say(Petrovova, 'DDoubts-Ptr-1');
+    Say(Lipshchin, 'DDoubts-Bur-1');
+    Say(Karamazov, 'DDoubts-Kar-2');
+    Say(Gleb, 'DDoubts-Glb-2');
+    Say(Burlak, 'DDoubts-Bur-2');
+
+    InGameOff;
+
+    ChangeMissionObjectives('MBegin');
+
+    SaveForQuickRestart;
+end;
