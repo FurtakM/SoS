@@ -13,7 +13,7 @@
 }
 
 Export Function InitAIManager(side, nation, basePersonel, baseArea, healArea, parkingArea, defenceArea, vehiclesAmount, vehiclesToDefenceAmount, vehiclesToAttackAmount, canAttack);
-var i, tmp, tmpState, unit, personel, soldiers, engineers, mechanics, scientists, vehicle, vehicles, vehicleInList, defenceUnits, weapons, chassis, depot, factory, lab, bunkers, barracks, damageBuilding, damageUnit, emptyBunkers, enemyUnits;
+var i, j,  tmp, tmpState, unit, personel, soldiers, engineers, mechanics, scientists, vehicle, vehicles, vehicleInList, defenceUnits, weapons, chassis, depot, factory, lab, bunkers, barracks, damageBuilding, damageUnit, emptyBunkers, enemyUnits, attackBuildings, enemyBuildings;
 begin
 
     personel = []; //struct: [unit, building/vehicle, state]
@@ -45,7 +45,7 @@ begin
                 personel = ReplaceIn(personel, [i, personel[i]], 1);
 
             end
-            else if GetLives(personel[i][1]) <= 650 then
+            else if GetLives(personel[i][1]) <= 950 then
             begin
                 personel = ReplaceIn(personel, [i, personel[i] - 1], 0);
                 ComMoveToArea(personel[i][1], healArea);
@@ -308,6 +308,14 @@ begin
             AddComAttackUnit(UnitFilter(defenceUnits, [f_not, [f_hastask]]), enemyUnits);
         end;
 
+        attackBuildings = FilterAllUnits([[f_side, side], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+        enemyBuildings = FilterAllUnits([[f_enemy, side], [f_type, unit_building], [f_empty]]);
+
+        if attackBuildings and enemyBuildings  then
+           for i in attackBuildings do
+               for j in enemyBuildings do
+                   if GetDistUnits(i, j) < 12 then
+                      ComAttackUnit(i, j);
 
     until NOT personel OR NOT enableOmicronAI;
 

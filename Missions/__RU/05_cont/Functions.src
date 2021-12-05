@@ -8,15 +8,18 @@ Export Function PrepareUnitExt(ident, exist_mode, class);
 var unit;
 begin
 
-if exist_mode then
-   unit := CreateCharacter(previousMissionPrefix&ident)
-  else
-   unit := NewCharacter(ident);
+   if debugMode then
+      unit := NewCharacter(ident);
+
+   if exist_mode AND NOT debugMode then
+      unit := CreateCharacter(previousMissionPrefix&ident)
+   else if NOT debugMode then
+      unit := NewCharacter(ident);
 
    if class then
       SetClass(unit, class);
 
-result := unit;
+   result := unit;
 End;
 
 // Summary: Before calling the SaveCharacters function, checks if the character given in the argument is OK and if it is on the side 
@@ -41,4 +44,112 @@ begin
          resultCharactersToSave = resultCharactersToSave ^ unit;
 
    SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
+end;
+
+
+// Place units from list on area with spawnMode (materialize)
+// Input: [list] units, [name] area, [bool] spawnMode
+// Example: PlaceUnitsArea([Burlak, Gnyevko, Kovalyuk], SpawnArea, false);
+Export Function PlaceUnitsArea(units, area, spawnMode);
+var unit;
+begin
+   for unit in units do
+      PlaceUnitArea(unit, area, spawnMode);
+end;
+
+Export function DialogRandom(characters, dialogMID, dialogFID, radio, canTalkHero);
+var i, speaker, units;
+begin
+   units = characters;
+
+   units := units diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin];
+
+   if NOT units AND NOT canTalkHero then
+      exit;
+
+   if NOT units then
+      units = characters diff Burlak;
+
+   if NOT units AND canTalkHero then
+      exit;
+
+   speaker := characters[rand(1, units)];
+
+   if radio then
+   begin
+      if GetSex(speaker) = sex_male then
+         SayRadio(speaker, dialogMID)
+      else
+         SayRadio(speaker, dialogFID);
+   end
+   else
+   begin
+      if GetSex(speaker) = sex_male then
+         Say(speaker, dialogMID)
+      else
+         Say(speaker, dialogFID);  
+   end;
+
+   result := speaker;
+end;
+
+Export Function PlaceHumanInBunker(un, bunker);
+var dir;
+begin
+     dir := GetDir(bunker)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, bunker);
+
+     result = un;
+End;
+
+// Summary: Get available weapons to construct vehicles or place weapon on turret, return only researched weapons.
+// Input: (int)side, (int)nation
+// Output: (int[]) availableWeaponsForCurrentNation
+// Example: GetAvailableWeapons(3, 2);
+Export Function GetAvailableWeapons(side, nation);
+var i, resultWeapons, weaponTechs;
+begin
+    weaponTechs = [tech_AdvMet, tech_AdvRocket, tech_Flame, tech_Gatling, tech_Gun, tech_Lapser, tech_LasDouble, tech_Laser, tech_Rocket];
+    resultWeapons = [];
+
+    for i := 1 to weaponTechs do
+    begin
+        if TechNationAvailable(weaponTechs[i], nation) AND GetTech(weaponTechs[i], side) = state_researched then
+            case nation of
+                nation_american:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_arabian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_russian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+            end;
+            
+    end;
+
+    result = resultWeapons;
+end;
+
+// Summary: Get weapon name for current nation using tech name.
+// Input: (int)tech, (int)nation
+// Output: (int)weapon
+// Example: GetNationWeaponByTech(tech_gun, 3);
+Export Function GetNationWeaponByTech(tech, nation);
+begin
+    case tech of
+        tech_AdvMet: result = [us_heavy_gun, '', ru_heavy_gun][nation];
+        tech_AdvRocket: result = ['', '', ru_rocket][nation];
+        tech_Flame: result = ['', ar_flame_thrower, ''][nation];
+        tech_Gatling: result = [us_gatling_gun, ar_gatling_gun, ru_gatling_gun][nation];
+        tech_Gun: result = [us_double_gun, ar_gun, ru_gun][nation];
+        tech_Lapser: result = ['', '', ru_time_lapser][nation];
+        tech_LasDouble: result = [us_double_laser, '', ''][nation];
+        tech_Laser: result = [us_laser, '', ''][nation];
+        tech_Rocket: result = [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nation];
+    end;
 end;

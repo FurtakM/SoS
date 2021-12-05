@@ -60,13 +60,22 @@ end;
 
 // Dialog if player start build depot in wrong place - dialog execute in event
 Export Function Dial_DepotInWrongPlace(building);
+var unit;
 begin
     CenterNowOnUnits(building);
-    DialogueOn;
-    SayRadio(Platonov, 'D2a-Pla-1');
-    DialogueOff;
+    InGameOn;
 
-    RemoveUnit(building);
+    SayRadio(Platonov, 'D2a-Pla-1');
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_engineer]]) do
+        if GetDistUnits(building, unit) < 10 then
+           ComDismantle(unit, building);
+
+    repeat
+      wait(0$1);
+    until NOT IsPlaced(building);
+
+    InGameOff;
 end;
 
 // Near Kuzmov

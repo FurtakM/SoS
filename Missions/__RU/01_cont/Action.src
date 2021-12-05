@@ -223,7 +223,7 @@ begin
 end;
 
 // Block attack Gnyevko and Jelena by ape before time end
-every 1 trigger NOT gnyevkoSaved AND NOT jelenaSaved do
+every 1 trigger NOT gnyevkoSaved OR NOT jelenaSaved do
 var ape;
 begin
     enable;
@@ -239,7 +239,7 @@ begin
 end;
 
 // Count time
-every 0$1 trigger NOT gnyevkoSaved AND NOT jelenaSaved do
+every 0$1 trigger NOT gnyevkoSaved OR NOT jelenaSaved do
 begin
 
     enable;
@@ -251,19 +251,8 @@ begin
         apeAttackJelenaTime = apeAttackJelenaTime - 0$01;
 end;
 
-// Pokryshkin detect your solds near river
-every 0$1 trigger NOT meetPokryshkin AND FilterUnitsInArea(PokryshkinSpotArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
-var unitInArea;
-begin
-    enable;
-
-    unitInArea = FilterUnitsInArea(PokryshkinSpotArea, [[f_side, 3], [f_type, unit_human]]);
-
-    ComMoveXY(Pokryshkin, GetX(unitInArea[1]), GetY(unitInArea[1]));
-end;
-
 // Meet Pokryshkin
-every 0$1 trigger See(3, Pokryshkin) AND NOT meetPokryshkin do
+every 0$1 trigger (See(3, Pokryshkin) OR See(6, Burlak) OR See(6, Gnyevko)) AND NOT meetPokryshkin do
 begin
     enable;
 
@@ -320,7 +309,8 @@ begin
     if GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
         Say(Gnyevko, 'D4-Gny-1');
 
-    if GetDistUnits(Burlak, Gnyevko) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
+
+    if GetDistUnits(Burlak, NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), Burlak)) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
     begin
         ComWalk(Gnyevko);
 
@@ -465,6 +455,7 @@ var ruSolds;
 begin
     goToHill = false;
 
+    ComStop(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
     ComWalk(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
     wait(0$1);
 
@@ -483,10 +474,15 @@ begin
 
     Say(Burlak, 'D5-Bur-3');
 
+    interface_hidden = true;
+    IngameOff;
+
     wait(0$2);
 
     ComMoveXY(Burlak, 85, 64);
     ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 85, 64);
+
+    InGameOn;
 
     CenterNowOnUnits(Burlak);
     Say(Pokryshkin, 'D6-Pok-1');
@@ -516,6 +512,8 @@ begin
     Say(Belkov, 'D6-Bel-4');
 
     InGameOff;
+
+    interface_hidden = false;
 
     ComAttackUnit(Pokryshkin, am_bun);
 
@@ -694,7 +692,7 @@ begin
 end;
 
 // Retreat if bunker have less than 50% HP - only hard difficulty
-every 0$1 trigger GetLives(am_bun) < 500 AND NOT amRetreat do
+every 0$1 trigger GetLives(am_bun) < 500 AND Difficulty = 3 AND NOT amRetreat do
 begin
     amRetreat = true;
 
