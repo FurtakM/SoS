@@ -1,1 +1,107 @@
 //
+{
+        // Enemy config
+    enemyWaves = [3, 4, 4][Difficulty];
+    enemyGroupVehicles = [3, 4, 4][Difficulty];
+    enemyGroupHumans = [5, 6, 7][Difficulty];
+}
+
+Export Heike;
+
+Export Function PrepareHeike;
+begin
+    uc_side = 2;
+
+    Heike = PrepareUnitExt('Heike', false, 0);
+
+    if Difficulty >= 2 then
+       SetTech(tech_weap1, 2, state_researched);
+end;
+
+Export currentEnemyGroup;
+Export Function PrepareArabianVehicles;
+var i, veh;
+begin
+
+    currentEnemyGroup = [];
+
+    for i := 1 to enemyGroupVehicles do
+    begin
+        uc_side = 2;
+        uc_nation = nation_arabian;
+
+        vc_weapon = [ar_light_gun, ar_double_machine_gun, ar_gatling_gun, ar_flame_thrower, ar_gun][rand(1, 5)];
+
+        if vc_weapon IN [ar_gatling_gun, ar_flame_thrower, ar_gun] then
+            vc_chassis = [ar_medium_trike, ar_half_tracked][rand(1,2)]
+        else
+            vc_chassis = [ar_light_trike, ar_medium_trike, ar_half_tracked][rand(1,3)];
+        
+        vc_control = control_manual;
+        vc_engine = engine_combustion;
+        vc_fuel_battery = 100;
+        
+        veh = CreateVehicle;  
+        currentEnemyGroup = currentEnemyGroup ^ veh;   
+
+        PlaceUnitArea(veh, ArabianSpawnArea1, false);
+
+        if vc_weapon = ar_flame_thrower then
+            PrepareMechanic(false, enemySkillLevelFlame)
+        else
+            PrepareMechanic(false, enemySkillLevel);
+
+        PlaceHumanInUnit(CreateHuman, veh);
+    end;
+end;
+
+Export Function PrepareArabianHumans(spawnArea);
+var i, unit;
+begin
+
+    currentEnemyGroup = [];
+
+    for i := 1 to enemyGroupHumans do
+    begin
+        uc_side = 2;
+        uc_nation = nation_arabian;
+        
+        PrepareSoldier(false, enemySkillLevel);
+        unit = CreateHuman;
+
+        currentEnemyGroup = currentEnemyGroup ^ unit;
+
+        PlaceUnitArea(unit, spawnArea, false);
+    end;
+
+    for i := 1 to rand(1, 3) do
+    begin
+        uc_side = 2;
+        uc_nation = nation_arabian;
+        
+        PrepareScientist(false, enemySkillLevel);
+        unit = CreateHuman;
+
+        currentEnemyGroup = currentEnemyGroup ^ unit;
+
+        PlaceUnitArea(unit, spawnArea, false);      
+    end;
+end;
+
+Export Function PrepareArabianKiller;
+var un;
+begin
+    uc_side = 5;
+    uc_nation = nation_arabian;
+
+    hc_class = class_soldier;
+    hc_skills = [0, 0, 0, 0];
+
+    un = CreateHuman;
+
+    PlaceUnitArea(un, ArabianSpawnArea3, false);
+
+    ComAttackUnit(un, Gaydar);
+
+    arabianKillers = arabianKillers + 1;
+end;

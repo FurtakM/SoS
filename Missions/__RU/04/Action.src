@@ -32,7 +32,7 @@ every 0$1 do
 var unit, driver;
 begin
     enable;
-    Display_strings = ['ewakuacja', ewakuowane];
+
     if NOT FilterUnitsInArea(ExitMapArea, [f_side, 6]) AND NOT FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) then
         exit;
 
@@ -40,27 +40,42 @@ begin
     begin
         RemoveUnit(unit);
 
-        if NOT unit IN popovTeam then
-            ewakuowane = ewakuowane + 1;
+        if NOT unit IN popovTeam AND GetWeapon(unit) = ru_cargo_bay then
+            evacuatedCargos = evacuatedCargos + 1;
     end;
         
-    
     if canExitMap then
         for unit in FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
         begin
-            // save units
+            if GetType(unit) = unit_vehicle then
+                if NOT UnitsInside(unit)[1] IN [Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze, Kuzmov, Gaydar] then
+                    randomsToSave = randomsToSave ^ UnitsInside(unit)[1];
+
+            if NOT unit IN [Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze, Kuzmov, Gaydar] then
+                randomsToSave = randomsToSave ^ unit;
+
+            RemoveUnit(unit);
         end;
 end;
 
 // Dialog if player start build depot in wrong place - dialog execute in event
 Export Function Dial_DepotInWrongPlace(building);
+var unit;
 begin
     CenterNowOnUnits(building);
-    DialogueOn;
-    SayRadio(Platonov, 'D2a-Pla-1');
-    DialogueOff;
+    InGameOn;
 
-    RemoveUnit(building);
+    SayRadio(Platonov, 'D2a-Pla-1');
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_engineer]]) do
+        if GetDistUnits(building, unit) < 10 then
+           ComDismantle(unit, building);
+
+    repeat
+      wait(0$1);
+    until NOT IsPlaced(building);
+
+    InGameOff;
 end;
 
 // Near Kuzmov
@@ -76,9 +91,459 @@ end;
 
 // Dialog after build depot - dialog execute in event
 Export Function Dial_FinishDepot;
+var i;
 begin
     startEvacuation = true;
     
+    ChangeMissionObjectives('MOutBuild');
+
+    uc_side = 6;
+    uc_nation = 3;
+    vc_chassis = ru_medium_wheeled;
+    vc_control = control_manual;
+    vc_engine = engine_combustion;
+    vc_weapon = ru_cargo_bay;
+
+    firstCargo = CreateVehicle;
+    SetDir(firstCargo, 3);
+
+    PlaceUnitArea(firstCargo, RussianSpawnArea2, false);
+
+    PrepareMechanic(sex_male, 3);
+    PlaceHumanInUnit(CreateHuman, firstCargo);
+
+    AddCargo(firstCargo, mat_cans, 100);
+
+    for i := 1 to 19 do
+        AddComMoveXY(firstCargo, russianCargoPath1[i][1], russianCargoPath1[i][2]);
+
+    AddComMoveXY(firstCargo, 105, 123);
+    AddComUnload(firstCargo);
+
+    for i := 21 to russianCargoPath1 do
+        AddComMoveXY(firstCargo, russianCargoPath1[i][1], russianCargoPath1[i][2]);
+  
     Say(Burlak, 'D2-Bur-1');
     SayRadio(Platonov, 'D2-Pla-1');
 end;
+
+// Dialog after upgrade your lab - execute in event
+Export Function Dial_LabUpgraded;
+var randomMaleSci;
+begin
+    dial_labUpgradedBlock = true;
+
+    randomMaleSci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_class, class_scientistic]]) diff [Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze, Kuzmov];
+
+    if IsOk(Scholtze) AND GetSide(Scholtze) = 3 then
+    begin
+        Say(Scholtze, 'D5-Sch-1');
+        Say(Burlak, 'D5-Bur-1');
+    end      
+    else if randomMaleSci then
+    begin
+        Say(randomMaleSci[1], 'D5-RSci1-1');
+        Say(Burlak, 'D5-Bur-1');
+    end
+    else
+    begin
+        randomMaleSci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_class, class_scientistic]]) diff [Burlak];
+
+        if randomMaleSci then
+        begin
+            Say(randomMaleSci[1], 'D5-RSci1-1');
+            Say(Burlak, 'D5-Bur-1');
+        end;
+    end;
+end;
+
+// First cargo dialog
+every 0$1 trigger GetDistUnitXY(firstCargo, 105, 123) < 12 do
+    Say(UnitsInside(firstCargo)[1], 'D2a-RSol1-1');
+
+// Spawn next evacuate units
+every 0$15 trigger startEvacuation do 
+begin
+    enable;
+
+    CreateEvacuateUnit;
+end;
+
+// Activate steal cargo
+every 0$1 trigger evacuatedCargos >= 3 do
+begin
+    if IsOk(Kuzmov) then
+    begin
+        DialogueOn;
+        Say(Kuzmov,'D2b-Kuz-1');
+        Say(Burlak,'D2b-Bur-1');
+        Say(Kuzmov,'D2b-Kuz-2');
+        Say(Burlak,'D2b-Bur-2');
+        Say(Kuzmov,'D2b-Kuz-3');
+        DialogueOff;     
+    end;
+
+
+  Query('Q1');
+
+  canStealCargo = true;
+end;
+
+// Steal cargo
+every 0$1 trigger canStealCargo do
+var unit, cargo;
+begin
+    enable; 
+
+    for cargo in FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_weapon, ru_cargo_bay]]) do
+        for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) do
+            if GetDistUnits(cargo, unit) < 8 AND NOT cargo IN stealCargos then
+            begin
+                stealCargos = stealCargos ^ cargo;
+                
+                case Query('QQrSteal') of
+                    1:begin
+                        DialogueOn;
+                        Say(Burlak, 'DQrSteal#1-Bur-1');
+                        DialogueOff;
+
+                        ComMoveXY(cargo, 115, 126);
+                        AddComUnload(cargo);
+                        AddComMoveXY(cargo, 92, 177);
+
+                        stealWarmCount = stealWarmCount + 1;
+                    end;
+
+                    2:begin
+                        DialogueOn;
+                        Say(Burlak, 'DQrSteal#2-Bur-1');
+                        DialogueOff;
+                    end;
+
+                end;
+            end;
+end;
+
+// Platonov warm 1
+every 0$10 trigger stealWarmCount = 3 do
+begin
+    DialogueOn;
+    SayRadio(Platonov, 'D3A-Pla-1');
+    Say(Burlak, 'D3A-Bur-1');
+    SayRadio(Platonov, 'D3A-Pla-2');
+
+    if IsOK(Kuzmov) then
+        Say(Kuzmov, 'D3A-Kuz-2');
+
+    DialogueOff;
+end;
+
+// Platonov warm 2
+every 0$10 trigger stealWarmCount = 6 do
+begin
+    DialogueOn;
+    SayRadio(Platonov, 'D3B-Pla-1');
+    Say(Burlak, 'D3B-Bur-1');
+    SayRadio(Platonov, 'D3B-Pla-2');
+    DialogueOff;
+end;
+
+// Platonov warm 3
+every 0$10 trigger stealWarmCount = 7 do
+begin
+    DialogueOn;
+    SayRadio(Platonov, 'D3C-Pla-1');
+    Say(Burlak, 'D3C-Bur-1');
+    SayRadio(Platonov, 'D3C-Pla-2');
+    Say(Burlak, 'D3C-Bur-2');
+
+    if IsOK(Kuzmov) then
+        Say(Kuzmov, 'D3C-Kuz-2');
+
+    DialogueOff;
+end;
+
+
+// Platonov warm 4
+every 0$10 trigger stealWarmCount = 8 do
+begin
+    canStealCargo = false;
+    
+    DialogueOn;
+    SayRadio(Platonov, 'D3D-Pla-1');
+    Say(Burlak, 'D3D-Bur-1');
+
+    if kurinOpinion = 0 then
+    begin
+        SayRadio(Platonov, 'D3E-Pla-1');
+        Lose_Arrest;
+        exit;
+    end;
+
+    if meetBelkovBrother = 1 then
+    begin
+        SayRadio(Platonov, 'D3E-Pla-1a');
+        Lose_Arrest;
+        exit;    
+    end;
+
+    if platonovOpinion = 0 then
+    begin
+        SayRadio(Platonov, 'D3E-Pla-1b');
+        Lose_Arrest;
+        exit;
+    end;
+
+    if platonovOpinion = 1 then
+    begin
+        SayRadio(Platonov, 'D3E-Pla-1c');
+        Lose_Arrest;
+        exit;
+    end;
+
+    SayRadio(Platonov, 'D3D-Pla-2');
+
+    if IsOK(Kuzmov) then
+        Say(Kuzmov, 'D3D-Kuz-2');
+
+    DialogueOff;
+end;
+
+// force move ally units to move exit area
+every 0$20 do
+var allyUntis;
+begin
+    enable;
+
+    wait(0$10);
+
+    allyUntis = FilterAllUnits([[f_side, 6], [f_not, [f_hastask]]]) diff popovTeam;
+    allyUntis = allyUntis diff Gaydar;
+    allyUntis = allyUntis diff Kuzmov;
+
+    if NOT allyUntis then
+        exit;
+
+    ComUnload(allyUntis);
+    AddComMoveXY(allyUntis, 92, 176);
+end;
+
+// Arrive enemy - stop resp new untis
+every 0$1 trigger evacuatedCargos >= cargosToTriggerAttacks do
+begin
+    startEvacuation = false;
+end;
+
+// Arrive enemy - dialog
+every 0$1 trigger evacuatedCargos >= cargosToTriggerAttacks AND NOT FilterAllUnits([[f_side, 6]]) do
+begin
+    wait(1$00);
+
+    DialogueOn;
+    SayRadio(Platonov, 'D4-Pla-1');
+    Say(Burlak, 'D4-Bur-1');
+    DialogueOff;
+
+    wait(0$2);
+
+    if IsOK(Kuzmov) AND GetSide(Kuzmov) = 3 then
+    begin
+        Say(Kuzmov, 'D4-Kuz-1');
+
+        if IsOK(Belkov) AND GetSide(Belkov) = 3 then
+            Say(Belkov, 'D4-Bel-1')
+        else if IsOK(Belkov2) AND GetSide(Belkov2) = 3 then
+            Say(Belkov2, 'D4-Bel-1'); 
+
+        Say(Burlak, 'D4-Bur-2');    
+
+        if IsOK(Gnyevko) AND GetSide(Gnyevko) = 3 then
+        begin
+            Say(Gnyevko, 'D4-Gny-2');
+            Say(Burlak, 'D4-Bur-3');    
+        end;
+
+        Say(Burlak, 'D4-Bur-3a');  
+
+        if IsOK(Belkov) AND GetSide(Belkov) = 3 then
+            Say(Belkov, 'D4-Bel-3')
+        else if IsOK(Belkov2) AND GetSide(Belkov2) = 3 then
+            Say(Belkov2, 'D4-Bel-3');  
+
+        if IsOK(Kovalyuk) AND GetSide(Kovalyuk) = 3 then
+            Say(Kovalyuk, 'D4-Kov-3');
+    end;
+
+    enableAttacks = true;
+    
+    wait(0$10);
+
+    Say(Burlak, 'D7-Bur-1');
+end;
+
+// Contact with enemy dialog - execute in event
+Export Function Dial_Contact;
+begin
+    Say(Burlak, 'D7-Bur-1a');
+
+    wait(0$12);
+
+    Say(Burlak, 'D7-Bur-1b');
+
+    if IsOK(Belkov) AND GetSide(Belkov) = 3 then
+        Say(Belkov, 'D7-Bel-1')
+    else if IsOK(Belkov2) AND GetSide(Belkov2) = 3 then
+        Say(Belkov2, 'D7-Bel-1');  
+
+    if IsOK(Kuzmov) AND GetSide(Kuzmov) = 3 then
+        Say(Kuzmov, 'D7-Kuz-1');
+
+    if IsOK(Kovalyuk) AND GetSide(Kovalyuk) = 3 then
+        Say(Kovalyuk, 'D7-Kov-1');
+
+    if IsOK(Scholtze) AND GetSide(Scholtze) = 3 then
+        Say(Scholtze, 'D7-Sch-1');
+
+    DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]), 'D7-RSol1-1', '', false);
+
+    PrepareHeike;
+
+    wait(0$10);
+
+    Say(Heike, 'D7a-Hke-1');
+    Say(Burlak, 'D7a-Bur-1');
+
+    wait(0$50);
+
+    if IsOK(Kuzmov) AND GetSide(Kuzmov) = 3 then
+        Say(Kuzmov, 'D8-Kuz-1')
+    else
+        DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]), 'D8-RSol1-1', '', false);
+    
+    Say(Burlak, 'D8-Bur-1');
+end;
+
+// Lost if arabia breakthrough
+every 0$1 trigger NOT IsPlaced(Gaydar) AND NOT FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok]]) AND FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) < 5 AND FilterUnitsInArea(HillArea, [[f_side, 2]]) > 3 do 
+    Lose_ArabBreakthrough;
+
+// Dialog about Gaydar
+every 1$30 trigger currentWave >= enemyWaves do
+begin
+    SayRadio(Platonov, 'D9-Pla-1');
+    Say(Burlak, 'D9-Bur-1');
+    SayRadio(Platonov, 'D9-Pla-2');
+    Say(Burlak, 'D9-Bur-2');  
+
+    wait(2$0);
+
+    PlaceUnitArea(Gaydar, GaydarSpawnArea, false);
+
+    arabianCanExitMap = true;
+
+    wait(0$1);
+
+    CenterNowOnUnits(Gaydar);
+    DialogueOn;
+
+    SayRadio(Gaydar, 'D10-Gay-1');
+    Say(Burlak, 'D10-Bur-1');
+    SayRadio(Gaydar, 'D10-Gay-2');
+    SayRadio(Popov, 'D10-Pop-2');
+    SayRadio(Gaydar, 'D10-Gay-3');
+
+    DialogueOff;
+
+    ComMoveXY(Gaydar, 36, 38);
+    AddComCrawl(Gaydar);
+
+    ChangeMissionObjectives('M2');
+end;
+
+// Arabian exit map
+every 0$1 trigger arabianCanExitMap do
+var unit;
+begin
+    enable;
+
+    ComMoveToArea(FilterAllUnits([[f_side, 2]]), ArabianExitMapArea);
+
+    for unit in FilterUnitsInArea(ArabianExitMapArea, [f_side, 2]) do
+        RemoveUnit(unit);
+end;
+
+// Find Gaydar
+every 0$01 trigger NOT saveGaydar do
+var unit, maleUnits;
+begin
+    enable;
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+    begin
+        if GetDistUnits(unit, Gaydar) < 6 then
+        begin
+            ComWalk(Gaydar);
+            saveGaydar = true;
+            wait(0$1);
+            DialogueOn;
+            Say(Gaydar, 'D11-Gay-1');
+
+            if NOT GetDistUnits(Burlak, Gaydar) < 6 then
+            begin
+                maleUnits = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok]]) diff Gaydar;
+                Say(NearestUnitToUnit(maleUnits, Gaydar), 'D11-RSol1-1');
+                gaydarWaitForBurlak = true;
+                DialogueOff;
+                exit;
+            end
+            else
+            begin
+                SetSide(Gaydar, 3);
+                Say(Gaydar, 'D11-Gay-2');   
+                Say(Burlak, 'D11-Bur-2');
+                Say(Gaydar, 'D11-Gay-3');   
+                Say(Burlak, 'D11-Bur-3');
+                Say(Gaydar, 'D11-Gay-4');   
+                Say(Burlak, 'D11-Bur-4');
+                wait(0$2);
+                SayRadio(Popov, 'D12-Pop-1');
+                Say(Burlak, 'D12-Bur-1');
+                SayRadio(Platonov, 'D12-Pla-1');
+                DialogueOff;
+
+                canExitMap = true;
+
+                ChangeMissionObjectives('MFinal');
+                SetAreaMapShow(ExitMapArea, 1);
+                exit;
+            end;
+        end;
+    end;
+end;
+
+// Burlak near Gaydar if he wait
+every 0$1 trigger GetDistUnits(Burlak, Gaydar) < 6 AND gaydarWaitForBurlak do
+begin
+    SetSide(Gaydar, 3);
+    DialogueOn;
+    Say(Gaydar, 'D11-Gay-2');   
+    Say(Burlak, 'D11-Bur-2');
+    Say(Gaydar, 'D11-Gay-3');   
+    Say(Burlak, 'D11-Bur-3');
+    Say(Gaydar, 'D11-Gay-4');   
+    Say(Burlak, 'D11-Bur-4');
+    wait(0$2);
+    SayRadio(Popov, 'D12-Pop-1');
+    Say(Burlak, 'D12-Bur-1');
+    SayRadio(Platonov, 'D12-Pla-1');
+    DialogueOff;
+
+    canExitMap = true;
+
+    ChangeMissionObjectives('MFinal');
+    SetAreaMapShow(ExitMapArea, 1);
+end;
+
+// End mission
+every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 AND canExitMap do
+      FinishMission;

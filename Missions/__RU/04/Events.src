@@ -6,6 +6,47 @@ end;
 
 On BuildingComplete(building) Do
 begin
-    if GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation then
-        Dial_FinishDepot; 
+    if GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation AND NOT namedBase then
+    begin
+        namedBase = true;
+        SetBName(building, 'chuikov');
+        Dial_FinishDepot;
+    end;
+end;
+
+On UpgradeComplete(building) Do
+begin
+    if GetBType(building) = b_lab_half AND NOT dial_labUpgradedBlock then
+        Dial_LabUpgraded;
+end;
+
+On Contact(side1, side2) Do
+begin
+    if (side1 = 3 AND side2 = 2) OR (side1 = 2 AND side2 = 3) then
+    begin
+        if dial_contactBlock then
+            exit;
+
+        dial_contactBlock = true;
+
+        Dial_Contact;
+    end;
+
+    if (side1 = 3 AND side2 = 6) OR (side1 = 6 AND side2 = 3) then
+        Lose_SelfAttack;
+end;
+
+On UnitDestroyed(unit) Do
+begin
+    if unit = Burlak then
+        Lose_Burlak;
+
+    if unit = Gaydar then
+        Lose_Gaydar;
+
+    if GetSide(unit) = 3 AND GetType(unit) = unit_human then
+        lostUnits = lostUnits + 1;
+
+    if GetSide(unit) = 2 AND GetType(unit) = unit_human AND NOT IsPlaced(Gaydar) then
+        killedArabianUnits = killedArabianUnits + 1;
 end;

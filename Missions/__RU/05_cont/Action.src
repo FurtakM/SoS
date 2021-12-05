@@ -1,0 +1,484 @@
+Export Function MissionIntro;
+var unit, meetPositions, x;
+begin
+
+    meetPositions = [ [66, 87], [66, 86], [67, 86], [69, 87], [70, 88], [71, 89], [72, 90], [72, 91] ];
+
+    wait(0$8);
+    Say(Burlak, 'DStart-Bur-1');
+    SayRadio(Platonov, 'DStart-Pla-1');
+    Say(Burlak, 'DStart-Bur-2');
+    SayRadio(Platonov, 'DStart-Pla-2');
+
+    x = 0;
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+    begin
+        ComExitVehicle(unit);
+        wait(0$1);
+        AddComMoveXY(unit, meetPositions[x][1], meetPositions[x][2]);
+        AddComTurnXY(unit, 69, 96);
+
+        x = x + 1;
+    end;
+
+   { repeat
+        CenterNowOnUnits(Burlak);
+        wait(10);
+    until GetDistUnitXY(Burlak, 70, 90) < 7;
+      }
+    Say(Karamazov, 'DDoubts-Kar-1');
+    Say(Petrovova, 'DDoubts-Ptr-1');
+    Say(Lipshchin, 'DDoubts-Bur-1');
+    Say(Karamazov, 'DDoubts-Kar-2');
+    Say(Gleb, 'DDoubts-Glb-2');
+    Say(Burlak, 'DDoubts-Bur-2');
+
+    InGameOff;
+
+    ChangeMissionObjectives('MBegin');
+
+    SaveForQuickRestart;
+
+    BuildBase;
+end;
+
+// See arabian base
+Every 0$1 trigger NOT sawArabianBase do
+var unit;
+begin
+    enable;
+
+    for unit in FilterUnitsInArea(ArabianBaseArea, [f_side, 2]) do
+        if See(3, unit) then
+        begin
+            sawArabianBase = true;
+
+            CenterNowOnUnits(unit);
+
+            DialogueOn;
+                if IsOk(Lipshchin) then Say(Lipshchin, 'DArabs-RSol1-1');
+                if IsOk(Karamazov) then Say(Karamazov, 'DArabs-Kar-1');
+
+                Say(Burlak, 'DArabs-Bur-1');
+                SayRadio(Platonov, 'DArabs-Pla-1');
+                Say(Omar, 'DSurrender-Omar-1');
+
+                case Query('QSurrender') of
+                    1:begin
+                        Say(Burlak, 'DQrSurrender#1-Bur-1');
+                        Lose_Survive;
+                    end;
+
+                    2:Say(Burlak, 'DQrSurrender#2-Bur-1');
+                    3:Say(Burlak, 'DQrSurrender#3-Bur-1');
+                end;
+            DialogueOff;
+
+            exit;
+        end;
+
+end;
+
+// See apeman
+Every 0$1 trigger NOT sawApeman AND GetTech(tech_apelang, 3) = state_enabled do
+var unit, nearUnit;
+begin
+    enable;
+
+    for unit in FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+        if See(3, unit) then
+        begin
+            sawApeman = true;
+
+            nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), unit);
+
+            CenterNowOnUnits(unit); 
+            DialogueOn;
+            
+            if nearUnit = Burlak then
+                Say(Burlak, 'DApeSpot-Bur-1a')
+            else
+                
+                Say(nearUnit, 'DApeSpot-RSol1-1');
+                Say(Burlak, 'DApeSpot-Bur-1');
+
+            if IsOK(Petrosyan) then
+            begin
+                Say(Petrosyan, 'DApeSpot-Pty-1');    
+
+                if FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) then
+                    Say(Petrosyan, 'DApeSpot-Pty-1a')
+                else
+                    Say(Petrosyan, 'DApeSpot-Pty-1b');        
+            end;
+
+            DialogueOff;
+            exit;
+        end;
+end;
+
+// Wait for construct lab
+Every 2$30 trigger sawApeman AND IsOk(Petrosyan) do
+Say(Petrosyan, 'DApeLab-Pty-1');
+
+// Research ape lang - execute in event
+Export Function Dial_ResearchApeLang;
+begin
+    DialogueOn;
+
+    if IsOK(Petrosyan) then
+    begin
+        Say(Petrosyan, 'DApeLangCompl-Pty-1');    
+        Say(Burlak, 'DApeLangCompl-Bur-1');   
+        Say(Petrosyan, 'DApeLangCompl-Pty-2');    
+        Say(Burlak, 'DApeLangCompl-Bur-2');   
+        Say(Petrosyan, 'DApeLangCompl-Pty-3');    
+        Say(Burlak, 'DApeLangCompl-Bur-3');   
+        Say(Petrosyan, 'DApeLangCompl-Pty-4');   
+    end;
+
+    DialogueOff;
+end;
+
+// Tame ape - execute in event
+Export Function Dial_TameApe(sci);
+begin
+    dial_tameApeBlocker = true;
+
+    if GetSex(sci) = sex_male then
+        Say(sci, 'DApeTame-Sci1-1')
+    else begin
+        if IsOK(Petrosyan) then Say(Petrosyan, 'DApeTame-Sci1-1')
+        else if IsOK(Dolgov) then Say(Dolgov, 'DApeTame-Sci1-1')
+        else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DApeTame-Sci1-1', '', false, true);
+    end;
+
+    Say(Burlak, 'DApeTame-Bur-1');
+end;
+
+// Ape in lab - execute in event
+Export Function Dial_ApeEnterLab;
+begin
+    dial_apeEnterLabBlocker = true;
+
+    DialogueOn;
+
+    Say(Burlak, 'DApeWorkSol-Bur-1'); 
+
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DApeWorkSol-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DApeWorkSol-Pty-1')
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DApeWorkSol-Pty-1', '', false, true);   
+
+    Say(Burlak, 'DApeWorkSol-Bur-2');
+
+    DialogueOff; 
+end;
+
+// Research ape psycho - execute in event
+Export Function Dial_ResearchApePsych;
+begin
+    DialogueOn;
+
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DApeWorkCompl-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DApeWorkCompl-Pty-1')
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DApeWorkCompl-Pty-1', '', false, true);   
+
+    Say(Burlak, 'DApeWorkCompl-Bur-1');
+
+    DialogueOff;    
+end;
+
+// Research ape agress - execute in event
+Export Function Dial_ResearchApeAgress;
+begin
+    DialogueOn;
+    
+     if IsOK(Petrosyan) then Say(Petrosyan, 'DApeSolCompl-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DApeSolCompl-Pty-1')
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DApeSolCompl-Pty-1', '', false, true);   
+
+    Say(Burlak, 'DApeSolCompl-Bur-1');
+
+    DialogueOff;    
+end;
+
+// Spawn Stevens
+every 0$1 trigger FilterUnitsInArea(NatureArea,[[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [Burlak] AND FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]) do
+begin
+    PrepareStevens;
+
+    wait(0$1.5);
+
+    stevensPlaced = true;
+end;
+
+// Meet Stevens
+every 0$1 trigger See(3, Stevens) AND stevensPlaced  do
+var nearUnit;
+begin
+    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), Stevens);
+    
+    CenterNowOnUnits(Stevens);
+    InGameOn;
+
+    DialogueOn;
+    Say(nearUnit, 'DStevens-RSol1-1');
+    DialogueOff;
+
+    wait(0$1.5);
+
+    if IsOK(Petrosyan) then
+    begin
+        SetSide(Stevens, 6);
+
+        DialogueOn;
+        Say(Stevens, 'DStevens-Huck-1');
+
+        if nearUnit = Petrosyan then
+        begin
+            Say(Petrosyan, 'DStevens-Pty-1a');
+            Say(Stevens, 'DStevens-Huck-2');
+            Say(Petrosyan, 'DStevens-Pty-2');
+            Say(Stevens, 'DStevens-Huck-3');
+            Say(Petrosyan, 'DStevens-Pty-3');
+            Say(Stevens, 'DStevens-Huck-4');
+            Say(Petrosyan, 'DStevens-Pty-4');  
+            
+            stevensFollow = true;    
+        end else
+        begin
+            stevensFollow = true;  
+            stevensWantTalkPetrosyan = true;
+
+            Say(Petrosyan, 'DStevens-Pty-1');
+        end;
+        DialogueOff;    
+     end;
+
+    InGameOff;
+
+end;
+
+// Stevens talk with Petrosyan
+Every 0$1 trigger stevensWantTalkPetrosyan AND GetDistUnits(Petrosyan, Stevens) < 20 AND IsOK(Petrosyan) do
+begin
+    stevensWantTalkPetrosyan = false;
+
+    DialogueOn;
+
+    Say(Petrosyan, 'DStevens-Pty-1a');
+    Say(Stevens, 'DStevens-Huck-2');
+    Say(Petrosyan, 'DStevens-Pty-2');
+    Say(Stevens, 'DStevens-Huck-3');
+    Say(Petrosyan, 'DStevens-Pty-3');
+    Say(Stevens, 'DStevens-Huck-4');
+    Say(Petrosyan, 'DStevens-Pty-4');  
+
+    DialogueOff;    
+end;
+
+// Stevens talk with Burlak
+Every 0$1 trigger GetDistUnits(Stevens, Burlak) < 15 AND IsOK(Petrosyan) do
+begin
+    DialogueOn;
+
+    Say(Petrosyan, 'DStevensBurlak-Pty-1');
+    Say(Burlak, 'DStevensBurlak-Bur-1');
+    Say(Petrosyan, 'DStevensBurlak-Pty-2');
+
+    case Query('QKill') of
+        1:begin
+            stevensCanExitMap = true;
+            stevensFollow = false;
+            
+            Say(Burlak, 'DKill-1-Bur-1');
+            if IsOK(Gleb) then Say(Gleb, 'DKill-1-Glb-1');
+
+            SetSide(Stevens, 1);
+
+            ComMoveToArea(Stevens, StevensExitMapArea);
+        end;
+
+        2:begin
+            stevensCanExitMap = true;
+            stevensFollow = false;
+            stevensDepot = true;
+
+            Say(Burlak, 'DKill-2-Bur-1');
+            Say(Petrosyan, 'DKill-2-Pty-1');
+            Say(Burlak, 'DKill-2-Bur-2');
+
+        end;
+    end;
+
+    DialogueOff;
+end;
+
+// Stevens follow
+every 0$1 trigger stevensFollow do
+var nearUnit;
+begin
+    enable;
+
+    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), Stevens);
+    
+    ComMoveXY(Stevens, GetX(nearUnit), GetY(nearUnit));
+end;
+
+// Stevens stay if no depots
+every 0$1 trigger stevensDepot AND NOT FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]) do
+begin
+    enable;
+
+    SetSide(Stevens, 6);
+    ComHold(Stevens);
+end;
+
+// Stevens go to depot
+every 0$1 trigger stevensDepot AND FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]) do
+var depot, depotUnit, constructDepot;
+begin
+    enable;
+
+    depot = FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]);
+
+    if NOT depot then
+        exit;
+
+    for depotUnit in depot do
+        if NOT IsConstructed(depotUnit) then
+            constructDepot = depotUnit;
+
+    if NOT constructDepot then
+        exit;
+
+    if NOT stevensWasInDepot then
+    begin
+        if NOT IsInUnit(Stevens) AND NOT GetDistUnits(Stevens, depot) > 8  then
+            ComMoveXY(Stevens, GetX(constructDepot), GetY(constructDepot))
+        else begin
+            InGameOn;
+
+            repeat
+                SetSide(Stevens, 3);
+                ComEnterUnit(Stevens, constructDepot);
+                wait(0$1);          
+            until IsInUnit(Stevens) OR NOT IsOK(Stevens);
+            InGameOff;
+
+            stevensWasInDepot = true;
+        end;      
+    end else
+    begin
+       if NOT IsInUnit(Stevens) then
+       begin
+            DialogueOn;
+            Say(Burlak, 'DRelease-Bur-1');
+
+            case Query('QKillAgain') of
+                1:begin
+                    Say(Burlak, 'DQrKillAgain#1-Bur-1');
+
+                    stevensCanExitMap = true;
+                    stevensWasInDepot = false;
+                    stevensDepot = false;
+
+                    SetSide(Stevens, 1);
+
+                    ComMoveToArea(Stevens, StevensExitMapArea);
+                end;
+
+                2:begin
+                    Say(Burlak, 'DQrKillAgain#2-Bur-1');
+
+                    stevensCanExitMap = true;
+                    stevensWasInDepot = false;
+                    stevensDepot = false;
+
+                    ComMoveToArea(Stevens, StevensExitMapArea);
+                end;
+
+                3:begin
+                    Say(Burlak, 'DQrKillAgain#2-Bur-1a');
+                    DialogueOff;
+                    InGameOn;
+
+                    repeat
+                        SetSide(Stevens, 3);
+                        ComEnterUnit(Stevens, constructDepot);
+                        wait(0$1);          
+                    until IsInUnit(Stevens) OR NOT IsOK(Stevens);
+
+                    InGameOff;
+                end;  
+            end;    
+
+            DialogueOff;
+       end;    
+    end;
+end;
+
+// Player see Omar and his mastodon
+Every 0$1 trigger See(3, mastodon) do
+var rnd;
+begin
+    rnd = rand(1, 2);
+
+    CenterNowOnUnits(mastodon);
+
+    DialogueOn;
+
+    if rnd = 1 then
+        Say(Burlak, 'DMastodon-Bur-1')
+    else
+        DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DMastodon-RSol1-1', '', false, true);   
+
+    if IsOK(Gleb) then Say(Gleb, 'DMastodon-Glb-1');
+
+    DialogueOff;
+end;
+
+// Mastodont die
+Every 0$1 trigger NOT IsOK(mastodon) do
+begin
+    DialogueOn;
+    if IsOK(Karamazov) then Say(Karamazov, 'DOmar-Kar-1');
+    if IsOK(Petrovova) then Say(Petrovova, 'DOmar-Ptr-1');
+    DialogueOff;
+end;
+
+// Omar die
+Every 0$1 trigger IsDead(Omar) do
+begin
+    DialogueOn;
+
+    DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DOmar-RSol1-1', '', false, true); 
+    
+    wait(0$1);
+    
+    Say(Heike, 'DOmar-Hke-1');
+    Say(Burlak, 'DOmar-Bur-1');
+
+    DialogueOff;
+end;
+
+// Breakthrough
+Every 0$1 trigger ( IsDead(Omar) OR NOT IsPlaced(Omar) ) AND FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_lives, 250]]) < 5 do
+begin
+    DialogueOn;
+
+    if IsOK(Petrovova) then Say(Petrovova, 'DBreakthrough-Ptr-1');
+    Say(Burlak, 'DBreakthrough-Bur-1');
+    SayRadio(Platonov, 'DBreakthrough-Pla-1');
+
+    if actionTime < arabBreakthrough then
+        SayRadio(Platonov, 'DBreakthrough-Pla-1a')
+    else
+        SayRadio(Platonov, 'DBreakthrough-Pla-1b');
+
+    if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) then
+        SayRadio(Platonov, 'DBreakthrough-Pla-1c');
+
+    DialogueOff;    
+end;

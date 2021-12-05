@@ -1,0 +1,115 @@
+Export Heike, Omar;
+Export arabianUnitsInBase;
+Export Function PrepareArabians;
+begin
+    arabianUnitsInBase = [];
+
+    PrepareHeroes;
+    PrepareBuildings;   
+    PrepareUnits;
+end;
+
+Function PrepareHeroes;
+begin
+    uc_side = 2;
+
+    Heike = PrepareUnitExt('Heike', false, 0);  
+    Omar = PrepareUnitExt('Omar', false, class_desert_warior);   
+
+    PlaceHumanInUnit(Omar, mastodon); 
+end;
+
+Function PrepareBuildings;
+var depot;
+begin
+
+    uc_side = 2;
+    uc_nation = nation_arabian;
+
+    bc_level = enemySkillLevel;
+    bc_type = b_breastwork;
+
+    CreateAndPlaceBuildingXYD(118, 63, 1);
+    CreateAndPlaceBuildingXYD(120, 66, 1);
+    CreateAndPlaceBuildingXYD(123, 73, 1);
+
+    if Difficulty = 2 then
+        CreateAndPlaceBuildingXYD(145, 83, 0);
+
+    if Difficulty = 3 then
+    begin
+        CreateAndPlaceBuildingXYD(145, 83, 0);
+        CreateAndPlaceBuildingXYD(151, 81, 5);    
+    end;
+
+    bc_type = b_depot;
+
+    depot = CreateAndPlaceBuildingXYD(124, 60, 2);
+
+    SetResourceType(GetBase(depot), mat_cans, 3000);
+    SetResourceVisibility(131, 51, 2);
+
+    bc_type = b_oil_mine;
+
+    CreateAndPlaceBuildingXYD(131, 51, 2);  
+
+
+    // Techs
+
+    if Difficulty >= 2 then
+        SetTech(tech_weap2, 2, state_researched);
+end;
+
+
+Function PrepareUnits;
+var i, unit, bunker;
+begin
+    uc_side = 2;
+    uc_nation = 2;
+
+    for bunker in FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]]) do
+    begin
+        PrepareSoldier(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceHumanInBunker(unit, bunker);
+        arabianUnitsInBase = arabianUnitsInBase ^ unit;
+    end;
+
+    for i := 1 to arabianUnits[1] do
+    begin
+        PrepareSoldier(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceUnitArea(unit, ArabianSpawnArea1, false);  
+        arabianUnitsInBase = arabianUnitsInBase ^ unit;  
+    end;
+
+    for i := 1 to arabianUnits[2] do
+    begin
+        PrepareEngineer(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceUnitArea(unit, ArabianSpawnArea1, false); 
+        arabianUnitsInBase = arabianUnitsInBase ^ unit;   
+    end;
+
+    for i := 1 to arabianUnits[3] do
+    begin
+        PrepareMechanic(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceUnitArea(unit, ArabianSpawnArea1, false);    
+        arabianUnitsInBase = arabianUnitsInBase ^ unit;
+    end;
+
+    for i := 1 to arabianUnits[4] do
+    begin
+        PrepareScientist(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceUnitArea(unit, ArabianSpawnArea1, false);  
+        arabianUnitsInBase = arabianUnitsInBase ^ unit;  
+    end;
+
+end;

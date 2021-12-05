@@ -1,0 +1,129 @@
+var Bur, Bel, Pla, Kar, Ptr, Glb, Pet, Stv, Dol, Lip, Tit;
+var donttalk;
+
+function set_shorts;
+begin
+     Bur:=Burlak;
+     Pla:=Platonov;
+     Kar:=Karamazov;
+     Ptr:=Petrovova;
+     Glb:=Gleb;
+     Pet:=Petrosyan;
+     Dol:=Dolgov;
+     Lip:=Lipshchin;
+     Tit:=Titov;
+
+     donttalk:=used diff [Burlak,Karamazov,Petrovova,Gleb,Petrosyan];
+end;
+
+// Dialogue Intro (Burlak and his men hiding in forest)
+export function DIntro;
+var pos, auta, i, hex, rcars, mt, vzdal, driver, driverShortName;
+begin
+     set_shorts;
+     auta:=FilterAllUnits([[f_side,you],[f_type,unit_vehicle]]);
+     vzdal:=[];
+     for i in auta do begin
+       vzdal:=vzdal^[GetDistUnitXY(i,20,2)];
+     end;
+     auta:=SortListByListAsc(auta,vzdal);
+
+     interface_hidden:=true;
+
+     CenterNowOnUnits(auta);
+     RevealFogArea(you, co_vidi);
+     Enable(10);
+     wait(0$1);
+     SayRadio(Pla, 'DIntro-Pla-1');
+     Say(Bur, 'DIntro-Bur-1');
+     SayRadio(Pla, 'DIntro-Pla-2');
+     Say(Bur, 'DIntro-Bur-2');
+     SayRadio(Pla, 'DIntro-Pla-3');
+//     ChangeMissionObjectives('MWest');
+
+     ComMoveToArea(auta[1], ru_exit);
+     for i:=1 to auta-1 do begin
+       ComMoveUnit(auta[i+1], auta[i]);
+     end;
+     AddComMoveToArea(auta, ru_exit);
+
+     mt:=tick+0$2;
+     while FilterAllUnits([[f_side,you],[f_placed]]) do begin
+        wait(0$0.2);
+
+        for i in auta do
+            begin
+            if GetLives(i) < 500 then
+               SetLives(i, 500);
+
+            if not HasTask(i) then
+               ComMoveToArea(i, ru_exit);
+            end;
+
+        for i in FilterUnitsInArea(ru_exit, []) do
+        begin
+          if GetType(i) = unit_vehicle AND GetSide(i) = 3 then
+          begin
+            driver = UnitsInside(i)[1];
+
+            if driver = Burlak then driverShortName = 'Bur';
+            if driver = Karamazov then driverShortName = 'Kar';
+            if driver = Petrovova then driverShortName = 'Ptr';
+            if driver = Gleb then driverShortName = 'Glb';
+            if driver = Petrosyan then driverShortName = 'Pet';
+            if driver = Dolgov then driverShortName = 'Dol';
+            if driver = Lipshchin then driverShortName = 'Lip';
+            if driver = Titov then driverShortName = 'Tit';
+
+            savedTanks = savedTanks ^ [ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
+
+          end;
+          RemoveUnit(i);
+        end;
+
+        if tick>mt then begin
+           CenterOnUnits(auta[3]);
+           mt:=tick+0$2;
+        end;
+     end;
+     ingame_video:=false;
+     interface_hidden:=false;
+end;
+
+every 0$0.5 marked 10 do
+var arabsc, arabsp, i;
+begin
+     ComEnterUnit(ar1, b1);
+     ComEnterUnit(ar2, b2);
+     arabsc:=FilterAllUnits([[f_side,arabians],[f_type,unit_vehicle]]);
+     arabsp:=FilterAllUnits([[f_side,arabians],[f_type,unit_human]]) diff [ar1,ar2];
+
+     for i:=1 to arabsc do begin
+        ComEnterUnit(arabsp[i], arabsc[i]);
+     end;
+
+     while not UnitFilter(arabsc, [[f_occupied]]) do
+        wait(0$1);
+
+     wait(0$3);
+     ComMoveToArea(arabsc, ru_exit);
+     wait(0$2);
+     ComStop(arabsc);
+     wait(0$1);
+     ComMoveToArea(arabsc, ru_exit);
+end;
+
+on DestinationUnreachable(un) do
+begin
+  ComStop(un);
+  wait(0$0.5);
+  AddComMoveToArea(un, ru_exit);
+end;
+
+on Contact(side1, side2) do
+begin
+  if ((side1=you) and (side2=arabians)) or ((side2=you) and (side1=arabians)) then begin
+    music_nat:=nation_arabian_music;
+    music_class:=music_combat;
+  end;
+end;

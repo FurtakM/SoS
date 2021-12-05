@@ -10,7 +10,7 @@ Function BaseMapConfig;
 begin
     // Base config
     // Amount of animals: ape, phororhacos, tiger, eohippus
-    animalsAmount = [8, 12, 6, 6];
+    animalsAmount = [8, 12, 6, 6, 0];
 
     // Animals stats
     animalsStats = [2, 2, 2, 2];
@@ -26,14 +26,17 @@ begin
     previousMissionPrefix = '03_';
 end;
 
-Export enemySkillLevel, russianCargoPath1, russianCargoPath2; // [[x, y], [x, y]..]
+Export enemySkillLevel, enemySkillLevelFlame, russianCargoPath1, russianCargoPath2; // [[x, y], [x, y]..]
 Export groupsToEvacuation;
+Export cargoChanceSpawn;
+Export enemyWaves, enemyGroupVehicles, enemyGroupHumans;
 Function MissionMapConfig;
 begin
     // Specific for current mission
 
     // Enemy skill level
-    enemySkillLevel = [2, 2, 3][Difficulty];
+    enemySkillLevel = [2, 3, 4][Difficulty];
+    enemySkillLevelFlame = [-2, -1, 0][Difficulty];
 
     // Paths for russian cargo
     russianCargoPath1 = [ [135, 8], [135, 4], [134, 19], [132, 26], [128, 31], [123, 37], [118, 45], [112, 51], [106, 57], 
@@ -48,6 +51,17 @@ begin
 
     // Groups vehicles and troops to evacuation, after that will spawn arabian atttacks
     groupsToEvacuation = [40, 35, 30][Difficulty];
+
+    // Cargo chance spawn
+    cargoChanceSpawn = 50; // 1 - 100
+
+    // How many cargo must evacuate to trigger attacks
+    cargosToTriggerAttacks = [21, 19, 17][Difficulty];
+
+    // Enemy config
+    enemyWaves = [3, 4, 4][Difficulty];
+    enemyGroupVehicles = [3, 4, 4][Difficulty];
+    enemyGroupHumans = [5, 6, 7][Difficulty];
 end;
 
 every 0$1 trigger debugMode do
@@ -56,10 +70,10 @@ begin
     enable;
 
     FogOff(your_side);
-
-    for i in FilterAllUnits([[f_side, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+     
+   for i in FilterAllUnits([[f_side, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
         SetLives(i, 1000);
-
+  
     for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
     begin
         SetSkill(i, skill_combat, 10);
@@ -74,4 +88,5 @@ begin
         SetResourceType(GetBase(i), mat_oil, 9999);
         SetResourceType(GetBase(i), mat_siberit, 9999);
     end;
+     
 end;
