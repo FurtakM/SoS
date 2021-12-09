@@ -238,21 +238,13 @@ Say(Aviradze, 'DA-2-spot');
 Say(Heike, 'DH-3-spot');
 
 ComMoveUnit(Kaia, Heike);
-ComTurnUNit(Heike, Kaia);
+ComTurnUnit(Heike, Kaia);
 
 wait(0$0.3);
 
-async;
-
 Say(Kaia, 'DK-3-spot');
 
-repeat
-  wait(0$1);
-until GetDistUnits(Heike, Kaia) < 4;
-
 ComTurnUnit(Kaia, Heike);
-
-sync;
 
 Say(Heike, 'DH-4-spot');
 
@@ -352,6 +344,39 @@ RemoveSeeing(GetX(un), GetY(un), 2);
 DialogueOff;
 End;
 
+// Gladstone run
+Every 0$1 trigger usAlert and (GetLives(Gladstone) < 1000 or GetLives(usLab) < 999) do
+var veh;
+begin
+veh := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);
+
+if veh and IsOk(Gladstone) then
+   begin
+
+   if IsInUnit(Gladstone) then
+      ComExitBuilding(Gladstone);
+
+   AddComEnterUnit(Gladstone, veh[1]);
+   end
+else if IsInUnit(Gladstone) then
+   ComExitBuilding(Gladstone);
+
+AddComMoveXY(Gladstone, 27, 51);
+
+Say(Gladstone, 'D8-Glad-2');
+
+repeat
+ wait(0$1);
+until IsAt(Gladstone, 27, 51) or IsAt(IsInUnit(Gladstone), 27, 51) or IsDead(Gladstone);
+
+if IsDead(Gladstone) then
+   exit;
+
+RemoveUnit(HexInfo(27, 51));
+gladstoneEscaped := true;
+SaveVariable(true, '02_GladstoneEscaped');
+End;
+
 // quest done
 Every 0$1 trigger aviradzeSpotted and (sciCounterKill >= 3 or not usSci) and not aviradzeQuestDone do
 begin
@@ -388,12 +413,15 @@ for i in FilterAllUnits([f_side, 5]) do
     SetSide(i, 2);
 End;
 
+Every 0$1 trigger usAlert and not attackDeltaAllowed do
+spottedBeforeRadio := true;
+
 Every 0$1 trigger attackDeltaAllowed and IsOk(Markov) and GetSide(Delta) = 1 and IsOk(Lynch) and not usAlert do
 var i, k, tmp;
 begin
 trap := 0;
 
-wait(0$15);
+wait(0$12);
 
 DialogueOn;
 
@@ -481,7 +509,7 @@ if IsOk(Kamil) or IsOk(Sophia) then
           AddComAgressiveMove(i, 42, 20);
           end;
 
-      wait(0$5);
+      wait(0$8);
       RemoveSeeing(64, 32, 2);
 
       repeat
@@ -727,13 +755,15 @@ if tick <= [25$00, 24$00, 23$00][Difficulty] then
 else
    AddMedal('med1', -1);
 
-if FilterAllUnits([[f_side, 1], [f_class, 4]]) = 0 then
+if FilterAllUnits([[f_side, 1], [f_class, 4]]) = 0 and not gladstoneEscaped then
    AddMedal('med2', 1)  
 else
    AddMedal('med2', -1);
 
 if trickyMove then
    AddMedal('med3', 1)
+else if spottedBeforeRadio then
+   AddMedal('med3', -2)
 else
    AddMedal('med3', -1);
 
