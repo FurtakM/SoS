@@ -213,10 +213,9 @@ tmp3 := UnitFilter(russianForces, [f_not, [f_lives, 500]]);
 if not tmp then
    exit;
 
-tmp := NearestUnitToUnit(tmp2[1], tmp);
-
-if GetDistUnits(tmp, tmp2[1]) < 10 then
-   ComAttackUnit(tmp2, tmp);
+for i in tmp2 do
+    if GetDistUnits(i, NearestUnitToUnit(tmp, i)) < 10 then
+       ComAttackUnit(i, NearestUnitToUnit(tmp, i));
 
 if tmp3 then
    for i in tmp do
@@ -767,6 +766,43 @@ End;
 // heike get hurt
 Every 0$1 trigger GetLives(Heike) < 500 do
 heikeHurt := true;
+
+// if player captured depot
+Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_type, unit_building]]) do
+var i, tmp, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+tmp := [];
+
+for i := 1 to 8 do
+    begin
+    PrepareHuman(false, 1, 4);
+    un := CreateHuman;
+    SetDir(un, 4);
+    PlaceUnitXY(un, 158, 80, false);
+    ComMoveXY(un, 147, 75);
+    wait(0$1);
+
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     un := NearestUnitToUnit(FilterAllUnits([f_side, 2]), i);
+
+     if HexInfo(GetX(un[1]), GetY(un[1])) then
+        ComAgressiveMove(i, GetX(un[1]), GetY(un[1]))
+     else
+        ComAttackUnit(i, Heike);
+     end;
+
+until IsDead(Heike) or not tmp;
+End;
 
 // end mission
 Every 0$1 trigger lastObjectiveActive and IsOk(Heike) and FilterUnitsExceptArea(escapeEast, [[f_type, unit_human], [f_side, 2], [f_ok]]) = 0 do
