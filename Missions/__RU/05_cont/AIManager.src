@@ -1,1 +1,472 @@
-//
+Export Function BuildBase;
+var engs;
+begin
+    engs = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_class, class_engineer]]);
+
+    AddComBuild(engs, b_armoury, 129, 74, 2);   
+    AddComBuild(engs, b_oil_power, 128, 53, 2);
+    AddComBuild(engs, b_lab, 138, 78, 5);    
+    AddComBuild(engs, b_workshop, 137, 63, 4);    
+    AddComBuild(engs, b_ext_stitch, 137, 60, 3);  
+    AddComBuild(engs, b_ext_track, 140, 66, 5);  
+    AddComBuild(engs, b_ext_gun, 133, 59, 2);
+
+    ComMoveXY([mastodon, Omar], 128, 66);
+end;
+
+{
+  AI manager version: 1.1
+  Programmer: Nefarem
+  
+  Summary: Manage AI troops in base, set state, build base/vehicles, repair building/vehicles, rebuild destroyed buildings/vehicles, heal damage units, defence base, attack other side.
+  Each units have 3 states: 0 - need heal, 1 - ready to work, 2 - defence, 3 - offensive
+  Example: InitAIManager(2, nation_arabian, [Heike, Gensher, Farmer, Schultz], ArabianBaseArea, ArabianHealArea, ArabianParkingArea, ArabianDefenceArea, 9, 4, 5, true);
+
+  Todo:
+  - Flex force stop init manager.
+  - Fix bugs.
+  - Other improvments.
+}
+
+Export Function InitAIManager(side, nation, basePersonel, baseArea, healArea, parkingArea, defenceArea, vehiclesAmount, vehiclesToDefenceAmount, vehiclesToAttackAmount, canAttack);
+var i, j,  tmp, tmpState, unit, personel, soldiers, engineers, mechanics, scientists, vehicle, vehicles, vehicleInList, defenceUnits, offensiveUnits, weapons, chassis, depot, factory, lab, bunkers, barracks, damageBuilding, damageUnit, emptyBunkers, enemyUnits, attackBuildings, enemyBuildings;
+begin
+
+    personel = []; //struct: [unit, building/vehicle, state]
+    vehicles = []; //struct: [unit, driver, state]
+
+    for unit in basePersonel do
+        personel = personel ^ [[unit, IsInUnit(unit), IsOK(unit)]];
+
+    for vehicle in FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_vehicle], [f_ok], [f_not, [f_or, [f_chassis, 31], [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay]]]]) diff arabianPatrolVehicles do
+        vehicles = vehicles ^ [[vehicle, IsInUnit(vehicle), IsOK(vehicle)]];
+
+
+    repeat
+        soldiers = [];
+        engineers = [];
+        mechanics = [];
+        scientists = [];
+        
+        depot = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+        factory = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+        lab = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+        bunkers = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+        barracks = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+        // Personel manager - change state
+        for i := 1 to personel do
+        begin
+            if GetLives(personel[i][1]) = 1000 then
+            begin
+                personel = ReplaceIn(personel, [i, personel[i]], 1);
+
+            end
+            else if GetLives(personel[i][1]) <= 950 then
+            begin
+                personel = ReplaceIn(personel, [i, personel[i] - 1], 0);
+                ComMoveToArea(personel[i][1], healArea);
+            end;
+
+            if GetLives(personel[i][1]) < 250 then
+                personel = personel diff [personel[i]];
+        end;
+
+        // Vehicles manager - change state        
+        for i := 1 to vehicles do
+        begin
+            if GetLives(vehicles[i][1]) = 1000 then
+            begin
+                if GetControl(vehicles[i][1]) = control_manual then
+                    if NOT IsInUnit(vehicles[i][2]) then
+                        ComEnterUnit(vehicles[i][2], vehicles[i][1]);
+
+                if vehicles < vehiclesToAttackAmount then
+                    vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 3)
+                else
+                    vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 2);
+            end
+            else if GetLives(vehicles[i][1]) <= 650 then
+            begin
+                vehicles = ReplaceIn(vehicles, [i, vehicles[i]], 0);
+                ComMoveToArea(vehicles[i][1], parkingArea);
+            end;
+
+            if GetLives(vehicles[i][1]) < 250 then
+                vehicles = vehicles diff [vehicles[i]];
+        end;
+
+        // Soldiers manager
+        for i := 1 to personel do
+            soldiers = soldiers ^ UnitFilter(personel[i], [f_class, class_soldier]);
+
+        if soldiers AND UnitFilter(bunkers, [f_not, [f_occupied]]) then
+        begin
+            for i := 1 to personel do
+            begin
+                if GetClass(personel[i][1]) = class_soldier AND personel[i][3] = 1 then
+                begin
+                    if GetTaskList(personel[i][1]) then
+                        if GetTaskList(personel[i][1])[1][1] = 'e' AND GetBType(GetTaskList(personel[i][1])[1][4]) IN [b_armoury, b_barracks] then
+                            SetTaskList(personel[i][1], []);
+
+                    for emptyBunkers in UnitFilter(bunkers, [f_not, [f_occupied]]) do
+                        if NOT GetBType(IsInUnit(personel[i][1])) IN [b_breastwork, b_bunker] then
+                            ComEnterUnit(personel[i][1], emptyBunkers);
+                        
+                end;
+            end;
+        end
+        else if soldiers AND barracks then
+            for i := 1 to personel do
+                if GetClass(personel[i][1]) = class_soldier AND personel[i][3] = 1 AND UnitFilter(personel[i][1], [f_outside]) then
+                begin        
+                    if NOT personel[i][2] then
+                        personel = ReplaceIn(personel, [i, personel[i] - 1], barracks[rand(1, barracks)]);
+
+                    ComEnterUnit(personel[i][1], personel[i][2]);
+                end;    
+
+        // Engineers manager
+        for i := 1 to personel do
+            engineers = engineers ^ UnitFilter(personel[i], [f_class, class_engineer]);
+
+        if engineers AND FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]) then
+        begin 
+            for i := 1 to personel do
+                if GetClass(personel[i][1]) = class_engineer AND personel[i][3] = 1 then
+                begin
+                    if GetTaskList(personel[i][1]) then
+                        if GetTaskList(personel[i][1])[1][1] = 'e' then
+                            SetTaskList(personel[i][1], []);
+
+                    if IsInUnit(personel[i][1]) then
+                        ComExitBuilding(personel[i][1]);
+
+                    for damageBuilding in FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]) do
+                        AddComRepairBuilding(personel[i][1], damageBuilding);
+                end;
+        end
+        else if engineers AND UnitFilter(engineers, [f_outside]) AND depot then
+            for i := 1 to personel do
+            begin
+                if GetClass(personel[i][1]) = class_engineer AND personel[i][3] = 1 then
+                begin        
+                    if NOT personel[i][2] then
+                        personel = ReplaceIn(personel, [i, personel[i] - 1], FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1]);
+
+                    ComEnterUnit(personel[i][1], personel[i][2]);
+                end;
+            end;     
+
+        // Mechanics manager
+        for i := 1 to personel do
+            mechanics = mechanics ^ UnitFilter(personel[i], [f_class, class_mechanic]);
+
+        if mechanics AND FilterUnitsInArea(baseArea,[[f_side, side], [f_type, unit_vehicle], [f_not, [f_lives, 1000]]]) then
+        begin
+            for damageUnit in FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_vehicle], [f_not, [f_lives, 1000]]]) do
+            begin
+               if GetDistUnitArea(damageUnit, parkingArea) < 5 then
+               begin
+                    for i := 1 to vehicles do
+                    begin
+                        if vehicles[i][1] = damageUnit then
+                            ComExitVehicle(vehicles[i][2]);
+                            AddComRepairVehicle(vehicles[i][2], damageUnit);
+                    end;   
+
+                    for i := 1 to personel do
+                        if GetClass(personel[i][1]) = class_mechanic AND personel[i][3] = 1 then
+                        begin
+                            if GetTaskList(personel[i][1]) then
+                                if GetTaskList(personel[i][1])[1][1] = 'e' then
+                                    SetTaskList(personel[i][1], []);
+
+                            if IsInUnit(personel[i][1]) then
+                                ComExitBuilding(personel[i][1]);
+                            
+                            AddComRepairVehicle(personel[i][1], damageUnit);              
+                        end;
+               end;
+ 
+                if GetLives(damageUnit) < 250 then
+                    for i := 1 to personel do
+                        if GetClass(personel[i][1]) = class_mechanic AND personel[i][3] = 1 then
+                        begin
+                            if GetTaskList(personel[i][1]) then
+                                if GetTaskList(personel[i][1])[1][1] = 'e' then
+                                    SetTaskList(personel[i][1], []);
+
+                            if IsInUnit(personel[i][1]) then
+                                ComExitBuilding(personel[i][1]);
+                            
+                            AddComRepairVehicle(personel[i][1], damageUnit);          
+                        end;       
+            end;
+        end
+        else if mechanics AND UnitFilter(mechanics, [f_outside]) AND factory then
+            for i := 1 to personel do
+                if GetClass(personel[i][1]) = class_mechanic AND personel[i][3] = 1 then
+                begin        
+                    if NOT personel[i][2] then
+                        personel = ReplaceIn(personel, [i, personel[i] - 1], factory[rand(1, factory)]);
+
+                    ComEnterUnit(personel[i][1], personel[i][2]);
+        end;  
+
+        // Scientists manager
+        for i := 1 to personel do
+            scientists = scientists ^ UnitFilter(personel[i], [f_class, class_scientistic]);
+
+        if scientists AND FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_human], [f_not, [f_lives, 1000]]]) then
+        begin
+            for damageUnit in FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_human], [f_not, [f_lives, 1000]]]) do
+            begin
+                if GetDistUnitArea(damageUnit, healArea) < 5 then
+                       for i := 1 to personel do
+                        if GetClass(personel[i][1]) = class_scientistic AND personel[i][3] = 1 then
+                        begin
+                            if GetTaskList(personel[i][1]) then
+                                if GetTaskList(personel[i][1])[1][1] = 'e' then
+                                    SetTaskList(personel[i][1], []);
+
+                            if IsInUnit(personel[i][1]) then
+                                ComExitBuilding(personel[i][1]);
+                            
+                            AddComHeal(personel[i][1], damageUnit);              
+                        end;
+
+                if GetLives(damageUnit) < 250 then
+                    for i := 1 to personel do
+                        if GetClass(personel[i][1]) = class_scientistic AND personel[i][3] = 1 then
+                        begin
+                            if GetTaskList(personel[i][1]) then
+                                if GetTaskList(personel[i][1])[1][1] = 'e' then
+                                    SetTaskList(personel[i][1], []);
+
+                            if IsInUnit(personel[i][1]) then
+                                ComExitBuilding(personel[i][1]);
+                            
+                            AddComHeal(personel[i][1], damageUnit);              
+                        end;
+            end;
+         
+        end
+        else if scientists AND UnitFilter(scientists, [f_outside]) AND lab  then
+            for i := 1 to personel do
+                if GetClass(personel[i][1]) = class_scientistic AND personel[i][3] = 1 then
+                begin        
+                    if NOT personel[i][2] then
+                        personel = ReplaceIn(personel, [i, personel[i] - 1], lab[rand(1, lab)]);
+
+                    ComEnterUnit(personel[i][1], personel[i][2]);
+                end;    
+
+        wait(0$01);
+
+
+        // Vehicles manager
+        if vehicles < vehiclesAmount AND factory then
+        begin
+        
+            tmp = vehiclesAmount - vehicles;
+            
+            weapons = GetAvailableWeapons(side, nation);
+
+            for i := 1 to tmp do
+            begin
+                tmp = weapons[rand(1, weapons)];
+                if tmp then
+                begin
+                    if tmp IN [34, 14, 71] then
+                        chassis = [[us_heavy_tracked], [ar_half_tracked], [ru_heavy_tracked]][nation]
+                    else 
+                        chassis = [[us_medium_wheeled, us_medium_tracked, us_heavy_tracked], [ar_half_tracked], [ru_medium_wheeled, ru_heavy_wheeled, ru_heavy_tracked, ru_medium_tracked]][nation];
+
+                    AddComConstruct(factory[1], chassis[rand(1, chassis)], engine_combustion, control_manual, tmp);         
+                end;
+
+            end;
+        end
+        else
+            ComCancel(factory[1]);
+
+        for vehicle in FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_vehicle], [f_ok], [f_not, [f_or, [f_chassis, 31], [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay]]]]) diff arabianPatrolVehicles do
+        begin
+            vehicleInList = false;
+
+            for i := 1 to vehicles do
+            begin
+                if vehicle IN vehicles[i] then
+                    vehicleInList = true;
+            end;  
+
+            if NOT vehicleInList then
+                if vehicles < vehiclesToAttackAmount then
+                    vehicles = vehicles ^ [[vehicle, UnitsInside(vehicle)[1], 3]]
+                else
+                    vehicles = vehicles ^ [[vehicle, UnitsInside(vehicle)[1], 2]];
+        end;
+
+        // Offensive manager
+        for enemyUnits in FilterAllUnits([f_enemy, side]) do
+        begin
+            offensiveUnits = [];
+
+            for i := 1 to vehicles do
+                if vehicles[i][3] = 3 then
+                begin
+                    offensiveUnits = offensiveUnits ^ vehicles[i][1];
+                    for j = 1 to personel do
+                        if personel[j][1] = vehicles[i][2] then
+                           personel = ReplaceIn(personel, [j, personel[j] - 1], 3);
+                end;
+
+            if offensiveUnits >= vehiclesToAttackAmount - 2 then
+               AddComAttackUnit(UnitFilter(offensiveUnits, [f_not, [f_hastask]]), enemyUnits);
+        end;
+
+        // Defence manager
+        for enemyUnits in FilterUnitsInArea(defenceArea, [f_enemy, side]) do
+        begin
+            defenceUnits = [];
+
+            for i := 1 to personel do
+                if personel[i][3] = 2 then
+                    defenceUnits = defenceUnits ^ personel[i][1];
+
+            for i := 1 to vehicles do
+                if vehicles[i][3] = 2 then
+                    defenceUnits = defenceUnits ^ vehicles[i][1];
+
+            AddComAttackUnit(UnitFilter(defenceUnits, [f_not, [f_hastask]]), enemyUnits);
+        end;
+
+        attackBuildings = FilterAllUnits([[f_side, side], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+        enemyBuildings = FilterAllUnits([[f_enemy, side], [f_type, unit_building], [f_empty]]);
+
+        if attackBuildings and enemyBuildings  then
+           for i in attackBuildings do
+               for j in enemyBuildings do
+                   if GetDistUnits(i, j) < 12 then
+                      ComAttackUnit(i, j);
+
+    until NOT personel OR arabianCanExitMap;
+
+end;
+
+
+// Patrol
+every 7$30 trigger NOT arabianPatrolVehicles do
+begin
+    enable;
+
+    PrepareArabianPatrolVehicles(arabianPatrolVehiclesAmount, ArabianPatrolExitArea1);
+
+    arabLeftExit = true;
+    arabRightExit = false;
+end;
+
+every 0$1 trigger arabianPatrolVehicles AND arabLeftExit do
+var veh, x, base, test;
+begin
+    enable;
+
+    ComAgressiveMove(arabianPatrolVehicles, 71, 137);
+
+    for veh in arabianPatrolVehicles do
+    begin
+        if IsInArea(veh, ArabianPatrolExitArea2) then
+        begin
+    
+            if arabianPatrolVehicles then
+            begin
+                RemoveUnit(UnitsInside(veh)[1]);
+                RemoveUnit(veh);    
+            end;
+   
+            x = 0;
+
+            for veh in arabianPatrolVehicles do
+                if NOT IsPlaced(veh) then
+                    x = x + 1;
+
+            if x = arabianPatrolVehicles then
+            begin
+                arabLeftExit = false;
+                arabRightExit = true;
+
+                wait(2$0);
+
+                arabianPatrolVehicles = [];
+                PrepareArabianPatrolVehicles(arabianPatrolVehiclesAmount, ArabianPatrolExitArea2);
+
+            end;
+        end;    
+    end;
+end;
+
+every 0$1 trigger arabianPatrolVehicles AND arabRightExit do
+var veh, x, base;
+begin
+    enable;
+
+    ComAgressiveMove(arabianPatrolVehicles, 184, 134);
+
+    for veh in arabianPatrolVehicles do
+    begin
+        if IsInArea(veh, ArabianPatrolExitArea1) then
+        begin
+    
+            if arabianPatrolVehicles then
+            begin
+                RemoveUnit(UnitsInside(veh)[1]);
+                RemoveUnit(veh);    
+            end;
+   
+            x = 0;
+
+            for veh in arabianPatrolVehicles do
+                if NOT IsPlaced(veh) then
+                    x = x + 1;
+
+            if x = arabianPatrolVehicles then
+            begin
+                arabLeftExit = true;
+                arabRightExit = false;
+
+                wait(2$0);
+
+                arabianPatrolVehicles = [];
+                PrepareArabianPatrolVehicles(arabianPatrolVehiclesAmount, ArabianPatrolExitArea1);
+
+            end;
+        end;    
+    end;
+end;
+
+every 4$0 trigger NOT arabianHovercrafts AND NOT arabianCanExitMap do
+begin
+    enable;
+    PrepareArabianHovercraft;
+end;
+
+every 0$1 trigger arabianHovercrafts do
+var i, x;
+begin
+    enable;
+
+    SetFuel(arabianHovercrafts, 100);
+
+    for i := 1 to arabianHovercraftsPath do
+        AddComAgressiveMove(arabianHovercrafts, arabianHovercraftsPath[i][1], arabianHovercraftsPath[i][2]);   
+
+    x = arabianHovercraftsPath;
+
+    repeat
+        AddComAgressiveMove(arabianHovercrafts, arabianHovercraftsPath[x][1], arabianHovercraftsPath[x][2]);
+
+        x = x - 1;     
+    until x = 0;
+end;

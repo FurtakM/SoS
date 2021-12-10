@@ -5,9 +5,6 @@ begin
 
     if GetSide(building) = 2 then
     begin
-        if GetBType(building) = b_armoury then
-            ComUpgrade(building);
-
         if GetBType(building) = b_lab then
             ComUpgradeLab(building, b_lab_weapon);
 
@@ -43,3 +40,38 @@ begin
         Dial_ApeEnterLab;
 end;
 
+On UnitGoesToRed(unit) Do
+begin
+    if unit in arabianPatrolVehicles then
+        arabianPatrolVehicles = arabianPatrolVehicles diff unit;
+
+    if unit in arabianHovercrafts then
+        arabianHovercrafts = arabianHovercrafts diff unit;
+end;
+
+On UnitDestroyed(unit) Do
+begin
+    if unit in arabianUnitsInBase then
+        arabianUnitsInBase = arabianUnitsInBase diff unit;
+
+    if unit = Burlak then
+        Lose_Burlak;
+
+    if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3]]) < 6 then
+        Lose_Survive;
+end;
+
+On Contact(side1, side2) Do
+begin
+    if (side1 = 3 AND side2 = 6 OR side1 = 6 AND side2 = 3) AND GetSide(Stevens) = 6 then
+    begin
+        stevensFollow = false;
+        stevensCanExitMap = true;
+        stevensWasInDepot = false;
+        stevensDepot = false;   
+
+        SetSide(Stevens, 1);
+
+        ComMoveToArea(Stevens, StevensExitMapArea);
+    end;
+end;

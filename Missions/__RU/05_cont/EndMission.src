@@ -2,21 +2,112 @@ Every 0$5 do
 begin
     enable;
 
-    if FilterUnitsInArea(exit_area, [[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]])
-    AND FilterUnitsInArea(exit_area, [[f_side, 3], [f_type, unit_human], [f_ok]]) then
+    if NOT finishMissionBool AND FilterUnitsInArea(exit_rus, [[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_occupied], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]])
+    AND FilterUnitsInArea(exit_rus, [[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_ok]]) then
         Query('QVehicles');
 
 
-    if FilterUnitsInArea(exit_area, [[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]]) >= 6 then
+   if IsInArea(IsInUnit(Burlak), exit_rus) AND NOT finishMissionBool AND FilterUnitsInArea(exit_rus, [[f_side, 3], [f_type, unit_vehicle], [f_occupied], [f_ok], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]]) >= FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) then
+        FinishMission;
+
+    if IsInArea(IsInUnit(Burlak), exit_rus) AND NOT finishMissionBool AND FilterUnitsInArea(exit_rus, [[f_side, 3], [f_type, unit_vehicle], [f_occupied], [f_ok], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]]) >= 6 AND FilterUnitsInArea(exit_rus, [[f_side, 3], [f_type, unit_vehicle], [f_occupied], [f_ok], [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_heavy_tracked], [f_chassis, ar_half_tracked]]]) < FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) then
     begin
         case Query('QEndMission') of
-            //1-finis
+            1: FinishMission;
         end;
     end;
+
 end;
 
- Function FinishMission;
+Function FinishMission;
+var nearUnit;
 begin
+    
+    finishMissionBool = true;
+
+    if stevensDepot then
+    begin
+        DialogueOn;
+
+        if IsOK(Petrosyan) then Say(Petrosyan, 'DStevensLeftBehind-Pty-1')
+        else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'StevensLeftBehind-RSol1-1', '', false, true); 
+        
+        Say(Burlak, 'DStevensLeftBehind-Bur-1'); 
+
+        DialogueOff;
+
+        stevensStatus = 1;  
+    end;
+
+    if NOT stevensPlaced AND IsOK(Petrosyan) then
+    begin
+        PrepareStevens(exit_rus);
+
+        wait(0$1.5);
+
+        stevensPlaced = true;
+
+        nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), Stevens);
+        
+        CenterNowOnUnits(Stevens);
+        InGameOn;
+
+        wait(0$1.5);
+
+        SetSide(Stevens, 6);
+
+        DialogueOn;
+        Say(Stevens, 'DStevens-Huck-1');
+        Say(Petrosyan, 'DStevens-Pty-1');
+        Say(Petrosyan, 'DStevens-Pty-1a');
+        Say(Stevens, 'DStevens-Huck-2');
+        Say(Petrosyan, 'DStevens-Pty-2');
+        Say(Stevens, 'DStevens-Huck-3');
+        Say(Petrosyan, 'DStevens-Pty-3');
+        Say(Stevens, 'DStevens-Huck-4');
+        Say(Petrosyan, 'DStevensBurlak-Pty-1');
+        Say(Burlak, 'DStevensBurlak-Bur-1');
+        Say(Petrosyan, 'DStevensBurlak-Pty-2');
+
+        case Query('QKill') of
+            1:begin
+                stevensCanExitMap = true;
+                stevensFollow = false;
+                
+                Say(Burlak, 'DKill-1-Bur-1');
+                if IsOK(Gleb) then Say(Gleb, 'DKill-1-Glb-1');
+
+                DialogueOff;
+
+                SetSide(Stevens, 1);
+
+                stevensStatus = 0;
+                repeat
+                    ComAttackUnit(FilterAllUnits([f_side, 3]), Stevens);
+                    wait(0$1);
+                until IsDead(Stevens);
+
+                wait(0$1.5);
+            end;
+
+            2:begin
+                stevensCanExitMap = true;
+                stevensWasInDepot = false;
+                stevensDepot = false;
+                stevensStatus = 1;
+
+                Say(Burlak, 'DKill-2-Bur-1');
+                Say(Petrosyan, 'DKill-2-Pty-1');
+
+                DialogueOff;
+                
+                ComMoveToArea(Stevens, StevensExitMapArea);
+
+            end;
+        end;
+
+    end;
+
     SetRewards;
     SavePlayerCharacters;
     SaveGlobalVariables;
@@ -26,27 +117,83 @@ end;
 
 
 Function SetRewards;
-var unitsToReward;
 begin
 
-    // Medals
+    if fastBreakthrough then
+        AddMedal('Time', 1)
+    else
+        AddMedal('Time', -1);
+
+    if dial_tameApeBlocker then
+        AddMedal('Apemen', 1)
+    else if NOT dial_tameApeBlocker AND GetTech(tech_apelang, 3) = state_enabled then
+        AddMedal('Apemen', -1)
+    else
+        AddMedal('Apemen', -2);
+    
+    if NOT omarStatus then
+        AddMedal('Abdul', 1)
+    else
+        AddMedal('Abdul', -1);
 
     GiveMedals('Main');
 
-
+    RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]));
 end;
 
 Function SavePlayerCharacters;
-var othersYour;
+var othersYour, ape;
 begin
-    SaveCharacters(Burlak, '04_Burlak');
+    ExtSaveCharacter(Burlak, 'Burlak', 3);
+    if IsInArea(IsInUnit(Karamazov), exit_rus) then ExtSaveCharacter(Karamazov, 'Karamazov', 3);
+    if IsInArea(IsInUnit(Petrovova), exit_rus) then ExtSaveCharacter(Petrovova, 'Petrovova', 3);
+    if IsInArea(IsInUnit(Gleb), exit_rus) then ExtSaveCharacter(Gleb, 'Gleb', 3);
+    if IsInArea(IsInUnit(Petrosyan), exit_rus) then ExtSaveCharacter(Petrosyan, 'Petrosyan', 3);
+    if IsInArea(IsInUnit(Dolgov), exit_rus) then ExtSaveCharacter(Dolgov, 'Dolgov', 3);
+    if IsInArea(IsInUnit(Lipshchin), exit_rus) then ExtSaveCharacter(Lipshchin, 'Lipshchin', 3);
+    if IsInArea(IsInUnit(Titov), exit_rus) then ExtSaveCharacter(Titov, 'Titov', 3);
 
 
-
+    ExtSaveCharacters(FilterUnitsInArea(exit_rus, [[f_side, 3],[f_type,unit_human], [f_or, [f_class, class_apeman], [f_class, class_apeman_engineer], [f_class, class_apeman_soldier]]]), 'other_apemans', 3);
  
 end;
 
 
 Function SaveGlobalVariables;
+var i, resources, driver, driverShortName;
 begin
+    resources = [];
+    tanksFrom05 = [];
+
+    SaveVariable(stevensStatus, '05_StevensStatus_1');
+    SaveVariable(omarStatus, '05_OmarStatus_2');
+
+    for i in FilterUnitsInArea(exit_rus,[[f_side, 3], [f_occupied], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay]]]) do
+        resources = resources ^ [GetMultiCargo(i)];
+
+   SaveVariable(resources, '05_ResourcesInCargo_3');
+
+    for i in FilterUnitsInArea(exit_rus,[[f_side, 3], [f_type, unit_vehicle], [f_occupied]]) do
+    begin
+        driver = UnitsInside(i)[1];
+
+        if driver = Burlak then driverShortName = 'Bur';
+        if driver = Karamazov then driverShortName = 'Kar';
+        if driver = Petrovova then driverShortName = 'Ptr';
+        if driver = Gleb then driverShortName = 'Glb';
+        if driver = Petrosyan then driverShortName = 'Pet';
+        if driver = Dolgov then driverShortName = 'Dol';
+        if driver = Lipshchin then driverShortName = 'Lip';
+        if driver = Titov then driverShortName = 'Tit';
+
+        tanksFrom05 = tanksFrom05 ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
+    end;
+
+    SaveVariable(tanksFrom05, '05_Tanks_4');
+
+    if NOT FilterAllUnits([[f_side, 3], [f_nation, nation_russian], [f_type, unit_building], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) then
+        labDestroyed = 1;
+
+    SaveVariable(labDestroyed, '05_LabDestroyed_5');
+
 end;

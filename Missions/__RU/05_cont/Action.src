@@ -22,11 +22,21 @@ begin
         x = x + 1;
     end;
 
-   { repeat
+    repeat
         CenterNowOnUnits(Burlak);
-        wait(10);
-    until GetDistUnitXY(Burlak, 70, 90) < 7;
-      }
+        x = 0;
+
+        for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+        begin
+             ComMoveXY(unit, meetPositions[x][1], meetPositions[x][2]);
+             AddComTurnXY(unit, 69, 96);
+
+             x = x + 1;
+        end;
+
+        wait(0$1);
+    until GetDistUnitXY(Burlak, 70, 90) < 7 AND GetDistUnitXY(Karamazov, 70, 90) < 7 AND GetDistUnitXY(Petrovova, 70, 90) < 7 AND GetDistUnitXY(Gleb, 70, 90) < 7 AND GetDistUnitXY(Lipshchin, 70, 90) < 7;
+      
     Say(Karamazov, 'DDoubts-Kar-1');
     Say(Petrovova, 'DDoubts-Ptr-1');
     Say(Lipshchin, 'DDoubts-Bur-1');
@@ -119,7 +129,7 @@ begin
 end;
 
 // Wait for construct lab
-Every 2$30 trigger sawApeman AND IsOk(Petrosyan) do
+Every 2$30 trigger IsOk(Petrosyan) AND NOT FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) do
 Say(Petrosyan, 'DApeLab-Pty-1');
 
 // Research ape lang - execute in event
@@ -203,10 +213,25 @@ begin
     DialogueOff;    
 end;
 
+// Find new crates
+Every 0$1 trigger SeeXY(3, 74, 115) do
+begin
+    DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DShipments-RSol1-1', '', false, true);   
+    Say(Burlak, 'DShipments-Bur-1');   
+end;
+
+// Find Ovsyenko road
+Every 0$1 trigger SeeXY(3, 81, 132) do
+var unit;
+begin
+    unit = DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), 'DRoad-RSol1-1', '', false, true);   
+    Say(unit, 'DRoad-RSol1-1a');   
+end;
+
 // Spawn Stevens
 every 0$1 trigger FilterUnitsInArea(NatureArea,[[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [Burlak] AND FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]) do
 begin
-    PrepareStevens;
+    PrepareStevens(StevensSpawnArea);
 
     wait(0$1.5);
 
@@ -214,7 +239,7 @@ begin
 end;
 
 // Meet Stevens
-every 0$1 trigger See(3, Stevens) AND stevensPlaced  do
+every 0$1 trigger See(3, Stevens) AND stevensPlaced AND NOT finishMissionBool  do
 var nearUnit;
 begin
     nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]), Stevens);
@@ -261,7 +286,7 @@ begin
 end;
 
 // Stevens talk with Petrosyan
-Every 0$1 trigger stevensWantTalkPetrosyan AND GetDistUnits(Petrosyan, Stevens) < 20 AND IsOK(Petrosyan) do
+Every 0$1 trigger stevensWantTalkPetrosyan AND GetDistUnits(Petrosyan, Stevens) < 20 AND IsOK(Petrosyan) AND NOT finishMissionBool do
 begin
     stevensWantTalkPetrosyan = false;
 
@@ -279,7 +304,7 @@ begin
 end;
 
 // Stevens talk with Burlak
-Every 0$1 trigger GetDistUnits(Stevens, Burlak) < 15 AND IsOK(Petrosyan) do
+Every 0$1 trigger GetDistUnits(Stevens, Burlak) < 15 AND IsOK(Petrosyan) AND NOT finishMissionBool do
 begin
     DialogueOn;
 
@@ -341,7 +366,7 @@ var depot, depotUnit, constructDepot;
 begin
     enable;
 
-    depot = FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]);
+    depot = FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]])[1];
 
     if NOT depot then
         exit;
@@ -355,7 +380,8 @@ begin
 
     if NOT stevensWasInDepot then
     begin
-        if NOT IsInUnit(Stevens) AND NOT GetDistUnits(Stevens, depot) > 8  then
+
+        if NOT IsInUnit(Stevens) AND NOT GetDistUnits(Stevens, depot) < 8  then
             ComMoveXY(Stevens, GetX(constructDepot), GetY(constructDepot))
         else begin
             InGameOn;
@@ -419,6 +445,17 @@ begin
     end;
 end;
 
+// Remove Stevens from map
+every 0$1 trigger stevensCanExitMap AND IsInArea(Stevens, StevensExitMapArea) do
+begin
+    if GetSide(Stevens) = 6 then
+        stevensStatus = 1
+    else
+        stevensStatus = 2;
+
+    RemoveUnit(Stevens);
+end;
+
 // Player see Omar and his mastodon
 Every 0$1 trigger See(3, mastodon) do
 var rnd;
@@ -442,10 +479,21 @@ end;
 // Mastodont die
 Every 0$1 trigger NOT IsOK(mastodon) do
 begin
+    omarCanExitMap = true;
+
     DialogueOn;
     if IsOK(Karamazov) then Say(Karamazov, 'DOmar-Kar-1');
     if IsOK(Petrovova) then Say(Petrovova, 'DOmar-Ptr-1');
     DialogueOff;
+
+    ComMoveToArea(Omar, ArabianExitArea);
+end;
+
+// Remove Omar from map
+every 0$1 trigger IsInArea(Omar, ArabianExitArea) AND omarCanExitMap do
+begin
+    RemoveUnit(Omar);
+    omarStatus = 1;
 end;
 
 // Omar die
@@ -464,21 +512,68 @@ begin
 end;
 
 // Breakthrough
-Every 0$1 trigger ( IsDead(Omar) OR NOT IsPlaced(Omar) ) AND FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_lives, 250]]) < 5 do
+Every 0$1 trigger ( IsDead(Omar) OR NOT IsPlaced(Omar) ) AND arabianUnitsInBase < 3 do
 begin
+
+    if actionTime < arabBreakthrough then
+        fastBreakthrough = true;
+
     DialogueOn;
 
     if IsOK(Petrovova) then Say(Petrovova, 'DBreakthrough-Ptr-1');
     Say(Burlak, 'DBreakthrough-Bur-1');
     SayRadio(Platonov, 'DBreakthrough-Pla-1');
 
-    if actionTime < arabBreakthrough then
+    if fastBreakthrough then
         SayRadio(Platonov, 'DBreakthrough-Pla-1a')
     else
         SayRadio(Platonov, 'DBreakthrough-Pla-1b');
 
-    if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]]) then
-        SayRadio(Platonov, 'DBreakthrough-Pla-1c');
+    SayRadio(Platonov, 'DBreakthrough-Pla-1c');
 
-    DialogueOff;    
+    DialogueOff;   
+
+    ChangeMissionObjectives('MAddLab');
+
+    arabianCanExitMap = true;
+
+    ComMoveToArea(arabianUnitsInBase, ArabianExitArea); 
 end;
+
+// Remove arabian units from map
+Every 0$1 trigger arabianCanExitMap do
+var unit;
+begin
+    enable;
+    
+    for unit in arabianUnitsInBase do
+        if IsInArea(unit, ArabianExitArea) then
+        begin
+            arabianUnitsInBase = arabianUnitsInBase diff unit;
+            RemoveUnit(unit);       
+        end;
+end;
+
+// Meet arabian patrol in south road
+every 0$1 trigger NOT dial_southRoadBlocker do
+var unit;
+begin
+    for unit in arabianPatrolVehicles do
+        if See(3, unit) then
+        begin
+            dial_southRoadBlocker = true;
+
+            CenterNowOnUnits(unit);
+
+            if IsOK(Karamazov) then Say(Karamazov, 'DPatrol-Kar-1');
+            if IsOK(Petrovova) then Say(Petrovova, 'DPatrol-Ptr-1');
+            DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff Karamazov, 'DPatrol-RSol1-1', '', false, true); 
+            Say(Burlak, 'DPatrol-Bur-1');
+
+            exit;
+        end;
+end;
+
+// Spawn arabian patrol
+every 10$0 do
+PrepareArabianPatrolSoldiers;
