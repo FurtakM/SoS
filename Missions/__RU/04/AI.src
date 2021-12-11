@@ -120,10 +120,15 @@ begin
                 for attackUnit in attackUnits do
                 begin
                     if NOT GetDistUnitXY(attackUnit, lastPathNode[1], lastPathNode[2]) < 7 AND GetTag(attackUnit) = 0 then
-                        ComMoveXY(attackUnit, lastPathNode[1], lastPathNode[2])
-                    else if GetTag(attackUnit) = 0 then
-                        SetTag(attackUnit, 1);
+                    begin
+                        if agressiveMove then
+                            ComAgressiveMove(attackUnit, lastPathNode[1], lastPathNode[2])    
+                        else
+                            ComMoveXY(attackUnit, lastPathNode[1], lastPathNode[2]);
 
+                    end else if GetTag(attackUnit) = 0 then
+                        SetTag(attackUnit, 1);
+                    
                     if GetTag(unit) = 1 then
                         unitsReachPathEnd = unitsReachPathEnd + 1;
                 end;       
@@ -237,4 +242,14 @@ begin
     end; 
 
     result = nearPosition;
+end;
+
+// Build second base
+every 0$1 trigger GetResourceType(GetBase(secondBaseDepot), mat_cans) > 0 do
+begin
+
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_breastwork, 105, 51, 3);
+    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_breastwork, 114, 58, 3);
+    AddComEnterUnit(UnitFilter(secondBaseTeam, [f_class, class_engineer]), secondBaseDepot);
+
 end;
