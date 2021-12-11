@@ -778,11 +778,16 @@ begin
 end;
 
 // Spawn Jelena
-every 0$15 trigger evacuationAvailable AND GetSide(Kirilenkova) = 6 do
+every 0$15 trigger evacuationAvailable AND NOT jelenaSpawned do
 var randomSold;
 begin
     PlaceUnitArea(Kirilenkova, JelenaSpawnArea, true);
     wait(0$3);
+
+    jelenaSpawned = true;
+
+    if GetDistUnits(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova), Kirilenkova) < 9 then
+       exit;
 
     DialogueOn;
     SayRadio(Kirilenkova, 'D11b-Kir-1');
@@ -854,7 +859,7 @@ begin
 end;
 
 // Save Jelena
-every 0$1 trigger See(3, Kirilenkova) do
+every 0$1 trigger See(3, Kirilenkova) AND jelenaSpawned do
 var nearUnit;
 begin
     SetSide(Kirilenkova, 3);
@@ -863,7 +868,7 @@ begin
 
     CenterNowOnUnits(Kirilenkova);
 
-    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova);
+    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) diff Kirilenkova, Kirilenkova);
 
     DialogueOn;
 
