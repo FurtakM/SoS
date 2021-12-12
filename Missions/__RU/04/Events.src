@@ -1,17 +1,46 @@
 On BuildingStarted(building, unit) Do
 begin
-    if GetBType(building) = b_depot AND NOT IsInArea(building, HillArea) then
+    if GetSide(building) = 3 AND GetBType(building) = b_depot AND NOT IsInArea(building, HillArea) then
         Dial_DepotInWrongPlace(building);
 end;
 
 On BuildingComplete(building) Do
+var i, cargo;
 begin
-    if GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation AND NOT namedBase then
+    if GetSide(building) = 3 AND GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation AND NOT namedBase then
     begin
         namedBase = true;
         SetBName(building, 'chuikov');
         Dial_FinishDepot;
     end;
+
+    if GetSide(building) = 6 AND GetBType(building) = b_depot then
+    begin
+        secondBaseDepot = building;
+
+        uc_side = 6;
+        uc_nation = nation_russian;
+        vc_chassis = ru_medium_wheeled;
+        vc_control = control_manual;
+        vc_engine = engine_combustion;
+        vc_weapon = ru_cargo_bay;
+        cargo = CreateVehicle; 
+
+        PlaceUnitArea(cargo, RussianSpawnArea2, false);
+
+        AddCargo(cargo, mat_cans, 100);   
+        ComGive(cargo, building);   
+
+        PrepareMechanic(false, 2);
+
+        PlaceHumanInUnit(CreateHuman, cargo);
+
+        for i := 10 to russianCargoPath1 do
+            AddComMoveXY(cargo, russianCargoPath1[i][1], russianCargoPath1[i][2]);
+    end;
+
+    if GetSide(building) = 6 and GetBType(building) = b_breastwork then
+        ComEnterUnit(UnitFilter(secondBaseTeam, [[f_class, class_soldier], [f_outside]])[1], building);
 end;
 
 On UpgradeComplete(building) Do
@@ -49,4 +78,26 @@ begin
 
     if GetSide(unit) = 2 AND GetType(unit) = unit_human AND NOT IsPlaced(Gaydar) then
         killedArabianUnits = killedArabianUnits + 1;
+end;
+
+On BuildingCaptured(building, side, human) Do
+begin
+    if side = 6 then
+        SetSide(building, 6);
+end;
+
+On Command(com) do
+var i, j, temp, order, x, y, building;
+begin
+
+    for i in FilterAllUnits([[f_side,3],[f_or, [f_weapon, ru_cargo_bay], [f_type,unit_human]]]) do
+        if GetTaskList(i) > 0 then
+            for j = 1 to GetTaskList(i) do
+            begin
+                temp = GetTaskList(i)[j][4];
+
+                if (GetSide(temp) = 6 and GetTaskList(i)[j][1] = '<') then
+                    SetTaskList(i, []);
+            end;
+
 end;

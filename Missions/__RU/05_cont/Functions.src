@@ -13,7 +13,7 @@ begin
 
    if exist_mode AND NOT debugMode then
       unit := CreateCharacter(previousMissionPrefix&ident)
-   else if NOT debugMode then
+   else if NOT debugMode  then
       unit := NewCharacter(ident);
 
    if class then
@@ -62,18 +62,18 @@ var i, speaker, units;
 begin
    units = characters;
 
-   units := units diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin];
+   units := units diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Stevens];
 
    if NOT units AND NOT canTalkHero then
       exit;
 
    if NOT units then
-      units = characters diff Burlak;
+      units = characters diff [Burlak, Stevens];
 
    if NOT units AND canTalkHero then
       exit;
 
-   speaker := characters[rand(1, units)];
+   speaker := units[rand(1, units)];
 
    if radio then
    begin
@@ -153,3 +153,9 @@ begin
         tech_Rocket: result = [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nation];
     end;
 end;
+
+Export Function GetMultiCargo(cargo_bay);
+var i;
+begin
+   result := [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
+End;

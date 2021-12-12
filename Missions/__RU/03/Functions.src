@@ -16,11 +16,23 @@ if exist_mode then
 result := unit;
 End;
 
-Export function DialogRandom(characters, dialogMID, dialogFID, radio);
-var i, speaker;
+Export function DialogRandom(characters, dialogMID, dialogFID, radio, canTalkHero);
+var i, speaker, units;
 begin
-   characters := characters diff [Burlak, Gnyevko, Belkov, Belkov2, Kirilenkova, Kovalyuk, Scholtze];
-   speaker := characters[rand(1, characters)];
+   units = characters;
+
+   units := units diff [Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze];
+
+   if NOT units AND NOT canTalkHero then
+      exit;
+
+   if NOT units then
+      units = characters diff [Burlak];
+
+   if NOT units AND canTalkHero then
+      exit;
+
+   speaker := units[rand(1, units)];
 
    if radio then
    begin
@@ -34,11 +46,12 @@ begin
       if GetSex(speaker) = sex_male then
          Say(speaker, dialogMID)
       else
-         Say(speaker, dialogFID);  
+         Say(speaker, dialogFID);
    end;
 
    result := speaker;
 end;
+
 
 // Summary: Before calling the SaveCharacters function, checks if the character given in the argument is OK and if it is on the side 
 // Input: Character, characterStringID
