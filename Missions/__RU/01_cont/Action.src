@@ -112,7 +112,7 @@ begin
     // Burlak is with others
     else
     begin
-        nearUnit = NearestUnitToXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), radioDropPosition[1], radioDropPosition[2]);
+        nearUnit = NearestUnitToXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff Gnyevko, radioDropPosition[1], radioDropPosition[2]);
         
         ComMoveXY(nearUnit, radioDropPosition[1], radioDropPosition[2]);
 
@@ -310,7 +310,7 @@ begin
         Say(Gnyevko, 'D4-Gny-1');
 
 
-    if GetDistUnits(Burlak, NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), Burlak)) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
+    if GetDistUnits(Burlak, NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), Burlak)) > 8 AND GetDistUnits(Burlak, Gnyevko) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
     begin
         ComWalk(Gnyevko);
 
@@ -482,6 +482,7 @@ begin
     ComMoveXY(Burlak, 85, 64);
     ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 85, 64);
 
+    interface_hidden = false;
     InGameOn;
 
     CenterNowOnUnits(Burlak);
@@ -777,11 +778,16 @@ begin
 end;
 
 // Spawn Jelena
-every 0$15 trigger evacuationAvailable do
+every 0$15 trigger evacuationAvailable AND NOT jelenaSpawned do
 var randomSold;
 begin
     PlaceUnitArea(Kirilenkova, JelenaSpawnArea, true);
     wait(0$3);
+
+    jelenaSpawned = true;
+
+    if GetDistUnits(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova), Kirilenkova) < 9 then
+       exit;
 
     DialogueOn;
     SayRadio(Kirilenkova, 'D11b-Kir-1');
@@ -853,12 +859,16 @@ begin
 end;
 
 // Save Jelena
-every 0$1 trigger See(3, Kirilenkova) do
+every 0$1 trigger See(3, Kirilenkova) AND jelenaSpawned do
 var nearUnit;
 begin
+    SetSide(Kirilenkova, 3);
+
+    jelenaSaved = true;
+
     CenterNowOnUnits(Kirilenkova);
 
-    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova);
+    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) diff Kirilenkova, Kirilenkova);
 
     DialogueOn;
 
@@ -879,10 +889,6 @@ begin
     end;
 
     DialogueOff;
-
-    SetSide(Kirilenkova, 3);
-
-    jelenaSaved = true;
 
     wait(0$5);
 

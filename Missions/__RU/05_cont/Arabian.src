@@ -1,12 +1,19 @@
 Export Heike, Omar;
-Export arabianUnitsInBase;
+Export arabianUnitsInBase, arabianPatrolVehicles, arabianHovercrafts, arabianPatrolTroops;
+Export arabLeftExit, arabRightExit;
 Export Function PrepareArabians;
 begin
     arabianUnitsInBase = [];
+    arabianHovercrafts = [];
+    arabianPatrolTroops = [];
+
+    arabLeftExit = true;
 
     PrepareHeroes;
     PrepareBuildings;   
     PrepareUnits;
+    PrepareArabianPatrolVehicles(arabianPatrolVehiclesAmount, ArabianPatrolExitArea1);
+    PrepareArabianHovercraft;
 end;
 
 Function PrepareHeroes;
@@ -56,8 +63,23 @@ begin
 
     // Techs
 
-    if Difficulty >= 2 then
-        SetTech(tech_weap2, 2, state_researched);
+    case Difficulty of
+        1:begin
+            SetTech(tech_tech1, 2, state_researched);
+        end;
+
+        2:begin
+            SetTech(tech_tech1, 2, state_researched);
+            SetTech(tech_weap1, 2, state_researched);
+        end;
+
+        3:begin
+            SetTech(tech_tech1, 2, state_researched);
+            SetTech(tech_weap1, 2, state_researched);
+            SetTech(tech_tech2, 2, state_researched);
+            SetTech(tech_weap2, 2, state_researched);
+        end;
+    end;
 end;
 
 
@@ -110,6 +132,64 @@ begin
 
         PlaceUnitArea(unit, ArabianSpawnArea1, false);  
         arabianUnitsInBase = arabianUnitsInBase ^ unit;  
+    end;
+
+end;
+
+Export Function PrepareArabianPatrolSoldiers;
+var i, unit;
+begin
+    uc_side = 2;
+    uc_nation = 2;
+
+    for i := 1 to arabianPatrolSoldiers do
+    begin
+        PrepareSoldier(0, enemySkillLevel);
+        unit = CreateHuman;
+
+        PlaceUnitArea(unit, ArabianSpawnArea2, false);  
+        arabianPatrolTroops = arabianPatrolTroops ^ unit;
+    end;
+
+end;
+
+Export Function PrepareArabianPatrolVehicles(amount, area);
+var i, veh;
+begin
+    uc_side = 2;
+    uc_nation = 2;
+
+    for i := 1 to amount do
+    begin
+        PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_flame_thrower, ar_gatling_gun, ar_gun][Rand(1, 3)], 100); 
+
+        veh = CreateVehicle;
+        arabianPatrolVehicles = arabianPatrolVehicles ^ veh;
+
+        PlaceUnitArea(veh, area, false);     
+
+        PrepareMechanic(0, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, veh);
+    end;
+end;
+
+Export Function PrepareArabianHovercraft;
+var i, veh;
+begin
+    uc_side = 2;
+    uc_nation = 2;
+
+    for i := 1 to arabianPatrolVehiclesAmount do
+    begin
+        PrepareVehicle(ar_hovercraft, engine_combustion, control_manual, [ar_double_machine_gun, ar_light_gun][Rand(1, 2)], 100); 
+
+        veh = CreateVehicle;
+        arabianHovercrafts = arabianHovercrafts ^ veh;
+
+        PlaceUnitArea(veh, ArabianSpawnArea3, false);     
+
+        PrepareMechanic(0, enemySkillLevel);
+        PlaceHumanInUnit(CreateHuman, veh);
     end;
 
 end;

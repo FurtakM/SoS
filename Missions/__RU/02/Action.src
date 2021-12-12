@@ -64,37 +64,46 @@ begin
 end;
 
 // Block move in far north
-every 1 trigger NOT interface_hidden AND NOT canExploreMap AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
+every 1 trigger NOT canExploreMap AND FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) > 0 do
 var unit;
 begin
     enable;
-
+    
     for unit in FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
     begin
+        //InGameOn;
+
         ComMoveXY(unit, GetX(unit), GetY(unit) + 5);
 
-        if dialogLoopBlocker then
-            exit;
-
-        dialogLoopBlocker = true;
-
-        if NOT meetPlatonov then
+        if NOT meetPlatonov AND NOT dialogLoopBlocker then
         begin
             if unit <> Burlak AND IsOk(Kovalyuk) then
                 Say(Kovalyuk, 'D1b-Kov-1');
-            
+
             if unit = Burlak then
-                Say(Burlak, 'D1b-Bur-1');        
+                Say(Burlak, 'D1b-Bur-1');
         end
-        else
+        else if NOT dialogLoopBlocker then
             Say(Platonov, 'D8-Pla-1');
 
-        exit;
+        if NOT dialogLoopBlocker then
+           dialogLoopBlocker = true;
+
+        repeat
+           ComMoveXY(FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), GetX(unit), GetY(unit) + 5);
+           wait(0$1);
+        until FilterUnitsInArea(NorthMoveLimitArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) = 0;
+
+        //InGameOff;
     end;
 
-    wait(0$5);
+    if dialogLoopBlocker then
+    begin
+         wait(0$5);
 
-    dialogLoopBlocker = false;
+         dialogLoopBlocker = false;
+    end;
+
 end;
 
 // Block exit Beria base
@@ -105,6 +114,7 @@ begin
 
     for unit in FilterUnitsExceptArea(BeriaBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
     begin
+
         ComMoveXY(unit, 114, 98);
 
         if dialogLoopBlocker then
@@ -137,7 +147,6 @@ begin
         if See(6, unit) then
         begin
             meetPlatonov = true;
-            interface_hidden = true;
 
             InGameOn;
             DialogueOn;
@@ -184,7 +193,6 @@ begin
             SetSide(beria, 3);
 
             canExitBase = false;
-            interface_hidden = false;
 
             exit;
         end;
@@ -275,7 +283,7 @@ begin
 
     ChangeMissionObjectives('M2');
 
-    CreateCratesXYR(5, GetX(Platonov), GetY(Platonov), 5, true);
+    CreateCratesXYR(3, GetX(Platonov), GetY(Platonov), 5, true);
 end;
 
 // "Towarzyszu Burlak! Znalezlismy nowa dostawe." ;_;
@@ -469,6 +477,12 @@ begin
             RemoveUnit(unit);
         end;
 
+        if unit = Belkov2 then
+        begin
+            SaveCharacters(Belkov2, '02_TmpBelkov2');
+            RemoveUnit(unit);
+        end;
+
         if GetType(unit) = unit_vehicle then
         begin
             driver = UnitsInside(unit);
@@ -605,7 +619,11 @@ begin
     ComMoveXY(belkovTeam, 101, 19);
     ComMoveXY(kirovVehicle, 101, 19);
 
-    wait(0$5);
+    wait(0$2);
+    immortalVehLive = 400;
+    SetLives(kirovVehicle, 500);
+
+    wait(0$3);
 
     ComExitVehicle(tmpBelkov);
     wait(0$1);
@@ -619,7 +637,9 @@ begin
         CenterNowOnUnits(tmpBelkov);
     until IsInArea(tmpBelkov, BelkovRetreatArea);
 
-    ComMoveXY(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 118, 25);
+    amVeh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1];
+
+    ComMoveXY(amVeh, 118, 25);
 
     SayRadio(tmpBelkov, 'D14-Bel-1a');
     SayRadio(Kurin, 'D14-Kur-1');
@@ -645,6 +665,7 @@ begin
     canExitBase = true;
     canExploreMap = true;
     construcMoreVehicles = false;
+    activateBelkovAI = true;
 
     ChangeMissionObjectives('M6');
 
@@ -653,11 +674,32 @@ begin
     ComFree(trapTeam);
 end;
 
+// Spawn am mech
+every 0$1 trigger GetDistUnitXY(amVeh, 118, 25) < 6 do
+begin
+    ComExitVehicle(trapCommander);
+
+    uc_side = 1;
+    uc_nation = 1;
+    
+    PrepareMechanic(0, enemySkillLevel);
+
+    amMech = CreateHuman;
+    PlaceUnitArea(amMech, AmMechSpawnArea, false);
+
+    ComRepairVehicle(amMech, amVeh);
+    AddComEnterUnit(amMech, amVeh);       
+end;
+
 // Immortal Belkov team
 every 0$1 trigger immortalBelkovTeam do
 begin
     enable;
-    SetLives(belkovTeam, 1000);
+
+    SetLives(UnitFilter(belkovTeam, [f_type, unit_human]), 1000);
+
+    if UnitFilter(belkovTeam, [f_type, unit_vehicle]) then
+        SetLives(UnitFilter(belkovTeam, [f_type, unit_vehicle])[1], immortalVehLive);
 end;
 
 // Start counter
@@ -675,7 +717,7 @@ begin
     tmp = trapTeam;
     tmp = tmp diff trapCommander;
 
-    for i := 1 to rand(3, 4) do
+    for i := 1 to rand(2, 3) do
         ComAgressiveMove(tmp[i], 87, 18);
 end;
 
@@ -684,11 +726,12 @@ every 0$1 trigger belkovAttackTime < 0$02 AND trapTeam do
 begin
     enable;
 
+    activateBelkovAI = false;
     ComAgressiveMove(belkovTeam, 120, 28);
 end;
 
 // Saw bunkers on hill
-every 0$1 trigger NOT sawLeftBunker OR NOT sawRightBunker do
+every 0$1 trigger (NOT sawLeftBunker OR NOT sawRightBunker) AND (IsOk(Gnyevko) OR IsOk(Kovalyuk)) AND canExploreMap do
 var bunker;
 begin
     enable;
@@ -769,7 +812,7 @@ begin
 end;
 
 // Dialog when player attack right bunkers
-every 0$2 trigger NOT dialogAttackRightBunkers AND rightBunkers AND (IsOK(Kovalyuk) OR IsOK(Gnyevko)) do
+every 0$2 trigger NOT dialogAttackRightBunkers AND rightBunkers AND canExploreMap AND (IsOK(Kovalyuk) OR IsOK(Gnyevko)) do
 var unit;
 begin
     enable;
@@ -866,7 +909,7 @@ begin
 end;
 
 // Dialog when player attack left bunkers but don't from hill
-every 0$2 trigger NOT dialogAttackLeftBunkers AND leftBunkers AND FilterUnitsInArea(WeakPositionArea, [[f_side, 3]]) = 0 AND (IsOK(Kovalyuk) OR IsOK(Gnyevko)) do
+every 0$2 trigger NOT dialogAttackLeftBunkers AND leftBunkers AND canExploreMap AND FilterUnitsInArea(WeakPositionArea, [[f_side, 3]]) = 0 AND (IsOK(Kovalyuk) OR IsOK(Gnyevko)) do
 var unit;
 begin
     enable;
@@ -1007,6 +1050,8 @@ end;
 every 0$1 trigger canExploreMap AND NOT trapTeam AND NOT belkovSaved do
 begin
     belkovSaved = true;
+    activateBelkovAI = false;
+    
     SetSide(belkovTeam, 3);
 
     ChangeMissionObjectives('M9a');
@@ -1020,11 +1065,11 @@ begin
 end;
 
 // Dialog with Belkov
-every 0$5 trigger belkovSaved AND (GetDistUnits(Burlak, Belkov) < 14 OR GetDistUnits(Burlak, Belkov2) < 14) do
+every 0$5 trigger belkovSaved AND ( (GetDistUnits(Burlak, Belkov) < 14 AND belkovReturn) OR (GetDistUnits(Burlak, Belkov2) < 14 AND NOT belkovReturn)) do
 begin
     InGameOn;
 
-    if IsOk(Belkov) then
+    if IsOk(Belkov) AND belkovReturn then
     begin
         CenterNowOnUnits([Burlak, Belkov]);
         ComTurnUnit(Burlak, Belkov);
@@ -1034,8 +1079,9 @@ begin
         Say(Burlak, 'D24-Bur-1');
         Say(Belkov, 'D24-Bel-2');
         Say(Burlak, 'D24-Bur-2');
-    end
-    else
+    end;
+
+    if IsOk(Belkov2) AND NOT belkovReturn then
     begin
         CenterNowOnUnits([Burlak, Belkov2]);
         ComTurnUnit(Burlak, Belkov2);

@@ -9,19 +9,23 @@ begin
 end;
 
 // Global campaign variables
-Export omarStatus, stevensStatus;
-Export tanksFromIntro;
+Export omarStatus, stevensStatus, labDestroyed;
+Export tanksFromIntro, tanksFrom05, resourcesInCargo;
 
 // Current mission variables
 Export actionTime;
 Export sawArabianBase, sawApeman;
-Export dial_tameApeBlocker, dial_apeEnterLabBlocker;
+Export dial_tameApeBlocker, dial_apeEnterLabBlocker, dial_southRoadBlocker, dial_seeCratesBlocker;
 Export stevensPlaced, stevensFollow, stevensWantTalkPetrosyan, stevensDepot, stevensWasInDepot, stevensCanExitMap;
+Export omarCanExitMap, arabianCanExitMap;
+Export cratesSpawned;
+Export fastBreakthrough;
+Export finishMissionBool;
 Function InitMission;
 begin
     ResetFog;
     RandomizeAll;
-    //InGameOn;
+    InGameOn;
 
     // Init map config
     InitMapConfig;
@@ -29,6 +33,13 @@ begin
     // Global campaign variables init values
     omarStatus = 0; // 1 - escape, 0 - die
     stevensStatus = 0; // 2- escape as enemy, 1 - escape, 0 - die
+    labDestroyed = 0; // 1 - yes, 0 - no
+
+    //[ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
+    tanksFrom05 = [];
+
+    // [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
+    resourcesInCargo = [];
 
     //[ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
     tanksFromIntro = LoadVariable('05_TanksIntro_1',[]);
@@ -38,7 +49,7 @@ begin
 
     dial_tameApeBlocker = false;
     dial_apeEnterLabBlocker = false;
-
+ 
     sawArabianBase = false;
     sawApeman = false;
 
@@ -49,8 +60,16 @@ begin
     stevensWasInDepot = false;
     stevensCanExitMap = false;
 
+    cratesSpawned = 0;
+
+    fastBreakthrough = false;
+
+    finishMissionBool = false;
+
     // AI variables
 
+    omarCanExitMap = false;
+    arabianCanExitMap = false;
 
     // Init units
     PrepareRussians;
