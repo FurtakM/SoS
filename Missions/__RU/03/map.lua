@@ -1,5 +1,5 @@
 function FROMOW_MAP_START(MAPPATH)
-    registryAchievs({'ACH_LAB', 'ACH_KING', 'ACH_CAMERA'});
+    registryAchievs({'ACH_PROFESSOR', 'ACH_REINFORCE', 'ACH_SIKORSKI'});
 end;
 
 function FROMOW_MAP_END()
