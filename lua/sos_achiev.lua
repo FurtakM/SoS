@@ -193,6 +193,42 @@ TID_ACH_CAMERA = 6486;
 TID_ACH_CAMERA_DESC = 6487;
 TID_ACH_TACT = 6488;
 TID_ACH_TACT_DESC = 6489;
+TID_ACH_EXT = 6490;
+TID_ACH_EXT_DESC = 6491;
+TID_ACH_KEY = 6492;
+TID_ACH_KEY_DESC = 6493;
+TID_ACH_CHEM = 6494;
+TID_ACH_CHEM_DESC = 6495;
+TID_ACH_FIRE = 6496;
+TID_ACH_FIRE_DESC = 6497;
+TID_ACH_YELENA = 6498;
+TID_ACH_YELENA_DESC = 6499;
+TID_ACH_NATURE = 6500;
+TID_ACH_NATURE_DESC = 6501;
+TID_ACH_DEPOT = 6502;
+TID_ACH_DEPOT_DESC = 6503;
+TID_ACH_WORKSHOP = 6504;
+TID_ACH_WORKSHOP_DESC = 6505;
+TID_ACH_RETAKE = 6506;
+TID_ACH_RETAKE_DESC = 6507;
+TID_ACH_PROFESSOR = 6508;
+TID_ACH_PROFESSOR_DESC = 6509;
+TID_ACH_SIKORSKI = 6510;
+TID_ACH_SIKORSKI_DESC = 6511;
+TID_ACH_REINFORCE = 6512;
+TID_ACH_REINFORCE_DESC = 6513;
+TID_ACH_DEFENSE = 6514;
+TID_ACH_DEFENSE_DESC = 6515;
+TID_ACH_ENO = 6516;
+TID_ACH_ENO_DESC = 6517;
+TID_ACH_ARAB = 6518;
+TID_ACH_ARAB_DESC = 6519;
+TID_ACH_HOVER = 6520;
+TID_ACH_HOVER_DESC = 6521;
+TID_ACH_REDARMY = 6522;
+TID_ACH_REDARMY_DESC = 6523;
+TID_ACH_CRATES = 6524;
+TID_ACH_CRATES_DESC = 6525;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -978,6 +1014,132 @@ achievements = {
         true,
         0,
         0
+    },
+    ['ACH_FIRE'] = {
+        loc(TID_ACH_FIRE),
+        loc(TID_ACH_FIRE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_CHEM'] = {
+        loc(TID_ACH_CHEM),
+        loc(TID_ACH_CHEM_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_KEY'] = {
+        loc(TID_ACH_KEY),
+        loc(TID_ACH_KEY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_EXT'] = {
+        loc(TID_ACH_EXT),
+        loc(TID_ACH_EXT_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_YELENA'] = {
+        loc(TID_ACH_YELENA),
+        loc(TID_ACH_YELENA_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_NATURE'] = {
+        loc(TID_ACH_NATURE),
+        loc(TID_ACH_NATURE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SIKORSKI'] = {
+        loc(TID_ACH_SIKORSKI),
+        loc(TID_ACH_SIKORSKI_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_DEPOT'] = {
+        loc(TID_ACH_DEPOT),
+        loc(TID_ACH_DEPOT_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_RETAKE'] = {
+        loc(TID_ACH_RETAKE),
+        loc(TID_ACH_RETAKE_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_WORKSHOP'] = {
+        loc(TID_ACH_WORKSHOP),
+        loc(TID_ACH_WORKSHOP_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_PROFESSOR'] = {
+        loc(TID_ACH_PROFESSOR),
+        loc(TID_ACH_PROFESSOR_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_REINFORCE'] = {
+        loc(TID_ACH_REINFORCE),
+        loc(TID_ACH_REINFORCE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_DEFENSE'] = {
+        loc(TID_ACH_DEFENSE),
+        loc(TID_ACH_DEFENSE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ARAB'] = {
+        loc(TID_ACH_ARAB),
+        loc(TID_ACH_ARAB_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_ENO'] = {
+        loc(TID_ACH_FIRE),
+        loc(TID_ACH_FIRE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_HOVER'] = {
+        loc(TID_ACH_HOVER),
+        loc(TID_ACH_HOVER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_CRATES'] = {
+        loc(TID_ACH_CRATES),
+        loc(TID_ACH_CRATES_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_REDARMY'] = {
+        loc(TID_ACH_REDARMY),
+        loc(TID_ACH_REDARMY_DESC),
+        true,
+        0,
+        0
     }
 };
 
@@ -1008,7 +1170,15 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_DOGTAG', 'ACH_INVINCIBLE', 'ACH_ZOOLIGST'},
         {'ACH_TRAP', 'ACH_SCRAP', 'ACH_DELTA'},
         {'ACH_ENG', 'ACH_BABY', 'ACH_CLEAN', 'ACH_APEGEN', 'ACH_IBRAHIM'},
-        {'ACH_FIST', 'ACH_LAB', 'ACH_COMMISAR', 'ACH_KING', 'ACH_CAMERA'}
+        {'ACH_FIST', 'ACH_LAB', 'ACH_COMMISAR', 'ACH_KING', 'ACH_CAMERA'},
+        {'ACH_FIRE', 'ACH_CHEM', 'ACH_KEY', 'ACH_EXT'}
+    },
+    {
+        {'ACH_NATURE', 'ACH_YELENA'},
+        {'ACH_WORKSHOP', 'ACH_RETAKE', 'ACH_DEPOT'},
+        {'ACH_PROFESSOR', 'ACH_REINFORCE', 'ACH_SIKORSKI'},
+        {'ACH_ENO', 'ACH_ARAB', 'ACH_DEFENSE'},
+        {'ACH_REDARMY', 'ACH_CRATES', 'ACH_HOVER'}
     },
     {}
 };
@@ -1114,6 +1284,22 @@ achievsCategory = {
         'ACH_CAMERA'
     },
     [3] = {
+        'ACH_YELENA',
+        'ACH_SIKORSKI',
+        'ACH_NATURE',
+        'ACH_DEPOT',
+        'ACH_RETAKE',
+        'ACH_WORKSHOP',
+        'ACH_PROFESSOR',
+        'ACH_REINFORCE',
+        'ACH_DEFENSE',
+        'ACH_ARAB',
+        'ACH_ENO',
+        'ACH_HOVER',
+        'ACH_CRATES',
+        'ACH_REDARMY'
+    },
+    [4] = {
         'ACH_DESERT',
         'ACH_HARD',
         'ACH_SAFECARGO',
@@ -1126,14 +1312,19 @@ achievsCategory = {
         'ACH_HUNT',
         'ACH_BEH',
         'ACH_NODEPOT',
-        'ACH_PANZERKNACKER'
+        'ACH_PANZERKNACKER',
+        'ACH_EXT',
+        'ACH_KEY',
+        'ACH_CHEM',
+        'ACH_FIRE'
     }
 };
 
 achievsCategoryName = { 
 	[1] = loc(TID_Achievements_US), 
     [2] = loc(TID_Achievements_Ares),
-    [3] = loc(TID_Achievements_Skir)
+    [3] = loc(TID_Achievements_RU),
+    [4] = loc(TID_Achievements_Skir)
 	--[2] = loc(TID_Achievements_AR), 
 	--[3] = loc(TID_Achievements_RU), 
 	--[4] = loc(TID_Achievements_Ally), 

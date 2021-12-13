@@ -1,9 +1,7 @@
 function FROMOW_MAP_START(MAPPATH)
-	registryAchievs({'ACH_PAV','ACH_FTA','ACH_OHI'});
+    registryAchievs({'ACH_NATURE', 'ACH_YELENA'});
 end;
 
-
-
 function FROMOW_MAP_END()
-	clearRegistryAchievs();
+    clearRegistryAchievs();
 end;
