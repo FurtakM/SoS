@@ -1,1 +1,35 @@
-//
+Export Function Action;
+begin
+CenterNowOnUnits(allianceHack);
+ChangeMissionObjectives('WT-Objectives-1');
+End;
+
+Every 0$2 trigger See(7, allianceMechanic) do
+SetSide(allianceMechanic, 7);
+
+Every 0$1 trigger not FindArtifact(2) do
+SetAreaMapShow(endMissionArea, 1);
+
+Every 0$1 trigger FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]) do
+var hasArtifact, i, tmp;
+begin
+hasArtifact := false;
+
+repeat
+ wait(0$1);
+ tmp := FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]);
+
+ for i in tmp do
+     if GetCargoType(i) = mat_artefact then
+        begin
+        hasArtifact := true;
+        break;
+        end;
+until hasArtifact;
+
+AddMedal('WT-med-1', 1);
+AddMedal('WT-med-2', IsOk(allianceMechanic) and GetSide(allianceMechanic) = 7);
+AddMedal('WT-med-3', FilterAllUnits([[f_side, 7], [f_type, us_double_laser]]) >= 2);
+
+YouWin;
+End;

@@ -1,1 +1,132 @@
-//
+Export ruGuard1, ruGuard2, ruGuard3, ruForces, ruEng;
+Export Function PrepareRussian;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+SetResourceType(GetBase(ruDep), mat_cans, 5000);
+SetResourceType(GetBase(ruDep), mat_siberit, 500);
+
+TeleportExit(ruTeleport, 132, 89);
+
+for i in FilterAllUnits([f_type, unit_building]) do
+    SetBLevel(i, [6, 8, 10][Difficulty]);
+
+for i := 1 to 4 do
+    begin
+    PrepareMechanic(false, 9);
+    PlaceHumanInUnit(CreateHuman, ruFac);
+    end;
+
+ruGuard1 := [];
+ruGuard2 := [];
+ruGuard3 := [];
+ruForces := [];
+ruEng := [];
+
+for i := 1 to [4, 5, 6][Difficulty] do
+    begin
+    PrepareEngineer(false, 8);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ruDep);
+    ruEng := Join(ruEng, un);
+    end;
+
+for i := 1 to [5, 6, 7][Difficulty] do
+    begin
+    PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, [ru_heavy_gun, ru_rocket_launcher][i mod 2 + 1], 100);
+    un := CreateVehicle;
+    SetDir(un, 3);
+    PlaceUnitArea(un, riverGuard1, false);
+    ruGuard1 := Replace(ruGuard1, ruGuard1 + 1, un);
+    end;
+
+for i := 1 to [4, 4, 5][Difficulty] do
+    begin
+    PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, [ru_heavy_gun, ru_rocket_launcher][i mod 2 + 1], 100);
+    un := CreateVehicle;
+    SetDir(un, 4);
+    PlaceUnitArea(un, riverGuard2, false);
+    ruGuard2 := Replace(ruGuard2, ruGuard2 + 1, un);
+    end;
+
+for i := 1 to [4, 4, 5][Difficulty] do
+    begin
+    PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, [ru_heavy_gun, ru_rocket_launcher][i mod 2 + 1], 100);
+    un := CreateVehicle;
+    SetDir(un, 1);
+    PlaceUnitArea(un, riverGuard3, false);
+    ruGuard3 := Replace(ruGuard3, ruGuard3 + 1, un);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_crane, 100);
+    un := CreateVehicle;
+    PlaceUnitArea(un, ruCraneArea, false);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, class_bazooker, 8);
+    PlaceHumanInUnit(CreateHuman, HexInfo(91, 83));
+    end;
+End;
+
+Every 0$1 trigger ruEng do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterUnitsInArea(ruBaseArea, [[f_type, unit_building], [f_not, [f_ok]]]);
+
+if not tmp and UnitFilter(ruEng, [f_not, [f_inside]]) then
+   ComEnterUnit(UnitFilter(ruEng, [f_not, [f_inside]]), ruDep);
+
+if tmp then
+   begin
+   for i in tmp do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+          ComRepairBuilding(i, SortByDistanceUnit(i, tmp, true, true)[1]);
+   end;
+End;
+
+Every 3$00 trigger not ruForces do
+var i, tmp;
+begin
+enable;
+
+for i := 1 to [4, 5, 6][Difficulty] do
+    AddComConstruct(ruFac, ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun);
+End;
+
+Every 0$30 trigger ruForces do
+var i, tmp;
+begin
+enable;
+
+tmp := ruForces;
+ruForces := [];
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+until not tmp;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 7], [f_distxy, 62, 83, 8]]) do
+ComAgressiveMove(ruGuard1, 69, 100);
+
+Every 0$1 trigger FilterAllUnits([[f_side, 7], [f_distxy, 85, 89, 8]]) do
+ComAgressiveMove(ruGuard2, 72, 88);
+
+Every 0$1 trigger FilterAllUnits([[f_side, 7], [f_distxy, 89, 13, 8]]) do
+ComAgressiveMove(ruGuard3, 107, 26);
