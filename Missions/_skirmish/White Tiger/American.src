@@ -1,1 +1,59 @@
-//
+Every 5$00 do
+var i, un, tmp;
+begin
+enable;
+
+tmp := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+for i := 1 to 8 do
+    begin
+    PrepareVehicle(us_morphling, engine_siberite, control_computer, [us_heavy_gun, us_laser, us_rocket_launcher][i mod 3 + 1], 100);
+    un := CreateVehicle;
+    tmp := Join(tmp, un);
+    SetDir(un, 1);
+    PlaceUnitArea(un, americanSpawnArea, false);
+
+    ComMoveXY(un, 16, 13);
+    wait(0$1);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+until not tmp;
+End;
+
+Every 7$00 trigger not HexInfo(149, 106) do
+var un;
+begin
+enable;
+
+uc_side := 1;
+uc_nation := 1;
+
+PrepareVehicle(us_morphling, engine_siberite, control_computer, us_cargo_bay, 100);
+un := CreateVehicle;
+PlaceUnitXY(un, 149, 106, false);
+
+SetCargo(un, mat_siberit, 100);
+
+ComMoveXY(un, 105, 2);
+
+repeat
+ wait(0$1);
+
+ if IsDead(un) or GetSide(un) <> 1 then
+    exit;
+
+until IsAt(un, 105, 2);
+
+RemoveUnit(un);
+End;

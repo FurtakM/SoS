@@ -74,7 +74,7 @@ for i in list do
 End;
 
 // us_hack script
-Export initHack, hackTanks, hackTanksCaptured, hackLimit, hackDist;
+Export initHack, hackTanks, hackTanksCaptured, hackLimit, hackDist, hackCounter;
 Every 0$1 trigger not initHack do
 begin
 initHack := true;
@@ -82,6 +82,7 @@ hackTanks := [];
 hackTanksCaptured := [];
 hackLimit := 3;
 hackDist := 12;
+hackCounter := [];
 End;
 
 Every 0$1 trigger initHack and FilterAllUnits([f_weapon, us_hack]) do
@@ -95,6 +96,7 @@ for i in FilterAllUnits([f_weapon, us_hack]) do
        begin
        hackTanks := Replace(hackTanks, hackTanks + 1, i);
        hackTanksCaptured := Replace(hackTanksCaptured, hackTanksCaptured + 1, []);
+       hackCounter := Replace(hackCounter, hackCounter + 1, []);
        end;
 
     if not IsOk(i) then
@@ -139,9 +141,6 @@ if not hack in hackTanks or not vehicles then
    exit;
 
 vehicles := SortByDistanceUnit(hack, vehicles, true, true);
-
-display_strings := vehicles;
-
 index := GetElementIndex(hackTanks, hack);
 
 if hackTanksCaptured[index] < hackLimit then
@@ -151,6 +150,7 @@ if hackTanksCaptured[index] < hackLimit then
        if hackTanksCaptured[index] = hackLimit then
           break;
 
+       hackCounter := Replace(hackCounter, index, hackCounter[index] + 1);
        hackTanksCaptured := ReplaceIn(hackTanksCaptured, [index, hackTanksCaptured[index] + 1], [vehicles[i], GetSide(vehicles[i])]);
        SetSide(vehicles[i], GetSide(hack));
        ComStop(vehicles[i]);
@@ -160,7 +160,7 @@ if hackTanksCaptured[index] < hackLimit then
 SetUnitDisplayNumber(hack, hackTanksCaptured[index] + 0);
 End;
 
-Export Function HackCheckCapturedStatus(hack);
+Function HackCheckCapturedStatus(hack);
 var i, index, tmp;
 begin
 if not hack in hackTanks then
