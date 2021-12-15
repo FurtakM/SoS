@@ -27,8 +27,10 @@ begin
 
 End;
 
-On TargetableSAIL(cmd, unit, selectedunit, x, y) do
+On TargetableSAIL(cmd, unit, selectedUnit, x, y) do
 begin
+if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
+   DestroyUnit(selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
    CutTreeXYR(unit, x, y, 12);
 End;
@@ -69,4 +71,115 @@ if not list then
 
 for i in list do
     AddTaskList(bulldozer, [['M', i[1], i[2], 0, 0, 0, 0]]);
+End;
+
+// us_hack script
+Export initHack, hackTanks, hackTanksCaptured, hackLimit, hackDist;
+Every 0$1 trigger not initHack do
+begin
+initHack := true;
+hackTanks := [];
+hackTanksCaptured := [];
+hackLimit := 3;
+hackDist := 12;
+End;
+
+Every 0$1 trigger initHack and FilterAllUnits([f_weapon, us_hack]) do
+var i, tmp;
+begin
+enable;
+
+for i in FilterAllUnits([f_weapon, us_hack]) do
+    begin
+    if not i in hackTanks then
+       begin
+       hackTanks := Replace(hackTanks, hackTanks + 1, i);
+       hackTanksCaptured := Replace(hackTanksCaptured, hackTanksCaptured + 1, []);
+       end;
+
+    if not IsOk(i) then
+       begin
+       HackUnlinkAll(i);
+       continue;
+       end;
+
+    HackCheckCapturedStatus(i);
+
+    tmp := FilterAllUnits([[f_enemy, GetSide(i)], [f_control, control_computer], [f_dist, i, hackDist], [f_ok]]);
+
+    if not tmp then
+       continue;
+
+    HackLink(i, tmp);
+    end;
+End;
+
+Function HackUnlinkAll(hack);
+var i, index;
+begin
+if not hack in hackTanks then
+   exit;
+
+index := GetElementIndex(hackTanks, hack);
+
+if hackTanksCaptured[index] then
+   begin
+   for i in hackTanksCaptured[index] do
+       SetSide(i[1], i[2]);
+
+   hackTanksCaptured := Replace(hackTanksCaptured, index, []);
+   SetUnitDisplayNumber(hack, 0);
+   end;
+End;
+
+Function HackLink(hack, vehicles);
+var i, index;
+begin
+if not hack in hackTanks or not vehicles then
+   exit;
+
+vehicles := SortByDistanceUnit(hack, vehicles, true, true);
+
+display_strings := vehicles;
+
+index := GetElementIndex(hackTanks, hack);
+
+if hackTanksCaptured[index] < hackLimit then
+   begin
+   for i := 1 to vehicles do
+       begin
+       if hackTanksCaptured[index] = hackLimit then
+          break;
+
+       hackTanksCaptured := ReplaceIn(hackTanksCaptured, [index, hackTanksCaptured[index] + 1], [vehicles[i], GetSide(vehicles[i])]);
+       SetSide(vehicles[i], GetSide(hack));
+       ComStop(vehicles[i]);
+       end;
+   end;
+
+SetUnitDisplayNumber(hack, hackTanksCaptured[index] + 0);
+End;
+
+Export Function HackCheckCapturedStatus(hack);
+var i, index, tmp;
+begin
+if not hack in hackTanks then
+   exit;
+
+index := GetElementIndex(hackTanks, hack);
+
+for i := hackTanksCaptured[index] downto 1 do
+    begin
+    tmp := hackTanksCaptured[index][i];
+
+    if not IsOk(tmp[1]) or GetSide(tmp[1]) <> GetSide(hack) then
+       begin
+       if IsPlaced(tmp[1]) and GetSide(tmp[1]) = GetSide(hack) then
+          SetSide(tmp[1], tmp[2]);
+
+       hackTanksCaptured := Replace(hackTanksCaptured, index, Delete(hackTanksCaptured[index], i));
+       end;
+    end;
+
+SetUnitDisplayNumber(hack, hackTanksCaptured[index] + 0);
 End;
