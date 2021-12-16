@@ -1281,7 +1281,11 @@ achievsCategory = {
         'ACH_LAB',
         'ACH_COMMISAR',
         'ACH_KING',
-        'ACH_CAMERA'
+        'ACH_CAMERA',
+        'ACH_FIRE',
+        'ACH_CHEM',
+        'ACH_KEY',
+        'ACH_EXT'
     },
     [3] = {
         'ACH_YELENA',
