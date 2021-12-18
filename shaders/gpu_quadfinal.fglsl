@@ -1,0 +1,47 @@
+#version 330
+
+uniform sampler2D tex0; //GBI
+uniform sampler2D tex1; //GRASS
+uniform sampler2D tex2; //ENV
+uniform sampler2D tex3; //UNITS
+uniform sampler2D tex4; //OVERLAY
+uniform sampler2D tex5; //GRASS ZBUFF
+uniform sampler2D tex6; //ENV ZBUFF
+uniform sampler2D tex7; //UNITS ZBUFF
+
+in vec2 TC1;
+out vec4 outColor;
+
+void main()
+{
+	vec4  col1  = texture2D(tex0,TC1);
+	float zbuf  = 0;
+
+	vec4 col2;
+	float zbuf2;
+
+	col2  = texture2D(tex1,TC1);
+	zbuf2 = texture2D(tex5,TC1).r;
+
+	if ((col2.a*255 > 0.4) && (zbuf2 >= zbuf)) {col1 = col2; zbuf = zbuf2;}
+
+	col2  = texture2D(tex2,TC1);
+	zbuf2 = texture2D(tex6,TC1).r;
+
+	if ((col2.a*255 > 0.4) && (zbuf2 > zbuf)) {col1 = col2; zbuf = zbuf2;}
+
+	col2  = texture2D(tex3,TC1);
+	zbuf2 = texture2D(tex7,TC1).r;
+
+	if ((col2.a*255 > 0.4) && (zbuf2 > zbuf)) {col1 = col2; zbuf = zbuf2;}
+
+	col2  = texture2D(tex4,TC1);
+	if (col1.a*255 < 1)
+		col1 = col2;
+	else
+	if (col2.a*255 > 0.4)
+		col1 = vec4(mix(col1.rgb,col2.rgb,col2.a),1.0);
+	
+
+	outColor = vec4(col1.rgb,1.0);
+}

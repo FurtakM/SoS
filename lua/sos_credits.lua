@@ -16,15 +16,4 @@ function hideCredits()
     end;
 end;
 
-function playCreditsMusic(mode)
-    if mode == 1 then
-        OW_menumusic(false);
-        creditsSound = OW_OAL_LOAD('Hudba/Credits.wav', true, true, '', VOLUME_MUSIC);
-        OW_OAL_PLAY(creditsSound);
-    else
-        OW_OAL_FREE(creditsSound);
-        OW_menumusic(true);
-    end;
-end;
-
 OW_loadcredits(menu.window_credits.content.ID, 'credits/credits');

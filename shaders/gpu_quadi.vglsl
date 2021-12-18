@@ -1,0 +1,27 @@
+#version 330
+
+layout (location = 0) in vec3 vaatV;
+layout (location = 1) in vec2 vaatT1;
+layout (location = 2) in vec4 instTO;
+layout (location = 3) in vec4 instQS;
+layout (location = 4) in vec4 instExtra;
+layout (location = 5) in vec4 instExtra2;
+
+uniform mat4 ModelMatrix;
+uniform mat4 ProjMatrix;
+
+out vec2 TC1;
+flat out int texid;
+flat out vec4 extra2;
+
+void main()
+{
+	TC1         = vaatT1;
+	TC1.x       = instTO.x+TC1.x*instTO.z;
+	TC1.y       = instTO.y+TC1.y*instTO.w;
+
+	texid       = int(instExtra.z);
+	extra2      = instExtra2;
+
+	gl_Position = ProjMatrix*ModelMatrix*vec4(instQS.x+vaatV.x*instQS.z,instQS.y+vaatV.y*instQS.w,vaatV.z,1.0);
+}
