@@ -201,12 +201,14 @@ begin
 
     for cargo in FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_weapon, ru_cargo_bay]]) do
         for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) do
-            if GetDistUnits(cargo, unit) < 8 AND NOT cargo IN stealCargos then
+            if GetDistUnits(cargo, unit) < 8 AND NOT cargo IN stealCargos AND GetCargo(cargo, mat_cans) > 0 then
             begin
                 stealCargos = stealCargos ^ cargo;
                 
                 case Query('QQrSteal') of
                     1:begin
+                       stealWarmCount = stealWarmCount + 1;
+
                         DialogueOn;
                         Say(Burlak, 'DQrSteal#1-Bur-1');
                         DialogueOff;
@@ -214,8 +216,6 @@ begin
                         ComMoveToArea(cargo, UnloadCargoArea);
                         AddComUnload(cargo);
                         AddComMoveXY(cargo, 92, 177);
-
-                        stealWarmCount = stealWarmCount + 1;
                     end;
 
                     2:begin
@@ -229,7 +229,7 @@ begin
 end;
 
 // Platonov warm 1
-every 0$10 trigger stealWarmCount = 3 do
+every 0$12 trigger stealWarmCount = 3 do
 begin
     DialogueOn;
     SayRadio(Platonov, 'D3A-Pla-1');
@@ -487,6 +487,7 @@ begin
     begin
         if GetDistUnits(unit, Gaydar) < 6 then
         begin
+            SetSide(Gaydar, 3);
             ComWalk(Gaydar);
             saveGaydar = true;
             wait(0$1);
@@ -503,7 +504,6 @@ begin
             end
             else
             begin
-                SetSide(Gaydar, 3);
                 Say(Gaydar, 'D11-Gay-2');   
                 Say(Burlak, 'D11-Bur-2');
                 Say(Gaydar, 'D11-Gay-3');   
@@ -529,7 +529,6 @@ end;
 // Burlak near Gaydar if he wait
 every 0$1 trigger GetDistUnits(Burlak, Gaydar) < 6 AND gaydarWaitForBurlak do
 begin
-    SetSide(Gaydar, 3);
     DialogueOn;
     Say(Gaydar, 'D11-Gay-2');   
     Say(Burlak, 'D11-Bur-2');

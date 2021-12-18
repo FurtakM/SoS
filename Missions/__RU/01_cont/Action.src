@@ -100,9 +100,11 @@ every 1 trigger IsDying(apemanWithRadio) do
     radioDropPosition = [GetX(apemanWithRadio), GetY(apemanWithRadio)];
 
 // Find radio
-every 0$1 trigger IsDead(apemanWithRadio) and SeeXY(3, radioDropPosition[1], radioDropPosition[2]) do
+every 0$1 trigger IsDying(apemanWithRadio) and SeeXY(3, radioDropPosition[1], radioDropPosition[2]) do
 var nearUnit;
 begin
+    wait(0$2);
+
     Say(Burlak,'D2a-Bur-1');
 
     // Burlak is alone
@@ -144,12 +146,17 @@ begin
     end;
 end;
 
+// Gnyevko control lives before save or passing time
+every 1 trigger NOT gnyevkoSaved AND apeAttackGnyevkoTime > 0$02 do
+begin
+  enable;
+  SetLives(Gnyevko, gnyevkoStartHP);
+end;
+
 // Find Gnyevko
 every 0$1 trigger See(3, Gnyevko) do
 var nearUnit, randomUnit;
 begin
-    SetLives(Gnyevko, gnyevkoStartHP);
-
     CenterNowOnUnits(Gnyevko);
 
     DialogueOn;
@@ -249,6 +256,9 @@ begin
 
     if IsPlaced(Kirilenkova) AND NOT jelenaSaved AND apeAttackJelenaTime > 0$00 then
         apeAttackJelenaTime = apeAttackJelenaTime - 0$01;
+
+    if IsPlaced(Kirilenkova) AND NOT jelenaSaved then
+       achievement_JelenaTimer = achievement_JelenaTimer + 0$01;
 end;
 
 // Meet Pokryshkin

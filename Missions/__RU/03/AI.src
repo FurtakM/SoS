@@ -405,7 +405,15 @@ begin
                 
             if GetLives(vehicles[i][1]) < 250 then     
                 vehicles = vehicles diff [vehicles[i]];
+
+            if GetLives(vehicles[i][2]) < 250 AND GetLives(vehicles[i][1]) > 250 then
+            begin
+                 kirovCanCaptureVehicles = kirovCanCaptureVehicles ^ vehicles[i][1];
+                 vehicles = vehicles diff [vehicles[i]];
+            end;
+
         end;
+
 
         wait(0$1);
     until omicronSurrender;
@@ -450,27 +458,46 @@ begin
         for i := 1 to cratesOnRoad / 2 do
             AddComAttackPlace(attackUnits, cratesOnRoad[i], cratesOnRoad[i+1]);
 
-         if enemyUnitsOnRoad then
-         begin
+        ComMoveXY(UnitFilter(attackUnits, [[f_type, unit_human], [f_not, [f_hastask]]]), 27, 34);
+        wait(0$01);
 
+         if enemyUnitsOnRoad AND UnitFilter(attackUnits, [[f_type, unit_human], [f_not, [f_hastask]]]) then
+         begin
             for playerUnit in playerUnits do
             begin
                if Attacks(playerUnit) then
                begin
                   if Attacks(playerUnit) in units AND GetDistUnits(playerUnit, unit) < 13 then
-                     ComAttackUnit(attackUnits, playerUnit) 
+                     ComAttackUnit(UnitFilter(attackUnits, [[f_type, unit_human], [f_not, [f_hastask]]]), playerUnit)
                end
                else
                begin        
                   nearUnit = NearestUnitToUnit(enemyUnitsOnRoad, unit);
-                  ComAttackUnit(attackUnits, nearUnit);
+                  ComAttackUnit(UnitFilter(attackUnits, [[f_type, unit_human], [f_not, [f_hastask]]]), nearUnit);
                end;  
             end;
          end
          else
+            ComMoveXY(UnitFilter(attackUnits, [[f_type, unit_human], [f_not, [f_hastask]]]), 27, 34);
+
+         if enemyUnitsOnRoad then
          begin
-            ComMoveXY(unit, 27, 34);
-         end; 
+            for playerUnit in playerUnits do
+            begin
+               if Attacks(playerUnit) then
+               begin
+                  if Attacks(playerUnit) in units AND GetDistUnits(playerUnit, unit) < 13 then
+                     ComAttackUnit(UnitFilter(attackUnits, [[f_type, unit_vehicle]]), playerUnit)
+               end
+               else
+               begin
+                  nearUnit = NearestUnitToUnit(enemyUnitsOnRoad, unit);
+                  ComAttackUnit(UnitFilter(attackUnits, [[f_type, unit_vehicle]]), nearUnit);
+               end;
+            end;
+         end
+         else
+            ComMoveXY(UnitFilter(attackUnits, [[f_type, unit_vehicle]]), 27, 34);
 
          if GetDistUnitXY(unit, 27, 34) < 5 then
             inBase = true;    

@@ -187,7 +187,8 @@ begin
         DialogueOff;
 
         // 82 - basic tools
-        SetTech(82, 3, state_enabled);
+        if GetTech(82, 3) = state_disabled then
+           SetTech(82, 3, state_enabled);
 
         // 84 - track
         SetTech(84, 3, state_enabled);
@@ -390,8 +391,15 @@ begin
 
 end;
 
+// Immortal Kurin
+every 0$1 trigger canExitBattlefield do
+begin
+  enable;
+  SetLives(Kurin, 1000);
+end;
+
 // Kurin ask about preparation to attack 
-every 0$1 trigger timeToPrepareAttack < 0$01 do
+every 0$1 do //trigger timeToPrepareAttack < 0$01 do
 begin
     CenterNowOnUnits(Kurin);
     InGameOn;
@@ -573,7 +581,7 @@ begin
     enable;
 
     for unit in FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
-        if NOT IsInArea(unit, OmicronBattlefieldArea) AND UnitFilter(unit, [[f_occupied], [f_type, unit_vehicle]]) then
+        if NOT IsInArea(unit, OmicronBattlefieldArea) AND (UnitFilter(unit, [f_type, unit_human]) OR UnitsInside(unit)) then
         begin
             ComMoveToArea(unit, OmicronBattlefieldArea);
 
@@ -636,7 +644,7 @@ end;
 
 // Omicron surrender
 every 0$1 trigger IsDead(Sikorski) AND FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 do
-var tmpUs, tmpRu, building;
+var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding;
 begin
     omicronSurrender = true;
     canExitBattlefield = true;
@@ -716,6 +724,9 @@ begin
 
     KillUnit(Grishko);
 
+    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 158, 105);
+    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), 158, 105);
+
     wait(0$12);
 
     CenterNowOnUnits(Kurin);
@@ -784,14 +795,20 @@ begin
         wait(0$1);
     until GetDistUnits(Burlak, beriaDepot) > 19;
 
+    PlaceSeeing(113, 96, 3, -12);
     CenterNowOnXY(113, 96);
 
     canDestroyBeriaBase = true;
 
-    for building in FilterUnitsInArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_building]]) do
+    beriaBuildings = FilterUnitsInArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_building]]);
+
+    for i = 1 to beriaBuildings do
     begin
-        AddComAttackUnit(northGroup, building);
-        AddComAttackUnit(southGroup, building);
+         nearBuilding = NearestUnitToUnit(beriaBuildings, FilterAllUnits([f_side, 2])[1]);
+         beriaBuildings = beriaBuildings diff nearBuilding;
+
+         AddComAttackUnit(northGroup, nearBuilding);
+         AddComAttackUnit(southGroup, nearBuilding);
     end;
         
     wait(0$35);

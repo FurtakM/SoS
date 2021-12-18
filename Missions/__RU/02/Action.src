@@ -61,6 +61,12 @@ begin
     ShowArea(6, VisibleMapPartArea);
 
     SaveForQuickRestart;
+
+    ComEnterUnit(other_survivors, ru2_arm1);
+    ComEnterUnit(Belkov, ru2_arm1);
+
+    if IsPlaced(Kirilenkova) then
+       ComEnterUnit(Kirilenkova, ru_lab);
 end;
 
 // Block move in far north
@@ -266,6 +272,7 @@ end;
 // All buindings constructed
 every 0$2 trigger workshopConstructed AND labConstructed do
 begin
+
     DialogueOn;
 
     if engineResearched then
@@ -432,10 +439,7 @@ begin
     AddComMoveXY(belkovTeam, 129, 32);
     AddComMoveXY(belkovTeam, 132, 22);
 
-    repeat
-        wait(0$1);
-        CenterNowOnUnits(kirovVehicle);
-    until GetDistUnitArea(kirovVehicle, belkovExitArea) < 10;
+    wait(0$8);
 
     CenterNowOnUnits(Kurin);
     Say(Kurin, 'D10-Kur-2b');
@@ -731,7 +735,7 @@ begin
 end;
 
 // Saw bunkers on hill
-every 0$1 trigger (NOT sawLeftBunker OR NOT sawRightBunker) AND (IsOk(Gnyevko) OR IsOk(Kovalyuk)) AND canExploreMap do
+every 0$1 trigger (NOT sawLeftBunker OR NOT sawRightBunker)  AND canExploreMap do
 var bunker;
 begin
     enable;
@@ -751,18 +755,21 @@ begin
 
                 Say(Burlak, 'D15-Bur-1');
 
-                if IsOK(Gnyevko) then
-                    Say(Gnyevko, 'D15-Gny-1');
+                if IsOK(Gnyevko) OR IsOK(Kovalyuk) then
+                begin
+                     if IsOK(Gnyevko) then
+                        Say(Gnyevko, 'D15-Gny-1');
 
-                if IsOK(Kovalyuk) then
-                    Say(Kovalyuk, 'D15-Kov-1');
+                     if IsOK(Kovalyuk) then
+                        Say(Kovalyuk, 'D15-Kov-1');
 
-                Say(Burlak, 'D15-Bur-2');
+                     Say(Burlak, 'D15-Bur-2');
 
-                if IsOK(Kovalyuk) then
-                    Say(Kovalyuk, 'D15-Kov-2');
+                     if IsOK(Kovalyuk) then
+                        Say(Kovalyuk, 'D15-Kov-2');
 
-                Say(Burlak, 'D15-Bur-3');
+                     Say(Burlak, 'D15-Bur-3');
+                end;
 
                 DialogueOff;
 
@@ -790,13 +797,13 @@ begin
                         Say(Kovalyuk, 'D16-Kov-1a')
                     else
                         Say(Kovalyuk, 'D16-Kov-1');
-                end;
-                    
 
                 Say(Burlak, 'D16-Bur-1');
 
                 if IsOK(Gnyevko) then
                     Say(Gnyevko, 'D16-Gny-1');
+
+                end;
 
                 DialogueOff;      
 
@@ -829,8 +836,9 @@ begin
 
             if IsOK(Kovalyuk) then
                 Say(Kovalyuk,'D16A-Kov-1');
-            
+
             Say(Burlak, 'D16A-Bur-1');
+
             DialogueOff;
             exit;
         end;
@@ -1200,4 +1208,11 @@ begin
     backToBeria2 = true;
 
     ChangeMissionObjectives('M10a');
+end;
+
+// Immortal Platonov and Kurin
+every 0$1 do
+begin
+   enable;
+   SetLives([Kurin, Platonov], 1000);
 end;
