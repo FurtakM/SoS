@@ -10,7 +10,7 @@ SOS_MUSIC_CREDITS_ID = 0;
 OW_menumusic(false);
 
 function sound.play(FILENAME, CALLBACK, VOLUMEID)
-    sound:add({ID = OW_OAL_LOAD(FILENAME, false, true, 'sound.finish('..(sound.COUNT+1)..');' .. CALLBACK, VOLUMEID)});
+    sound:add({ID = OW_OAL_LOAD(FILENAME, false, true, 'sound.finish(' .. (sound.COUNT + 1) .. ');' .. CALLBACK, VOLUMEID)});
     OW_OAL_PLAY(sound:getLast().ID);
     return sound.COUNT;
 end;
@@ -29,7 +29,7 @@ function playMenuMusic(MODE)
             SOS_MUSIC_MENU_ID = 0;
         end;
     else
-        SOS_MUSIC_TRACK = math.random(0, 3);
+        SOS_MUSIC_TRACK = math.random(0, #SOS_MUSIC_LIST - 1);
         playNextTrack(SOS_MUSIC_TRACK);
     end;
 end;
@@ -80,5 +80,6 @@ function playNextTrack()
         SOS_MUSIC_TRACK = SOS_MUSIC_TRACK + 1;
     end;
 
+    changeBackgroundMenuImage();
     SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC);
 end;

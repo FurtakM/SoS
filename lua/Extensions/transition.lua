@@ -24,7 +24,11 @@ function transition:doRender(FRAMETIME)
 		return;
 	end;
 
-	debug2(self.TIME);
+	if (self.TIME > self.TOTALTIME) then
+		self.ACTIVE = false;
+	end;
+
+	-- debug2({self.TIME, self.TOTALTIME, self.iTime, self.ACTIVE});
 	
 	self.TIME = self.TIME + FRAMETIME;
 	
@@ -44,7 +48,7 @@ function transition:doRender(FRAMETIME)
 	
 	self.GLSL:setUniform4F(self.QSLoc, 0, 0, self.FBO.W, self.FBO.H);
 	self.GLSL:setUniform1F(self.iTime, self.TIME);
-	--self.GLSL:setUniform1F(self.iTotalTime, self.TOTALTIME);			
+	-- self.GLSL:setUniform1F(self.iTotalTime, self.TOTALTIME);			
 	
 	OGL_DRAW_ARRAYS(GL_TRIANGLES, 0, 6);
 
@@ -60,11 +64,19 @@ function transition:doTransition(TEXTURE1, TEXTURE2, TOTALTIME)
 	self.TOTALTIME = TOTALTIME;
 	self.ACTIVE   = true;
 	self.TIME     = 0;
-	self:doRender(0);
+	-- self:doRender(0);
 end;
 
 function transition:setActivity(MODE)
 	self.ACTIVE = MODE;
 end;
+
+function transition:repeatTransition(TEXTURE)
+	self.TEXTURE1 = self.TEXTURE2;
+	self.TEXTURE2 = TEXTURE;
+	self.TIME = 1;
+	self.ACTIVE = true;
+	self:doRender(0);
+end
 
 SGUI_register_tick_callback('transition:doRender(%frametime)');

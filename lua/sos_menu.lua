@@ -1,21 +1,51 @@
 include('Extensions/transition');
 
-TEXTURE1 = loadOGLTexture('mainbackground-0.png', true);
-TEXTURE2 = loadOGLTexture('mainbackground-1.png', true);
-TEXTURE3 = loadOGLTexture('mainbackground2.png', true);
+TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
+TEXTURE2 = loadOGLTexture('mainbackground2.png', true);
+TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
+TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
 
-function animateMenu() -- TODO
+LAST_USED_TEXTURE = 1;
+
+function animateMenu()
     transition:init(getWidth({ID=menu.ID}), getHeight({ID=menu.ID}));
-    transition:doTransition(TEXTURE1:getTextureID(), TEXTURE2:getTextureID(), 3);
+    transition:doTransition(TEXTURE1:getTextureID(), TEXTURE1:getTextureID(), 3);
     SGUI_settextureid(menu.ID, transition:getTextureID());
 end;
+
+function changeBackgroundMenuImage();
+    local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4};
+    local texture = tmp[LAST_USED_TEXTURE];
+    LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
+
+    if (LAST_USED_TEXTURE > #tmp) then
+        LAST_USED_TEXTURE = 1;
+    end;
+
+    transition:repeatTransition(texture:getTextureID());
+end;
+
+animateMenu();
 
 -- menu logo
 setVisible(version, false);
 setVisible(mod_version, false);
-setTexture(menu, 'mainbackground-0.png');
+-- setTexture(menu, 'mainbackground-0.png');
 logoVisible(false);
-setVisible(classic_logo, false);
+
+setVisible(classic_logo, true);
+setWidth(classic_logo, 768);
+setHeight(classic_logo, 78);
+setX(classic_logo, LayoutWidth / 2 - 384);
+
+local logoHeight = LayoutHeight / 2 - (155 + 92 * 2);
+
+if (logoHeight < 80) then
+    logoHeight = 80;
+end;
+
+setY(classic_logo, logoHeight);
+
 playMenuMusic(1);
 
 -- override menu
@@ -307,8 +337,10 @@ function showMenuButton(windowNumber)
     if (windowNumber == 0) then
         ChangeInterface(0);
         setVisible(footer, false);
+        setVisible(classic_logo, false);
     else
         setVisible(footer, true);
+        setVisible(classic_logo, true);
     end;
 
     if (windowNumber > 0) then
