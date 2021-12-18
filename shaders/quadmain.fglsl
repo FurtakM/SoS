@@ -1,0 +1,62 @@
+uniform vec4 col;
+uniform vec4 col2;
+uniform int typ;
+uniform vec2 ud;
+uniform ivec2 udi;
+uniform int grayscale;
+
+void main()
+{
+	vec4 color = texture2D(tex0,TC1);
+
+	if (typ == 1)
+	{
+		if( distance(color.rgb, vec3(0,0,1)) < 0.01 )
+		color.a = 0.0;
+	}
+	else
+	if (typ == 2)
+	{
+		if ((udi.x == 1) && (color.r > 0.1) && (color.r <= 0.5))
+		{
+			color = vec4(0,0,0,smoothstep(0.1,0.5,color.r));
+		}
+		else
+		{
+			if (color.r >= 0.6)
+				color = vec4(1,1,1,color.r);
+			else
+				color = vec4(1,1,1,0);
+		}
+	}
+	else
+	if (typ == 3)
+	{
+		color = vec4(mix(col, col2, TC1.y));
+	}
+	if (typ == 4)
+	{
+		if (udi.x == 1)
+		{
+			float r = color.r;
+			vec4 black = vec4(0,0,0,smoothstep(ud.x,(ud.x+(ud.y-ud.x)/2),r));
+
+			r     = smoothstep(ud.x,ud.y,r);
+			color = mix(black,vec4(1,1,1,r),r);
+
+//			vec3 cols = mix(vec3(0,0,0),vec3(1,1,1),smoothstep(0.45,0.55,color.r));
+//			color = vec4(cols,smoothstep(max(ud.x-(0.2),0.05),ud.y,color.r));
+		}
+		else
+			color = vec4(1,1,1,smoothstep(ud.x,ud.y,color.r));
+	}
+	else
+	if (typ == 5)
+	{
+		color = vec4(1,1,1,color.r);
+	}
+
+	if (typ != 3)
+	{
+		color = color*col;
+	}

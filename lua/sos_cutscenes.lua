@@ -1,3 +1,25 @@
+function cutscene.doCutscene(FILENAME, RECIEVER, CALLBACK)
+    setTexture(cutscene.video, 'black.png');
+    
+    OW_menumusic(false);
+    playMenuMusic(0);
+
+    OW_hidemouse(true);
+    setFocus(cutscene.video);
+    setVisible(cutscene, true);
+
+    setText(cutscene.subtitles,'');
+
+    setVisible(cutscene.video.glare, RECIEVER);
+    setVisible(cutscene.video.bord, RECIEVER);
+    setVisible(cutscene.video.redled, RECIEVER);
+
+    setVisible(cutscene.subtitles, OW_get(SETTING_SUBTITLES));
+
+    OW_SEQ_RUN(cutscene.video.ID, 'videos/' .. FILENAME, CALLBACK);
+    OW_SET_VSYNC_VIDEOMODE(true);
+end;
+
 function cutscene.doX1(FILENAME, CALLBACK)
     setColour1(cutscene, BLACK());
     setXYWH(cutscene.video, XYWH(0, 0, ScrWidth, ScrHeight));

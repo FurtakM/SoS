@@ -1,9 +1,22 @@
+include('Extensions/transition');
+
+TEXTURE1 = loadOGLTexture('mainbackground-0.png', true);
+TEXTURE2 = loadOGLTexture('mainbackground-1.png', true);
+TEXTURE3 = loadOGLTexture('mainbackground2.png', true);
+
+function animateMenu() -- TODO
+    transition:init(getWidth({ID=menu.ID}), getHeight({ID=menu.ID}));
+    transition:doTransition(TEXTURE1:getTextureID(), TEXTURE2:getTextureID(), 3);
+    SGUI_settextureid(menu.ID, transition:getTextureID());
+end;
+
 -- menu logo
 setVisible(version, false);
 setVisible(mod_version, false);
-setTexture(menu, 'mainbackground-l.png');
+setTexture(menu, 'mainbackground-0.png');
 logoVisible(false);
 setVisible(classic_logo, false);
+playMenuMusic(1);
 
 -- override menu
 sgui_deletechildren(menu.window.ID);
@@ -313,4 +326,32 @@ function showMenuButton(windowNumber)
     if (windowNumber == 3) then
         setVisible(menu.window3, true);
     end;
+end;
+
+function endLogos() -- Called by lua when logos are over
+    clearFocus();
+    setVisible(logos, false);
+    setVisible(menu, true);
+    OW_menumusic(false);
+    playMenuMusic(1);
+    OW_hidemouse(false);
+    OW_SET_VSYNC_VIDEOMODE(false);
+end;
+
+function FROMOW_DOLOGOS() -- Called by game when Skip is false
+    setVisible(menu,false)
+    setVisible(logos,true);
+    OW_menumusic(false);
+    playMenuMusic(1);
+    setFocus(logos);
+    playLogo(0); -- See logos.lua
+    OW_SET_VSYNC_VIDEOMODE(true);
+end;
+
+function backToMenu_lite()
+    setVisible(game,false);
+    setVisible(menu,true);
+    loadMenuThings();
+    OW_menumusic(false);  
+    playMenuMusic(1);
 end;
