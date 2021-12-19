@@ -214,7 +214,7 @@ begin
     Say(Burlak, 'D5a-Bur-1');
 
     if workshopConstructed then
-        Say(Platonov, 'D5a-Pla-1a')
+        Say(Platonov, 'D5a-Pla-1')
     else
         Say(Platonov, 'D5a-Pla-1a');
 
@@ -297,6 +297,10 @@ end;
 Export Function Dial_NewCrates(x, y);
 begin
     wait(0$18);
+
+    if NOT spawnCrates then
+       exit;
+
     ComMoveXY(Platonov, x, y);
     Say(Platonov, 'D4-Pla-1');
 end;
@@ -643,6 +647,7 @@ begin
 
     amVeh = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]])[1];
 
+    ComMoveXY(FilterUnitsInArea(NearHillArea, [[f_side, 1], [f_type, unit_human]]), 113, 29);
     ComMoveXY(amVeh, 118, 25);
 
     SayRadio(tmpBelkov, 'D14-Bel-1a');
@@ -693,6 +698,23 @@ begin
 
     ComRepairVehicle(amMech, amVeh);
     AddComEnterUnit(amMech, amVeh);       
+end;
+
+// Am mech enter veh if near is enemy
+every 0$1 trigger IsOK(amMech) AND FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_ok]]) do
+var nearUnit;
+begin
+    enable;
+
+    nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), amMech);
+
+    if GetDistUnits(nearUnit, amMech) < 7 then
+        ComEnterUnit(amMech, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_ok]])[1] )
+    else
+    begin
+        if GetLives(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_ok]])[1]) = 1000 AND NOT IsInUnit(amMech) then
+            ComEnterUnit(amMech, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_ok]])[1] );
+    end;
 end;
 
 // Immortal Belkov team
