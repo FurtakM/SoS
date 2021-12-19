@@ -1114,8 +1114,8 @@ achievements = {
         0
     },
     ['ACH_ENO'] = {
-        loc(TID_ACH_FIRE),
-        loc(TID_ACH_FIRE_DESC),
+        loc(TID_ACH_ENO),
+        loc(TID_ACH_ENO_DESC),
         true,
         0,
         0
@@ -1316,11 +1316,7 @@ achievsCategory = {
         'ACH_HUNT',
         'ACH_BEH',
         'ACH_NODEPOT',
-        'ACH_PANZERKNACKER',
-        'ACH_EXT',
-        'ACH_KEY',
-        'ACH_CHEM',
-        'ACH_FIRE'
+        'ACH_PANZERKNACKER'
     }
 };
 
@@ -1594,4 +1590,34 @@ function showAchivs(mode)
         showMenuButton(3);
         setVisible(menu.window_achivs, false);
     end;
+end;
+
+function showIGAchievs()    
+    sgui_deletechildren(dialog.achievs.scrollbox.ID);
+
+    local rowcolour1 = interface.current.game.ui.achievsBG[1];
+    local rowcolour2 = interface.current.game.ui.achievsBG[2];
+    local colour = WHITEA;
+    local index = 0;
+    local yOffset = 0;
+
+    for k, i in pairs(IGAchievs) do
+        index = index + 1;
+        
+        if odd(index) then
+            colour = rowcolour1;
+        else
+            colour = rowcolour2;
+        end;
+        
+        createAchiev(dialog.achievs.scrollbox.ID,yOffset,i,achievements[i],colour);
+        yOffset = yOffset + 110;
+    end;
+
+    if (not getVisible(gamewindow.pause)) then
+        dialogUnpauseAfterClose = true;
+        OW_PAUSE();
+    end;
+
+    ShowDialog(dialog.achievs);
 end;

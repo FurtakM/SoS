@@ -11,3 +11,4 @@ include('sos_campaings');
 include('sos_credits');
 include('sos_stream');
 include('sos_events');
+include('sos_dialogs');

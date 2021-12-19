@@ -365,7 +365,7 @@ function endLogos() -- Called by lua when logos are over
     setVisible(logos, false);
     setVisible(menu, true);
     OW_menumusic(false);
-    playMenuMusic(1);
+    -- playMenuMusic(1);
     OW_hidemouse(false);
     OW_SET_VSYNC_VIDEOMODE(false);
 end;
@@ -374,16 +374,29 @@ function FROMOW_DOLOGOS() -- Called by game when Skip is false
     setVisible(menu,false)
     setVisible(logos,true);
     OW_menumusic(false);
-    playMenuMusic(1);
+    -- playMenuMusic(1);
     setFocus(logos);
     playLogo(0); -- See logos.lua
     OW_SET_VSYNC_VIDEOMODE(true);
 end;
 
 function backToMenu_lite()
-    setVisible(game,false);
-    setVisible(menu,true);
-    loadMenuThings();
+    setVisible(game, false);
+    setVisible(menu, true);
+    -- loadMenuThings();
     OW_menumusic(false);  
+
+    playMenuMusic(0);
+end;
+
+function backToMenu()
     playMenuMusic(1);
+
+    setVisible(game, false);
+    setVisible(menu, true);
+
+    if not getvalue(OWV_SKIRMISH) then
+        showCampaign(1);
+        runCampaign(CAMPAIGN_ID - 1);
+    end;        
 end;

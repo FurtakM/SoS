@@ -29,8 +29,10 @@ function playMenuMusic(MODE)
             SOS_MUSIC_MENU_ID = 0;
         end;
     else
-        SOS_MUSIC_TRACK = math.random(0, #SOS_MUSIC_LIST - 1);
-        playNextTrack(SOS_MUSIC_TRACK);
+        if (SOS_MUSIC_MENU_ID == 0) then
+            SOS_MUSIC_TRACK = math.random(0, #SOS_MUSIC_LIST - 1);
+            playNextTrack(SOS_MUSIC_TRACK);
+        end;
     end;
 end;
 
