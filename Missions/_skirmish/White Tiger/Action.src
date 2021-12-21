@@ -7,29 +7,19 @@ End;
 Every 0$2 trigger See(7, allianceMechanic) do
 SetSide(allianceMechanic, 7);
 
+Every 2$00 do
+PrepareReinforcements();
+
 Every 0$1 trigger not FindArtifact(2) do
 SetAreaMapShow(endMissionArea, 1);
 
-Every 0$1 trigger FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]) do
-var hasArtifact, i, tmp;
+Every 0$1 trigger FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]) and not FindArtifact(2) do
 begin
-hasArtifact := false;
-
-repeat
- wait(0$1);
- tmp := FilterUnitsInArea(endMissionArea, [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay]]);
-
- for i in tmp do
-     if GetCargoType(i) = mat_artefact then
-        begin
-        hasArtifact := true;
-        break;
-        end;
-until hasArtifact;
-
 AddMedal('WT-med-1', 1);
-AddMedal('WT-med-2', IsOk(allianceMechanic) and GetSide(allianceMechanic) = 7);
-AddMedal('WT-med-3', FilterAllUnits([[f_side, 7], [f_type, us_double_laser]]) >= 2);
+AddMedal('WT-med-2', [-1, 1][(IsOk(allianceMechanic) * (GetSide(allianceMechanic)) = 7) + 1]);
+AddMedal('WT-med-3', [-1, 1][(FilterAllUnits([[f_side, 7], [f_weapon, us_double_laser]]) >= 2) + 1]);
+
+GiveMedals('WT-Main');
 
 YouWin;
 End;
