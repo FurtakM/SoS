@@ -47,7 +47,7 @@ begin
             end
             else if GetLives(personel[i][1]) <= 950 then
             begin
-                personel = ReplaceIn(personel, [i, personel[i] - 1], 0);
+                personel = ReplaceIn(personel, [i, personel[i]], 0);
                 ComMoveToArea(personel[i][1], healArea);
             end;
 
@@ -58,6 +58,9 @@ begin
         // Vehicles manager - change state        
         for i := 1 to vehicles do
         begin
+           if GetFuel(vehicles[i][1]) < 50 then
+               SetFuel(vehicles[i][1], 100);
+
             if GetLives(vehicles[i][1]) = 1000 then
             begin
                 if GetControl(vehicles[i][1]) = control_manual then
@@ -394,6 +397,10 @@ begin
              end;
             end;
 
+        // if near is enemy, mechanic enter vehicle
+        if IsEnemyNear(vehicles[i][1], 1) AND NOT IsInUnit(vehicles[i][2]) then
+            ComEnterUnit(vehicles[i][2], vehicles[i][1]);
+
         goodVehs = 0;
 
         // if damaged - change stan and retreat
@@ -407,7 +414,7 @@ begin
                 ComMoveXY(vehicles[i][1], 78, 39);
            end;
 
-           if GetLives(vehicles[i][1]) < 500 AND GetDistUnitXY(vehicles[i][1], 78, 39) < 9 then
+           if GetLives(vehicles[i][1]) < 500 AND GetDistUnitXY(vehicles[i][1], 78, 39) < 9 AND NOT IsEnemyNear(vehicles[i][1], 1) then
            begin
                 AddComExitVehicle(vehicles[i][2]);
                 AddComRepairVehicle(vehicles[i][2], vehicles[i][1]);
