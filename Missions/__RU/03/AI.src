@@ -359,9 +359,10 @@ begin
 end;
 
 Export Function KirovAttackOmicron;
-var i, vehicles, vehicle, goodVehs; 
+var i, vehicles, vehicle, goodVehs, cargo, cargoRefuel;
 begin
     vehicles = []; // [[vehicle, driver, stan], [vehicle, driver, stan]] stan: 1 - attack, 2 - retreat and repair
+    cargoRefuel = [];
 
     for vehicle in kirovAttackVehicles do
         vehicles = Insert(vehicles, 1, [vehicle, UnitsInside(vehicle)[1], 1]);
@@ -376,7 +377,22 @@ begin
         // if good vehs = all vehs - attack
         if goodVehs = vehicles then
             for i := 1 to vehicles do
-                ComAgressiveMove(vehicles[i][1], 26, 35);
+            begin
+                if NOT HasTask(vehicles[i][1]) then
+                begin
+                   if GetFuel(vehicles[i][1]) < 50 then
+                   begin
+                        for cargo in FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_weapon, ru_cargo_bay], [f_ok]]) do
+                             if GetCargo(cargo, mat_oil) > 0 then
+                                cargoRefuel = cargoRefuel ^ cargo;
+
+                        if cargo then
+                           ComRefuelFromCargo(vehicles[i][1], cargo[1]);
+                   end;
+                     
+                AddComAgressiveMove(vehicles[i][1], 26, 35);
+             end;
+            end;
 
         goodVehs = 0;
 
@@ -491,7 +507,7 @@ begin
                end
                else
                begin
-                  nearUnit = NearestUnitToUnit(enemyUnitsOnRoad, unit);
+                  nearUnit = NearestUnitToUnit(enemyUnitsOnRoad, UnitFilter(attackUnits, [[f_type, unit_vehicle], [f_ok]])[1]);
                   ComAttackUnit(UnitFilter(attackUnits, [[f_type, unit_vehicle]]), nearUnit);
                end;
             end;
@@ -506,7 +522,7 @@ begin
       wait(0$1);
    until UnitFilter(units, [f_ok]) = 0 OR inBase;
 
-   ComMoveXY(units, 27, 34);
+   ComMoveXY(UnitFilter(units, [[f_type, unit_human], [f_ok]]), 27, 34);
 
    for i := 1 to units do
       if IsOk(units[i]) then

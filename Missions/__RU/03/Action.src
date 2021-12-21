@@ -1,5 +1,5 @@
 Export Function MissionIntro;
-var unit;
+var i, unit, freeSlots, tmp;
 begin
     CenterNowOnUnits([Burlak, Kurin]);
 
@@ -104,7 +104,26 @@ begin
     AddComEnterUnit(FilterUnitsInArea(KirovBaseArea, [[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]), kirovDepot);
 
     ComFree(survivorsArabianAttack);
+
+    tmp = survivorsArabianAttack diff Popov;
+    freeSlots = 6 - UnitsInside(ru2_bar1);
+
     AddComEnterUnit(survivorsArabianAttack diff Popov, ru2_bar1);
+
+    for i = 1 to tmp do
+    begin
+      if freeSlots > 0 then
+      begin
+        ComEnterUnit(tmp[i], ru2_bar1);
+        freeSlots = freeSlots - 1;
+      end
+      else
+      break;
+    end;
+
+    wait(0$1);
+
+    ComEnterUnit(UnitFilter(tmp, [[f_outside], [f_not, [f_hastask]]]), kirovDepot);
 
     ComWalk(ruScout);
     wait(0$1);
@@ -148,7 +167,7 @@ begin
 end;
 
 // Kirov send cargo to transport oil
-every 0$1 trigger kirovTransportCargo do
+every 0$1 trigger kirovTransportCargo AND NOT endCutscene do
 begin
     enable;
 
@@ -392,7 +411,7 @@ begin
 end;
 
 // Immortal Kurin
-every 0$1 trigger canExitBattlefield do
+every 1 trigger NOT endCutscene do
 begin
   enable;
   SetLives(Kurin, 1000);
@@ -644,12 +663,13 @@ end;
 
 // Omicron surrender
 every 0$1 trigger IsDead(Sikorski) AND FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 do
-var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding;
+var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding, turrets, nearTurrets;
 begin
     omicronSurrender = true;
     canExitBattlefield = true;
 
     enableOmicronAI = false;
+    endCutscene = true;
 
     SetAttitude(1, 3, att_friend, false);
     SetAttitude(2, 3, att_friend, true);
@@ -707,6 +727,15 @@ begin
     SayRadio(Kurin, 'D9-Kur-1');
     DialogueOff;
 
+    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 158, 105);
+    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), 158, 105);
+
+    AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), GetX(beriaDepot), GetY(beriaDepot));
+    AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), GetX(beriaDepot), GetY(beriaDepot));
+
+    ComMoveXY(kirovTransportCargo, 158, 105);
+    AddComMoveXY(kirovTransportCargo, GetX(beriaDepot), GetY(beriaDepot));
+
     wait(0$2.5);
 
     DialogueOn;
@@ -723,9 +752,6 @@ begin
     DialogueOff;
 
     KillUnit(Grishko);
-
-    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 158, 105);
-    ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), 158, 105);
 
     wait(0$12);
 
@@ -759,7 +785,44 @@ begin
     for tmpUS in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_ok]]) do
         RemoveUnit(tmpUS);
 
-    wait(0$33);
+    repeat
+        wait(0$1);
+    until IsDead(Kurin);
+
+    wait(0$1);
+
+    nearTurrets = [];
+    turrets = FilterAllUnits([[f_side, 6], [f_btype, b_bunker], [f_ok]]);
+
+    for i = 1 to 2 do
+    begin
+      nearTurrets = nearTurrets ^ NearestUnitToUnit(turrets, beriaDepot);
+      turrets = turrets diff nearTurrets;
+      tmpRu = UnitsInside(nearTurrets[i])[1];
+
+      ComExitBuilding(tmpRu);
+      AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
+    end;
+
+    tmpRu = UnitsInside(FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]])[1]);
+    ComExitBuilding(tmpRu);
+    AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
+
+    wait(0$14);
+
+    ComExitVehicle(FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 6], [f_type, unit_human]]));
+
+    for i in FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 6], [f_type, unit_vehicle]]) do
+    begin
+       tmpRu = UnitsInside(i);
+       ComExitVehicle(tmpRu[1]);
+       AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
+    end;
+
+    wait(0$1);
+
+    AddComMoveXY(FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 6], [f_type, unit_human]]), GetX(beriaDepot), GetY(beriaDepot));
+    ComExitVehicle(UnitsInside(kirovTransportCargo)[1]);
 
     ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
     wait(0$1);
@@ -769,7 +832,7 @@ begin
         ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(Popov), GetY(Popov));
         CenterNowOnUnits(Burlak);
         wait(0$1);
-    until GetDistUnits(Burlak, Popov) < 6;
+    until GetDistUnits(Burlak, Popov) < 8;
 
     CenterNowOnUnits([Burlak, Popov]);
 
@@ -787,13 +850,16 @@ begin
     Say(Burlak, 'D10a-Bur-5');
     Say(Popov, 'D10a-Pop-5');
 
+    survivorsArabianAttack = [];
+    survivorsArabianAttack = FilterUnitsInArea(BigBeriaBaseArea, [[f_side, 6], [f_ok], [f_type, unit_human]]);
+
     ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 83, 157);
     ComMoveXY(survivorsArabianAttack, 83, 157);
 
     repeat
         CenterNowOnUnits(Burlak);
         wait(0$1);
-    until GetDistUnits(Burlak, beriaDepot) > 19;
+    until GetDistUnits(Burlak, beriaDepot) > 23;
 
     PlaceSeeing(113, 96, 3, -12);
     CenterNowOnXY(113, 96);

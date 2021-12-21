@@ -379,11 +379,46 @@ begin
             Say(Kovalyuk, 'D4-Kov-3');
     end;
 
-    enableAttacks = true;
-    
+    PrepareFirstAttack;
+    firstAttack = true;
+
     wait(0$10);
 
     Say(Burlak, 'D7-Bur-1');
+
+    AttackEnemy(firstAttackGroup, [ [135, 4], [134, 19], [132, 26], [128, 31], [123, 37], [118, 45], [112, 51], [106, 57],
+                                    [99, 62], [93, 67], [86, 72], [78, 75], [71, 81], [69, 88], [71, 95], [74, 103], [80, 113] ],
+                                    false, true, ArabianRetreatArea);
+end;
+
+// After first attack, if easy difficulty, ally units join to you
+every 0$1 trigger NOT UnitFilter(firstAttackGroup, [f_type, unit_human]) AND firstAttack do
+begin
+    if Difficulty = 1 then
+    begin
+      ComExitBuilding(secondBaseTeam);
+      wait(0$1);
+      ComMoveXY(secondBaseTeam, 114, 114);
+    end;
+
+    wait(0$15);
+
+    firstAttack = false;
+    enableAttacks = true;
+end;
+
+// Change side
+every 0$1 trigger Difficulty = 1 AND secondBaseTeam do
+var un;
+begin
+    enable;
+
+    for un in secondBaseTeam do
+        if IsInArea(un, HillArea) then
+        begin
+            SetSide(un, 3);
+            secondBaseTeam = secondBaseTeam diff un;
+        end;    
 end;
 
 // Contact with enemy dialog - execute in event
