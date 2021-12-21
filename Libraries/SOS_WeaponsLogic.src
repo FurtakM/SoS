@@ -30,7 +30,7 @@ End;
 On TargetableSAIL(cmd, unit, selectedUnit, x, y) do
 begin
 if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
-   DestroyUnit(selectedUnit);
+   HackDestroyVehicle(unit, selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
    CutTreeXYR(unit, x, y, 12);
 End;
@@ -182,4 +182,17 @@ for i := hackTanksCaptured[index] downto 1 do
     end;
 
 SetUnitDisplayNumber(hack, hackTanksCaptured[index] + 0);
+End;
+
+Export Function HackDestroyVehicle(hack, vehicle);
+var i, index, tmp;
+begin
+if not hack in hackTanks then
+   exit;
+
+index := GetElementIndex(hackTanks, hack);
+
+for i := 1 to hackTanksCaptured[index] do
+    if hackTanksCaptured[index][i][1] = vehicle then
+       KillUnit(vehicle);
 End;

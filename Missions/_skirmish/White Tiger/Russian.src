@@ -5,8 +5,8 @@ begin
 uc_side := 3;
 uc_nation := 3;
 
-SetResourceType(GetBase(ruDep), mat_cans, 5000);
-SetResourceType(GetBase(ruDep), mat_siberit, 500);
+SetResourceType(GetBase(ruDep), mat_cans, 50000);
+SetResourceType(GetBase(ruDep), mat_siberit, 5000);
 
 TeleportExit(ruTeleport, 132, 89);
 
@@ -79,14 +79,14 @@ var i, tmp;
 begin
 enable;
 
-tmp := FilterUnitsInArea(ruBaseArea, [[f_type, unit_building], [f_not, [f_ok]]]);
+tmp := FilterUnitsInArea(ruBaseArea, [[f_type, unit_building], [f_not, [f_lives, 1000]]]);
 
 if not tmp and UnitFilter(ruEng, [f_not, [f_inside]]) then
    ComEnterUnit(UnitFilter(ruEng, [f_not, [f_inside]]), ruDep);
 
 if tmp then
    begin
-   for i in tmp do
+   for i in ruEng do
        if IsInUnit(i) then
           ComExitBuilding(i)
        else
@@ -94,7 +94,7 @@ if tmp then
    end;
 End;
 
-Every 3$00 trigger not ruForces do
+Every 4$00 trigger not ruForces do
 var i, tmp;
 begin
 enable;
@@ -103,12 +103,19 @@ for i := 1 to [4, 5, 6][Difficulty] do
     AddComConstruct(ruFac, ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun);
 End;
 
-Every 0$30 trigger ruForces do
+Every 0$30 trigger ruForces >= [4, 5, 6][Difficulty] do
 var i, tmp;
 begin
 enable;
 
 tmp := ruForces;
+
+if rand(0, 1) then
+   begin
+   ComEnterUnit(tmp, ruTeleport);
+   wait(0$20);
+   end;
+
 ruForces := [];
 
 repeat

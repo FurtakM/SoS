@@ -114,12 +114,12 @@ begin
     // Burlak is with others
     else
     begin
-        nearUnit = NearestUnitToXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff Gnyevko, radioDropPosition[1], radioDropPosition[2]);
-        
+        nearUnit = NearestUnitToXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko], radioDropPosition[1], radioDropPosition[2]);
+        apeWithRadioKiller = nearUnit;
+
         ComMoveXY(nearUnit, radioDropPosition[1], radioDropPosition[2]);
 
         case nearUnit of
-            Burlak: Say(Burlak, 'D3-Bur-2a');
             Belkov: Say(Belkov,'D2a-Bel-1');
             Kirilenkova: Say(Kirilenkova,'D2a-Kir-1');
         else
@@ -131,9 +131,6 @@ begin
 
         if (GetSide(Gnyevko) = 3 and IsOK(Gnyevko)) then
             Say(Gnyevko,'D2a-Gny-1');
-
-        if (apemanWithRadio = apemanAttackedBurlak) then
-            Say(Burlak, 'D3-Bur-2');
 
         if (GetSide(Gnyevko) = 8) then
         begin
@@ -167,6 +164,13 @@ begin
     begin
         Say(Burlak, 'D3-Bur-1');
         Say(Gnyevko, 'D3-Gny-1');
+
+        if apeWithRadioKiller then
+        begin
+          if apeWithRadioKiller = Burlak then Say(Burlak, 'D3-Bur-2')
+          else Say(Burlak, 'D3-Bur-2a');
+        end;
+
         Say(Burlak, 'D3-Bur-2b');
 
         if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 AND NOT meetPokryshkin then
@@ -214,12 +218,19 @@ begin
 
         Say(Gnyevko, 'D3-Gny-1');
 
+        if apeWithRadioKiller then
+        begin
+          if apeWithRadioKiller = Burlak then Say(Burlak, 'D3-Bur-2')
+          else Say(Burlak, 'D3-Bur-2a');
+        end;
+
         if GetSex(nearUnit) = sex_male then
             Say(nearUnit, 'D3-RSol1-2')
         else
             Say(nearUnit, 'D3-RFSol1-2');
 
         Say(Gnyevko, 'D3-Gny-2a');  
+
 
         DialogueOff;
 
@@ -262,7 +273,7 @@ begin
 end;
 
 // Meet Pokryshkin
-every 0$1 trigger (See(3, Pokryshkin) OR See(6, Burlak) OR See(6, Gnyevko)) AND NOT meetPokryshkin do
+every 0$1 trigger (See(3, Pokryshkin) OR See(6, Burlak) OR (GetSide(Gnyevko) = 3 AND See(6, Gnyevko)) ) AND NOT meetPokryshkin do
 begin
     enable;
 
@@ -374,6 +385,9 @@ begin
         
         goToHill = true;
 
+        DialogueOff;
+        InGameOff;
+
         MoveToHill;
 
     end;
@@ -463,9 +477,11 @@ end;
 every 0$1 trigger IsDead(Charles) AND goToHill do
 var ruSolds;
 begin
+    InGameOn;
     goToHill = false;
 
     ComStop(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
+    wait(0$1);
     ComWalk(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
     wait(0$1);
 
