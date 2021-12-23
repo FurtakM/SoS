@@ -1,21 +1,3 @@
-// Prepare Hero for use
-// ident - ident from start.txt - 'JMM' for example
-// exist_mode
-//   - false if unit not exist in save
-//   - true if unit already exist in save
-// example: JMM := PrepareUnit('JMM', false);
-Export Function PrepareUnit(ident, exist_mode);
-var unit;
-begin
-
-if exist_mode then
-   unit := CreateCharacter(mission_prev_prefix&ident)
-  else
-   unit := NewCharacter(ident);
-
-result := unit;
-End;
-
 // example: PrepareTank(1, 1, us_medium_wheeled, engine_combustion, control_manual, us_machine_gun, 80);
 Export Function PrepareTank(side, nation, chassis, engine, control, weapon, fuel);
 begin
@@ -57,135 +39,6 @@ for i in units do
        result := i;
        break;
        end;
-End;
-
-Export Function GetBaseBuildings(base);
-var tmp, i;
-begin
-result := [];
-tmp := FilterAllUnits([f_type, unit_building]);
-
-if not tmp then
-   exit;
-
-for i in tmp do
-    if GetBase(i) = base then
-       result := result ^ i;
-End;
-
-Export Function GetTurretWeapon(tower);
-var hex, list, factories, base, i, j, x, y, nat, h, tmp, height, side, fac_list, weapon;
-begin
-result := false;
-
-if not tower or not GetBType(tower) in [b_bunker, b_turret] then
-   exit;
-
-nat := GetNation(tower);
-side := GetSide(tower);
-
-x := GetX(tower);
-y := GetY(tower);
-
-if not x or not y then
-   exit;
-
-weapon := 0;
-fac_list := [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_heavy_gun];
-
-
-if not fac_list then
-   exit;
-
-list := [
-             [us_gatling_gun, us_double_gun, us_laser,
-              us_double_laser, us_heavy_gun, us_rocket_launcher, us_radar],
-             [ar_gun,
-              ar_rocket_launcher, ar_flame_thrower, ar_radar],
-             [ru_gatling_gun, ru_gun, ru_heavy_gun,
-              ru_rocket_launcher, ru_rocket, ru_time_lapser]
-        ][nat];
-
-// filter list
-for i in list do
-    if not i in fac_list then
-       list := list diff i;
-
-if not list then
-   exit;
-
-// time lapsers
-if nat = nation_russian and ru_time_lapser in list and GetTech(tech_lapser, side) = state_researched then
-   begin
-   if not FilterAllUnits([[f_side, side], [f_bweapon, ru_time_lapser], [f_dist, tower, 10]]) then
-      weapon := ru_time_lapser;
-   end;
-
-// radar
-if nat in [1,2] and (us_radar in list or ar_radar in list) and GetTech(tech_radar, side) = state_researched then
-   begin
-   if not FilterAllUnits([[f_side, side], [f_or, [f_bweapon, us_radar], [f_bweapon, ar_radar]], [f_dist, tower, 18]]) and
-      FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_dist, tower, 12]]]) > 2 then
-      weapon := [us_radar, ar_radar][nat];
-   end;
-
-// rocket_launcher
-if not weapon and GetTech(tech_rocket, side) = state_researched and
-   (us_rocket_launcher in list or ar_rocket_launcher in list or ru_rocket_launcher in list) then
-   begin
-   hex := GetHexInfo(x, y);
-
-   if hex[1] then
-      exit;
-
-   height := hex[2];
-   tmp := [0, 2, 3, 5];
-
-   for i in tmp do
-       begin
-       j := [ShiftX(x, i, 5), ShiftY(y, i, 5)];
-
-       if ValidHex(j[1], j[2]) then
-          begin
-          hex := GetHexInfo(j[1], j[2]);
-
-          if hex[1] then
-             continue;
-
-          h := hex[2];
-
-          if h+7 < height then
-             begin
-             weapon := [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nat];
-             break;
-             end;
-          end;
-       end;
-   end;
-
-// group of weapons
-if not weapon then
-   begin
-   list := list diff [us_radar, ar_radar, ru_time_lapser];
-   tmp := FilterAllUnits([[f_side, side], [f_dist, tower, 6], [f_not, [f_bweapon, 0]]]);
-
-   for i in tmp do
-       list := list diff GetBWeapon(i);
-
-   if list then
-      weapon := list[rand(1, list)];
-   end;
-
-if weapon then
-   begin
-   tmp := CostOfWeapon(weapon);
-   j := GetBase(tower);
-
-   if GetResourceType(j, mat_cans) >= tmp[1] and
-      GetResourceType(j, mat_oil) >= tmp[2] and
-      GetResourceType(j, mat_siberit) >= tmp[3] then
-      result := weapon;
-   end;
 End;
 
 Export Function GoToAnotherTower(un, b, x, y);
@@ -302,7 +155,7 @@ result := FilterAllUnits([[f_side, side], [f_type, unit_building]]);
 End;
 
 // animals
-Export Function PrepareNature;
+Export Function CreateNature;
 var i, animal, nat_area;
 begin
 
@@ -402,4 +255,119 @@ for i in tmp do
        end;
     end;
 
+End;
+
+Export Function GetTurretWeaponBase(tower);
+var hex, list, factories, base, i, j, x, y, nat, h, tmp, height, side, fac_list, weapon;
+begin
+result := false;
+
+if not tower or not GetBType(tower) in [b_bunker, b_turret] then
+   exit;
+
+nat := GetNation(tower);
+side := GetSide(tower);
+
+x := GetX(tower);
+y := GetY(tower);
+
+if not x or not y then
+   exit;
+
+weapon := 0;
+fac_list := [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_heavy_gun];
+
+
+if not fac_list then
+   exit;
+
+list := [
+             [us_gatling_gun, us_double_gun, us_laser,
+              us_double_laser, us_heavy_gun, us_rocket_launcher, us_radar],
+             [ar_gun,
+              ar_rocket_launcher, ar_flame_thrower, ar_radar],
+             [ru_gatling_gun, ru_gun, ru_heavy_gun,
+              ru_rocket_launcher, ru_rocket, ru_time_lapser]
+        ][nat];
+
+// filter list
+for i in list do
+    if not i in fac_list then
+       list := list diff i;
+
+if not list then
+   exit;
+
+// time lapsers
+if nat = nation_russian and ru_time_lapser in list and GetTech(tech_lapser, side) = state_researched then
+   begin
+   if not FilterAllUnits([[f_side, side], [f_bweapon, ru_time_lapser], [f_dist, tower, 10]]) then
+      weapon := ru_time_lapser;
+   end;
+
+// radar
+if nat in [1,2] and (us_radar in list or ar_radar in list) and GetTech(tech_radar, side) = state_researched then
+   begin
+   if not FilterAllUnits([[f_side, side], [f_or, [f_bweapon, us_radar], [f_bweapon, ar_radar]], [f_dist, tower, 18]]) and
+      FilterAllUnits([[[f_side, side], [f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_dist, tower, 12]]]) > 2 then
+      weapon := [us_radar, ar_radar][nat];
+   end;
+
+// rocket_launcher
+if not weapon and GetTech(tech_rocket, side) = state_researched and
+   (us_rocket_launcher in list or ar_rocket_launcher in list or ru_rocket_launcher in list) then
+   begin
+   hex := GetHexInfo(x, y);
+
+   if hex[1] then
+      exit;
+
+   height := hex[2];
+   tmp := [0, 2, 3, 5];
+
+   for i in tmp do
+       begin
+       j := [ShiftX(x, i, 5), ShiftY(y, i, 5)];
+
+       if ValidHex(j[1], j[2]) then
+          begin
+          hex := GetHexInfo(j[1], j[2]);
+
+          if hex[1] then
+             continue;
+
+          h := hex[2];
+
+          if h+7 < height then
+             begin
+             weapon := [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nat];
+             break;
+             end;
+          end;
+       end;
+   end;
+
+// group of weapons
+if not weapon then
+   begin
+   list := list diff [us_radar, ar_radar, ru_time_lapser];
+   tmp := FilterAllUnits([[f_side, side], [f_dist, tower, 6], [f_not, [f_bweapon, 0]]]);
+
+   for i in tmp do
+       list := list diff GetBWeapon(i);
+
+   if list then
+      weapon := list[rand(1, list)];
+   end;
+
+if weapon then
+   begin
+   tmp := CostOfWeapon(weapon);
+   j := GetBase(tower);
+
+   if GetResourceType(j, mat_cans) >= tmp[1] and
+      GetResourceType(j, mat_oil) >= tmp[2] and
+      GetResourceType(j, mat_siberit) >= tmp[3] then
+      result := weapon;
+   end;
 End;
