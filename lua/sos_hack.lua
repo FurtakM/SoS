@@ -1,4 +1,4 @@
-HACK_MODE = parseInt(MOD_DATA.Hack_Mode); -- define if stream mode is active (check mod.ini)
+HACK_MODE = parseInt(MOD_DATA.Hack_Mode); -- define if hack mode is active (check mod.ini)
 
 game.hackPanel = getElementEX(
     game, 
