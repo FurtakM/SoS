@@ -16,19 +16,19 @@
 --VK_TILDE      = 192;
 --
 function onMenuKeyPress(key)
-    if (key == VK_F1) then
-        if mask == nil then
-           mask = netMask();
-        else
-            if getVisible(mask) then
-               setVisible(mask, false);
-            else
-               setVisible(mask, true);
-            end;
-        end;
-
-        return;
-    end;
+    --if (key == VK_F1) then
+    --    if mask == nil then
+    --       mask = netMask();
+    --    else
+    --        if getVisible(mask) then
+    --           setVisible(mask, false);
+    --        else
+    --           setVisible(mask, true);
+    --        end;
+    --    end;
+    --
+    --    return;
+    --end;
 
     if (key == VK_RETURN) then
        -- credits
@@ -113,8 +113,12 @@ function onMenuKeyPress(key)
         end;
     end;
 
-    if (STREAM_MODE == 1 and key == VK_TILDE) then
+    if (STREAM_MODE == 1 and HACK_MODE == 0 and (key == VK_TILDE or key == VK_F1)) then
         showStreamPanel();
+    end;
+
+    if (HACK_MODE == 1 and (key == VK_TILDE or key == VK_F1)) then
+        showHackPanel();
     end;
 end;
 

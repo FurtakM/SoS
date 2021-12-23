@@ -4,6 +4,7 @@ TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
 TEXTURE2 = loadOGLTexture('mainbackground2.png', true);
 TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
 TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
+TEXTURE5 = loadOGLTexture('mainbackground5.png', true);
 
 LAST_USED_TEXTURE = 1;
 
@@ -14,7 +15,7 @@ function animateMenu()
 end;
 
 function changeBackgroundMenuImage();
-    local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4};
+    local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5};
     local texture = tmp[LAST_USED_TEXTURE];
     LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
 
