@@ -637,13 +637,28 @@ end;
 
 // Stop move near Omicron base
 every 1 trigger NOT meetNearOmicronBase AND IsOK(Sikorski) do
-var unit, randDialog;
+var i, unit, randDialog, currentDist, tmpDist, nearUnit, index;
 begin
     enable;
     for unit in FilterUnitsInArea(OmicronBaseArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building]]]) do
         if GetDistUnits(unit, NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit)) < 17 then
         begin
-            ComMoveXY(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit), 69, 85);
+            nearUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit);
+            currentDist = GetDistUnitXY(nearUnit, omicronBlockerPoints[1][1], omicronBlockerPoints[1][2]);
+            index = 1;
+
+            for i = 2 to omicronBlockerPoints do
+            begin
+                 tmpDist = GetDistUnitXY(nearUnit, omicronBlockerPoints[i][1], omicronBlockerPoints[i][2]);
+
+                 if tmpDist < currentDist then
+                 begin
+                    index = i;
+                    currentDist = tmpDist;
+                 end;
+            end;
+
+            ComMoveXY(nearUnit, omicronBlockerPoints[index][1], omicronBlockerPoints[index][2]);
 
             randDialog = rand(1, 2);
 
@@ -814,9 +829,14 @@ begin
 
     for i in FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 6], [f_type, unit_vehicle]]) do
     begin
-       tmpRu = UnitsInside(i);
-       ComExitVehicle(tmpRu[1]);
-       AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
+       if GetLives(i) < 15 then
+       begin
+            tmpRu = UnitsInside(i);
+            ComExitVehicle(tmpRu[1]);
+            AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
+      end
+      else
+          AddComMoveXY(i, GetX(beriaDepot), GetY(beriaDepot));
     end;
 
     wait(0$1);
@@ -824,15 +844,36 @@ begin
     AddComMoveXY(FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 6], [f_type, unit_human]]), GetX(beriaDepot), GetY(beriaDepot));
     ComExitVehicle(UnitsInside(kirovTransportCargo)[1]);
 
-    ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+    for i in FilterUnitsInArea(OmicronBattlefieldArea, [[f_side, 3], [f_type, unit_vehicle]]) do
+    begin
+       if GetLives(i) < 15 then
+       begin
+            tmpRu = UnitsInside(i);
+            ComExitVehicle(tmpRu[1]);
+            AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
+      end
+      else
+          AddComMoveXY(i, GetX(beriaDepot), GetY(beriaDepot));
+    end;
+
     wait(0$1);
     ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(Popov), GetY(Popov));
 
     repeat
         ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(Popov), GetY(Popov));
-        CenterNowOnUnits(Burlak);
+        ComMoveXY(IsInUnit(Burlak), GetX(Popov), GetY(Popov));
+
+        if IsInUnit(Burlak) then CenterNowOnUnits(IsInUnit(Burlak))
+        else  CenterNowOnUnits(Burlak);
+
         wait(0$1);
-    until GetDistUnits(Burlak, Popov) < 8;
+    until GetDistUnits(Burlak, Popov) < 8 OR (IsInUnit(Burlak) < 8 AND IsInUnit(Burlak));
+
+    if IsInUnit(Burlak) then
+    begin
+         ComExitVehicle(Burlak);
+         wait(0$1);
+    end;
 
     CenterNowOnUnits([Burlak, Popov]);
 
@@ -853,10 +894,11 @@ begin
     survivorsArabianAttack = [];
     survivorsArabianAttack = FilterAllUnits([[f_side, 6], [f_ok], [f_type, unit_human]]);
 
-    ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 83, 157);
+    ComMoveXY(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), 83, 157);
     ComMoveXY(survivorsArabianAttack, 83, 157);
 
     repeat
+        ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]), 83, 157);
         CenterNowOnUnits(Burlak);
         wait(0$1);
     until GetDistUnits(Burlak, beriaDepot) > 23;

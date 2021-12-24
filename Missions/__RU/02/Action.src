@@ -143,8 +143,8 @@ every 1$30 trigger NOT meetPlatonov and FilterUnitsInArea(KirovBaseArea, [[f_sid
     Say(Kurin, 'D1a-Kur-1');
 
 // First visit Beria base
-every 0$1 trigger NOT meetPlatonov AND IsOK(Burlak) AND FilterUnitsInArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
-var i, unit, yourUnits, randomMaleSoldier;
+every 0$1 trigger NOT meetPlatonov AND IsOK(Burlak) AND FilterUnitsInArea(MeetBeriaBaseArea, [[f_side, 3], [f_type, unit_human]]) > 0 do
+var i, unit, yourUnits, randomMaleSoldiers, nearRandom;
 begin
 
     enable;
@@ -157,9 +157,17 @@ begin
             InGameOn;
             DialogueOn;
 
-            randomMaleSoldier = DialogRandom(UnitFilter(platSoldiers, [f_sex, sex_male]), 'D2-RSol1-1', '', false);
+            randomMaleSoldiers = UnitFilter(platSoldiers, [f_sex, sex_male]);
+            randomMaleSoldiers = randomMaleSoldiers ^ FilterUnitsInArea(BeriaBaseArea, [[f_side, 6], [f_type, unit_building], [f_btype, b_breastwork], [f_not, [f_empty]]]);
+
+            nearRandom = NearestUnitToUnit(randomMaleSoldiers, unit);
+
+            if GetType(nearRandom) = unit_building then
+               nearRandom = UnitsInside(nearRandom)[1];
+
+            DialogRandom(nearRandom, 'D2-RSol1-1', '', false);
             Say(Burlak, 'D2-Bur-1');
-            Say(randomMaleSoldier, 'D2-RSol1-2');
+            Say(nearRandom, 'D2-RSol1-2');
 
             DialogueOff; 
 
@@ -532,6 +540,8 @@ begin
         Say(Burlak, 'D11-Bur-1');
 
     ChangeMissionObjectives('M5');
+
+    CreateCratesArea(rand(1,5), CratesArea, true);
 
     construcMoreVehicles = true;
     spawnCrates = true;
