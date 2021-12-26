@@ -1,37 +1,44 @@
-include('Extensions/transition');
+if (parseInt(MOD_DATA.Static_Menu) == 0) then
+    include('Extensions/transition');
 
-TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
-TEXTURE2 = loadOGLTexture('mainbackground2.png', true);
-TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
-TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
-TEXTURE5 = loadOGLTexture('mainbackground5.png', true);
+    TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
+    TEXTURE2 = loadOGLTexture('mainbackground2.png', true);
+    TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
+    TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
+    TEXTURE5 = loadOGLTexture('mainbackground5.png', true);
 
-LAST_USED_TEXTURE = 1;
+    LAST_USED_TEXTURE = 1;
 
-function animateMenu()
-    transition:init(getWidth({ID=menu.ID}), getHeight({ID=menu.ID}));
-    transition:doTransition(TEXTURE1:getTextureID(), TEXTURE1:getTextureID(), 3);
-    SGUI_settextureid(menu.ID, transition:getTextureID());
-end;
-
-function changeBackgroundMenuImage();
-    local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5};
-    local texture = tmp[LAST_USED_TEXTURE];
-    LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
-
-    if (LAST_USED_TEXTURE > #tmp) then
-        LAST_USED_TEXTURE = 1;
+    function animateMenu()
+        transition:init(getWidth({ID=menu.ID}), getHeight({ID=menu.ID}));
+        transition:doTransition(TEXTURE1:getTextureID(), TEXTURE1:getTextureID(), 3);
+        SGUI_settextureid(menu.ID, transition:getTextureID());
     end;
 
-    transition:repeatTransition(texture:getTextureID());
-end;
+    function changeBackgroundMenuImage();
+        local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5};
+        local texture = tmp[LAST_USED_TEXTURE];
+        LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
 
-animateMenu();
+        if (LAST_USED_TEXTURE > #tmp) then
+            LAST_USED_TEXTURE = 1;
+        end;
+
+        transition:repeatTransition(texture:getTextureID());
+    end;
+
+    animateMenu();
+else
+    setTexture(menu, 'mainbackground1.png');
+
+    function changeBackgroundMenuImage();
+        -- not support
+    end;
+end;
 
 -- menu logo
 setVisible(version, false);
 setVisible(mod_version, false);
--- setTexture(menu, 'mainbackground-0.png');
 logoVisible(false);
 
 setVisible(classic_logo, true);
