@@ -1,5 +1,5 @@
 Export Function MissionIntro;
-var i, unit, freeSlots, tmp;
+var i, unit, freeSlots, tmp, timer;
 begin
     CenterNowOnUnits([Burlak, Kurin]);
 
@@ -78,13 +78,16 @@ begin
 
     ComExitBuilding(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
     wait(0$1);
-    AddComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(beriaDepot), GetY(beriaDepot));
+    AddComMoveUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), beriaDepot);
+
+    timer := 0;
 
     repeat
         wait(0$1);
+        timer := timer + 1;
         CenterNowOnUnits(Burlak);
-        ComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), GetX(beriaDepot), GetY(beriaDepot));
-    until GetDistUnits(Burlak, beriaDepot) < 6 OR NOT HasTask(Burlak);
+        ComMoveUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), beriaDepot);
+    until GetDistUnits(Burlak, beriaDepot) < 6 OR NOT HasTask(Burlak) OR timer > 10;
 
     InGameOff;
 

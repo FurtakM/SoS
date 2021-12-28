@@ -289,7 +289,7 @@ if sci then
    ComMoveXY(sci, attackFormula[2][1], attackFormula[2][2]);
 
 repeat
- wait(0$1);
+ wait(10);
 
  sol := UnitFilter(usAttackers, [f_class, 1]);
  sci := UnitFilter(usAttackers, [f_class, 4]);
@@ -307,16 +307,16 @@ repeat
            if GetLives(i) = 1000 then
               SetTag(i, 1)
            else
-              if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 6 then
-                 begin
+              if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 10 then
                  ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
-                 AddComHold(i);
-                 end;
            end
         else
            begin
            if GetLives(i) < 720 then
-              SetTag(i, 0)
+              begin
+              SetTag(i, 0);
+              ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+              end
            else
               if tag <= attackFormula[1] then
                  begin
@@ -344,8 +344,11 @@ repeat
        end
     else
      for i in sci do
-         if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 8 then
-            ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+         if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 10 then
+            ComMoveXY(i, attackFormula[2][1], attackFormula[2][2])
+         else
+           if UnitFilter(sol, [[f_not, [f_lives, 1000]], [f_dist, i, 10]]) then
+              ComHeal(i, UnitFilter(sol, [[f_not, [f_lives, 1000]], [f_dist, i, 10]])[1]);
     end;
 
  if mech then
@@ -359,19 +362,18 @@ repeat
            begin
            if veh then
               begin
-              if GetLives(veh) = 1000 and GetFuel(veh) > 60 then
+              if GetLives(veh) = 1000 then
                  SetTag(i, 1)
+              else if GetDistUnitXY(veh, attackFormula[3][1], attackFormula[3][2]) > 7 then
+                 ComMoveXY(veh, attackFormula[3][1], attackFormula[3][2])
               else
-                 if GetDistUnitXY(i, attackFormula[3][1], attackFormula[3][2]) > 7 then
-                    ComMoveXY(i, attackFormula[3][1], attackFormula[3][2])
-                 else
-                    begin
-                    ComExitVehicle(i);
-                    AddComRepairVehicle(i, veh);                     
-                    end;
+                 begin
+                 ComExitVehicle(i);
+                 AddComRepairVehicle(i, veh);                     
+                 end;
               end
            else
-              if GetLives(i) < 700 then
+              if GetLives(i) < 400 then
                  begin
                  usAttackers := usAttackers diff i;
                  usForces := usForces union i;
@@ -379,27 +381,30 @@ repeat
                  ComMoveXY(i, 34, 68);
                  end
               else if UnitFilter(tanks, [[f_empty], [f_lives, 1000]]) and not HasTask(i) then
-                 ComEnterUnit(i, NearestUnitToUnit(UnitFilter(tanks, [[f_empty], [f_lives, 1000]]), i));
+                 ComEnterUnit(i, NearestUnitToUnit(UnitFilter(tanks, [[f_empty], [f_lives, 250]]), i));
            end
         else
            begin
-           if GetLives(veh) < 720 then
-              SetTag(i, 0)
-           else
+           if veh and GetLives(veh) < 720 then
+              begin
+              SetTag(i, 0);
+              ComMoveXY(veh, attackFormula[3][1], attackFormula[3][2]);
+              end
+           else if veh then
               if tag <= attackFormula[4] then
                  begin
-                 if GetDistUnitXY(i, attackFormula[4][tag][1], attackFormula[4][tag][2]) > 6 then
-                    ComAgressiveMove(i, attackFormula[4][tag][1], attackFormula[4][tag][2])
-                 else if not FilterAllUnits([[f_enemy, 1], [f_dist, i, 10]]) then
+                 if GetDistUnitXY(veh, attackFormula[4][tag][1], attackFormula[4][tag][2]) > 6 then
+                    ComAgressiveMove(veh, attackFormula[4][tag][1], attackFormula[4][tag][2])
+                 else if not FilterAllUnits([[f_enemy, 1], [f_dist, veh, 10]]) then
                     SetTag(i, tag + 1);
                  end
               else
-                 ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+                 ComAttackUnit(veh, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
            end;
         end;
     end;
 
-until not usAttackers;
+until not UnitFilter(usAttackers, [f_placed]);
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_engine, engine_combustion]]) do
