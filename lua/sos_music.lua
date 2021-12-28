@@ -82,6 +82,7 @@ function playNextTrack()
         SOS_MUSIC_TRACK = SOS_MUSIC_TRACK + 1;
     end;
 
+    OW_menumusic(false);
     changeBackgroundMenuImage();
     SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC);
 end;

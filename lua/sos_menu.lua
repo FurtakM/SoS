@@ -54,7 +54,7 @@ end;
 
 setY(classic_logo, logoHeight);
 
-playMenuMusic(1);
+InitMusicTimer = timer:repeatable(0.5, 'playMenuMusic(1);', -1);
 
 -- override menu
 sgui_deletechildren(menu.window.ID);
