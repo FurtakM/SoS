@@ -7,6 +7,7 @@ Export Popov, Platonov, Gaydar;
 Export burlakTeam, popovTeam, secondBaseTeam, secondBaseDepot;
 Export dialogRus;
 Export firstCargo;
+Export ruCars;
 
 Export randomsToSave;
 
@@ -14,7 +15,9 @@ Export Function PrepareRussians;
 begin
     randomsToSave = [];
     secondBaseTeam = [];
+    ruCars = [];
 
+    LoadVehiclesFromPreviousMission;
     PrepareHeroes;
 end;
 
@@ -51,10 +54,25 @@ begin
     other_kirov_survivors = CreateCharacterSet('03_other_kirov');
 
     for i in other_survivors do
-        PlaceUnitArea(i, RussianSpawnArea1, false);
-        
+    begin
+        if ruCars then
+        begin
+           PlaceHumanInUnit(i, ruCars[1]);
+           ruCars = ruCars diff ruCars[1];
+        end
+        else
+          PlaceUnitArea(i, RussianSpawnArea1, false);
+    end;
+
     for i in other_kirov_survivors do
-        PlaceUnitArea(i, RussianSpawnArea1, false);
+    begin
+        if ruCars then
+        begin
+             PlaceHumanInUnit(i, ruCars[1]);
+             ruCars = ruCars diff ruCars[1];
+        end else
+          PlaceUnitArea(i, RussianSpawnArea1, false);
+    end;
 
     PrepareSoldier(sex_male, 1);
 
@@ -69,11 +87,39 @@ begin
         for i := 1 to current do
         begin
             uc_nation = 3;
-            uc_side = 6;
+            uc_side = 3;
             
             PrepareHuman(false, rand(1, 4), rand(1, 3));
-            PlaceUnitArea(CreateHuman, RussianSpawnArea1, false);    
+
+            if ruCars then
+            begin
+              PlaceHumanInUnit(CreateHuman, ruCars[1]);
+              ruCars = ruCars diff ruCars[1];
+            end
+            else
+              PlaceUnitArea(CreateHuman, RussianSpawnArea1, false);
+
         end;     
+    end;
+end;
+
+Export Function LoadVehiclesFromPreviousMission;
+var i, car;
+begin
+     uc_side = 3;
+     uc_nation = 3;
+
+     for i:=1 to tanksFromPreviousMission do
+     begin
+         vc_chassis:=tanksFromPreviousMission[i][1];
+         vc_engine = tanksFromPreviousMission[i][2];
+         vc_control = tanksFromPreviousMission[i][3];
+         vc_weapon:=tanksFromPreviousMission[i][4];
+         uc_direction:=3;
+         vc_fuel_battery:=Rand(25,30);
+         car:=CreateVehicle;
+         ruCars:=ruCars ^ car;
+         PlaceUnitArea(car, RussianSpawnArea1, false);
     end;
 end;
 
