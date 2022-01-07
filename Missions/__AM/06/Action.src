@@ -57,7 +57,7 @@ begin
     Say(JMM, 'D1-JMM-10');
     If IsOK(Denis) then Say(JMM, 'D1-JMM-10a');
 
-    SelectAndSaveCharacters;
+    SelectDeltaCharacters;
 
     SetResourceType(GetBase(lab[1]), 1, 250);
     If FilterAllUnits([[f_side, 1], [f_btype, b_oil_mine]]) > 0 then SetResourceType(GetBase(lab[1]), 2, 300);
@@ -71,35 +71,28 @@ begin
 
 end;
 
-Every 0$1 trigger FilterUnitsExceptArea(ExitArea, [[f_side, 1], [f_type, unit_human]]) = 0 do 
+Every 0$1 trigger FilterUnitsExceptArea(ExitArea, [[f_side, 1], [f_type, unit_human]]) = 0 do
 var i, cargoType;
 begin
+SaveDeltaCharacters;
 
-    if FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) > 0 then
-    begin
-        for i in FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) do
-        begin
-            cargoType = GetCargoType(i);
-            if GetWeapon(i) = us_cargo_bay then
-            begin
-                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), cargoType, GetCargo(i, cargoType) ] ];
-            end else 
-            begin
-                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)] ];
-            end;
-        end;  
+if FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) then
+   begin
 
-        SaveVariable(yourVehicles, '06_VehiclesIn06_1');
-        
-    end;
-    SaveCargos;
-    ChangeMap(6, '%_cont');
-end;
+   for i in FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_not, [f_empty]]]) do
+       begin
+       cargoType = GetCargoType(i);
 
+       if GetWeapon(i) = us_cargo_bay then
+          yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), cargoType, GetCargo(i, cargoType) ] ]
+       else
+          yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)] ];
 
-Export function SaveCargos;
-var i;
-begin
-   for i in FilterUnitsInArea(ExitArea,[[f_side, 1], [f_weapon, us_cargo_bay]]) do resources = resources ^ [GetMultiCargo(i)];
-   SaveVariable(resources, '06_ResourcesInCargo06_1');
-end;
+       SaveVariable(yourVehicles, '06_VehiclesIn06_1');
+       end;
+
+   end;
+
+SaveCargos;
+ChangeMap(6, '%_cont');
+End;
