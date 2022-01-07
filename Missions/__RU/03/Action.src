@@ -52,9 +52,6 @@ begin
     CenterNowOnUnits([Burlak, Kurin]);
     wait(0$1);
 
-    for unit in amIntroUnits do
-        RemoveUnit(unit);
-
     Say(Kurin, 'D2-Kur-4');
     Say(Burlak, 'D2-Bur-4');
     Say(Kurin, 'D2-Kur-5');
@@ -682,7 +679,7 @@ end;
 
 // Omicron surrender
 every 0$1 trigger IsDead(Sikorski) AND FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 do
-var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding, turrets, nearTurrets;
+var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding, turrets, nearTurrets, emptyVehicles;
 begin
     omicronSurrender = true;
     canExitBattlefield = true;
@@ -692,6 +689,9 @@ begin
 
     SetAttitude(1, 3, att_friend, false);
     SetAttitude(2, 3, att_friend, true);
+
+    if NOT IsOk(beriaBase) OR NOT beriaBase then
+       beriaBase = FilterUnitsInArea(BeriaBaseArea, [[f_side, 3], [f_type, unit_building], [f_or, [f_btype, b_depot], [b_warehouse]]])[1];
 
     CenterNowOnUnits(Burlak);
 
@@ -746,14 +746,24 @@ begin
     SayRadio(Kurin, 'D9-Kur-1');
     DialogueOff;
 
+    CenterOnXY(221, 109);
+
     ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), 158, 105);
     ComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), 158, 105);
-
-    AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), GetX(beriaDepot), GetY(beriaDepot));
-    AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), GetX(beriaDepot), GetY(beriaDepot));
-
     ComMoveXY(kirovTransportCargo, 158, 105);
-    AddComMoveXY(kirovTransportCargo, GetX(beriaDepot), GetY(beriaDepot));
+
+    if NOT beriaDepot then
+    begin
+         AddComMoveToArea(UnitFilter(secondBaseTeam, [f_class, class_engineer]), EndMissionMeetArea);
+         AddComMoveToArea(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), EndMissionMeetArea);
+         AddComMoveToArea(kirovTransportCargo, EndMissionMeetArea);
+    end
+    else
+    begin
+       AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_engineer]), GetX(beriaDepot), GetY(beriaDepot));
+       AddComMoveXY(UnitFilter(secondBaseTeam, [f_class, class_scientistic]), GetX(beriaDepot), GetY(beriaDepot));
+       AddComMoveXY(kirovTransportCargo, GetX(beriaDepot), GetY(beriaDepot));
+    end;
 
     wait(0$2.5);
 
@@ -797,7 +807,11 @@ begin
 
     ComExitBuilding(survivorsArabianAttack);
     wait(0$1);
-    ComMoveXY(survivorsArabianAttack, GetX(beriaDepot), GetY(beriaDepot));
+
+    if NOT beriaBase then
+       ComMoveToArea(survivorsArabianAttack, EndMissionMeetArea)
+    else
+        ComMoveXY(survivorsArabianAttack, GetX(beriaDepot), GetY(beriaDepot));
 
     immortalSurvivors = true;
 
@@ -815,17 +829,25 @@ begin
 
     for i = 1 to 2 do
     begin
-      nearTurrets = nearTurrets ^ NearestUnitToUnit(turrets, beriaDepot);
+      nearTurrets = nearTurrets ^ NearestUnitToXY(turrets, 129, 99);
       turrets = turrets diff nearTurrets;
       tmpRu = UnitsInside(nearTurrets[i])[1];
 
       ComExitBuilding(tmpRu);
-      AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
+
+      if NOT beriaDepot then
+         AddComMoveToArea(tmpRu, EndMissionMeetArea)
+      else
+          AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
     end;
 
     tmpRu = UnitsInside(FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_or, [f_btype, b_lab], [f_btype, b_lab_half]]])[1]);
     ComExitBuilding(tmpRu);
-    AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
+
+    if NOT beriaDepot then
+       AddComMoveToArea(tmpRu, EndMissionMeetArea)
+    else
+       AddComMoveXY(tmpRu, GetX(beriaDepot), GetY(beriaDepot));
 
     wait(0$14);
 
@@ -854,10 +876,17 @@ begin
        begin
             tmpRu = UnitsInside(i);
             ComExitVehicle(tmpRu[1]);
-            AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
+
+            if NOT beriaDepot then
+               AddComMoveToArea(tmpRu[1], EndMissionMeetArea)
+            else
+               AddComMoveXY(tmpRu[1], GetX(beriaDepot), GetY(beriaDepot));
       end
       else
-          AddComMoveXY(i, GetX(beriaDepot), GetY(beriaDepot));
+          if NOT beriaDepot then
+             AddComMoveToArea(i, EndMissionMeetArea)
+          else
+             AddComMoveXY(i, GetX(beriaDepot), GetY(beriaDepot));
     end;
 
     wait(0$1);
@@ -898,8 +927,27 @@ begin
     survivorsArabianAttack = [];
     survivorsArabianAttack = FilterAllUnits([[f_side, 6], [f_ok], [f_type, unit_human]]);
 
-    ComMoveXY(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), 83, 157);
-    ComMoveXY(survivorsArabianAttack, 83, 157);
+    emptyVehicles = [];
+
+    for i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok]]) do
+        if GetFuel(i) >= 50 then
+           emptyVehicles = emptyVehicles ^ i;
+
+    if emptyVehicles then
+       for i = 1 to emptyVehicles do
+       begin
+           AddComEnterUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_not, [f_hastask]]])[i], emptyVehicles[i]);
+
+           if GetFuel(emptyVehicles[i]) >= 65 then
+              vehiclesToSave = vehiclesToSave ^ [ [GetChassis(emptyVehicles[i]), GetEngine(emptyVehicles[i]), GetControl(emptyVehicles[i]), GetWeapon(emptyVehicles[i])] ];
+       end;
+
+    for i in FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_ok]]) do
+        if GetFuel(i) >= 65 then
+           vehiclesToSave = vehiclesToSave ^ [ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)] ];
+
+    AddComMoveXY(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), 83, 157);
+    AddComMoveXY(survivorsArabianAttack, 83, 157);
 
     repeat
         ComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]), 83, 157);

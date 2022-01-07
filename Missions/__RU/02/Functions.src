@@ -102,23 +102,24 @@ end;
 Export Function ExtAddComRefuel(engineer, depot, vehicle);
 var taskList;
 begin
-   if NOT IsOK(engineer) OR NOT IsOK(depot) OR NOT IsOK(vehicle) OR GetFuel(vehicle) = 100 then
+   if NOT IsOK(engineer) OR NOT IsOK(depot) OR NOT IsOK(vehicle) OR GetFuel(vehicle) = 100 OR NOT GetBType(depot) in [b_depot, b_warehouse] then
       exit;
 
    AddComTransport(engineer, depot, mat_oil);
 
    repeat
-    wait(0$1);
+    wait(0$01);
    until Carry(engineer);
 
    RemoveTasks(engineer);
    SetTaskList(engineer, [['O', 0, 0, vehicle, 0, 0, 0]]);
 
    repeat
-    wait(0$1);
+    wait(0$01);
    until NOT Carry(engineer);
 
    SetFuel(vehicle, 100);
+   AddComEnterUnit(engineer, depot);
 end;
 
 Export function ResAllTechs(side, lab, nation);
