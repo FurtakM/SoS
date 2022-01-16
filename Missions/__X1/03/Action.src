@@ -920,15 +920,29 @@ ComEnterUnit(speaker[1], depot);
 
 repeat
  wait(0$1);
-until IsInUnit(Ibrahim) or not IsOk(Ibrahim);
+until IsInUnit(Ibrahim) or not IsOk(Ibrahim) or not IsOk(depot);
 
 InGameOff;
 
 if not IsOk(Ibrahim) then
    exit;
 
+if not IsOk(depot) then
+   begin
+   ComMoveXY(Ibrahim, 30, 1);
+
+   repeat
+    wait(0$1);
+   until IsAt(Ibrahim, 30, 1) or IsDead(Ibrahim);
+
+   RemoveUnit(Ibrahim);
+   exit;
+   end;
+
 ibrahimInDepot := true;
 allowConvoys := true;
+
+Query('IbrahimInDepot');
 End;
 
 Export Function IbrahimQuery;
