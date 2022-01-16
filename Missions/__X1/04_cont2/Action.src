@@ -120,17 +120,31 @@ End;
 
 // ibrahim betrayal
 Every 0$2 trigger FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 20]]) and ibrahimOnRuSide and IsOk(Ibrahim) do
+var x, y, d, lives;
 begin
 IbrahimBetrayal;
 
 repeat
  wait(0$1);
-until IsDead(Ibrahim) or FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 6]]);
+until IsDead(Ibrahim) or (FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 6]]) and IsOk(Ibrahim));
 
 if IsDead(Ibrahim) then
    exit;
 
-SetSide(Ibrahim, 2);
+x := GetX(Ibrahim);
+y := GetY(Ibrahim);
+d := GetDir(Ibrahim);
+lives := GetLives(Ibrahim);
+
+RemoveUnit(Ibrahim);
+
+uc_side := 2;
+uc_nation := 2;
+
+Ibrahim := PrepareUnit('Ibrahim', false, '');
+SetDir(Ibrahim, d);
+PlaceUnitXY(Ibrahim, x, y, false);
+SetLives(Ibrahim, lives);
 End;
 
 Export Function IbrahimBetrayal;
@@ -187,8 +201,6 @@ Say(Ibrahim, 'DI-ibrahimlives-1');
 Say(Heike, 'DH-Ibrahimlives-2');
 
 DialogueOff;
-
-SetSide(Ibrahim, 2);
 End;
 
 // second depot
