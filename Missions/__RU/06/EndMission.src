@@ -1,0 +1,104 @@
+every 0$5 trigger canEndMission AND NOT FilterUnitsExceptArea(ExitMapArea, [[f_side, 3], [f_ok], [f_or, [f_type, unit_human], [f_and, [f_type, unit_vehicle], [f_occupied]]]]) do
+var units,qr;
+begin
+
+    case Query('QEndGame') of
+        1:begin
+            SetRewards;
+            SavePlayerCharacters;
+            SaveGlobalVariables;
+
+            YouWin;
+        end;    
+    end;
+
+    enable;
+end;
+
+Export Function ForceFinishGame;
+begin
+    SetRewards;
+    SavePlayerCharacters;
+    SaveGlobalVariables;
+
+    YouWin;   
+end;
+
+Function SetRewards;
+begin
+
+    if savedVsevolod then
+        AddMedal('Vsevolod', 1)
+    else
+        AddMedal('Vsevolod', -1);
+
+    if NOT lostAgainBase then
+        AddMedal('Ovsyenko', 1)
+    else
+        AddMedal('Ovsyenko', -1);
+    
+    if GetTech(tech_MatPred, 3) = state_researched then
+        AddMedal('Prediction', 1)
+    else
+        AddMedal('Prediction', -1);
+
+    GiveMedals('Main');
+
+    RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_ok]]));
+end;
+
+Function SavePlayerCharacters;
+var randomsToSave;
+begin
+    ExtSaveCharacter(Burlak, 'Burlak', 3);
+    ExtSaveCharacter(Karamazov, 'Karamazov', 3);
+    ExtSaveCharacter(Petrovova, 'Petrovova', 3);
+    ExtSaveCharacter(Gleb, 'Gleb', 3);
+    ExtSaveCharacter(Petrosyan, 'Petrosyan', 3);
+    ExtSaveCharacter(Dolgov, 'Dolgov', 3);
+    ExtSaveCharacter(Lipshchin, 'Lipshchin', 3);
+    ExtSaveCharacter(Titov, 'Titov', 3);
+    ExtSaveCharacter(Kirilenkova, 'Kirilenkova', 3);
+
+    ExtSaveCharacters(FilterAllUnits([[f_side, 3],[f_type,unit_human], [f_or, [f_class, class_apeman], [f_class, class_apeman_engineer], [f_class, class_apeman_soldier]]]), 'other_apemans', 3);
+    
+    randomsToSave = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_ok]]) diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Kirilenkova];
+
+    ExtSaveCharacters(randomsToSave, 'other_survivors', 3);
+end;
+
+
+Function SaveGlobalVariables;
+var i, driver, driverShortName;
+begin
+    resourcesFrom06 = [];
+
+    SaveVariable(techMatPredStatus, '06_TechMatPredStatus_1');
+
+    for i in FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_occupied], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, us_cargo_bay], [f_weapon, 89]]]) do
+        resourcesFrom06 = resourcesFrom06 ^ [GetMultiCargo(i)];
+
+   SaveVariable(resourcesFrom06, '06_ResourcesInCargo_3');
+
+    for i in FilterUnitsInArea(ExitMapArea, [[f_side, 3], [f_type, unit_vehicle], [f_occupied]]) do
+    begin
+        driver = UnitsInside(i)[1];
+
+        if driver = Burlak then driverShortName = 'Bur';
+        if driver = Karamazov then driverShortName = 'Kar';
+        if driver = Petrovova then driverShortName = 'Ptr';
+        if driver = Gleb then driverShortName = 'Glb';
+        if driver = Petrosyan then driverShortName = 'Pet';
+        if driver = Dolgov then driverShortName = 'Dol';
+        if driver = Lipshchin then driverShortName = 'Lip';
+        if driver = Titov then driverShortName = 'Tit';
+        if driver = Kirilenkova then driverShortName = 'Kir';
+
+        if NOT driver IN [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Kirilenkova] then driverShortName = 'rand';
+
+        vehsFrom06 = vehsFrom06 ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
+    end;
+
+    SaveVariable(vehsFrom06, '06_Vehicles_2');
+    SaveVariable(savedVsevolod, '06_VsevolodStatus_4');
+end;

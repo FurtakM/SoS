@@ -1,0 +1,187 @@
+Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin; // Heroes
+Export Platonov, Kirilenkova;
+Export Vsevolod, vsevolodTeam;
+
+Export Function PrepareRussians;
+begin
+    PrepareHeroes;
+end;
+
+Function PrepareHeroes;
+var i, j, car, tmp, cargoList, point, areaPoints, nearPosition, burlakPosition, distance, index;
+begin
+
+    point = [170, 208];
+    areaPoints = AreaToList(RussianSpawnArea1, 0); // [ [x, x, x], [y, y, y] ]
+
+    uc_side = 3;
+    uc_nation = 3;
+
+    Burlak:=PrepareUnitExt('Burlak', true, 0);
+
+    Titov := PrepareUnitExt('Titov', true, 0);
+    Dolgov:= PrepareUnitExt('Dolgov', true, 0);
+    Lipshchin:= PrepareUnitExt('Lipshchin', true, 0);
+    Karamazov:= PrepareUnitExt('Karamazov', true, class_engineer);
+    Petrovova:= PrepareUnitExt('Petrovova', true, 0);
+    Gleb:= PrepareUnitExt('Gleb', true, 0);
+    Petrosyan:= PrepareUnitExt('Petrosyan', true, 0);
+
+    Platonov = PrepareUnitExt('Platonov', false, 0);
+
+    if TestCharacters('04_Kirilenkova') then
+    begin
+        Kirilenkova := CreateCharacter('04_Kirilenkova');
+        SetClass(Kirilenkova, class_scientistic);   
+    end;
+
+
+    for i:=1 to vehiclesFrom05 do
+    begin
+        uc_nation = vehiclesFrom05[i][1];
+        vc_chassis:=vehiclesFrom05[i][2];
+        vc_engine = vehiclesFrom05[i][3];
+        vc_control = vehiclesFrom05[i][4];
+        vc_weapon:=vehiclesFrom05[i][5];
+        uc_direction:=0;
+        vc_fuel_battery:=Rand(10, 15);
+        car:=CreateVehicle;
+      
+        distance = 999;
+        index = 1;
+
+       for j := 1 to areaPoints[1] do
+       begin
+            if GetDistXY(point[1], point[2], areaPoints[1][j], areaPoints[2][j]) < distance then
+            begin
+                
+                distance = GetDistXY(point[1], point[2], areaPoints[1][j], areaPoints[2][j]);
+                nearPosition = [areaPoints[1][j], areaPoints[2][j]];
+                index = j;
+            end;
+       end;
+
+        if NOT burlakPosition then
+            burlakPosition = nearPosition;
+
+        if areaPoints then
+        begin
+          areaPoints = Delete2D(areaPoints, 1, index);
+          areaPoints = Delete2D(areaPoints, 2, index);
+        end;
+
+       //  if vehiclesFrom05[i][6] = 'Bur' then
+       //     PlaceUnitXY(car, burlakPosition[1], burlakPosition[2], false)
+       //  else
+            PlaceUnitXY(car, nearPosition[1], nearPosition[2], false);  
+          
+              
+        case vehiclesFrom05[i][6] of
+            'Bur': PlaceHumanInUnit(Burlak, car);
+            'Kar': PlaceHumanInUnit(Karamazov, car);
+            'Ptr': PlaceHumanInUnit(Petrovova, car);
+            'Glb': PlaceHumanInUnit(Gleb, car);
+            'Pet': PlaceHumanInUnit(Petrosyan, car);
+            'Dol': PlaceHumanInUnit(Dolgov, car);
+            'Lip': PlaceHumanInUnit(Lipshchin, car);
+            'Tit': PlaceHumanInUnit(Titov, car);
+        end;
+         
+     end;
+
+    cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay]]]);
+
+    if cargoList then
+        for i = 1 to cargoList do
+            if resourcesFrom05 then
+            begin
+                AddCargo(cargoList[i], 1, resourcesFrom05[i][1]);
+                AddCargo(cargoList[i], 2, resourcesFrom05[i][2]);
+                AddCargo(cargoList[i], 3, resourcesFrom05[i][3]);
+            end;
+
+
+    if NOT FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_class, class_engineer]]) then
+    begin
+        if IsOk(Lipshchin) then
+            SetClass(Lipshchin, class_engineer)
+        else
+        begin
+            tmp = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_ok]]);
+            SetClass(tmp[rand(0, tmp)], class_engineer);  
+        end;
+
+    end;
+
+    SetTech(tech_ApeLang, 3, apeTechsStatus[1]);
+    SetTech(tech_ApePsych, 3, apeTechsStatus[2]);
+    SetTech(tech_ApeAgres, 3, apeTechsStatus[3]);
+
+end;
+
+Export Function PrepareVsevolod;
+var i, un;
+begin
+    uc_side = 6;
+    uc_nation = 3;
+
+    vsevolodTeam = [];
+
+    Vsevolod:=PrepareUnitExt('Vsevolod', false, class_soldier);
+    PlaceUnitArea(Vsevolod, VsevolodSpawnArea, false);
+
+    vsevolodTeam = vsevolodTeam ^ Vsevolod;
+
+    for i := 1 to 2 do
+    begin
+        PrepareSoldier(sex_male, 4);
+        un = CreateHuman;
+        PlaceUnitArea(un, VsevolodSpawnArea, false);
+
+        vsevolodTeam = vsevolodTeam ^ un;    
+    end;
+end;
+
+Export Function SpawnPlatonovReinforces;
+var i, un, veh;
+begin
+    uc_side = 3;
+    uc_nation = 3;
+
+    PrepareSoldier(false, 4);
+
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_gun][rand(1, 2)], rand(50, 60));
+
+    veh = CreateVehicle;
+    SetDir(veh, 0);
+    PlaceUnitXY(veh, 134, 230, false);
+
+    
+    un = CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, rand(50, 60));
+
+    veh = CreateVehicle;
+    SetDir(veh, 0);
+    PlaceUnitXY(veh, 134, 233, false);
+
+    SetCargo(veh, mat_cans, 100);
+
+    un = CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    if Kirilenkova then
+    begin
+        PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, rand(50, 60));
+
+        veh = CreateVehicle;
+        SetDir(veh, 0);
+        PlaceUnitXY(veh, 134, 236, false); 
+        SetCargo(veh, mat_cans, 100);  
+
+        PlaceHumanInUnit(Kirilenkova, veh);
+    end;
+            
+end;

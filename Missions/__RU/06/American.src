@@ -1,0 +1,181 @@
+Export VanHouten;
+Export ovsyenkoBase, terminalBase, headAmBase;
+Export trapTeam, convoyTeam, attackTeam;
+
+Export Function PrepareAmericans;
+begin
+    PrepareOvsyenko;
+    PrepareTerminal;
+    PrepareMainAmericanBase;
+end;
+
+Function PrepareOvsyenko;
+var soldiersAmount;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;
+
+    soldiersAmount = 3;
+
+   if fastBreakthrough then
+   begin
+    RemoveUnit(ovs_bun2);    
+    RemoveUnit(ovs_bun3);    
+   end
+   else soldiersAmount = 4;
+
+    //PrepareBase(baseDep, area, name, skill, sources, personel);
+    ovsyenkoBase := Nef_PrepareBase(
+        ovsyenko,
+        OvsyenkoBaseArea,
+        'ovsyenko',
+        enemySkillLevel,
+        [
+        ovsyenkoStartCrates,
+        50,
+        0
+        ],
+        1,
+        [soldiersAmount, 1, 0, 1]
+    );  
+
+    case Difficulty of
+        1: PlaceWeaponTurret(ovs_bun1, us_double_gun);  
+        2: PlaceWeaponTurret(ovs_bun1, us_light_gun);   
+        3: PlaceWeaponTurret(ovs_bun1, us_gatling_gun);    
+    end; 
+end;
+
+Function PrepareTerminal;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;
+
+
+    //PrepareBase(baseDep, area, name, skill, sources, personel);
+    terminalBase := Nef_PrepareBase(
+        terminal,
+        terminalBaseArea,
+        'terminal',
+        enemySkillLevel,
+        [
+        100,
+        50,
+        0
+        ],
+        1,
+        [2, 1, 0, 0]
+    );  
+end;
+
+Function PrepareMainAmericanBase;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;
+
+   if fastBreakthrough then
+        RemoveUnit(ovs_bun2);
+
+    //PrepareBase(baseDep, area, name, skill, sources, personel);
+    headAmBase := Nef_PrepareBase(
+        headamdepot,
+        HeadAmericanBaseArea,
+        '',
+        enemySkillLevel,
+        [
+        3000,
+        1000,
+        0
+        ],
+        1,
+        [9, 3, 9, 2]
+    );  
+
+    VanHouten = PrepareUnitExt('VanHouten', true, class_soldier);
+    headAmBase = headAmBase ^ VanHouten;
+
+    PlaceUnitXYR(VanHouten, 35, 57, 3, false);
+
+end;
+
+Export Function PrepareTrap;
+var i, un, nearEnemyUnit;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;
+
+    for i := 1 to trapAmount do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        un = CreateHuman;
+        trapTeam = trapTeam ^ un;
+
+        PlaceUnitArea(un, TrapSpawnArea, false);   
+        nearEnemyUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3]]), un); 
+        
+        ComAgressiveMove(un, GetX(nearEnemyUnit), GetY(nearEnemyUnit));
+    end;    
+end;
+
+Export Function PrepareSoldiersInBunkers;
+begin
+     PrepareSolBun(enemySkilLLevel, non_bun1);
+     PrepareSolBun(enemySkilLLevel, non_bun2);
+     PrepareSolBun(enemySkilLLevel, non_bun3);
+end;
+
+Export Function PrepareConvoy;
+var i, un, veh;
+begin
+    convoyTeam = [];
+
+    uc_side = 1;
+    uc_nation = nation_american;    
+
+    for i := 1 to 2 do
+    begin
+        PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 80);
+        veh = CreateVehicle;
+        AddCargo(veh, mat_cans, 100);
+        convoyTeam = convoyTeam ^ veh;
+
+        PlaceUnitArea(veh, AmericanSpawnArea1, false);
+
+        PrepareMechanic(false, enemySkillLevel);
+        un = CreateHuman;
+        convoyTeam = convoyTeam ^ un;
+
+        PlaceHumanInUnit(un, veh);   
+    end;   
+end;
+
+Export Function PrepareAttack;
+var i, un, veh;
+begin
+    uc_side = 1;
+    uc_nation = nation_american;    
+
+    for i := 1 to 4 do
+    begin
+        PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, [us_light_gun, us_double_gun, us_gatling_gun][Rand(1, 3)], 80);
+        veh = CreateVehicle;
+        attackTeam = attackTeam ^ veh;
+
+        PlaceUnitArea(veh, AmericanSpawnArea2, false);
+
+        PrepareMechanic(false, enemySkillLevel);
+        un = CreateHuman;
+        attackTeam = attackTeam ^ un;
+
+        PlaceHumanInUnit(un, veh);   
+    end;    
+
+    for i := 1 to 3 do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        un = CreateHuman;
+        attackTeam = attackTeam ^ un;
+
+        PlaceUnitArea(un, AmericanSpawnArea2, false);      
+    end;
+end;

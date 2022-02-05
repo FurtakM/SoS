@@ -1,0 +1,371 @@
+// Prepare Hero for use
+// ident - ident from start.txt - 'JMM' for example
+// exist_mode
+//   - false if unit not exist in save
+//   - true if unit already exist in save
+// class - which class will have unit after spawn, set 0 if not
+// example: JMM := PrepareUnitExt('JMM', false, class_soldier);
+Export Function PrepareUnitExt(ident, exist_mode, class);
+var unit;
+begin
+
+   if debugMode then
+      unit := NewCharacter(ident);
+
+   if exist_mode AND NOT debugMode then
+      unit := CreateCharacter(previousMissionPrefix&ident)
+   else if NOT debugMode  then
+      unit := NewCharacter(ident);
+
+   if class then
+      SetClass(unit, class);
+
+   result := unit;
+End;
+
+// Summary: Before calling the SaveCharacters function, checks if the character given in the argument is OK and if it is on the side 
+// Input: Character, characterStringID
+// Example: ExtSaveCharacter(Burlak, 'MyBurlak');
+Export Function ExtSaveCharacter(character, characterStringID, side);
+begin
+   if GetSide(character) = side AND IsOK(character) then
+      SaveCharacters(character, missionPrefix&characterStringID);
+end;
+
+// Summary: Before calling the SaveCharacters function, checks if the characters list given in the argument is OK and if it is on the side 
+// Input: Characters, characterStringID
+// Example: ExtSaveCharacter([FilterAllUnits...], 'MySavedTeam');
+Export Function ExtSaveCharacters(characters, charactersStringID, side);
+var unit, resultCharactersToSave;
+begin
+   resultCharactersToSave = [];
+
+   for unit in characters do
+      if GetSide(unit) = side AND IsOK(unit) then
+         resultCharactersToSave = resultCharactersToSave ^ unit;
+
+   SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
+end;
+
+
+// Place units from list on area with spawnMode (materialize)
+// Input: [list] units, [name] area, [bool] spawnMode
+// Example: PlaceUnitsArea([Burlak, Gnyevko, Kovalyuk], SpawnArea, false);
+Export Function PlaceUnitsArea(units, area, spawnMode);
+var unit;
+begin
+   for unit in units do
+      PlaceUnitArea(unit, area, spawnMode);
+end;
+
+Export function DialogRandom(characters, dialogMID, dialogFID, radio, canTalkHero);
+var i, speaker, units;
+begin
+   units = characters;
+
+   units := units diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Vsevolod, Kirilenkova];
+
+   if NOT units AND NOT canTalkHero then
+      exit;
+
+   if NOT units then
+      units = characters diff [Burlak];
+
+   if NOT units AND canTalkHero then
+      exit;
+
+   speaker := units[rand(1, units)];
+
+   if radio then
+   begin
+      if GetSex(speaker) = sex_male then
+         SayRadio(speaker, dialogMID)
+      else
+         SayRadio(speaker, dialogFID);
+   end
+   else
+   begin
+      if GetSex(speaker) = sex_male then
+         Say(speaker, dialogMID)
+      else
+         Say(speaker, dialogFID);  
+   end;
+
+   result := speaker;
+end;
+
+Export Function PlaceHumanInBunker(un, bunker);
+var dir;
+begin
+     dir := GetDir(bunker)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, bunker);
+
+     result = un;
+End;
+
+// Summary: Add task for engs to capture building.
+// Input: [list] eng units, [int] building ID
+// Example: AddComCaptureBuilding((Filter...[f_class, class_engineer]), NewKabulBase);
+Export Function AddComCaptureBuilding(engs, building);
+var eng;
+begin
+
+   for eng in engs do
+      if GetClass(eng) = class_engineer AND IsOK(eng) AND building AND NOT GetSide(building) = GetSide(eng) then
+         AddTaskList(eng, [['e', GetX(building), GetY(building), building, 0, 0, 0]])
+
+end;
+
+Export Function Delete2D(tab, firstIndex, secondIndex);
+var i, list, tabPom;
+begin
+     tabPom := Delete(tab[firstIndex], secondIndex);
+     tab := Replace(tab, firstIndex, tabPom);
+     result := tab;
+End;
+
+// Override Serpent's function
+Export Function Nef_PrepareBase(base_dep, area, name, skill, sources, nation, personel);
+var i, j, d, b, f, x, un, base, side, buildings, tmp;
+begin
+result := [];
+
+if not GetBType(base_dep) in [b_depot, b_warehouse] then
+   exit;
+
+if name then
+   SetBName(base_dep, name);
+
+base := GetBase(base_dep);
+side := GetSide(base_dep);
+
+if sources then
+   for i = 1 to 3 do
+       AddResourceType(base, i, sources[i]);
+
+buildings := GetBaseBuildings(base, area);
+
+InitHc;
+InitUc;
+
+uc_side := side;
+uc_nation := nation;
+
+
+if buildings then
+   begin
+   tmp := UnitFilter(buildings, [f_or, [f_btype, b_oil_mine], [f_btype, b_siberite_mine]]);
+
+   if tmp then
+      for i in tmp do
+          SetResourceVisibility(GetX(i), GetY(i), side);
+
+   if UnitFilter(buildings, [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret]]) then
+      begin
+      for i in UnitFilter(buildings, [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret]]) do
+          begin
+          if not GetBWeapon(i) then
+             PlaceWeaponTurret(i, GetTurretWeapon(i, area));
+          end;
+      end;
+
+   for i = 1 to personel do
+       begin
+
+       if i > 4 then
+          break;
+
+       case i of
+       1: f := UnitFilter(buildings, [[f_side, side], [f_empty], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+       2: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+       3: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+       4: f := UnitFilter(buildings, [[f_side, side], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+       end;
+
+       // sort buildings - towers first
+       if i = 1 then
+          begin
+          tmp := [];
+
+          for j in f do
+              if GetBType(j) in [b_breastwork, b_bunker] then
+                 tmp := Insert(tmp, 1, j)
+              else
+                 tmp := Insert(tmp, tmp+1, j);
+
+          if tmp then
+             f := tmp;
+          end;
+
+       x := personel[i];
+
+       if x = -1 then
+          begin
+
+          for j in f do
+              repeat
+              InitHc;
+
+              if GetBType(j) = b_barracks then
+                 begin
+                 if UnitsInside(j) < 3 then
+                    PrepareHuman(false, i, skill)
+                   else
+                    PrepareHuman(false, i, skill);
+                 end
+                  else
+                 PrepareHuman(false, i, skill);
+
+               un := CreateHuman;
+               result := Insert(result, 1, un);
+               PlaceHumanInUnit(un, j);
+              until UnitsInside(j) = 6 or GetBType(j) in [b_bunker, b_breastwork];
+
+          end
+         else
+          for j = 1 to x do
+              begin
+              InitHc;
+
+              if not f then
+                 begin
+                 PrepareHuman(false, i, skill);
+
+                 un := CreateHuman;
+                 result := Insert(result, 1, un);
+                 PlaceUnitXYR(un, GetX(base_dep), GetY(base_dep), 10, false);
+                 continue;
+                 end;
+
+              if (UnitsInside(f[1]) and GetBType(f[1]) in [b_bunker, b_breastwork]) or
+                 (UnitsInside(f[1]) = 6) then
+                  f := Delete(f, 1);
+
+              if not f then
+                 begin
+                 x := x + 2;
+                 continue;
+                 end;
+
+              if GetBType(f[1]) = b_barracks then
+                 begin
+                 if UnitsInside(f[1]) < 3 then
+                    PrepareHuman(false, i, skill)
+                   else
+                    PrepareHuman(false, i, skill);
+                 end
+                  else
+                 PrepareHuman(false, i, skill);
+
+              un := CreateHuman;
+              result := Insert(result, 1, un);
+              PlaceHumanInUnit(un, f[1]);
+              end;
+       end;
+
+    result := result ^ buildings;
+    end
+   else
+    begin
+
+    for i = 1 to personel do
+        begin
+
+        if i > 4 then
+           break;
+
+        x := personel[i];
+
+        if x = -1 then
+           continue;
+
+        PrepareHuman(false, i, skill);
+        un := CreateHuman;
+        PlaceUnitXYR(un, GetX(base_dep), GetY(base_dep), 10, false);
+        result := result ^ un;
+        end;
+    end;
+End;  
+
+
+
+Export Function GetAvailableWeapons(side, nation);
+var i, resultWeapons, weaponTechs;
+begin
+    weaponTechs = [tech_AdvMet, tech_AdvRocket, tech_Flame, tech_Gatling, tech_Gun, tech_Lapser, tech_LasDouble, tech_Laser, tech_Rocket];
+    resultWeapons = [];
+
+    for i := 1 to weaponTechs do
+    begin
+        if TechNationAvailable(weaponTechs[i], nation) AND GetTech(weaponTechs[i], side) = state_researched then
+            case nation of
+                nation_american:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_arabian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+
+                nation_russian:
+                    resultWeapons = resultWeapons ^ GetNationWeaponByTech(weaponTechs[i], nation);
+            end;
+            
+    end;
+
+    result = resultWeapons;
+end;
+
+Export Function GetNationWeaponByTech(tech, nation);
+begin
+    case tech of
+        tech_AdvMet: result = [us_heavy_gun, '', ru_heavy_gun][nation];
+        tech_AdvRocket: result = ['', '', ru_rocket][nation];
+        tech_Flame: result = ['', ar_flame_thrower, ''][nation];
+        tech_Gatling: result = [us_gatling_gun, ar_gatling_gun, ru_gatling_gun][nation];
+        tech_Gun: result = [us_double_gun, ar_gun, ru_gun][nation];
+        tech_Lapser: result = ['', '', ru_time_lapser][nation];
+        tech_LasDouble: result = [us_double_laser, '', ''][nation];
+        tech_Laser: result = [us_laser, '', ''][nation];
+        tech_Rocket: result = [us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher][nation];
+    end;
+end;
+
+Export Function GetMultiCargo(cargo_bay);
+var i;
+begin
+   result := [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+   for i = area downto 1 do
+       if IsEnvironment(area[i][1], area[i][2]) then
+          if not HasTask(bulldozer) then
+             AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;
+
+Export Function PrepareSolBun(skill, b);
+var un, dir;
+begin
+     uc_side := GetSide(b);
+     uc_nation := GetNation(b);
+
+     PrepareHuman(false, 1, skill);
+     un = CreateHuman;
+
+     dir := GetDir(b)  - 3;
+
+     if dir < 0 then dir := 6 + dir;
+
+     SetDir(un, dir);
+     PlaceHumanInUnit(un, b);
+
+     result = un;
+End;
