@@ -59,7 +59,7 @@ var unit;
 begin
     enable;
 
-    for unit in FilterUnitsInArea(ArabianBaseArea, [f_side, 2]) do
+    for unit in FilterUnitsInArea(ArabianBaseArea, [[f_side, 2], [f_type, unit_building]]) do
         if See(3, unit) then
         begin
             sawArabianBase = true;
@@ -233,7 +233,7 @@ every 0$1 trigger FilterUnitsInArea(NatureArea,[[f_side, 3], [f_type, unit_human
 begin
     PrepareStevens(StevensSpawnArea);
 
-    wait(0$1.5);
+    wait(0$2);
 
     stevensPlaced = true;
 end;
@@ -304,7 +304,7 @@ begin
 end;
 
 // Stevens talk with Burlak
-Every 0$1 trigger GetDistUnits(Stevens, Burlak) < 15 AND IsOK(Petrosyan) AND NOT finishMissionBool do
+Every 0$1 trigger GetDistUnits(Stevens, Burlak) < 15 AND GetSide(Stevens) = 6 AND IsOK(Petrosyan) AND NOT finishMissionBool do
 begin
     DialogueOn;
 
@@ -399,7 +399,7 @@ begin
         end;      
     end else
     begin
-       if NOT IsInUnit(Stevens) then
+       if NOT IsInUnit(Stevens) OR GetType(IsInUnit(Stevens)) = unit_vehicle then
        begin
             DialogueOn;
             Say(Burlak, 'DRelease-Bur-1');
@@ -439,7 +439,8 @@ begin
                     Say(Burlak, 'DQrKillAgain#2-Bur-1a');
                     DialogueOff;
                     InGameOn;
-
+                    ComExitVehicle(Stevens);
+                    wait(0$1);
                     repeat
                         SetSide(Stevens, 3);
                         ComEnterUnit(Stevens, constructDepot);

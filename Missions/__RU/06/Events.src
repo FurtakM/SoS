@@ -1,0 +1,71 @@
+On UnitDestroyed(unit) Do
+begin
+    if unit IN ovsyenkoBase then
+        ovsyenkoBase = ovsyenkoBase diff unit;
+
+    if unit = Burlak then
+        Lose_Burlak;
+
+    if unit = Vsevolod AND GetSide(Vsevolod) = 3 then
+        savedVsevolod = false;
+
+    if unit = ovsyenko AND GetSide(ovsyenko) = 3 then
+        lostAgainBase = true;
+end;
+
+On UnitDestroyed_Extra(unit, killer_side, killer_unit) Do
+begin
+    if unit = Gleb AND killer_side = 3 then
+        Lose_Gleb;
+
+    if unit = Vsevolod then
+        savedVsevolod = false;
+end;
+
+On BuildingComplete(building) Do
+begin
+end;
+
+On BuildingCaptured(building, side, human) Do
+begin
+    if GetSide(human) = 3 AND GetBType(building) = b_siberite_mine AND NOT dial_SibTechsBlocker then
+        Dial_SibTechs;
+
+    if GetSide(human) = 3 AND GetBType(building) in [b_depot, b_warehouse] AND GetResourceType(GetBase(building), mat_siberit) > 0 AND NOT dial_SibTechsBlocker then
+        Dial_SibTechs;
+end;
+
+On Contact(side1, side2) Do
+begin
+
+end;
+
+On VehicleConstructed(vehicle, building) Do
+var side, controlTowers, tmp;
+begin
+    if GetSide(vehicle) = 1 then
+    begin
+        controlTowers = FilterUnitsInArea(HeadAmericanBaseArea, [[f_side, 1], [f_ok], [f_or, [f_type, unit_building], [f_type, unit_vehicle]], [f_or, [f_btype, b_control_tower], [f_weapon, ar_control_tower]]]);
+        
+        if GetControl(vehicle) = control_remote AND controlTowers then
+        begin
+            tmp = UnitsInside(controlTowers[1]);
+
+            if tmp then
+                LinkVehicleToHuman(vehicle, tmp[rand(1, tmp)]);
+
+        end;
+    end;
+end;
+
+On ResearchComplete(research, building) Do
+begin
+    if research = tech_TauField then
+        Dial_ResearchTauField;
+
+    if research = tech_SibEng AND GetTech(tech_TauField, 3) = state_researched then
+        ChangeMissionObjectives('MOutResearch');
+
+    if research = tech_MatPred then
+        Dial_ResearchMatPredictions;
+end;

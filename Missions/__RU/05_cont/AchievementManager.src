@@ -1,0 +1,27 @@
+// Destroy 3 enemy hovecrafts
+every 1 trigger achievement_DestroyedHovercrafts >= 3 do
+SetAchievement('ACH_HOVER');
+
+// Tame all ape on map
+every 1 trigger FilterAllUnits([[f_side, 3], [f_nation, nation_nature], [f_or, [f_class, class_apeman], [f_class, class_apeman_engineer], [f_class, class_apeman_soldier]]]) AND NOT FilterAllUnits([[f_side, 0], [f_nation, nation_nature], [f_class, class_apeman]]) do
+SetAchievement('ACH_REDARMY');
+
+// Collect 500 crates
+every 1 trigger NOT achievement_CollectedCrates do
+var crates, depot;
+begin
+     enable;
+
+     crates = 0;
+
+     for depot in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_depot], [f_ok]]) do
+         crates = crates + GetResourceType(GetBase(depot), mat_cans);
+
+     if crates >= 500 then
+     begin
+          achievement_CollectedCrates = true;
+          SetAchievement('ACH_CRATES');
+          exit;
+     end;
+end;
+

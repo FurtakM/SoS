@@ -1,0 +1,614 @@
+Export Function MissionIntro;
+var i, ruEng, unit;
+begin
+    CenterNowOnUnits(IsInUnit(Burlak));
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) do
+    begin
+        if (i mod 2) = 0 then ComMoveXY(unit, 150, 212)
+        else ComMoveXY(unit, 157, 205);
+
+        i = i + 1;
+    end;
+
+    if IsOK(Karamazov) then
+        ruEng = Karamazov
+    else if IsOK(Lipshchin) then
+        ruEng = Lipshchin
+    else
+        ruEng = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_class, class_engineer]])[1];
+
+    repeat
+        ComMoveXY(IsInUnit(ruEng), 148, 214);
+        wait(0$1);
+    until GetDistUnitXY(IsInUnit(ruEng), 148, 214) <= 2;
+
+    ComExitVehicle(ruEng);
+    wait(0$1);
+    AddComCaptureBuilding(ruEng, rudepot);
+    
+    repeat
+        wait(0$1);
+    until GetSide(rudepot) = 3;
+
+    ComEnterUnit(ruEng, rudepot);
+
+    wait(0$2);
+
+    SetSide(FilterAllUnits([f_side, 6]), 3);
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+        if GetType(IsInUnit(unit)) = unit_vehicle then
+            ComExitVehicle(unit);
+
+    if ruEng = Karamazov then
+        Say(Karamazov, 'DStart-Kar-1')
+    else if ruEng = Lipshchin then
+        Say(Lipshchin, 'DStart-Lip-1');
+
+    ComExitBuilding(ruEng);
+
+    for unit in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 250]]]) do
+        AddComRepairBuilding(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_engineer]]), unit);
+
+    Say(Burlak, 'DStart-Bur-1');
+    SayRadio(Platonov, 'DStart-Pla-1');
+    Say(Burlak, 'DStart-Bur-2');
+    SayRadio(Platonov, 'DStart-Pla-2');
+
+    if IsOK(Petrovova) then
+        Say(Petrovova, 'DStart-Ptr-2');
+
+    InGameOff;
+
+    ChangeMissionObjectives('MStart');
+
+    SaveForQuickRestart;
+ 
+    wait(0$10);
+
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DMatPrediction-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DMatPrediction-Dol-1');
+
+    if IsOK(Petrosyan) OR IsOK(Dolgov) then Say(Burlak, 'DMatPrediction-Bur-1');
+    
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DMatPrediction-Pty-2')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DMatPrediction-Dol-2');
+
+    if IsOK(Petrosyan) OR IsOK(Dolgov) then Say(Burlak, 'DMatPrediction-Bur-2');
+
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DMatPrediction-Pty-3')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DMatPrediction-Dol-3');
+
+    ChangeMissionObjectives('MPred');
+end;
+
+// Capture Ovsyenko
+every 0$1 trigger NOT UnitFilter(ovsyenkoBase, [f_type, unit_human]) do
+begin
+    DialogueOn;
+
+    Say(Burlak, 'DOvsyenkoTaken-Bur-1');
+    SayRadio(Platonov, 'DOvsyenkoTaken-Pla-1');
+
+    if IsOK(Karamazov) then Say(Karamazov, 'DOvsyenkoTaken-Kar-1');
+    if IsOK(Titov) then Say(Titov, 'DOvsyenkoTaken-Tit-1');
+    if IsOK(Lipshchin) AND (IsOK(Karamazov) OR IsOK(Titov)) then
+    begin
+        Say(Lipshchin, 'DOvsyenkoTaken-Lip-1');
+
+        if IsOK(Gleb) then Say(Gleb, 'DOvsyenkoTaken-Glb-1');
+    end;
+
+    DialogueOff;
+
+    ChangeMissionObjectives('MOutCapture');
+    ChangeMissionObjectives('MAddMine');
+
+    claimOvsyenkoBase = true;
+
+    wait(1$10);
+    InitAIManager(1, 1, headAmBase, HeadAmericanBaseArea, HeadAmericanHealArea, false, HeadAmericanBaseArea, 6, 2, 4, true, true);
+end;
+
+// Alaskite dialog - execute in events or trigger
+Export Function Dial_SibTechs;
+begin
+    dial_SibTechsBlocker = true;
+
+    DialogueOn;
+
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DSibResearch-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DSibResearch-Dol-1');
+
+    Say(Burlak, 'DSibResearch-Bur-1');
+    SayRadio(Platonov, 'DSibResearch-Pla-1');
+
+    DialogueOff;
+
+    ChangeMissionObjectives('MResearch');
+
+    SetRestrict(b_ext_siberium, 3, true);
+    SetRestrict(b_siberite_power, 3, true);
+    SetRestrict(b_lab_siberium, 3, true);
+    SetRestrict(b_lab_spacetime, 3, true);
+end;
+
+// Research Materialization predicitons - execute in event
+Export Function Dial_ResearchMatPredictions;
+begin
+    ChangeMissionObjectives('MOutResearch');
+
+    DialogueOn;
+
+    if IsOK(Petrosyan) OR IsOK(Dolgov) then
+    begin
+        if IsOK(Petrosyan) then Say(Petrosyan, 'DNoMaterial-Pty-1')
+        else if IsOK(Dolgov) then Say(Dolgov, 'DNoMaterial-Dol-1');
+
+        Say(Burlak, 'DNoMaterial-Bur-1');
+
+        if IsOK(Petrosyan) then Say(Petrosyan, 'DNoMaterial-Pty-2')
+        else if IsOK(Dolgov) then Say(Dolgov, 'DNoMaterial-Dol-2');
+
+        Say(Burlak, 'DNoMaterial-Bur-2');
+    end;
+
+    DialogueOff;
+end;
+
+every 0$1 trigger NOT dial_SibTechsBlocker AND (GetResourceVisibility(116, 123, 3) OR GetResourceVisibility(72, 86, 3)) do
+    Dial_SibTechs;
+
+// Vsevolod resp
+every 5$0 trigger claimOvsyenkoBase do
+begin
+    PrepareVsevolod;
+    ComAgressiveMove(vsevolodTeam, 61, 45);    
+end;
+    
+// Vsevoldo team immortal
+every 0$1 trigger immortalVsevolodTeam do
+var unit;
+begin
+    enable;
+
+    for unit in vsevolodTeam do
+        SetLives(unit, 1000);
+end;
+
+// Vsevolod capture terminatl
+every 0$1 trigger GetLives(ter_bun1) <= 650 OR GetLives(ter_arm1) <= 650 do
+var belkovSavedIn02, tmp, speaker;
+begin
+    ComMoveXY(UnitFilter(terminalBase, [f_type, unit_human]), 35, 58);
+
+    SetSide(UnitFilter(terminalBase, [f_type, unit_building]), 6);
+
+    immortalVsevolodTeam = false;
+
+    ComEnterUnit([Vsevolod, vsevolodTeam[2]], ter_arm1);
+    ComEnterUnit(vsevolodTeam[3], ter_bun1);
+
+    wait(0$5);
+
+    DialogueOn;
+
+    if IsOK(Dolgov) then Say(Dolgov, 'DVsevolod-Dol-1');
+    SayRadio(Vsevolod, 'DVsevolod-Vse-1');
+
+    if IsOK(Gleb) then
+    begin
+        Say(Burlak, 'DVsevolod-Bur-1');    
+        Say(Gleb, 'DVsevolod-Glb-1');
+        SayRadio(Vsevolod, 'DVsevolod-Vse-2');
+    end;
+
+    Say(Burlak, 'DVsevolod-Bur-2'); 
+    SayRadio(Vsevolod, 'DVsevolod-Vse-3');
+    Say(Burlak, 'DVsevolod-Bur-3'); 
+    SayRadio(Vsevolod, 'DVsevolod-Vse-4'); 
+    Say(Burlak, 'DVsevolod-Bur-4'); 
+
+    if IsOK(Gleb) then
+    begin
+        Say(Gleb, 'DVsevolod-Glb-4');
+        Say(Burlak, 'DVsevolod-Bur-5'); 
+    end
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]), 'DVsevolod-RSol1-5', '', false, true);
+    
+    Say(Burlak, 'DVsevolod-Bur-6');
+
+    CenterOnXY(59, 40);
+    RevealFogArea(3, TerminalBaseArea);
+
+    if IsOK(Dolgov) then Say(Dolgov, 'DVsevolod-Dol-6')
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]), 'DVsevolod-Dol-6', '', false, true);
+
+    Say(Burlak, 'DVsevolod-Bur-7'); 
+    SayRadio(Vsevolod, 'DVsevolod-Vse-7'); 
+
+    DialogueOff;
+
+    ChangeMissionObjectives('MVsevolod');
+
+    enableVsevolodCounter = true;
+    canGoNorth = true;
+
+    PrepareSoldiersInBunkers;
+
+    wait(0$7);
+
+    belkovSavedIn02 = TestCharacters('02_Belkov');
+
+    DialogueOn;
+
+    if belkovSavedIn02 then
+    begin
+        if IsOK(Gleb) then Say(Gleb, 'DHelp1-Glb-1');    
+        if IsOK(Dolgov) then Say(Dolgov, 'DHelp1-Dol-1');
+
+        tmp = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff [Gleb, Dolgov, Titov];
+
+        DialogRandom(tmp, 'DHelp1-RSol1-1', '', false, true);
+
+        If IsOK(Titov) then Say(Titov, 'DHelp1-Tit-1');
+        if IsOK(Gleb) then Say(Gleb, 'DHelp1-Glb-2');   
+
+    end
+    else
+    begin
+        If IsOK(Titov) then Say(Titov, 'DHelp2-Tit-1');
+
+        tmp = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff [Gleb, Titov];
+
+        speaker = DialogRandom(tmp, 'DHelp2-RSol1-1', '', false, true);
+        if IsOK(Gleb) then Say(Gleb, 'DHelp2-Glb-1'); 
+
+        tmp = tmp diff speaker;
+
+        DialogRandom(tmp, 'DHelp2-RSol2-1', '', false, true);
+        If IsOK(Titov) then Say(Titov, 'DHelp2-Tit-2');
+    end;
+
+    Say(Burlak, 'DHelp3-Bur-1');
+
+    if IsOK(Lipshchin) then Say(Lipshchin, 'DHelp3-Lip-1')
+    else DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]), 'DVsevolod-Dol-6', '', false, true);
+
+    Say(Burlak, 'DHelp3-Bur-2');
+
+    DialogueOff;
+    
+end;
+
+// Enemy capture Ovsyenko base again
+every 0$1 trigger claimOvsyenkoBase AND NOT FilterUnitsInArea(OvsyenkoBaseArea, [[f_side, 3], [f_or, [f_type, unit_human], [f_occupied], [f_type, unit_vehicle]]]) AND FilterUnitsInArea(OvsyenkoBaseArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+begin
+    lostAgainBase = true;
+
+    SetSide(FilterUnitsInArea(OvsyenkoBaseArea, [[f_side, 3], [f_type, unit_building]]), 1);
+
+    if IsOK(Gleb) then
+    begin
+        Say(Gleb, 'DOvsyenkoCaptured-Glb-1');
+        Say(Burlak, 'DOvsyenkoCaptured-Bur-1');
+    end; 
+
+    DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff Gleb, 'DOvsyenkoCaptured-RSol1-1', '', false, true);
+   
+end;
+
+// Spawn trap
+every 0$1 trigger FilterUnitsInArea(TrapArea, [[f_side, 3], [f_ok]]) do
+   PrepareTrap;
+
+
+// See trap units
+every 0$1 trigger NOT dial_TrapDialogBlocker do
+var tmp, speaker, unit;
+begin
+    enable;
+
+    for unit in trapTeam do
+        if See(3, unit) then
+        begin
+            dial_TrapDialogBlocker = true;
+
+            DialogueOn;
+
+            tmp = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff Gleb;
+            speaker = DialogRandom(tmp, 'DPartyAttacked-RSol1-1', '', false, true);
+
+            tmp = tmp diff speaker;
+            if IsOK(Gleb) then Say(Gleb, 'DPartyAttacked-Glb-1');
+            DialogRandom(tmp, 'DPartyAttacked-RSol1-2', '', false, true);
+        
+            DialogueOff;
+            exit;
+        end;
+end;
+
+// Save Vsevolod
+every 0$1 trigger NOT savedVsevolod AND IsOK(Vsevolod) AND FilterUnitsInArea(TerminalBaseArea, [[f_side, 3], [f_ok], [f_or, [[f_type, unit_human],[f_nation, nation_russian]], [f_type, unit_vehicle]]]) do
+var nearUnit, unit;
+begin 
+    savedVsevolod = true;
+
+    ChangeMissionObjectives('MVsevolodOut');
+
+    unit = FilterUnitsInArea(TerminalBaseArea, [[f_side, 3], [f_ok], [f_or, [[f_type, unit_human], [f_nation, nation_russian]], [f_type, unit_vehicle]]])[1];
+
+    if GetType(unit) = unit_vehicle then
+        unit = UnitsInside(unit)[1];
+
+    SetSide(FilterAllUnits([f_side, 6]), 3);
+
+    if NOT unit = Burlak then
+    begin
+        vsevolodWaitGorky = true;
+    
+        DialogueOn;
+        
+        Say(Vsevolod, 'DOtherMeetVsev-Vse-1');    
+
+        if GetSex(unit) = sex_female then
+            DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff Gleb, 'DOtherMeetVsev-RSol1-1', '', false, true)
+        else Say(unit, 'DOtherMeetVsev-RSol1-1');
+   
+        DialogueOff;
+    end
+    else
+    begin
+        DialogueOn;
+
+        Say(Vsevolod, 'DMeetVsev-Vse-1');    
+        Say(Burlak, 'DMeetVsev-Bur-1');
+          
+
+        if lostAgainBase then
+        begin
+            Say(Vsevolod, 'DMeetVsev2-Vse-1');  
+            Say(Burlak, 'DMeetVsev2-Bur-1');    
+            Say(Vsevolod, 'DMeetVsev2-Vse-2');  
+        end
+        else
+        begin
+            Say(Vsevolod, 'DMeetVsev2-Vse-2a');    
+            Say(Burlak, 'DMeetVsev2-Bur-2');   
+            Say(Vsevolod, 'DMeetVsev2-Vse-3'); 
+        end;
+        
+        Say(Burlak, 'DMeetVsev3-Bur-1'); 
+        Say(Vsevolod, 'DMeetVsev3-Vse-1'); 
+        Say(Burlak, 'DMeetVsev3-Bur-2'); 
+        Say(Vsevolod, 'DMeetVsev3-Vse-2'); 
+        Say(Burlak, 'DMeetVsev3-Bur-3'); 
+
+        if stevensStatus = 0 then Say(Burlak, 'DMeetVsev4-Bur-1');
+
+        Say(Burlak, 'DMeetVsev5-Bur-1');
+        Say(Vsevolod, 'DMeetVsev5-Vse-1'); 
+        Say(Burlak, 'DMeetVsev6-Bur-1');
+        Say(Vsevolod, 'DMeetVsev6-Vse-1'); 
+
+        DialogueOff;
+
+        wait(0$20);
+        PrepareConvoy;
+        ComMoveXY(convoyTeam, 57, 40);
+        AddComMoveXY(convoyTeam, 37, 59);
+    end;
+end;
+
+// Vsevolod want talk with Burlak
+every 0$1 trigger vsevolodWaitGorky AND GetDistUnits(Vsevolod, Burlak) <= 7 do
+begin
+    vsevolodWaitGorky = false;
+
+    DialogueOn;
+
+    Say(Vsevolod, 'DMeetVsev-Vse-1');    
+    Say(Burlak, 'DMeetVsev-Bur-1');
+        
+
+    if lostAgainBase then
+    begin
+        Say(Vsevolod, 'DMeetVsev2-Vse-1');  
+        Say(Burlak, 'DMeetVsev2-Bur-1');    
+        Say(Vsevolod, 'DMeetVsev2-Vse-2');  
+    end
+    else
+    begin
+        Say(Vsevolod, 'DMeetVsev2-Vse-2a');    
+        Say(Burlak, 'DMeetVsev2-Bur-2');   
+        Say(Vsevolod, 'DMeetVsev2-Vse-3'); 
+    end;
+    
+    Say(Burlak, 'DMeetVsev3-Bur-1'); 
+    Say(Vsevolod, 'DMeetVsev3-Vse-1'); 
+    Say(Burlak, 'DMeetVsev3-Bur-2'); 
+    Say(Vsevolod, 'DMeetVsev3-Vse-2'); 
+    Say(Burlak, 'DMeetVsev3-Bur-3'); 
+
+    if stevensStatus = 0 then Say(Burlak, 'DMeetVsev4-Bur-1');
+
+    Say(Burlak, 'DMeetVsev5-Bur-1');
+    Say(Vsevolod, 'DMeetVsev5-Vse-1'); 
+    Say(Vsevolod, 'DMeetVsev6-Vse-1'); 
+    Say(Burlak, 'DMeetVsev6-Bur-1');
+
+    DialogueOff;
+
+    wait(0$20);
+    PrepareConvoy;
+    ComMoveXY(convoyTeam, 57, 40);
+    AddComMoveXY(convoyTeam, 37, 59);
+end;
+
+// See convoy units
+every 0$1 trigger NOT dial_ConvoyDialogBlocker do
+var tmp, speaker, unit;
+begin
+    enable;
+
+    for unit in convoyTeam do
+        if See(3, unit) AND NOT IsInArea(unit, InsideBaseArea) then
+        begin
+            dial_ConvoyDialogBlocker = true;
+
+            DialogueOn;
+            speaker = UnitFilter(convoyTeam, [f_type, unit_human])[1];
+            Say(speaker, 'DTruck-Sol1-1');
+            Say(Burlak, 'DTruck-Bur-1');
+            DialogueOff;
+            exit;
+        end;
+end;
+
+// Spawn attack
+every 0$1 trigger timeToAttack >= vsevolodSaveTime do 
+begin
+    PrepareAttack;
+    ComAgressiveMove(attackTeam, 60, 41);
+    AddComAgressiveMove(attackTeam, 107, 125);
+end;
+
+// Vsevolod escape
+every 1 trigger NOT savedVsevolod AND GetLives(Vsevolod) <= 500 do
+begin
+    DialogueOn;
+    SayRadio(Vsevolod, 'DDieVsev2-Vse-1');
+    DialogueOff;
+end;
+
+// Research local tau field - execute in event
+Export Function Dial_ResearchTauField;
+var speaker, sci, randomTalkDialog;
+begin
+    if IsOK(Petrosyan) then Say(Petrosyan, 'DStasis-Pty-1')
+    else if IsOK(Dolgov) then Say(Dolgov, 'DStasis-Dol-1')
+    else
+    begin
+        sci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_class, class_scientistic], [f_nation, nation_russian]]) diff Burlak;
+
+        if NOT sci then
+            sci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male], [f_nation, nation_russian]]) diff Burlak;
+
+        if sci then
+        begin
+            speaker = DialogRandom(sci, 'DStasis-RSol1-1', '', false, true);
+            randomTalkDialog = true;
+        end;
+    end; 
+
+    if IsOK(Petrosyan) OR IsOK(Dolgov) OR randomTalkDialog then
+    begin
+        Say(Burlak, 'DStasis-Bur-1');
+        if IsOK(Petrosyan) then Say(Petrosyan, 'DStasis-Pty-2')
+        else if IsOK(Dolgov) then Say(Dolgov, 'DStasis-Dol-2')
+        else DialogRandom(speaker, 'DStasis-RSol1-2', '', false, true);    
+        Say(Burlak, 'DStasis-Bur-2');
+    end;
+
+    if GetTech(tech_SibEng, 3) = state_researched then
+        ChangeMissionObjectives('MOutResearch');
+
+end;
+
+// All main objectives completed successfully
+every 0$20 trigger GetTech(tech_SibEng, 3) = state_researched AND GetTech(tech_TauField, 3) = state_researched AND NOT dial_EndMissionDialogBlocker do
+var depots, depot, sibCounter;
+begin
+    enable;
+
+    depots = FilterAllUnits([[f_side, 3], [f_ok], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+    sibCounter = 0;
+
+    for depot in depots do
+        sibCounter = sibCounter + GetResourceType(GetBase(depot), mat_siberit);
+
+    if sibCounter >= 100 then
+    begin
+        ChangeMissionObjectives('MOutMine');
+
+        dial_EndMissionDialogBlocker = true;
+
+        DialogueOn;
+        SayRadio(Platonov, 'DNextMiss1-Pla-1'); 
+
+        if NOT savedVsevolod then
+        begin     
+            SayRadio(Platonov, 'DNextMiss2-Pla-1');
+            Say(Burlak, 'DNextMiss4-Bur-1');
+            SayRadio(Vsevolod, 'DDieVsev1-Vse-1');
+            ForceFinishGame;
+            exit;
+        end
+        else begin
+            SayRadio(Platonov, 'DNextMiss3-Pla-1');
+            SayRadio(Platonov, 'DNextMiss4-Pla-1');
+            Say(Burlak, 'DNextMiss4-Bur-1');
+        end;
+
+        DialogueOff;
+
+        
+        SelectCharacters;
+        
+        canSpawnReinforces = true;
+        canRemoveUnits = true;
+
+        SetAttitude(1, 6, att_friend, true);
+
+        SetAreaMapShow(ExitMapArea, 1);
+
+        ChangeMissionObjectives('MOutResearch');
+        ChangeMissionObjectives('MCars');
+
+        exit;
+    end;
+end;
+
+every 0$1 trigger canRemoveUnits do
+var un;
+begin
+    enable;
+
+    SetLives(Vsevolod, 1000);
+    ComMoveToArea(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), ExitMapArea);
+
+    for un in FilterUnitsInArea(ExitMapArea, [[f_side, 6], [f_type, unit_human]]) do
+        RemoveUnit(un);
+end;
+
+// Blocker
+every 1 trigger NOT canGoNorth AND FilterUnitsInArea(NorthBlockerArea, [[f_side, 3], [f_ok], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+var unit;
+begin
+    enable;
+
+    for unit in FilterUnitsInArea(NorthBlockerArea, [[f_side, 3], [f_ok], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        ComMoveToArea(unit, NorthBlockerReturnArea);
+
+    if NOT dial_NorthBlocker then
+    begin
+        dial_NorthBlocker = true;
+
+        Say(Burlak, 'DMoveNorth-Bur-1');
+        
+        wait(0$5);
+
+        dial_NorthBlocker = false;
+    end;    
+end;
+
+every 2$30 trigger canSpawnReinforces do
+begin
+    SpawnPlatonovReinforces;
+    CenterOnXY(134, 233);
+
+    if Kirilenkova AND IsPlaced(Kirilenkova) then Say(Kirilenkova, 'DMeetKirilenkova-Kir-1');
+
+    canEndMission = true;
+end;
