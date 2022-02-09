@@ -284,8 +284,13 @@ function changeHumanSkill(ID, INDEX)
 end;
 
 function spawnHuman()
-    --OW_CUSTOM_COMMAND(101, 4, HUMAN_ACTIVE_NATION, HUMAN_ACTIVE_CLASS, HUMAN_ACTIVE_SKILL);
-    OW_COMM_BUTTON_PRESS(IT_TARGETABLESAIL_NOUNIT, 301, HUMAN_ACTIVE_NATION, HUMAN_ACTIVE_CLASS, HUMAN_ACTIVE_SKILL);
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL_NOUNIT, 
+        301, 
+        HUMAN_ACTIVE_NATION, 
+        HUMAN_ACTIVE_CLASS, 
+        HUMAN_ACTIVE_SKILL
+    );
 end;
 
 -- vehicle spawn panel
@@ -374,11 +379,23 @@ VEHICLE_WEAPON_LIST = {
     '(AR) Cargo', -- 32
     '(AR) Bio Bomb', -- 91,
     '(AR) Mortar', -- 92,
-    '(RU) '
+    '(RU) Heavy M. Gun', -- 42
+    '(RU) Gatling Gun', -- 43
+    '(RU) Gun', -- 44
+    '(RU) Rocket Launcher', -- 45
+    '(RU) Heavy Gun', -- 46
+    '(RU) Rocket', -- 47
+    '(RU) Sib Rocket', -- 48
+    '(RU) Time Lapser', -- 49
+    '(RU) Cargo', -- 51
+    '(RU) Crane', -- 52
+    '(RU) Bulldozer', -- 53
+    '(RU) Flame Thrower', -- 93
+    '(RU) Radar', -- 98
 };
 
-game.hackPanel.humanPanel.nationLabel = getLabelEX(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.chassisLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
     anchorT, 
     XYWH(
         10,
@@ -387,24 +404,24 @@ game.hackPanel.humanPanel.nationLabel = getLabelEX(
         14
     ), 
     nil,
-    'Nation',
+    'Chassis',
     {
         nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.nationCombo = clComboBox(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.chassisCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
     10,
     50,
-    HUMAN_NATION_LIST,
+    VEHICLE_CHASSIS_LIST,
     1,
-    'changeHumanNation(%id, "INDEX")',
+    'changeVehicleChassis(%id, "INDEX")',
     {}
 );
 
-game.hackPanel.humanPanel.classLabel = getLabelEX(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.engineLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
     anchorT, 
     XYWH(
         10,
@@ -413,24 +430,24 @@ game.hackPanel.humanPanel.classLabel = getLabelEX(
         14
     ), 
     nil,
-    'Class',
+    'Engine',
     {
         nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.classCombo = clComboBox(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.engineCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
     10,
     90,
-    HUMAN_CLASS_LIST,
+    VEHICLE_ENGINE_LIST,
     1,
-    'changeHumanClass(%id, "INDEX")',
+    'changeVehicleEngine(%id, "INDEX")',
     {}
 );
 
-game.hackPanel.humanPanel.skillLabel = getLabelEX(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.controlLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
     anchorT, 
     XYWH(
         10,
@@ -439,70 +456,115 @@ game.hackPanel.humanPanel.skillLabel = getLabelEX(
         14
     ), 
     nil,
-    'Skill',
+    'Control',
     {
         nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.skillCombo = clComboBox(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.controlCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
     10,
     130,
-    HUMAN_SKILL_LIST,
+    VEHICLE_CONTROL_LIST,
     1,
-    'changeHumanSkill(%id, "INDEX")',
+    'changeVehicleControl(%id, "INDEX")',
     {}
 );
 
-game.hackPanel.humanPanel.buttonSpawn = clButton(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.weaponLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorT, 
+    XYWH(
+        10,
+        150,
+        240,
+        14
+    ), 
+    nil,
+    'Weapon',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.vehiclePanel.weaponCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
+    10,
+    170,
+    VEHICLE_WEAPON_LIST,
+    1,
+    'changeVehicleWeapon(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.vehiclePanel.buttonSpawn = clButton(
+    game.hackPanel.vehiclePanel,
     10, 
     220, 
     280, 
     20,
-    'Spawn human',
-    'spawnHuman();',
+    'Spawn vehicle',
+    'spawnVehicle();',
     {}
 );
 
-game.hackPanel.humanPanel.buttonBack = clButton(
-    game.hackPanel.humanPanel,
+game.hackPanel.vehiclePanel.buttonBack = clButton(
+    game.hackPanel.vehiclePanel,
     10, 
     260, 
     280, 
     20,
     'Back',
-    'showHumanPanel(0);',
+    'showVehiclePanel(0);',
     {}
 );
 
-function changeHumanNation(ID, INDEX)
-    HUMAN_ACTIVE_NATION = parseInt(INDEX);
+function changeVehicleChassis(ID, INDEX)
+    local CHASSIS = parseInt(INDEX);
+    local LIST = {
+        1, 2, 3, 4, 5, -- US
+        11, 12, 13, 14, -- AR
+        21, 22, 23, 24 -- RU
+    };
+
+    VEHICLE_ACTIVE_CHASSIS = LIST[CHASSIS];
 end;
 
-function changeHumanClass(ID, INDEX)
-    local CLASS = parseInt(INDEX);
-
-    if (CLASS < 6) then
-        HUMAN_ACTIVE_CLASS = CLASS;
-    elseif (CLASS == 6) then
-        HUMAN_ACTIVE_CLASS = 8; -- mortar
-    elseif (CLASS == 7) then
-        HUMAN_ACTIVE_CLASS = 9; -- bazooka
-    else
-        HUMAN_ACTIVE_CLASS = 11; -- sheik
-    end;
+function changeVehicleEngine(ID, INDEX)
+    VEHICLE_ACTIVE_ENGINE = parseInt(INDEX);
 end;
 
-function changeHumanSkill(ID, INDEX)
-    local SKILL = parseInt(INDEX);
-    HUMAN_ACTIVE_SKILL = SKILL - 1;
+function changeVehicleControl(ID, INDEX)
+    local CONTROL = parseInt(INDEX);
+    local LIST = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 97, -- US
+        
+    };
+
+    VEHICLE_ACTIVE_CONTROL = LIST[CONTROL];
 end;
 
-function spawnHuman()
-    --OW_CUSTOM_COMMAND(101, 4, HUMAN_ACTIVE_NATION, HUMAN_ACTIVE_CLASS, HUMAN_ACTIVE_SKILL);
-    OW_COMM_BUTTON_PRESS(IT_TARGETABLESAIL_NOUNIT, 301, HUMAN_ACTIVE_NATION, HUMAN_ACTIVE_CLASS, HUMAN_ACTIVE_SKILL);
+function changeVehicleWeapon(ID, INDEX)
+    local WEAPON = parseInt(INDEX);
+    local LIST = {
+        1, 2, 3, 4, 5, -- US
+        11, 12, 13, 14, -- AR
+        21, 22, 23, 24 -- RU
+    };
+
+    VEHICLE_ACTIVE_CHASSIS = LIST[CHASSIS];
+end;
+
+function spawnVehicle()
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL_NOUNIT, 
+        302, 
+        VEHICLE_ACTIVE_CHASSIS, 
+        VEHICLE_ACTIVE_ENGINE, 
+        VEHICLE_ACTIVE_CONTROL, 
+        VEHICLE_ACTIVE_WEAPON
+    );
 end;
 
 
@@ -518,7 +580,13 @@ function showHumanPanel(MODE)
 end;
 
 function showVehiclePanel(MODE)
-
+    if (MODE == 1) then
+        setVisible(game.hackPanel.vehiclePanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.vehiclePanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
 end;
 
 function showHackPanel()
