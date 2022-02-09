@@ -536,16 +536,6 @@ function changeVehicleEngine(ID, INDEX)
 end;
 
 function changeVehicleControl(ID, INDEX)
-    local CONTROL = parseInt(INDEX);
-    local LIST = {
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 97, -- US
-        
-    };
-
-    VEHICLE_ACTIVE_CONTROL = LIST[CONTROL];
-end;
-
-function changeVehicleWeapon(ID, INDEX)
     local WEAPON = parseInt(INDEX);
     local LIST = {
         1, 2, 3, 4, 5, -- US
@@ -553,7 +543,18 @@ function changeVehicleWeapon(ID, INDEX)
         21, 22, 23, 24 -- RU
     };
 
-    VEHICLE_ACTIVE_CHASSIS = LIST[CHASSIS];
+    VEHICLE_ACTIVE_CONTROL = LIST[CHASSIS];
+end;
+
+function changeVehicleWeapon(ID, INDEX)
+    local WEAPON = parseInt(INDEX);
+    local LIST = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 97, 99, -- US
+        22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 91, 92, -- AR
+        42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 93, 98 -- RU
+    };
+
+    VEHICLE_ACTIVE_WEAPON = LIST[WEAPON];
 end;
 
 function spawnVehicle()
