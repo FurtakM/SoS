@@ -173,7 +173,7 @@ if p2 = 100 then // stream mode
            1: hHackUnlimitedResources;
            2: hHackSetLevel10;
            3: hHackSetLevel10YourUnits;
-           4: hHackSpawnHuman(p4, p5, p6);
+           // 4: hHackSpawnHuman(p4, p5, p6); // moved to targetable
            5: hHackSpawnVehicle;
            6: hHackInvincible;
            7: hHackInvisible;
@@ -1068,11 +1068,16 @@ if un then
    RemoveUnit(un);
 End;
 
-// Hack methods
-Export Function SOS_TargetableHack(cmd, unit, selectedUnit, x, y);
+//
+//
+// HACK MOD
+// 8.02.22
+//
+//
+Export Function SOS_TargetableHack(cmd, unit, selectedUnit, x, y, p1, p2, p3, p4, p5, p6);
 begin
 case cmd of
-     301: ;
+     301: hHackSpawnHuman(p1, p2, p3, x, y);
      end;
 End;
 
@@ -1110,7 +1115,7 @@ for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
     end;
 End;
 
-Export Function hHackSpawnHuman(nation, class, skill);
+Export Function hHackSpawnHuman(nation, class, skill, x, y);
 begin
 uc_side := your_side;
 uc_nation := nation;
@@ -1118,7 +1123,9 @@ uc_nation := nation;
 InitHc;
 
 PrepareHuman(false, class, skill);
-PlaceUnitAnywhere(CreateHuman, true);
+
+if HexInfo(x, y) = 0 then
+   PlaceUnitXY(CreateHuman, x, y, true);
 End;
 
 Export Function hHackSpawnVehicle;
