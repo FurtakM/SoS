@@ -768,13 +768,16 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         setHint(ELEMENT.comboBox.selected, PROPERTIES.hint);
     end;
 
-    set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
-    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ', ' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
-    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
+    set_Callback(ELEMENT.comboBox.selected.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
 
     COMBOBOX_LIST[ELEMENT.list.scroll.ID] = {
         ID = ELEMENT.list.scroll.ID,
         PARENT = ELEMENT.list.ID,
+        BACKGROUND = ELEMENT.background.ID,
+        BUTTON = ELEMENT.comboBox.button.ID,
+        TEXTURE = PROPERTIES.textureButton,
         ITEMS = ITEMS,
         SELECTED = SELECTEDITEM,
         ELEMENTS = elements
@@ -825,7 +828,7 @@ end;
 
 function clSelectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE)
     clSetComboBoxValue(COMBOBOXLABELID, VALUE);
-    clShowComboBoxList(LISTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
+    clShowComboBoxList(LISTID, PARENTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
     clSetComboBoxSelectedItem(PARENTID, INDEX);
 end;
 
@@ -849,18 +852,33 @@ function clSetComboBoxValue(ID, VALUE)
     setText({ID=ID}, SGUI_widesub(VALUE, 1, 22));
 end;
 
-function clShowComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
+function clShowComboBoxList(ID, PARENTID, BACKGROUNDID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
     local mode = getVisible({ID=ID});
 
     if mode then
         setTextureID(BUTTONID, BUTTONTEXTURE);
     else
+        bringToFront({ID=BACKGROUNDID});
         bringToFront({ID=ID});
         setTextureID(BUTTONID, BUTTONCLICKTEXTURE);
     end;
 
-    setVisible({ID=PARENTID}, (not mode));
+    setVisible({ID=BACKGROUNDID}, (not mode));
     setVisible({ID=ID}, (not mode));
+end;
+
+function clHideComboBoxList(ID, BACKGROUNDID, BUTTONID, BUTTONTEXTURE)
+    setTextureID(BUTTONID, BUTTONTEXTURE);
+    setVisible({ID=BACKGROUNDID}, false)
+    setVisible({ID=ID}, false);
+end;
+
+function clHideAllComboBoxList()
+    for _, v in pairs(COMBOBOX_LIST) do
+        if (getVisibleID(v.ID)) then
+            clHideComboBoxList(v.PARENT, v.BACKGROUND, v.BUTTON, v.TEXTURE);
+        end;
+    end;
 end;
 
 function clHoverItem(ID, MODE, SELECTED)
