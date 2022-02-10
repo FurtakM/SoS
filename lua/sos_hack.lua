@@ -335,7 +335,7 @@ game.hackPanel.humanPanel = getElementEX(
     XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
     false,
     {
-        colour1 = RGB(20, 25, 30),
+        colour1 = WHITEA()
     }
 );
 
@@ -459,7 +459,7 @@ game.hackPanel.vehiclePanel = getElementEX(
     XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
     false,
     {
-        colour1 = RGB(20, 25, 30),
+        colour1 = WHITEA()
     }
 );
 
@@ -601,9 +601,3 @@ game.hackPanel.vehiclePanel.buttonBack = clButton(
     'showVehiclePanel(0);',
     {}
 );
-
-function onMenuKeyPress(key)
-    clHideAllComboBoxList();
-end;
-
-set_Callback(game.hackPanel.ID, CALLBACK_KEYPRESS, 'onHackKeyPress(%k)');

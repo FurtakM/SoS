@@ -5,7 +5,7 @@ function displayHackPanel()
 	debug('override');
 end;
 
-function showHackPanel(MODE)
+function showHackPanel()
 	if (INIT_HACK_MODE == false) then
 		INIT_HACK_MODE = true;
 		include('sos_hack');

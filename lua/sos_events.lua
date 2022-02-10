@@ -57,12 +57,13 @@ function onMenuKeyPress(key)
             return;
         end;
 
-        if (not getVisible(menu)) then
+        -- combobox
+        if (getOneOfVisible(COMBOBOX_LIST)) then
+            clHideAllComboBoxList();
             return;
         end;
 
-        -- combobox
-        if (getOneOfVisible(COMBOBOX_LIST)) then
+        if (not getVisible(menu)) then
             return;
         end;
 
@@ -109,6 +110,14 @@ function onMenuKeyPress(key)
 
         if (getVisible(menu.window_profile)) then
             showProfile(0);
+            return;
+        end;
+    end;
+
+    if (key == VK_F1) then
+        -- combobox
+        if (getOneOfVisible(COMBOBOX_LIST)) then
+            clHideAllComboBoxList();
             return;
         end;
     end;
