@@ -1,168 +1,534 @@
-HACK_MODE = parseInt(MOD_DATA.Hack_Mode); -- define if hack mode is active (check mod.ini)
+HUMAN_ACTIVE_CLASS = 1;
+HUMAN_CLASS_LIST = {
+    'Soldier',
+    'Engineer',
+    'Mechanic',
+    'Scientist',
+    'Sniper',
+    'Mortar',
+    'Bazooka',
+    'Sheik'
+};
+
+HUMAN_ACTIVE_NATION = 1;
+HUMAN_NATION_LIST = {
+    'American',
+    'Arabian',
+    'Russian'
+};
+
+HUMAN_ACTIVE_SKILL = 0;
+HUMAN_SKILL_LIST = {
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10'
+};
+
+function changeHumanNation(ID, INDEX)
+    HUMAN_ACTIVE_NATION = parseInt(INDEX);
+end;
+
+function changeHumanClass(ID, INDEX)
+    local CLASS = parseInt(INDEX);
+
+    if (CLASS < 6) then
+        HUMAN_ACTIVE_CLASS = CLASS;
+    elseif (CLASS == 6) then
+        HUMAN_ACTIVE_CLASS = 8; -- mortar
+    elseif (CLASS == 7) then
+        HUMAN_ACTIVE_CLASS = 9; -- bazooka
+    else
+        HUMAN_ACTIVE_CLASS = 11; -- sheik
+    end;
+end;
+
+function changeHumanSkill(ID, INDEX)
+    local SKILL = parseInt(INDEX);
+    HUMAN_ACTIVE_SKILL = SKILL - 1;
+end;
+
+function spawnHuman()
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL_NOUNIT, 
+        301, 
+        HUMAN_ACTIVE_NATION, 
+        HUMAN_ACTIVE_CLASS, 
+        HUMAN_ACTIVE_SKILL
+    );
+end;
+
+VEHICLE_ACTIVE_CHASSIS = 1;
+VEHICLE_CHASSIS_LIST = {
+    '(US) Light Wheel', -- 1
+    '(US) Medium Wheel', -- 2
+    '(US) Medium Track', -- 3
+    '(US) Heavy Track', -- 4
+    '(US) Morph', -- 5
+    '(AR) Hovercraft', -- 11
+    '(AR) Trike', -- 12
+    '(AR) Wheel', -- 13
+    '(AR) Track', -- 14
+    '(RU) Medium Wheel', -- 21
+    '(RU) Medium Track', -- 22
+    '(RU) Heavy Wheel', -- 23
+    '(RU) Heavy Track' -- 24
+};
+
+VEHICLE_ACTIVE_ENGINE = 1;
+VEHICLE_ENGINE_LIST = {
+    'Combustion', -- 1
+    'Solar', -- 2
+    'Siberite' -- 3
+};
+
+VEHICLE_ACTIVE_CONTROL = 1;
+VEHICLE_CONTROL_LIST = {
+    'Manual', -- 1
+    'Remote', -- 2
+    'Computer', -- 3
+    'Ape' -- 5
+};
+
+VEHICLE_ACTIVE_WEAPON = 1;
+VEHICLE_WEAPON_LIST = {
+    '(US) Machine Gun', -- 2
+    '(US) Light Gun', -- 3
+    '(US) Gatling Gun', -- 4
+    '(US) Double Gun', -- 5
+    '(US) Heavy Gun', -- 6
+    '(US) Rocket Launcher', -- 7
+    '(US) Sib Rocket', -- 8
+    '(US) Laser', -- 9
+    '(US) Double Laser', -- 10
+    '(US) Radar', -- 11
+    '(US) Cargo', -- 12
+    '(US) Crane', -- 13
+    '(US) Bulldozer', -- 14
+    '(US) Artillery', -- 97
+    '(US) Hack', -- 99
+    '(AR) Ballista', -- 22
+    '(AR) Light Gun', -- 23
+    '(AR) Double M. Gun', -- 24
+    '(AR) Gatling Gun', -- 25
+    '(AR) Flame Thrower', -- 26
+    '(AR) Gun', -- 27
+    '(AR) Rocket Launcher', -- 28
+    '(AR) Self-propelled Bomb', -- 29
+    '(AR) Radar', -- 30
+    '(AR) Control Tower', -- 31
+    '(AR) Cargo', -- 32
+    '(AR) Bio Bomb', -- 91,
+    '(AR) Mortar', -- 92,
+    '(RU) Heavy M. Gun', -- 42
+    '(RU) Gatling Gun', -- 43
+    '(RU) Gun', -- 44
+    '(RU) Rocket Launcher', -- 45
+    '(RU) Heavy Gun', -- 46
+    '(RU) Rocket', -- 47
+    '(RU) Sib Rocket', -- 48
+    '(RU) Time Lapser', -- 49
+    '(RU) Cargo', -- 51
+    '(RU) Crane', -- 52
+    '(RU) Bulldozer', -- 53
+    '(RU) Flame Thrower', -- 93
+    '(RU) Radar', -- 98
+};
+
+function changeVehicleChassis(ID, INDEX)
+    local CHASSIS = parseInt(INDEX);
+    local LIST = {
+        1, 2, 3, 4, 5, -- US
+        11, 12, 13, 14, -- AR
+        21, 22, 23, 24 -- RU
+    };
+
+    VEHICLE_ACTIVE_CHASSIS = LIST[CHASSIS];
+end;
+
+function changeVehicleEngine(ID, INDEX)
+    VEHICLE_ACTIVE_ENGINE = parseInt(INDEX);
+end;
+
+function changeVehicleControl(ID, INDEX)
+    local CONTROL = parseInt(INDEX);
+    local LIST = {
+        1, 2, 3, 4, 5, -- US
+        11, 12, 13, 14, -- AR
+        21, 22, 23, 24 -- RU
+    };
+
+    VEHICLE_ACTIVE_CONTROL = LIST[CONTROL];
+end;
+
+function changeVehicleWeapon(ID, INDEX)
+    local WEAPON = parseInt(INDEX);
+    local LIST = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 97, 99, -- US
+        22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 91, 92, -- AR
+        42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 93, 98 -- RU
+    };
+
+    VEHICLE_ACTIVE_WEAPON = LIST[WEAPON];
+end;
+
+function spawnVehicle()
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL_NOUNIT, 
+        302, 
+        VEHICLE_ACTIVE_CHASSIS, 
+        VEHICLE_ACTIVE_ENGINE, 
+        VEHICLE_ACTIVE_CONTROL, 
+        VEHICLE_ACTIVE_WEAPON
+    );
+end;
+
+BASE_ACTIVE_NATION = 1;
+BASE_ACTIVE_BUILDING = 1;
+BASE_BUILDING_LIST = {
+    'Depot',
+    'Warehouse',
+    'Lab',
+    'Lab (Weapon)',
+    'Lab (Sib)',
+    'Lab (Comp)',
+    'Lab (Opto)',
+    'Lab (Space)',
+    'Lab (Bio)',
+    'Lab (Weapon + Sib)',
+    'Lab (Comp + Opto)',
+    'Lab (Space + Comp)',
+    'Lab (Bio + Opto)',
+    'Workshop',
+    'Factory',
+    'Ext. Gun',
+    'Ext. Cargo',
+    'Ext. Radar',
+    'Ext. Radio',
+    'Ext. Sib',
+    'Ext. Comp',
+    'Ext. Track',
+    'Ext. Laser',
+    'Control Tower',
+    'Bunker',
+    'Tower',
+    'Automatic Turret',
+    'Armoury',
+    'Barracks',
+    'Solar Plant',
+    'Oil Plant',
+    'Sib Plant',
+    'Oil Mine',
+    'Sib Mine'
+};
+
+BASE_DIRECTION_TEXTURES = {
+    'up-right-',
+    'right-',
+    'down-right-',
+    'down-left-',
+    'left-',
+    'up-left-'
+};
+BASE_ACTIVE_DIRECTION_LAST = -1;
+BASE_ACTIVE_DIRECTION = 0;
+BASE_ACTIVE_WEAPON = 1;
+BASE_WEAPON_LIST = {
+    '(US) Machine Gun', -- 2
+    '(US) Light Gun', -- 3
+    '(US) Gatling Gun', -- 4
+    '(US) Double Gun', -- 5
+    '(US) Heavy Gun', -- 6
+    '(US) Rocket Launcher', -- 7
+    '(US) Sib Rocket', -- 8
+    '(US) Laser', -- 9
+    '(US) Double Laser', -- 10
+    '(US) Radar', -- 11
+    '(US) Artillery', -- 97
+    '(AR) Ballista', -- 22
+    '(AR) Light Gun', -- 23
+    '(AR) Double M. Gun', -- 24
+    '(AR) Gatling Gun', -- 25
+    '(AR) Flame Thrower', -- 26
+    '(AR) Gun', -- 27
+    '(AR) Rocket Launcher', -- 28
+    '(AR) Radar', -- 30
+    '(AR) Mortar', -- 92,
+    '(RU) Heavy M. Gun', -- 42
+    '(RU) Gatling Gun', -- 43
+    '(RU) Gun', -- 44
+    '(RU) Rocket Launcher', -- 45
+    '(RU) Heavy Gun', -- 46
+    '(RU) Rocket', -- 47
+    '(RU) Sib Rocket', -- 48
+    '(RU) Time Lapser', -- 49
+    '(RU) Flame Thrower', -- 93
+    '(RU) Radar', -- 98
+};
+
+function changeBaseNation(ID, INDEX)
+    BASE_ACTIVE_NATION = parseInt(INDEX);
+end;
+
+function changeBaseBuilding(ID, INDEX)
+    BASE_ACTIVE_BUILDING = parseInt(INDEX);
+end;
+
+function changeBaseWeapon(ID, INDEX)
+    local WEAPON = parseInt(INDEX);
+    local LIST = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 97, -- US
+        22, 23, 24, 25, 26, 27, 28, 30, 91, -- AR
+        42, 43, 44, 45, 46, 47, 48, 49, 93, 98 -- RU
+    };
+
+    BASE_ACTIVE_WEAPON = LIST[WEAPON];
+end;
+
+function changeBaseDirection(ID, DIR)
+    DIR = parseInt(DIR);
+    setTextureID(BASE_ACTIVE_DIRECTION_LAST, 'SGUI/Hack/arrows/' .. BASE_DIRECTION_TEXTURES[BASE_ACTIVE_DIRECTION + 1] .. '2');
+    
+    BASE_ACTIVE_DIRECTION = DIR;
+    BASE_ACTIVE_DIRECTION_LAST = ID;
+
+    setTextureID(BASE_ACTIVE_DIRECTION_LAST, 'SGUI/Hack/arrows/' .. BASE_DIRECTION_TEXTURES[DIR + 1] .. '1');
+end;
+
+function spawnBuilding()
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL_NOUNIT, 
+        303, 
+        BASE_ACTIVE_NATION,
+        BASE_ACTIVE_BUILDING,
+        BASE_ACTIVE_DIRECTION,
+        BASE_ACTIVE_WEAPON
+    );
+end;
+
+-- behaviour functions
+function teleportUnit()
+    OW_COMM_BUTTON_PRESS(
+        IT_TARGETABLESAIL, 
+        304
+    );
+end;
+
+function unitInvincible()
+    OW_CUSTOM_COMMAND(101, 4);
+end;
+
+function unitInvisible()
+    OW_CUSTOM_COMMAND(101, 5);
+end;
+
+function unitSide()
+    OW_CUSTOM_COMMAND(101, 7);
+end;
+
+function unitLevelMax()
+    OW_CUSTOM_COMMAND(101, 2);
+end;
+
+function unitYourLevelMax()
+    OW_CUSTOM_COMMAND(101, 3);
+end;
+
+-- map functions
+function mapFog()
+    OW_CUSTOM_COMMAND(101, 8);
+end;
+
+function mapChangeSide()
+    OW_CUSTOM_COMMAND(101, 6);
+end;
+
+function mapResources()
+    OW_CUSTOM_COMMAND(101, 1);
+end;
+
+-- main functions
+function showHumanPanel(MODE)
+    if (MODE == 1) then
+        setVisible(game.hackPanel.humanPanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.humanPanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
+end;
+
+function showVehiclePanel(MODE)
+    if (MODE == 1) then
+        setVisible(game.hackPanel.vehiclePanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.vehiclePanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
+end;
+
+function showBasePanel(MODE)
+    if (MODE == 1) then
+        setVisible(game.hackPanel.basePanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.basePanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
+end;
+
+function showBehaviourPanel(MODE)
+    if (MODE == 1) then
+        setVisible(game.hackPanel.behavPanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.behavPanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
+end;
+
+function showMapPanel(MODE)
+    if (MODE == 1) then
+        setVisible(game.hackPanel.mapPanel, true);
+        setVisible(game.hackPanel.main, false);
+    else
+        setVisible(game.hackPanel.mapPanel, false);
+        setVisible(game.hackPanel.main, true);
+    end;
+end;
+
+function displayHackPanel()
+    if (not getVisible(game)) then
+        return;
+    end;
+
+    local MODE = getVisible(game.hackPanel);
+
+    if (not MODE) then
+        setVisible(game.hackPanel, true);
+    else
+        setVisible(game.hackPanel, false);
+    end;
+end;
 
 game.hackPanel = getElementEX(
     game, 
     anchorNone, 
-    XYWH(0, 60, 300, 530), 
+    XYWH(0, 60, 300, 330), 
     false,
     {
-        colour1 = RGB(20, 25, 30),
+        -- colour1 = RGB(20, 25, 30),
+        texture = 'SGUI/Hack/hackBackground.png'
     }
 );
 
 game.hackPanel.name = getLabelEX(
-	game.hackPanel,
-	anchorNone,
-	XYWH(0, 10, 300, 10), 
-	nil,
-	'Hack Console - by Serpent',
-	{
-		nomouseevent = true,
-		text_halign = ALIGN_MIDDLE,
+    game.hackPanel,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Hack Console - by Serpent',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
         text_valign = ALIGN_TOP,
-	}
+    }
 );
 
-game.hackPanel.button1 = clButton(
-	game.hackPanel,
-	10,
+game.hackPanel.main = getElementEX(
+    game.hackPanel, 
+    anchorNone, 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
+    true,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+game.hackPanel.main.name = getLabelEX(
+    game.hackPanel.main,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Choose panel',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+    }
+);
+
+game.hackPanel.main.buttonHumanPanel = clButton(
+    game.hackPanel.main,
+    10, 
     40, 
     280, 
     20,
-	'Add resources',
-	'OW_CUSTOM_COMMAND(101, 1);',
+    'Human',
+    'showHumanPanel(1);',
     {}
 );
 
-game.hackPanel.button2 = clButton(
-	game.hackPanel,
-	10, 
+game.hackPanel.main.buttonVehiclePanel = clButton(
+    game.hackPanel.main,
+    10, 
     80, 
     280, 
     20,
-	'10 level for selected units',
-	'OW_CUSTOM_COMMAND(101, 2);',
+    'Vehicle',
+    'showVehiclePanel(1);',
     {}
 );
 
-game.hackPanel.button3 = clButton(
-	game.hackPanel,
-	10, 
-    120,
+game.hackPanel.main.buttonBasePanel = clButton(
+    game.hackPanel.main,
+    10,
+    120, 
     280, 
     20,
-	'10 level for all your units',
-	'OW_CUSTOM_COMMAND(101, 3);',
+    'Base',
+    'showBasePanel(1);',
     {}
 );
 
-game.hackPanel.button4 = clButton(
-	game.hackPanel,
-	10, 
+game.hackPanel.main.buttonBehaviourPanel = clButton(
+    game.hackPanel.main,
+    10,
     160, 
     280, 
     20,
-	'Create human',
-	'showHumanPanel(1);', -- OW_CUSTOM_COMMAND(4);
+    'Behaviour',
+    'showBehaviourPanel(1);',
     {}
 );
 
-game.hackPanel.button5 = clButton(
-	game.hackPanel,
-	10, 
+game.hackPanel.main.buttonMapPanel = clButton(
+    game.hackPanel.main,
+    10,
     200, 
     280, 
     20,
-	'Spawn vehicle',
-	'OW_CUSTOM_COMMAND(101, 5);',
-    {}
-);
-
-game.hackPanel.button11 = clButton(
-    game.hackPanel,
-    10, 
-    240, 
-    280, 
-    20,
-    'Spawn apeman',
-    'OW_CUSTOM_COMMAND(101, 11);',
-    {}
-);
-
-game.hackPanel.button6 = clButton(
-	game.hackPanel,
-    10, 
-    280, 
-    280, 
-    20,
-	'Set selected units invincible',
-	'OW_CUSTOM_COMMAND(101, 6);',
-    {}
-);
-
-game.hackPanel.button7 = clButton(
-	game.hackPanel,
-	10,
-    320, 
-    280, 
-    20,
-	'Set selected units invisible',
-	'OW_CUSTOM_COMMAND(101, 7);',
-    {}
-);
-
-game.hackPanel.button8 = clButton(
-	game.hackPanel,
-	10, 
-    360,
-    280, 
-    20,
-    'Change your side',
-	'OW_CUSTOM_COMMAND(101, 8);',
-    {}
-);
-
-game.hackPanel.button9 = clButton(
-	game.hackPanel,
-	10, 
-    400, 
-    280, 
-    20,
-	'Change selected units side',
-	'OW_CUSTOM_COMMAND(101, 9);',
-    {}
-);
-
-game.hackPanel.button10 = clButton(
-	game.hackPanel,
-	10, 
-    440, 
-    280, 
-    20,
-	'Fog Off',
-	'OW_CUSTOM_COMMAND(101, 10);',
-    {}
-);
-
-game.hackPanel.button12 = clButton(
-    game.hackPanel,
-    10, 
-    480,
-    280, 
-    20,
-    'Boom!',
-    'OW_CUSTOM_COMMAND(101, 12);',
+    'Map',
+    'showMapPanel(1);',
     {}
 );
 
 -- human spawn panel
 game.hackPanel.humanPanel = getElementEX(
-    game, 
+    game.hackPanel, 
     anchorNone, 
-    XYWH(0, 60, 300, 530), 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
     false,
     {
-        colour1 = RGB(20, 25, 30),
+        colour1 = WHITEA()
     }
 );
 
@@ -171,7 +537,7 @@ game.hackPanel.humanPanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Hack Console - by Serpent\nHuman Panel',
+    'Human Panel',
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -179,224 +545,85 @@ game.hackPanel.humanPanel.name = getLabelEX(
     }
 );
 
-game.hackPanel.humanPanel.class = getLabelEX(
+game.hackPanel.humanPanel.nationLabel = getLabelEX(
     game.hackPanel.humanPanel,
-    anchorNone,
-    XYWH(0, 60, 140, 10), 
+    anchorT, 
+    XYWH(
+        10,
+        30,
+        240,
+        14
+    ), 
     nil,
-    'Class: Soldier',
+    'Nation',
     {
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
+        nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.buttonChangeClass = clButton(
+game.hackPanel.humanPanel.nationCombo = clComboBox(
     game.hackPanel.humanPanel,
-    140, 
-    60, 
-    140, 
-    20,
-    'Change',
-    'changeClass();',
+    10,
+    50,
+    HUMAN_NATION_LIST,
+    1,
+    'changeHumanNation(%id, "INDEX")',
     {}
 );
 
-HUMAN_ACTIVE_CLASS = 1;
-HUMAN_ACTIVE_CLASS_INDEX = 0;
-HUMAN_CLASS = {
-    {
-        ID = 1,
-        NAME = 'Soldier'
-    },
-    {
-        ID = 2,
-        NAME = 'Engineer'
-    },
-    {
-        ID = 3,
-        NAME = 'Mechanic'
-    },
-    {
-        ID = 4,
-        NAME = 'Scientist'
-    },
-    {
-        ID = 5,
-        NAME = 'Sniper'
-    },
-    {
-        ID = 8,
-        NAME = 'Mortar'
-    },
-    {
-        ID = 9,
-        NAME = 'Bazooka'
-    },
-    {
-        ID = 11,
-        NAME = 'Sheik'
-    }
-}
-
-function changeClass()
-    HUMAN_ACTIVE_CLASS_INDEX = HUMAN_ACTIVE_CLASS_INDEX + 1;
-
-    if (HUMAN_ACTIVE_CLASS_INDEX > #HUMAN_CLASS) then
-        HUMAN_ACTIVE_CLASS_INDEX = 1;
-    end;
-
-    HUMAN_ACTIVE_CLASS = HUMAN_CLASS[HUMAN_ACTIVE_CLASS_INDEX].ID;
-
-    setText(game.hackPanel.humanPanel.class, 'Class: ' .. HUMAN_CLASS[HUMAN_ACTIVE_CLASS_INDEX].NAME);
-end;
-
-game.hackPanel.humanPanel.nation = getLabelEX(
+game.hackPanel.humanPanel.classLabel = getLabelEX(
     game.hackPanel.humanPanel,
-    anchorNone,
-    XYWH(0, 100, 140, 10), 
+    anchorT, 
+    XYWH(
+        10,
+        70,
+        240,
+        14
+    ), 
     nil,
-    'Nation: American',
+    'Class',
     {
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
+        nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.buttonChangeNation = clButton(
+game.hackPanel.humanPanel.classCombo = clComboBox(
     game.hackPanel.humanPanel,
-    140,
-    100,
-    140,
-    20,
-    'Change',
-    'changeNation();',
+    10,
+    90,
+    HUMAN_CLASS_LIST,
+    1,
+    'changeHumanClass(%id, "INDEX")',
     {}
 );
 
-HUMAN_ACTIVE_NATION = 1;
-HUMAN_ACTIVE_NATION_INDEX = 0;
-HUMAN_NATION = {
-    {
-        ID = 1,
-        NAME = 'American'
-    },
-    {
-        ID = 2,
-        NAME = 'Arabian'
-    },
-    {
-        ID = 3,
-        NAME = 'Russian'
-    }
-}
-
-function changeNation()
-    HUMAN_ACTIVE_NATION_INDEX = HUMAN_ACTIVE_NATION_INDEX + 1;
-
-    if (HUMAN_ACTIVE_NATION_INDEX > #HUMAN_NATION) then
-        HUMAN_ACTIVE_NATION_INDEX = 1;
-    end;
-
-    HUMAN_ACTIVE_NATION = HUMAN_NATION[HUMAN_ACTIVE_NATION_INDEX].ID;
-
-    setText(game.hackPanel.humanPanel.nation, 'Nation: ' .. HUMAN_NATION[HUMAN_ACTIVE_NATION_INDEX].NAME);
-end;
-
-game.hackPanel.humanPanel.skill = getLabelEX(
+game.hackPanel.humanPanel.skillLabel = getLabelEX(
     game.hackPanel.humanPanel,
-    anchorNone,
-    XYWH(0, 140, 140, 10), 
+    anchorT, 
+    XYWH(
+        10,
+        110,
+        240,
+        14
+    ), 
     nil,
-    'Skill: 0',
+    'Skill',
     {
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
+        nomouseevent = true
     }
 );
 
-game.hackPanel.humanPanel.buttonChangeNation = clButton(
+game.hackPanel.humanPanel.skillCombo = clComboBox(
     game.hackPanel.humanPanel,
-    140, 
-    140, 
-    140, 
-    20,
-    'Change',
-    'changeSkill();',
+    10,
+    130,
+    HUMAN_SKILL_LIST,
+    1,
+    'changeHumanSkill(%id, "INDEX")',
     {}
 );
 
-HUMAN_ACTIVE_SKILL = 0;
-HUMAN_ACTIVE_SKILL_INDEX = 0;
-HUMAN_SKILL = {
-    {
-        ID = 1,
-        NAME = '0'
-    },
-    {
-        ID = 2,
-        NAME = '1'
-    },
-    {
-        ID = 3,
-        NAME = '2'
-    },
-    {
-        ID = 4,
-        NAME = '3'
-    },
-    {
-        ID = 5,
-        NAME = '4'
-    },
-    {
-        ID = 6,
-        NAME = '5'
-    },
-    {
-        ID = 7,
-        NAME = '6'
-    },
-    {
-        ID = 8,
-        NAME = '7'
-    },
-    {
-        ID = 9,
-        NAME = '8'
-    },
-    {
-        ID = 10,
-        NAME = '9'
-    },
-    {
-        ID = 11,
-        NAME = '10'
-    }
-}
-
-function changeSkill()
-    HUMAN_ACTIVE_SKILL_INDEX = HUMAN_ACTIVE_SKILL_INDEX + 1;
-
-    if (HUMAN_ACTIVE_SKILL_INDEX > #HUMAN_SKILL) then
-        HUMAN_ACTIVE_SKILL_INDEX = 1;
-    end;
-
-    HUMAN_ACTIVE_SKILL = HUMAN_SKILL[HUMAN_ACTIVE_SKILL_INDEX].ID - 1;
-
-    setText(game.hackPanel.humanPanel.skill, 'Skill: ' .. HUMAN_SKILL[HUMAN_ACTIVE_SKILL_INDEX].NAME);
-end;
-
-function spawnHuman()
-    --OW_CUSTOM_COMMAND(101, 4, HUMAN_ACTIVE_NATION, HUMAN_ACTIVE_CLASS, HUMAN_ACTIVE_SKILL);
-    OW_COMM_BUTTON_PRESS(IT_TARGETABLESAIL, 256);
-    debug('test');
-end;
-
-game.hackPanel.humanPanel.button1 = clButton(
+game.hackPanel.humanPanel.buttonSpawn = clButton(
     game.hackPanel.humanPanel,
     10, 
     220, 
@@ -407,7 +634,7 @@ game.hackPanel.humanPanel.button1 = clButton(
     {}
 );
 
-game.hackPanel.humanPanel.button2 = clButton(
+game.hackPanel.humanPanel.buttonBack = clButton(
     game.hackPanel.humanPanel,
     10, 
     260, 
@@ -418,28 +645,527 @@ game.hackPanel.humanPanel.button2 = clButton(
     {}
 );
 
-function showHumanPanel(MODE)
-    if (MODE == 1) then
-        setVisible(game.hackPanel.humanPanel, true);
-        setVisible(game.hackPanel, false);
-    else
-        setVisible(game.hackPanel.humanPanel, false);
-        setVisible(game.hackPanel, true);
-    end;
-end;
+-- vehicle spawn panel
+game.hackPanel.vehiclePanel = getElementEX(
+    game.hackPanel, 
+    anchorNone, 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
 
+game.hackPanel.vehiclePanel.name = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Vehicle Panel',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+    }
+);
 
-function showHackPanel()
-	if (not getVisible(game)) then
-		return;
-	end;
+game.hackPanel.vehiclePanel.chassisLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorT, 
+    XYWH(
+        10,
+        30,
+        240,
+        14
+    ), 
+    nil,
+    'Chassis',
+    {
+        nomouseevent = true
+    }
+);
 
-	local MODE = getVisible(game.hackPanel);
+game.hackPanel.vehiclePanel.chassisCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
+    10,
+    50,
+    VEHICLE_CHASSIS_LIST,
+    1,
+    'changeVehicleChassis(%id, "INDEX")',
+    {}
+);
 
-	if (not MODE) then
-		setVisible(game.hackPanel, true);
-		setX(game.hackPanel, 0);
-	else
-		setVisible(game.hackPanel, false);
-	end;
-end;
+game.hackPanel.vehiclePanel.engineLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorT, 
+    XYWH(
+        10,
+        70,
+        240,
+        14
+    ), 
+    nil,
+    'Engine',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.vehiclePanel.engineCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
+    10,
+    90,
+    VEHICLE_ENGINE_LIST,
+    1,
+    'changeVehicleEngine(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.vehiclePanel.controlLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorT, 
+    XYWH(
+        10,
+        110,
+        240,
+        14
+    ), 
+    nil,
+    'Control',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.vehiclePanel.controlCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
+    10,
+    130,
+    VEHICLE_CONTROL_LIST,
+    1,
+    'changeVehicleControl(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.vehiclePanel.weaponLabel = getLabelEX(
+    game.hackPanel.vehiclePanel,
+    anchorT, 
+    XYWH(
+        10,
+        150,
+        240,
+        14
+    ), 
+    nil,
+    'Weapon',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.vehiclePanel.weaponCombo = clComboBox(
+    game.hackPanel.vehiclePanel,
+    10,
+    170,
+    VEHICLE_WEAPON_LIST,
+    1,
+    'changeVehicleWeapon(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.vehiclePanel.buttonSpawn = clButton(
+    game.hackPanel.vehiclePanel,
+    10, 
+    220, 
+    280, 
+    20,
+    'Spawn vehicle',
+    'spawnVehicle();',
+    {}
+);
+
+game.hackPanel.vehiclePanel.buttonBack = clButton(
+    game.hackPanel.vehiclePanel,
+    10, 
+    260, 
+    280, 
+    20,
+    'Back',
+    'showVehiclePanel(0);',
+    {}
+);
+
+-- base panel
+game.hackPanel.basePanel = getElementEX(
+    game.hackPanel, 
+    anchorNone, 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+game.hackPanel.basePanel.name = getLabelEX(
+    game.hackPanel.basePanel,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Base Panel',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+    }
+);
+
+game.hackPanel.basePanel.nationLabel = getLabelEX(
+    game.hackPanel.basePanel,
+    anchorT, 
+    XYWH(
+        10,
+        30,
+        240,
+        14
+    ), 
+    nil,
+    'Nation',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.basePanel.nationCombo = clComboBox(
+    game.hackPanel.basePanel,
+    10,
+    50,
+    HUMAN_NATION_LIST,
+    1,
+    'changeBaseNation(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.basePanel.btypeLabel = getLabelEX(
+    game.hackPanel.basePanel,
+    anchorT, 
+    XYWH(
+        10,
+        70,
+        240,
+        14
+    ), 
+    nil,
+    'Building',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.basePanel.btypeCombo = clComboBox(
+    game.hackPanel.basePanel,
+    10,
+    90,
+    BASE_BUILDING_LIST,
+    1,
+    'changeBaseBuilding(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.basePanel.bweaponLabel = getLabelEX(
+    game.hackPanel.basePanel,
+    anchorT, 
+    XYWH(
+        10,
+        110,
+        240,
+        14
+    ), 
+    nil,
+    'Weapon',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.basePanel.bweaponCombo = clComboBox(
+    game.hackPanel.basePanel,
+    10,
+    130,
+    BASE_WEAPON_LIST,
+    1,
+    'changeBaseWeapon(%id, "INDEX")',
+    {}
+);
+
+game.hackPanel.basePanel.directionLabel = getLabelEX(
+    game.hackPanel.basePanel,
+    anchorT, 
+    XYWH(
+        10,
+        150,
+        240,
+        14
+    ), 
+    nil,
+    'Direction',
+    {
+        nomouseevent = true
+    }
+);
+
+game.hackPanel.basePanel.direction1 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(10, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/up-right-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 0);'
+    }
+);
+
+game.hackPanel.basePanel.direction2 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(50, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/right-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 1);'
+    }
+);
+
+game.hackPanel.basePanel.direction3 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(90, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/down-right-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 2);'
+    }
+);
+
+game.hackPanel.basePanel.direction4 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(130, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/down-left-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 3);'
+    }
+);
+
+game.hackPanel.basePanel.direction5 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(170, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/left-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 4);'
+    }
+);
+
+game.hackPanel.basePanel.direction6 = getElementEX(
+    game.hackPanel.basePanel, 
+    anchorNone, 
+    XYWH(210, 175, 30, 30), 
+    true,
+    {
+        texture = 'SGUI/Hack/arrows/up-left-2.png',
+        callback_mousedown = 'changeBaseDirection(%id, 5);'
+    }
+);
+
+game.hackPanel.basePanel.buttonSpawn = clButton(
+    game.hackPanel.basePanel,
+    10, 
+    220, 
+    280, 
+    20,
+    'Create building',
+    'spawnBuilding();',
+    {}
+);
+
+game.hackPanel.basePanel.buttonBack = clButton(
+    game.hackPanel.basePanel,
+    10, 
+    260, 
+    280, 
+    20,
+    'Back',
+    'showBasePanel(0);',
+    {}
+);
+
+-- base panel
+game.hackPanel.behavPanel = getElementEX(
+    game.hackPanel, 
+    anchorNone, 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+game.hackPanel.behavPanel.name = getLabelEX(
+    game.hackPanel.behavPanel,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Behaviour Panel',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+    }
+);
+
+game.hackPanel.behavPanel.buttonTeleport = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    40, 
+    280, 
+    20,
+    'Teleport',
+    'teleportUnit();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonInvincible = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    70, 
+    280, 
+    20,
+    'Invincible',
+    'unitInvincible();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonInvisible = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    100, 
+    280, 
+    20,
+    'Invisible',
+    'unitInvisible();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonSide = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    130, 
+    280, 
+    20,
+    'Change Unit Side',
+    'sideUnit();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonLevel = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    160, 
+    280, 
+    20,
+    'Set level 10 for selected units',
+    'unitLevelMax();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonYourLevel = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    190, 
+    280, 
+    20,
+    'Set level 10 for your units',
+    'unitYourLevelMax();',
+    {}
+);
+
+game.hackPanel.behavPanel.buttonBack = clButton(
+    game.hackPanel.behavPanel,
+    10, 
+    260, 
+    280, 
+    20,
+    'Back',
+    'showBehaviourPanel(0);',
+    {}
+);
+
+-- map panel
+game.hackPanel.mapPanel = getElementEX(
+    game.hackPanel, 
+    anchorNone, 
+    XYWH(0, 30, getWidth(game.hackPanel), getHeight(game.hackPanel) - 30), 
+    false,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+game.hackPanel.mapPanel.name = getLabelEX(
+    game.hackPanel.mapPanel,
+    anchorNone,
+    XYWH(0, 10, 300, 10), 
+    nil,
+    'Map Panel',
+    {
+        nomouseevent = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+    }
+);
+
+game.hackPanel.mapPanel.buttonResources = clButton(
+    game.hackPanel.mapPanel,
+    10, 
+    40, 
+    280, 
+    20,
+    'Resources',
+    'mapResources();',
+    {}
+);
+
+game.hackPanel.mapPanel.buttonChangeSide = clButton(
+    game.hackPanel.mapPanel,
+    10, 
+    70, 
+    280, 
+    20,
+    'Change Your Side',
+    'mapChangeSide();',
+    {}
+);
+
+game.hackPanel.mapPanel.buttonFog = clButton(
+    game.hackPanel.mapPanel,
+    10, 
+    100, 
+    280, 
+    20,
+    'Fog Off',
+    'mapFog();',
+    {}
+);
+
+game.hackPanel.mapPanel.buttonBack = clButton(
+    game.hackPanel.mapPanel,
+    10, 
+    260, 
+    280, 
+    20,
+    'Back',
+    'showMapPanel(0);',
+    {}
+);

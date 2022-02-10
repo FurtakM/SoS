@@ -661,6 +661,9 @@ function showCampaign(mode)
 	if mode == 1 then
 		showMenuButton(0);
 		setVisible(menu.window_campaign, true);
+		setFontName(menu.window_campaign_tree.panel.sidebar.run, ADMUI3L);
+		setFontName(menu.window_campaign_tree.panel.sidebar.delete, ADMUI3L);
+		setFontName(menu.window_campaign_tree.panel.sidebar.back, ADMUI3L);
 	else
 		showMenuButton(2);
 		setVisible(menu.window_campaign, false);
