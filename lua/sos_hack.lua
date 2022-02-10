@@ -1098,7 +1098,7 @@ game.hackPanel.behavPanel.buttonBack = clButton(
     280, 
     20,
     'Back',
-    'showBehavPanel(0);',
+    'showBehaviourPanel(0);',
     {}
 );
 
@@ -1159,13 +1159,13 @@ game.hackPanel.mapPanel.buttonFog = clButton(
     {}
 );
 
-game.hackPanel.behavPanel.buttonBack = clButton(
-    game.hackPanel.behavPanel,
+game.hackPanel.mapPanel.buttonBack = clButton(
+    game.hackPanel.mapPanel,
     10, 
     260, 
     280, 
     20,
     'Back',
-    'showBehavPanel(0);',
+    'showMapPanel(0);',
     {}
 );
