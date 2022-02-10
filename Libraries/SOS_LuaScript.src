@@ -173,15 +173,11 @@ if p2 = 100 then // stream mode
            1: hHackUnlimitedResources;
            2: hHackSetLevel10;
            3: hHackSetLevel10YourUnits;
-           // 4: hHackSpawnHuman(p4, p5, p6); // moved to targetable
-           // 5: hHackSpawnVehicle; // moved to targetable
-           6: hHackInvincible;
-           7: hHackInvisible;
-           8: hHackChangeYourSide;
-           9: hHackChangeUnitSide;
-           10: hHackFog;
-           11: hHackApeman;
-           12: hHackBoom;
+           4: hHackInvincible;
+           5: hHackInvisible;
+           6: hHackChangeYourSide;
+           7: hHackChangeUnitSide;
+           8: hHackFog;
            end;
       end;
 End;
@@ -1079,7 +1075,67 @@ begin
 case cmd of
      301: hHackSpawnHuman(p1, p2, p3, x, y);
      302: hHackSpawnVehicle(p1, p2, p3, p4, x, y);
+     303: hHackSpawnBuilding(p1, p2, p3, p4, x, y);
+     304: hHackTeleport(unit, x, y);
      end;
+End;
+
+Export Function hHackSpawnBuilding(nation, btype, dir, weapon, x, y);
+var b;
+begin
+if nation < 1 or nation > 3 or HexInfo(x, y) then
+   exit;
+
+uc_side := your_side;
+uc_nation := nation;
+
+bc_level = 1;
+
+case btype of
+1: bc_type := b_depot;
+2: bc_type := b_warehouse;
+3: bc_type := b_lab;
+4..9:
+   begin
+   bc_type := b_lab_half;
+   bc_kind1 := [b_lab_weapon, b_lab_siberium, b_lab_computer, b_lab_opto,
+                b_lab_spacetime, b_lab_biological][btype - 3];
+   end;
+10..13:
+   begin
+   bc_type := b_lab_full;
+   bc_kind1 := [b_lab_weapon, b_lab_computer,
+                b_lab_spacetime, b_lab_biological][btype - 9];
+   bc_kind2 := [b_lab_siberium, b_lab_opto,
+                 b_lab_computer, b_lab_opto][btype - 9];
+   end;
+14: bc_type := b_workshop;
+15: bc_type := b_factory;
+16: bc_type := b_ext_gun;
+17: bc_type := [b_ext_noncombat, b_ext_stitch, b_ext_noncombat][nation];
+18: bc_type := b_ext_radar;
+19: bc_type := b_ext_radio;
+20: bc_type := b_ext_siberium;
+21: bc_type := b_ext_computer;
+22: bc_type := b_ext_track;
+23: bc_type := b_ext_laser;
+24: bc_type := b_control_tower;
+25: bc_type := b_breastwork;
+26: bc_type := b_bunker;
+27: bc_type := b_turret;
+28: bc_type := b_armoury;
+29: bc_type := b_barracks;
+30: bc_type := b_solar_power;
+31: bc_type := b_oil_power;
+32: bc_type := b_siberite_power;
+33: bc_type := b_oil_mine;
+34: bc_type := b_siberite_mine;
+end;
+
+b := CreateAndPlaceBuildingXYD(x, y, dir);
+
+if bc_type in [b_bunker, b_turret] then
+   PlaceWeaponTurret(b, weapon);
 End;
 
 Export Function hHackUnlimitedResources;
@@ -1219,30 +1275,8 @@ begin
 FogOff(true);
 End;
 
-Export Function hHackApeman;
+Export Function hHackTeleport(unit, x, y);
 begin
-uc_side := your_side;
-uc_nation := 0;
-
-hc_name := '';
-hc_gallery := '';
-hc_skills := [0, 0, 0, 0];
-hc_class := class_apeman;
-
-PlaceUnitAnywhere(CreateHuman, true);
-End;
-
-Export Function hHackBoom;
-begin
-uc_side := your_side;
-uc_nation := 1;
-
-vc_chassis := us_morphling;
-vc_engine := engine_siberite;
-vc_control := control_computer;
-vc_weapon := us_siberium_rocket;
-
-PlaceUnitAnywhere(CreateVehicle, true);
-End;
-FogOff(2);
+TeleportUnit(unit, x, y, 1, true);
+CenterOnXY(x, y);
 End;
