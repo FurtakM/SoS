@@ -42,7 +42,7 @@ for i in units do
 End;
 
 Export Function GoToAnotherTower(un, b, x, y);
-var i, filter, t, side;
+var i, filter, barracks, side;
 begin
 if not un or not IsOk(un) then
    exit;
@@ -50,55 +50,34 @@ if not un or not IsOk(un) then
 side := GetSide(un);
 
 filter := FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_ok], [f_empty]]) diff b;
+barracks := FilterAllUnits([[f_side, side], [f_btype, b_barracks]]);
 
 if not filter then
    begin
-   filter := FilterAllUnits([[f_side, side], [f_btype, b_barracks]]);
+   ComMoveXY(un, x, y);
 
-   if debug then
-      display_strings := [filter, '1'];
-
-   if not filter then
-      begin
-      ComMoveXY(un, x, y); 
-      exit;
-      end;
-
-   repeat
-     t := NearestUnitToUnit(filter, un);
-
-     if UnitsInside(t) = 6 then
-        filter := filter diff t
-       else
-        break;
-   until UnitsInside(t) < 6 or not filter;
-
-   if debug then
-      display_strings := [filter, t];
-
-   if not filter then
-      ComMoveXY(un, x, y) // ?
-     else
-      ComEnterUnit(un, t);
+   if barracks then
+      for i in barracks do
+          begin
+          if UnitsInside(i) < 6 and IsOk(i) then
+             begin
+             AddComEnterUnit(un, i);
+             exit;
+             end;
+          end;
    end
-  else
+else
    begin
+   filter := SortByDistanceUnit(un, filter, true, true);
 
-   repeat
-    t := NearestUnitToUnit(filter, un);
-
-    if (GetTag(t) = 7) then
-        filter := filter diff t;
-    until GetTag(t) <> 7 or not filter;
-
-    if GetTag(t) <> 7 then
-       begin
-       SetTag(t, 7);
-       ComEnterUnit(un, t);
-       end
-      else
-       ComMoveXY(un, x, y);
-    end;
+   for i in filter do
+       if GetTag(i) <> 7 then
+          begin
+          ComEnterUnit(un, i);
+          SetTag(i, 7);
+          exit;
+          end;
+   end;
 End;
 
 // Return true if base don't have enough energy
