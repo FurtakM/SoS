@@ -49,13 +49,7 @@ End;
 // MCT_Enemy(side, x, y);
 Export Function MCT_Enemy(side, x, y, dist);
 begin
-if FilterAllUnits([f_enemy, side]) = 0 then
-   result := false
-    else
-     if FilterAllUnits([[f_enemy, side], [f_distxy, x, y, dist]]) then
-        result := true
-         else
-          result := false;
+result := FilterAllUnits([[f_enemy, side], [f_distxy, x, y, dist]]);
 End;
 
 // MCT_Retreat
@@ -307,7 +301,7 @@ End;
 Export Function MCT_EnemyNearBase(side);
 var i, p, tmp, area;
 begin
-result := 0;
+result := [];
 p := 1;
 
 
@@ -316,12 +310,12 @@ for i = 1 to (MREG_DefPoints[side][1])/2 do
     tmp := FilterAllUnits([[f_enemy, side], [f_distxy, MREG_DefPoints[side][1][p], MREG_DefPoints[side][1][p+1], 12]]);
 
     if tmp then
-       result := result ^ tmp;
+       result := result union tmp;
 
     p := p + 2;
     end;
 
 
     if FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]) then
-       result := result ^ FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]);
+       result := result union FilterUnitsInArea(MREG_DefArea[side], [f_enemy, side]);
 End;

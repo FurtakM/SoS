@@ -465,7 +465,8 @@ if mech then
                        // antyrush tactic
                           if tick <= 15$00 then
                              begin
-                             if sol > 4 and MCT_EnemyNearBase(side) < 4 then
+                             if sol and MCT_EnemyNearBase(side) < 4 then
+                                begin
                                 for i in sol do
                                     begin
                                     k := NearestUnitToUnit(MCT_EnemyNearBase(side), i);
@@ -474,8 +475,9 @@ if mech then
                                        ComExitBuilding(i);
 
                                     if not HasTask(i) and k then
-                                       ComAgressiveMove(i, GetX(k), GetY(k));
+                                       AddComAgressiveMove(i, GetX(k), GetY(k));
                                     end;
+                                end;
 
                              if MCF_Get(side, [f_btype, b_barracks]) then
                                 begin
@@ -489,18 +491,8 @@ if mech then
                                    for i = eng downto 2 do
                                        MCH_ChangeClass(side, eng[i], 1);
 
-                                if UnitsInside(b) = 6 then
-                                   begin
-                                   un := UnitsInside(b)[1];
-                                   ComExitBuilding(un);
-
-                                   if MCF_Get(side, [f_btype, b_barracks]) > 1 and MCT_EnemyNearBase(side) >= 4 then
-                                      begin
-                                      k := MCF_Get(side, [f_btype, b_barracks])[2];
-                                      if UnitsInside(k) < 6 then
-                                         AddComEnterUnit(un, k);
-                                      end;
-                                   end;
+                                if UnitsInside(b) then
+                                   ComExitBuilding(UnitsInside(b));
                                 end;
                              end
                           else
