@@ -142,6 +142,24 @@ MCE_ApemanTamed(ape, sci);
 End;
 
 On Command(cmd) do
+var i;
 begin
+if cmd = 77 and southAreaBlocker then
+   begin
+   for i in FilterAllUnits([[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+       NotGoToAreaUnit(i, SouthAreaBlock, SouthAreaGoAway);
+   end;
+
 SOS_Command(cmd);
 End;
+
+
+// Return units from "block" area
+every 0$1 trigger southAreaBlocker and FilterUnitsInArea(SouthArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(SouthArea, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+    NotGoToAreaUnit(i, SouthAreaOutside, SouthAreaGoAway);
+end;

@@ -69,29 +69,155 @@
 // end ;
  114: LD_VAR 0 5
  118: RET
-// every 1 do
- 119: GO 121
- 121: DISABLE
-// begin display_strings := PointBetweenXY ( 24 , 24 , 32 , 24 ) ;
- 122: LD_ADDR_OWVAR 47
- 126: PUSH
- 127: LD_INT 24
- 129: PPUSH
- 130: LD_INT 24
- 132: PPUSH
- 133: LD_INT 32
- 135: PPUSH
- 136: LD_INT 24
- 138: PPUSH
- 139: CALL 0 0 4
- 143: ST_TO_ADDR
-// ComAgressiveMove ( a1 , 32 , 24 ) ;
- 144: LD_INT 9
- 146: PPUSH
- 147: LD_INT 32
- 149: PPUSH
- 150: LD_INT 24
- 152: PPUSH
- 153: CALL_OW 114
+// export function NotGoToAreaUnit ( unit , area , outside ) ; var x , y , task ; begin
+ 119: LD_INT 0
+ 121: PPUSH
+ 122: PPUSH
+ 123: PPUSH
+ 124: PPUSH
+// task := GetTaskList ( unit ) ;
+ 125: LD_ADDR_VAR 0 7
+ 129: PUSH
+ 130: LD_VAR 0 1
+ 134: PPUSH
+ 135: CALL_OW 437
+ 139: ST_TO_ADDR
+// if not task and not IsInArea ( unit , area ) then
+ 140: LD_VAR 0 7
+ 144: NOT
+ 145: PUSH
+ 146: LD_VAR 0 1
+ 150: PPUSH
+ 151: LD_VAR 0 2
+ 155: PPUSH
+ 156: CALL_OW 308
+ 160: NOT
+ 161: AND
+ 162: IFFALSE 166
+// exit ;
+ 164: GO 284
+// if IsInArea ( unit , area ) then
+ 166: LD_VAR 0 1
+ 170: PPUSH
+ 171: LD_VAR 0 2
+ 175: PPUSH
+ 176: CALL_OW 308
+ 180: IFFALSE 198
+// begin ComMoveToArea ( unit , outside ) ;
+ 182: LD_VAR 0 1
+ 186: PPUSH
+ 187: LD_VAR 0 3
+ 191: PPUSH
+ 192: CALL_OW 113
+// exit ;
+ 196: GO 284
+// end ; if task [ 1 ] [ 1 ] <> M then
+ 198: LD_VAR 0 7
+ 202: PUSH
+ 203: LD_INT 1
+ 205: ARRAY
+ 206: PUSH
+ 207: LD_INT 1
+ 209: ARRAY
+ 210: PUSH
+ 211: LD_STRING M
+ 213: NONEQUAL
+ 214: IFFALSE 218
+// exit ;
+ 216: GO 284
+// x := task [ 1 ] [ 2 ] ;
+ 218: LD_ADDR_VAR 0 5
+ 222: PUSH
+ 223: LD_VAR 0 7
+ 227: PUSH
+ 228: LD_INT 1
+ 230: ARRAY
+ 231: PUSH
+ 232: LD_INT 2
+ 234: ARRAY
+ 235: ST_TO_ADDR
+// y := task [ 1 ] [ 3 ] ;
+ 236: LD_ADDR_VAR 0 6
+ 240: PUSH
+ 241: LD_VAR 0 7
+ 245: PUSH
+ 246: LD_INT 1
+ 248: ARRAY
+ 249: PUSH
+ 250: LD_INT 3
+ 252: ARRAY
+ 253: ST_TO_ADDR
+// if InArea ( x , y , area ) then
+ 254: LD_VAR 0 5
+ 258: PPUSH
+ 259: LD_VAR 0 6
+ 263: PPUSH
+ 264: LD_VAR 0 2
+ 268: PPUSH
+ 269: CALL_OW 309
+ 273: IFFALSE 284
+// ComStop ( unit ) ;
+ 275: LD_VAR 0 1
+ 279: PPUSH
+ 280: CALL_OW 141
 // end ;
- 157: END
+ 284: LD_VAR 0 4
+ 288: RET
+// every 0 0$1 do
+ 289: GO 291
+ 291: DISABLE
+// begin enable ;
+ 292: ENABLE
+// NotGoToAreaUnit ( a1 , Area13 , Area14 ) ;
+ 293: LD_INT 9
+ 295: PPUSH
+ 296: LD_INT 3
+ 298: PPUSH
+ 299: LD_INT 4
+ 301: PPUSH
+ 302: CALL 119 0 3
+// end ;
+ 306: END
+// on Command ( cmd ) do begin if cmd = 77 then
+ 307: LD_VAR 0 1
+ 311: PUSH
+ 312: LD_INT 77
+ 314: EQUAL
+ 315: IFFALSE 330
+// NotGoToAreaUnit ( a1 , Area13 , Area14 ) ;
+ 317: LD_INT 9
+ 319: PPUSH
+ 320: LD_INT 3
+ 322: PPUSH
+ 323: LD_INT 4
+ 325: PPUSH
+ 326: CALL 119 0 3
+// end ;
+ 330: PPOPN 1
+ 332: END
+// every 1 do
+ 333: GO 335
+ 335: DISABLE
+// begin display_strings := PointBetweenXY ( 24 , 24 , 32 , 24 ) ;
+ 336: LD_ADDR_OWVAR 47
+ 340: PUSH
+ 341: LD_INT 24
+ 343: PPUSH
+ 344: LD_INT 24
+ 346: PPUSH
+ 347: LD_INT 32
+ 349: PPUSH
+ 350: LD_INT 24
+ 352: PPUSH
+ 353: CALL 0 0 4
+ 357: ST_TO_ADDR
+// ComAgressiveMove ( a1 , 32 , 24 ) ;
+ 358: LD_INT 9
+ 360: PPUSH
+ 361: LD_INT 32
+ 363: PPUSH
+ 364: LD_INT 24
+ 366: PPUSH
+ 367: CALL_OW 114
+// end ;
+ 371: END

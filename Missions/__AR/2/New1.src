@@ -14,6 +14,44 @@ if _y < 0 then
 result := [_x, _y];
 End;
 
+Export Function NotGoToAreaUnit(unit, area, outside);
+var x, y, task;
+begin
+task := GetTaskList(unit);
+
+if not task and not IsInArea(unit, area) then
+   exit;
+
+if IsInArea(unit, area) then
+   begin
+   ComMoveToArea(unit, outside);
+   exit;
+   end;
+
+if task[1][1] <> 'M' then
+   exit;
+
+x := task[1][2];
+y := task[1][3];
+
+if InArea(x, y, area) then
+   ComStop(unit);
+End;
+
+Every 0$1 do
+begin
+enable;
+NotGoToAreaUnit(a1, Area13, Area14);
+End;
+
+On Command(cmd) do
+begin
+if cmd = 77 then
+   NotGoToAreaUnit(a1, Area13, Area14);
+End;
+
+
+
 // 7 5
 // 32 24
 
