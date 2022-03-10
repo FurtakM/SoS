@@ -29,6 +29,12 @@ End;
 
 Export Function SOS_TargetableSAIL(cmd, unit, selectedUnit, x, y);
 begin
+if cmd = 250 and GetWeapon(unit) = ar_miner then
+   MinerPlaceMine(unit, x, y);
+if cmd = 251 and GetWeapon(unit) = ar_miner then
+   MinerDetoneMine(unit, x, y);
+if cmd = 252 and GetWeapon(unit) = ar_miner then
+   MinerCreateMinefield(unit, x, y);
 if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
    HackDestroyVehicle(unit, selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
@@ -195,4 +201,134 @@ index := GetElementIndex(hackTanks, hack);
 for i := 1 to hackTanksCaptured[index] do
     if hackTanksCaptured[index][i][1] = vehicle then
        KillUnit(vehicle);
+End;
+
+// ar miner script
+Export initMiner, minersList, minerMinesList, minesLimitPerVehicle;
+Every 0$1 trigger not initMiner do
+begin
+initMiner := true;
+minersList := [];
+minerMinesList := [];
+minesLimitPerVehicle := 5;
+End;
+
+Every 0$1 trigger initMiner and FilterAllUnits([f_weapon, ar_miner]) do
+var i, j, side, tmp;
+begin
+enable;
+
+for i in FilterAllUnits([f_weapon, ar_miner]) do
+    begin
+    if not i in minersList then
+       begin
+       minersList := Replace(minersList, minersList + 1, i);
+       minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
+       end
+    end;
+
+for i := 1 to minerMinesList do
+    begin
+    if IsLive(minersList[i]) then
+       SetUnitDisplayNumber(minersList[i], minerMinesList[i]);
+
+    if not minerMinesList[i] then
+       continue;
+
+    for j := 1 to minerMinesList[i] do
+        begin
+        side := GetSide(minersList[i]);
+        tmp := HexInfo(minerMinesList[i][j][1], minerMinesList[i][j][2]);
+
+        if not tmp then
+           continue;
+
+        if tmp in FilterAllUnits([f_enemy, side]) and MineAtPos(minerMinesList[i][j][1], minerMinesList[i][j][2]) then
+           begin
+           LaunchMineAtPos(minersList[i][j][1], minerMinesList[i][j][2], side);
+           minerMinesList := Replace(minerMinesList, i, Delete(minerMinesList[i], j));
+           end;
+        end;
+    end;
+End;
+
+Export Function MinerPlaceMine(unit, x, y);
+var index;
+begin
+result := false;
+
+if not GetWeapon(unit) = ar_miner then
+   exit;
+
+index := GetElementIndex(minersList, unit);
+
+if minerMinesList[index] >= minesLimitPerVehicle then
+   exit;
+
+ComMoveXY(unit, x, y);
+
+repeat
+ wait(0$1);
+
+ if not UnitGoingToXY(unit, x, y) and HasTask(unit) then
+    exit;
+
+until HexInfo(x, y) = unit and not HasTask(unit);
+
+PlaySoundXY(x, y, 'PlantMine');
+PlaceMine(x, y, GetSide(unit), 0);
+
+minerMinesList := ReplaceIn(minerMinesList, [index, minerMinesList[index] + 1], [x, y]);
+
+result := true;
+End;
+
+Export Function MinerDetoneMine(unit, x, y);
+var i, index;
+begin
+if not unit in minersList then
+   exit;
+
+index := GetElementIndex(minersList, unit);
+
+for i := 1 to minerMinesList[index] do
+    begin
+    if minerMinesList[index][i][1] = x and minerMinesList[index][i][2] = y then
+       begin
+       LaunchMineAtPos(minerMinesList[index][i][1], minerMinesList[index][i][2], GetSide(unit));
+       minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
+       end;
+    end;
+End;
+
+Export Function MinerCreateMinefield(unit, x, y);
+var i, index, tmp, minesFreeAmount, _x, _y, _d, _r;
+begin
+if not GetWeapon(unit) = ar_miner or not unit in minersList then
+   exit;
+
+index := GetElementIndex(minersList, unit);
+minesFreeAmount := minesLimitPerVehicle - minerMinesList[index];
+
+if not minesFreeAmount then
+   exit;
+
+tmp := [];
+
+for i := 1 to minesFreeAmount do
+    begin
+    _d := rand(0, 5);
+    _r := rand(2, 6);
+    _x := ShiftX(x, _d, _r);
+    _y := ShiftY(y, _d, _r);
+
+    if ValidHex(_x, _y) and not [_x, _y] in tmp and not MineAtPos(_x, _y) then
+       tmp := Replace(tmp, tmp + 1, [_x, _y])
+    else
+       i := i - 1;
+    end;
+
+for i in tmp do
+    if not MinerPlaceMine(unit, i[1], i[2]) then
+       exit;
 End;

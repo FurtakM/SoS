@@ -5,12 +5,9 @@ begin
 pom := GetBase(fac);
 cost := CostOfVehicle(list[1], list[2], list[3], list[4]);
  
-if GetResourceType(pom, mat_cans) >= cost[1] and
+result := GetResourceType(pom, mat_cans) >= cost[1] and
    GetResourceType(pom, mat_oil) >= cost[2] and
-   GetResourceType(pom, mat_siberit) >= cost[3] then
-   result := true
-    else
-     result := false;
+   GetResourceType(pom, mat_siberit) >= cost[3];
 End;
 
 // MCV_InQueue(side, component)
@@ -25,7 +22,7 @@ for i = 1 to tmp do
     if component = tmp[i] then
        begin
        result := true;
-       break;
+       exit;
        end;
 End;
 
@@ -33,8 +30,11 @@ End;
 Export Function MCV_Produce(side, fac, list);
 var i, tab;
 begin
+result := false;
+
 if fac then
    begin
+
    if MCV_Cost(fac, list) and BuildingStatus(fac) = bs_idle and CanBeConstructed(fac, list[1], list[2], list[3], list[4]) then
       begin
       ComConstruct(fac, list[1], list[2], list[3], list[4]);
@@ -45,13 +45,10 @@ if fac then
           tab := Remove(tab, list[i], true);
 
       MREG_ToConstruct := Replace(MREG_ToConstruct, side, tab);
+
       result := true;
-      end
-       else
-        result := false;
-   end
-    else
-     result := false;
+      end;
+   end;
 End;
 
 // MCV_Parking
@@ -233,12 +230,10 @@ End;
 Export Function MCV_ToRepair(unit);
 begin
 if not unit then
-   exit
-    else
-     begin
-     SetTag(unit, 6);
-     MCV_Parking(GetSide(unit), unit);
-     end;
+   exit;
+
+SetTag(unit, 6);
+MCV_Parking(GetSide(unit), unit);
 End;
 
 Export Function MCV_CheckStatus(side);
