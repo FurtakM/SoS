@@ -1,3 +1,143 @@
-//
+Export Function Attack(attackers, attackFormula, retreatFormula, captureTanks);
+var i, j, tag, sol, sci, mech, tanks, veh;
+begin
+// attackers: [array of units]
+// attackFormula := [aggressive inf point (x, y) | heal point (x, y) | repair point (x, y) | aggressive tank point (x, y)]
+// example:  attackFormula := [ [ [90,59], [108,64] ], [82,75], [73,67], [ [101,65], [108,62] ] ];
+// retreatFormula := [x, y]
+// captureTanks := boolean (0 or 1)
+
+if not attackFormula then
+   exit;
+
+sol := UnitFilter(attackers, [f_class, 1]);
+sci := UnitFilter(attackers, [f_class, 4]);
+mech := UnitFilter(attackers, [f_class, 3]);
+tanks := UnitFilter(attackers, [f_type, unit_vehicle]);
+
+if sci then
+   ComMoveXY(sci, attackFormula[2][1], attackFormula[2][2]);
+
+repeat
+ wait(10);
+
+ sol := UnitFilter(attackers, [f_class, 1]);
+ sci := UnitFilter(attackers, [f_class, 4]);
+ mech := UnitFilter(attackers, [f_class, 3]);
+ tanks := UnitFilter(attackers, [f_type, unit_vehicle]);
+
+ if sol then
+    begin
+    for i in sol do
+        begin
+        tag := GetTag(i);
+
+        if not tag then
+           begin
+           if GetLives(i) = 1000 then
+              SetTag(i, 1)
+           else
+              if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 10 then
+                 ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+           end
+        else
+           begin
+           if GetLives(i) < 720 then
+              begin
+              SetTag(i, 0);
+              ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
+              end
+           else
+              if tag <= attackFormula[1] then
+                 begin
+                 if GetDistUnitXY(i, attackFormula[1][tag][1], attackFormula[1][tag][2]) > 6 then
+                    ComAgressiveMove(i, attackFormula[1][tag][1], attackFormula[1][tag][2])
+                 else if not FilterAllUnits([[f_enemy, GetSide(i)], [f_dist, i, 10]]) then
+                    SetTag(i, tag + 1);
+                 end
+              else
+                 begin
+                 if captureTanks and FilterAllUnits([[f_enemy, GetSide(i)], [f_type, unit_vehicle], [f_ok], [f_dist, i, 10]]) then
+                    ComEnterUnit(i, FilterAllUnits([[f_enemy, GetSide(i)], [f_type, unit_vehicle], [f_ok], [f_dist, i, 10]])[1])
+                 else
+                    ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+                 end;                                                                                  
+           end;
+        end;
+    end;
+
+ if sci then
+    begin
+    if not sol and not mech and retreatFormula then
+       begin
+       for i in sci do
+           begin
+           ComMoveXY(i, retreatFormula[1][1], retreatFormula[1][2]);
+           attackers := attackers diff i;
+           end;
+       end
+    else
+     for i in sci do
+         if GetDistUnitXY(i, attackFormula[2][1], attackFormula[2][2]) > 10 then
+            ComMoveXY(i, attackFormula[2][1], attackFormula[2][2])
+         else
+           if UnitFilter(sol, [[f_not, [f_lives, 1000]], [f_dist, i, 10]]) then
+              ComHeal(i, UnitFilter(sol, [[f_not, [f_lives, 1000]], [f_dist, i, 10]])[1]);
+    end;
+
+ if mech then
+    begin
+    for i in mech do
+        begin
+        tag := GetTag(i);
+        veh := IsInUnit(i);
+
+        if not tag then
+           begin
+           if veh then
+              begin
+              if GetLives(veh) = 1000 then
+                 SetTag(i, 1)
+              else if GetDistUnitXY(veh, attackFormula[3][1], attackFormula[3][2]) > 7 then
+                 ComMoveXY(veh, attackFormula[3][1], attackFormula[3][2])
+              else
+                 begin
+                 ComExitVehicle(i);
+                 AddComRepairVehicle(i, veh);
+                 end;
+              end
+           else
+              if GetLives(i) < 400 then
+                 begin
+                 attackers := attackers diff i; 
+                 ComMoveXY(i, retreatFormula[1][1], retreatFormula[1][2]);
+                 end
+              else if UnitFilter(tanks, [[f_empty], [f_lives, 1000]]) and not HasTask(i) then
+                 ComEnterUnit(i, NearestUnitToUnit(UnitFilter(tanks, [[f_empty], [f_lives, 250]]), i));
+           end
+        else
+           begin
+           if veh and GetLives(veh) < 720 then
+              begin
+              SetTag(i, 0);
+              ComMoveXY(veh, attackFormula[3][1], attackFormula[3][2]);
+              end
+           else if veh then
+              if tag <= attackFormula[4] then
+                 begin
+                 if GetDistUnitXY(veh, attackFormula[4][tag][1], attackFormula[4][tag][2]) > 6 then
+                    ComAgressiveMove(veh, attackFormula[4][tag][1], attackFormula[4][tag][2])
+                 else if not FilterAllUnits([[f_enemy, 1], [f_dist, veh, 10]]) then
+                    SetTag(i, tag + 1);
+                 end
+              else
+                 ComAttackUnit(veh, NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i));
+           end;
+        end;
+    end;
+
+until not UnitFilter(attackers, [f_placed]);
+End;
+
 
 

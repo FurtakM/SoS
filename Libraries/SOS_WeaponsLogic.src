@@ -32,7 +32,7 @@ begin
 if cmd = 250 and GetWeapon(unit) = ar_miner then
    MinerPlaceMine(unit, x, y);
 if cmd = 251 and GetWeapon(unit) = ar_miner then
-   MinerDetoneMine(unit, x, y);
+   MinerDetonateMine(unit, x, y);
 if cmd = 252 and GetWeapon(unit) = ar_miner then
    MinerCreateMinefield(unit, x, y);
 if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
@@ -283,7 +283,7 @@ minerMinesList := ReplaceIn(minerMinesList, [index, minerMinesList[index] + 1], 
 result := true;
 End;
 
-Export Function MinerDetoneMine(unit, x, y);
+Export Function MinerDetonateMine(unit, x, y);
 var i, index;
 begin
 if not unit in minersList then
@@ -291,9 +291,19 @@ if not unit in minersList then
 
 index := GetElementIndex(minersList, unit);
 
-for i := 1 to minerMinesList[index] do
+for i := minerMinesList[index] downto 1 do
     begin
     if minerMinesList[index][i][1] = x and minerMinesList[index][i][2] = y then
+       begin
+       LaunchMineAtPos(minerMinesList[index][i][1], minerMinesList[index][i][2], GetSide(unit));
+       minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
+       exit;
+       end;
+    end;
+
+for i := minerMinesList[index] downto 1 do
+    begin
+    if GetDistXY(minerMinesList[index][i][1], minerMinesList[index][i][2], x, y) < 6 then
        begin
        LaunchMineAtPos(minerMinesList[index][i][1], minerMinesList[index][i][2], GetSide(unit));
        minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
