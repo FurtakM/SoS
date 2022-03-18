@@ -35,6 +35,8 @@ if cmd = 251 and GetWeapon(unit) = ar_miner then
    MinerDetonateMine(unit, x, y);
 if cmd = 252 and GetWeapon(unit) = ar_miner then
    MinerCreateMinefield(unit, x, y);
+if cmd = 253 and GetClass(unit) = class_sniper then
+   ComBinocular(unit, x, y);
 if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
    HackDestroyVehicle(unit, selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
@@ -341,4 +343,51 @@ for i := 1 to minesFreeAmount do
 for i in tmp do
     if not MinerPlaceMine(unit, i[1], i[2]) then
        exit;
+End;
+
+Export Function ComBinocular(unit, x, y);
+var dist, side, viewRange, _x, _y, _d;
+begin
+if not GetClass(unit) = class_sniper then
+   exit;
+
+dist := 8;
+viewRange := 12;
+side := GetSide(unit);
+
+if GetTech(tech_opto2, side) = state_researched then
+   viewRange := 16;
+
+if GetDistUnitXY(unit, x, y) > dist then
+   begin
+   ComMoveXY(unit, x, y);
+
+   repeat
+    wait(0$1);
+
+    if not UnitGoingToXY(unit, x, y) then
+       exit;
+
+   until GetDistUnitXY(unit, x, y) < dist;
+   end;
+
+ComTurnXY(unit, x, y);
+wait(5);
+
+_d := GetDir(unit);
+_x := ShiftX(GetX(unit), _d, dist);
+_y := ShiftY(GetY(unit), _d, dist);
+
+if not ValidHex(_x, _y) then
+   exit;
+
+ComAnimCustom(unit, 1); // see customanim.txt in data/gameinit
+
+PlaceSeeing(_x, _y, side, viewRange);
+
+repeat
+ wait(1);
+until IsIdle(unit) or not IsOk(unit) or IsDead(unit);
+
+RemoveSeeing(_x, _y, side);
 End;

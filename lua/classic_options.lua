@@ -311,17 +311,25 @@ function saveComboBoxSetting(setting, value)
                 OW_SETTING_WRITE('OPTIONS', 'SUBTITLES', i);
 
                 if (i == 1) then
-                    OW_set(SETTING_SUBTITLES, true);
-                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', true);
-                elseif (i == 2) then
                     OW_set(SETTING_SUBTITLES, false);
                     OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', false);
+                    OW_set(SETTING_SUBTITLESAUDIO, false);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', false);
+                elseif (i == 2) then
+                    OW_set(SETTING_SUBTITLES, true);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', true);
+                    OW_set(SETTING_SUBTITLESAUDIO, false);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', false);
                 elseif (i == 3) then
+                    OW_set(SETTING_SUBTITLES, false);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', false);
                     OW_set(SETTING_SUBTITLESAUDIO, true);
                     OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', true);
                 else 
-                    OW_set(SETTING_SUBTITLESAUDIO, false);
-                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', false);
+                    OW_set(SETTING_SUBTITLESAUDIO, true);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', true);
+                    OW_set(SETTING_SUBTITLES, true);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', true);
                 end;
 
                 break;
