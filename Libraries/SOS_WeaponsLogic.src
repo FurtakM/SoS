@@ -32,9 +32,11 @@ begin
 if cmd = 250 and GetWeapon(unit) = ar_miner then
    MinerPlaceMine(unit, x, y);
 if cmd = 251 and GetWeapon(unit) = ar_miner then
-   MinerDetoneMine(unit, x, y);
+   MinerDetonateMine(unit, x, y);
 if cmd = 252 and GetWeapon(unit) = ar_miner then
    MinerCreateMinefield(unit, x, y);
+if cmd = 253 and GetClass(unit) = class_sniper then
+   ComBinocular(unit, x, y);
 if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
    HackDestroyVehicle(unit, selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
@@ -283,7 +285,7 @@ minerMinesList := ReplaceIn(minerMinesList, [index, minerMinesList[index] + 1], 
 result := true;
 End;
 
-Export Function MinerDetoneMine(unit, x, y);
+Export Function MinerDetonateMine(unit, x, y);
 var i, index;
 begin
 if not unit in minersList then
@@ -291,9 +293,19 @@ if not unit in minersList then
 
 index := GetElementIndex(minersList, unit);
 
-for i := 1 to minerMinesList[index] do
+for i := minerMinesList[index] downto 1 do
     begin
     if minerMinesList[index][i][1] = x and minerMinesList[index][i][2] = y then
+       begin
+       LaunchMineAtPos(minerMinesList[index][i][1], minerMinesList[index][i][2], GetSide(unit));
+       minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
+       exit;
+       end;
+    end;
+
+for i := minerMinesList[index] downto 1 do
+    begin
+    if GetDistXY(minerMinesList[index][i][1], minerMinesList[index][i][2], x, y) < 6 then
        begin
        LaunchMineAtPos(minerMinesList[index][i][1], minerMinesList[index][i][2], GetSide(unit));
        minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
@@ -331,4 +343,51 @@ for i := 1 to minesFreeAmount do
 for i in tmp do
     if not MinerPlaceMine(unit, i[1], i[2]) then
        exit;
+End;
+
+Export Function ComBinocular(unit, x, y);
+var dist, side, viewRange, _x, _y, _d;
+begin
+if not GetClass(unit) = class_sniper then
+   exit;
+
+dist := 8;
+viewRange := 12;
+side := GetSide(unit);
+
+if GetTech(tech_opto2, side) = state_researched then
+   viewRange := 16;
+
+if GetDistUnitXY(unit, x, y) > dist then
+   begin
+   ComMoveXY(unit, x, y);
+
+   repeat
+    wait(0$1);
+
+    if not UnitGoingToXY(unit, x, y) then
+       exit;
+
+   until GetDistUnitXY(unit, x, y) < dist;
+   end;
+
+ComTurnXY(unit, x, y);
+wait(5);
+
+_d := GetDir(unit);
+_x := ShiftX(GetX(unit), _d, dist);
+_y := ShiftY(GetY(unit), _d, dist);
+
+if not ValidHex(_x, _y) then
+   exit;
+
+ComAnimCustom(unit, 1); // see customanim.txt in data/gameinit
+
+PlaceSeeing(_x, _y, side, viewRange);
+
+repeat
+ wait(1);
+until IsIdle(unit) or HasTask(unit) or not IsOk(unit) or IsDead(unit);
+
+RemoveSeeing(_x, _y, side);
 End;
