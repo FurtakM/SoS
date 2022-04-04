@@ -244,49 +244,46 @@ else
    end;
 End;
 
-Export Function StartCargoEvacuation;
+Export Function CargoEvacuation;
 begin
-while omarCargoCounter > 0 do
-   begin
-   wait(0$20);
+wait(0$20);
 
-   omarCargo := PrepareCargo;
-   SetTag(omarCargo, 0);
+omarCargo := PrepareCargo;
+SetTag(omarCargo, 0);
 
-   ComMoveXY(omarCargo, 107, 59);
+ComMoveXY(omarCargo, 107, 59);
 
-   repeat
-    wait(0$1);
-    ComMoveXY(omarCargo, 107, 59);
+repeat
+ wait(0$1);
+ ComMoveXY(omarCargo, 107, 59);
 
-    if not IsOk(omarCargo) or IsDead(omarCargo) then
-       continue;
+ if not IsOk(omarCargo) or IsDead(omarCargo) then
+    exit;
 
-   until IsAt(omarCargo, 107, 59) or GetDistUnits(omarCargo, arDepot) < 6;
+until IsAt(omarCargo, 107, 59) or GetDistUnits(omarCargo, arDepot) < 6;
 
-   SetTag(omarCargo, 1);
+SetTag(omarCargo, 1);
 
-   wait(0$05);
+wait(0$05);
 
-   ComTransport(omarCargo, arDepot, mat_cans);
-   AddComMoveXY(omarCargo, 103, 9);
+ComTransport(omarCargo, arDepot, mat_cans);
+AddComMoveXY(omarCargo, 103, 9);
 
-   wait(0$1);
+wait(0$1);
 
-   SetCargo(omarCargo, mat_cans, 100);
+SetCargo(omarCargo, mat_cans, 100);
 
-   repeat
-    wait(0$1);
-    ComMoveXY(omarCargo, 103, 9);
+repeat
+ wait(0$1);
+ ComMoveXY(omarCargo, 103, 9);
 
-    if not IsOk(omarCargo) or IsDead(omarCargo) then
-       continue;
+ if not IsOk(omarCargo) or IsDead(omarCargo) then
+    exit;
 
-   until (IsAt(omarCargo, 103, 9) or IsInArea(omarCargo, northRoad)) and GetTag(omarCargo) > 0;
+until (IsAt(omarCargo, 103, 9) or IsInArea(omarCargo, northRoad)) and GetTag(omarCargo) > 0;
 
-   RemoveUnit(omarCargo);
-   omarCargoCounter := omarCargoCounter - 1;
-   end;
+RemoveUnit(omarCargo);
+omarCargoCounter := omarCargoCounter - 1;
 End;
 
 Export Function PrepareCargo;
