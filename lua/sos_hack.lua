@@ -458,7 +458,7 @@ game.hackPanel.main.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Choose panel',
+    loc(5800), -- Choose panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -472,7 +472,7 @@ game.hackPanel.main.buttonHumanPanel = clButton(
     40, 
     280, 
     20,
-    'Human',
+    loc(5801), -- Human
     'showHumanPanel(1);',
     {}
 );
@@ -483,7 +483,7 @@ game.hackPanel.main.buttonVehiclePanel = clButton(
     80, 
     280, 
     20,
-    'Vehicle',
+    loc(5802), -- Vehicle
     'showVehiclePanel(1);',
     {}
 );
@@ -494,7 +494,7 @@ game.hackPanel.main.buttonBasePanel = clButton(
     120, 
     280, 
     20,
-    'Base',
+    loc(5803), -- Base
     'showBasePanel(1);',
     {}
 );
@@ -505,7 +505,7 @@ game.hackPanel.main.buttonBehaviourPanel = clButton(
     160, 
     280, 
     20,
-    'Behaviour',
+    loc(5804), -- Behaviour
     'showBehaviourPanel(1);',
     {}
 );
@@ -516,7 +516,7 @@ game.hackPanel.main.buttonMapPanel = clButton(
     200, 
     280, 
     20,
-    'Map',
+    loc(5805), -- Map
     'showMapPanel(1);',
     {}
 );
@@ -537,7 +537,7 @@ game.hackPanel.humanPanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Human Panel',
+    loc(5806), -- Human Panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -555,7 +555,7 @@ game.hackPanel.humanPanel.nationLabel = getLabelEX(
         14
     ), 
     nil,
-    'Nation',
+    loc(5807), -- Nation
     {
         nomouseevent = true
     }
@@ -581,7 +581,7 @@ game.hackPanel.humanPanel.classLabel = getLabelEX(
         14
     ), 
     nil,
-    'Class',
+    loc(5808), -- Class
     {
         nomouseevent = true
     }
@@ -607,7 +607,7 @@ game.hackPanel.humanPanel.skillLabel = getLabelEX(
         14
     ), 
     nil,
-    'Skill',
+    loc(5809), -- Skill
     {
         nomouseevent = true
     }
@@ -629,7 +629,7 @@ game.hackPanel.humanPanel.buttonSpawn = clButton(
     220, 
     280, 
     20,
-    'Spawn human',
+    loc(5810), -- Spawn human
     'spawnHuman();',
     {}
 );
@@ -640,7 +640,7 @@ game.hackPanel.humanPanel.buttonBack = clButton(
     260, 
     280, 
     20,
-    'Back',
+    loc(5811), -- Back
     'showHumanPanel(0);',
     {}
 );
@@ -661,7 +661,7 @@ game.hackPanel.vehiclePanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Vehicle Panel',
+    loc(5812), -- Vehicle Panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -679,7 +679,7 @@ game.hackPanel.vehiclePanel.chassisLabel = getLabelEX(
         14
     ), 
     nil,
-    'Chassis',
+    loc(5813), -- Chassis
     {
         nomouseevent = true
     }
@@ -705,7 +705,7 @@ game.hackPanel.vehiclePanel.engineLabel = getLabelEX(
         14
     ), 
     nil,
-    'Engine',
+    loc(5814), -- Engine
     {
         nomouseevent = true
     }
@@ -731,7 +731,7 @@ game.hackPanel.vehiclePanel.controlLabel = getLabelEX(
         14
     ), 
     nil,
-    'Control',
+    loc(5815), -- Control
     {
         nomouseevent = true
     }
@@ -757,7 +757,7 @@ game.hackPanel.vehiclePanel.weaponLabel = getLabelEX(
         14
     ), 
     nil,
-    'Weapon',
+    loc(5816), -- Weapon
     {
         nomouseevent = true
     }
@@ -779,7 +779,7 @@ game.hackPanel.vehiclePanel.buttonSpawn = clButton(
     220, 
     280, 
     20,
-    'Spawn vehicle',
+    loc(5817), -- Spawn vehicle
     'spawnVehicle();',
     {}
 );
@@ -790,7 +790,7 @@ game.hackPanel.vehiclePanel.buttonBack = clButton(
     260, 
     280, 
     20,
-    'Back',
+    loc(5811), -- Back
     'showVehiclePanel(0);',
     {}
 );
@@ -811,7 +811,7 @@ game.hackPanel.basePanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Base Panel',
+    loc(5818), -- Base Panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -829,7 +829,7 @@ game.hackPanel.basePanel.nationLabel = getLabelEX(
         14
     ), 
     nil,
-    'Nation',
+    loc(5807), -- Nation
     {
         nomouseevent = true
     }
@@ -855,7 +855,7 @@ game.hackPanel.basePanel.btypeLabel = getLabelEX(
         14
     ), 
     nil,
-    'Building',
+    loc(5819), -- Building
     {
         nomouseevent = true
     }
@@ -881,7 +881,7 @@ game.hackPanel.basePanel.bweaponLabel = getLabelEX(
         14
     ), 
     nil,
-    'Weapon',
+    loc(5820), -- Weapon
     {
         nomouseevent = true
     }
@@ -907,7 +907,7 @@ game.hackPanel.basePanel.directionLabel = getLabelEX(
         14
     ), 
     nil,
-    'Direction',
+    loc(5821), -- Direction
     {
         nomouseevent = true
     }
@@ -985,7 +985,7 @@ game.hackPanel.basePanel.buttonSpawn = clButton(
     220, 
     280, 
     20,
-    'Create building',
+    loc(5822), -- Create building
     'spawnBuilding();',
     {}
 );
@@ -996,7 +996,7 @@ game.hackPanel.basePanel.buttonBack = clButton(
     260, 
     280, 
     20,
-    'Back',
+    loc(5811), -- Back
     'showBasePanel(0);',
     {}
 );
@@ -1017,7 +1017,7 @@ game.hackPanel.behavPanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Behaviour Panel',
+    loc(5823), -- Behaviour Panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -1042,7 +1042,7 @@ game.hackPanel.behavPanel.buttonInvincible = clButton(
     70, 
     280, 
     20,
-    'Invincible',
+    loc(5824), -- Invincible
     'unitInvincible();',
     {}
 );
@@ -1053,7 +1053,7 @@ game.hackPanel.behavPanel.buttonInvisible = clButton(
     100, 
     280, 
     20,
-    'Invisible',
+    loc(5825), -- Invisible
     'unitInvisible();',
     {}
 );
@@ -1064,7 +1064,7 @@ game.hackPanel.behavPanel.buttonSide = clButton(
     130, 
     280, 
     20,
-    'Change Unit Side',
+    loc(5826), -- Change Unit Side
     'sideUnit();',
     {}
 );
@@ -1075,7 +1075,7 @@ game.hackPanel.behavPanel.buttonLevel = clButton(
     160, 
     280, 
     20,
-    'Set level 10 for selected units',
+    loc(5827), -- Set level 10 for selected units
     'unitLevelMax();',
     {}
 );
@@ -1086,7 +1086,7 @@ game.hackPanel.behavPanel.buttonYourLevel = clButton(
     190, 
     280, 
     20,
-    'Set level 10 for your units',
+    loc(5828), -- Set level 10 for your units
     'unitYourLevelMax();',
     {}
 );
@@ -1097,7 +1097,7 @@ game.hackPanel.behavPanel.buttonBack = clButton(
     260, 
     280, 
     20,
-    'Back',
+    loc(5811), -- Back
     'showBehaviourPanel(0);',
     {}
 );
@@ -1118,7 +1118,7 @@ game.hackPanel.mapPanel.name = getLabelEX(
     anchorNone,
     XYWH(0, 10, 300, 10), 
     nil,
-    'Map Panel',
+    loc(5829), -- Map Panel
     {
         nomouseevent = true,
         text_halign = ALIGN_MIDDLE,
@@ -1132,7 +1132,7 @@ game.hackPanel.mapPanel.buttonResources = clButton(
     40, 
     280, 
     20,
-    'Resources',
+    loc(5830), -- Resources
     'mapResources();',
     {}
 );
@@ -1143,7 +1143,7 @@ game.hackPanel.mapPanel.buttonChangeSide = clButton(
     70, 
     280, 
     20,
-    'Change Your Side',
+    loc(5831), -- Change Your Side
     'mapChangeSide();',
     {}
 );
@@ -1154,7 +1154,7 @@ game.hackPanel.mapPanel.buttonFog = clButton(
     100, 
     280, 
     20,
-    'Fog Off',
+    loc(5832) -- Fog Off,
     'mapFog();',
     {}
 );
@@ -1165,7 +1165,7 @@ game.hackPanel.mapPanel.buttonBack = clButton(
     260, 
     280, 
     20,
-    'Back',
+    loc(5811), -- Back
     'showMapPanel(0);',
     {}
 );

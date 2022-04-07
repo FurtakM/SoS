@@ -1178,7 +1178,7 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_WORKSHOP', 'ACH_RETAKE', 'ACH_DEPOT'},
         {'ACH_PROFESSOR', 'ACH_REINFORCE', 'ACH_SIKORSKI'},
         {'ACH_ENO', 'ACH_ARAB', 'ACH_DEFENSE'}
-        --{'ACH_REDARMY', 'ACH_CRATES', 'ACH_HOVER'}
+        {'ACH_REDARMY', 'ACH_CRATES', 'ACH_HOVER'}
     },
     {}
 };
@@ -1299,9 +1299,9 @@ achievsCategory = {
         'ACH_DEFENSE',
         'ACH_ARAB',
         'ACH_ENO'
-        --'ACH_HOVER',
-        --'ACH_CRATES',
-        --'ACH_REDARMY'
+        'ACH_HOVER',
+        'ACH_CRATES',
+        'ACH_REDARMY'
     },
     [4] = {
         'ACH_DESERT',
