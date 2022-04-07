@@ -2,10 +2,10 @@
 debugLayout = getElementEX(
     nil,
     anchorLT,
-    XYWH(0, 0, 300, 300),
+    XYWH(0, 0, 400, 400),
     false,
     {
-        colour1 = RGB(0, 0, 0)
+        colour1 = RGB(0, 0, 0),
     }
 );
 
@@ -59,6 +59,7 @@ function debug(var)
     end;
 
     setText(debugValue, getText(debugValue) .. '\n' .. dump(var));   
+    LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
 function debug2(var)
@@ -66,23 +67,41 @@ function debug2(var)
         setVisible(debugLayout, true);
     end;
 
-    setText(debugValue, dump(var));   
+    setText(debugValue, dump(var));  
+    LUA_TO_DEBUGLOG(dump(var)); 
 end;
 
-
 function dump(o)
+    return vardump(o, 0);
+end;
+
+function vardump(o, level)
+    local s = '';
+    local space = '';
+    local space2 = '';
+
+    if (level > 0) then
+        for i = 1, level do
+            space = space .. '  ';
+
+            if (level > 1) then
+                space2 = space2 .. ' ';
+            end;
+        end;
+    end;
+
     if type(o) == 'table' then
-        local s = '{ ';
+        s = '{ ';
 
         for k, v in pairs(o) do
             if type(k) ~= 'number' then 
-                k = '"' .. k .. '"'; 
+                k = '"' .. k .. '"';
             end;
 
-        s = s .. '\n' .. '[' .. k .. '] = ' .. dump(v)
+        s = s .. '\n' .. space .. '[' .. k .. '] = ' .. vardump(v, level + 1);
         end;
 
-        return s .. '\n' .. '} ';
+        return s .. '\n' .. space2 .. '} ';
     else
         return tostring(o);
     end;

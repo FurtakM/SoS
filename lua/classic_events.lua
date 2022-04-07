@@ -104,5 +104,13 @@ function onMenuKeyPress(key)
     end;
 end;
 
+function FROMOW_SGUI_RESTART() -- Called just before SGUI is restarted
+    clearAvatarCache();
+
+    if (MULTIPLAYER_ROOM_ACTIVE) then
+        hideMultiplayerGame();
+    end;
+end;
+
 -- event
 set_Callback(0, CALLBACK_KEYPRESS, 'onMenuKeyPress(%k)');

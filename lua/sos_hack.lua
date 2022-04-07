@@ -1154,7 +1154,7 @@ game.hackPanel.mapPanel.buttonFog = clButton(
     100, 
     280, 
     20,
-    loc(5832) -- Fog Off,
+    loc(5832), -- Fog Off,
     'mapFog();',
     {}
 );
