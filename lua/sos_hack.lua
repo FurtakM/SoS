@@ -1065,7 +1065,7 @@ game.hackPanel.behavPanel.buttonSide = clButton(
     280, 
     20,
     loc(5826), -- Change Unit Side
-    'sideUnit();',
+    'unitSide();',
     {}
 );
 

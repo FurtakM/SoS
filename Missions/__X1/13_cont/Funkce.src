@@ -1,0 +1,206 @@
+// Vrátí maximum dvou èísel.
+Export Function max (A, B);
+Begin
+  If A > B then Result = A
+  else Result = B;
+End;
+
+
+// Naloží do auta materiál z dané budovy.
+Export Function naloz (Auto, Budova, Material, Pocet);
+Var Base, Kolik, Volno;
+Begin
+  // Pokud to není náklaïák, nedìlám nic.
+  If not GetWeapon (Auto) in [US_CARGO_BAY, RU_CARGO_BAY, AR_CARGO_BAY] then Exit;
+  // Zjistit, kolik materiálu je v budovì.
+  Base = GetBase (Budova);
+  Kolik = GetResourceType (Base, Material);
+  If Kolik = 0 then Exit;
+  // Zjistit, kolik volného místa má náklaïák.
+  Volno = CanCarryHowMuch (Auto);
+  If Volno = 0 then Exit;
+  // Zjistit, kolik nákladuse bude pøevážet.
+  If Pocet > Kolik then Pocet = Kolik;
+  If Pocet > Volno then Pocet = Volno;
+  If Pocet = 0 then Exit;
+  // Pøeložit materiál.
+  SetResourceType (Base, Material, Kolik - Pocet);
+  AddCargo (Auto, Material, Pocet);
+End;
+
+
+// Vrátí true, pokud strana Kdo vidí stranu Koho.
+Export Function vidi_strana_stranu (Kdo, Koho);
+Var KohoJednotky, Jednotka;
+Begin
+  KohoJednotky = FilterAllUnits ([[F_SIDE, Koho]]);
+  For Jednotka in KohoJednotky do
+    If See (Kdo, Jednotka) then
+    Begin
+      Result = true;
+      Exit;
+    End;
+  Result = false;
+End;
+
+
+Export Function bez_opic (List);
+Var Opice;
+Begin
+  Opice = UnitFilter (List, [[F_OR, [F_CLASS, CLASS_APEMAN], [F_CLASS, CLASS_APEMAN_SOLDIER], [F_CLASS, CLASS_APEMAN_ENGINEER], [F_CLASS, CLASS_APEMAN_KAMIKAZE]]]);
+  Result = List diff Opice;
+End;
+
+
+// Opravování budov.
+Export Function opravuj_budovy (Jednotky, Area, Side);
+Var Budovy, Opravit, I, Kde;
+Begin
+  // Zjistit seznam budov na opravení.
+  Budovy = FilterUnitsInArea (Area, [[F_TYPE, UNIT_BUILDING], [F_SIDE, Side]]);
+  Opravit = [];
+  For I in Budovy do If GetLives (I) < HRANICE_ZDRAVI then Opravit = Opravit union [I];
+  // Provést opravu.
+  For I in Opravit do AddComRepairBuilding (Jednotky, I);
+End;
+
+
+// Sbírání beden.
+Export Function sbirej_bedny (Jednotky, Area);
+Var I, Ok, Kdo, Bedny, Delka, X, Y;
+Begin
+  // Je nìkdo z jednotek OK?
+  Ok = false;
+  For Kdo in Jednotky do
+    If IsOk (Kdo) then Begin Ok = true; Break; End;
+  If not Ok then Exit;
+  // Zjistit seznam beden.
+  Bedny = GetListOfCratesInArea (Area);
+  If not Bedny then Exit;
+  // Projít všechny bedny.
+  Delka = Bedny div 2;
+  For I = 1 to Delka do
+  Begin
+    X = Bedny [2 * I - 1]; Y = Bedny [2 * I];
+    For Kdo in Jednotky do
+      If IsOk (Kdo) and Prob (50) then
+        AddComCollect (Kdo, X, Y);
+  End;
+End;
+
+
+// Bude opravovat automobily.
+Export Function opravuj_auta (List, Event, Area, Side, Ignore);
+Var Auta, Opravit, I, Kde, Mech;
+Begin
+  Result = []; Mech = 0;
+  For I in List do If IsOk (I) then
+  Begin
+    Mech = I;
+    Break;
+  End;
+  If not Mech then Exit;
+  // Zjistit seznam budov na opravení.
+  Auta = FilterUnitsInArea (Area, [[F_TYPE, UNIT_VEHICLE], [F_SIDE, Side]]) diff Ignore;
+  Opravit = [];
+  For I in Auta do If GetLives (I) < HRANICE_ZDRAVI then Opravit = Opravit union [I];
+  // Provést opravu.
+  If Opravit then
+  Begin
+    Kde = IsInUnit (Mech);
+    If Kde then
+      If GetType (Kde) = UNIT_BUILDING then ComExitBuilding (Mech)
+      else ComExitVehicle (Mech);
+    For I in Opravit do AddComRepairVehicle (Mech, I);
+    AddComSailEvent (Mech, Event);
+    Result = [Mech];
+  End;
+End;
+
+
+// Bude léèit lidi dané strany.
+Export Function kuryruj_lidi (List, Event, Area, Side);
+Var Lidi, Opravit, I, Kde, Felcar, Budova;
+Begin
+  Result = []; Felcar = 0;
+  For I in List do If IsOk (I) then
+  Begin
+    Felcar = I;
+    Break;
+  End;
+  // Zjistit seznam lidí na opravení.
+  Lidi = FilterUnitsInArea (Area, [[F_TYPE, UNIT_HUMAN], [F_SIDE, Side]]);
+  Opravit = [];
+  For I in Lidi do If GetLives (I) < HRANICE_ZDRAVI then Opravit = Opravit union [I];
+  // Provést opravu.
+  If Opravit then
+  Begin
+    Kde = IsInUnit (Felcar);
+    If Kde then
+      If GetType (Kde) = UNIT_BUILDING then ComExitBuilding (Felcar)
+      else ComExitVehicle (Felcar);
+    For I in Opravit do AddComHeal (Felcar, I);
+    AddComSailEvent (Felcar, Event);
+    Result = [Felcar];
+  End;
+End;
+
+
+// Zjistí, zda uvedená základna žije.
+Export Function zije_zakladna (Side, Depot, Area, Lidi);
+Var I, List;
+Begin
+  Result = true;
+  // Pokud žije èlovìk, žije i základna.
+  For I in Lidi do If (GetSide (I) = Side) and IsOk (I) then Exit;
+  // Pokud jsou v oblasti dùležité budovy, žije základna.
+  List = FilterUnitsInArea (Area, [[F_SIDE, Side], [F_TYPE, UNIT_BUILDING], [F_OK], [F_OR, [F_BTYPE, B_DEPOT], [F_BTYPE, B_WAREHOUSE]]]);
+  If List then Exit;
+  // Pokud žije depot, žije základna.
+  If Depot and (GetSide (Depot) = Side) and IsOk (Depot) then Exit;
+  // Nežije nic.
+  Result = false;
+End;
+
+
+// Náhodný prvek ze seznamu.
+Export Function nahoda_seznam (Seznam);
+Begin
+  If Seznam then Result = Seznam [Rand (1, Seznam)]
+  else Result = 0;
+End;
+
+
+// Zruší z auta daný materiál.
+Function uvolni_material (Auto, Kolik, Co);
+Var Veze;
+Begin
+  Veze = GetCargo (Auto, Co);
+  If Veze > 0 then
+  Begin
+    If (Kolik >= Veze) then Veze = 0
+    else Veze = Veze - Kolik;
+    SetCargo (Auto, Co, Veze);
+  End;
+End;
+
+
+// Uvolní v daném autì daný prostor.
+Export Function uvolni_auto (Auto, Kolik);
+Var Uveze;
+Begin
+  // Uvolnit bedny.
+  Uveze = CanCarryHowMuch (Auto);
+  If Uveze >= Kolik then Exit;
+  uvolni_material (Auto, Kolik - Uveze, MAT_CANS);
+  // Uvolnit ropu.
+  Uveze = CanCarryHowMuch (Auto);
+  If Uveze >= Kolik then Exit;
+  uvolni_material (Auto, Kolik - Uveze, MAT_OIL);
+  // Uvolnit siberit.
+  Uveze = CanCarryHowMuch (Auto);
+  If Uveze >= Kolik then Exit;
+  uvolni_material (Auto, Kolik - Uveze, MAT_SIBERIT);
+End;
+
+
