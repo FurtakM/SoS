@@ -2162,6 +2162,32 @@ if value < 0 then
    result := value * -1;
 End;
 
+Export Function ComMoveToNearbyEntrance(unit, building);
+var x, _x, y, _y, d, r, i;
+begin
+if not unit or not building then
+   exit;
+
+x := GetX(building);
+y := GetY(building);
+d := GetDir(building);
+
+r := 4;
+
+for i := 1 to 5 do
+    begin
+    _x := ShiftX(x, d, r + i);
+    _y := ShiftY(y, d, r + i);
+
+    if ValidHex(_x, _y) and not GetType(HexInfo(_x, _y)) in [unit_building, unit_vehicle] then
+       begin
+       ComMoveXY(unit, _x, _y);
+       result := [_x, _y];
+       exit;
+       end;
+    end;
+End;
+
 
 
 

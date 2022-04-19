@@ -658,7 +658,11 @@ end;
 
 
 function showCampaign(mode)
-	if mode == 1 then
+	if mode == 1 then    
+		if parseInt(OW_SAVENEXIT_CHECK()) == 2 then
+	        return;
+	    end;
+
 		showMenuButton(0);
 		setVisible(menu.window_campaign, true);
 		setFontName(menu.window_campaign_tree.panel.sidebar.run, ADMUI3L);

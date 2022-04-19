@@ -152,8 +152,19 @@ begin
   CutTreeInArea(Bulldozers[2], BulldozerArea2);
   DoNotAttack(1, Bulldozers[1]);
   DoNotAttack(1, Bulldozers[2]);
-  wait(0$50);
+  wait(1$20);
 
+  ComMoveXY(Bulldozers, 64, 114);
+
+  wait(0$10);
+
+  for i := 1 to 2 do     
+      RemoveUnit(Bulldozers[i]);
+
+  RemoveEnvironmentArea(BulldozerArea);
+  RemoveEnvironmentArea(BulldozerArea2);
+
+  {
   ShowArea(1, SouthArea);
 
   InGameOn;
@@ -189,7 +200,7 @@ begin
   southAreaBlocker = false;
 
   wait(0$3);
-  InGameOff;
+  InGameOff;  }
   
   SayEffect('DRuSol-A1');
 
@@ -208,6 +219,8 @@ begin
   wait(0$5);
   Say(Sevi, 'DDeath-Vse-1'); 
   Say(Popov, 'DDeath-Pop-2');
+
+  southAreaBlocker = false;
 end;
 
 
@@ -220,7 +233,19 @@ begin
 
   repeat
     for i in RuArmada do
-        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+        begin
+        if GetDistUnitXY(i, 87, 77) < 10 and not GetTag(i) then
+           SetTag(i, 1);
+        if GetDistUnitXY(i, 62, 48) < 10 and GetTag(i) < 2 then
+           SetTag(i, 2);
+
+        if not GetTag(i) then
+           ComAgressiveMove(i, 87, 77);
+        if GetTag(i) = 1 then
+           ComAgressiveMove(i, 62, 48);
+        if GetTag(i) = 2 then
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+        end;
 
     wait(0$1)
     until FilterAllUnits([f_and, [f_side, 6], [f_type, unit_human] ]) < 10
@@ -252,8 +277,6 @@ begin
   ChangeMissionObjectives('C2');
   FirstAssaultRepelled := true;
 
-  RemoveUnit(Bulldozers[1]);
-  RemoveUnit(Bulldozers[2]);
   AddComExitVehicle(FilterAllUnits([f_side, 6]));
 end;
 

@@ -34,11 +34,16 @@ Shariff := PrepareUnit('Abdul', false, '');
 End;
 
 // Arab support
-Export cargoDriver;
+Export cargoDriver, cargoCounter;
 Every 2$00 trigger LoadVariable('04_1_KaganCaptured', 0) and not FilterAllUnits([f_side, 5]) and (HexInfo(124, 26) = 0 xor GetSide(HexInfo(124, 26)) = 2) do
-var veh;
+var veh, tmp;
 begin
 enable;
+
+if not cargoCounter or cargoCounter > 4 then
+   cargoCounter := 1;
+
+tmp := [ [142, 15], [129, 11], [138, 9], [133, 10] ];
 
 uc_side := 5;
 uc_nation := 2;
@@ -58,7 +63,7 @@ PlaceHumanInUnit(cargoDriver, veh);
 
 SetCargo(veh, mat_oil, 100);
 
-ComMoveXY(veh, 142, 15);
+ComMoveXY(veh, tmp[cargoCounter][1], tmp[cargoCounter][2]);
 AddComUnload(veh);
 AddComMoveXY(veh, 133, 2);
 

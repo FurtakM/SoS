@@ -47,6 +47,7 @@ TID_Main_Menu_Options_Interface_Options = 5034;
 TID_Main_Menu_Options_Interface_Label = 5035;
 TID_Main_Menu_Options_Objectives_Desc = 5036;
 TID_Main_Menu_SteamOverlay_Desc = 5037;
+TID_Main_Menu_ChangeAvatar = 5038;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -103,8 +104,30 @@ function length(t)
 end;
 
 function addToArray(array, element)
-  array[#array + 1] = element;
-  return array;
+    array[#array + 1] = element;
+    return array;
+end;
+
+function insertToArray(array, element, index)
+    local size = #array;
+
+    if (index < 1 or index >= size) then
+        return addToArray(array, element);
+    end;
+
+    local tmp = {};
+
+    for i = 1, index do
+        tmp = addToArray(tmp, array[i]);
+    end;    
+
+    tmp = addToArray(tmp, element);
+
+    for i = index + 1, size do
+        tmp = addToArray(tmp, array[i]);
+    end;
+
+    return tmp;
 end;
 
 function inArray(array, element)
@@ -361,3 +384,14 @@ function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
 
 	return runstring(str);
 end;
+
+function trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"));
+end
+
+function unionArray(a, b)
+    local result = {table.unpack(a)};
+    table.move(b, 1, #b, #result + 1, result);
+
+    return result;
+end

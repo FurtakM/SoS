@@ -71,7 +71,7 @@ if flags then
    f_attack_depot := flags[9];
    f_crawl := flags[10];
    end
-  else
+else
    begin
    f_ignore_area := false;
    f_capture := false;
@@ -502,7 +502,6 @@ repeat
 
  wait(0$2);
 until not group or group = [] or not FilterAllUnits([f_enemy, side]);
-
 End;
 
 Export Function BasicDefend(base, solds, area);
@@ -526,7 +525,7 @@ if not solds then
    exit;
 
 repeat
- wait(0$1);
+ wait(0$2);
  enemy := ScanBase(side, area);
 
  if not mc_bases[base] or mc_bases[base] = [] then
@@ -590,14 +589,15 @@ depot_under_attack := false;
 sold_defenders := [];
 
 if mechs then
-   for i in defenders do
+   for i in UnitFilter(defenders, [f_type, unit_vehicle]) do
        begin
-       SetTag(i, 20);
+       if GetTag(i) <> 20 then
+          SetTag(i, 20);
 
-       if GetControl(i) = control_manual and not IsDrivenBy(i) and mechs then
+       if GetControl(i) = control_manual and not IsDrivenBy(i) then
           begin
           un := mechs[1];
-          ComExitBuilding(un);
+          ComExit(un);
           AddComEnterUnit(un, i);
           SetTag(un, 19);
           mechs := mechs diff un;
@@ -613,7 +613,7 @@ if solds then
           end;
 
 repeat
- wait(0$1);
+ wait(0$2);
  enemy := mc_scan[base];
 
  if not mc_bases[base] or mc_bases[base] = [] then
@@ -735,6 +735,8 @@ if not enemy and UnitFilter(defenders, [f_type, unit_vehicle]) then
    until UnitFilter(defenders, [f_inarea, mc_parking[base]]) = defenders or mc_scan[base] or not mc_bases[base];
 
    end;
+
+mc_defender := Replace(mc_defender, base, UnitFilter(defenders, [f_type, unit_vehicle]));
 
 MC_Reset(base, 19);
 MC_Reset(base, 20);
