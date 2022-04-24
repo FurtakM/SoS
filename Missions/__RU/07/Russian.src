@@ -1,98 +1,200 @@
-Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Kirilenkova, Vsevolod; // Heroes
-Export Platonov;
+Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Kirilenkova, Belkov, Belkov2, Vsevolod; // Heroes
+Export Platonov, Popov, Yashin;
+Export vsevolodTeam;
 Export other_survivors;
 Export survivorsToPlace;
 
 Export Function PrepareRussians;
 begin
+   vsevolodTeam = [];
+
+   PrepareYashin;
+
     if savedVsevolod then
-        PrepareHeroes(RussianSpawnArea1, 0)
-    else
     begin
-        PrepareHeroes(RussianSpawnArea2, 5);
-        SpawnPlatonovReinforces;
+      PrepareVsevolodBase;
+      PrepareHeroes(RussianSpawnArea1, 0);
+      SpawnVsevolodTeamInBase;
+   end else
+    begin
+      PrepareHeroes(RussianSpawnArea2, 5);
+      SpawnPlatonovReinforces;
    end;
+
+   if matPredStatus then SetTech(tech_MatPred, 3, state_researched);
+end;
+
+Export Function PrepareXavierRu(x, y, dir);
+begin
+   uc_side = 3;
+   uc_nation = 3; 
+
+   Xavier = PrepareUnitExt('Xavier2', false, 0); 
+   SetDir(Xavier, dir);
+   PlaceUnitXY(Xavier, x, y, false);
+end;
+
+Export Function PrepareXavierRuVeh(veh);
+begin
+   uc_side = 3;
+   uc_nation = 3; 
+
+   Xavier = PrepareUnitExt('Xavier2', false, 0); 
+   PlaceHumanInUnit(Xavier, veh);
 end;
 
 Function PrepareHeroes(area, dir);
 var i, unit, car, cargoList;
 begin
+   uc_side = 3;
+   uc_nation = 3;
 
-    uc_side = 3;
-    uc_nation = 3;
+   Burlak:=PrepareUnitExt('Burlak', true, 0);
 
-    Burlak:=PrepareUnitExt('Burlak', true, 0);
+   Titov := PrepareUnitExt('Titov', true, 0);
 
-    Titov := PrepareUnitExt('Titov', true, 0);
-    Dolgov:= PrepareUnitExt('Dolgov', true, 0);
-    Lipshchin:= PrepareUnitExt('Lipshchin', true, 0);
-    Karamazov:= PrepareUnitExt('Karamazov', true, 0);
-    Petrovova:= PrepareUnitExt('Petrovova', true, 0);
-    Gleb:= PrepareUnitExt('Gleb', true, 0);
-    Petrosyan:= PrepareUnitExt('Petrosyan', true, 0);
-    if savedVsevolod then
-    begin
-      Kirilenkova := PrepareUnitExt('Kirilenkova', true, 0);
+   if NOT Titov AND TestCharacters('06_VSTitov') then
+   begin
+      Titov := PrepareUnitExt('VSTitov', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Titov;
+   end;
+
+   Dolgov:= PrepareUnitExt('Dolgov', true, 0);
+
+   if NOT Dolgov AND TestCharacters('06_VSDolgov') then
+   begin
+      Dolgov := PrepareUnitExt('VSDolgov', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Dolgov;
+   end;
+
+   Lipshchin:= PrepareUnitExt('Lipshchin', true, 0);
+
+   if NOT Lipshchin AND TestCharacters('06_VSLipshchin') then
+   begin
+      Lipshchin := PrepareUnitExt('VSLipshchin', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Lipshchin;
+   end;
+
+   Karamazov:= PrepareUnitExt('Karamazov', true, 0);
+
+  if NOT Karamazov AND TestCharacters('06_VSKaramazov') then
+  begin
+      Karamazov := PrepareUnitExt('VSKaramazov', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Karamazov;
+  end;
+
+   Petrovova:= PrepareUnitExt('Petrovova', true, 0);
+
+  if NOT Petrovova AND TestCharacters('06_VSPetrovova') then
+  begin
+      Petrovova := PrepareUnitExt('VSPetrovova', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Petrovova;
+  end;
+
+   Gleb:= PrepareUnitExt('Gleb', true, 0);
+   
+  if NOT Gleb AND TestCharacters('06_VSGleb') then
+  begin
+      Gleb := PrepareUnitExt('VSGleb', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Gleb;
+  end;
+
+   Petrosyan:= PrepareUnitExt('Petrosyan', true, 0);
+
+  if NOT Petrosyan AND TestCharacters('06_VSPetrosyan') then
+  begin
+      Petrosyan := PrepareUnitExt('VSPetrosyan', true, 0);
+      vsevolodTeam = vsevolodTeam ^ Petrosyan;
+  end;
+
+   if savedVsevolod then
+   begin
+      Kirilenkova := PrepareUnitExt('Kirilenkova', true, class_scientistic);
+      Belkov := PrepareUnitExt('Belkov', true, class_soldier);
+      Belkov2 := PrepareUnitExt('Belkov2', true, class_soldier);
       Vsevolod := PrepareUnitExt('Vsevolod', true, class_soldier);
-    end;
+      PlaceUnitArea(Vsevolod, SeviSpawnArea, false);
+      ComTurnXY(Vsevolod, 100, 153);
+   end else
+   begin
+      Kirilenkova := CreateCharacter('04_Kirilenkova');
+      Belkov := CreateCharacter('04_Belkov');
+      Belkov2 := CreateCharacter('04_Belkov2');
+   end;
 
-    Platonov = PrepareUnitExt('Platonov', false, 0);
+   Platonov = PrepareUnitExt('Platonov', false, 0);
+   Popov = PrepareUnitExt('Popov', false, 0);
 
-    other_survivors = CreateCharacterSet('06_other_survivors');
-    survivorsToPlace = other_survivors;
-    
-    for i:=1 to vehiclesFrom06 do
-    begin
-        uc_nation = vehiclesFrom06[i][1];
-        vc_chassis:=vehiclesFrom06[i][2];
-        vc_engine = vehiclesFrom06[i][3];
-        vc_control = vehiclesFrom06[i][4];
-        vc_weapon:=vehiclesFrom06[i][5];
-        uc_direction:=dir;
-        vc_fuel_battery:=Rand(60, 70);
-        car:=CreateVehicle;
-        PlaceUnitArea(car, area, false);
+   other_survivors = CreateCharacterSet('06_other_survivors');
+   survivorsToPlace = other_survivors;
 
-        case vehiclesFrom06[i][6] of
-            'Bur': PlaceHumanInUnit(Burlak, car);
-            'Kar': PlaceHumanInUnit(Karamazov, car);
-            'Ptr': PlaceHumanInUnit(Petrovova, car);
-            'Glb': PlaceHumanInUnit(Gleb, car);
-            'Pet': PlaceHumanInUnit(Petrosyan, car);
-            'Dol': PlaceHumanInUnit(Dolgov, car);
-            'Lip': PlaceHumanInUnit(Lipshchin, car);
-            'Tit': PlaceHumanInUnit(Titov, car);
-            'Kir': PlaceHumanInUnit(Kirilenkova, car);
-            'rand' : begin
-                PlaceHumanInUnit(survivorsToPlace[1], car);
-                survivorsToPlace = survivorsToPlace diff survivorsToPlace[1];
-                end;    
-        end;
-     end;
+   vsevolodTeam = vsevolodTeam ^ CreateCharacterSet('06_other_survivors_with_vsevolod');
+   
+   for i:=1 to vehiclesFrom06 do
+   begin
+      uc_nation = vehiclesFrom06[i][1];
+      vc_chassis:=vehiclesFrom06[i][2];
+      vc_engine = vehiclesFrom06[i][3];
+      vc_control = vehiclesFrom06[i][4];
+      vc_weapon:=vehiclesFrom06[i][5];
+      uc_direction:=dir;
+      vc_fuel_battery:=Rand(60, 70);
+      car:=CreateVehicle;
+      PlaceUnitArea(car, area, false);
 
-    if Burlak AND NOT IsPlaced(Burlak) then PlaceUnitArea(Burlak, area, false);
-    if Karamazov AND NOT IsPlaced(Karamazov) then PlaceUnitArea(Karamazov, area, false);
-    if Petrovova AND NOT IsPlaced(Petrovova) then PlaceUnitArea(Petrovova, area, false);
-    if Gleb AND NOT IsPlaced(Gleb) then PlaceUnitArea(Gleb, area, false);
-    if Petrosyan AND NOT IsPlaced(Petrosyan) then PlaceUnitArea(Petrosyan, area, false);
-    if Dolgov AND NOT IsPlaced(Dolgov) then PlaceUnitArea(Dolgov, area, false);
-    if Lipshchin AND NOT IsPlaced(Lipshchin) then PlaceUnitArea(Lipshchin, area, false);
-    if Titov AND NOT IsPlaced(Titov) then PlaceUnitArea(Titov, area, false);
-    if Kirilenkova AND NOT IsPlaced(Kirilenkova) then PlaceUnitArea(Kirilenkova, area, false);
+      case vehiclesFrom06[i][6] of
+         'Bur': PlaceHumanInUnit(Burlak, car);
+         'Kar': PlaceHumanInUnit(Karamazov, car);
+         'Ptr': PlaceHumanInUnit(Petrovova, car);
+         'Glb': PlaceHumanInUnit(Gleb, car);
+         'Pet': PlaceHumanInUnit(Petrosyan, car);
+         'Dol': PlaceHumanInUnit(Dolgov, car);
+         'Lip': PlaceHumanInUnit(Lipshchin, car);
+         'Tit': PlaceHumanInUnit(Titov, car);
+         'Kir': PlaceHumanInUnit(Kirilenkova, car);
+         'Bel': PlaceHumanInUnit(Belkov, car);
+         'Bel2': PlaceHumanInUnit(Belkov2, car);
+         'rand' : begin
+               PlaceHumanInUnit(survivorsToPlace[1], car);
+               survivorsToPlace = survivorsToPlace diff survivorsToPlace[1];
+               end;    
+      end;
+   end;
 
-    for unit in survivorsToPlace do
-        PlaceUnitArea(unit, area, false);
+   if Burlak AND NOT IsPlaced(Burlak) AND NOT Burlak in vsevolodTeam then PlaceUnitArea(Burlak, area, false);
+   if Karamazov AND NOT IsPlaced(Karamazov) AND NOT Karamazov in vsevolodTeam then PlaceUnitArea(Karamazov, area, false);
+   if Petrovova AND NOT IsPlaced(Petrovova) AND NOT Petrovova in vsevolodTeam then PlaceUnitArea(Petrovova, area, false);
+   if Gleb AND NOT IsPlaced(Gleb) AND NOT Gleb in vsevolodTeam then PlaceUnitArea(Gleb, area, false);
+   if Petrosyan AND NOT IsPlaced(Petrosyan) AND NOT Petrosyan in vsevolodTeam then PlaceUnitArea(Petrosyan, area, false);
+   if Dolgov AND NOT IsPlaced(Dolgov) AND NOT Dolgov in vsevolodTeam then PlaceUnitArea(Dolgov, area, false);
+   if Lipshchin AND NOT IsPlaced(Lipshchin) AND NOT Lipshchin in vsevolodTeam then PlaceUnitArea(Lipshchin, area, false);
+   if Titov AND NOT IsPlaced(Titov) AND NOT Titov in vsevolodTeam then PlaceUnitArea(Titov, area, false);
+   if Kirilenkova AND NOT IsPlaced(Kirilenkova) AND NOT Kirilenkova in vsevolodTeam AND savedVsevolod then PlaceUnitArea(Kirilenkova, area, false);
+   if Belkov AND NOT IsPlaced(Belkov) AND NOT Belkov in vsevolodTeam AND savedVsevolod then PlaceUnitArea(Belkov, area, false);
+   if Belkov2 AND NOT IsPlaced(Belkov2) AND NOT Belkov2 in vsevolodTeam AND savedVsevolod then PlaceUnitArea(Belkov2, area, false);
 
-    cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, us_cargo_bay]]]);
 
-    if cargoList then
-        for i = 1 to cargoList do
-            if resourcesFrom06 then
-            begin
-                AddCargo(cargoList[i], 1, resourcesFrom06[i][1]);
-                AddCargo(cargoList[i], 2, resourcesFrom06[i][2]);
-                AddCargo(cargoList[i], 3, resourcesFrom06[i][3]);
-            end;
+   for unit in survivorsToPlace do
+      PlaceUnitArea(unit, area, false);
+
+   cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, us_cargo_bay]]]);
+
+   if cargoList then
+      for i = 1 to cargoList do
+         if resourcesFrom06 then
+         begin
+               AddCargo(cargoList[i], 1, resourcesFrom06[i][1]);
+               AddCargo(cargoList[i], 2, resourcesFrom06[i][2]);
+               AddCargo(cargoList[i], 3, resourcesFrom06[i][3]);
+         end;
+end;
+
+Function PrepareYashin;
+begin
+   uc_side = 6;
+   uc_nation = 3;
+
+   Yashin = PrepareUnitExt('Yashin', false, 0);
 end;
 
 Function SpawnPlatonovReinforces;
@@ -107,23 +209,31 @@ begin
 
     veh = CreateVehicle;
     SetDir(veh, 0);
-    PlaceUnitXY(veh, 134, 230, false);
+    PlaceUnitArea(veh, RussianSpawnArea2, false);
 
-
-    un = CreateHuman;
-    PlaceHumanInUnit(un, veh);
-
+    if Belkov then
+      PlaceHumanInUnit(Belkov, veh)
+    else if Difficulty = 1 OR Difficulty = 2 then
+    begin
+      un = CreateHuman;
+      PlaceHumanInUnit(un, veh);
+   end;
 
     PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, rand(50, 60));
 
     veh = CreateVehicle;
     SetDir(veh, 0);
-    PlaceUnitXY(veh, 134, 233, false);
+    PlaceUnitArea(veh, RussianSpawnArea2, false);
 
     SetCargo(veh, mat_cans, 100);
 
-    un = CreateHuman;
-    PlaceHumanInUnit(un, veh);
+   if Belkov2 then
+       PlaceHumanInUnit(Belkov2, veh)
+    else if Difficulty = 1 then
+    begin
+       un = CreateHuman;
+       PlaceHumanInUnit(un, veh);
+    end;
 
     if Kirilenkova then
     begin
@@ -131,10 +241,80 @@ begin
 
         veh = CreateVehicle;
         SetDir(veh, 0);
-        PlaceUnitXY(veh, 134, 236, false);
+        PlaceUnitArea(veh, RussianSpawnArea2, false);
         SetCargo(veh, mat_cans, 100);
-
         PlaceHumanInUnit(Kirilenkova, veh);
     end;
 
 end;
+
+Function PrepareVsevolodBase;
+var units, depot;
+begin
+
+   SetResourceVisibility(67, 115, 3);
+
+   uc_side = 3;
+   uc_nation = 3;
+   bc_level = 5;
+   bc_type = b_depot;
+
+   depot = CreateAndPlaceBuildingXYD(53, 97, 1);   
+   SetBName(depot, 'gorkij');
+
+   SetResourceType(GetBase(depot), mat_cans, vsevolodBaseStartCrates);
+
+   bc_type = b_lab_half;
+   bc_kind1 = b_lab_spacetime;
+
+   if matPredStatus then
+   begin
+      bc_type = b_lab_full;
+      bc_kind2 = b_lab_computer
+   end
+   else bc_kind2 = b_lab_basic;
+   
+   CreateAndPlaceBuildingXYD(58, 105, 1);   
+
+   bc_type = b_armoury;
+   CreateAndPlaceBuildingXYD(65, 93, 3);   
+
+   bc_type = b_oil_mine;
+   CreateAndPlaceBuildingXYD(67, 115, 3);   
+
+   bc_type = b_oil_power;
+   CreateAndPlaceBuildingXYD(68, 104, 4);   
+
+   bc_type = b_breastwork;
+   CreateAndPlaceBuildingXYD(60, 91, 3);   
+   CreateAndPlaceBuildingXYD(73, 112, 5);   
+   CreateAndPlaceBuildingXYD(66, 118, 5);   
+end;
+
+Function SpawnVsevolodTeamInBase;
+var unit, buildings, building, randBuild;
+begin
+   for unit in vsevolodTeam do
+   begin
+      for building in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_breastwork]]) do
+         if NOT UnitsInside(building) then
+         begin
+            PlaceHumanInBunker(unit, building);
+            SetClass(unit, 1);
+         end;
+
+      if NOT IsInUnit(unit) then
+      begin
+         buildings = FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_armoury], [f_btype, b_lab_half]]]);
+         randBuild = buildings[Rand(1, buildings)];
+         PlaceHumanInUnit(unit, randBuild);
+
+         case GetBType(randBuild) of
+            b_depot: SetClass(unit, 2);
+            b_armoury: SetClass(unit, 1);
+            b_lab_half: SetClass(unit, 4);
+         end;
+      end;
+      
+   end;  
+end; 

@@ -1,0 +1,90 @@
+On VehicleCaptured(new_vehicle, old_vehicle, original_side, human) Do
+begin
+    if old_vehicle = XavierVeh AND human = Xavier then
+        xavierJoinToPlayer = true;
+
+    if original_side = 6 and GetSide(human) = 3 then
+    begin
+        ComExitVehicle(human);
+        SetSide([old_vehicle, new_vehicle], 6);
+        ComEnterUnit(Yashin, new_vehicle);
+    end;
+end;
+
+On Contact(side1, side2) Do
+begin
+    if side1 = 3 AND side2 = 5 then
+    begin
+        xavierPatrol = false;
+        ChangeSideFog(5, 5);
+        SetAttitude(3, 5, att_enemy, true);
+        ComAttackUnit(Xavier, Burlak);
+    end;
+end;
+
+On UnitDestroyed(unit) Do
+var aiData, buildingType;
+begin
+    if unit = Burlak then Lose_Burlak;
+    if unit = Vsevolod then Lose_Vsevolod;
+
+    aiData = GetAIDataBySide(GetSide(unit));
+
+    if aiData then
+    begin
+        if NOT InArea(GetX(unit), GetY(unit), aiData[8]) then exit;
+
+        RemoveUnitFromAI(aiData, unit);
+
+        if GetType(unit) = unit_building then
+        begin   
+            if GetBType(unit) = 1 then buildingType = 0
+            else if GetBType(unit) = 3 then buildingType = 2
+            else if GetBType(unit) = 5 then buildingType = 4
+            else buildingType = GetBType(unit);
+
+            AddNewDestroyedBuilding(aiData, [buildingType, GetX(unit), GetY(unit), GetDir(unit)]);  
+        end;     
+    end;     
+end;
+
+On VehicleConstructed(vehicle, building) Do
+var aiData;
+begin
+    aiData = GetAIDataBySide(GetSide(vehicle));
+
+    if aiData then
+    begin
+        if NOT GetWeapon(vehicle) in [us_cargo_bay, ar_cargo_bay, ru_cargo_bay, us_crane, ar_crane, ru_crane, us_bulldozer, ru_bulldozer, ar_control_tower] then
+        begin
+            if aiData[13] > GetDefenceVehicles(aiData) then AddNewVehicle(aiData, vehicle, 2)
+            else AddNewVehicle(aiData, vehicle, 4)
+        end;
+
+        if GetWeapon(vehicle) in [us_cargo_bay, ar_cargo_bay, ru_cargo_bay, us_crane, ar_crane, ru_crane, us_bulldozer, ru_bulldozer, ar_control_tower] then AddNewVehicle(aiData, vehicle, 1);
+    
+    
+        if remoteVehs AND GetControl(vehicle) = control_remote then
+            LinkVehicleToHuman(vehicle, UnitsInside(remoteVehs[rand(1, remoteVehs)])[1]);
+
+    end;
+end;
+
+On BuildingStarted(building, unit) Do
+var aiData;
+begin
+    aiData = GetAIDataBySide(GetSide(unit));
+
+    if(aiData) then
+    begin
+        RemoveDestroyedBuilding(aiData);
+        AddNewUnit(aiData, building);
+    end;
+    
+end;
+
+On EnterVehicle(vehicle, human) Do
+begin
+    if human = Yashin then
+        ComMoveToArea(vehicle, YashinExitArea);
+end;

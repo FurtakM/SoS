@@ -1,6 +1,6 @@
 Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin; // Heroes
-Export Platonov, Kirilenkova;
-Export Vsevolod, vsevolodTeam;
+Export Platonov, Kirilenkova, Belkov, Belkov2;
+Export Vsevolod, vsevolodTeam, Petr, Igor;
 
 Export Function PrepareRussians;
 begin
@@ -35,6 +35,17 @@ begin
         SetClass(Kirilenkova, class_scientistic);   
     end;
 
+    if TestCharacters('04_Belkov') then
+    begin
+        Belkov := CreateCharacter('04_Belkov');
+        SetClass(Belkov, class_soldier);
+    end;
+
+    if TestCharacters('04_Belkov2') then
+    begin
+        Belkov2 := CreateCharacter('04_Belkov2');
+        SetClass(Belkov2, class_soldier);
+    end;
 
     for i:=1 to vehiclesFrom05 do
     begin
@@ -132,14 +143,13 @@ begin
 
     vsevolodTeam = vsevolodTeam ^ Vsevolod;
 
-    for i := 1 to 2 do
-    begin
-        PrepareSoldier(sex_male, 4);
-        un = CreateHuman;
-        PlaceUnitArea(un, VsevolodSpawnArea, false);
+    Petr = PrepareUnitExt('SPetr', false, class_soldier);
+    PlaceUnitArea(Petr, VsevolodSpawnArea, false);
+    vsevolodTeam = vsevolodTeam ^ Petr;
 
-        vsevolodTeam = vsevolodTeam ^ un;    
-    end;
+    Igor = PrepareUnitExt('SIgor', false, class_soldier);
+    PlaceUnitArea(Igor, VsevolodSpawnArea, false);
+    vsevolodTeam = vsevolodTeam ^ Igor;
 end;
 
 Export Function SpawnPlatonovReinforces;
@@ -156,10 +166,13 @@ begin
     SetDir(veh, 0);
     PlaceUnitXY(veh, 134, 230, false);
 
-    
-    un = CreateHuman;
-    PlaceHumanInUnit(un, veh);
-
+    if Belkov then
+      PlaceHumanInUnit(Belkov, veh)
+    else if Difficulty = 1 OR Difficulty = 2 then
+    begin
+      un = CreateHuman;
+      PlaceHumanInUnit(un, veh);
+   end;
 
     PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, rand(50, 60));
 
@@ -169,8 +182,13 @@ begin
 
     SetCargo(veh, mat_cans, 100);
 
-    un = CreateHuman;
-    PlaceHumanInUnit(un, veh);
+    if Belkov2 then
+       PlaceHumanInUnit(Belkov2, veh)
+    else if Difficulty = 1 then
+    begin
+       un = CreateHuman;
+       PlaceHumanInUnit(un, veh);
+    end;
 
     if Kirilenkova then
     begin

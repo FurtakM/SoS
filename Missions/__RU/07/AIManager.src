@@ -1,0 +1,815 @@
+{
+  AI manager version: 3.0
+  Programmer: Nefarem
+  
+  Summary: Manage AI troops in base, set state, build base/vehicles, repair building/vehicles, rebuild destroyed buildings/vehicles, heal damage units, defence base, attack other side.
+
+   AI struct data
+   1 ID
+   2 Active,
+   3 Side,
+   4 Nation,
+   5 StartUnits,
+   6 StartBuildings,
+   7 DestoyedBuildings,
+   8 BaseArea,
+   9 HealArea,
+   10 RepairArea
+   11 DefenceArea,
+   12 RepairVehiclesArea,
+   13 VehiclesDefenceAmount, struct: [ [ chassis, engine, control, [weapons] ], [ chassis, engine, control, [weapons] ]]
+   14 VehiclesAttackAmount,  struct: [ [ chassis, engine, control, [weapons] ], [ chassis, engine, control, [weapons] ]]
+   15 VehiclesNonCombatAmount, struct: [cargoAmount, craneAmount, buldozerAmount]
+   16 BuildNewVehiclesDelay
+   17 NeedBuildNewVehicles, struct : [true, false, true] - def, attack, non combat
+   18 CanAttack,
+   19 CanRebuildBase,
+   20 CanRebuildVehicles
+
+
+    Tags/States:
+    0 - go to heal area,
+    1 - ready to work,
+    2 - defence,
+    3 - defence repair
+    4 - attack,
+    5 - attack repair,
+    6 - escape before enemy,
+    7 - inside veh
+}
+
+export aiStructDatas;
+
+// Todo: Merge changes
+Export function InitAIManager;
+begin
+   aiStructDatas = [];
+end;
+
+every 1 do
+begin
+   InitAIManager;
+
+   AddNewAI
+   (
+      1, // ID
+      0, // Active
+      2, // Side
+      2, // Nation
+      kabulBaseUnits, // StartUnits
+      FilterUnitsInArea(KabulBaseArea, [[f_side, 2], [f_type, unit_building]]), // StartBuildings
+      [], // DestoyedBuildings
+      KabulBaseArea, // BaseArea
+      KabulHealArea, // HealArea
+      KabulRepairArea,  // RepairArea
+      KabulDefenceArea, // DefenceArea
+      KabulRepairArea, // RepairVehiclesArea - 2x same variable todo: fix this!
+      [ [ar_medium_trike, engine_combustion, control_remote, [ar_gatling_gun, ar_gun, ar_light_gun, ar_flame_thrower, ar_rocket_launcher]], [ar_medium_trike, engine_combustion, control_remote, [ar_gatling_gun, ar_gun, ar_light_gun, ar_flame_thrower, ar_rocket_launcher]]  ], // VehiclesDefenceAmount
+      [ [ar_medium_trike, engine_combustion, control_remote, [ar_gatling_gun, ar_gun, ar_light_gun, ar_flame_thrower, ar_rocket_launcher]], [ar_medium_trike, engine_combustion, control_remote, [ar_gatling_gun, ar_gun, ar_light_gun, ar_flame_thrower, ar_rocket_launcher]], [ar_medium_trike, engine_combustion, control_remote, [ar_gatling_gun, ar_gun, ar_light_gun, ar_flame_thrower, ar_rocket_launcher]]  ], // VehiclesAttackAmount
+      [1, 1, 0], // VehiclesNonCombatAmount
+      2$30, // BuildNewVehiclesDelay
+      [true, true, true], // NeedBuildNewVehicles
+      1, // CanAttack
+      1, // CanRebuildBase
+      1 // CanRebuildVehicles
+   );
+end;
+
+every 0$1 do
+begin
+   StateManager(1);
+   MechanicsManager(1);
+   VehiclesManager(1);
+   SoldiersManager(1);
+   DefenceManager(1);
+   CollectCrates(1);
+   FleeToHealArea(1);
+   FleeToRepairArea(1);
+   RepairBuildings(1);
+   HealDamageUnits(1);
+
+   enable;
+end;
+
+every 0$1 do
+begin
+   ProduceVehicles(1);
+   enable;
+end;
+
+every 0$1 do
+begin
+   AttackManager(1);
+   enable;
+end;
+
+every 0$1 trigger (FilterUnitsInArea(MinefieldNorthArea, [f_side, 3]) OR FilterUnitsInArea(MinefieldSouthArea, [f_side, 3]) OR FilterUnitsInArea(MinefieldMainRoadArea, [f_side, 3]) OR FilterUnitsInArea(MinefieldOilDepositsArea, [f_side, 3]) OR FilterUnitsInArea(MinefieldExtraArea, [f_side, 3])) and minesList do
+var i, unitsInArea, unit, minDistance, tmp;
+begin
+  unitsInArea = [];
+  tmp = [];
+
+  unitsInArea = unitsInArea ^ FilterUnitsInArea(MinefieldNorthArea, [f_side, 3]);
+  unitsInArea = unitsInArea ^ FilterUnitsInArea(MinefieldSouthArea, [f_side, 3]);
+  unitsInArea = unitsInArea ^ FilterUnitsInArea(MinefieldMainRoadArea, [f_side, 3]);
+  unitsInArea = unitsInArea ^ FilterUnitsInArea(MinefieldOilDepositsArea, [f_side, 3]);
+  unitsInArea = unitsInArea ^ FilterUnitsInArea(MinefieldExtraArea, [f_side, 3]);
+
+  for unit in unitsInArea do
+  begin
+      if GetType(unit) = unit_human then minDistance = 3
+      else minDistance = 4;
+
+      for i = 1 to (minesList div 2) do
+        if GetDistXY(minesList[(i*2)-1], minesList[(i*2)], GetX(unit), GetY(unit)) < minDistance then LaunchMineAtPos(minesList[(i*2)-1], minesList[(i*2)], 2)
+        else tmp = tmp ^ minesList[(i*2)-1] ^ minesList[(i*2)];           
+      minesList = tmp;
+      tmp:=[];
+  end;
+  enable;
+end;
+
+every 0$1 trigger GetSide(ar_dep) = 3 OR IsDying(ar_dep) do
+var unitInside, turret;
+begin
+   for turret in FilterAllUnits([[f_side, 2], [f_ok], [f_type, unit_building], [f_btype, b_bunker]]) do
+      if UnitsInside(turret) then
+      begin
+         unitInside = UnitsInside(turret)[1];
+         ComExitBuilding(unitInside);
+         wait(0$01);
+         ComAgressiveMove(unitInside, 103, 48);
+      end;    
+end;
+
+// Research techs
+every 0$1 do
+var i, tech, cout, ar_tech_list;
+begin
+   ar_tech_list = GetTechNation(2, 2, state_enabled);
+
+  For i = 1 to ar_tech_list do
+  begin
+   AddComResearch(ar_lab1, ar_tech_list[i]); 
+   AddComResearch(ar_lab2, ar_tech_list[i]);   
+  end;
+end;   
+
+
+Export function AddNewAI(id, active, side, nation, startUnits, startBuildings, destroyedBuildings, baseArea, healArea, repairArea, defenceArea, repairVehiclesArea, vehiclesDefenceAmount, vehiclesAttackAmount, vehiclesNonCombatAmount, buildNewVehiclesDelay, needBuildNewVehicles, canAttack, canRebuildBase, canRebuildVehicles);
+begin
+   aiStructDatas = aiStructDatas ^ [ [id, active, side, nation, startUnits, startBuildings, destroyedBuildings, baseArea, healArea, repairArea, defenceArea, repairVehiclesArea, vehiclesDefenceAmount, vehiclesAttackAmount, vehiclesNonCombatAmount, buildNewVehiclesDelay, needBuildNewVehicles, canAttack, canRebuildBase, canRebuildVehicles] ];
+end;
+
+Export function ActiveAI(index);
+begin
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 2], 1);
+end;
+
+Export function DeactiveAI(index);
+begin
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 2], 0);
+end;
+
+
+function GetAIDataByID(aiID);
+var i;
+begin
+   for i := 1 to aiStructDatas do
+      if (aiStructDatas[i][1] = aiID) then
+      begin
+         result = aiStructDatas[i];
+         exit;
+      end;
+
+   result = [];
+end;
+
+export function GetAIIndexByID(aiID);
+var i;
+begin
+   for i := 1 to aiStructDatas do
+      if (aiStructDatas[i][1] = aiID) then
+      begin
+         result = i;
+         exit;
+      end;
+
+   result = [];
+end;
+
+export function AddNewUnit(aiData, unit);
+var index, newArray;
+begin
+   index = GetAIIndexByID(aiData[1]);
+
+   newArray = aiData[5];
+   newArray = newArray ^ unit;
+
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 5], newArray);
+end;
+
+export function AddNewVehicle(aiData, veh, state);
+var index, newArray;
+begin
+   SetTag(veh, state);
+
+   index = GetAIIndexByID(aiData[1]);
+
+   newArray = aiData[5];
+   newArray = newArray ^ veh;
+
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 5], newArray);
+end;
+
+export function AddNewDestroyedBuilding(aiData, buildingData);
+var index, newArray;
+begin
+
+   index = GetAIIndexByID(aiData[1]);
+
+   newArray = aiData[7];   
+   newArray = newArray ^ [buildingData];
+
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 7], newArray);
+end;
+
+export function RemoveDestroyedBuilding(aiData);
+var index, newArray;
+begin
+   index = GetAIIndexByID(aiData[1]);
+
+   newArray = aiData[7];   
+   newArray = Delete(newArray, 1);
+
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 7], newArray);
+end;
+
+export function RemoveUnitFromAI(aiData, unit);
+var index, newArray;
+begin
+   index = GetAIIndexByID(aiData[1]);
+
+   newArray = aiData[5]; 
+
+   newArray = newArray diff unit;
+
+   aiStructDatas = ReplaceIn(aiStructDatas, [index, 5], newArray);
+end;
+
+export function GetAIDataBySide(aiSide);
+var i;
+begin
+   for i := 1 to aiStructDatas do
+      if (aiStructDatas[i][3] = aiSide) then
+      begin
+        result = aiStructDatas[i];
+        exit;
+      end;
+
+   result = [];
+end;
+
+export function GetDefenceVehicles(aiData);
+var defVehs, veh;
+begin
+   if NOT aiData then
+   begin
+      result = [];
+      exit;
+   end;
+
+   defVehs = [];
+
+   for veh in UnitFilter(aiData[5], [f_type, unit_vehicle]) do
+      if GetTag(veh) = 2  then
+         defVehs = defVehs ^ veh;
+
+
+   result = defVehs;
+
+end;
+
+export function GetAttackVehicles(aiData);
+var attackVehs, veh;
+begin
+   if NOT aiData then
+   begin
+      result = [];
+      exit;
+   end;
+
+   attackVehs = [];
+
+   for veh in UnitFilter(aiData[5], [f_type, unit_vehicle]) do
+      if GetTag(veh) = 4 then
+         attackVehs = attackVehs ^ veh;
+
+
+   result = attackVehs;
+
+end;
+
+
+export function StateManager(aiID);
+var aiData, unit;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;       
+
+   // Human units
+    for unit in UnitFilter(aiData[5], [f_type, unit_human]) do
+    begin
+         if GetLives(unit) = 1000 AND GetTag(unit) = 0 then SetTag(unit, 1)
+         else if GetLives(unit) <= 950 AND GetLives(unit) > 250 AND GetTag(unit) = 1 then SetTag(unit, 0);
+    end;
+
+   // Vehicle units
+   for unit in UnitFilter(aiData[5], [f_type, unit_vehicle]) do
+   begin
+      if GetLives(unit) = 1000 AND GetTag(unit) = 3 then SetTag(unit, 2);
+      if GetLives(unit) = 1000 AND GetTag(unit) = 5 then SetTag(unit, 4);
+
+      if GetLives(unit) <= 650 AND GetTag(unit) = 4 AND GetControl(unit) = control_manual then SetTag(unit, 5);
+      if GetLives(unit) <= 650 AND GetTag(unit) = 2 AND GetControl(unit) = control_manual then SetTag(unit, 3);
+
+      if GetControl(unit) = control_manual then
+         if (UnitsInside(unit)) then
+            SetTag(UnitsInside(unit)[1], 7);
+
+      if GetFuel(unit) < 50 then SetFuel(unit, 100);
+   end;
+end;
+
+export function SoldiersManager(aiID);
+var aiData, soldiers, sold, bunkers, barracks, index, depot, soldiersInsideBarracks, barrack;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;
+
+    soldiersInsideBarracks = [];
+
+   soldiers = UnitFilter(aiData[5], [[f_class, class_soldier], [f_ok]]);
+   bunkers = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_not, [f_occupied]], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+   barracks = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+   depot = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+
+   for barrack in barracks do
+       soldiersInsideBarracks = soldiersInsideBarracks ^ UnitsInside(barrack);
+
+   index = 1;
+
+   if UnitFilter(soldiers, [[f_outside], [f_not, [f_hastask]]]) AND bunkers AND depot then
+      for sold in UnitFilter(soldiers, [[f_outside]]) ^ soldiersInsideBarracks do
+         if (GetTag(sold) = 1 AND index <= bunkers) then
+         begin
+            ComEnterUnit(sold, bunkers[index]);
+            index = index + 1;
+         end;
+            
+
+   if UnitFilter(soldiers, [[f_outside], [f_not, [f_hastask]]]) AND NOT bunkers AND barracks then
+      for sold in UnitFilter(soldiers, [[f_outside]]) do
+         if (GetTag(sold) = 1) then
+            ComEnterUnit(sold, barracks[rand(1, barracks)]);
+
+end;
+
+
+export function MechanicsManager(aiID);
+var aiData, mechanics, mech, fabs;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;
+
+   mechanics = UnitFilter(aiData[5], [[f_class, class_mechanic], [f_ok]]);
+   fabs = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+
+   if UnitFilter(mechanics, [[f_outside], [f_not, [f_hastask]]]) AND fabs then
+      for mech in UnitFilter(mechanics, [[f_outside]]) do
+         if (GetTag(mech) = 1) then
+            ComEnterUnit(mech, fabs[rand(1, fabs)]);
+end;
+
+
+export function VehiclesManager(aiID);
+var aiData, mechanicsInsideFab, fabs, fab, nearFab, damageVehicles, damageVeh, mehInside;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit;  
+
+   fabs = UnitFilter(aiData[5], [[f_type, unit_building], [f_ok], [f_occupied], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+
+   damageVehicles = UnitFilter(aiData[5], [[f_type, unit_vehicle], [f_control, control_manual], [f_distxy, AreaToList(aiData[10], 0)[1][1], AreaToList(aiData[10], 0)[2][1], 16], [f_not, [f_lives, 1000]]]);
+
+   if NOT damageVehicles then exit;
+
+   if fabs then
+   begin
+      for damageVeh in damageVehicles do
+         if GetTag(damageVeh) = 3 OR GetTag(damageVeh) = 5 then
+         begin
+            nearFab = NearestUnitToUnit(fabs, damageVeh);
+            mechanicsInsideFab = UnitsInside(nearFab);
+
+            ComExitBuilding(mechanicsInsideFab);
+            AddComRepairVehicle(UnitFilter(mechanicsInsideFab, [f_not, [f_hastask]]), damageVeh);
+         end;
+   end;
+
+   for damageVeh in damageVehicles do
+      if GetTag(damageVeh) = 3 OR GetTag(damageVeh) = 5 then
+      begin
+         mehInside = UnitsInside(damageVeh);
+
+         if mehInside then
+         begin
+            mehInside = mehInside[1];
+            AddComExitVehicle(mehInside);
+            wait(0$01);
+            ComRepairVehicle(mehInside, damageVeh);
+            AddComEnterUnit(mehInside, damageVeh);
+         end;  
+      end;
+
+end;
+
+export function DefenceManager(aiID);
+var aiData, defenceUnits, veh, enemyUnit, depot;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit;  
+
+   depot = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1];
+   
+   if NOT GetDefenceVehicles(aiData) then exit;
+
+   if depot AND GetDefenceVehicles(aiData) AND NOT FilterUnitsInArea(aiData[11], [f_enemy, aiData[3]]) then
+      for veh in UnitFilter(GetDefenceVehicles(aiData), [[f_ok], [f_not, [f_hastask]], [f_not, [f_distxy, GetX(depot), GetY(depot), 12]]]) do
+         if GetLives(veh) = 1000 then ComMoveXY(veh, GetX(depot), GetY(depot))
+         else SetTag(veh, 3);
+
+   if NOT FilterUnitsInArea(aiData[11], [f_enemy, aiData[3]]) then exit;
+
+   for veh in UnitFilter(GetDefenceVehicles(aiData), [[f_ok], [f_not, [f_hastask]]]) do
+         ComAgressiveMove(veh, GetX(FilterUnitsInArea(aiData[11], [f_enemy, aiData[3]])[1]), GetY(FilterUnitsInArea(aiData[11], [f_enemy, aiData[3]])[1]));
+
+end;
+
+export function AttackManager(aiID);
+var aiData, target1, target2, offensiveUnits, ofUnit;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit;  
+   if (aiData[18] = 0) then exit;  
+
+   if GetAttackVehicles(aiData) >= aiData[14] then
+   begin
+      repeat
+         wait(0$01);
+
+         offensiveUnits = GetAttackVehicles(aiData);
+
+         for ofUnit in offensiveUnits do
+         begin
+            target1 := NearestUnitToUnit(FilterAllUnits([f_enemy, aiData[3]]), ofUnit);
+            target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, aiData[3]], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), ofUnit);
+
+            if GetDistUnits(ofUnit, target1) + 12 < GetDistUnits(ofUnit, target2) then
+            begin
+               ComAgressiveMove(UnitFilter(ofUnit, [f_ok]), GetX(target1), GetY(target1));
+               wait(0$01);
+               ComAttackUnit(UnitFilter(ofUnit, [f_ok]), target1);   
+            end 
+            else begin 
+               ComAgressiveMove(UnitFilter(ofUnit, [f_ok]), GetX(target2), GetY(target2));
+               wait(0$01);
+               ComAttackUnit(UnitFilter(ofUnit, [f_ok]), target2);   
+            end;    
+         end;
+
+      until NOT UnitFilter(offensiveUnits, [f_ok]);
+   end;
+
+end;
+
+export function CollectCrates(aiID);
+var aiData, cargo;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit; 
+
+   cargo = UnitFilter(aiData[5], [[f_type, unit_vehicle], [f_ok], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]);
+
+   if NOT GetListOfCratesInArea(aiData[8]) OR NOT cargo then exit;
+
+   ComCollect(cargo, GetListOfCratesInArea(aiData[8])[1], GetListOfCratesInArea(aiData[8])[2]);
+end;
+
+export function FleeToHealArea(aiID);
+var aiData, unit;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit;
+
+   for unit in UnitFilter(aiData[5], [f_type, unit_human]) do
+      if GetTag(unit) = 0 AND NOT IsInArea(unit, aiData[9]) then ComMoveToArea(unit, aiData[9]);
+end;
+
+export function FleeToRepairArea(aiID);
+var aiData, veh;
+begin
+   aiData = GetAIDataByID(aiID);
+
+   if (aiData[2] = 0) then exit;
+
+   for veh in UnitFilter(aiData[5], [[f_type, unit_vehicle], [f_ok]]) do
+      if (GetTag(veh) = 3 OR GetTag(veh) = 5) AND NOT IsInArea(veh, aiData[10]) then ComMoveToArea(veh, aiData[10]);
+end;
+
+export function RepairBuildings(aiID);
+var aiData, engineers, cranes, crane, eng, damagedBuildings;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;
+
+    engineers = UnitFilter(aiData[5], [[f_class, class_engineer], [f_ok]]);
+    cranes = UnitFilter(aiData[5], [[f_type, unit_vehicle], [f_ok], [f_or, [f_weapon, us_crane], [f_weapon, ar_crane], [f_weapon, ru_crane]]]);
+    damagedBuildings = UnitFilter(aiData[6], [[f_type, unit_building], [f_not, [f_lives, 1000]]]);
+
+   if UnitFilter(engineers, [[f_outside], [f_not, [f_hastask]]]) AND NOT damagedBuildings AND UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) then
+      for eng in UnitFilter(engineers, [[f_outside], [f_not, [f_hastask]]]) do
+         if (GetTag(eng) = 1) then
+            ComEnterUnit(eng, UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])[1]);
+
+   if engineers AND damagedBuildings then
+   begin
+      for eng in engineers do
+         if (GetTag(eng) = 1) then
+         begin
+            ForceResetTaskList(eng);
+            ExitUnitFromBuilding(eng);
+            AddComRepairBuilding(UnitFilter(eng, [f_not, [f_hastask]]), damagedBuildings[1]);
+         end;
+
+      if cranes then
+         for crane in cranes do
+            AddComRepairBuilding(UnitFilter(crane, [f_not, [f_hastask]]), damagedBuildings[1]);
+  
+   end;
+
+   if engineers AND NOT damagedBuildings AND  aiData[7] then
+   begin
+      for eng in engineers do
+         if (GetTag(eng) = 1) then
+            ComBuild(eng, aiData[7][1][1], aiData[7][1][2], aiData[7][1][3], aiData[7][1][4])
+   end; 
+
+end;
+
+export function HealDamageUnits(aiID);
+var aiData, scientists, sci, damageUnits, labs;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;
+
+    scientists = UnitFilter(aiData[5], [[f_class, class_scientistic], [f_ok]]);
+    damageUnits = UnitFilter(aiData[5], [[f_type, unit_human], [f_distxy, AreaToList(aiData[9], 0)[1][1], AreaToList(aiData[9], 0)[2][1], 6], [f_not, [f_lives, 1000]]]);
+    labs = UnitFilter(aiData[5], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+   if UnitFilter(scientists, [[f_outside], [f_not, [f_hastask]]]) AND NOT damageUnits AND labs then
+      for sci in UnitFilter(scientists, [[f_outside]]) do
+         if (GetTag(sci) = 1) then
+            ComEnterUnit(sci, labs[rand(1, labs)]);
+
+   if NOT scientists OR NOT damageUnits then exit;
+   
+   for sci in scientists do
+      if (GetTag(sci) = 1) then
+      begin
+         ForceResetTaskList(sci);
+         ExitUnitFromBuilding(sci);
+         AddComHeal(UnitFilter(sci, [f_not, [f_hastask]]), damageUnits[1]);
+      end;
+end;
+
+
+// Prio: def, non combar, attack
+export function ProduceVehicles(aiID);
+var aiData, fabs, i, weapons, randWeapon;
+begin
+    aiData = GetAIDataByID(aiID);
+
+    if (aiData[2] = 0) then exit;
+
+    fabs = UnitFilter(aiData[6], [[f_type, unit_building], [f_ok], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]]);
+
+    if NOT fabs then exit;
+
+   wait(aiData[16]);
+
+   // def
+   if aiData[17][1] then
+   begin
+      for i := 1 to aiData[13] - GetDefenceVehicles(aiData) do
+      begin
+         weapons = aiData[13][i][4];
+         randWeapon = weapons[rand(1, weapons)];
+
+         AddComConstruct(fabs[rand(0, fabs)], aiData[13][i][1], aiData[13][i][2], aiData[13][i][3], randWeapon);
+      end; 
+   end;
+
+   // non combat
+   if aiData[17][3] then
+   begin
+      if FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) < aiData[15][1] then
+         for i := 1 to aiData[15][1] - FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]) do
+            AddComConstruct(fabs[rand(0, fabs)], [[us_medium_tracked], [ar_medium_trike], [ru_medium_tracked]][aiData[4]][1], engine_combustion, control_remote, [[us_cargo_bay], [ar_cargo_bay], [ru_cargo_bay]][aiData[4]][1]);
+
+      if FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_crane], [f_weapon, ar_crane], [f_weapon, ru_crane]]]) < aiData[15][2] then
+         for i := 1 to aiData[15][2] - FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_crane], [f_weapon, ar_crane], [f_weapon, ru_crane]]]) do
+           AddComConstruct(fabs[rand(0, fabs)], [[us_medium_tracked], [ar_medium_trike], [ru_medium_tracked]][aiData[4]][1], engine_combustion, control_remote, [[us_crane], [ar_crane], [ru_crane]][aiData[4]][1]);
+
+      if FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_bulldozer], [us_bulldozer], [f_weapon, ru_bulldozer]]]) < aiData[15][3] then
+         for i := 1 to aiData[15][3] - FilterAllUnits([[f_side, aiData[3]], [f_type, unit_vehicle], [f_or, [f_weapon, us_bulldozer], [us_bulldozer], [f_weapon, ru_bulldozer]]]) do
+           AddComConstruct(fabs[rand(0, fabs)], [[us_heavy_tracked], [ar_medium_trike], [ru_heavy_tracked]][aiData[4]][1], engine_combustion, control_manual, [[us_bulldozer], [us_bulldozer], [ru_bulldozer]][aiData[4]][1]);
+   end;
+
+   // attack
+   if aiData[17][2] - GetAttackVehicles(aiData) then
+   begin
+      for i := 1 to aiData[14] do
+      begin
+         weapons = aiData[14][i][4];
+         randWeapon = weapons[rand(1, weapons)];
+
+         AddComConstruct(fabs[rand(0, fabs)], aiData[14][i][1], aiData[14][i][2], aiData[14][i][3], randWeapon);
+      end;
+   end;
+
+end;
+
+// Example: EscortUnit(Heike, [Jakes, Serpent], [ [0,0], [1,1]]);
+Export Function EscortUnit(escortedUnit, units, path);
+var i, unit, attackUnits, attackUnit,  medics, damageUnits, crates, nearUnitsCounter, lastPathNode, nearEnemyObject, nearCrate, nearPathNode, unitsReachPathEnd;
+begin
+{ 
+   Logic:
+   1. Move units to next path nodes.
+   2. If can't reach next node destroy all object which can block (buildings, vehicles, units, crates).
+   3. If units destroy block objects, find near path node.
+   4. Wait for rest units min distance betweeen Heike and unit 9.
+   5. Delete from list node that the units could not reach and move to them.
+   6. If near is enemy unit - attack
+}
+
+    // Set state
+    for unit in units do
+         SetTag(unit, 0);
+
+    lastPathNode = [path[path][1], path[path][2]];
+
+    repeat
+        attackUnits = UnitFilter(units, [[f_ok], [f_or, [f_occupied], [f_class, class_soldier], [f_class, class_mortar], [f_type, unit_vehicle]]]);
+        medics = UnitFilter(units, [[f_ok], [f_class, class_scientistic]]);
+        damageUnits = UnitFilter(units, [[f_type, unit_human], [f_not, [f_lives, 1000]]]);
+        crates = GetListOfCratesInArea(AllMapArea); // struct:  [x1, y1, x2, y2, x3, y3, x4, y4]
+        for unit in attackUnits do
+        begin
+            // Move to next road node and attack all block objects
+            if path then
+            begin
+                i = 1;
+
+                repeat
+                    crates = GetListOfCratesInArea(AllMapArea);
+                    nearEnemyObject = NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(unit)]), unit);
+  
+                    nearCrate = FindNearestPoint(crates, GetX(unit), GetY(unit));  
+                    
+                    if damageUnits AND medics then
+                        ComHeal(medics, damageUnits[1])
+                    else if medics then
+                        ComMoveXY(medics, GetX(attackUnits[1]), GetY(attackUnits[1]));
+
+                    if NOT HasTask(unit) then
+                    begin
+                        nearCrate = FindNearestPoint(crates, GetX(unit), GetY(unit)); 
+
+                        if i > crates then
+                            i = 1;
+
+                        if nearEnemyObject AND nearCrate then
+                        begin
+                            if GetDistUnitXY(unit, GetX(nearEnemyObject), GetY(nearEnemyObject)) < GetDistUnitXY(unit, nearCrate[1], nearCrate[2]) then
+                                ComAttackUnit(attackUnits, nearEnemyObject)    
+                            else
+                                ComAttackPlace(attackUnits, crates[i], crates[i+1]);  
+                        end
+                        else if crates then
+                            ComAttackPlace(attackUnits, crates[i], crates[i+1])
+                        else
+                            ComAttackUnit(attackUnits, nearEnemyObject);               
+                    end;
+
+                    wait(0$1);
+
+                    if path then
+                    begin
+                        nearPathNode = FindNearPathNode(unit, path);
+
+                        ComAgressiveMove(attackUnits, nearPathNode[1], nearPathNode[2]);
+                        ComAgressiveMove(escortedUnit, nearPathNode[1], nearPathNode[2]);
+                    end;
+
+
+                    i = i + 2;
+
+                until GetDistUnitXY(escortedUnit, nearPathNode[1], nearPathNode[2]) <= 6;
+               
+                repeat
+                    wait(0$1);
+
+                    nearUnitsCounter = 0;
+
+                    for attackUnit in attackUnits do
+                        if GetDistUnits(unit, escortedUnit) <= 7 then nearUnitsCounter = nearUnitsCounter + 1;
+
+                until nearUnitsCounter = attackUnits;     
+                
+                for i := 1 to path do
+                    if path[i][1] = nearPathNode[1] AND path[i][2] = nearPathNode[2] then
+                    begin
+                        path = path diff [path[i]]; 
+                        break;
+                    end;                  
+            end;
+
+            if NOT path then
+                break;                
+        end;
+
+        // Count units
+        repeat
+            unitsReachPathEnd = 0;
+
+            for attackUnit in attackUnits do
+            begin
+                if NOT GetDistUnitXY(attackUnit, lastPathNode[1], lastPathNode[2]) < 7 AND GetTag(attackUnit) = 0 then
+                    ComMoveXY(attackUnit, lastPathNode[1], lastPathNode[2])
+                else if GetTag(attackUnit) = 0 then
+                    SetTag(attackUnit, 1);
+
+                if GetTag(unit) = 1 then
+                    unitsReachPathEnd = unitsReachPathEnd + 1;
+            end;       
+
+            wait(0$1); 
+        until unitsReachPathEnd > attackUnits - 3;
+
+    until NOT UnitFilter(units, [f_ok]) OR IsDying(escortedUnit);
+end;
+
+// Summary: Find near path node for unit
+// Input: [int] unit, [list][list] path
+// Output: [list] nearNode struct: [x, y]
+Function FindNearPathNode(unit, path);
+var i, nearPosition;
+begin
+
+    nearPosition = [path[1][1], path[1][2]];
+
+    for i := 2 to path do
+    begin
+        if GetDistUnitXY(unit, path[i][1], path[i][2]) < GetDistUnitXY(unit, nearPosition[1], nearPosition[2]) then
+        begin
+            nearPosition = Replace(nearPosition, 1, path[i][1]);   
+            nearPosition = Replace(nearPosition, 2, path[i][2]);
+        end;         
+    end; 
+
+    result = nearPosition;
+end;
+
+function ForceResetTaskList(unit);
+begin
+   if GetTaskList(unit) then
+      if GetTaskList(unit)[1][1] = 'e' then
+         SetTaskList(unit, []);
+end;
+
+function ExitUnitFromBuilding(unit);
+begin
+   if IsInUnit(unit) then ComExitBuilding(unit);  
+end;
