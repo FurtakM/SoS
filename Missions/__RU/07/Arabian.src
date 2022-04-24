@@ -1,1 +1,217 @@
-//
+Export Xavier, Heike; // Ar heroes
+Export heikeVehicle;
+Export heikeGroup;
+Export kabulBaseUnits;
+Export remoteVehs;
+Export minesList;
+
+Export function PrepareArabians;
+begin
+
+    remoteVehs = [];
+    minesList = [];
+    heikeGroup = [];
+
+    PrepareXavierAr; 
+    PrepareKabulBase; 
+end;
+
+export function PrepareIntroArabians;
+var i, solds;
+begin
+    solds = [];
+
+    uc_side = 2;
+    uc_nation = 2;
+
+    PrepareSoldier(false, 1);
+
+    for i := 1 to 2 do
+    begin
+        solds = solds ^ CreateHuman;
+        SetDir(solds[i], 4);
+        PlaceUnitArea(solds[i], ArabianIntroSpawnArea, false);
+    end;
+
+
+    result = solds; 
+end;
+
+Export Function PrepareHeikeGroup;
+var i, un, veh, waepons, soldAmount, mortarAmount, vehicleAmount;
+begin
+    uc_side = 8;
+    uc_nation = 2;
+
+    Heike:=PrepareUnitExt('Heike', false, 0);
+
+    waepons = [ar_gun, ar_rocket_launcher, ar_flame_thrower, ar_light_gun, ar_gatling_gun];
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, waepons[Rand(1, waepons)], 65);
+
+    heikeVehicle = CreateVehicle;
+    PlaceUnitArea(heikeVehicle, HeikeSpawnArea, false);
+    SetMark(heikeVehicle, 1);
+
+    PlaceHumanInUnit(Heike, heikeVehicle);
+
+    uc_side = 2;
+
+    soldAmount = heikeSoldiers;
+    if NOT heikeHeavyLosses then soldAmount = soldAmount +  heikeAdditionalSoldiers;
+
+    mortarAmount = heikeMortars;
+    if NOT heikeHeavyLosses then mortarAmount = mortarAmount +  heikeAdditionalMortars;
+
+    vehicleAmount = heikeVehicles;
+    if NOT heikeHeavyLosses then vehicleAmount = vehicleAmount +  heikeAdditionalVehicles;
+
+    for i := 1 to soldAmount  do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        un = CreateHuman;
+        heikeGroup = heikeGroup ^ un;
+
+        PlaceUnitArea(un, HeikeSpawnArea, false);
+    end;
+
+    for i := 1 to  mortarAmount   do
+    begin
+        PrepareHuman(false, class_mortar, enemySkillLevel);
+        un = CreateHuman;
+        heikeGroup = heikeGroup ^ un;
+
+        PlaceUnitArea(un, HeikeSpawnArea, false);
+    end;
+
+    for i := 1 to  vehicleAmount do
+    begin
+        PrepareMechanic(false, enemySkillLevel);
+        un = CreateHuman;
+        heikeGroup = heikeGroup ^ un;
+
+        PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, waepons[Rand(1, waepons)], 65);
+
+        veh = CreateVehicle;
+        heikeGroup = heikeGroup ^ veh;
+
+        PlaceUnitArea(veh, HeikeSpawnArea, false);
+        PlaceHumanInUnit(un, veh);
+    end;
+end;
+
+function PrepareKabulBase;
+var weapons, building, remoteVeh, outsideBunkers;
+begin
+    kabulBaseUnits = [];
+
+    uc_side = 2;
+    uc_nation = 2;
+
+    //Nef_PrepareBase(baseDep, area, name, skill, sources, nation, personel);
+    kabulBaseUnits := Nef_PrepareBase(
+        ar_dep,
+        KabulBaseArea,
+        'newkabul',
+        enemySkillLevel,
+        [
+        5000,
+        5000,
+        0
+        ],
+        nation_arabian,
+        [17, 3, 4, 8]
+    );  
+
+    case Difficulty of
+    2: begin
+       SetTech(tech_tech2, 2, state_researched);
+    end; 
+    3: begin
+        SetTech(tech_tech2, 2, state_researched);
+        SetTech(tech_tech3, 2, state_enabled);
+        SetTech(tech_weap2, 2, state_researched);
+        SetTech(tech_opto2, 2, state_enabled);
+    end;   
+    end; 
+
+    weapons = [ar_gun, ar_light_gun, ar_gatling_gun, ar_rocket_launcher, ar_flame_thrower];
+
+    for building in FilterAllUnits([[f_side, 2], [f_btype, b_bunker], [f_not, [f_bweapon, ar_radar]]]) do
+        PlaceWeaponTurret(building, weapons[Rand(1, weapons)]);
+
+    SetBLevel(FilterAllUnits([[f_side, 2], [f_type, unit_building]]), enemySkillLevel);
+
+    for remoteVeh in FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_ok], [f_weapon, ar_control_tower]]) do
+    begin
+        PrepareMechanic(false, enemySkillLevel);
+
+        PlaceHumanInUnit(CreateHuman, remoteVeh);
+    end;
+
+    // Outside bunkers
+    
+    if Difficulty = 1 then
+    begin
+        PrepareSoldier(false, enemySkillLevel); 
+        PlaceHumanInBunker(CreateHuman, ar_bun1);
+        PlaceHumanInBunker(CreateHuman, ar_bun2);
+        PlaceHumanInBunker(CreateHuman, ar_bun3);
+    end;
+
+    if Difficulty = 2 then
+    begin
+        PrepareSoldier(false, enemySkillLevel); 
+        PlaceHumanInBunker(CreateHuman, ar_bun1);
+        PlaceHumanInBunker(CreateHuman, ar_bun2);
+
+        PrepareHuman(false, class_mortar, enemySkillLevel); 
+        PlaceHumanInBunker(CreateHuman, ar_bun3);
+    end;  
+
+    if Difficulty = 3 then
+    begin
+        PrepareHuman(false, class_mortar, enemySkillLevel);  
+        PlaceHumanInBunker(CreateHuman, ar_bun1);
+        PlaceHumanInBunker(CreateHuman, ar_bun2);
+        PlaceHumanInBunker(CreateHuman, ar_bun3);
+    end;
+    
+
+    // Jakes nightmare ;)
+    CreateMineField(MinefieldNorthArea, 10 + [2, 5, 7][Difficulty]);
+    CreateMineField(MinefieldSouthArea, 20 + [4, 6, 9][Difficulty]);
+    CreateMineField(MinefieldMainRoadArea, 10);
+    CreateMineField(MinefieldOilDepositsArea, 5);
+
+    if NOT savedVsevolod then
+        CreateMineField(MinefieldExtraArea, 1);
+end;
+
+function CreateMineField(area, amount);
+var i, randPos;
+begin
+
+  for i=1 to amount do
+  begin
+    randPos = RandHexArea(area, false);
+    PlaceMine(randPos[1], randPos[2], 2, 0);
+    minesList = minesList ^ randPos;
+  end;
+end;
+
+function PrepareXavierAr;
+begin
+    uc_side = 5;
+    uc_nation = 2; 
+
+    Xavier = PrepareUnitExt('Xavier', false, 0);  
+end;
+
+every 0$1 do
+begin
+
+    remoteVehs = FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_ok], [f_occupied], [f_weapon, ar_control_tower]]);
+
+    enable;
+end;

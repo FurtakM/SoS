@@ -1,3 +1,640 @@
 Export function MissionIntro;
+var arSolds, burlakUnits;
 begin
+
+   burlakUnits = FilterUnitsInArea(IntroArea, [[f_side, 3], [f_ok]] diff [Burlak, Vsevolod]);
+
+   CenterNowOnUnits(Burlak);
+
+   SayRadio(Platonov, 'DStart-Pla-1');
+
+   if savedVsevolod then
+   begin
+
+      arSolds = PrepareIntroArabians;
+
+      SayRadio(Platonov, 'DStartVS-Pla-1');    
+      SayRadio(Platonov, 'DStart2-Pla-1');
+      Say(Burlak, 'DStart2-Bur-1');
+
+      PlaceSeeing(92, 133, 3, -9);
+
+      CenterOnXY(103, 133);
+
+      AddComPlaceMineXY(arSolds[1], 93, 134, 1);
+      AddComMoveXY(arSolds[2], 96, 134);
+
+      repeat
+         wait(0$1);
+      until GetDistUnitXY(arSolds[1], 93, 134) < 2;
+
+      wait(0$5);
+
+      ComMoveXY([arSolds[1], arSolds[2]], 107, 134);
+
+      repeat
+         wait(0$1);
+      until GetDistUnitXY(arSolds[1], 107, 134) < 5;
+
+      ComCrawl(arSolds);
+
+      CenterOnXY(96, 161);
+
+      ComMoveXY(Vsevolod, 97, 160);
+      AddComTurnUnit(Vsevolod, Burlak);
+
+      if IsInUnit(Burlak) then ComExitVehicle(Burlak);
+      wait(0$01);
+      AddComMoveXY(Burlak, 96, 162);
+      AddComTurnUnit(Burlak, Vsevolod);
+
+      repeat
+         wait(0$1);
+      until GetDistUnits(Burlak, Vsevolod) <= 5;
+
+      CenterOnXY(96, 160);
+
+      Say(Burlak, 'DMeetVsevolodVS-Bur-1');
+      PlaceSeeing(52, 59, 3, -14);
+      CenterOnXY(58, 54);
+      Say(Vsevolod, 'DMeetVsevolodVS-Vse-1');
+      CenterNowOnUnits([Burlak, Vsevolod]);
+      Say(Burlak, 'DMeetVsevolodVS-Bur-2');
+      CenterOnXY(61, 102);
+      Say(Vsevolod, 'DMeetVsevolodVS-Vse-2');
+      CenterNowOnUnits([Burlak, Vsevolod]);
+
+      RemoveSeeing(52, 59, 3);
+      RemoveSeeing(92, 133, 3);
+
+      SetAttitude(3, 2, att_friend, true);
+
+      if UnitFilter(burlakUnits, [[f_type, unit_vehicle], [f_empty]]) AND UnitFilter(burlakUnits, [f_type, unit_human]) then
+         ComEnterUnit(UnitFilter(burlakUnits, [f_type, unit_human])[1], UnitFilter(burlakUnits, [[f_type, unit_vehicle], [f_empty]])[1]);
+
+      AddComMoveXY(burlakUnits, GetX(Burlak), GetY(Burlak));
+
+      wait(0$6);
+
+      AddComMoveXY(Burlak, 98, 143);
+      AddComMoveXY(Vsevolod, 98, 143);
+      AddComMoveXY(burlakUnits, 98, 143);
+
+      repeat
+         wait(0$1);
+         ComMoveXY(Burlak, 98, 143);
+         ComMoveXY(Vsevolod, 98, 143);
+         CenterNowOnUnits(Vsevolod);
+      until GetDistUnitXY(Burlak, 98, 143) <= 4 AND GetDistUnitXY(Vsevolod, 98, 143) <= 4;
+
+      CenterOnXY(93, 134);
+      ComMoveXY(Vsevolod, 82, 109);
+
+      wait(0$2);
+
+      ComMoveXY(Burlak, 82, 109);
+      ComMoveXY(burlakUnits, 82, 109);
+
+      repeat
+         wait(0$1);
+         CenterNowOnUnits(Vsevolod);
+      until GetDistUnitXY(Vsevolod, 93, 134) <= 2;
+
+      LaunchMineAtPos(93, 134, 2);
+      wait(0$1);
+      SetLives(Vsevolod, 250);
+
+      wait(0$1);
+
+      ComStop(Burlak);
+      ComStop(Vsevolod);
+      ComStop(burlakUnits);
+
+      DialogueOn;
+      if Kirilenkova then Say(Kirilenkova, 'DStasisVS-Kir-1');
+      if Titov then Say(Titov, 'DStasisVS-Tit-1');
+      Say(Burlak, 'DStasisVS-Bur-1');
+
+      if Titov then Say(Titov, 'DStasisVS-Tit-2')
+      else if Kirilenkova then Say(Kirilenkova, 'DStasisVS-Kir-2');
+
+      if Titov OR Kirilenkova then Say(Burlak, 'DStasisVS-Bur-2');
+
+      wait(0$2);
+
+      SayRadio(Popov, 'DStasisVS-Pop-2');
+      
+      if Gleb then Say(Gleb, 'DStasisVS-Glb-2');
+
+      SetAttitude(3, 2, att_enemy, true);
+      ChangeSideFog(2, 2);
+
+      DialogueOff;
+      InGameOff;
+
+      SetLives(Vsevolod, 250);
+
+      ChangeMissionObjectives('MVsevolod');
+
+      wait(0$2);
+
+      ComWalk(arSolds);
+      wait(0$01);
+      AddComAgressiveMove(arSolds, GetX(Vsevolod), GetY(Vsevolod));
+
+   end else
+   begin     
+      SayRadio(Platonov, 'DStartNV-Pla-1');
+      SayRadio(Platonov, 'DStart2-Pla-1');
+      Say(Burlak, 'DStart2-Bur-1');
+
+      DialogueOff;
+      InGameOff;
+      ChangeMissionObjectives('MStart');
+   end;
+
+   SaveForQuickRestart;
+
+   enableCounter = true;
+
+   ActiveAI(GetAIIndexByID(1));
+
 end;
+
+// Heal Vsevolod
+every 0$5 trigger Vsevolod AND GetLives(Vsevolod) >= 250 do
+begin
+   DialogueOn;
+   CenterNowOnUnits(Vsevolod);
+   Say(Burlak, 'DSeviSaved-Bur-1');  
+   Say(Vsevolod, 'DSeviSaved-Vse-1'); 
+   Say(Burlak, 'DSeviSaved-Bur-2');  
+   Say(Vsevolod, 'DSeviSaved-Vse-2');
+   DialogueOff;
+
+   ChangeMissionObjectives('MStart');
+end;
+
+// Spawn Xavier
+every 5$0 trigger Kirilenkova AND NOT IsDead(Kirilenkova) do
+var enemyUntis, x, y, dir;
+begin
+
+   enemyUntis = FilterAllUnits([[f_side, 2], [f_ok], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]);
+
+   repeat
+      wait(0$1);
+   until IsOK(Kirilenkova) AND GetDistUnits(NearestUnitToUnit(enemyUntis, Kirilenkova), Kirilenkova) > 12;
+
+   if IsInUnit(Kirilenkova) then PlaceUnitXYR(Xavier, GetX(IsInUnit(Kirilenkova)), GetY(IsInUnit(Kirilenkova)), 5, true)
+   else PlaceUnitXYR(Xavier, GetX(Kirilenkova), GetY(Kirilenkova), 5, true);
+
+   xavierSpawned = true;
+
+   wait(0$2);
+
+   InGameOn;
+   CenterNowOnUnits(Xavier);
+   ComTurnUnit(Xavier, Kirilenkova);
+   ComTurnUnit(Kirilenkova, Xavier);
+
+   DialogueOn;
+
+   Say(Xavier, 'DMeetXavier-Xav-1');
+   Say(Kirilenkova, 'DMeetXavier-Kir-1');
+   Say(Xavier, 'DMeetXavier-Xav-2');
+
+   case Query('QXavier') of
+      1: begin
+         Say(Burlak, 'DQrXavier#1-Bur-1');
+         Say(Kirilenkova, 'DQrXavier#1-Kir-1');
+         Say(Xavier, 'DQrXavier#1-Xav-1');
+         Say(Kirilenkova, 'DQrXavier#1-Kir-2');
+         Say(Xavier, 'DQrXavier#1-Xav-2');
+         Say(Kirilenkova, 'DQrXavier#1-Kir-3');
+         Say(Xavier, 'DQrXavier#1-Xav-3');
+         Say(Kirilenkova, 'DQrXavier#1-Kir-4');
+         if IsOK(Gleb) then Say(Gleb, 'DQrXavier#1-Glb-4');
+
+         dir = GetDir(Xavier);
+         x = GetX(Xavier);
+         y = GetY(Xavier);
+
+         RemoveUnit(Xavier);
+
+         PrepareXavierRu(x, y, dir);
+      end;
+
+      2: begin
+         Say(Burlak, 'DQrXavier#2-Bur-1');
+         Say(Kirilenkova, 'DQrXavier#2-Kir-1');
+         Say(Xavier, 'DQrXavier#2-Xav-1');
+         Say(Kirilenkova, 'DQrXavier#2-Kir-2');
+         Say(Xavier, 'DQrXavier#2-Xav-2');
+         Say(Kirilenkova, 'DQrXavier#2-Kir-3');
+         Say(Xavier, 'DQrXavier#2-Xav-3');
+         Say(Kirilenkova, 'DQrXavier#2-Kir-4');
+         Say(Xavier, 'DQrXavier#2-Xav-4');
+         Say(Kirilenkova, 'DQrXavier#2-Kir-5');
+         if IsOK(Gleb) then Say(Gleb, 'DQrXavier#2-Glb-5');
+
+         xavierPatrol = true;
+      end;
+   end;
+
+   InGameOff;
+   DialogueOff;
+
+end;
+
+// Xavier patrol in Kabul base
+every 0$1 trigger xavierPatrol AND GetAttitude(3, 5) = att_friend do
+var i;
+begin
+   enable;
+
+   for i := 1 to xavierPatrolPathKabul do
+      AddComMoveXY(Xavier, xavierPatrolPathKabul[i][1], xavierPatrolPathKabul[i][2]);
+
+end;
+
+// Xavier back from Kabul to set contact spot
+every 7$0 trigger xavierPatrol AND xavierFirstPatrol AND GetAttitude(3, 5) = att_friend do
+begin
+   xavierPatrol = false;
+   xavierCanSaySpotDialog = true;
+   xavierFirstPatrol = false;
+
+   ComMoveXY(Xavier, 123, 92);
+end;
+
+// Xavier dialog near spot
+every 0$1 trigger xavierCanSaySpotDialog AND GetDistUnitXY(Xavier, 123, 92) <= 2 AND IsOk(Kirilenkova) AND GetAttitude(3, 5) = att_friend do
+begin
+   DialogueOn;
+   CenterNowOnUnits(Xavier);
+
+   Say(Xavier, 'DPointXavier-Xav-1');
+   Say(Kirilenkova, 'DPointXavier-Kir-1');
+   Say(Xavier, 'DPointXavier-Xav-2');
+
+   DialogueOff;
+
+   SetAreaMapShow(XavierContactArea, 1);
+
+   SetTaskList(Xavier, []);
+
+   canLeaveMessage = true;
+   xavierCanSaySpotDialog = false;
+   xavierPatrol = true;
+end;
+
+// Kirilenkova put message for Xavier
+every 0$1 trigger canLeaveMessage AND IsInArea(Kirilenkova, XavierContactArea) AND GetAttitude(3, 5) = att_friend do
+begin
+   case Query('QActivateXavier') of
+      1: begin
+         messageForXavier = 1;
+         canLeaveMessage = false;
+         SetAreaMapShow(XavierContactArea, 0);
+         exit;
+      end;
+      2: begin
+         messageForXavier = 2;
+         canLeaveMessage = false;
+         SetAreaMapShow(XavierContactArea, 0);
+         exit;
+      end;
+      3: messageForXavier = 3;
+   end;
+
+   wait(0$4);
+   enable;
+end;
+
+// Xavier go for message
+every 0$20 trigger (messageForXavier = 1 OR messageForXavier = 2) AND GetAttitude(3, 5) = att_friend do
+begin
+   xavierPatrol = false;
+
+   ComMoveXY(Xavier, 123, 92);
+end;
+
+// Xavier read message
+every 0$1 trigger (messageForXavier = 1 OR messageForXavier = 2) AND GetDistUnitXY(Xavier, 123, 92) <= 2 AND GetAttitude(3, 5) = att_friend do
+begin
+   if messageForXavier = 1 then
+   begin
+      Say(Burlak, 'DQrActivateXavier#1-Bur-1');
+      xavierJoinToPlayer = true;
+   end;
+
+   if messageForXavier = 2 then
+   begin
+      Say(Burlak, 'DQrActivateXavier#2-Bur-1');
+      ComEnterUnit(Xavier, XavierVeh);
+   end;
+
+end;
+
+// Xavier join to player
+every 0$1 trigger xavierJoinToPlayer AND GetAttitude(3, 5) = att_friend do
+var unit, yourUnits, x, y, dir, veh;
+begin
+   if messageForXavier = 1 then ComMoveXY(Xavier, GetX(Burlak), GetY(Burlak));
+   if messageForXavier = 2 then ComMoveXY(IsInUnit(Xavier), GetX(Burlak), GetY(Burlak));
+
+   yourUnits = FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_type, unit_human], [f_occupied]]]);
+
+   if GetDistUnits(NearestUnitToUnit(yourUnits, Xavier), Xavier) <= 6 AND messageForXavier = 1  then
+   begin
+      xavierJoinToPlayer = false;
+
+      x = GetX(Xavier);
+      y = GetY(Xavier);
+      dir = GetDir(Xavier);
+
+      RemoveUnit(Xavier);
+
+      PrepareXavierRu(x, y, dir);
+
+      exit;
+   end;
+
+   if GetDistUnits(NearestUnitToUnit(yourUnits, IsInUnit(Xavier)), IsInUnit(Xavier)) <= 6 AND messageForXavier = 2  then
+   begin
+      xavierJoinToPlayer = false;
+
+      veh = IsInUnit(Xavier);
+
+      RemoveUnit(Xavier);
+      
+      SetSide(veh, 3);
+      PrepareXavierRuVeh(veh);
+
+      exit;
+   end;
+
+   enable;
+end;
+
+// Spawn Yashin
+every 8$0 do
+var playerDepot;
+begin
+
+   SetTech(tech_bazooka, 3, state_enabled);
+
+    PlaceUnitArea(Yashin, YashinSpawnArea, false);
+    ComMoveXY(Yashin, 97, 162);
+
+    wait(0$3);
+    CenterNowOnUnits(Yashin);
+
+    DialogueOn;
+    Say(Yashin, 'DYashinArrives-Yas-1');
+
+    if savedVsevolod then
+    begin
+        Say(Vsevolod, 'DYashinArrives-Vse-1');
+        Say(Yashin, 'DYashinArrives-Yas-2');
+        Say(Vsevolod, 'DYashinArrives-Vse-2');
+        Say(Yashin, 'DYashinArrives-Yas-3');
+        Say(Vsevolod, 'DYashinArrives-Vse-3');
+    end else
+    begin
+        Say(Burlak, 'DYashinArrives-Bur-3');    
+        Say(Yashin, 'DYashinArrives-Yas-4');
+        Say(Burlak, 'DYashinArrives-Bur-4');
+        SayRadio(Yashin, 'DYashinArrives-Yas-5'); 
+    end;
+
+    Say(Burlak, 'DYashinArrives-Bur-5');  
+    Say(Yashin, 'DYashinArrives-Yas-6');
+    Say(Burlak, 'DYashinArrives-Bur-6');  
+    Say(Yashin, 'DYashinArrives-Yas-7');
+    
+    if IsDead(ar_bun1) AND IsDead(ar_bun2) AND IsDead(ar_bun3) then
+    begin
+      case Query('QYashinHelp2') of
+         1:begin
+            Say(Burlak, 'DQrYashinHelp#2-Bur-1');
+            Say(Yashin, 'DQrYashinHelp#2-Yas-1');
+         end;
+
+         2:begin
+            Say(Burlak, 'DQrYashinHelp#3-Bur-1');
+            Say(Yashin, 'DQrYashinHelp#3-Yas-1');
+         end;
+      end;   
+    end else
+    begin
+      case Query('QYashinHelp') of
+         1:begin
+            Say(Burlak, 'DQrYashinHelp#1-Bur-1');
+            Say(Yashin, 'DQrYashinHelp#1-Yas-1');
+            Say(Burlak, 'DQrYashinHelp#1-Bur-2');
+            Say(Yashin, 'DQrYashinHelp#1-Yas-2');
+         end;
+
+         2:begin
+            Say(Burlak, 'DQrYashinHelp#2-Bur-1');
+            Say(Yashin, 'DQrYashinHelp#2-Yas-1');
+         end;
+
+         3:begin
+            Say(Burlak, 'DQrYashinHelp#3-Bur-1');
+            Say(Yashin, 'DQrYashinHelp#3-Yas-1');
+         end;
+      end;     
+    end;
+
+
+    Say(Yashin, 'DYashinLeave-Yas-1');
+
+    yashinSearchVeh = true;
+
+    DialogueOff;
+
+    playerDepot = FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+    if playerDepot then ComMoveXY(Yashin, GetX(playerDepot[1]), GetY(playerDepot[1]));
+end;
+
+// Block attack Yashin and dialog
+every 1 trigger IsPlaced(Yashin) do
+var yourUnits, unit;
+begin
+
+    yourUnits = FilterAllUnits([f_side, 3]);
+
+    for unit in yourUnits do
+        if WantsToAttack(unit) = Yashin OR (yashinVeh AND  WantsToAttack(unit) = yashinVeh) then
+        begin
+            ComStop(unit);
+            DialogueOn;
+            Say(Burlak, 'DYashinAttack-Bur-1');
+            DialogueOff
+        end;
+
+    enable;
+end;
+
+// Immortal Yashin and vehicle
+every 1 trigger IsPlaced(Yashin) do
+begin
+   SetLives(Yashin, 1000);
+
+   if yashinVeh then SetLives(yashinVeh, 1000);
+
+   enable;
+end;
+
+// Yashin search vehcile
+every 0$1 trigger IsPlaced(Yashin) AND yashinSearchVeh do
+var playerVehs, veh;
+begin
+   playerVehs = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty], [f_nation, nation_russian], [f_or, [f_weapon, ru_heavy_machine_gun], [f_weapon, ru_gatling_gun], [f_weapon, ru_gun], [f_weapon, ru_heavy_gun]]]);
+
+   if playerVehs then
+   begin
+      for veh in playerVehs do
+      begin
+         if GetFuel(veh) >= 50 then
+         begin
+            yashinSearchVeh = false;
+            yashinVeh = veh;
+            SetSide(yashinVeh, 6);
+            ComEnterUnit(Yashin, yashinVeh);
+            ComMoveToArea(yashinVeh, YashinExitArea);   
+            exit;       
+         end;   
+      end;
+   end;
+   enable;
+end;
+
+// Yashin exit area
+every 0$1 trigger IsInArea(yashinVeh, YashinExitArea) do
+begin
+   RemoveUnit(yashinVeh);
+   RemoveUnit(Yashin);
+end;
+
+// Heike arrive
+every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, unit_building], [f_ok]]) <= 7 AND FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_ok]]) <= 6 AND (IsDying(ar_dep) OR IsDead(ar_dep) OR GetSide(ar_dep) = 3) do
+var x, y, dir;
+begin
+   enableCounter = false;
+   Display_strings = [];
+
+   DeactiveAI(GetAIIndexByID(1));
+
+   SayRadio(Popov, 'DHeikeObj-Pop-1');
+   Say(Burlak, 'DHeikeObj-Bur-1');  
+   SayRadio(Popov, 'DHeikeObj-Pop-2');
+   Say(Burlak, 'DHeikeObj-Bur-2');
+
+   ChangeMissionObjectives('MHeike');
+   Query('QHeike');
+
+
+   // if for some reason Xavier don't spawn if Kirilenkova  or not join to player
+   if NOT xavierSpawned AND Kirilenkova AND NOT IsDead(Kirilenkova) then
+   begin
+      if IsInUnit(Kirilenkova) then PlaceUnitXYR(Xavier, GetX(IsInUnit(Kirilenkova)), GetY(IsInUnit(Kirilenkova)), 5, true)
+      else PlaceUnitXYR(Xavier, GetX(Kirilenkova), GetY(Kirilenkova), 5, true);
+
+      xavierSpawned = true;
+
+      wait(0$2);
+
+      InGameOn;
+      CenterNowOnUnits(Xavier);
+      ComTurnUnit(Xavier, Kirilenkova);
+      ComTurnUnit(Kirilenkova, Xavier);
+
+      DialogueOn;
+
+      Say(Xavier, 'DMeetXavier-Xav-1');
+      Say(Kirilenkova, 'DMeetXavier-Kir-1');
+      Say(Xavier, 'DMeetXavier-Xav-2');
+      Say(Burlak, 'DQrXavier#1-Bur-1');
+      Say(Kirilenkova, 'DQrXavier#1-Kir-1');
+      Say(Xavier, 'DQrXavier#1-Xav-1');
+      Say(Kirilenkova, 'DQrXavier#1-Kir-2');
+      Say(Xavier, 'DQrXavier#1-Xav-2');
+      Say(Kirilenkova, 'DQrXavier#1-Kir-3');
+      Say(Xavier, 'DQrXavier#1-Xav-3');
+      Say(Kirilenkova, 'DQrXavier#1-Kir-4');
+      if IsOK(Gleb) then Say(Gleb, 'DQrXavier#1-Glb-4');
+
+      dir = GetDir(Xavier);
+      x = GetX(Xavier);
+      y = GetY(Xavier);
+
+      RemoveUnit(Xavier);
+
+      PrepareXavierRu(x, y, dir);
+
+      DialogueOff;
+      IngameOff;
+   end;
+
+   if xavierSpawned AND GetSide(Xavier) = 5 AND GetAttitude(3, 5) = att_friend then
+   begin
+      xavierPatrol = false;
+
+      dir = GetDir(Xavier);
+      x = GetX(Xavier);
+      y = GetY(Xavier);
+
+      RemoveUnit(Xavier);
+
+      PrepareXavierRu(x, y, dir);  
+   end;
+
+   wait(2$30);
+
+   PrepareHeikeGroup;
+
+   EscortUnit(heikeVehicle, heikeGroup, heikePath);
+end;
+
+// Continue escape if Heike lost vehicle
+every 0$1 trigger IsDying(heikeVehicle) do
+   EscortUnit(Heike, heikeGroup, heikePath);
+
+every 0$1 trigger IsDying(Heike) do
+begin
+   canCaptureHeike = true;
+   ComStop(Heike);
+   SetAttitude(8, 3, att_friend, true);
+end;
+
+every 0$2 trigger GetLives(Heike) > 250 AND canCaptureHeike do
+   Dial_CaptureHeike;
+
+// Capture Heike execute in event
+Export Function Dial_CaptureHeike;
+begin
+   heikeCaptured = true;
+   enableCounter = false;
+
+   InGameOn;
+   DialogueOn;
+   CenterNowOnUnits(Heike);
+
+   Say(Heike, 'DHeikeCapt-Hke-1');
+   Say(Burlak, 'DHeikeCapt-Bur-1');
+   Say(Heike, 'DHeikeCapt-Hke-2');
+
+   DialogueOff;
+   IngameOff;
+
+   FinishMission;
+end;
+
+// Heike dead - end mission
+every 0$2 trigger IsDead(Heike) AND IsPlaced(Heike) do
+   FinishMission;

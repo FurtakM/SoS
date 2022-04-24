@@ -28,7 +28,7 @@ End;
 // Example: ExtSaveCharacter(Burlak, 'MyBurlak');
 Export Function ExtSaveCharacter(character, characterStringID, side);
 begin
-   if GetSide(character) = side AND IsOK(character) then
+   if GetSide(character) = side AND NOT IsDead(character) then
       SaveCharacters(character, missionPrefix&characterStringID);
 end;
 
@@ -41,7 +41,7 @@ begin
    resultCharactersToSave = [];
 
    for unit in characters do
-      if GetSide(unit) = side AND IsOK(unit) then
+      if GetSide(unit) = side AND NOT IsDead(unit) then
          resultCharactersToSave = resultCharactersToSave ^ unit;
 
    SaveCharacters(resultCharactersToSave, missionPrefix&charactersStringID);
@@ -60,7 +60,7 @@ end;
 
 Export function DialogRandom(characters, dialogMID, dialogFID, radio, canTalkHero);
 var i, speaker, units;
-begin
+begin                                       
    units = characters;
 
    units := units diff [Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin, Vsevolod, Kirilenkova];
@@ -118,6 +118,16 @@ begin
       if GetClass(eng) = class_engineer AND IsOK(eng) AND building AND NOT GetSide(building) = GetSide(eng) then
          AddTaskList(eng, [['e', GetX(building), GetY(building), building, 0, 0, 0]])
 
+end;
+
+// Summary: Add task for soldier to place time/remote mine in XY
+// Input: [int] soldierID, [int] x, [int] y, [int] mine type (0 - time, 1 - remote)
+// Example: AddComPlaceMineXY(Gensher, 21, 37, 0);
+Export Function AddComPlaceMineXY(unit, x, y, type);
+begin
+   if NOT GetClass(unit) = class_soldier then exit;
+
+   AddTaskList(unit, [['p', x, y, 0, type, 0, 0]])
 end;
 
 Export Function Delete2D(tab, firstIndex, secondIndex);
@@ -254,7 +264,7 @@ if buildings then
               if GetBType(f[1]) = b_barracks then
                  begin
                  if UnitsInside(f[1]) < 3 then
-                    PrepareHuman(false, i, skill)
+                    PrepareHuman(false, [class_sniper, class_mortar, class_bazooker][nation], skill)
                    else
                     PrepareHuman(false, i, skill);
                  end
