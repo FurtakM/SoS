@@ -6,6 +6,7 @@ if (parseInt(MOD_DATA.Static_Menu) == 0) then
     TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
     TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
     TEXTURE5 = loadOGLTexture('mainbackground5.png', true);
+    TEXTURE6 = loadOGLTexture('mainbackground6.png', true);
 
     LAST_USED_TEXTURE = 1;
 
@@ -16,7 +17,7 @@ if (parseInt(MOD_DATA.Static_Menu) == 0) then
     end;
 
     function changeBackgroundMenuImage();
-        local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5};
+        local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5, TEXTURE6};
         local texture = tmp[LAST_USED_TEXTURE];
         LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
 
@@ -42,17 +43,26 @@ setVisible(mod_version, false);
 logoVisible(false);
 
 setVisible(classic_logo, true);
-setWidth(classic_logo, 768);
-setHeight(classic_logo, 78);
-setX(classic_logo, LayoutWidth / 2 - 384);
 
-local logoHeight = LayoutHeight / 2 - (155 + 92 * 2);
+local logoY;
 
-if (logoHeight < 80) then
-    logoHeight = 80;
+if LayoutWidth < 1366 then
+	setWidth(classic_logo, 660);
+	setX(classic_logo, LayoutWidth / 2 - 330);
+	setHeight(classic_logo, 91);
+	logoY = LayoutHeight / 2 - (91 + 92 * 2);
+else
+	setWidth(classic_logo, 1320);
+	setX(classic_logo, LayoutWidth / 2 - 660);
+	setHeight(classic_logo, 182);
+	logoY = LayoutHeight / 2 - (182 + 92 * 2);
 end;
 
-setY(classic_logo, logoHeight);
+if (logoY < 80) then
+    logoY = 80;
+end;
+
+setY(classic_logo, logoY);
 
 InitMusicTimer = timer:repeatable(0.5, 'playMenuMusic(1);', -1);
 

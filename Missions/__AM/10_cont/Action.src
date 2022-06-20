@@ -52,6 +52,8 @@ begin
         p := p - 1;
     until GetDistUnits(JMM, Simms) < 5 or p <= 0;
 
+    ComTurnUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
+
     if not IsInUnit(JMM) then
        ComTurnUnit(JMM, Simms);
 
@@ -63,18 +65,25 @@ begin
     Say(JMM, 'D2a-JMM-1');
 
     if IsOk(Joan) then
-    begin
-    if not IsInUnit(JMM) then
-       ComTurnUnit(JMM, Joan);
-        Say(Joan, 'D2b-Joan-1');
-        Say(JMM, 'D2b-JMM-1');
-        Say(Joan, 'D2b-Joan-2');
-    end;
+       begin
+
+       if not IsInUnit(JMM) then
+          ComTurnUnit(JMM, Joan);
+
+       ComTurnUnit(Joan, JMM);
+
+       Say(Joan, 'D2b-Joan-1');
+       Say(JMM, 'D2b-JMM-1');
+       Say(Joan, 'D2b-Joan-2');
+       end;
 
     if IsOk(Denis) then
     begin
         if not IsInUnit(JMM) then
            ComTurnUnit(JMM, Denis);
+
+        ComTurnUnit(Denis, JMM);
+
         Say(Denis, 'D2c-Den-1');
     end;
 
@@ -86,16 +95,20 @@ begin
             ComMoveUnit(Kikuchi, JMM);
         until GetDistUnits(JMM, Kikuchi) < 5;
 
+        ComTurnUnit(Kikuchi, JMM);
+
         if not IsInUnit(JMM) then
            ComTurnUnit(JMM, Kikuchi);
-        Say(Kikuchi, 'D3b-Yam-1');
 
+        Say(Kikuchi, 'D3b-Yam-1');
     end;
 
     if IsOk(Khatam) then
     begin
         if not IsInUnit(JMM) then
            ComTurnUnit(JMM, Khatam);
+
+        ComTurnUnit(Khatam, JMM);
 
         Say(JMM, 'D2c-JMM-1');
         Say(Khatam, 'D2c-Khat-1');
@@ -105,8 +118,7 @@ begin
     SetSide(FilterAllUnits([f_side, 4]), 1);
     ChangeMissionObjectives('M1a');
     joinEpsilon = 1;
-
-end;
+End;
 
 // Ar cargo move
 Every 0$1 trigger GetCargo(cargo1, 1) = 0 and GetCargo(cargo2, 1) = 0  and GetCargo(cargo2, 2) = 0 do
@@ -212,9 +224,11 @@ begin
 end;
 
 // Respawn Russian convoy
-Every 2$1 trigger joinEpsilon = 1 do 
+Every 0$2 trigger joinEpsilon = 1 do
 var rnd;
 begin
+    wait(2$00);
+
     SayRadio(AmScout, 'D4-FSol1-1');
     ChangeMissionObjectives('M3');
 
