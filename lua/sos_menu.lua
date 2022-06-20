@@ -187,10 +187,8 @@ menu.window2.multiplayer = clButton(
     170,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
-    'showMultiplayer(1);',
-    {
-        disabled = true
-    }
+    'showMultiplayerWindow(1);',
+    {}
 );
 
 menu.window2.skirmish = clButton(
