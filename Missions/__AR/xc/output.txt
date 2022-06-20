@@ -1,25 +1,98 @@
-// every 0 0$10 do
-   0: GO 2
-   2: DISABLE
-// begin display_strings := display_strings ^ ( tick / 35 ) & s ;
-   3: LD_ADDR_OWVAR 47
-   7: PUSH
-   8: LD_OWVAR 47
-  12: PUSH
-  13: LD_OWVAR 1
+// export function SideAttackedSide ( side1 , side2 ) ; var i , un ; begin
+   0: LD_INT 0
+   2: PPUSH
+   3: PPUSH
+   4: PPUSH
+// result := 0 ;
+   5: LD_ADDR_VAR 0 3
+   9: PUSH
+  10: LD_INT 0
+  12: ST_TO_ADDR
+// if side1 < 0 or side1 > 8 or side2 < 0 or side2 > 8 then
+  13: LD_VAR 0 1
   17: PUSH
-  18: LD_INT 35
-  20: DIVREAL
+  18: LD_INT 0
+  20: LESS
   21: PUSH
-  22: LD_STRING s
-  24: STR
-  25: ADD
-  26: ST_TO_ADDR
-// wait ( 0 0$12 ) ;
-  27: LD_INT 420
-  29: PPUSH
-  30: CALL_OW 67
-// enable ;
-  34: ENABLE
+  22: LD_VAR 0 1
+  26: PUSH
+  27: LD_INT 8
+  29: GREATER
+  30: OR
+  31: PUSH
+  32: LD_VAR 0 2
+  36: PUSH
+  37: LD_INT 0
+  39: LESS
+  40: OR
+  41: PUSH
+  42: LD_VAR 0 2
+  46: PUSH
+  47: LD_INT 8
+  49: GREATER
+  50: OR
+  51: IFFALSE 55
+// exit ;
+  53: GO 130
+// for i in FilterAllUnits ( [ f_side , side2 ] ) do
+  55: LD_ADDR_VAR 0 4
+  59: PUSH
+  60: LD_INT 22
+  62: PUSH
+  63: LD_VAR 0 2
+  67: PUSH
+  68: EMPTY
+  69: LIST
+  70: LIST
+  71: PPUSH
+  72: CALL_OW 69
+  76: PUSH
+  77: FOR_IN
+  78: IFFALSE 128
+// begin un := UnitShoot ( i ) ;
+  80: LD_ADDR_VAR 0 5
+  84: PUSH
+  85: LD_VAR 0 4
+  89: PPUSH
+  90: CALL_OW 504
+  94: ST_TO_ADDR
+// if GetSide ( un ) = side1 then
+  95: LD_VAR 0 5
+  99: PPUSH
+ 100: CALL_OW 255
+ 104: PUSH
+ 105: LD_VAR 0 1
+ 109: EQUAL
+ 110: IFFALSE 126
+// begin result := un ;
+ 112: LD_ADDR_VAR 0 3
+ 116: PUSH
+ 117: LD_VAR 0 5
+ 121: ST_TO_ADDR
+// exit ;
+ 122: POP
+ 123: POP
+ 124: GO 130
+// end ; end ;
+ 126: GO 77
+ 128: POP
+ 129: POP
 // end ;
-  35: END
+ 130: LD_VAR 0 3
+ 134: RET
+// every 0 0$1 do
+ 135: GO 137
+ 137: DISABLE
+// begin enable ;
+ 138: ENABLE
+// display_strings := SideAttackedSide ( 1 , 2 ) ;
+ 139: LD_ADDR_OWVAR 47
+ 143: PUSH
+ 144: LD_INT 1
+ 146: PPUSH
+ 147: LD_INT 2
+ 149: PPUSH
+ 150: CALL 0 0 2
+ 154: ST_TO_ADDR
+// end ;
+ 155: END

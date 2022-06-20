@@ -573,10 +573,18 @@ function clCheckbox(PARENT, X, Y, EVENT, PROPERTIES)
 
     if PROPERTIES.textureChecked == nil then
         PROPERTIES.textureChecked = 'classic/edit/checkbox_on.png';
+
+        if PROPERTIES.disabled then
+            PROPERTIES.textureChecked = 'classic/edit/checkbox_on_inactive.png';
+        end;
     end;
 
     if PROPERTIES.textureUnchecked == nil then
         PROPERTIES.textureUnchecked = 'classic/edit/checkbox_off.png';
+
+        if PROPERTIES.disabled then
+            PROPERTIES.textureUnchecked = 'classic/edit/checkbox_off_inactive.png';
+        end;
     end;
 
     if PROPERTIES.interface then
@@ -657,6 +665,10 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.trimLength = 22;
     end;
 
+    if PROPERTIES.trimFrom == nil then
+        PROPERTIES.trimFrom = 1;
+    end;
+
     if PROPERTIES.defaultLabel == nil then
         PROPERTIES.defaultLabel = '';
     end;
@@ -705,7 +717,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         anchorLTRB,
         XYWH(4, 0, PROPERTIES.width - 28, PROPERTIES.height),
         nil,
-        SGUI_widesub(label, 1, PROPERTIES.trimLength),
+        SGUI_widesub(label, PROPERTIES.trimFrom),
         {
             font_colour = BLACK(),
             nomouseevent = true,
@@ -793,12 +805,13 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
             ELEMENT.comboBox.selected.label.ID,
             PROPERTIES.textureButton,
             PROPERTIES.textureButtonClick,
-            CALLBACK
+            CALLBACK,
+            PROPERTIES
         ));
     end;
 
     if PROPERTIES.hint then
-        setHint(ELEMENT.comboBox.selected, PROPERTIES.hint);
+        setHint(ELEMENT.comboBox.selected, SGUI_widesub(PROPERTIES.hint, PROPERTIES.trimFrom));
     end;
 
     set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'clShowComboBoxList(' .. ELEMENT.list.ID .. ',' .. ELEMENT.ID .. ',' .. ELEMENT.background.ID .. ', ' .. ELEMENT.comboBox.button.ID .. ', "' .. PROPERTIES.textureButton .. '", "' .. PROPERTIES.textureButtonClick .. '")');
@@ -819,7 +832,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     return ELEMENT;
 end;
 
-function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
+function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK, PROPERTIES)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
@@ -829,26 +842,38 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         colour = RGB(191, 191, 191);
     end;
 
+    if PROPERTIES.width == nil then
+        PROPERTIES.width = 234;
+    end;
+
+    if PROPERTIES.trimFrom == nil then
+        PROPERTIES.trimFrom = 0;
+    end;
+
+    if PROPERTIES.trimLength == nil then
+        PROPERTIES.trimLength = strlen(VALUE); 
+    end;
+
     local item = getElementEX(
         PARENT,
         anchorLTRB,
-        XYWH(3, 15 * (INDEX - 1), 207, 15),
+        XYWH(3, 15 * (INDEX - 1), PROPERTIES.width - 27, 15),
         true,
         {
-            hint = VALUE,
+            hint = SGUI_widesub(VALUE, PROPERTIES.trimFrom),
             colour1 = colour,
             callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
             callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '"); ' .. CALLBACK
+            callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK
         }
     );
     
     item.label = getLabelEX(
         item,
         anchorLTRB,
-        XYWH(0, 0, 207, 15),
+        XYWH(0, 0, PROPERTIES.width - 27, 15),
         nil,
-        SGUI_widesub(VALUE, 1, 22),
+        SGUI_widesub(VALUE, PROPERTIES.trimFrom, PROPERTIES.trimLength),
         {
             font_colour = BLACK(),
             nomouseevent = true,
@@ -859,8 +884,8 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
     return item.ID;
 end;
 
-function clSelectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE)
-    clSetComboBoxValue(COMBOBOXLABELID, VALUE);
+function clSelectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE, TRIM_FROM, TRIM)
+    clSetComboBoxValue(COMBOBOXLABELID, VALUE, TRIM_FROM, TRIM);
     clShowComboBoxList(LISTID, PARENTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
     clSetComboBoxSelectedItem(PARENTID, INDEX);
 end;
@@ -881,8 +906,8 @@ function clSetComboBoxSelectedItem(ID, INDEX)
     setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[COMBOBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
-function clSetComboBoxValue(ID, VALUE)
-    setText({ID=ID}, SGUI_widesub(VALUE, 1, 22));
+function clSetComboBoxValue(ID, VALUE, TRIM_FROM, TRIM)
+    setText({ID=ID}, SGUI_widesub(VALUE, TRIM_FROM, TRIM));
 end;
 
 function clShowComboBoxList(ID, PARENTID, BACKGROUNDID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)

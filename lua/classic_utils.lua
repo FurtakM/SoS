@@ -73,6 +73,10 @@ function parseInt(value)
 	return tonumber(value);
 end;
 
+function parseBool(value)
+    return toboolean(value);
+end;
+
 function strlen(str)
   return SGUI_widelen(str);
 end;

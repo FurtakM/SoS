@@ -107,6 +107,10 @@ function vardump(o, level)
     end;
 end;
 
+function consoleLog(var)
+    LUA_TO_DEBUGLOG(dump(var)); 
+end;
+
 function netMask(PARENT)
     if (PARENT == nil) then
         PARENT = getElementEX(
