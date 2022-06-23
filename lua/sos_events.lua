@@ -122,11 +122,11 @@ function onMenuKeyPress(key)
         end;
     end;
 
-    if (STREAM_MODE == 1 and HACK_MODE == 0 and (key == VK_TILDE or key == VK_F1)) then
+    if ((not isMultiplayer()) and STREAM_MODE == 1 and HACK_MODE == 0 and (key == VK_TILDE or key == VK_F1)) then
         showStreamPanel();
     end;
 
-    if (HACK_MODE == 1 and (key == VK_TILDE or key == VK_F1)) then
+    if ((not isMultiplayer()) and HACK_MODE == 1 and (key == VK_TILDE or key == VK_F1)) then
         showHackPanel();
     end;
 end;
