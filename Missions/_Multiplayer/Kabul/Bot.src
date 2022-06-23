@@ -9,11 +9,14 @@ ct := [];
 patrols := [];
 attackers := [];
 attackers_tmp := [];
-to_produce := [ [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+to_produce := [
+                [ar_half_tracked, engine_combustion, control_remote, ar_gun],
                 [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
                 [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
                 [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
-                [ar_half_tracked, engine_combustion, control_remote, ar_gun] ];
+                [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+                [ar_medium_trike, engine_siberite, control_remote, ar_selfpropelled_bomb]
+              ];
 
 SetBName(ar_dep, 'newkabul');
 
@@ -69,7 +72,7 @@ for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
 uc_side := side;
 uc_nation := 2;
 
-for i = 1 to 1+Difficulty do
+for i = 1 to 1 + Difficulty do
     begin
     vc_chassis := ar_half_tracked;
     vc_engine := engine_combustion;
@@ -142,15 +145,18 @@ End;
 
 
 // produce
-Every 12$00 trigger FilterAllUnits([[f_side, bot_side], [f_btype, b_factory]]) do
+Every 12$00 + 2$00 trigger FilterAllUnits([[f_side, bot_side], [f_btype, b_factory]]) do
 var i, tmp, p;
 begin
 enable;
 
+if Difficulty < 3 then
+   wait(1$00);
+
 tmp := queue_codes[rng];
 p := 1;
 
-for i = 1 to veh_counter do
+for i = 1 to veh_counter + [-1, 0, 1][Difficulty] do
     begin
     AddComConstruct(FilterAllUnits([[f_side, bot_side], [f_btype, b_factory]])[1],
                     to_produce[tmp mod 10][1],
@@ -207,23 +213,11 @@ Disable(17);
 End;
 
 
-Every 3$00 trigger veh_counter <= attackers do
+Every 1$00 trigger veh_counter <= attackers do
 var max, i;
 begin
 enable;
 Enable(17);
-
-max := 1;
-
-for i = 1 to 8 do
-    if i <> bot_side then
-       begin
-       if max < FilterAllUnits([f_side, i]) then
-          begin
-          max := FilterAllUnits([f_side, i]);
-          target := i;
-          end;
-       end;
 End;
 
 Every 0$01 trigger game_start and tick >= 30$00 do
@@ -423,7 +417,8 @@ skr    := GetListOfCratesInArea(kabul_crates);
 
 if filter and skr then
    for i = 1 to filter do
-       ComCollect(filter[i], skr[1], skr[2]);
+       if not HasTask(filter[i]) then
+          ComCollect(filter[i], skr[1], skr[2]);
 End;
 
 

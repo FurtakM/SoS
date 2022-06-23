@@ -391,11 +391,19 @@ end;
 
 function trim(s)
     return (s:gsub("^%s*(.-)%s*$", "%1"));
-end
+end;
 
 function unionArray(a, b)
     local result = {table.unpack(a)};
     table.move(b, 1, #b, #result + 1, result);
 
     return result;
-end
+end;
+
+function isSkirmish()
+    return getvalue(OWV_SKIRMISH);
+end;
+
+function isMultiplayer()
+    return getvalue(OWV_MULTIPLAYER);
+end;
