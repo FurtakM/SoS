@@ -842,8 +842,8 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         colour = RGB(191, 191, 191);
     end;
 
-    if PROPERTIES.width == nil then
-        PROPERTIES.width = 234;
+    if PROPERTIES.widthList == nil then
+        PROPERTIES.widthList = 234;
     end;
 
     if PROPERTIES.trimFrom == nil then
@@ -857,7 +857,7 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
     local item = getElementEX(
         PARENT,
         anchorLTRB,
-        XYWH(3, 15 * (INDEX - 1), PROPERTIES.width - 27, 15),
+        XYWH(3, 15 * (INDEX - 1), PROPERTIES.widthList - 27, 15),
         true,
         {
             hint = SGUI_widesub(VALUE, PROPERTIES.trimFrom),
@@ -871,7 +871,7 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
     item.label = getLabelEX(
         item,
         anchorLTRB,
-        XYWH(0, 0, PROPERTIES.width - 27, 15),
+        XYWH(0, 0, PROPERTIES.widthList - 27, 15),
         nil,
         SGUI_widesub(VALUE, PROPERTIES.trimFrom, PROPERTIES.trimLength),
         {

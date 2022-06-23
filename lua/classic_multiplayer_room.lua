@@ -1499,17 +1499,17 @@ function refreshPlayerView()
 
 					if (#allowedPositions > 0 and playerData.SIDE > 0) then
 						local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
-						
+					
 						if (nations.US) then
-							allowedNations[1] = loc(810);
+							allowedNations = addToArray(allowedNations, loc(810));
 						end;
 
 						if (nations.AR) then
-							allowedNations[2] = loc(811);
+							allowedNations = addToArray(allowedNations, loc(811));
 						end;
 
 						if (nations.RU) then
-							allowedNations[3] = loc(812);
+							allowedNations = addToArray(allowedNations, loc(812));
 						end;
 					end;
 
@@ -1723,15 +1723,15 @@ function refreshPlayerView()
 				local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
 				
 				if (nations.US) then
-					allowedNations[1] = loc(810);
+					allowedNations = addToArray(allowedNations, loc(810));
 				end;
 
 				if (nations.AR) then
-					allowedNations[2] = loc(811);
+					allowedNations = addToArray(allowedNations, loc(811));
 				end;
 
 				if (nations.RU) then
-					allowedNations[3] = loc(812);
+					allowedNations = addToArray(allowedNations, loc(812));
 				end;
 			end;
 
