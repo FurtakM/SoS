@@ -46,7 +46,7 @@ setVisible(classic_logo, true);
 
 local logoY;
 
-if LayoutWidth < 1366 then
+if ScrWidth < 1366 then
 	setWidth(classic_logo, 660);
 	setX(classic_logo, LayoutWidth / 2 - 330);
 	setHeight(classic_logo, 91);

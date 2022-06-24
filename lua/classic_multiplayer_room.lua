@@ -1627,8 +1627,8 @@ function refreshPlayerView()
 							    488,
 							    3,
 							    allowedNations,
-							    playerData.NATION,
-							    'OW_MULTIROOM_SET_MYNATION(INDEX);',
+							    getMultiplayerNation(playerData.NATION, playerData.SIDE),
+							    'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
 							    {
 							        width = 150,
 							        texture = 'classic/edit/combobox-short.png',
@@ -1838,8 +1838,8 @@ function refreshPlayerView()
 				    488,
 				    3,
 				    allowedNations,
-				    playerData.NATION,
-				    'OW_MULTIROOM_SET_MYNATION(INDEX);',
+				    getMultiplayerNation(playerData.NATION, playerData.SIDE),
+				    'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
 				    {
 				        width = 150,
 				        texture = 'classic/edit/combobox-short.png',
@@ -1981,6 +1981,76 @@ function refreshPlayerView()
 			end;
 		end;
 	end;
+end;
+
+function getMultiplayerNation(NATION, POSITION)
+	NATION = parseInt(NATION);
+	POSITION = parseInt(POSITION);
+
+	if POSITION < 1 or NATION < 1 or MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil then
+		return 0;
+	end;
+
+	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
+
+	if nations.US and nations.AR and nations.RU then
+		return NATION;
+	end;
+
+	if nations.US and nations.AR and NATION == 2 then
+		return 2;
+	end;
+
+	if (nations.US or nations.AR) and nations.RU and NATION == 3 then
+		return 2;
+	end;
+
+	if nations.US and NATION == 1 then
+		return 1;
+	end;
+
+	if nations.AR and NATION == 2 then
+		return 1;
+	end;
+
+	if nations.RU and NATION == 3 then
+		return 1;
+	end; 
+
+	return 0;
+end;
+
+function setMultiplayerNation(INDEX, POSITION)
+	INDEX = parseInt(INDEX);
+	POSITION = parseInt(POSITION);
+	
+	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
+
+	if INDEX == 1 then
+		if nations.US then
+			return OW_MULTIROOM_SET_MYNATION(1);
+		end;
+
+		if nations.AR then
+			return OW_MULTIROOM_SET_MYNATION(2);
+		end;
+
+		if nations.RU then
+			return OW_MULTIROOM_SET_MYNATION(3);
+		end;
+	end;
+
+	if INDEX == 2 then
+		if nations.AR then
+			return OW_MULTIROOM_SET_MYNATION(2);
+		end;
+
+		if nations.RU then
+			return OW_MULTIROOM_SET_MYNATION(3);
+		end;
+	end;
+
+	return OW_MULTIROOM_SET_MYNATION(3); -- RU
 end;
 
 function deleteSlots()
