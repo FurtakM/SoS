@@ -409,10 +409,15 @@ end;
 function backToMenu()
     playMenuMusic(1);
 
+    if getVisible(Multi_Debrief) then
+        bringToFront(Multi_Debrief);
+        return;
+    end;
+
     setVisible(game, false);
     setVisible(menu, true);
 
-    if not getvalue(OWV_SKIRMISH) then
+    if not isSkirmish() then
         showCampaign(1);
         runCampaign(CAMPAIGN_ID - 1);
     end;        
