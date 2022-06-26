@@ -404,15 +404,14 @@ function backToMenu_lite()
     OW_menumusic(false);  
 
     playMenuMusic(0);
+
+    if getVisible(Multi_Debrief) then
+        bringToFront(Multi_Debrief);
+    end;
 end;
 
 function backToMenu()
     playMenuMusic(1);
-
-    if getVisible(Multi_Debrief) then
-        bringToFront(Multi_Debrief);
-        return;
-    end;
 
     setVisible(game, false);
     setVisible(menu, true);

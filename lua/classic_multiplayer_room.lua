@@ -2392,7 +2392,7 @@ function setMapPictureDescription()
 	local picture = '';
 	local mapName = nil;
 
-	if MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME then
+	if MULTIPLAYER_ROOM_DATA.MAPS ~= nil and MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME then
 		mapName = MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME;
 	end;
 
@@ -2404,6 +2404,10 @@ function setMapPictureDescription()
 
 	setTexture(menu.window_multiplayer_room.panel.page3.mapPic, picture);
 	setTextureFallback(menu.window_multiplayer_room.panel.page3.mapPic, 'skirmish_unknown.png');
+
+	if MULTIPLAYER_ROOM_DATA.MULTIMAP == nil then
+		return;
+	end;
 
 	local description = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 2);
 	local rules = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 2);

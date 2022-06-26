@@ -595,10 +595,6 @@ function showMultiplayerWindow(MODE)
 		showMenuButton(0);
 		setVisible(menu.window_multiplayer, true);
 		initMultiplayer();
-
-        if getVisible(Multi_Debrief) then
-            bringToFront(Multi_Debrief);            
-        end;
 	else
 		destroyMultiplayer();
 		setVisible(menu.window_multiplayer, false);
