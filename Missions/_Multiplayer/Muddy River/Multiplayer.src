@@ -17,13 +17,13 @@ if multiplayer then
    multi_sides      := mp_sides_positions;
    multi_side_teams := mp_sides_teams;
    multi_nations    := mp_sides_nations;
-   multi_teams      := [ [] ];
+   multi_teams      := [];
 
    for i in mp_teams do
-       multi_teams := Replace(multi_teams, 1, multi_teams[1] union i[1]);
+       multi_teams := Replace(multi_teams, multi_teams + 1, i[1]);
 
    for i = 1 to multi_settings_counter do
-       multi_settings := Insert(multi_settings, multi_settings+1, GetMultiplayerSetting(i)+1);
+       multi_settings := Insert(multi_settings, multi_settings + 1, GetMultiplayerSetting(i) + 1);
    end
   else
    begin
@@ -32,7 +32,7 @@ if multiplayer then
    multi_sides      := [2, 0, 0, 3, 0, 0, 1, 0]; // allowed values: 0-8
    multi_side_teams := [1, 0, 0, 1, 0, 0, 1, 0]; // allowed values: 0, 1
    multi_nations    := [1, 0, 0, 1, 0, 0, 1, 0]; // allowed values: 0, 1, 2, 3
-   multi_teams      := [ [1, 4, 7] ];
+   multi_teams      := [1, 4, 7];
    multi_settings   := [2, 2, 1, 3, 1, 1]; // Difficulty, Pep.amount, Skill level, Crates, Ape, Support
    end;
 
@@ -106,22 +106,17 @@ multi_ape_amount := [6, 8, 10][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 End;
 
-Export Function Multiplayer_SetBotSide(prefer_side);
+Export Function Multiplayer_SetBotSide(preferSide);
 var i;
 begin
-ResetFog;
-
-if not multi_bots then
-   exit;
-
-if multi_bots[prefer_side] then
+if not preferSide in multi_sides then
    begin
-   result := prefer_side;
+   result := preferSide;
    exit;
    end;
 
-for i = 1 to multi_bots do
-    if multi_bots[i] then
+for i := 1 to 8 do
+    if not multi_sides[i] then
        begin
        result := i;
        exit;
@@ -447,7 +442,7 @@ for i = 1 to 8 do
 
 if multi_loosers[your_side] then
    YouLostInMultiplayer
-  else
+else
    YouWinInMultiplayer;
 End;
 
@@ -473,7 +468,6 @@ begin
 multi_points := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_points_conditions := [];
 End;
-
 
 Export Function Multiplayer_AddPoints(side, amount);
 begin
