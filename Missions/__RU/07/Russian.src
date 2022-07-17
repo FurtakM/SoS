@@ -21,7 +21,7 @@ begin
       SpawnPlatonovReinforces;
    end;
 
-   if matPredStatus then SetTech(tech_MatPred, 3, state_researched);
+   if matPredStatus = state_researched then SetTech(tech_MatPred, 3, state_researched);
 end;
 
 Export Function PrepareXavierRu(x, y, dir);
@@ -44,7 +44,7 @@ begin
 end;
 
 Function PrepareHeroes(area, dir);
-var i, unit, car, cargoList;
+var i, unit, car, cargoList, bigCargoList;
 begin
    uc_side = 3;
    uc_nation = 3;
@@ -178,15 +178,31 @@ begin
       PlaceUnitArea(unit, area, false);
 
    cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, us_cargo_bay]]]);
+          bigCargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, 89]]);
 
-   if cargoList then
-      for i = 1 to cargoList do
-         if resourcesFrom06 then
-         begin
-               AddCargo(cargoList[i], 1, resourcesFrom06[i][1]);
-               AddCargo(cargoList[i], 2, resourcesFrom06[i][2]);
-               AddCargo(cargoList[i], 3, resourcesFrom06[i][3]);
-         end;
+          if cargoList then
+                    for i = 1 to cargoList do
+                               if resourcesFrom06 then
+                               begin
+                                           if NOT resourcesFrom06[i][1] > 100 OR resourcesFrom06[i][2] > 100 OR resourcesFrom06[i][3] > 100 then
+                                           begin
+                                                AddCargo(cargoList[i], 1, resourcesFrom06[i][1]);
+                                                AddCargo(cargoList[i], 2, resourcesFrom06[i][2]);
+                                                AddCargo(cargoList[i], 3, resourcesFrom06[i][3]);
+                                           end;
+                               end;
+
+          if bigCargoList then
+             for i = 1 to bigCargoList do
+                        if resourcesFrom06 then
+                           begin
+                                              if resourcesFrom06[i][1] > 100 OR resourcesFrom06[i][2] > 100 OR resourcesFrom06[i][3] > 100 then
+                                              begin
+                                                   AddCargo(bigCargoList[i], 1, resourcesFrom06[i][1]);
+                                                   AddCargo(bigCargoList[i], 2, resourcesFrom06[i][2]);
+                                                   AddCargo(bigCargoList[i], 3, resourcesFrom06[i][3]);
+                                             end;
+                         end;
 end;
 
 Function PrepareYashin;
@@ -267,7 +283,7 @@ begin
    bc_type = b_lab_half;
    bc_kind1 = b_lab_spacetime;
 
-   if matPredStatus then
+   if matPredStatus = state_researched then
    begin
       bc_type = b_lab_full;
       bc_kind2 = b_lab_computer

@@ -1,6 +1,7 @@
 Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin; // Heroes
 Export Platonov, Kirilenkova, Belkov, Belkov2;
-Export Vsevolod, vsevolodTeam, Petr, Igor;
+Export Vsevolod, vsevolodTeam, Petr, Igor, Boris;
+Export ConvoyBoris, ConvoyIbrahim;
 
 Export Function PrepareRussians;
 begin
@@ -8,7 +9,7 @@ begin
 end;
 
 Function PrepareHeroes;
-var i, j, car, tmp, cargoList, point, areaPoints, nearPosition, burlakPosition, distance, index;
+var i, j, car, tmp, cargoList, bigCargoList, point, areaPoints, nearPosition, burlakPosition, distance, index;
 begin
 
     point = [170, 208];
@@ -100,17 +101,32 @@ begin
          
      end;
 
-    cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay]]]);
+    cargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, us_cargo_bay]]]);
+    bigCargoList = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, 89]]);
 
     if cargoList then
         for i = 1 to cargoList do
             if resourcesFrom05 then
             begin
-                AddCargo(cargoList[i], 1, resourcesFrom05[i][1]);
-                AddCargo(cargoList[i], 2, resourcesFrom05[i][2]);
-                AddCargo(cargoList[i], 3, resourcesFrom05[i][3]);
+                if NOT resourcesFrom05[i][1] > 100 OR resourcesFrom05[i][2] > 100 OR resourcesFrom05[i][3] > 100 then
+                begin
+                  AddCargo(cargoList[i], 1, resourcesFrom05[i][1]);
+                  AddCargo(cargoList[i], 2, resourcesFrom05[i][2]);
+                  AddCargo(cargoList[i], 3, resourcesFrom05[i][3]);
+                end;
             end;
 
+    if bigCargoList then
+       for i = 1 to bigCargoList do
+           if resourcesFrom05 then
+           begin
+                if resourcesFrom05[i][1] > 100 OR resourcesFrom05[i][2] > 100 OR resourcesFrom05[i][3] > 100 then
+                begin
+                  AddCargo(bigCargoList[i], 1, resourcesFrom05[i][1]);
+                  AddCargo(bigCargoList[i], 2, resourcesFrom05[i][2]);
+                  AddCargo(bigCargoList[i], 3, resourcesFrom05[i][3]);
+                end;
+           end;
 
     if NOT FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian], [f_class, class_engineer]]) then
     begin
@@ -143,13 +159,17 @@ begin
 
     vsevolodTeam = vsevolodTeam ^ Vsevolod;
 
-    Petr = PrepareUnitExt('SPetr', false, class_soldier);
+    Petr = PrepareUnitExt('SPetr', false, class_engineer);
     PlaceUnitArea(Petr, VsevolodSpawnArea, false);
     vsevolodTeam = vsevolodTeam ^ Petr;
 
     Igor = PrepareUnitExt('SIgor', false, class_soldier);
     PlaceUnitArea(Igor, VsevolodSpawnArea, false);
     vsevolodTeam = vsevolodTeam ^ Igor;
+
+    Boris = PrepareUnitExt('SBoris', false, class_soldier);
+    PlaceUnitArea(Boris, VsevolodSpawnArea, false);
+    vsevolodTeam = vsevolodTeam ^ Boris;
 end;
 
 Export Function SpawnPlatonovReinforces;
@@ -170,8 +190,8 @@ begin
       PlaceHumanInUnit(Belkov, veh)
     else if Difficulty = 1 OR Difficulty = 2 then
     begin
-      un = CreateHuman;
-      PlaceHumanInUnit(un, veh);
+      ConvoyBoris = PrepareUnitExt('SCBoris', false, class_soldier);
+      PlaceHumanInUnit(ConvoyBoris, veh);
    end;
 
     PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, rand(50, 60));
@@ -186,8 +206,8 @@ begin
        PlaceHumanInUnit(Belkov2, veh)
     else if Difficulty = 1 then
     begin
-       un = CreateHuman;
-       PlaceHumanInUnit(un, veh);
+       ConvoyIbrahim = PrepareUnitExt('SCIbrahim', false, class_soldier);
+       PlaceHumanInUnit(ConvoyIbrahim, veh);
     end;
 
     if Kirilenkova then

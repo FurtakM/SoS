@@ -102,7 +102,7 @@ begin
 
       LaunchMineAtPos(93, 134, 2);
       wait(0$1);
-      SetLives(Vsevolod, 250);
+      SetLives(Vsevolod, 200);
 
       wait(0$1);
 
@@ -201,6 +201,22 @@ begin
    DialogueOn;
 
    Say(Xavier, 'DMeetXavier-Xav-1');
+
+   if IsInUnit(Kirilenkova) then
+   begin
+        if GetType(IsInUnit(Kirilenkova)) = unit_vehicle then ComExitVehicle(Kirilenkova)
+        else ComExitBuilding(Kirilenkova);
+
+        wait(0$1);
+
+        repeat
+        wait(0$1);
+        ComMoveXY(Kirilenkova, GetX(Xavier), GetY(Xavier));
+        until GetDistUnits(Kirilenkova, Xavier) <= 3;
+
+        ComTurnUnit(Kirilenkova, Xavier);
+   end;
+
    Say(Kirilenkova, 'DMeetXavier-Kir-1');
    Say(Xavier, 'DMeetXavier-Xav-2');
 
@@ -380,7 +396,7 @@ end;
 
 // Spawn Yashin
 every 8$0 do
-var playerDepot;
+var playerDepot, bazookDialog;
 begin
 
    SetTech(tech_bazooka, 3, state_enabled);
@@ -435,6 +451,8 @@ begin
             Say(Yashin, 'DQrYashinHelp#1-Yas-1');
             Say(Burlak, 'DQrYashinHelp#1-Bur-2');
             Say(Yashin, 'DQrYashinHelp#1-Yas-2');
+
+            bazookDialog = true;
          end;
 
          2:begin
@@ -449,6 +467,12 @@ begin
       end;     
     end;
 
+    if NOT bazookDialog then
+    begin
+         Say(Yashin, 'DQrYashinHelp#4-Yas-1');
+         Say(Burlak, 'DQrYashinHelp#1-Bur-2');
+         Say(Yashin, 'DQrYashinHelp#1-Yas-2');
+    end;
 
     Say(Yashin, 'DYashinLeave-Yas-1');
 
@@ -492,13 +516,14 @@ end;
 
 // Yashin search vehcile
 every 0$1 trigger IsPlaced(Yashin) AND yashinSearchVeh do
-var playerVehs, veh;
+var playerVehsEmpty, playerVehs, veh, driver;
 begin
-   playerVehs = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty], [f_nation, nation_russian], [f_or, [f_weapon, ru_heavy_machine_gun], [f_weapon, ru_gatling_gun], [f_weapon, ru_gun], [f_weapon, ru_heavy_gun]]]);
+   playerVehsEmpty = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty], [f_nation, nation_russian], [f_or, [f_weapon, ru_heavy_machine_gun], [f_weapon, ru_gatling_gun], [f_weapon, ru_gun], [f_weapon, ru_heavy_gun]]]);
+   playerVehs = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_or, [f_weapon, ru_heavy_machine_gun], [f_weapon, ru_gatling_gun], [f_weapon, ru_gun], [f_weapon, ru_heavy_gun]]]);
 
-   if playerVehs then
+   if playerVehsEmpty then
    begin
-      for veh in playerVehs do
+      for veh in playerVehsEmpty do
       begin
          if GetFuel(veh) >= 50 then
          begin
@@ -509,6 +534,24 @@ begin
             ComMoveToArea(yashinVeh, YashinExitArea);   
             exit;       
          end;   
+      end;
+   end else
+   if playerVehs then
+   begin
+      for veh in playerVehs do
+      begin
+         if GetFuel(veh) >= 50 then
+         begin
+            yashinSearchVeh = false;
+            yashinVeh = veh;
+            driver = UnitsInside(veh)[1];
+            ComExitVehicle(driver);
+            wait(0$1);
+            SetSide(yashinVeh, 6);
+            ComEnterUnit(Yashin, yashinVeh);
+            ComMoveToArea(yashinVeh, YashinExitArea);
+            exit;
+         end;
       end;
    end;
    enable;

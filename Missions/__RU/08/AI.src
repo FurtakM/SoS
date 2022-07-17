@@ -1,0 +1,28 @@
+// Self destro ar vehs
+every 0$1 do
+var arVehs, arVeh, nearPlayerUnit;
+begin
+    enable;
+
+    arVehs = FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [f_empty]]);
+
+    if NOT arVehs OR NOT GetAttitude(3, 8) = att_enemy then exit;
+
+    for arVeh in arVehs do
+    begin
+        nearPlayerUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), arVeh);
+
+        if GetDistUnits(nearPlayerUnit, arVeh) <= 2 then ComSelfDestruction(arVeh);
+    end;
+end;                   
+
+every 0$1 trigger forceStopKurtAttack do
+begin
+    KurtAttack = false;
+    allowExitFromMap = 4;
+    SetAttitude(3, 8, att_friend, true);
+
+    arAttackTeam = [];
+
+    ComMoveToArea(FilterAllUnits([f_side, 8]), KurtExitMapArea);
+end;
