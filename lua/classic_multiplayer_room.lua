@@ -784,7 +784,7 @@ DATA Breakdown
 
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
-	setMapPictureDescription(MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME);
+	setMapPictureDescription();
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -1563,7 +1563,7 @@ function refreshPlayerView()
 						if (isMySlot and (not canModifyServerSettings())) then
 							MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 							set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-							setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
+							-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
 						end;
 
 						local slotPlayerAvatar = getElementEX(
@@ -1617,7 +1617,7 @@ function refreshPlayerView()
 						        width = 150,
 						        texture = 'classic/edit/combobox-short.png',
 						        defaultLabel = loc(809),
-						        disabled = (not isMySlot)
+						        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
 						    }
 						);
 
@@ -1633,7 +1633,7 @@ function refreshPlayerView()
 							        width = 150,
 							        texture = 'classic/edit/combobox-short.png',
 							        defaultLabel = loc(809),
-							        disabled = (not isMySlot)
+							        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
 							    }
 							);
 						end;
@@ -1645,6 +1645,7 @@ function refreshPlayerView()
 							    6,
 							    'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
 							    {
+							    	disabled = playerData.READY,
 							        checked = playerData.LOCKED,
 							        hint = loc(829)
 							    }
@@ -1776,7 +1777,7 @@ function refreshPlayerView()
 			if (isMySlot and (not canModifyServerSettings())) then
 				MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 				set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-				setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
+				-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
 			end;
 
 			local slotPlayerAvatar = getElementEX(
@@ -1828,7 +1829,7 @@ function refreshPlayerView()
 			        width = 150,
 			        texture = 'classic/edit/combobox-short.png',
 			        defaultLabel = loc(809),
-			        disabled = (not isMySlot)
+			        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
 			    }
 			);
 
@@ -1844,7 +1845,7 @@ function refreshPlayerView()
 				        width = 150,
 				        texture = 'classic/edit/combobox-short.png',
 				        defaultLabel = loc(809),
-				        disabled = (not isMySlot)
+				        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
 				    }
 				);
 			end;
@@ -1938,7 +1939,7 @@ function refreshPlayerView()
 				if (isMySlot and (not canModifyServerSettings())) then
 					MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 					set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-					setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
+					-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
 				end;
 
 				local slotPlayerAvatar = getElementEX(
@@ -2335,6 +2336,10 @@ function setGameTypeList(INDEX, selectedGameType, isHost)
 	local gameTypeList = {};
 	local gameType = nil;
 
+	if INDEX < 1 or MULTIPLAYER_ROOM_DATA.MAPS == nil or MULTIPLAYER_ROOM_DATA.MAPS[INDEX] == nil then
+		return;
+	end;
+
 	for i = 1, MULTIPLAYER_ROOM_DATA.MAPS[INDEX].GAMETYPELISTCOUNT do
 		gameType = MULTIPLAYER_ROOM_DATA.MAPS[INDEX].GAMETYPELIST[i];
 		gameTypeList = addToArray(gameTypeList, gameType.NAMELOC);
@@ -2383,8 +2388,13 @@ function selectGameType(INDEX)
 	OW_MULTIROOM_HOST_SET_MAP(mapName, gameType);
 end;
 
-function setMapPictureDescription(mapName)
+function setMapPictureDescription()
 	local picture = '';
+	local mapName = nil;
+
+	if MULTIPLAYER_ROOM_DATA.MAPS ~= nil and MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME then
+		mapName = MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME;
+	end;
 
 	if mapName == nil or mapName == '' then
 		picture = 'skirmish_unknown.png';
@@ -2394,6 +2404,10 @@ function setMapPictureDescription(mapName)
 
 	setTexture(menu.window_multiplayer_room.panel.page3.mapPic, picture);
 	setTextureFallback(menu.window_multiplayer_room.panel.page3.mapPic, 'skirmish_unknown.png');
+
+	if MULTIPLAYER_ROOM_DATA.MULTIMAP == nil then
+		return;
+	end;
 
 	local description = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 2);
 	local rules = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 2);

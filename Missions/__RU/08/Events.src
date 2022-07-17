@@ -1,0 +1,148 @@
+Export Function CustomEvent(event);
+begin
+
+End;
+
+On BuildingComplete(building) Do
+begin
+    if GetBType(building) in buildingsToBuild AND GetNation(building) = nation_russian then buildingsToBuild = buildingsToBuild diff GetBType(building);    
+
+    if GetBType(building) = b_depot then
+    begin
+        SetBName(building, 'trockij');
+
+        if NOT dial_BuildDepotBlocker AND HeikeCaptured then
+            Dial_EscortHeike(GetX(building), GetY(building));
+    end; 
+end;
+
+On UpgradeComplete(building) Do
+begin
+    if GetBType(building) in buildingsToBuild AND GetNation(building) = nation_russian then buildingsToBuild = buildingsToBuild diff GetBType(building);    
+
+    if GetBType(building) = b_barracks AND GetNation(building) = 2 AND NOT dial_BuildArBarrackBlocker then
+        Dial_UpgradeArmoury;
+end;
+
+On ResearchComplete(research, building) Do
+begin
+    if research in techsToResearch then
+        techsToResearch = techsToResearch diff research;
+
+    if research = tech_LimTeleport then Dial_TeleportTechResearched;
+    if research = tech_AdvAI then Dial_ComputerTechResearched;
+end;
+
+On EnterVehicle(vehicle, human) Do
+begin
+    if NOT canChooseMashaVehicle then exit;
+
+    wait(0$1);
+
+    if GetSide(vehicle) = 3 AND human = Burlak AND GetNation(vehicle) = nation_russian AND GetWeapon(vehicle) in [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_heavy_gun, ru_rocket_launcher] then
+    begin   
+        if Masha then
+            if Masha[1] = vehicle then exit;
+
+        if firstMashaQuery then
+        begin
+            firstMashaQuery = false;    
+
+            if Query('QMashaQuery') = 1 then SetMashaData(vehicle);
+        end else
+        begin
+            if Query('QMashaQuery2') = 1 then SetMashaData(vehicle);
+        end;  
+    end;
+
+end;
+
+On UnitDestroyed(unit) Do
+begin
+    if Masha then
+        if unit = Masha[1] then Masha = [];
+
+    if unit = Burlak then Lose_Burlak;
+    
+    if GetType(unit) = unit_human AND GetNation(unit) = nation_russian then
+        lostUnits = lostUnits + 1;
+end;
+
+On UnitGoesToRed(unit) Do
+begin
+    if GetType(unit) = unit_vehicle AND GetNation(unit) = nation_russian AND GetTech(tech_LimTeleport, 3) = state_researched AND NOT testedTeleport then
+    begin
+        testedTeleport = true;
+        ChangeMissionObjectives('MTeleDone');
+    end;
+
+    if unit = Heike then
+    begin
+        DialogueOn;
+        CenterNowOnUnits(Heike);
+        ForceSay(Heike, 'DHeikeKilled-Hke-1');
+        DialogueOff;
+        SetLives(Heike, 0);      
+    end;
+
+end;
+
+On Contact(side1, side2) Do
+begin
+    if side1 = 3 AND side2 = 6 then
+        Lost_AttackAlly;
+
+    if side1 = 3 AND side2 = 2 then
+        Dial_AttackGensher;
+
+    if side1 = 3 AND side2 = 5 then
+    begin
+        SetAttitude(3, 5, att_enemy, true);
+
+        if acceptKurtOffert AND NOT GetSide(Kurt) = 2 then Dial_BetrayedKurt1;
+    end; 
+
+    if side1 = 3 AND side2 = 8 AND GetAttitude(3, 8) = att_neutral then
+    begin
+        if acceptKurtOffert then Dial_BetrayedKurt2;
+    end;
+
+end;
+
+On VehicleConstructed(vehicle, building) Do
+begin
+
+    SetWeaponDataBuild(GetWeapon(vehicle), false);
+
+    if GetControl(vehicle) = control_computer AND NOT buildCompVehicle then
+    begin
+        buildCompVehicle = true;
+        ChangeMissionObjectives('MAIDone');
+    end;
+end;
+
+On WeaponPlaced(building, factory) Do
+begin
+    SetWeaponDataBuild(GetBWeapon(building), true);
+end;
+
+On Command(comandid) Do
+var i;
+begin
+
+  if IsOK(KurtEng) AND GetSide(KurtEng) = 3 then
+    if GetTaskList(KurtEng) then
+    begin
+      for i:=1 to (GetTaskList(KurtEng)) do
+      begin
+        if (GetTaskList(KurtEng)[i][1] in ['F','H','M','U','V','a','h','u','v','~','^','>','+',';','4','{']) OR (GetTaskList(KurtEng)[i][1]='B' AND GetTaskList(KurtEng)[i][5]=36) then
+        else
+        begin
+          RemoveTasks(KurtEng);
+          DialogueOn;
+          Say(Kurt, 'DMercRefuseBuild-Kurt-1');
+          DialogueOff;
+        end;
+      end;
+    end;
+end;

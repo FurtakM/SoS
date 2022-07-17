@@ -45,7 +45,10 @@ definitions := [];
     Side_Positions := mp_sides_positions;
     Side_Teams     := mp_sides_teams;
     Side_Nations   := mp_sides_nations;
-    Teams          := mp_teams;
+    Teams          := [ [] ];
+
+    for i in mp_teams do
+        Teams := Replace(Teams, 1, Teams[1] union i[1]);
 
     for i = 0 to 6 do
         definitions := Insert(definitions, definitions+1, GetMultiplayerSetting(i)+1);
@@ -71,7 +74,7 @@ definitions := [];
       if Multiplayer_GetPlayerIsSpec(i) or Multiplayer_GetPlayerIsComp(i) then
          begin
          Side_Positions := Replace(Side_Positions, i, 0);
-         Teams := Replace(Teams, Side_Teams[i], Teams[Side_Teams[i]] diff i);
+         // Teams := Replace(Teams, Side_Teams[i], Teams[Side_Teams[i]] diff i);
          end;
 
       if Side_Nations[i] and Side_Nations <> 3 then
@@ -85,14 +88,7 @@ definitions := [];
      bot_side := 8;
 
 
-  Team_Game := false;
-
-  for i = 1 to 8 do
-      if Side_Teams[i] then
-         begin
-         Team_Game := true; 
-         break;
-         end;
+  Team_Game := true;
 
   for i = 1 to 8 do
       if i <> bot_side then
@@ -100,13 +96,11 @@ definitions := [];
 
 
   // share vision
-  for i in Teams do
-      for j = 2 to i do
-          begin
-          ChangeSideFog(i[j], i[1]);
-          SetAttitude(i[j], i[1], att_friend, true);
-          end;
-
+  for i := 2 to Teams[1] do
+      begin
+      ChangeSideFog(Teams[1][i], Teams[1][1]);
+      SetAttitude(Teams[1][i], Teams[1][1], att_friend, true);
+      end;  
 
   if not Multiplayer then
      definitions := [1, 1, 1, 1, 2, 3, 3];

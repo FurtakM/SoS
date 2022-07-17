@@ -404,6 +404,10 @@ function backToMenu_lite()
     OW_menumusic(false);  
 
     playMenuMusic(0);
+
+    if getVisible(Multi_Debrief) then
+        bringToFront(Multi_Debrief);
+    end;
 end;
 
 function backToMenu()
@@ -412,7 +416,7 @@ function backToMenu()
     setVisible(game, false);
     setVisible(menu, true);
 
-    if not getvalue(OWV_SKIRMISH) then
+    if not isSkirmish() then
         showCampaign(1);
         runCampaign(CAMPAIGN_ID - 1);
     end;        
