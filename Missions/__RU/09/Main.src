@@ -1,0 +1,59 @@
+Starting
+begin
+    Resetfog;
+    RandomizeAll;
+
+    PrepareTrockyBase;
+
+end;
+
+Function PrepareTrockyBase;
+var i, building, trockyBase, trockyDepot;
+begin
+    trockyBase = LoadVariable('08_TrockyBase_1', []);
+
+    SetResourceVisibility(134, 43, 3);
+    SetResourceVisibility(114, 24, 3);
+    SetResourceVisibility(123, 60, 3);
+    SetResourceVisibility(47, 46, 3);
+    SetResourceVisibility(54, 76, 3);
+
+    uc_side = 3;
+    
+
+    for i := 1 to trockyBase do
+    begin
+
+        uc_nation = trockyBase[i][6];
+        bc_type = trockyBase[i][1];
+        bc_level = trockyBase[i][5]; 
+
+        if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+        if bc_type = b_lab_half or bc_type = b_lab_full then
+        begin
+            if trockyBase[i][7] then
+                bc_kind1 = trockyBase[i][7];
+
+            if trockyBase[i][8] then
+                bc_kind2 = trockyBase[i][8];
+
+            if not trockyBase[i][7] and not trockyBase[i][8] then
+                bc_type := b_lab;
+        end;
+
+        building = CreateAndPlaceBuildingXYD(trockyBase[i][2], trockyBase[i][3], trockyBase[i][4]);
+
+        if bc_type in [b_bunker, b_turret] then
+            PlaceWeaponTurret(building, trockyBase[i][8]);
+
+    end;
+
+    trockyDepot = FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1];
+
+    SetBName(trockyDepot, 'trockij');
+end;

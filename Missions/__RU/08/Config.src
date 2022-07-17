@@ -1,0 +1,93 @@
+// InitMapConfig execute three func base config and with specific for current mission and develop mode.
+export Function InitMapConfig;
+begin
+    BaseMapConfig;
+    MissionMapConfig;
+end;
+
+export animalsAmount, animalsStats, animalsAgression, missionPrefix, previousMissionPrefix, debugMode;
+Function BaseMapConfig;
+begin
+    // Base config
+    // Amount of animals: ape, phororhacos, tiger, eohippus, mastodonts
+    animalsAmount = [6, 3, 4, 4, 1];
+
+    // Animals stats
+    animalsStats = [2, 2, 2, 2];
+
+    // Animals agression
+    animalsAgression = 3;
+
+    // Develop mode
+    debugMode = 0;
+
+    //Current and previous map prefix, if its mission 1 set for previous ''
+    missionPrefix = '08_';
+    previousMissionPrefix = '07_';
+end;
+
+Export KurtAttackWaves, americansAttackWaves;
+Export firstAttackDelay;
+Export waveCooldown;
+Export legionReduceAmericansUnits;
+Export speedMedalTime;
+Export enemyAttackUnitsData; // Struct: [ [side, minSolds, maxSold, minSpecialSolds, maxSpecialSolds, minVehs, maxVehs], [side, minSolds, maxSold, minSpecialSolds, maxSpecialSolds, minVehs, maxVehs] ]
+Export timeToFreeHeike, timeToBuildArBarrack;
+Export enemySkillLevel;
+function MissionMapConfig;
+begin
+    // Specific for current mission
+
+    // Enemy waves amount
+    KurtAttackWaves = [3, 4, 5][Difficulty];
+    americansAttackWaves = [1, 2, 3][Difficulty];
+
+    // Enemy skill level
+    enemySkillLevel = [3, 4, 5][Difficulty];
+
+    // Timers
+    waveCooldown = 1$30;
+    firstAttackDelay = 1$00;
+    timeToFreeHeike = 2$00;
+    timeToBuildArBarrack = 5$00;
+
+    // How many am units will reduce legion
+    legionReduceAmericansUnits = [5, 5, 6][Difficulty];
+
+    // Timer to alternative medal if in previous mission player don't capture Heike
+    speedMedalTime = [80$0, 70$0, 60$0][Difficulty];
+
+    // Enemy attack data, struct: [side, minSolds, maxSolds, minSpecialSolds, maxSpecialSolds, minVehs, maxVehs]
+    enemyAttackUnitsData = 
+    [
+        [1, [4, 5, 6][Difficulty], [7, 8, 9][Difficulty], [1, 2, 2][Difficulty], [3, 3, 4][Difficulty], [6, 7, 8][Difficulty], [10, 12, 15][Difficulty]],
+        [8, [2, 3, 4][Difficulty], [6, 6, 7][Difficulty], [0, 1, 1][Difficulty], [1, 2, 3][Difficulty], [1, 2, 2][Difficulty], [2, 3, 5][Difficulty]]
+    ];
+end;
+
+every 0$1 trigger debugMode do
+var i;
+begin
+    enable;
+
+    FogOff(your_side);
+
+   for i in FilterAllUnits([[f_side, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        SetLives(i, 1000);
+
+    for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
+    begin
+        SetSkill(i, skill_combat, 10);
+        SetSkill(i, skill_engineering, 10);
+        SetSkill(i, skill_mechanical, 10);
+        SetSkill(i, skill_scientistic, 10);
+    end;
+
+    for i in FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    begin
+        SetResourceType(GetBase(i), mat_cans, 9999);
+        SetResourceType(GetBase(i), mat_oil, 9999);
+        SetResourceType(GetBase(i), mat_siberit, 9999);
+    end;
+
+end;
