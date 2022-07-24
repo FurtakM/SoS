@@ -1,0 +1,54 @@
+// macro events
+Export mce_start, // 1
+       mce_monitor_base, // 2
+       mce_;
+
+Export Function MCE_InitEvents();
+begin
+// tag events to make them readable
+mce_start := 1;
+mce_monitor_base := 2;
+End;
+
+Export Function MCE_SailEventCustom(event, p1, p2, p3, p4, p5, p6);
+begin
+     case event of
+          mce_start: MC_Monitor();
+          mce_monitor_base: MC_MonitorBase(p1);
+     end;
+End;
+
+Export Function MCE_ClassChanged(unit, old_class, new_class);
+begin
+SetTag(unit, mct_none);
+End;
+
+Export Function MCE_UnitDestroyed(un);
+begin
+     case GetType(un) of
+          unit_human: MCE_HumanKilled(un);
+     end; 
+End;
+
+Export Function MCE_HumanKilled(un);
+var i;
+begin
+for i := 1 to mc_people do
+    if un in mc_people[i] then
+       mc_people := Replace(mc_people, i, mc_people[i] diff un);
+End;
+
+Export Function MCE_EvacuateVehicle(driver, vehicle, p1, p2);
+var base;
+begin
+if GetTag(driver) = mct_collect_crates then
+   begin
+   base := MC_GetHumanBase(driver);
+
+   if base then
+      begin
+      SetTag(driver, 0);
+      MC_Retreat(base, driver);
+      end;
+   end;
+End;
