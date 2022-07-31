@@ -52,6 +52,9 @@ if not buildings then
 
 for i := 1 to units do
     begin
+    if GetClass(units[i]) = class then
+       continue;
+
     SetTag(units[i], mct_change_class);
 
     if buildings > i div 6 then
@@ -67,14 +70,20 @@ for i := 1 to units do
     end;
 End;
 
-Export Function MC_GetByClass(base, class);
+Export Function MC_GetByClass(base, class, tag);
+var i;
 begin
 result := UnitFilter(mc_people[base], [f_class, class]);
+
+if tag > -1 then
+   for i in result do
+       if GetTag(i) <> tag then
+          result := result diff i;
 End;
 
-Export Function MC_GetOneByClass(base, class);
+Export Function MC_GetOneByClass(base, class, tag);
 begin
-result := MC_GetByClass(base, class);
+result := MC_GetByClass(base, class, tag);
 
 if result then
    result := result[1];

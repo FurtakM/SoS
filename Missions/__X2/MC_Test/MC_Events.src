@@ -27,6 +27,7 @@ Export Function MCE_UnitDestroyed(un);
 begin
      case GetType(un) of
           unit_human: MCE_HumanKilled(un);
+          unit_building: MCE_BuildingDestroyed(un);
      end; 
 End;
 
@@ -51,4 +52,91 @@ if GetTag(driver) = mct_collect_crates then
       MC_Retreat(base, driver);
       end;
    end;
+End;
+
+Export Function MCE_BuildingComplete(building);
+var base, btype, x, y, d;
+begin
+btype := GetBType(building);
+x := GetX(building);
+y := GetY(building);
+d := GetDir(building);
+
+for base = 1 to mc_build_list do
+    begin
+    if not mc_build_list[base] then
+       continue;
+
+    if CompareArrayValues([btype, x, y, d], mc_build_list[base][1]) and GetSide(building) = mc_bases[base] then
+       begin
+       if mc_build_list[base][1] > 4 then
+          begin
+          repeat
+           wait(0$1);
+          until not UpgradeCost(mc_build_list[base][1][5]) or not IsDead(building);
+
+          if IsDead(building) then
+             exit;
+
+          ComUpgrade(building);
+          end
+       else
+          mc_build_list := Replace(mc_build_list, base, Delete(mc_build_list[base], 1));
+
+       mc_buildings := Replace(mc_buildings, base, Replace(mc_buildings[base], mc_buildings[base] + 1, building));
+       MCTM_DeleteActiveTask(base, mctm_build);
+       MCT_ResetTag(base, mctm_build);
+       exit;
+       end; 
+    end;
+End;
+
+Export Function MCE_BuildingDestroyed(building);
+var base, x, y, d, btype;
+begin
+btype := GetBType(building);
+x := GetX(building);
+y := GetY(building);
+d := GetDir(building);
+
+for base := 1 to mc_buildings do
+    begin
+    if not mc_buildings[base] then
+       continue;
+
+    if building in mc_buildings[base] then
+       begin
+       mc_buildings := Replace(mc_buildings, base, mc_buildings[base] diff building);
+
+       if mc_build_list[base] then
+          if mc_build_list[base][1][1] = btype and mc_build_list[base][1][2] = x and mc_build_list[base][1][3] = y then
+             exit;
+
+       mc_build_list := Replace(mc_build_list, base, mc_build_list[base] ^ [btype, x, y, d]);
+       exit;
+       end;
+    end;
+End;
+
+Export Function MCE_BuildingUpgradeComplete(building);
+var base, btype, x, y, d;
+begin
+btype := GetBType(building);
+x := GetX(building);
+y := GetY(building);
+d := GetDir(building);
+
+for base = 1 to mc_build_list do
+    begin
+    if not mc_build_list[base] then
+       continue;
+
+    if CompareArrayValues([btype - 1, x, y, d, btype], mc_build_list[base][1]) and GetSide(building) = mc_bases[base] then
+       begin
+       mc_build_list := Replace(mc_build_list, base, Delete(mc_build_list[base], 1)); 
+       MCTM_DeleteActiveTask(base, mctm_build);
+       MCT_ResetTag(base, mctm_build);
+       exit;
+       end;
+    end;
 End;

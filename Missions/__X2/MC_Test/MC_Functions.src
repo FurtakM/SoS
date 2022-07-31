@@ -62,105 +62,94 @@ mc_minefields := Replace(mc_minefields, base, area);
 End;
 
 Export Function MC_SetBuildingList(base, construct_list);
+var i, btype;
 begin
-if not mc_bases[base] then
+if not construct_list then
    exit;
+
+for i := 1 to construct_list do
+    if construct_list[i][1] in [b_factory, b_barracks] then
+       begin 
+       case construct_list[i][1] of
+            b_factory: btype := b_workshop;
+            b_barracks: btype := b_armoury;
+            end;
+
+       construct_list := Replace(construct_list, i, Replace(construct_list[i], 5, construct_list[i][1]));
+       construct_list := Replace(construct_list, i, Replace(construct_list[i], 1, btype));
+       end;
 
 mc_build_list := Replace(mc_build_list, base, construct_list);
 End;
 
-Export Function MC_InsertBuildingList(base, list);
+Export Function MC_InsertBuildingList(base, construct_list);
+var i, btype;
 begin
-if not mc_bases[base] then
+if not construct_list then
    exit;
 
-mc_build_list := Replace(mc_build_list, base, mc_build_list[base] union list);
+for i := 1 to construct_list do
+    if construct_list[i][1] in [b_factory, b_barracks] then
+       begin
+       case construct_list[i][1] of
+            b_factory: btype := b_workshop;
+            b_barracks: btype := b_armoury;
+            end;
+
+       construct_list := Replace(construct_list, i, Replace(construct_list[i], 5, construct_list[i][1]));
+       construct_list := Replace(construct_list, i, Replace(construct_list[i], 1, btype));        
+       end;
+
+mc_build_list := Replace(mc_build_list, base, mc_build_list[base] union construct_list);
 End;
 
 Export Function MC_SetProduceList(base, produce_list);
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_produce_list := Replace(mc_produce_list, base, produce_list);
 End;
 
 Export Function MC_InsertProduceList(base, components);
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_produce_list := Replace(mc_produce_list, base, mc_produce_list[base] ^ components);
 End;
 
 Export Function MC_SetDefenderList(base, deflist);
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_defender := Replace(mc_defender, base, deflist);
 mc_defender_limit := Replace(mc_defender_limit, base, deflist + 0);
 End;
 
 Export Function MC_SetDefenderLimit(base, limit);
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_defender_limit := Replace(mc_defender_limit, base, limit);
 End;
 
 Export Function MC_PrepareAttack(base, group, path, flags);
-var i, j, tmp;
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_attack := ReplaceIn(mc_attack, [base, mc_attack[base]+1], [base, group, path, flags]);
 End;
 
 // list: [ [x, y, type (0 - oil, 1 - sib)] ]
 Export Function MC_SetDepositsXY(base, deposits_list);
 begin
-if not mc_bases[base] then
-   exit;
-
 mc_deposits_xy := Replace(mc_deposits_xy, base, deposits_list);
 End;
 
 // Set available tame area
 Export Function MC_SetTame(base, area);
 begin
-if not mc_bases or not base then
-   exit;
-
 mc_can_tame := Replace(mc_can_tame, base, area);
-End;
-
-// Set available upgrade for buildings
-Export Function MC_SetUpgradeBuilding(base, btype);
-var tmp;
-begin
-if not mc_bases or not base then
-   exit;
-
-tmp := UnitFilter(mc_bases[base], [f_btype, btype]);
-
-if not tmp then
-   exit;
-
-mc_build_upgrade := Replace(mc_build_upgrade, base, Insert(mc_build_upgrade[base], mc_build_upgrade[base]+1, tmp[1]));
 End;
 
 // Set available lab kinds
 Export Function MC_SetLabKind(base, kinds);
 var i;
 begin
-if not mc_bases or not base or not kinds then
+if not base or not kinds then
    exit;
 
 for i in kinds do
-    mc_lab_upgrade := ReplaceIn(mc_lab_upgrade, [base, mc_lab_upgrade[base]+1], i);
+    mc_lab_upgrade := ReplaceIn(mc_lab_upgrade, [base, mc_lab_upgrade[base] + 1], i);
 End;
 
 // Set area for collect crates
@@ -186,7 +175,7 @@ End;
 Export Function MC_SetFactoryExtension(base, x, y, d, ext_list);
 var i, tmp;
 begin
-if not mc_bases or not base or not ext_list then
+if not base or not ext_list then
    exit;
 
 tmp := GetFacExtXYD(x, y, d);
@@ -194,10 +183,9 @@ tmp := GetFacExtXYD(x, y, d);
 if not tmp then
    exit;
 
-
 for i in tmp do
     begin
-    mc_build_list := Replace(mc_build_list, base, Insert(mc_build_list[base], mc_build_list[base]+1, [ext_list[1], i[1], i[2], i[3]]));
+    mc_build_list := Replace(mc_build_list, base, Insert(mc_build_list[base], mc_build_list[base] + 1, [ext_list[1], i[1], i[2], i[3]]));
     ext_list := Delete(ext_list, 1);
 
     if not ext_list then
@@ -227,7 +215,7 @@ End;
 // Set parking area
 Export Function MC_SetParkingArea(base, parking_area);
 begin
-if not mc_bases or not parking_area or not base then
+if not parking_area or not base then
    exit;
 
 mc_parking := Replace(mc_parking, base, parking_area);
@@ -236,7 +224,7 @@ End;
 // Set scan area
 Export Function MC_SetScanArea(base, scan_area);
 begin
-if not mc_bases or not base or not scan_area then
+if not base or not scan_area then
    exit;
 
 mc_scan_area := Replace(mc_scan_area, base, scan_area);
