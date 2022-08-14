@@ -1,0 +1,316 @@
+// inner macro's functions (don't use them outside)
+// main container which monitor each macro players action
+// it's workin until mc_active is set to true
+Export Function MC_Monitor();
+var i, active_players;
+begin
+while mc_active do
+      begin
+      wait(0$1); // interval value
+
+      active_players := 0;
+
+      for i := 1 to mc_bases do
+          begin
+          if MC_Exist(i) then
+             begin
+             MCE_SailEventCustom(mce_monitor_base, i, 0, 0, 0, 0, 0); // monitor_each base
+             active_players := active_players + 1;
+             end;
+          end;
+
+      if not active_players then
+         mc_active := false; // kill macro if noone stay alive
+      end;
+End;
+
+Export Function MC_MonitorBase(base);
+begin
+// check if player is still alive
+if not mc_people[base] then
+   mc_bases := Replace(mc_bases, base, 0);
+
+// scan area if enemy is in range
+mc_danger := Replace(mc_danger, base, DangerInArea(mc_bases[base], mc_scan_area[base]));
+
+if mc_danger[base] then
+   MC_Defend(base)
+else
+   MC_TaskManager(base); // see MC_TaskManager module
+End;
+
+Export Function MC_Defend(base);
+var defender_vehicles;
+begin
+if mc_defense_status[base] then // don't run second thread for defense purpose
+   exit;
+
+mc_defense_status := Replace(mc_defense_status, base, true);
+
+// check if defender vehicles exist
+defender_vehicles := mc_defender[base];
+
+// todo
+End;
+
+// set task list for base
+Export Function MC_TaskManager(base);
+var crates_list;
+begin
+// check if there is any crates to collect
+MC_CollectCrates(base, GetListOfCratesInArea(mc_crates_area[base]));
+// check if build_list is not empty
+MC_Build(base);
+End;
+
+Export Function MC_CollectCrates(base, crates);
+var i, j, amount, cargo_bays, apes, engs, collectors, number_of_crates, driver, drivers, depot, mechanic_used;
+begin
+if MCTM_HasActiveTask(base, mctm_collect_crates) or not crates or not MC_GetDepot(base) then
+   exit;
+
+MCTM_SetActiveTask(base, mctm_collect_crates);
+
+collectors := []; // units which are supose to collect crates
+
+// check if player has cargo bay
+cargo_bays := GetCargoBay(mc_vehicles[base]);
+
+if cargo_bays then
+   begin
+   collectors := collectors union cargo_bays;
+
+   while crates and collectors do
+         begin
+         wait(0$1);
+
+         for i in collectors do
+             begin
+             driver := 0;
+
+             // get driver if cargo is empty
+             if GetControl(i) = control_manual and not IsDrivenBy(i) then
+                begin
+                driver := MC_GetOneByClass(base, 3, mct_none);
+
+                if not driver then
+                   begin
+                   driver := MC_GetBestForClass(base, 3, 1);
+
+                   if driver then
+                      begin
+                      driver := driver[1];
+                      MC_ChangeClass(base, 3, driver);
+                      AddComExitBuilding(driver);
+                      end;
+                   end;
+
+                if IsInUnit(driver) then
+                   ComExit(driver);
+
+                SetTag(driver, mct_collect_crates);
+
+                if GetLives(i) < 1000 then
+                   AddComRepairVehicle(driver, i);
+
+                AddComEnterUnit(driver, i);
+                mechanic_used := true;
+                end;
+
+             // go for crates
+             repeat
+              wait(0$1);
+
+              // evacuate vehicle logic in event
+
+              if IsDead(i) then
+                 begin
+                 collectors := collectors diff i;
+                 continue;
+                 end;
+
+              if GetEngine(i) = engine_combustion and GetFuel(i) < 20 then
+                 begin
+                 depot := NearestUnitToUnit(MC_GetDepot(base), i);
+
+                 if GetDistUnits(i, depot) < 6 then
+                    ComMoveUnit(i, depot);
+                 end;
+
+              if GetControl(i) = control_manual then
+                 begin
+                 if not driver then
+                    driver := IsDrivenBy(i);
+
+                 if not HasTask(driver) then
+                    ComCollect(driver, crates[1], crates[2]);
+                 end
+              else
+                 if not HasTask(i) then
+                    ComCollect(i, crates[1], crates[2]);
+             until not GetResourceAmountXY(crates[1], crates[2]);
+
+             for j := 1 to 2 do
+                 crates := Delete(crates, 1);
+             end;
+         end;
+
+   if mechanic_used then
+      begin
+
+      repeat
+       wait(0$1);
+      until not GetCargo(collectors, mat_cans) or not collectors;
+
+      drivers := MCT_ResetTag(base, mct_collect_crates);
+
+      if drivers then
+         for i in drivers do
+             ComExit(i);
+
+      MCTM_DeleteActiveTask(base, mctm_collect_crates);
+      end;
+   end
+else
+    begin
+    // check if player has ape_eng
+    apes := MC_GetByClass(base, class_apeman_engineer, mct_none);
+
+    if apes then
+       collectors := collectors union apes;
+
+    // check if player has eng
+    engs := MC_GetByClass(base, class_engineer, mct_none);
+
+    if engs then
+       collectors := collectors union engs;
+
+    if not collectors then
+       begin
+       engs := MC_GetBestForClass(base, 2, 3);
+
+       if engs then
+          MC_ChangeClass(base, 2, engs);
+
+       repeat
+        wait(0$1);
+
+        if not UnitFilter(engs, [f_ok]) then
+           break;  
+       until UnitFilter(engs, [f_class, 2]) = engs;
+       end;
+
+    if not collectors then
+       begin
+       MCTM_DeleteActiveTask(base, mctm_collect_crates);
+       exit;
+       end;
+
+    if collectors > 5 then
+       for i := collectors downto 5 do
+           begin
+           SetTag(i, 0);
+           collectors := Delete(collectors, i);
+           end;
+
+    ComExitAll(collectors);
+    MCT_SetTag(collectors, mct_collect_crates);
+
+    while crates and collectors do
+         begin
+         wait(0$1);
+
+         amount := GetResourceAmountXY(crates[1], crates[2]);
+         j := 0;
+
+         for i in collectors do
+             begin
+             if IsDead(i) then
+                collectors := collectors diff i;
+
+             if j < amount and not HasTask(i) then
+                begin
+                j := j + 1;
+                ComCollect(i, crates[1], crates[2]);
+                end;
+             end;
+
+         if not GetResourceAmountXY(crates[1], crates[2]) then
+            for j := 1 to 2 do
+                crates := Delete(crates, 1);
+         end;
+
+    {for i in collectors do
+        MC_Retreat(base, i);}
+
+    MCT_ResetTag(base, mct_collect_crates);
+    MCTM_DeleteActiveTask(base, mctm_collect_crates);
+    end;
+End;
+
+Export Function MC_Build(base);
+var depot, btype, x, y, d, engs;
+begin
+if MCTM_HasActiveTask(base, mctm_build) or not mc_build_list[base] or not MC_GetDepot(base) then
+   exit;
+
+MCTM_SetActiveTask(base, mctm_build);
+
+// check if there is any engineer
+engs := MC_GetByClass(base, 2, mct_none);
+
+if not engs then
+   begin
+   engs := MC_GetBestForClass(base, 2, 6);
+
+   if not engs then
+      begin          
+      MCTM_DeleteActiveTask(base, mctm_build);
+      exit;
+      end;
+
+   MC_ChangeClass(base, 2, engs);
+
+   repeat
+    wait(0$1);
+
+    if not mc_people[base] then
+       exit;
+
+   until UnitFilter(engs, [f_class, 2]) = engs;
+   end;
+
+ComExitAll(engs);
+MCT_SetTag(engs, mct_build);
+
+btype := mc_build_list[base][1][1];
+x := mc_build_list[base][1][2];
+y := mc_build_list[base][1][3];
+d := mc_build_list[base][1][4];
+
+// building exist but it's not finished
+if GetType(HexInfo(x, y)) = unit_building then
+   begin
+   wait(0$1);
+   ComComplete(engs, HexInfo(x, y));
+   end
+else    // building not exist
+   begin
+   depot := NearestUnitToXY(MC_GetDepot(base), x, y);
+
+   if not HexInfo(x, y) and CanBeBuilt(depot, btype, x, y, d) then
+      ComBuild(engs, btype, x, y, d)
+   else
+      begin
+      if GetType(HexInfo(x, y)) <> unit_building then
+         begin // (btype, x, y, d, buildings, cleaners, parking)
+         TryClearPlaceForBuilding(btype, x, y, d, mc_buildings[base], engs, mc_parking[base]);
+         wait(0$10);
+         end;
+
+      MCTM_DeleteActiveTask(base, mctm_build);
+      MCT_ResetTag(base, mctm_build);
+      end;
+   end;                              
+End;
+

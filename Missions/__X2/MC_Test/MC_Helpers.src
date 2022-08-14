@@ -1,0 +1,135 @@
+// check if current macro's player exist
+Export Function MC_Exist(base);
+begin
+result := mc_bases >= base and mc_bases[base] > 0;
+End;
+
+Export Function MC_GetBestForClass(base, class, amount);
+var i, units;
+begin
+result := [];
+units := SortBySkill(UnitFilter(mc_people[base], [f_not, [f_class, class]]), class);
+
+if not units then
+   exit;
+
+for i := 1 to amount do
+    begin
+    if i > units then
+       exit;
+
+    if not GetTag(units[i]) then
+       result := Replace(result, result + 1, units[i]);
+    end;
+End;
+
+Export Function MC_GetHumanBase(human);
+var i;
+begin
+for i := 1 to mc_people do
+    if human in mc_people[i] then
+       begin
+       result := i;
+       exit;
+       end;
+End;
+
+Export Function MC_ChangeClass(base, class, units);
+var i, buildings, b;
+begin
+if not base or not units then
+   exit;
+
+   case class of
+   1, 5, 6, 7, 8: buildings := UnitFilter(mc_buildings[base], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]);
+   2: buildings := UnitFilter(mc_buildings[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+   3: buildings := UnitFilter(mc_buildings[base], [f_or, [f_btype, b_workshop], [f_btype, b_factory]]);
+   4: buildings := UnitFilter(mc_buildings[base], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+   end;
+
+if not buildings then
+   exit; // cannot change class due to lack of needed building
+
+for i := 1 to units do
+    begin
+    if GetClass(units[i]) = class then
+       continue;
+
+    SetTag(units[i], mct_change_class);
+
+    if buildings > i div 6 then
+       b := buildings[i div 6]
+    else
+       b := buildings[1];
+
+    if IsInUnit(units[i]) then
+       ComExit(units[i]);
+
+    AddComEnterUnit(units[i], b);
+    AddComChangeProfession(units[i], class);
+    end;
+End;
+
+Export Function MC_GetByClass(base, class, tag);
+var i;
+begin
+result := UnitFilter(mc_people[base], [f_class, class]);
+
+if tag > -1 then
+   for i in result do
+       if GetTag(i) <> tag then
+          result := result diff i;
+End;
+
+Export Function MC_GetOneByClass(base, class, tag);
+begin
+result := MC_GetByClass(base, class, tag);
+
+if result then
+   result := result[1];
+End;
+
+Export Function MC_GetBuilding(base, btype);
+begin
+result := UnitFilter(mc_buildings[base], [f_btype, btype]);
+End;
+
+Export Function MC_GetDepot(base);
+begin
+result := UnitFilter(mc_buildings[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+End;
+
+Export Function MC_GetVehicles(base, onlyCombat);
+begin
+result := mc_vehicles[base];
+
+if onlyCombat then
+   result := result diff UnitFilter(result, [f_or, [f_weapon, us_cargo_bay],
+                                                   [f_weapon, ru_cargo_bay],
+                                                   [f_weapon, ru_big_cargo_bay],
+                                                   [f_weapon, ar_cargo_bay],
+                                                   [f_weapon, us_crane],
+                                                   [f_weapon, ru_crane],
+                                                   [f_weapon, ar_crane],
+                                                   [f_weapon, us_bulldozer],
+                                                   [f_weapon, ru_bulldozer],
+                                                   [f_weapon, ru_radar],
+                                                   [f_weapon, ar_control_tower],
+                                                   [f_weapon, ru_siberium_rocket],
+                                                   [f_weapon, us_siberium_rocket]
+                                            ]);
+End;
+
+Export Function MC_Retreat(base, unit);
+var depot;
+begin
+if not base or not unit then
+   exit;
+
+depot := NearestUnitToUnit(MC_GetDepot(base), unit);
+
+if depot then
+   ComStandNearbyBuilding(unit, depot)
+else
+   ComMoveToArea(unit, mc_scan_area[base]);
+End;

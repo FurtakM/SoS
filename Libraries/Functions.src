@@ -792,7 +792,7 @@ begin
 result := b in [b_ext_stitch, b_ext_radar, b_ext_radio, b_ext_gun, b_ext_computer, b_ext_siberium, b_ext_noncombat, b_ext_track, b_ext_laser, b_ext_rocket];
 End;
 
-Export Function GetBaseBuildings(base, area);
+Export Function GetBaseBuildings(base, area, checkLink);
 var tmp, i;
 begin
 result := [];
@@ -801,18 +801,25 @@ tmp := FilterUnitsInArea(area, [f_type, unit_building]);
 if not tmp then
    exit;
 
-for i in tmp do
-    if GetBase(i) <> base then
-       ComLinkToBase(base, i);
+if checkLink then
+   begin
+   for i in tmp do
+       if GetBase(i) <> base then
+          ComLinkToBase(base, i);
+   end;
 
 result := tmp;
 End;
 
-Export Function ComComplete(unit, b);
+Export Function ComComplete(units, b);
 var i;
 begin
-if BuildingStatus(b) = bs_build then
-   SetTaskList(unit, [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
+if not units then
+   exit;
+
+for i in units do
+    if BuildingStatus(b) = bs_build then
+       SetTaskList(i, [['h', GetX(b), GetY(b), b, 0, 0, 0]]);
 End;
 
 Export Function Connect(vehicle);
@@ -873,7 +880,7 @@ if sources then
    for i = 1 to 3 do
        AddResourceType(base, i, sources[i]);
 
-buildings := GetBaseBuildings(base, area);
+buildings := GetBaseBuildings(base, area, true);
 
 InitHc;
 InitUc;
@@ -1036,7 +1043,7 @@ if not x or not y then
 
 weapon := 0;
 fac_list := [];
-factories := UnitFilter(GetBaseBuildings(GetBase(tower), area), [f_btype, b_factory]);
+factories := UnitFilter(GetBaseBuildings(GetBase(tower), area, false), [f_btype, b_factory]);
 
 if not factories then
    exit;
@@ -1161,6 +1168,22 @@ result := true;
           result := false;
 End;
 
+Export Function CompareArrayValues(array1, array2);
+var i;
+begin
+if not array1 or not array2 then
+   exit;
+
+result := true;
+
+for i = 1 to array1 do
+    if array1[i] <> array2[i] then
+       begin
+       result := false;
+       break;
+       end;
+End;
+
 Export Function VehicleCost(fac, list);
 var cost, pom;
 begin
@@ -1213,18 +1236,20 @@ result := GetResourceType(pom, mat_cans) >= cost[1] and
           GetResourceType(pom, mat_siberit) >= cost[3];
 End;
 
-Export Function TryClearPlaceForBuilding(base, btype, x, y, d);
-var i, j, _x, _y, tmp, hexes, r, xy, dep;
+Export Function TryClearPlaceForBuilding(btype, x, y, d, buildings, cleaners, parking);
+var i, j, _x, _y, tmp, hexes, r, xy, dep, driver;
 begin
 result := false;
 
-if not base or not btype or not x or not y then
+if not buildings or not btype or not x or not y then
    exit;
 
-hexes := GetBuildingHexes(btype, x, y, d, GetNation(base[1]), 0);
+hexes := GetBuildingHexes(btype, x, y, d, GetNation(buildings[1]), 0);
 
 if not hexes then
    exit;
+
+dep := UnitFilter(buildings, [[f_side, GetSide(tmp)], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
 for i = 1 to hexes do
     begin
@@ -1233,40 +1258,61 @@ for i = 1 to hexes do
     if IsEnvironment(hexes[i][1], hexes[i][2]) or not ValidHex(hexes[i][1], hexes[i][2]) or GetType(tmp) = unit_building then
        exit;
 
-    if not tmp or not tmp in base then
+    if not tmp then
        continue;
 
     result := true;
 
-    dep := UnitFilter(base, [[f_side, GetSide(tmp)], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
-
-    if dep then
+    if cleaners and GetType(tmp) = unit_vehicle and GetControl(tmp) = control_manual then
        begin
-       xy := [ShiftX(GetX(dep[1]), GetDir(dep[1]), 5), ShiftY(GetY(dep[1]), GetDir(dep[1]), 5)];
-
-       if ValidHex(xy[1], xy[2]) then
-          begin
-          ComMoveXY(tmp, xy[1], xy[2]);
+       if IsDrivenBy(tmp) then
           continue;
+
+       if UnitFilter(cleaners, [[f_not, [f_hastask]], [f_not, [f_driving]]]) then
+          begin
+          driver := UnitFilter(cleaners, [[f_not, [f_hastask]], [f_not, [f_driving]]])[1];
+
+          if IsInUnit(driver) then
+             ComExit(driver);
+
+          AddComEnterUnit(driver, tmp);
+          AddComMoveToArea(driver, parking);
+          AddComExitVehicle(driver);
           end;
+
+       continue;
        end;
 
-    r := GetDir(tmp);
+    if not cleaners or not tmp in cleaners then
+       begin          
+       if dep then
+          begin
+          xy := [ShiftX(GetX(dep[1]), GetDir(dep[1]), 5), ShiftY(GetY(dep[1]), GetDir(dep[1]), 5)];
 
-    if r = 5 then
-       r := 0;
+          if ValidHex(xy[1], xy[2]) then
+             begin
+             ComMoveXY(tmp, xy[1], xy[2]);
+             continue;
+             end;
+          end;
 
-    for j = r to 5 do
-        begin
-        _x := ShiftX(GetX(tmp), j, 2);
-        _y := ShiftY(GetY(tmp), j, 2);
+       r := GetDir(tmp);
 
-        if ValidHex(_x, _y) and not HexInfo(_x, _y) then
+       if r = 5 then
+          r := 0;
+
+       for j = r to 5 do
            begin
-           ComMoveXY(tmp, _x, _y);
-           break;
-           end;
-        end;
+           _x := ShiftX(GetX(tmp), j, 2);
+           _y := ShiftY(GetY(tmp), j, 2);
+
+           if ValidHex(_x, _y) and not HexInfo(_x, _y) then
+              begin
+              ComMoveXY(tmp, _x, _y);
+              break;
+              end; 
+          end;
+       end;
     end;
 End;
 
@@ -2108,6 +2154,16 @@ else
 result := tmp;
 End;
 
+Export Function ComExitAll(units);
+var i;
+begin
+if not units then
+   exit;
+
+for i in units do
+    ComExit(i);
+End;
+
 Export Function ResetHc;
 begin
 InitHc;
@@ -2207,6 +2263,14 @@ for i in FilterAllUnits([f_side, side2]) do
        exit;
        end;
     end;
+End;
+
+Export Function GetCargoBay(units);
+begin
+result := UnitFilter(units, [f_or, [f_weapon, us_cargo_bay],
+                                   [f_weapon, ru_cargo_bay],
+                                   [f_weapon, ar_cargo_bay],
+                                   [f_weapon, ru_big_cargo_bay]]);
 End;
 
 

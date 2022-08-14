@@ -1,0 +1,51 @@
+// mc_tags module
+// used to tag people tasks
+Export mct_none,
+       mct_change_class,
+       mct_build,
+       mct_collect_crates,
+       mct_heal;
+
+Export Function MCT_InitTags;
+begin
+mct_none := 0;
+mct_change_class := 1;
+mct_build := 2;
+mct_collect_crates := 3;
+mct_heal := 4;
+End;
+
+Export Function MCT_GetByTag(base, tag);
+var i;
+begin
+result := [];
+
+if not base then
+   exit;
+
+for i in mc_people[base] do
+    if GetTag(i) = tag then
+       result := Replace(result, result + 1, i);
+End;
+
+Export Function MCT_ResetTag(base, tag);
+var i;
+begin
+result := MCT_GetByTag(base, tag);
+
+if result then
+   for i in result do
+       SetTag(i, mct_none);
+End;
+
+Export Function MCT_SetTag(units, tag);
+var i;
+begin
+if not units then
+   exit;
+
+for i in units do
+    SetTag(i, tag);
+End;
+
+

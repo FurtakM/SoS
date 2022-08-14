@@ -288,9 +288,14 @@ begin
 end;
 
 // Coop attack with Donaldson
-Every 7$0 trigger GetSide(Donaldson) = 4 and IsOK(Donaldson) do
+Every 0$1 trigger GetSide(Donaldson) = 4 and IsOK(Donaldson) do
 var i, tmp;
 begin
+wait(5$00);
+
+if GetSide(Donaldson) = 1 or IsDead(Donaldson) then
+   exit;
+
 SayRadio(Donaldson, 'D3b-Don-1');
 donaldsonCoopAttack = 1;
 tmp := FilterAllUnits([f_side, 4]);
@@ -307,7 +312,7 @@ for i in tmp do
 end;
 
 // Save Donaldson
-Every 0$1 trigger not saveDonaldson and FilterAllUnits([[f_side, 4], [f_type, unit_human], [f_dist, JMM, 9]]) diff Frank do
+Every 0$1 trigger not saveDonaldson and FilterUnitsInArea(OuterDonaldsonArea, [f_side, 1]) do
 var i;
 begin
 saveDonaldson := 1;

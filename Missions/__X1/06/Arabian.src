@@ -1,10 +1,15 @@
 Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Shariff, Olaf, Omar,
-       Kurt, Aviradze, heikeSecondSquad, heikeApes;
+       Kurt, Aviradze,
+       heikeSecondSquad, heikeApes;
 Export Function PrepareArabian;
-var i;
+var i, b, base, hasRadar, hasRemote, hasDrugs, factory, depot, lab, bunkers;
 begin
-uc_side := 2;
 uc_nation := 2;
+uc_side := 5;
+Shariff := PrepareUnit('Abdul', false, '');
+Omar := PrepareUnit('Omar', false, '');
+
+uc_side := 2;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
 Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);
@@ -20,9 +25,112 @@ Olaf := PrepareUnit('Olaf', false, '');
 
 heikeSecondSquad := CreateCharacterSet('05_others');
 heikeApes := CreateCharacterSet('05_apes');
+hasRadar := LoadVariable('05_Radar', debug);
+hasRemote := LoadVariable('05_RemoteControl', debug);
+hasDrugs := LoadVariable('05_DrugsTested', debug);
 
-uc_side := 5;
-Shariff := PrepareUnit('Abdul', false, '');
-Omar := PrepareUnit('Omar', false, '');
+if hasDrugs then
+   SetTech(tech_StimDrugs, 2, state_researched);
+
+// prepare base
+base := [ [b_depot, 206, 80, 1],
+          [b_bunker, 221, 95, 5, ar_light_gun],
+          [b_bunker, 223, 88, 5, ar_double_machine_gun],
+          [b_bunker, 202, 64, 2, ar_gatling_gun],
+          [b_factory, 203, 91, 1],
+          [b_lab_full, 217, 78, 4],
+          [b_solar_power, 220, 99, 1],
+          [b_solar_power, 220, 103, 1],
+          [b_solar_power, 216, 102, 1],
+          [b_ext_gun, 203, 94, 0],
+          [b_ext_stitch, 200, 88, 2],
+          [b_ext_track, 199, 91, 1],
+          [b_oil_power, 197, 81, 1],
+          [b_oil_power, 197, 78, 3] ];
+
+if hasRadar then
+   base := Replace(base, base + 1, [b_ext_radar, 203, 87, 3]);
+
+if hasRemote then
+   base := Replace(base, base + 1, [b_ext_radio, 207, 95, 5]);
+
+for i in base do
+    begin
+    bc_type := i[1];
+    bc_level := 3;
+
+    if i[1] = b_lab_full then
+       begin
+       bc_kind1 := b_lab_weapon;
+
+       if hasRadar then
+          bc_kind2 := b_lab_opto
+       else
+          bc_kind2 := -1;
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if i > 4 then
+       PlaceWeaponTurret(b, i[5]);
+
+    if i[1] = b_bunker then
+       bunkers := Replace(bunkers, bunkers + 1, b);
+    end;
+
+depot := HexInfo(206, 80);
+factory := HexInfo(203, 91);
+lab := HexInfo(217, 78);
+
+SetResourceType(GetBase(depot), mat_cans, [360, 260, 160][Difficulty]);
+SetResourceType(GetBase(depot), mat_oil, [200, 150, 100][Difficulty]);
+
+PlaceUnitXY(Heike, 213, 87, false);
+ComTurnXY(Heike, 214, 87);
+
+if Kaia then
+   begin
+   PlaceUnitXY(Kaia, 213, 85, false);
+   ComTurnXY(Kaia, 215, 87);
+   end;
+
+if Olaf and Kaia then
+   begin
+   PlaceUnitXY(Olaf, 215, 87, false);
+   ComTurnXY(Olaf, 213, 85);
+   end
+else if Olaf then
+   PlaceHumanInUnit(Olaf, factory);
+
+if Givi then
+   PlaceHumanInUnit(Givi, bunkers[1]);
+
+if Kurt then
+   PlaceHumanInUnit(Kurt, bunkers[2]);
+
+if Mike then
+   PlaceHumanInUnit(Mike, bunkers[3]);
+
+if Kamil then
+   PlaceHumanInUnit(Kamil, depot);
+
+if Sophia then
+   PlaceHumanInUnit(Sophia, depot);
+
+if Aviradze then
+   PlaceHumanInUnit(Aviradze, lab);
+
+if Ibrahim then
+   PlaceHumanInUnit(Ibrahim, lab);
+
+if Markov then
+   PlaceHumanInUnit(Markov, factory);
+
+if heikeSecondSquad then
+   for i in heikeSecondSquad do
+       PlaceUnitXYR(i, 190, 65, 5, false);
+
+if heikeApes then
+   for i in heikeApes do
+       PlaceUnitXYR(i, 190, 70, 5, false);
 End;
-
