@@ -2,7 +2,7 @@ Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Shariff, Olaf, O
        Kurt, Aviradze,
        heikeSecondSquad, heikeApes;
 Export Function PrepareArabian;
-var i, b, base, hasRadar, hasRemote, hasDrugs, factory, depot, lab, bunkers;
+var i, b, base, hasRadar, hasRemote, hasDrugs, factory, depot, lab, bunkers, tmp;
 begin
 uc_nation := 2;
 uc_side := 5;
@@ -31,6 +31,13 @@ hasDrugs := LoadVariable('05_DrugsTested', debug);
 
 if hasDrugs then
    SetTech(tech_StimDrugs, 2, state_researched);
+
+// cameras
+tmp := AreaToList(camArea, 0);
+
+for i := 1 to tmp[1] do
+    if IsEnvironment(tmp[1][i], tmp[2][i]) then
+       HiddenCamera(tmp[1][i], tmp[2][i], 2);
 
 // prepare base
 base := [ [b_depot, 206, 80, 1],
@@ -103,7 +110,18 @@ else if Olaf then
    PlaceHumanInUnit(Olaf, factory);
 
 if Givi then
-   PlaceHumanInUnit(Givi, bunkers[1]);
+   begin
+   if Kaia and Olaf then
+      begin
+      PlaceUnitXY(Givi, 247, 117, false);
+      ComTurnXY(Givi, 248, 118);
+      end
+   else
+      begin
+      PlaceUnitXY(Givi, 216, 88, false);
+      ComTurnUnit(Givi, Heike);
+      end;
+   end;
 
 if Kurt then
    PlaceHumanInUnit(Kurt, bunkers[2]);
@@ -112,7 +130,15 @@ if Mike then
    PlaceHumanInUnit(Mike, bunkers[3]);
 
 if Kamil then
-   PlaceHumanInUnit(Kamil, depot);
+   begin
+   if Kaia and Olaf then
+      PlaceHumanInUnit(Kamil, depot)
+   else
+      begin
+      PlaceUnitXY(Kamil, 213, 87, false);
+      ComTurnUnit(Kamil, Heike);
+      end;
+   end;
 
 if Sophia then
    PlaceHumanInUnit(Sophia, depot);

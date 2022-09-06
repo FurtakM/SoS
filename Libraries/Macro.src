@@ -11,7 +11,7 @@ Export mc_bases, mc_building_need_repair, mc_building_repairs,
        mc_scan_area, mc_sides, mc_tech, mc_can_tame, mc_ape, mc_ape_in_lab, mc_taming,
        mc_build_upgrade, mc_lab, mc_lab_upgrade, mc_teleport_exit, mc_teleport_exit_set, mc_deposits_xy,
        mc_deposits_finder, mc_allowed_tower_weapons, mc_remote_driver, mc_class,
-       mc_class_case_use;
+       mc_class_case_use, mc_is_defending;
 
 Export Function InitMacro;
 var i;
@@ -48,6 +48,7 @@ mc_scan_area := [];
 mc_tech := [];
 mc_class := [];
 mc_class_case_use := [];
+mc_is_defending := [];
 End;
 
 // destroy current mc_base instance
@@ -94,6 +95,7 @@ mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, base, []);
 mc_remote_driver := Replace(mc_remote_driver, base, []);
 mc_class := Replace(mc_class, base, []);
 mc_class_case_use := Replace(mc_class_case_use, base, 0);
+mc_is_defending := Replace(mc_is_defending, base, false);
 End;
 
 Export Function MC_Add(side, units);
@@ -143,6 +145,7 @@ mc_allowed_tower_weapons := Replace(mc_allowed_tower_weapons, base, []);
 mc_remote_driver := Replace(mc_remote_driver, base, []);
 mc_class := Replace(mc_class, base, []);
 mc_class_case_use := Replace(mc_class_case_use, base, 0);
+mc_is_defending := Replace(mc_is_defending, base, false);
 
 result := base;
 End;
@@ -1538,24 +1541,28 @@ for i = 1 to mc_bases do
        for j in tmp do
            if GetBType(IsInUnit(j)) = b_barracks and GetClass(j) = 1 and not MineOfUnit(j) and class then
               ComChangeProfession(j, class);
+
+       mc_is_defending := Replace(mc_is_defending, i, false);
        end;
 
-    if mc_scan[i] and not mc_defender[i] and not UnitFilter(mc_bases[i], [f_btype, b_bunker]) and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) then
+    if mc_scan[i] and not mc_is_defending[i] and not mc_defender[i] and not UnitFilter(mc_bases[i], [f_btype, b_bunker]) and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) then
        begin
        tmp := UnitFilter(mc_bases[i], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
        tmp := tmp diff FilterByTag(tmp, 18);
 
        if tmp then
           begin
+          mc_is_defending := Replace(mc_is_defending, i, true);
           BasicDefend(i, tmp, mc_scan_area[i]);
           exit;
           end;
        end;
 
-    if mc_scan[i] and mc_defender[i] then
+    if mc_scan[i] and not mc_is_defending[i] and mc_defender[i] then
        begin
        tmp := mc_defender[i];
        mc_defender := Replace(mc_defender, i, []);
+       mc_is_defending := Replace(mc_is_defending, i, true);
        Defend(i, tmp, mc_scan[i]);
        exit;
        end;
