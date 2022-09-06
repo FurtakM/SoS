@@ -1,14 +1,23 @@
 Export Function Action;
 begin
 RevealFogArea(2, revealArea);
-InGameOn;
+Video(true);
 
 CenterNowOnXY(213, 89);
 
-if Kaia and Olaf then
-   SceneKaiaWithOlaf;
+if not debug then
+   begin   
+   if Kaia and Olaf then
+      SceneKaiaWithOlaf;
 
-InGameOff;
+   if Givi and Kamil then
+      SceneWithGiviAndKamil;
+   end;
+
+Video(false);
+
+ChangeMissionObjectives('M1');
+SaveForQuickRestart;
 End;
 
 Export Function SceneKaiaWithOlaf;
@@ -24,6 +33,8 @@ Say(Kaia, 'DK-06-Mem-4');
 Say(Olaf, 'DO-06-Mem-5');
 
 wait(0$2);
+
+SetWorkingProgress(FilterAllUnits([[f_side, 2], [f_btype, b_factory]]), 90);
 
 Say(Olaf, 'DO-06-Mem-6');
 Say(Kaia, 'DK-06-Mem-7');
@@ -55,7 +66,20 @@ Say(Kaia, 'DK-06-Mem-19');
 ComMoveXY(Olaf, 214, 86);
 AddComTurnUnit(Olaf, Kaia);
 
-wait(0$1);
+if Givi then
+   begin
+   ComMoveXY(Givi, 217, 86);
+   AddComTurnUnit(Givi, Heike);
+   end;
+
+if Kamil then
+   begin
+   ComExit(Kamil);
+   AddComMoveXY(Kamil, 212, 86);
+   AddComTurnUnit(Kamil, Heike);
+   end;
+
+wait(0$2);
 
 Say(Heike, 'DH-06-Mem-20');
 
@@ -64,5 +88,38 @@ AddComTurnUnit(Olaf, Kaia);
 
 Say(Kaia, 'DK-06-Mem-21');
 
+wait(0$2);
+End;
 
+Export function SceneWithGiviAndKamil;
+begin
+if Markov then
+   begin
+   if IsInUnit(Markov) then
+      ComExit(Markov);
+
+   AddComMoveXY(Markov, 212, 88);
+   AddComTurnUnit(Markov, Heike);
+   end;
+
+Say(Givi, 'DG-06-Obj-1');
+Say(Kamil, 'DKam-06-Obj-2');
+
+ComTurnUnit(Heike, Kamil);
+
+Say(Kamil, 'DKam-06-Obj-3');
+Say(Markov, 'DMar-06-Obj-4');
+Say(Kamil, 'DKam-06-Obj-6');
+Say(Kamil, 'DKam-06-Obj-7');
+Say(Kamil, 'DKam-06-Obj-8');
+Say(Heike, 'DH-06-Obj-9');
+Say(Kamil, 'DKam-06-Obj-10');
+Say(Kamil, 'DKam-06-Obj-11');
+Say(Markov, 'DMar-06-Obj-12');
+Say(Markov, 'DMar-06-Obj-13');
+Say(Markov, 'DMar-06-Obj-14');
+Say(Olaf, 'DO-06-Obj-15');
+Say(Olaf, 'DO-06-Obj-16');
+Say(Heike, 'DH-06-Obj-17');
+Say(Olaf, 'DO-06-Obj-18');
 End;
