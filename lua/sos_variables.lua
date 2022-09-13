@@ -42,6 +42,24 @@ TID_Legion = 6044;
 TID_Neptun = 6045;
 TID_Achievements_Ares = 6046;
 
+TID_GameType = 6050;
+TID_Color1 = 6051;
+TID_Color2 = 6052;
+TID_Color3 = 6053;
+TID_Color4 = 6054;
+TID_Color5 = 6055;
+TID_Color6 = 6056;
+TID_Color7 = 6057;
+TID_Color8 = 6058;
+TID_Color9 = 6059;
+
+TID_PeopleAmount = 6060;
+TID_ResourcesAmount = 6061;
+TID_Small = 6062;
+TID_Medium = 6063;
+TID_Huge = 6064;
+TID_CratesDrop = 6065;
+
 TID_Website = 6090;
 TID_Contact = 6091;
 

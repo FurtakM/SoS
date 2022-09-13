@@ -1,6 +1,8 @@
 SKIRMISH_DATA = {};
 SKIRMISH_DISPLAY_DATA = {};
 SKIRMISH_SELECTED = nil;
+SKIRMISH_INIT = false;
+SKIRMISH_ACTIVE_GAMETYPE = nil;
 
 function FROMOW_SKIRMISH_LISTBOX_ADD(INFO, INDEX) -- Called by OW!
 	if (SKIRMISH_ALLOWED_MAPS == nil or inArray(SKIRMISH_ALLOWED_MAPS, INFO.map)) then
@@ -9,7 +11,10 @@ function FROMOW_SKIRMISH_LISTBOX_ADD(INFO, INDEX) -- Called by OW!
 
 		if (SKIRMISH_SELECTED == nil) and (#SKIRMISH_DATA > 0) then
 			SKIRMISH_SELECTED = #SKIRMISH_DATA;-- INDEX + 1;
-			setMap();
+
+			if (not SKIRMISH_INIT) then				
+				setMap();
+			end;
 		end;
 	end;
 end;
@@ -19,17 +24,37 @@ function setMap()
 		return;
 	end;
 
+	local gameType = nil;
+
 	setTexture(menu.window_skirmish.panel.mappic, '%missions%/_skirmish/' .. SKIRMISH_DATA[SKIRMISH_SELECTED].map .. '/mappic.png');
 	setTextureFallback(menu.window_skirmish.panel.mappic, 'classic/edit/mappic_default.png');
 	
 	setText(menu.window_skirmish.panel.title, SKIRMISH_DATA[SKIRMISH_SELECTED].title);
-	setText(menu.window_skirmish.panel.description, SKIRMISH_DATA[SKIRMISH_SELECTED].desc);
 
 	sgui_deletechildren(menu.window_skirmish.panel.options.ID);
 	OW_mapparams_clear();
 
+	if (SKIRMISH_DATA[SKIRMISH_SELECTED].gametypes) then
+		if (SKIRMISH_ACTIVE_GAMETYPE == nil) then
+			showGameType(SKIRMISH_DATA[SKIRMISH_SELECTED].gametypes);
+			SKIRMISH_ACTIVE_GAMETYPE = parseInt(SKIRMISH_DATA[SKIRMISH_SELECTED].gametypes.default) + 1;
+		end;
+
+		setText(menu.window_skirmish.panel.description, SKIRMISH_DATA[SKIRMISH_SELECTED].desc .. '\n\n' .. SKIRMISH_DATA[SKIRMISH_SELECTED].gametypes.desc[SKIRMISH_ACTIVE_GAMETYPE]);
+	else
+		deleteGameType();
+		SKIRMISH_ACTIVE_GAMETYPE = nil;
+
+		setText(menu.window_skirmish.panel.description, SKIRMISH_DATA[SKIRMISH_SELECTED].desc);
+	end;
+
+	local optionsCount = 1;
+
 	for i = 1, table.getn(SKIRMISH_DATA[SKIRMISH_SELECTED].options) do
-		setSkirmishOption(SKIRMISH_DATA[SKIRMISH_SELECTED].options[i], i);
+		if (SKIRMISH_ACTIVE_GAMETYPE == nil or SKIRMISH_ACTIVE_GAMETYPE == parseInt(SKIRMISH_DATA[SKIRMISH_SELECTED].options[i].gametype)) then
+			setSkirmishOption(SKIRMISH_DATA[SKIRMISH_SELECTED].options[i], optionsCount);
+			optionsCount = optionsCount + 1;
+		end;
 	end;
 end;
 
@@ -70,6 +95,47 @@ end;
 
 function changeSkirmishOption(INDEX, ID)
 	OW_SKIRMISH_SET_MAPPARAM(INDEX, ID);
+end;
+
+function changeGameType(ID)
+	OW_SKIRMISH_SET_MAPPARAM(50, ID);
+	SKIRMISH_ACTIVE_GAMETYPE = parseInt(ID);
+	setMap();
+end;
+
+function showGameType(GAMETYPES)
+	menu.window_skirmish.panel.gameType.label = getLabelEX(
+	    menu.window_skirmish.panel.gameType,
+	    anchorT, 
+	    XYWH(
+	    	0,
+	    	0,
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    loc(993),
+	    {
+	        font_colour = WHITE(),
+	        nomouseevent = true,
+	        font_name = BankGotic_14
+	    }
+	);
+		
+	menu.window_skirmish.panel.gameType.list = clComboBox(
+	    menu.window_skirmish.panel.gameType,
+	    0,
+	    16,
+	    GAMETYPES.list,
+	    GAMETYPES.default + 1,
+	    'changeGameType("INDEX")',
+	    {
+	    }
+	);
+end;
+
+function deleteGameType()
+	sgui_deletechildren(menu.window_skirmish.panel.gameType.ID);
 end;
 
 function reloadSkirmishList()
@@ -143,7 +209,7 @@ menu.window_skirmish.panel.title = getLabelEX(
 menu.window_skirmish.panel.description = getLabelEX(
 	menu.window_skirmish.panel,
     anchorT, 
-    XYWH(510, 40, 500, 596),
+    XYWH(510, 40, 500, 246),
     nil, 
     '',
     {
@@ -156,6 +222,17 @@ menu.window_skirmish.panel.description = getLabelEX(
         scissor = true
  	}
 );
+
+menu.window_skirmish.panel.gameType = getElementEX(
+	menu.window_skirmish.panel,
+	anchorNone,
+	XYWH(510, 290, 240, 100),
+	true,
+	{
+		colour1 = WHITEA()
+	}
+);
+
 
 menu.window_skirmish.panel.options = getElementEX(
 	menu.window_skirmish.panel,
@@ -309,6 +386,8 @@ end;
 
 function showChangeSkirmishPanel(MODE)
 	if (MODE == 1) then
+		SKIRMISH_INIT = true;
+
 		reloadSkirmishList();
 		
 		clSetListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)', {}); 
