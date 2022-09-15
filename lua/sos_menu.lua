@@ -231,10 +231,8 @@ menu.window3.biographies = clButton(
     170,
     30, 
     loc(TID_Biographies), 
-    '',
-    {
-        disabled = true
-    }
+    'showBiographic(1);',
+    {}
 );
 
 menu.window3.achivs = clButton(
