@@ -1,16 +1,16 @@
 avatarPath = 'SGUI/Bio/avatars/';
 
 biographics = {
-	['HEIKE'] = {
+	{
     	loc(8001),        -- NAME 
     	loc(8002),        -- DESC
-    	'Heike',          -- IMG
+    	'Heike',          -- ID / IMG
     	2,                -- SIDE
     	1,         	      -- CLASS
     	'24.01.1983',  	  -- BIRTH
     	loc(TID_Chechen), -- NATIONALTY
     },
-    ['KAIA'] = {
+    {
     	loc(8003),
     	loc(8004),
     	'Kaia',
@@ -19,7 +19,7 @@ biographics = {
     	'23.03.1983',
     	loc(TID_Croatia),
     },
-    ['GIVI'] = {
+    {
     	loc(8005),
     	loc(8006),
     	'Givi',
@@ -28,7 +28,7 @@ biographics = {
     	'26.11.1960',
     	loc(TID_Georgia),
     },
-    ['MIKE'] = {
+    {
     	loc(8007),
     	loc(8008),
     	'Mike',
@@ -48,15 +48,14 @@ function unHoverOnBiographic(ID)
 end;
 
 function loadBiographic()
-	local index = 0;
 	local rowIndex = 0;
 	local isActive = true;
 
-	for i, k in pairs(biographics) do
+	for i = 1, #biographics do
 		local placeholder = getElementEX(
 			menu.window_bio.panel.scroll,
 	        anchorLTRB,
-	        XYWH(index * 120 + 30, 10 + (108 * rowIndex), 88, 108),
+	        XYWH((i - 1) * 120 + 30, 10 + (108 * rowIndex), 88, 108),
 	        true,
 	        {
 	            texture = 'SGUI/Bio/placeholder.PNG'
@@ -70,10 +69,11 @@ function loadBiographic()
 		        XYWH(4, 4, 80, 100),
 		        true,
 		        {
-		            texture = avatarPath .. k[3] .. '.png',
-		            hint = k[1],
+		            texture = avatarPath .. biographics[i][3] .. '.png',
+		            hint = biographics[i][1],
 		            callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
-		            callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')'
+		            callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
+		            callback_mousedown = 'openBioPopup(' .. i .. ')'
 		        }
 		    );
 		else
@@ -83,16 +83,14 @@ function loadBiographic()
 		        XYWH(4, 4, 80, 100),
 		        true,
 		        {
-		            texture = avatarPath .. k[3] .. '.png'
+		            texture = avatarPath .. biographics[i][3] .. '.png'
 		        }
 		    );
 
 			sgui_set(avatar.ID, PROP_GRAYSCALE, true);
 		end;
 
-	    index = index + 1;
-
-	    if (index % 8 == 0) then
+	    if (i % 8 == 0) then
 	    	rowIndex = rowIndex + 1;
 	    end;
 	end;
@@ -112,6 +110,21 @@ function showBiographic(mode)
 		deleteBiographic();
 		showMenuButton(3);
 	end;
+end;
+
+function openBioPopup(ID)
+	local nat = {'am', 'ar', 'ru'};
+	local info = loc(9200) .. ': ' .. loc(1162 + biographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. biographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. biographics[ID][7];
+
+	setVisible(menu.window_bio.popup, true);
+	setText(menu.window_bio.popup.panel.name, biographics[ID][1]);
+	setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
+	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. biographics[ID][3] .. '.png');
+	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
+end;
+
+function closeBioPopup()
+	setVisible(menu.window_bio.popup, false);
 end;
 
 menu.window_bio = getElementEX(
@@ -168,5 +181,84 @@ menu.window_bio.panel.button_quit = clButton(
     18, 
     loc(TID_Main_Menu_Campaign_Back), 
     'showBiographic(0);', 
+    {}
+);
+
+menu.window_bio.popup = getElementEX(
+    nil,
+    anchorLTRB,
+    XYWH(0, 0, LayoutWidth, LayoutHeight),
+    false,
+    {
+        colour1 = BLACKA(50)
+    }
+);
+
+menu.window_bio.popup.panel = getElementEX(
+	menu.window_bio.popup,
+    anchorNone,
+    XYWH(menu.window_bio.popup.width / 2 - 400, menu.window_bio.popup.height / 2 - 300, 800, 600),
+    true,
+    {
+        texture = 'SGUI/Bio/popup.png'
+    }
+);
+
+menu.window_bio.popup.panel.avatar = getElementEX(
+	menu.window_bio.popup.panel,
+    anchorNone,
+    XYWH(54, 28, 320, 400),
+    true,
+    {}
+);
+
+menu.window_bio.popup.panel.avatar.nation = getElementEX(
+	menu.window_bio.popup.panel.avatar,
+    anchorNone,
+    XYWH(265, 350, 51, 48),
+    true,
+    {
+    	texture = 'SGUI/Bio/ar.png'
+    }
+);
+
+menu.window_bio.popup.panel.desc = getLabelEX(
+    menu.window_bio.popup.panel, 
+    anchorLT, 
+    XYWH(426, 40, 330, 300), 
+    Arial_12, 
+    '',
+    {
+        wordwrap = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        font_colour = BLACK(255)
+    }
+);
+
+menu.window_bio.popup.panel.name = getLabelEX(
+    menu.window_bio.popup.panel, 
+    anchorT, 
+    XYWH(65, 430, 300, 40),
+    Tahoma_30B, 
+    '',
+    {
+        wordwrap = true,
+        text_halign = ALIGN_MIDDLE,
+        text_valign = ALIGN_TOP,
+        font_colour = RGB(231, 222, 214),
+        shadowtext = true,
+        text_case = CASE_UPPER
+    }
+);
+
+menu.window_bio.popup.panel.button_quit = clButton(
+    menu.window_bio.popup.panel, 
+    285, 
+    560, 
+    230, 
+    18, 
+    loc(1135), 
+    'closeBioPopup();', 
     {}
 );
