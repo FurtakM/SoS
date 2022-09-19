@@ -1729,3 +1729,15 @@ end;
 function hasSkirmishInMod(mod)
     return hasFilesInMod(mod, 'missions/_skirmish') or hasFilesInMod(mod, 'Missions/_Skirmish');
 end;
+
+function saveExists(NAME)
+    local saves = OW_CUSTOMSAVE_SAVELIST();
+
+    for i = 1,#saves do
+        if saves[i] == NAME then
+            return true;
+        end;
+    end;
+
+    return false;
+end;

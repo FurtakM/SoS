@@ -105,6 +105,7 @@ function showBiographic(mode)
 		loadBiographic();
 		showMenuButton(0);
 		setVisible(menu.window_bio, true);
+        displayDialogMessage(SOS_DIALOG_BIO_FIRST, true);
 	else
 		setVisible(menu.window_bio, false);
 		deleteBiographic();

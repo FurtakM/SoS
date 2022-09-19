@@ -1,5 +1,6 @@
 include('sos_variables');
 include('sos_music');
+include('sos_dialog');
 include('sos_custom_tech');
 include('sos_loading');
 include('sos_cutscenes');

@@ -212,7 +212,14 @@ function getCustomDialog(DATA)
         }
     );
 
-    local height = 108 + 30 * DATA.COUNT;
+    local questionLength = strlen(DATA.QUESTION); -- 20 per row
+    local questionHeight = 10 * (questionLength / 20);
+
+    if (questionHeight < 40) then
+        questionHeight = 40;
+    end;
+
+    local height = 108 + questionHeight + 30 * DATA.COUNT;
 
     ELEMENT.dialog = getElementEX(
         ELEMENT,
@@ -227,17 +234,49 @@ function getCustomDialog(DATA)
     ELEMENT.dialog.top = getElementEX(
         ELEMENT.dialog,
         anchorNone,
-        XYWH(0, 0, 299, 96),
+        XYWH(0, 0, 299, 80 + questionHeight),
         true,
         {
-            texture = 'classic/edit/query_t.png'
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.dialog.top.top = getElementEX(
+        ELEMENT.dialog.top,
+        anchorNone,
+        XYWH(0, 0, 299, 40),
+        true,
+        {
+            texture = 'classic/edit/query_t1.png'
+        }
+    );
+
+    for i = 1, questionHeight / 40 do
+        getElementEX(
+            ELEMENT.dialog.top,
+            anchorNone,
+            XYWH(0, 40 * i, 299, 40),
+            true,
+            {
+                texture = 'classic/edit/query_t2.png'
+            }
+        );
+    end;
+
+    ELEMENT.dialog.top.bottom = getElementEX(
+        ELEMENT.dialog.top,
+        anchorNone,
+        XYWH(0, questionHeight, 299, 40),
+        true,
+        {
+            texture = 'classic/edit/query_t3.png'
         }
     );
 
     ELEMENT.dialog.top.label = getLabelEX(
         ELEMENT.dialog, 
         anchorLT, 
-        XYWH(18, 24, 262, 64),
+        XYWH(18, 24, 262, 64 + questionHeight),
         Arial_12, 
         DATA.QUESTION,
         {
@@ -253,7 +292,7 @@ function getCustomDialog(DATA)
     ELEMENT.dialog.center = getElementEX(
         ELEMENT.dialog,
         anchorNone,
-        XYWH(0, 96, 299, 30 * DATA.COUNT),
+        XYWH(0, 40 + questionHeight, 299, 30 * DATA.COUNT),
         true,
         {
             colour1 = WHITEA()
@@ -294,7 +333,7 @@ function getCustomDialog(DATA)
     ELEMENT.dialog.bottom = getElementEX(
         ELEMENT.dialog,
         anchorNone,
-        XYWH(0, ELEMENT.dialog.top.height + (30 * DATA.COUNT), 299, 12),
+        XYWH(0, 40 + questionHeight + (30 * DATA.COUNT), 299, 12),
         true,
         {
             texture = 'classic/edit/query_b.png'
