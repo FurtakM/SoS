@@ -1,7 +1,13 @@
 SOS_DIALOG_BIO_FIRST = {
-	ID = 1,
-	TEXT = loc(9300),
-	CALLBACK = ''
+    ID = 1,
+    TEXT = loc(9300),
+    CALLBACK = ''
+};
+
+SOS_DIALOG_BIO_HUMAN_DISABLED = {
+    ID = 2,
+    TEXT = loc(9301),
+    CALLBACK = ''
 };
 
 
@@ -16,28 +22,28 @@ OW_CUSTOMSAVE_WRITE
 ]]--
 
 function displayDialogMessage(message, onlyOnce)
-	local dialogSave;
+    local dialogSave;
 
-	if onlyOnce then
-		if (not saveExists('sos_messages')) then
-			dialogSave = OW_CUSTOMSAVE_NEW();
-		else
-			dialogSave = OW_CUSTOMSAVE_LOAD('sos_messages');
-		end;
+    if onlyOnce then
+        if (not saveExists('sos_messages')) then
+            dialogSave = OW_CUSTOMSAVE_NEW();
+        else
+            dialogSave = OW_CUSTOMSAVE_LOAD('sos_messages');
+        end;
 
-		local hasBeenRead = OW_CUSTOMSAVE_READ(dialogSave, message.ID);
+        local hasBeenRead = OW_CUSTOMSAVE_READ(dialogSave, message.ID);
 
-		if hasBeenRead then
-			OW_CUSTOMSAVE_CLOSE(dialogSave);
-			return;
-		end;
+        if hasBeenRead then
+            OW_CUSTOMSAVE_CLOSE(dialogSave);
+            return;
+        end;
 
-		OW_CUSTOMSAVE_WRITE(dialogSave, message.ID, true);
-		OW_CUSTOMSAVE_SAVE(dialogSave, 'sos_messages');
+        OW_CUSTOMSAVE_WRITE(dialogSave, message.ID, true);
+        OW_CUSTOMSAVE_SAVE(dialogSave, 'sos_messages');
         OW_CUSTOMSAVE_CLOSE(dialogSave);
-	end;
+    end;
 
-	getCustomDialog({
+    getCustomDialog({
         COUNT = 1,
         QUESTION = message.TEXT,
         LIST = {

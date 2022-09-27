@@ -106,3 +106,5 @@ TID_Estonia = 9023;
 TID_Latvia = 9024;
 TID_Lithuania = 9025;
 TID_Iraq = 9026;
+TID_Sweden = 9027;
+TID_Finland = 9028;

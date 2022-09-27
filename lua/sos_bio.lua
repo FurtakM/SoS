@@ -1,5 +1,9 @@
-avatarPath = 'SGUI/Bio/avatars/';
+BIO_HEIKE = 1;
+BIO_KAIA = 2;
+BIO_GIVI = 3;
+BIO_MIKE = 4;
 
+avatarPath = 'SGUI/Bio/avatars/';
 biographics = {
 	{
     	loc(8001),        -- NAME 
@@ -36,8 +40,258 @@ biographics = {
     	1,
     	'7.7.1969',
     	loc(TID_Germany),
+    },
+    {
+        loc(8009),
+        loc(8010),
+        'Kraysto',
+        2,
+        3,
+        '28.2.1972',
+        loc(TID_Bulgaria),
+    },
+    {
+        loc(8011),
+        loc(8012),
+        'Aviradze',
+        2,
+        4,
+        '26.7.1966',
+        loc(TID_Georgia),
+    },
+    {
+        loc(8013),
+        loc(8014),
+        'Sophia',
+        2,
+        2,
+        '12.5.1975',
+        loc(TID_Greece),
+    },
+    {
+        loc(8015),
+        loc(8016),
+        'Kamil',
+        2,
+        2,
+        '21.1.1970',
+        loc(TID_Britain),
+    },
+    {
+        loc(8017),
+        loc(8018),
+        'OlafL',
+        2,
+        3,
+        '15.9.1971',
+        loc(TID_Norway),
+    },
+    {
+        loc(8019),
+        loc(8020),
+        'Kurt',
+        2,
+        1,
+        '8.06.1969',
+        loc(TID_Switzerland),
+    },
+    {
+        loc(8021),
+        loc(8022),
+        'Omar',
+        2,
+        1,
+        '19.8.1970',
+        loc(TID_Afghanistan),
+    },
+    {
+        loc(8023),
+        loc(8024),
+        'Ibrahim',
+        3,
+        4,
+        '6.11.1964',
+        loc(TID_Azerbaijan),
+    },
+    {
+        loc(8025),
+        loc(8026),
+        'Louis',
+        2,
+        1,
+        '24.08.1970',
+        loc(TID_Austria),
+    },
+    {
+        loc(8027),
+        loc(8028),
+        'Jenna',
+        2,
+        4,
+        '01.10.1977',
+        loc(TID_Ireland),
+    },
+    {
+        loc(8029),
+        loc(8030),
+        'Robert',
+        2,
+        1,
+        '04.12.1963',
+        loc(TID_Rhodesia),
+    },
+    {
+        loc(8031),
+        loc(8032),
+        'Karla',
+        2,
+        1,
+        '29.04.1981',
+        loc(TID_Belgium),
+    },
+    {
+        loc(8033),
+        loc(8034),
+        'Dietrich',
+        2,
+        1,
+        '16.03.1945',
+        loc(TID_Turkey),
+    },
+    {
+        loc(8035),
+        loc(8036),
+        'Joachim2',
+        2,
+        1,
+        '14.12.1980',
+        loc(TID_Germany),
+    },
+    {
+        loc(8037),
+        loc(8038),
+        'Gali',
+        2,
+        2,
+        '24.10.1967',
+        loc(TID_Algeria),
+    },
+    {
+        loc(8039),
+        loc(8040),
+        'Shariff',
+        2,
+        1,
+        '28.08.1941',
+        loc(TID_Arabia),
+    },
+    {
+        loc(8041),
+        loc(8042),
+        'Mark',
+        2,
+        3,
+        '19.03.1983',
+        loc(TID_Sweden),
+    },
+    {
+        loc(8043),
+        loc(8044),
+        'Rolf',
+        2,
+        1,
+        '17.11.1962',
+        loc(TID_Belgium),
+    },
+    {
+        loc(8045),
+        loc(8046),
+        'Maria',
+        2,
+        1,
+        '24.09.1973',
+        loc(TID_Bosna),
+    },
+    {
+        loc(8047),
+        loc(8048),
+        'Rick',
+        2,
+        1,
+        '27.05.1974',
+        loc(TID_RPA),
+    },
+    {
+        loc(8049),
+        loc(8050),
+        'Erwin',
+        2,
+        1,
+        '29.04.1957',
+        loc(TID_Holand),
+    },
+    {
+        loc(8051),
+        loc(8052),
+        'Olaf',
+        2,
+        4,
+        '16.08.1967',
+        loc(TID_Estonia),
+    },
+    {
+        loc(8053),
+        loc(8054),
+        'Ronn',
+        2,
+        2,
+        '13.05.1969',
+        loc(TID_RPA),
+    },
+    {
+        loc(8055),
+        loc(8056),
+        'Nia',
+        2,
+        1,
+        '18.11.1978',
+        loc(TID_Georgia),
     }
-}
+};
+
+function loadBioCharactersStatus()
+    local bioSave;
+
+    if (not saveExists('sos_biographic')) then
+        bioSave = OW_CUSTOMSAVE_NEW();
+    else
+        bioSave = OW_CUSTOMSAVE_LOAD('sos_biographic');
+    end;
+
+    local biographicsStatus = {};
+
+    for i = 1, #biographics do
+        biographicsStatus = addToArray(biographicsStatus, parseInt(OW_CUSTOMSAVE_READ(bioSave, i)));
+    end;
+    
+    OW_CUSTOMSAVE_CLOSE(bioSave);
+
+    return biographicsStatus;
+end;
+
+function enableBioCharacter(ID)
+    local bioSave;
+
+    if (not saveExists('sos_biographic')) then
+        bioSave = OW_CUSTOMSAVE_NEW();
+    else
+        bioSave = OW_CUSTOMSAVE_LOAD('sos_biographic');
+    end;
+
+    OW_CUSTOMSAVE_WRITE(bioSave, parseInt(ID), true);
+    OW_CUSTOMSAVE_SAVE(bioSave, 'sos_biographic');
+    OW_CUSTOMSAVE_CLOSE(bioSave);
+end;
 
 function hoverOnBiographic(ID)
 	setTextureID(ID, 'SGUI/Bio/placeholder-active.PNG');
@@ -50,17 +304,20 @@ end;
 function loadBiographic()
 	local rowIndex = 0;
 	local isActive = true;
+    local status = loadBioCharactersStatus();
 
 	for i = 1, #biographics do
 		local placeholder = getElementEX(
 			menu.window_bio.panel.scroll,
 	        anchorLTRB,
-	        XYWH((i - 1) * 120 + 30, 10 + (108 * rowIndex), 88, 108),
+	        XYWH(((i - 1) % 8) * 120 + 30, 10 + (112 * rowIndex), 88, 108),
 	        true,
 	        {
 	            texture = 'SGUI/Bio/placeholder.PNG'
 	        }
 		);
+
+        isActive = status[i];
 
 		if isActive then
 			local avatar = getElementEX(
@@ -83,7 +340,8 @@ function loadBiographic()
 		        XYWH(4, 4, 80, 100),
 		        true,
 		        {
-		            texture = avatarPath .. biographics[i][3] .. '.png'
+		            texture = avatarPath .. biographics[i][3] .. '.png',
+                    callback_mousedown = 'isBioDisabledInfo();'
 		        }
 		    );
 
@@ -126,6 +384,10 @@ end;
 
 function closeBioPopup()
 	setVisible(menu.window_bio.popup, false);
+end;
+
+function isBioDisabledInfo()
+    displayDialogMessage(SOS_DIALOG_BIO_HUMAN_DISABLED, false);
 end;
 
 menu.window_bio = getElementEX(
