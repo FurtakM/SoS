@@ -35,18 +35,28 @@ dialog.customDialog = getDialogEX(
 	}
 );
 
-dialog.customDialog.panel = getElementEX(
-	dialog.customDialog,
+dialog.customDialog.content = getElementEX(
+	dialog.customDialog, 
+	anchorNone,
+	XYWH(0, 0, 400, 380), 
+	true,
+	{
+		colour1 = WHITEA()
+	}
+);
+
+dialog.customDialog.content.panel = getElementEX(
+	dialog.customDialog.content,
 	anchorLTRB,
 	XYWH(20, 25, dialog.customDialog.width - 40, dialog.customDialog.height - 95),
 	true,
 	{
-		colour1 = BLACKA(0),
+		colour1 = BLACKA(0)
 	}
 );
 
-dialog.customDialog.ok = getImageButtonEX(
-	dialog.customDialog,
+dialog.customDialog.content.ok = getImageButtonEX(
+	dialog.customDialog.content,
 	anchorB,
 	XYWH(dialog.customDialog.width / 2 - 75, dialog.customDialog.height - 45, 150, 24),
     loc(TID_InGame_Mission_objectives_Continue),
