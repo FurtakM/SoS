@@ -1,118 +1,124 @@
 Export function PrepareHeroes;
 var tmp, tmp2, i;
 begin
-    uc_side = 1;
+uc_side = 1;
 
-    JMM = PrepareUnit('JMM', true, '13c_');
-    Stevens = PrepareUnit('Stevens', true, '13c_');
-    Lisa = PrepareUnit('Lisa', true, '13c_');
-    Donaldson = PrepareUnit('Donaldson', true, '13c_');
-    Bobby = PrepareUnit('Bobby', true, '13c_');
-    Cyrus = PrepareUnit('Cyrus', true, '13c_');
-    Denis = PrepareUnit('Denis', true, '13c_');
-    Brown = PrepareUnit('Brown', true, '13c_');
-    Gladstone = PrepareUnit('Gladstone', true, '13c_');
-    Houten = PrepareUnit('Houten', true, '13c_');
-    Cornel = PrepareUnit('Cornel', true, '13c_');
-    Gary = PrepareUnit('Gary', true, '13c_');
-    Frank = PrepareUnit('Frank', true, '13c_');
-    Kikuchi = PrepareUnit('Kikuchi', true, '13c_');
+JMM = PrepareUnit('JMM', (not debugMode), '13c_');
+Stevens = PrepareUnit('Stevens', (not debugMode), '13c_');
+Lisa = PrepareUnit('Lisa', (not debugMode), '13c_');
+Donaldson = PrepareUnit('Donaldson', (not debugMode), '13c_');
+Bobby = PrepareUnit('Bobby', (not debugMode), '13c_');
+Cyrus = PrepareUnit('Cyrus', (not debugMode), '13c_');
+Denis = PrepareUnit('Denis', (not debugMode), '13c_');
+Brown = PrepareUnit('Brown', (not debugMode), '13c_');
+Gladstone = PrepareUnit('Gladstone', true, '13c_');
+Houten = PrepareUnit('Houten', true, '13c_');
+Cornel = PrepareUnit('Cornel', true, '13c_');
+Gary = PrepareUnit('Gary', true, '13c_');
+Frank = PrepareUnit('Frank', true, '13c_');
+Kikuchi = PrepareUnit('Kikuchi', true, '13c_');
 
-    Powell = PrepareUnit('Powell', false, '');
+Powell = PrepareUnit('Powell', false, '');
 
-    tmp := [JMM, Stevens, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
-    tmp2 := FilterAllUnits([[f_side, 1], [f_control, control_manual], [f_type, unit_vehicle]]);
+tmp := [JMM, Stevens, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
+tmp2 := FilterAllUnits([[f_side, 1], [f_control, control_manual], [f_type, unit_vehicle]]);
 
-    for i = tmp downto 1 do
-        if not tmp[i] then
-           tmp := Delete(tmp, i);
+for i = tmp downto 1 do
+    if not tmp[i] then
+       tmp := Delete(tmp, i);
 
-    for i = 1 to tmp do
-        PlaceHumanInUnit(tmp[i], tmp2[i]);
+for i = 1 to tmp do
+    PlaceHumanInUnit(tmp[i], tmp2[i]);
 
-    if FilterAllUnits([[f_side, 1], [f_class, 2]]) = 0 and FilterAllUnits([[f_side, 1], [f_weapon, us_crane]]) = 0 then
-       SetClass(JMM, 2);
+if FilterAllUnits([[f_side, 1], [f_class, 2]]) = 0 and FilterAllUnits([[f_side, 1], [f_weapon, us_crane]]) = 0 then
+   SetClass(JMM, 2);
 end;
 
 Export function PrepareAmericansRandom;
 var i;
 begin
+uc_side = 1;
+others13 = CreateCharacterSet('13c_others');
 
-    uc_side = 1;
-
-    others13 = CreateCharacterSet('13c_others');
-    
-    for i in others13 do PlaceHumanInUnit(i, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]])[1]);
+for i in others13 do
+    PlaceHumanInUnit(i, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]])[1]);
 end;
 
 Export function PrepareVehicles;
 var i, j, veh, vehicles, cargoList;
 begin
-    vehicles = LoadVariable('13_VehiclesIn13_1', []);
-    resources = LoadVariable('13_ResourcesInCargo13_1', []);
-    cargoList = [];
+vehicles = LoadVariable('13_VehiclesIn13_1', [
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100],
+              [1, us_morphling, engine_siberite, control_manual, us_heavy_gun, 100]
+           ]);
+resources = LoadVariable('13_ResourcesInCargo13_1', []);
+cargoList = [];
 
-    uc_side = 1;
+uc_side = 1;
 
-    if vehicles > 0 then
-    begin
+if vehicles then
+   begin 
+   for i := 1 to vehicles do
+       begin
+       uc_nation = vehicles[i][1];
+       vc_chassis = vehicles[i][2];
+       vc_engine = vehicles[i][3];
+       vc_control = vehicles[i][4];
+       vc_weapon = vehicles[i][5];
+       vc_fuel_battery = 40;
 
-        for i := 1 to vehicles do
-        begin
-            uc_nation = vehicles[i][1];
-            vc_chassis = vehicles[i][2];
-            vc_engine = vehicles[i][3];
-            vc_control = vehicles[i][4];
-            vc_weapon = vehicles[i][5];
-            vc_fuel_battery = 40;
+       veh = CreateVehicle;
+       SetDir(veh, 3);
+       PlaceUnitArea(veh, PlayerSpawn, false);
+       end;
 
-            veh = CreateVehicle;
-            SetDir(veh, 3);
-            PlaceUnitArea(veh, PlayerSpawn, false);
-        end;
+       cargoList = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_weapon, us_cargo_bay]]);
 
-        cargoList = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_weapon, us_cargo_bay]]);
-
-        if cargoList > 0 then
+       if cargoList then
           for i = 1 to cargoList do
-          begin
-             if resources > 0 then
-             begin
-                   AddCargo(cargoList[i], 1, resources[i][1]);
-                   AddCargo(cargoList[i], 2, resources[i][2]);
-                   AddCargo(cargoList[i], 3, resources[i][3]);
-             end;
+              begin
+              if resources then
+                 begin
+                 AddCargo(cargoList[i], 1, resources[i][1]);
+                 AddCargo(cargoList[i], 2, resources[i][2]);
+                 AddCargo(cargoList[i], 3, resources[i][3]);
+                 end;
           end;
-
-    end;
-
-end;
+       end;
+End;
 
 Export function PowellSupport;
 var i, veh, un;
 begin
-
-    for i = 1 to 3 do
+for i = 1 to 3 do
     begin
-        uc_nation = 1;
-        uc_side = 1;
+    uc_nation = 1;
+    uc_side = 1;
 
-        vc_engine = 3;
-        vc_control = 1;
-        vc_weapon = [9, 5, 4, 7, 6][Rand(1, 5)];
-        if vc_weapon = 6 then vc_chassis = 4
-        else vc_chassis = 3;
+    vc_engine = 3;
+    vc_control = 1;
+    vc_weapon = [9, 5, 4, 7, 6][Rand(1, 5)];
 
-        veh = CreateVehicle;
-        PlaceUnitArea(veh, PlayerSpawn, false);
-        SetDir(veh, 1);
+    if vc_weapon = 6 then
+       vc_chassis = 4
+    else
+       vc_chassis = 3;
 
-        hc_gallery = '';
-        hc_name = '';
-        PrepareHuman(false, 3, rand(7, 10));
+    veh = CreateVehicle;
+    PlaceUnitArea(veh, PlayerSpawn, false);
+    SetDir(veh, 1);
 
-        un = CreateHuman;
-        PlaceHumanInUnit(un, veh);
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, 3, rand(7, 10));
+
+    un = CreateHuman;
+    PlaceHumanInUnit(un, veh);
     end;
-
-end;
+End;

@@ -131,5 +131,22 @@ function onMenuKeyPress(key)
     end;
 end;
 
+function FROMSGUI_KEYDOWN(KEY)
+    if (KEY == VK_ESC) and (getVisible(game)) then
+        if not OW_FORM_CLOSE_TOP((KEY == VK_ESC)) then
+            if getVisible(dialog.options) then --In-Game Options doesn't use the forms to pause the game. So we need to handle it.
+                dialog.options.Hide();
+            elseif getVisible(dialog.achievs) then
+                HideDialog(dialog.achievs);
+            elseif getVisible(dialog.customDialog) then
+                HideDialog(dialog.customDialog);
+            else
+                OW_TOOLBARBUTTON(1);
+            end;
+        end;
+    end;
+end;
+
+
 -- event
 set_Callback(0, CALLBACK_KEYPRESS, 'onMenuKeyPress(%k)');
