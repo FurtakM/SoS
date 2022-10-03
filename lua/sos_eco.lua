@@ -10,7 +10,7 @@ function initEcoPanel();
 		anchorLTR,
 		XYWH(0, 20, dialog.customDialog.content.width, 20),
 		Trebuchet_20,
-		'test',
+		loc(8900),
       	{
       		wordwrap = true,
       		nomouseevent = true,
@@ -22,13 +22,101 @@ function initEcoPanel();
     	dialog.customDialog.content,
     	anchorLT,
     	XYWH(28, 50, 17, 17),
-    	'Events',
+    	loc(8901),
     	{},
-		'',
+		'OW_CUSTOM_COMMAND(102, 1);',
 		{
 			checked = false
 		}
 	);
+
+	dialog.customDialog.content.attacks = getCheckBoxEX_UI(
+    	dialog.customDialog.content,
+    	anchorLT,
+    	XYWH(28, 72, 17, 17),
+    	loc(8902),
+    	{},
+		'OW_CUSTOM_COMMAND(102, 2);',
+		{
+			checked = false
+		}
+	);
+
+	dialog.customDialog.content.crates = getCheckBoxEX_UI(
+    	dialog.customDialog.content,
+    	anchorLT,
+    	XYWH(28, 94, 17, 17),
+    	loc(8903),
+    	{},
+		'OW_CUSTOM_COMMAND(102, 3);',
+		{
+			checked = true
+		}
+	);
+
+	dialog.customDialog.content.techs = getCheckBoxEX_UI(
+    	dialog.customDialog.content,
+    	anchorLT,
+    	XYWH(28, 116, 17, 17),
+    	loc(8904),
+    	{},
+		'OW_CUSTOM_COMMAND(102, 4); setEnabled({ID=%ID}, false);',
+		{
+			checked = false
+		}
+	);
+
+    dialog.customDialog.content.human1 = getImageButtonEX(
+    	dialog.customDialog.content,
+    	anchorB,
+    	XYWH(28, 146, 150, 24),
+        loc(8906),
+        '',
+        'OW_CUSTOM_COMMAND(102, 5);',
+        SKINTYPE_BUTTON,
+        {
+        	font_colour_disabled = GRAY(127)
+        }
+    );
+
+    dialog.customDialog.content.human2 = getImageButtonEX(
+    	dialog.customDialog.content,
+    	anchorB,
+    	XYWH(28, 176, 150, 24),
+        loc(8907),
+        '',
+        'OW_CUSTOM_COMMAND(102, 6);',
+        SKINTYPE_BUTTON,
+        {
+        	font_colour_disabled = GRAY(127)
+        }
+    );
+
+    dialog.customDialog.content.human3 = getImageButtonEX(
+    	dialog.customDialog.content,
+    	anchorB,
+    	XYWH(dialog.customDialog.content.width - 150 - 28, 146, 150, 24),
+        loc(8908),
+        '',
+        'OW_CUSTOM_COMMAND(102, 7);',
+        SKINTYPE_BUTTON,
+        {
+        	font_colour_disabled = GRAY(127)
+        }
+    );
+
+    dialog.customDialog.content.human4 = getImageButtonEX(
+    	dialog.customDialog.content,
+    	anchorB,
+    	XYWH(dialog.customDialog.content.width - 150 - 28, 176, 150, 24),
+        loc(8909),
+        '',
+        'OW_CUSTOM_COMMAND(102, 8);',
+        SKINTYPE_BUTTON,
+        {
+        	font_colour_disabled = GRAY(127)
+        }
+    );
 
     dialog.customDialog.content.close = getImageButtonEX(
     	dialog.customDialog.content,
@@ -36,7 +124,7 @@ function initEcoPanel();
     	XYWH(dialog.customDialog.content.width / 2 - 75, dialog.customDialog.content.height - 45, 150, 24),
         loc(TID_msg_Ok),
         '',
-        'HideDialog(dialog.customDialog.content);',
+        'HideDialog(dialog.customDialog); OW_PAUSE();',
         SKINTYPE_BUTTON,
         {
         	font_colour_disabled = GRAY(127)
@@ -55,6 +143,10 @@ function slideEcoPanel()
 end;
 
 function displayEcoPanel()
+	if not getVisible(gamewindow.pause) then
+		OW_PAUSE();
+	end;
+
 	ShowDialog(dialog.customDialog);
 end;
 
