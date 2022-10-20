@@ -1,4 +1,4 @@
-Export Gensher, gensher_side;
+Export Gensher, gensher_side, gensherAttackGroup;
 Export Function PrepareGensher;
 var i, tmp, un;
 begin
@@ -7,7 +7,7 @@ gensher_side := 2;
 uc_side := gensher_side;
 uc_nation := 2;
 
-tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [1500, 300, 30], [4, 4, 4, 4]);
+tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [3500, 300, 30], [4, 4, 4, 4]);
 mc_bases := Replace(mc_bases, 2, tmp);
 
 // hill
@@ -29,6 +29,8 @@ for i = 1 to tmp[1] do
     PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
     staticMines := Insert(staticMines, staticMines + 1, [tmp[1][i], tmp[2][i]]);
     end;
+
+gensherAttackGroup := [];
 End;
 
 
@@ -108,4 +110,123 @@ for i in tmp do
               end;
        end;
     end;
+End;
+
+Every 8$00 + 2$00 trigger IsOk(ar_depot) and not arDestroyed do
+var i, base, tmp, attackers, amount;
+begin
+enable;
+
+base := 2;
+tmp := [
+         [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+         [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+         [ar_half_tracked, engine_combustion, control_remote, ar_mortar],
+         [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower]
+       ];
+
+amount := amount + tick div 10$00;
+
+if amount > 8 then
+   amount := 8;
+
+for i = 1 to amount do
+    tmp := Insert(tmp, tmp + 1, [[ar_half_tracked, ar_medium_trike][rand(1,2)], engine_combustion, control_remote, [ar_rocket_launcher, ar_gatling_gun, ar_gun][rand(1,3)]]);
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= amount;
+
+wait(0$30);
+
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_control_tower], [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]);
+
+if not attackers then
+   exit;
+
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
+
+ComAgressiveMove(attackers, 107, 74);
+
+wait(0$5);
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+if rand(0, 1) then
+   ComAgressiveMove(attackers, 155, 108)
+else
+   ComAgressiveMove(attackers, 149, 55);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ for i in attackers do
+     if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 2]), i));
+
+until not UnitFilter(attackers, [f_ok]);
+End;
+
+Every 20$00 trigger not arDestroyed and tick < 81$00 do
+var i, un, tmp;
+begin
+enable;
+
+tmp := [];
+
+for i := 1 to [4, 5, 5][Difficulty] do
+    begin
+    uc_side := 2;
+    uc_nation := 2;
+
+    InitHC_All();
+
+    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitArea(un, gensher_spawn, false);
+
+    SetClass(un, [class_soldier, class_mortar][rand(1, 2)]);
+
+    ComMoveXY(un, 73, 24);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, [ar_selfpropelled_bomb, ar_rocket_launcher, ar_gun][rand(1, 3)], 90);
+    un := CreateVehicle;
+    SetDir(un, 2);
+    PlaceUnitArea(un, gensher_spawn, false);
+
+    ComMoveXY(un, 66, 23);
+    wait(0$3);
+
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+if not tmp then
+   exit;
+
+wait(0$5);
+
+repeat
+ wait(0$3);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) or IsDead(i) then
+        tmp := tmp diff i;
+
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+     end;
+until not tmp;
+
 End;

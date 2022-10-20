@@ -1,4 +1,4 @@
-Export Powell, powell_side;
+Export Powell, powell_side, powellAttackGroup;
 Export Function PreparePowell;
 var i, tmp;
 begin
@@ -16,9 +16,10 @@ SetSkill(Powell, 4, 4);
 
 PlaceHumanInUnit(Powell, us_depot);
 
-// PrepareBase(ar_dep_n, base_north, 'dammam', skill, [10000, 1000, 300], [16, [2, 3, 4][Difficulty], -1, 4]);
-tmp := PrepareBase(us_depot, powell_base, '', [8, 7, 6][Difficulty], [1000, 100, 0], [4, 4, 4, 4]);
+tmp := PrepareBase(us_depot, powell_base, '', [8, 7, 6][Difficulty], [2500, 300, 0], [4, 4, 4, 4]);
 mc_bases := Replace(mc_bases, 1, tmp);
+
+powellAttackGroup := [];
 End;
 
 
@@ -34,7 +35,7 @@ MC_SetDepositsXY(1, [
    [178, 148, 1]
 ]);
 
-MC_SetAllowedTurretWeapons(1, [us_radar, us_heavy_gun, us_rocket_launcher, us_laser, us_double_laser]);
+MC_SetAllowedTurretWeapons(1, [us_radar, us_heavy_gun, us_rocket_launcher]);
 MC_SetCratesArea(1, powell_crates);
 MC_SetTame(1, powell_ape);
 MC_SetDefenderLimit(1, 4);
@@ -44,14 +45,14 @@ MC_SetProduceList(1, [
    [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
    [us_heavy_tracked, engine_combustion, control_remote, us_rocket_launcher],
    [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
-   [us_morphling, engine_combustion, control_remote, us_heavy_gun]
+   [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun]
 ]);
 
 MC_SetBuildingList(1, [
    [b_lab, 200, 111, 4],
    [b_oil_mine, 167,102, 0],
    [b_armoury, 178, 117, 2],
-   [b_workshop, 197, 144, 4],
+   [b_workshop, 201, 140, 4],
    [b_solar_power, 206, 124, 3],
    [b_solar_power, 209, 128, 3],
    [b_solar_power, 211, 132, 3],
@@ -67,10 +68,81 @@ MC_SetBuildingList(1, [
    [b_solar_power, 201, 133, 3],
    [b_siberite_power, 199, 119, 5],
    [b_turret, 184, 141, 1],
-   [b_turret, 183, 131, 2]
+   [b_turret, 183, 131, 2],
+   [b_turret, 194, 146, 4],
+   [b_turret, 190, 142, 4]
 ]);
 
 MC_SetLabKind(1, [b_lab_weapon, b_lab_opto, b_lab_computer, b_lab_siberium]);
-MC_SetFactoryExtension(1, 197, 144, 4, [b_ext_noncombat, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
+MC_SetFactoryExtension(1, 201, 140, 4, [b_ext_noncombat, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
 MC_SetUpgradeBuilding(1, b_depot);
+End;
+
+Every 8$00 + 2$00 trigger IsOk(us_depot) do
+var i, base, tmp, attackers, amount;
+begin
+enable;
+
+base := 1;
+tmp := [
+         [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
+         [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
+         [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher],
+         [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher]
+       ];
+
+amount := amount + tick div 10$00;
+
+if amount > 8 then
+   amount := 8;
+
+for i = 1 to amount do
+    tmp := Insert(tmp, tmp + 1, [[us_medium_tracked, us_heavy_tracked][rand(1,2)], engine_combustion, control_remote, [us_rocket_launcher, us_double_gun][rand(1,2)]]);
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= amount;
+
+wait(0$30);
+
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, us_cargo_bay], [f_weapon, us_crane], [f_weapon, us_bulldozer]]);
+
+if not attackers then
+   exit;
+
+DialogPowellsAttack;
+
+powellAttackGroup := attackers;
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
+
+if sikorskiInTrouble and FilterUnitsInArea(sikorski_base, [f_enemy, 4]) then
+   ComAgressiveMove(attackers, 135, 21)
+else
+   ComAgressiveMove(attackers, 146, 103);
+
+wait(0$5);
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+if FilterAllUnits([f_side, 3]) then
+   ComAgressiveMove(attackers, 102, 116)
+else
+   ComAgressiveMove(attackers, 66, 41);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ for i in attackers do
+     if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 4]), i));
+
+until not UnitFilter(attackers, [f_ok]);
+
+DialogPowellsAttackFailed;
 End;

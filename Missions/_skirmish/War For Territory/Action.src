@@ -1,18 +1,117 @@
 Export Function Action;
 begin
-
-
-wait(0$5);
-
 InGameOn;
-
-wait(0$2);
-
 CenterNowOnXY(133, 19);
 Say(Sikorski, 'WT-DS-1');
-
-wait(0$5);
 InGameOff;
 
 ChangeMissionObjectives('DestroyEnemy');
+
+wait(0$20);
+
+DialogueOn;
+PlaceSeeing(100, 37, 1, -30);
+CenterNowOnXY(100, 37);
+SayRadio(Powell, 'WT-PL-1');
+Say(Sikorski, 'WT-DS-2');
+DialogueOff;
+
+wait(0$2);
+RemoveSeeing(100, 37, 1);
+End;
+
+Export function DialogPowellsAttack;
+begin
+SayRadio(Powell, 'WT-PL-8');
+End;
+
+// contaminate
+Export function DialogContaminateSib(x, y);
+begin
+DialogueOn;
+CenterNowOnXY(x, y);
+Say(Sikorski, 'WT-DS-3');
+DialogueOff;
+End;
+
+// powell in trouble
+Every 0$3 trigger not powellInTrouble and FilterUnitsInArea(powell_base, [f_enemy, 4]) > 3 do
+begin
+powellInTrouble := true;
+Say(Sikorski, 'WT-DS-6');
+
+if not FilterUnitsInArea(powell_base, [f_side, 1]) then
+   SayRadio(Powell, 'WT-PL-6');
+
+wait(1$30);
+
+powellInTrouble := false;
+End;
+
+// sikorski in trouble
+Every 0$3 trigger not sikorskiInTrouble and FilterUnitsInArea(sikorski_base, [f_enemy, 1]) > 6 do
+begin
+sikorskiInTrouble := true;
+Say(Sikorski, 'WT-DS-7');
+
+if not powellAttackGroup then
+   SayRadio(Powell, 'WT-PL-7n')
+else
+   SayRadio(Powell, 'WT-PL-7y');
+
+wait(1$30);
+
+sikorskiInTrouble := false;
+End;
+
+Export function DialogPowellsAttackFailed;
+begin
+if not ruDestroyed then
+   SayRadio(Powell, 'WT-PL-9')
+else
+   SayRadio(Powell, 'WT-PL-10');
+End;
+
+// arab eliminated
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 do
+begin
+arDestroyed := true;
+MC_Kill(2);
+
+Say(Sikorski, 'WT-DS-4');
+SayRadio(Powell, 'WT-PL-4');
+End;
+
+// russian eliminated
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+ruDestroyed := true;
+MC_Kill(3);
+
+Say(Sikorski, 'WT-DS-5');
+SayRadio(Powell, 'WT-PL-5');
+End;
+
+// end mission
+Every 0$1 trigger ruDestroyed and arDestroyed do
+begin
+wait(0$3);
+
+if tick >= [60$00, 50$00, 45$00][Difficulty] then
+   AddMedal('WoT-med-1', -1)
+else
+   AddMedal('WoT-med-1', 1);
+
+if loseCounter >= [4, 3, 2][Difficulty] then
+   AddMedal('WoT-med-2', -1)
+else
+   AddMedal('WoT-med-2', 1);
+
+if powellLoseCounter >= [8, 6, 5][Difficulty] then
+   AddMedal('WoT-med-3', -1)
+else
+   AddMedal('WoT-med-3', 1);
+
+GiveMedals('MAIN');
+YouWin;
 End;

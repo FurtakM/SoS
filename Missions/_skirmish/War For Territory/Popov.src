@@ -1,4 +1,4 @@
-Export Popov, popov_side, extraPopovForces;
+Export Popov, popov_side, extraPopovForces, popovAttackGroup;
 Export Function PreparePopov;
 var i, un, tmp;
 begin
@@ -7,7 +7,7 @@ popov_side := 3;
 uc_side := popov_side;
 uc_nation := 3;
 
-tmp := PrepareBase(ru_depot, popov_base, '', [8, 7, 6][Difficulty], [1500, 300, 30], [4, 4, 4, 4]);
+tmp := PrepareBase(ru_depot, popov_base, '', [8, 7, 6][Difficulty], [3500, 300, 30], [4, 4, 4, 4]);
 mc_bases := Replace(mc_bases, 3, tmp);
 
 extraPopovForces := [];
@@ -25,6 +25,8 @@ PrepareSoldier(false, 6);
 un := CreateHuman;
 SetDir(un, 1);
 PlaceHumanInUnit(un, HexInfo(150, 158));
+
+popovAttackGroup := [];
 End;
 
 
@@ -39,7 +41,7 @@ MC_SetDepositsXY(3, [
    [ 106, 113, 0]
 ]);
 
-MC_SetAllowedTurretWeapons(3, [ru_heavy_gun, ru_rocket_launcher, ru_rocket, ru_time_lapser]);
+MC_SetAllowedTurretWeapons(3, [ru_heavy_gun, ru_rocket_launcher, ru_gatling_gun]);
 MC_SetCratesArea(3, popov_crates);
 MC_SetTame(3, popov_ape);
 MC_SetDefenderLimit(3, 4);
@@ -76,11 +78,135 @@ MC_SetBuildingList(3, [
    [b_siberite_power, 85, 165, 0],
    [b_siberite_power, 83, 161, 4],
    [b_siberite_power, 91, 166, 3],
-   [b_siberite_power, 102,166, 2],
-   [b_teleport, 91, 147, 3]
+   [b_siberite_power, 102,166, 2]
+   // [b_teleport, 91, 147, 3]
 ]);
 
 MC_SetLabKind(3, [b_lab_weapon, b_lab_computer, b_lab_spacetime, b_lab_siberium]);
 MC_SetFactoryExtension(3, 94, 161, 0, [b_ext_noncombat, b_ext_gun, b_ext_rocket, b_ext_computer, b_ext_siberium]);
 MC_SetUpgradeBuilding(3, b_depot);
+End;
+
+Every 8$00 + 2$00 trigger IsOk(ru_depot) and not ruDestroyed do
+var i, base, tmp, attackers, amount;
+begin
+enable;
+
+base := 3;
+tmp := [
+         [ru_medium_tracked, engine_combustion, control_computer, ru_gun],
+         [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+         [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun],
+         [ru_heavy_tracked, engine_combustion, control_computer, ru_heavy_gun]
+       ];
+
+amount := amount + tick div 10$00;
+
+if amount > 8 then
+   amount := 8;
+
+for i = 1 to amount do
+    tmp := Insert(tmp, tmp + 1, [ru_heavy_tracked, engine_combustion, control_computer, [ru_heavy_gun, ru_rocket_launcher][rand(1,2)]]);
+
+MC_InsertProduceList(base, tmp);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= amount;
+
+wait(0$30);
+
+attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ru_cargo_bay], [f_weapon, ru_crane]]);
+
+if not attackers then
+   exit;
+
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff attackers);
+
+ComAgressiveMove(attackers, 107, 74);
+
+wait(0$5);
+
+repeat
+ wait(0$1);
+until not UnitFilter(attackers, [f_hastask]);
+
+if rand(0, 1) then
+   ComAgressiveMove(attackers, 155, 108)
+else
+   ComAgressiveMove(attackers, 149, 55);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ for i in attackers do
+     if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+
+until not UnitFilter(attackers, [f_ok]);
+End;
+
+Every 24$00 trigger not ruDestroyed do
+var i, un, tmp;
+begin
+enable;
+
+if Difficulty = 1 and tick < 30$00 then
+   exit;
+
+tmp := [];
+
+for i := 1 to [2, 3, 4][Difficulty] do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    InitHC_All();
+
+    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitArea(un, popov_spawn, false);
+
+    SetClass(un, class_bazooker);
+
+    ComMoveXY(un, 147, 161);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    PrepareVehicle(ru_heavy_tracked, engine_combustion, control_computer, [ru_heavy_gun, ru_rocket_launcher][rand(1, 2)], 90);
+    un := CreateVehicle;
+    PlaceUnitArea(un, popov_spawn, false);
+
+    ComMoveXY(un, 147, 161);
+    wait(0$3);
+
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+if not tmp then
+   exit;
+
+wait(0$5);
+
+repeat
+ wait(0$3);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) or IsDead(i) then
+        tmp := tmp diff i;
+
+     if GetClass(i) = class_bazooker then
+        ComSpaceTimeShoot(i);
+
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+     end;
+until not tmp;
+
 End;

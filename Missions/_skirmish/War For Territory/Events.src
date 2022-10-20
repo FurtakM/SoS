@@ -1,9 +1,57 @@
+Export Function CustomEvent(event);
+begin
+
+End;
+
+On Command(com) do
+var i, j, temp;
+begin
+if com = 60 then
+   begin
+   for i in FilterAllUnits([[f_side, 1], [f_or, [f_type, unit_human], [f_weapon, us_cargo_bay]]]) do
+       begin
+       if GetTaskList(i) > 0 then
+          for j = 1 to GetTaskList(i) do
+              begin
+              temp = GetTaskList(i)[j][4];
+
+              if GetSide(temp) = 4 and GetTaskList(i)[j][1] = '<' then
+                 SetTaskList(i, []);
+              end;
+       end;
+   end; 
+End;
+
+On SibDepositContaminated(sci, x, y) do
+begin
+if GetSide(HexInfo(x, y)) = 1 then
+   DialogContaminateSib(x, y);
+End;
+
 On UnitDestroyed(un) do
 begin
 MCE_UnitDestroyed(un);
 
 if un = Powell then
    YouLost('Powell');
+
+if un = Sikorski then
+   YouLost('Sikorski');
+
+if un in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) then
+   loseCounter := loseCounter + 1;
+
+if un in FilterAllUnits([[f_side, 4], [f_type, unit_human]]) then
+   powellLoseCounter := powellLoseCounter + 1;
+
+if un in powellAttackGroup then
+   powellAttackGroup := powellAttackGroup diff un;
+
+if un in gensherAttackGroup then
+   gensherAttackGroup := gensherAttackGroup diff un;
+
+if un in popovAttackGroup then
+   popovAttackGroup := popovAttackGroup diff un;
 End;
 
 On BuildingStarted(building, builder) do
@@ -66,13 +114,9 @@ begin
 MCE_ApemanTamed(ape, sci);
 End;
 
-Export Function CustomEvent(event);
-begin
-
-End;
-
 On Contact(s1, s2) do
 begin
 if s1 = 1 and s2 = 4 then
    YouLost('FriendlyFire');
 End;
+
