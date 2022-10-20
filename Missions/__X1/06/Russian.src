@@ -1,5 +1,7 @@
 Export Morozov;
+Export ruBlockadeTank, ruOutsiders, ruBlockadeSquad;
 Export Function PrepareRussian;
+var i, b, un, veh, tmp, outpost;
 begin
 uc_side := 3;
 uc_nation := 3;
@@ -8,5 +10,126 @@ Morozov := NewCharacter('Morozov');
 
 SetBName(ruLenin, 'lenin');
 
+ruOutsiders := [];
 
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+for i in tmp do
+    SetBLevel(i, [5, 5, 6][Difficulty]);
+
+// outpost
+outpost := [];
+tmp := [ [198, 158], [203, 166], [177, 114], [138, 96], [181, 209], [178, 196], [181, 212] ];
+
+for i := 1 to tmp do
+    begin
+    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    b := HexInfo(tmp[i][1], tmp[i][2]);
+
+    SetDir(un, ReverseDir(b));
+    PlaceHumanInUnit(un, b);
+    outpost := Replace(outpost, outpost, un);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 2, [5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 194, 164, 6, false);
+    outpost := Replace(outpost, outpost + 1, un);
+    end;
+
+tmp := [ [135, 100], [137, 92] ];
+
+for i := 1 to tmp do
+    begin
+    PrepareVehicle([ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty + rand(0, 1)], engine_combustion, control_manual, ru_gun, 25);
+    veh := CreateVehicle;
+    SetDir(veh, 2);
+    PlaceUnitXY(veh, tmp[i][1], tmp[i][2], false);
+
+    PrepareHuman(false, 3, 6);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    ComHold(veh);
+    end;
+
+// road block
+if Difficulty > 1 then
+   begin
+   tmp := [191, 122];
+
+   PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_gun, 30);
+   ruBlockadeTank := CreateVehicle;
+   SetDir(ruBlockadeTank, 2);
+   PlaceUnitXY(ruBlockadeTank, 191, 122, false);
+
+   PrepareMechanic(sex_male, [5, 6][Difficulty - 1]);
+   PlaceHumanInUnit(CreateHuman, ruBlockadeTank);
+
+   ComHold(ruBlockadeTank);
+
+   ruBlockadeSquad := [];
+
+   for i := 1 to [3, 4][Difficulty - 1] do
+       begin
+       PrepareHuman(false, 1, [5, 6][Difficulty - 1]);
+       un := CreateHuman;
+       PlaceUnitArea(un, ruRoadBlockade, false);
+       ComTurnXY(un, 198, 129);
+       AddComCrawl(un);
+
+       ruBlockadeSquad := Replace(ruBlockadeSquad, ruBlockadeSquad + 1, un);
+       end;
+
+   PrepareHuman(false, 4, 5);
+   un := CreateHuman;
+   PlaceUnitXY(un, 179, 113, false);
+   ComHold(un);
+
+   ruBlockadeSquad := Replace(ruBlockadeSquad, ruBlockadeSquad + 1, un);
+   end;
+End;
+
+Every 0$1 trigger ruBlockadeTank and GetSide(ruBlockadeTank) = 3 do
+var driver;
+begin
+enable;
+
+if FilterAllUnits([[f_enemy, 3], [f_dist, ruBlockadeTank, 15]]) then
+   begin
+   if not IsDrivenBy(ruBlockadeTank) then
+      begin
+      driver := NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), ruBlockadeTank);
+
+      if driver then
+         ComEnterUnit(driver, ruBlockadeTank);
+      end;
+
+   exit;
+   end;
+
+if GetLives(ruBlockadeTank) < 1000 and IsDrivenBy(ruBlockadeTank) then
+   ComRepairVehicleAndReturn(IsDrivenBy(ruBlockadeTank));
+End;
+
+Every 0$3 trigger UnitFilter(ruBlockadeSquad, [f_not, [f_lives, 1000]]) and UnitFilter(ruBlockadeSquad, [[f_class, 4], [f_ok]]) do
+var i, sci, needHeal;
+begin
+enable;
+
+needHeal := SortByHealth(UnitFilter(ruBlockadeSquad, [f_not, [f_lives, 1000]]), true);
+sci := UnitFilter(ruBlockadeSquad, [[f_class, 4], [f_ok]])[1];
+
+if not WantHeal(sci, needHeal[1]) then
+   begin
+   if not IsInArea(needHeal[1], ruRoadBlockade) then
+      ComMoveToArea(needHeal[1], ruRoadBlockade);
+
+   ComHeal(sci, needHeal[1]);
+   AddComMoveXY(sci, 179, 113);
+   AddComHold(sci);
+   end;
 End;
