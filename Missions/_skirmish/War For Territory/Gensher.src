@@ -7,7 +7,7 @@ gensher_side := 2;
 uc_side := gensher_side;
 uc_nation := 2;
 
-tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [3500, 300, 30], [4, 4, 4, 4]);
+tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [4500, 600, 60], [6, 6, 6, 6]);
 mc_bases := Replace(mc_bases, 2, tmp);
 
 // hill
@@ -29,6 +29,17 @@ for i = 1 to tmp[1] do
     PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
     staticMines := Insert(staticMines, staticMines + 1, [tmp[1][i], tmp[2][i]]);
     end;
+
+if Difficulty > 1 then
+   begin
+   tmp := AreaToList(gensher_mines2, 0);
+
+   for i = 1 to tmp[1] do
+       begin
+       PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
+       staticMines := Insert(staticMines, staticMines + 1, [tmp[1][i], tmp[2][i]]);
+       end;
+   end;
 
 gensherAttackGroup := [];
 End;
@@ -55,12 +66,11 @@ MC_SetProduceList(2, [
    [ar_half_tracked, engine_combustion, control_remote, ar_gun],
    [ar_half_tracked, engine_combustion, control_remote, ar_gun],
    [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-   [ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower]
+   [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower]
 ]);
 
 MC_SetBuildingList(2, [
    [b_lab, 13, 18, 1],
-   [b_lab, 17, 27, 1],
    [b_solar_power, 17, 3, 0],
    [b_oil_mine, 56, 23, 0],
    [b_armoury, 42, 29, 5],
@@ -68,6 +78,7 @@ MC_SetBuildingList(2, [
    [b_solar_power, 20, 3, 0],
    [b_solar_power, 23, 3, 0],
    [b_solar_power, 26, 3, 0],
+   [b_lab, 17, 27, 1],
    [b_bunker, 27, 44, 5],
    [b_bunker, 41, 41, 5],
    [b_bunker, 45, 24, 5],
@@ -173,30 +184,52 @@ repeat
 until not UnitFilter(attackers, [f_ok]);
 End;
 
-Every 20$00 trigger not arDestroyed and tick < 81$00 do
+Every 15$00 + 8$00 trigger not arDestroyed and tick < 81$00 do
 var i, un, tmp;
 begin
 enable;
 
 tmp := [];
 
-for i := 1 to [4, 5, 5][Difficulty] do
+if tick < 35$00 then
+   begin
+   for i := 1 to [4, 5, 5][Difficulty] do
+       begin
+       uc_side := 2;
+       uc_nation := 2;
+
+       InitHC_All();
+
+       PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+       un := CreateHuman;
+       PlaceUnitArea(un, gensher_spawn, false);
+
+       SetClass(un, [class_soldier, class_mortar][rand(1, 2)]);
+
+       ComAgressiveMove(un, 111, 34);
+       wait(0$2);
+
+       tmp := Replace(tmp, tmp + 1, un);
+       end;
+    end
+else
     begin
-    uc_side := 2;
-    uc_nation := 2;
+    for i := 1 to [4, 5, 5][Difficulty] do
+       begin
+       uc_side := 2;
+       uc_nation := 0;
 
-    InitHC_All();
+       InitHC_All();
 
-    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
-    un := CreateHuman;
-    PlaceUnitArea(un, gensher_spawn, false);
+       hc_class := class_apeman_kamikaze;
+       un := CreateHuman;
+       PlaceUnitArea(un, gensher_spawn, false);
 
-    SetClass(un, [class_soldier, class_mortar][rand(1, 2)]);
+       ComAgressiveMove(un, 110, 33);
+       wait(0$2);
 
-    ComMoveXY(un, 73, 24);
-    wait(0$2);
-
-    tmp := Replace(tmp, tmp + 1, un);
+       tmp := Replace(tmp, tmp + 1, un);
+       end;
     end;
 
 for i := 1 to [3, 4, 5][Difficulty] do

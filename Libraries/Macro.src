@@ -1268,7 +1268,7 @@ for i = 1 to mc_bases do
 End;
 
 Export Function MC_CollectCrates();
-var i, j, k, tmp, target, cargo, depot, fac, components;
+var i, j, k, tmp, side, target, cargo, depot, fac, components;
 begin
 if not mc_bases then
    exit;
@@ -1286,6 +1286,8 @@ for i = 1 to mc_bases do
        end;
 
     target := [];
+    side := GetSide(mc_bases[i][1]);
+    depot := UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
 
     for j = mc_crates[i] downto 1 do
         begin
@@ -1298,7 +1300,7 @@ for i = 1 to mc_bases do
            continue;
            end;
 
-        if DangerAtRangeXY(GetSide(mc_bases[i][1]), mc_crates[i][j][2], mc_crates[i][j][3], 30)[4] = 0 then
+        if DangerAtRangeXY(side, mc_crates[i][j][2], mc_crates[i][j][3], 30)[4] = 0 then
            begin
            target := mc_crates[i][j];
            break;
@@ -1376,7 +1378,11 @@ for i = 1 to mc_bases do
                  ComExitBuilding(j);
 
               wait(3);
-              ComCollect(j, target[2], target[3]);
+
+              if HasTask(j) and DangerAtRangeXY(side, target[2], target[3], 30)[4] then
+                 ComStandNearbyBuilding(j, depot)
+              else
+                 ComCollect(j, target[2], target[3]);
               end;
 
           end;
@@ -1399,8 +1405,6 @@ for i = 1 to mc_bases do
 
            if GetEngine(j) = engine_combustion and GetFuel(j) < 10 then
               begin
-              depot := UnitFilter(mc_bases[i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
-
               if not depot then
                  continue;
 
@@ -1458,7 +1462,7 @@ for i = 1 to mc_bases do
        for j in tmp do
            if not IsControledBy(j) and GetLives(j) >= 250 then
               Connect(j)
-             else
+           else
               if GetLives(j) < 250 and IsControledBy(j) then
                  ComUnlink(j);
     end;
@@ -1765,10 +1769,9 @@ for i = 1 to mc_bases do
         if not IsDrivenBy(j) and not j in mc_need_heal[i][1] and not j in mc_need_heal[i][2] then
            begin
            if IsInUnit(j) then
-              ComExitBuilding(j);
-
-           if not HasTask(j) then
-              AddComRepairVehicle(j, vehs[1]);
+              ComExitBuilding(j)
+           else if not WantToRepairVehicle(j, vehs[1]) then
+              ComRepairVehicle(j, vehs[1]);
            end;
         end;
     end;

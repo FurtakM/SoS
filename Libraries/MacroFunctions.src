@@ -569,7 +569,7 @@ End;
 
 // base, defenders, enemy
 Export Function Defend(base, defenders, enemy);
-var i, j, x, depot, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend;
+var i, j, x, depot, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend, class;
 begin
 mechs := UnitFilter(mc_bases[base], [f_class, 3]);
 
@@ -667,6 +667,14 @@ repeat
           b := IsInUnit(i);
           can_defend := (not b or GetBType(b) in [b_bunker, b_breastwork]);
 
+          if GetBType(b) = b_barracks and GetClass(i) in [1, 2, 3, 4] then
+             begin
+             class := AllowSpecClass(i);
+
+             if class then
+                ComChangeProfession(i, class);
+             end;
+
           if (depot_under_attack or UnitFilter(defenders, [f_type, unit_vehicle]) <= 1) and can_defend and not i in sold_defenders then
              begin
 
@@ -674,7 +682,7 @@ repeat
                 if GetDistUnits(b, NearestUnitToUnit(enemy, b)) < 10 and BuildingStatus(b) <> bs_need_power then
                    continue;
 
-             sold_defenders := Replace(sold_defenders, sold_defenders+1, i);
+             sold_defenders := Replace(sold_defenders, sold_defenders + 1, i);
              ComExitBuilding(i);
              end;
 
