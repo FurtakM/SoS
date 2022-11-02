@@ -1,4 +1,4 @@
-Export commanders, player, gladkov, davidov, gorki, stolypin, player_squad, pl_counter, player_com;
+Export commanders, player, gladkov, davidov, gorki, stolypin, player_squad, player_com;
 Export Function InitCommanders(commander);
 var i, skill, tmp, team, veh;
 begin
@@ -28,6 +28,9 @@ player_com := commanders[commander];
 
 team := [];
 skill := [4, 3, 3][Difficulty];
+
+uc_side := 3;
+uc_nation := 3;
 
 hc_gallery := '';
 hc_name := '';
@@ -143,20 +146,23 @@ end;
 if isTest then
    tmp := team
     else
-     tmp := CharacterSelection('text', [10, 9, 8][Difficulty], [10, 9, 8][Difficulty], [sel_not_hired, sel_change_class, sel_changeable]^team, [class_soldier, [class_engineer, 1], class_mechanic, class_scientistic]);
+     tmp := CharacterSelection('text', [10, 9, 8][Difficulty], [10, 9, 8][Difficulty], [sel_not_hired, sel_change_class, sel_changeable]^team, [class_soldier, class_engineer, class_mechanic, class_scientistic]);
 
-PlaceUnitArea(player_com, gaidar_base, false);
+SetDir(player_com, 4);
+PlaceUnitArea(player_com, east_arr, false);
+ComHold(player_com);
 
-SetClass(tmp[1], 2);
+for i in tmp do
+    SetSide(i, 6);
 
-for i = 1 to tmp do
-    if i < 4 then
-       PlaceUnitArea(tmp[i], gaidar_base, false)
-        else
-         SetSide(tmp[i], 6);
+for i = 1 to 4 do
+    begin
+    SetDir(tmp[1], 4);
+    PlaceUnitXYR(tmp[1], 104, 88, 3, false);
+    tmp := Delete(tmp, 1);
+    end;
 
 player_squad := tmp;
-pl_counter := 4;
 
 MCN_AddApes(ape_east, 5, 1);
 End;
@@ -188,29 +194,26 @@ InitCommanders(commander);
 End;
 
 
-Every 1$45 trigger pl_counter < 12 do
+Every 1$45 trigger player_squad do
 var i;
 begin
 enable;
 
-for i = pl_counter to pl_counter + 2 do
-    begin   
-    PlaceUnitArea(player_squad[i], east_arr, false);
-    ComMoveXY(player_squad[i], 107, 88);
-    end;
-
-for i = pl_counter to pl_counter + 2 do
+for i := 1 to 3 do
     begin
-     repeat
-      wait(0$01);
-     until GetDistUnitXY(player_squad[i], 107, 88) < 6;
-    SetSide(player_squad[i], 3);
-    end;
+    if player_squad < i then
+       exit;
 
-pl_counter := pl_counter + 3;
+    PlaceUnitArea(player_squad[1], east_arr, false);
+    ComMoveXY(player_squad[1], 107, 88);
+    SetSide(player_squad[1], 3);
+
+    player_squad := Delete(player_squad, 1);
+    end;
 End;
 
 Export Function Dialog;
+var i;
 begin
 
 if not isTest then
@@ -218,34 +221,29 @@ if not isTest then
    1: ;
    end;
 
+PlaceSeeing(105, 84, 3, -30);
+RemoveSeeing(105, 84, 3);
+
 InGameOn;
-CenterNowOnXY(107, 84);
+CenterNowOnXY(128, 64);
 
 if isTest then
    dialogue_skipped := true;
 
-player_depot := ComBuild(player_squad[1], b_depot, 96, 79, 2);
-
-Wait(0$01);
-
 SayRadio(Popov, 'DR1');
-
-Wait(0$01);
-
 SayRadio(Popov, 'DR2');
 SayRadio(Popov, 'DR3');
-
-Repeat
- Wait(0$01);
-Until MCF_Get(3, [f_btype, b_depot]) or isTest;
 
 InGameOff;
 
 ChangeMissionObjectives('C1');
 
-Repeat
- Wait(0$01);
-Until BuildingStatus(player_depot) = bs_idle;
+repeat
+ wait(0$1);
+until FilterUnitsInArea(gaidar_base, [f_side, 3]);
+
+for i in FilterUnitsInArea(gaidar_base, [f_side, 6]) do
+    SetSide(i, 3);
 
 if not isTest then
    case query('support') of
@@ -253,7 +251,6 @@ if not isTest then
    end;
 
 SetArtifactUse(3, art_use_exclamation, art_instant, FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1]);
-
 
 if player_com = stolypin then
    PrepareConvoy(east_arr, [3, 3, 2][Difficulty]);
@@ -518,9 +515,12 @@ Every 0$01 trigger tick > [10$00, 9$00, 8$00][Difficulty] do
 begin
 
 repeat
- SayRadio(Popov, 'DR5');
  wait(Rand(0$30, 2$00));
  PrepareAlfaAttack(north_arr, [5, 6, 8][Difficulty]);
+
+ if FilterAllUnits([f_side, 8]) then
+    SayRadio(Popov, 'DR5');
+
  wait(rand(4$00, 6$00));
 until tick >= 120$00;
 
