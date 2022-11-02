@@ -21,7 +21,7 @@ else
 ChangeSideFog(4, 1);
 
 PrepareNature(0, 0, 5, 0, 0, 0, 0, gensher_ape, 0);
-PrepareNature(0, 0, 5, 0, 0, 0, 0, powell_ape, 0);
+PrepareNature(0, 0, 3, 0, 0, 0, 0, powell_ape, 0);
 PrepareNature(0, 0, 5, 0, 0, 0, 0, popov_ape, 0);
 PrepareNature(0, 0, 5, 0, 0, 0, 0, sikorski_ape, 0);
 
@@ -61,7 +61,7 @@ End;
 Every 0$10 do
 var cr, time, i;
 begin
-time := 0$30;
+time := 0$20;
 
 repeat
  wait(time);
@@ -69,18 +69,29 @@ repeat
 
  for i in [powell_crates, gensher_crates, popov_crates, sikorski_crates] do
      begin
-     if GetResourceArea(i, mat_cans) < 20 then
+     if GetResourceArea(i, mat_cans) < 40 then
         CreateCratesArea(cr, i, true);
 
-     wait(rand(0$5, 0$20));
+     wait(rand(0$5, 0$15));
      end;
 
  time := time + 0$2;
 
- if time > 1$00 then
+ if time > 0$40 then
     time := 0$25;
 
 until not game;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) do
+var i, tmp;
+begin
+enable;
+tmp := FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]);
+
+for i in tmp do
+    if GetFuel(i) < 5 then
+       SetFuel(i, 5);
 End;
 
 

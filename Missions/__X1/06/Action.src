@@ -153,6 +153,28 @@ DialogueOff;
 
 ChangeMissionObjectives('MortarConstructed');
 Hint('SelfPropelledMortar');
+
+mortarConstructed := true;
+End;
+
+// Outpost spotted
+Every 0$1 trigger SeeArea(2, ruOutpostNorth) do
+begin
+PlaceSeeing(200, 162, 2, -6);
+RemoveSeeing(200, 162, 2);
+
+CenterOnXY(200, 162);
+
+if not IsOk(Kurt) then
+   exit;
+
+Say(Kurt, 'DKs-06-Otpst-2-1');
+Say(Kaia, 'DK-06-Otpst-2-2');
+Say(Kurt, 'DKs-06-Otpst-2-3');
+Say(Kurt, 'DKs-06-Otpst-2-4');
+Say(Kurt, 'DKs-06-Otpst-2-5');
+Say(Kamil, 'DKam-06-Otpst-2-6');
+Say(Kurt, 'DKs-06-Otpst-2-7');
 End;
 
 // Outpost destroyed
@@ -186,4 +208,274 @@ else
    end;
 
 Say(Givi, 'DG-06-Otpst-1-5');
+End;
+
+// Spawn Rolf
+Every 0$1 trigger tick >= 6$00 or ruLoseCounter > 3 do
+var i, tmp, dep;
+begin
+PrepareRolfSquad;
+
+dep := HexInfo(86, 54);
+SetResourceType(GetBase(dep), mat_cans, 300);
+SetResourceType(GetBase(dep), mat_oil, 300);
+
+ComAgressiveMove(rolfSquad, 79, 52);
+
+repeat
+ wait(0$1);
+until not FilterUnitsInArea(ruRolfBase, [[f_side, 3], [f_type, unit_human]]);
+
+tmp := FilterUnitsInArea(ruRolfBase, [f_type, unit_building]);
+
+for i in tmp do
+    SetSide(i, 8);
+
+SetLives(HexInfo(63, 42), 320);
+
+ComEnterUnit(Rolf, dep);
+AddComChangeProfession(Rolf, class_engineer);
+AddComExitBuilding(Rolf);
+
+wait(0$20);
+
+DialogueOn;
+
+ChangeSideFog(8, 2);
+
+SetBName(HexInfo(86, 54), 'antwerp');
+
+CenterNowOnUnits(Rolf);
+
+SayRadio(Rolf, 'DRf-06-rast-1');
+Say(Heike, 'DH-06-rast-2');
+SayRadio(Rolf, 'DRf-06-rast-3');
+SayRadio(Rolf, 'DRf-06-rast-4');
+SayRadio(Rolf, 'DRf-06-rast-5');
+
+if IsOk(Aviradze) then
+   begin
+   CenterNowOnUnits(Aviradze);
+
+   Say(Aviradze, 'DA-06-rast-6');
+   Say(Heike, 'DH-06-rast-7');
+   Say(Givi, 'DG-06-rast-8');
+   Say(Givi, 'DG-06-rast-9');
+   end;
+
+Say(Heike, 'DH-06-rast-10');
+
+DialogueOff;
+
+ChangeMissionObjectives('M2');
+
+bergkampfArrived := true;
+
+PrepareRolfBase;
+End;
+
+// Spot Rolf
+Every 0$1 trigger GetDistUnits(Heike, Rolf) < 8 do
+var i;
+begin
+DialogueOn;
+
+CenterNowOnUnits(Rolf);
+
+if rolfSquad >= 10 then
+   begin
+   linkedWithRolf := 2;
+
+   Say(Rolf, 'DRf-06-rast-11');
+   Say(Heike, 'DH-06-rast-12');
+   Say(Rolf, 'DRf-06-rast-13');
+   Say(Heike, 'DH-06-rast-14');
+   Say(Rolf, 'DRf-06-rast-15');
+   Say(Heike, 'DH-06-rast-16');
+
+   if IsOk(Mike) then
+      begin
+      Say(Mike, 'DM-06-rast-17');
+      Say(Heike, 'DH-06-rast-18');
+      Say(Mike, 'DM-06-rast-19');
+      Say(Heike, 'DH-06-rast-20');
+      Say(Mike, 'DM-06-rast-21');
+      Say(Heike, 'DH-06-rast-22');
+      end;
+
+   Say(Heike, 'DH-06-rast-23');
+   end
+else
+   begin
+   linkedWithRolf := 1;
+
+   Say(Rolf, 'DRf-06-rast-a-11');
+   Say(Heike, 'DH-06-rast-a-12');
+
+   if IsOk(Kurt) then
+      begin
+      Say(Kurt, 'DKs-06-rast-a-13');
+      Say(Rolf, 'DRf-06-rast-a-14');
+      Say(Rolf, 'DRf-06-rast-a-15');
+      Say(Kurt, 'DKs-06-rast-a-16');
+
+      if IsOk(Givi) then
+         begin
+         Say(Givi, 'DG-06-rast-a-17');
+         Say(Givi, 'DG-06-rast-a-18');
+         Say(Kurt, 'DKs-06-rast-a-19');
+         end;
+      end;
+
+   Say(Heike, 'DH-06-rast-a-20');
+   end;
+
+Say(Rolf, 'DRf-06-rast-24');
+
+if IsOk(Aviradze) then
+   begin
+   Say(Aviradze, 'DA-06-rast-25');
+   Say(Heike, 'DH-06-rast-26');
+   Say(Aviradze, 'DA-06-rast-27');
+
+   if IsOk(Markov) then
+      begin
+      Say(Markov, 'DMar-06-rast-28');
+      Say(Markov, 'DMar-06-rast-29');
+      end
+   else if IsOk(Sophia) then
+      begin
+      Say(Sophia, 'DS-06-rast-28');
+      end;
+   end
+else if IsOk(Sophia) then
+   Say(Sophia, 'DS-06-rast-29');
+
+DialogueOff;
+
+rolfScriptBase := false;
+ChangeMissionObjectives('M3');
+
+for i in FilterAllUnits([f_side, 8]) do
+    SetSide(i, 2);
+End;
+
+// Rolf dies
+Every 0$1 trigger GetLives(Rolf) < 400 and not linkedWithRolf do
+var random;
+begin
+DialogueOn;
+
+SayRadio(Rolf, 'DRf-06-rast-f-11');
+SayRadio(Rolf, 'DRf-06-rast-f-12');
+SayRadio(Rolf, 'DRf-06-rast-f-13');
+
+DialogueOff;
+
+KillUnit(Rolf);
+rolfDied := true;
+
+wait(0$1);
+
+if not IsOk(Givi) then
+   exit;
+
+DialogueOn;
+
+Say(Givi, 'DG-06-rast-f-14');
+Say(Givi, 'DG-06-rast-f-15');
+
+if IsOk(Kaia) then
+   Say(Kaia, 'DK-06-rast-f-16')
+else if heikeSecondSquad then
+   begin
+   random := heikeSecondSquad[rand(1, heikeSecondSquad)];
+
+   case GetSex(random) of
+        1: Say(random, 'DArm-06-rast-f-a-16');
+        2: Say(random, 'DArf-06-rast-f-a-16');
+        end;
+   end;
+
+Say(Givi, 'DG-06-rast-f-17');
+Say(Givi, 'DG-06-rast-f-18');
+Say(Givi, 'DG-06-rast-f-19');
+Say(Givi, 'DG-06-rast-f-20');
+
+DialogueOff;
+End;
+
+// lenin spotted
+Every 0$1 trigger SeeArea(2, ruMainBase) do
+begin
+Say(Givi, 'DG-06-Len-1');
+Say(Kurt, 'DKs-06-Len-2');
+Say(Kurt, 'DKs-06-Len-3');
+Say(Heike, 'DH-06-Len-4');
+Say(Kaia, 'DK-06-Len-5');
+
+leninSpotted := true;
+End;
+
+// spawn Omar
+Every 0$1 trigger (bergkampfArrived and tick > 10$00) or debug do
+var i;
+begin  
+PrepareOmarSquad;
+
+repeat
+ wait(0$1);
+until not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_type, unit_human]]);
+
+for i in FilterUnitsInArea(ruOmarBase, [f_type, unit_building]) do
+    SetSide(i, 5);
+
+wait(0$3);
+
+ChangeSideFog(5, 2);
+
+CenterNowOnUnits(Omar);
+
+DialogueOn;
+
+SayRadio(Omar, 'DOm-06-Veh-1');
+SayRadio(Omar, 'DOm-06-Veh-2');
+SayRadio(Omar, 'DOm-06-Veh-3');
+
+if mortarConstructed then
+   SayRadio(Omar, 'DOm-06-Veh-4');
+
+Say(Heike, 'DH-06-Veh-5');
+
+if IsOk(Kurt) then
+   begin
+   Say(Kurt, 'DKs-06-Veh-6');
+   Say(Kurt, 'DKs-06-Veh-7');
+   Say(Givi, 'DG-06-Veh-8');
+   Say(Mike, 'DM-06-Veh-9');
+   end;
+
+DialogueOff;
+
+omarArrived := true;
+omarScriptBase := true;
+
+ChangeMissionObjectives('M4');
+End;
+
+Every 0$1 trigger IsOk(Rolf) and linkedWithRolf and omarArrived do
+begin
+CenterNowOnUnits(Rolf);
+
+DialogueOn;
+
+Say(Rolf, 'DRf-06-Veh-10');
+Say(Rolf, 'DRf-06-Veh-11');
+Say(Heike, 'DH-06-Veh-12');
+Say(Heike, 'DH-06-Veh-13');
+Say(Rolf, 'DRf-06-Veh-14');
+
+DialogueOff;
+
+ChangeMissionObjectives('M5');
 End;
