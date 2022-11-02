@@ -7,12 +7,12 @@ popov_side := 3;
 uc_side := popov_side;
 uc_nation := 3;
 
-tmp := PrepareBase(ru_depot, popov_base, '', [8, 7, 6][Difficulty], [3500, 300, 30], [4, 4, 4, 4]);
+tmp := PrepareBase(ru_depot, popov_base, '', [8, 7, 6][Difficulty], [11500, 1100, 60], [6, 6, 6, 6]);
 mc_bases := Replace(mc_bases, 3, tmp);
 
 extraPopovForces := [];
 
-for i := 1 to [4, 5, 6][Difficulty] do
+for i := 1 to [5, 6, 7][Difficulty] do
     begin
     PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
     un := CreateHuman;
@@ -38,18 +38,18 @@ MC_SetParkingArea(3, popov_parking);
 MC_SetDepositsXY(3, [
    [ 86,  118, 0],
    [ 123, 151, 1],
-   [ 106, 113, 0]
+   [ 98,  121, 0]
 ]);
 
-MC_SetAllowedTurretWeapons(3, [ru_heavy_gun, ru_rocket_launcher, ru_gatling_gun]);
+MC_SetAllowedTurretWeapons(3, [ru_heavy_gun, ru_rocket_launcher]);
 MC_SetCratesArea(3, popov_crates);
 MC_SetTame(3, popov_ape);
 MC_SetDefenderLimit(3, 4);
 
 MC_SetProduceList(3, [
-   [ru_heavy_wheeled, engine_combustion, control_manual, ru_gun],
+   [ru_heavy_wheeled, engine_combustion, control_computer, ru_gun],
    [ru_heavy_wheeled, engine_combustion, control_computer, ru_rocket_launcher],
-   [ru_medium_wheeled, engine_combustion, control_computer, ru_gatling_gun],
+   [ru_medium_wheeled, engine_combustion, control_computer, ru_gun],
    [ru_medium_wheeled, engine_combustion, control_computer, ru_rocket_launcher]
 ]);
 
@@ -57,7 +57,7 @@ MC_SetBuildingList(3, [
    [b_lab, 76, 145, 1],
    [b_oil_power, 87, 144, 0],
    [b_oil_mine,  86, 118, 0],
-   [b_oil_mine, 106, 113, 0],
+   [b_oil_mine, 98, 121, 0],
    [b_oil_power, 87, 147, 1],
    [b_workshop, 94, 161, 0],
    [b_lab, 81, 155, 1],
@@ -85,6 +85,15 @@ MC_SetBuildingList(3, [
 MC_SetLabKind(3, [b_lab_weapon, b_lab_computer, b_lab_spacetime, b_lab_siberium]);
 MC_SetFactoryExtension(3, 94, 161, 0, [b_ext_noncombat, b_ext_gun, b_ext_rocket, b_ext_computer, b_ext_siberium]);
 MC_SetUpgradeBuilding(3, b_depot);
+
+MC_InsertProduceList(3, [[ru_medium_wheeled, engine_combustion, control_computer, ru_cargo_bay]]);
+End;
+
+Every 6$00 trigger extraPopovForces and not ruDestroyed do
+begin
+ComMoveXY(extraPopovForces, 106, 137);
+mc_bases := Replace(mc_bases, 3, mc_bases[3] union extraPopovForces);
+extraPopovForces := [];
 End;
 
 Every 8$00 + 2$00 trigger IsOk(ru_depot) and not ruDestroyed do
@@ -148,8 +157,8 @@ repeat
 until not UnitFilter(attackers, [f_ok]);
 End;
 
-Every 24$00 trigger not ruDestroyed do
-var i, un, tmp;
+Every 12$00 + 10$00 trigger not ruDestroyed do
+var i, un, tmp, amount;
 begin
 enable;
 
@@ -158,28 +167,39 @@ if Difficulty = 1 and tick < 30$00 then
 
 tmp := [];
 
-for i := 1 to [2, 3, 4][Difficulty] do
+if tick < 45$00 then
+   begin
+   for i := 1 to [2, 3, 4][Difficulty] do
+       begin
+       uc_side := 3;
+       uc_nation := 3;
+
+       InitHC_All();
+
+       PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+       un := CreateHuman;
+       PlaceUnitArea(un, popov_spawn, false);
+
+       SetClass(un, class_bazooker);
+
+       ComMoveXY(un, 147, 161);
+       wait(0$2);
+       
+       tmp := Replace(tmp, tmp + 1, un);
+       end;
+   end;
+
+amount := [3, 4, 5][Difficulty] + tick div 10$00;
+
+if amount > 15 then
+   amount := 15;
+
+for i := 1 to amount do
     begin
     uc_side := 3;
     uc_nation := 3;
 
-    InitHC_All();
-
-    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
-    un := CreateHuman;
-    PlaceUnitArea(un, popov_spawn, false);
-
-    SetClass(un, class_bazooker);
-
-    ComMoveXY(un, 147, 161);
-    wait(0$2);
-
-    tmp := Replace(tmp, tmp + 1, un);
-    end;
-
-for i := 1 to [3, 4, 5][Difficulty] do
-    begin
-    PrepareVehicle(ru_heavy_tracked, engine_combustion, control_computer, [ru_heavy_gun, ru_rocket_launcher][rand(1, 2)], 90);
+    PrepareVehicle(ru_heavy_tracked, engine_combustion, control_computer, [ru_heavy_gun, ru_rocket_launcher, ru_gun, ru_gatling_gun, ru_heavy_machine_gun][rand(1, 5)], 90);
     un := CreateVehicle;
     PlaceUnitArea(un, popov_spawn, false);
 
@@ -195,7 +215,7 @@ if not tmp then
 wait(0$5);
 
 repeat
- wait(0$3);
+ wait(0$2);
 
  for i in tmp do
      begin

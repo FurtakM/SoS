@@ -1,24 +1,56 @@
 Export Morozov;
-Export ruBlockadeTank, ruOutsiders, ruBlockadeSquad;
+Export ruBlockadeTank, ruOutsiders, ruBlockadeSquad,
+       ruHelperBaseSquad, ruMainBaseSquad;
 Export Function PrepareRussian;
-var i, b, un, veh, tmp, outpost;
+var i, j, b, un, veh, tmp, outpost;
 begin
 uc_side := 3;
 uc_nation := 3;
 
 Morozov := NewCharacter('Morozov');
+PlaceHumanInUnit(Morozov, ruLenin);
 
 SetBName(ruLenin, 'lenin');
 
 ruOutsiders := [];
+ruHelperBaseSquad := [];
+ruMainBaseSquad := [];
 
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
 
 for i in tmp do
     SetBLevel(i, [5, 5, 6][Difficulty]);
 
+// north base fakes
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, 0);
+    PlaceUnitXYR(CreateHuman, 75, 49, 3, false);
+    end;
+
+// south base fakes
+for i := 1 to 4 do
+    begin
+    PrepareHuman(false, rand(1, 2), 0);
+    PlaceUnitXYR(CreateHuman, 330, 231, 5, false);
+    end;
+
+hc_class := 1;
+
+PlaceHumanInUnit(CreateHuman, HexInfo(324, 219));
+PlaceHumanInUnit(CreateHuman, HexInfo(316, 223));
+
 // outpost
 outpost := [];
+
+tmp := [GetBase(HexInfo(172, 198)), GetBase(HexInfo(189, 156)), GetBase(HexInfo(341, 232))];
+
+for i in tmp do
+    begin
+    SetResourceType(i, mat_cans, 200);
+    SetResourceType(i, mat_oil, 200);
+    end;
+
 tmp := [ [198, 158], [203, 166], [177, 114], [138, 96], [181, 209], [178, 196], [181, 212] ];
 
 for i := 1 to tmp do
@@ -91,6 +123,107 @@ if Difficulty > 1 then
 
    ruBlockadeSquad := Replace(ruBlockadeSquad, ruBlockadeSquad + 1, un);
    end;
+
+// helper base
+tmp := GetBase(HexInfo(167, 243));
+
+SetResourceType(tmp, mat_cans, 1000);
+SetResourceType(tmp, mat_oil, 400);
+
+tmp := HexInfo(169, 226);
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, tmp);
+
+    ruHelperBaseSquad := Replace(ruHelperBaseSquad, ruHelperBaseSquad + 1, un);
+    end;
+
+tmp := [ [165, 224], [173, 228] ];
+
+for i := 1 to tmp do
+    begin
+    PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, HexInfo(tmp[i][1], tmp[i][2]));
+
+    ruHelperBaseSquad := Replace(ruHelperBaseSquad, ruHelperBaseSquad + 1, un);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareHuman(false, 2, 3);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 166, 233, 2, false);
+    end;
+
+// main base
+tmp := [ ruDepMainN, ruLenin, ruDepMainS ];
+
+for i in tmp do
+    begin
+    SetResourceType(GetBase(i), mat_cans, 3000);
+    SetResourceType(GetBase(i), mat_oil, 600);
+    end;
+
+tmp := [ [41, 57], [38, 55], [50, 73], [51, 65], [82, 93], [87, 100], [91, 109],
+         [84, 120], [113, 153], [123, 171], [125, 178], [125, 188], [125, 201],
+         [33, 60], [76, 95], [84, 111], [112, 165] ];
+
+for i := 1 to tmp do
+    begin
+    b := HexInfo(tmp[i][1], tmp[i][2]);
+
+    if GetBType(b) in [b_armoury, b_barracks] then
+       begin
+       for j := 1 to Difficulty do
+           begin
+           PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+           un := CreateHuman;
+           PlaceHumanInUnit(un, b);
+           end;
+       end
+    else
+       begin
+       PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, b);
+       end;
+
+    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+    end;
+
+for i := 1 to 5 do
+    begin
+    PrepareHuman(false, 2, [4, 5, 5][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 66, 101, 3, false);
+
+    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+    end;
+
+
+tmp := [ ruFac1, ruFac2 ];
+
+for i := 1 to tmp do
+    begin
+    PrepareHuman(false, 3, [4, 5, 5][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, tmp);
+
+    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 4, [4, 5, 5][Difficulty]);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, ruLab1);
+
+    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+    end;
 End;
 
 Every 0$1 trigger ruBlockadeTank and GetSide(ruBlockadeTank) = 3 do

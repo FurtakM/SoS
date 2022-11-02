@@ -16,7 +16,7 @@ SetSkill(Powell, 4, 4);
 
 PlaceHumanInUnit(Powell, us_depot);
 
-tmp := PrepareBase(us_depot, powell_base, '', [8, 7, 6][Difficulty], [2500, 300, 0], [4, 4, 4, 4]);
+tmp := PrepareBase(us_depot, powell_base, '', [8, 7, 6][Difficulty], [5500, 500, 0], [6, 6, 6, 6]);
 mc_bases := Replace(mc_bases, 1, tmp);
 
 powellAttackGroup := [];
@@ -44,14 +44,13 @@ MC_SetProduceList(1, [
    [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
    [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
    [us_heavy_tracked, engine_combustion, control_remote, us_rocket_launcher],
-   [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
    [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun]
 ]);
 
 MC_SetBuildingList(1, [
-   [b_lab, 200, 111, 4],
-   [b_oil_mine, 167,102, 0],
+   [b_oil_mine, 167, 102, 0],
    [b_armoury, 178, 117, 2],
+   [b_lab, 200, 111, 4],
    [b_workshop, 201, 140, 4],
    [b_solar_power, 206, 124, 3],
    [b_solar_power, 209, 128, 3],
@@ -64,13 +63,13 @@ MC_SetBuildingList(1, [
    [b_turret, 174, 108, 1],
    [b_turret, 182, 122, 1],
    [b_control_tower, 194, 124, 5],
-   [b_siberite_power, 204, 133, 3],
-   [b_solar_power, 201, 133, 3],
-   [b_siberite_power, 199, 119, 5],
    [b_turret, 184, 141, 1],
    [b_turret, 183, 131, 2],
    [b_turret, 194, 146, 4],
-   [b_turret, 190, 142, 4]
+   [b_turret, 190, 142, 4],
+   [b_siberite_power, 204, 133, 3],
+   [b_solar_power, 201, 133, 3],
+   [b_siberite_power, 199, 119, 5]
 ]);
 
 MC_SetLabKind(1, [b_lab_weapon, b_lab_opto, b_lab_computer, b_lab_siberium]);
@@ -145,4 +144,78 @@ repeat
 until not UnitFilter(attackers, [f_ok]);
 
 DialogPowellsAttackFailed;
+End;
+
+// repair player's vehicles
+Every 0$2 do
+var vehicles, mechs, i;
+begin
+enable;
+
+vehicles := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_not, [f_lives, 1000]], [f_distxy, 191, 140, 10]]);
+mechs := FilterAllUnits([[f_side, 4], [f_class, 3]]);
+
+if not mechs then
+   exit;
+
+if mc_remote_driver[1] then
+   mechs := mechs diff mc_remote_driver[1];
+
+if not mechs then
+   exit;
+
+if vehicles then
+   begin
+   for i in mechs do
+       begin
+       if GetTag(i) <> 120 then
+          SetTag(i, 120);
+
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+          ComRepairVehicle(i, vehicles[1]);
+       end;
+   end
+else if FilterByTag(mechs, 120) then
+   begin
+   for i in mechs do
+       begin
+       SetTag(i, 0);
+       end;
+   end;
+End;
+
+// heal player's people
+Every 0$2 do
+var people, sci, i;
+begin
+enable;
+
+people := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]], [f_distxy, 188, 112, 10]]);
+sci := FilterAllUnits([[f_side, 4], [f_class, 4]]);
+
+if not sci then
+   exit;
+
+if people then
+   begin
+   for i in sci do
+       begin
+       if GetTag(i) <> 102 then
+          SetTag(i, 102);
+
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+          ComHeal(i, people[1]);
+       end;
+   end
+else if FilterByTag(sci, 102) then
+   begin
+   for i in sci do
+       begin
+       SetTag(i, 0);
+       end;
+   end;
 End;
