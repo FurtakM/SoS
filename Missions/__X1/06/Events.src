@@ -8,6 +8,15 @@ if GetSide(vehicle) = 2 and ingame_video and GetControl(vehicle) = control_manua
    AddComExitVehicle(driver);
    AddComEnterUnit(driver, factory);
    end;
+
+if GetSide(vehicle) = 3 then
+   ruSpecialVehicleGroup := Replace(ruSpecialVehicleGroup, ruSpecialVehicleGroup + 1, vehicle);   
+End;
+
+On BuildingComplete(b) do
+begin
+if GetSide(b) = 8 and GetBType(b) = b_armoury then
+   ComUpgrade(b);
 End;
 
 On UnitDestroyed(un) do
@@ -15,11 +24,147 @@ begin
 if un = Heike then
    YouLost('Heike');
 
+if un in FilterAllUnits([[f_side, 2], [f_nation, 2]]) then
+   heikeLoseCounter := heikeLoseCounter + 1;
+
+if un = arDepot then
+   YouLost('Base');
+
+if un = Rolf then
+   rolfDied := true;
+
+if un in rolfSquad then
+   rolfSquad := rolfSquad diff un;
+
+if un in omarSquad then
+   omarSquad := omarSquad diff un;
+
 if GetSide(un) = 3 then
    ruLoseCounter := ruLoseCounter + 1;
+
+if un in ruAttackers then
+   ruAttackers := ruAttackers diff un;
 End;
 
-On EvacuateVehicle(driver, vehicle, p1, p2) do
+On EvacuateVehicle(un, vehicle, p1, p2) do
+var i, b, p, tmp;
 begin
+if GetSide(un) = 3 and not un in ruAttackers then
+   begin
+   if not IsInArea(un, ruMainBase) then
+      ComMoveToArea(un, ruMainBase);
 
+   repeat
+    wait(0$1);
+   until not IsOk(un) or IsInArea(un, ruMainBase);
+
+   ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+
+   tmp := [ruFac1, ruFac2];
+
+   if tmp then
+      for i in tmp do
+          if UnitsInside(i) < 6 then
+             begin
+             AddComEnterUnit(un, i);
+             AddComConstruct(tmp, [ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_heavy_gun, ru_rocket][rand(1, 3)]);
+             exit;
+             end;
+
+   tmp := FilterUnitsInArea(ruMainBase, [[f_side, 3], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_bunker], [f_btype, b_breastwork]]]);
+
+   if not tmp then
+      begin
+      ComMoveXY(un, 83, 133);
+      exit;
+      end;
+
+   for b in SortByDistanceUnit(un, tmp, true, true) do
+       begin
+       case GetBType(b) of
+            b_armoury, b_barracks: p := 6;
+            b_breastwork, b_bunker: p := 1;
+            end;
+
+       if UnitsInside(b) < p then
+          begin
+          ComEnterUnit(un, b);
+
+          if GetBType(b) in [b_armoury, b_barracks] then
+             AddComChangeProfession(un, class_soldier);
+          exit;
+          end;
+       end;
+   end;
+End;
+
+On EvacuateBuilding(building, un) do
+var p, tmp, b;
+begin
+if GetSide(un) = 3 and GetClass(un) = 1 and not un in ruMainBaseSquad then
+   begin
+   ComMoveToArea(un, ruMainBase);
+
+   repeat
+    wait(0$1);
+   until not IsOk(un) or IsInArea(un, ruMainBase);
+
+   ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+
+   tmp := FilterUnitsInArea(ruMainBase, [[f_side, 3], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_bunker], [f_btype, b_breastwork]]]);
+
+   if not tmp then
+      begin
+      ComMoveXY(un, 83, 133);
+      exit;
+      end;
+
+   for b in SortByDistanceUnit(un, tmp, true, true) do
+       begin
+       case GetBType(b) of
+            b_armoury, b_barracks: p := 6;
+            b_breastwork, b_bunker: p := 1;
+            end;
+
+       if UnitsInside(b) < p then
+          begin
+          ComEnterUnit(un, b);
+          exit;
+          end;
+       end;
+   end;
+
+if un in ruMainBaseSquad and GetClass(un) = 1 then
+   begin
+   tmp := FilterUnitsInArea(ruMainBase, [[f_side, 3], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_bunker], [f_btype, b_breastwork]]]);
+
+   if not tmp then
+      exit;
+
+   for b in SortByDistanceUnit(un, tmp, true, true) do
+       begin
+       case GetBType(b) of
+            b_armoury, b_barracks: p := 6;
+            b_breastwork, b_bunker: p := 1;
+            end;
+
+       if UnitsInside(b) < p then
+          begin
+          ComEnterUnit(un, b);
+          exit;
+          end;
+       end;           
+   end;
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 2 and s2 in [5, 8] then
+   YouLost('FriendlyFire');
+End;
+
+On EnterBuilding(building, unit) do
+begin
+if GetSide(building) = 8 and GetBType(building) = b_barracks then
+   SetClass(unit, class_mortar);
 End;
