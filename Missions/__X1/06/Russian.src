@@ -1,8 +1,9 @@
 Export Morozov;
 Export ruBlockadeTank, ruOutsiders, ruBlockadeSquad,
-       ruHelperBaseSquad, ruMainBaseSquad;
+       ruHelperBaseSquad, ruMainBaseSquad, ruSpecialVehicleGroup,
+       ruAttackers, waveStrength;
 Export Function PrepareRussian;
-var i, j, b, un, veh, tmp, outpost;
+var i, j, b, un, veh, tmp;
 begin
 uc_side := 3;
 uc_nation := 3;
@@ -15,6 +16,9 @@ SetBName(ruLenin, 'lenin');
 ruOutsiders := [];
 ruHelperBaseSquad := [];
 ruMainBaseSquad := [];
+ruSpecialVehicleGroup := [];
+ruAttackers := [];
+waveStrength := 0;
 
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
 
@@ -41,8 +45,6 @@ PlaceHumanInUnit(CreateHuman, HexInfo(324, 219));
 PlaceHumanInUnit(CreateHuman, HexInfo(316, 223));
 
 // outpost
-outpost := [];
-
 tmp := [GetBase(HexInfo(172, 198)), GetBase(HexInfo(189, 156)), GetBase(HexInfo(341, 232))];
 
 for i in tmp do
@@ -55,22 +57,37 @@ tmp := [ [198, 158], [203, 166], [177, 114], [138, 96], [181, 209], [178, 196], 
 
 for i := 1 to tmp do
     begin
-    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
     un := CreateHuman;
     b := HexInfo(tmp[i][1], tmp[i][2]);
 
     SetDir(un, ReverseDir(b));
     PlaceHumanInUnit(un, b);
-    outpost := Replace(outpost, outpost, un);
     end;
 
-for i := 1 to 2 do
+for i := 1 to 3 do
     begin
-    PrepareHuman(false, 2, [5, 6, 7][Difficulty]);
+    InitHc;
+
+    uc_nation := 0;
+    hc_class := class_apeman_engineer;
+
     un := CreateHuman;
     PlaceUnitXYR(un, 194, 164, 6, false);
-    outpost := Replace(outpost, outpost + 1, un);
     end;
+
+uc_nation := 3;
+
+if Difficulty > 1 then
+   begin
+   PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_gun, 10);
+   un := CreateVehicle;
+   PlaceUnitXYD(un, 199, 162, 1, false);
+   ComHold(un);
+
+   PrepareHuman(false, 3, 4);
+   PlaceHumanInUnit(CreateHuman, un);
+   end;
 
 tmp := [ [135, 100], [137, 92] ];
 
@@ -154,10 +171,16 @@ for i := 1 to tmp do
 
 for i := 1 to 2 do
     begin
-    PrepareHuman(false, 2, 3);
+    InitHc;
+
+    uc_nation := 0;
+    hc_class := class_apeman_engineer;
+
     un := CreateHuman;
     PlaceUnitXYR(un, 166, 233, 2, false);
     end;
+
+uc_nation := 3;
 
 // main base
 tmp := [ ruDepMainN, ruLenin, ruDepMainS ];
@@ -208,13 +231,14 @@ for i := 1 to 5 do
 tmp := [ ruFac1, ruFac2 ];
 
 for i := 1 to tmp do
-    begin
-    PrepareHuman(false, 3, [4, 5, 5][Difficulty]);
-    un := CreateHuman;
-    PlaceHumanInUnit(un, tmp);
+    for j := 1 to 6 do
+        begin
+        PrepareHuman(false, 3, [4, 5, 5][Difficulty]);
+        un := CreateHuman;
+        PlaceHumanInUnit(un, tmp[i]);
 
-    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
-    end;
+        ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+        end;
 
 for i := 1 to 3 do
     begin
@@ -224,6 +248,40 @@ for i := 1 to 3 do
 
     ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
     end;
+
+for i := 1 to [2, 3, 3][Difficulty] do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_crane, 100);
+    veh := CreateVehicle;
+
+    PrepareHuman(false, 3, 4);
+    un := CreateHuman;
+
+    PlaceUnitXYR(veh, 107, 182, 4, false);
+    PlaceHumanInUnit(un, veh);
+
+    ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
+    end;
+
+// others
+InitHc;
+
+for i := 1 to [6, 8, 10][Difficulty] do
+    begin
+    uc_nation := 0;
+    hc_class := class_apeman_soldier;
+
+    un := CreateHuman;
+    PlaceUnitXYR(un, [269, 300][i mod 2 + 1], 182, 4, false);
+    end;
+
+uc_nation := 3;
+
+PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay, 12);
+veh := CreateVehicle;
+PlaceUnitXYD(veh, 269, 66, 4, false);
+SetLives(veh, 333);
+SetCargo(veh, mat_oil, 100);
 End;
 
 Every 0$1 trigger ruBlockadeTank and GetSide(ruBlockadeTank) = 3 do
@@ -265,4 +323,354 @@ if not WantHeal(sci, needHeal[1]) then
    AddComMoveXY(sci, 179, 113);
    AddComHold(sci);
    end;
+End;
+
+Every 0$1 trigger See(2, ruLenin) do
+var i, tmp;
+begin
+tmp := UnitFilter(ruMainBaseSquad, [[f_class, 1], [f_ok]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComAgressiveMove(i, 84, 133);
+    end;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(ruMainBase, [f_enemy, 3]) do
+var i, tmp;
+begin
+tmp := [ruFac1, ruFac2];
+
+for i := 1 to 6 do
+    AddComConstruct(tmp, [ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_heavy_gun, ru_rocket][rand(1, 3)]);
+End;
+
+Every 0$2 trigger leninScriptBase do
+var i, tmp, b, hurt, sci, enemyInBase;
+begin
+enable;
+
+enemyInBase := FilterUnitsInArea(ruMainBase, [f_enemy, 3]);
+
+if ruSpecialVehicleGroup then
+   begin
+   for i in ruSpecialVehicleGroup do
+       begin
+       if enemyInBase then
+          begin
+          if GetLives(i) > 500 and GetTag(i) = 0 then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+
+          if GetLives(i) <= 500 and GetTag(i) = 0 then
+             begin
+             SetTag(i, 1);
+             ComMoveXY(i, 83, 134);
+             end;
+
+          if GetLives(i) < 1000 and GetTag(i) = 1 and GetDistUnitXY(i, 83, 134) < 6 then
+             begin
+             SetFuel(i, 100);
+             AddComRepairVehicleAndReturn(IsInUnit(i));
+             end;
+
+          if GetLives(i) = 1000 and GetTag(i) = 1 and IsDrivenBy(i) then
+             SetTag(i, 0);
+          end;
+      end;
+   end;
+
+sci := UnitFilter(ruMainBaseSquad, [f_class, 4]);
+hurt := UnitFilter(ruMainBaseSquad, [[f_distxy, 92, 155, 12], [f_not, [f_lives, 1000]]]);
+
+if sci then
+   begin
+   if hurt then
+      begin
+      if UnitFilter(sci, [f_not, [f_inside]]) then
+         ComExitBuilding(UnitFilter(sci, [f_not, [f_inside]]));
+
+      AddComHeal(sci, hurt[1]);
+      end
+   else if UnitFilter(sci, [f_not, [f_inside]]) then
+      ComEnterUnit(UnitFilter(sci, [f_not, [f_inside]]), ruLab1);
+   end;
+
+b := FilterUnitsInArea(ruMainBase, [[f_type, unit_building], [f_not, [f_lives, 1000]]]);
+tmp := UnitFilter(ruMainBaseSquad, [f_class, 2]) union FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    if GetClass(i) = 2 then
+       begin
+       if GetLives(i) = 1000 and GetTag(i) = 1 then
+          SetTag(i, 0);
+
+       if GetLives(i) <= 500 and GetTag(i) = 0 then
+          begin
+          SetTag(i, 1);
+          ComMoveXY(i, 92, 155);
+          end;
+
+       if b and GetLives(i) > 500 and GetTag(i) = 0 and not HasTask(i) then
+          begin
+          if b then
+             ComRepairBuilding(i, b[rand(1, b)])
+          else if GetDistUnitXY(i, 94, 165) then
+             ComMoveXY(i, 94, 165);
+          end;
+       end
+    else if GetWeapon(i) = ru_crane then
+       begin
+       if GetLives(i) = 1000 and GetTag(i) = 1 then
+          begin
+          SetTag(i, 0);
+          SetFuel(i, 100);
+          end;
+
+       if GetLives(i) <= 500 and GetTag(i) = 0 then
+          begin
+          SetTag(i, 1);
+          ComMoveXY(i, 83, 135);
+          AddComRepairVehicleAndReturn(IsInUnit(i));
+          end;
+
+       if GetLives(i) > 500 and GetTag(i) = 0 and IsDrivenBy(i) and not HasTask(i) then
+          begin
+          if b then
+             ComRepairBuilding(i, b[rand(1, b)])
+          else if GetDistUnitXY(i, 94, 165) then
+             ComMoveXY(i, 94, 165);
+          end;
+       end;
+    end;
+End;
+
+// Attacks
+// on heike's base
+Every 6$00 + 2$00 trigger not omarAttack and not disableAttackOnHeike do
+var i, un, veh, tmp;
+begin
+enable;
+
+if Prob(40) then
+   waveStrength := waveStrength + 1;
+
+if waveStrength > [4, 5, 6][Difficulty] then
+   begin
+   waveStrength := waveStrength + Difficulty;
+   disableAttackOnHeike := true;
+   wait(3$00);
+   end;
+
+if disableAttackOnHeike and Difficulty > 1 then
+   begin
+   for i := 1 to [3, 3, 4][Difficulty] do
+       begin
+       InitHc;
+       InitVc;
+
+       uc_side := 3;
+       uc_nation := 3;
+
+       PrepareHuman(false, 1, Difficulty + 2);
+       un := CreateHuman;
+       PlaceUnitXYD(un, 160, 3, 2, false);
+       SetClass(un, class_bazooker);
+       ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+
+       ComMoveXY(un, 177, 17);
+       wait(0$2);
+
+       tmp := Replace(tmp, tmp + 1, un);
+       end;
+    end;
+
+for i := 1 to [2, 3, 4][Difficulty] + waveStrength do
+    begin
+    InitHc;
+    InitVc;
+
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle([ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_rocket_launcher, ru_gatling_gun, ru_heavy_machine_gun, ru_gun][rand(1,5)], 99);
+    veh := CreateVehicle;
+    PlaceUnitXYD(veh, 160, 3, 2, false);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, veh);
+
+    PrepareHuman(false, 3, Difficulty + 2);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+
+    ComMoveXY(un, 177, 17);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, veh);
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i in tmp do
+    begin
+    if Prob(50) then
+       ComAgressiveMove(i, 206, 73)
+    else
+       begin
+       ComAgressiveMove(i, 206, 73);
+       AddComAgressiveMove(i, 257, 105);
+       AddComAgressiveMove(i, 227, 97);
+       AddComAgressiveMove(i, 206, 73);
+       end;
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsDead(i) then
+        tmp := tmp diff i
+     else if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+
+until not tmp;
+End;
+
+// on rolf's base
+Every 8$00 trigger not omarAttack and bergkampfArrived and not rolfHasVehicles do
+var i, un, veh, tmp;
+begin
+enable;
+
+for i := 1 to [2, 3, 3][Difficulty] do
+    begin
+    InitHc;
+    InitVc;
+
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle([ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_rocket_launcher, ru_gatling_gun, ru_heavy_machine_gun, ru_gun][rand(1,5)], 99);
+    veh := CreateVehicle;
+    PlaceUnitXYD(veh, 5, 3, 2, false);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, veh);
+
+    PrepareHuman(false, 3, Difficulty);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+
+    ComMoveXY(un, 23, 7);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, veh);
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i := 1 to [2, 3, 4][Difficulty] do
+    begin
+    InitHc;
+    InitVc;
+
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle([ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_rocket_launcher, ru_gatling_gun, ru_heavy_machine_gun, ru_gun][rand(1,5)], 99);
+    veh := CreateVehicle;
+    PlaceUnitXYD(veh, 127, 243, 0, false);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, veh);
+
+    PrepareHuman(false, 3, Difficulty + 2);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+
+    ComMoveXY(un, 130, 233);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, veh);
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i in tmp do
+    begin
+    ComAgressiveMove(i, 76, 49);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsDead(i) then
+        tmp := tmp diff i
+     else if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+
+until not tmp;
+End;
+
+// attack on omar's base
+Every 0$1 trigger omarArrived do
+var i, un, veh, tmp;
+begin
+wait(3$00);
+
+for i := 1 to 3 do
+    begin
+    InitHc;
+    InitVc;
+
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle([ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_manual, [ru_gun, ru_gatling_gun, ru_heavy_machine_gun, ru_gun][rand(1,4)], 99);
+    veh := CreateVehicle;
+    PlaceUnitXYD(veh, 293, 246, 5, false);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, veh);
+
+    PrepareHuman(false, 3, 3);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+
+    ComMoveXY(un, 273, 227);
+    wait(0$2);
+
+    tmp := Replace(tmp, tmp + 1, veh);
+    tmp := Replace(tmp, tmp + 1, un);
+    end;
+
+for i in tmp do
+    begin
+    ComAgressiveMove(i, 330, 231);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsDead(i) then
+        tmp := tmp diff i
+     else if not HasTask(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+
+until not tmp;
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_not, [f_side, 2]], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_not, [f_side, 2]], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
 End;

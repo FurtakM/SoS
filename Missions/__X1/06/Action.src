@@ -210,8 +210,31 @@ else
 Say(Givi, 'DG-06-Otpst-1-5');
 End;
 
+// Kaia die
+Every 0$1 trigger GetLives(Kaia) < 10 do
+begin
+DialogueOn;
+
+CenterNowOnUnits(Kaia);
+
+ForceSay(Kaia, 'DK-06-Dead-1');
+Say(Heike, 'DH-06-Dead-2');
+ForceSay(Kaia, 'DK-06-Dead-3');
+Say(Heike, 'DH-06-Dead-4');
+
+if IsOk(Mike) then
+   begin
+   Say(Mike, 'DM-06-Dead-5');
+   Say(Heike, 'DH-06-Dead-6');
+   end;
+
+DialogueOff;
+
+KillUnit(Kaia);
+End;
+
 // Spawn Rolf
-Every 0$1 trigger tick >= 6$00 or ruLoseCounter > 3 do
+Every 0$1 trigger tick >= 5$20 or ruLoseCounter > 6 do
 var i, tmp, dep;
 begin
 PrepareRolfSquad;
@@ -361,7 +384,7 @@ for i in FilterAllUnits([f_side, 8]) do
 End;
 
 // Rolf dies
-Every 0$1 trigger GetLives(Rolf) < 400 and not linkedWithRolf do
+Every 0$1 trigger bergkampfArrived and GetLives(Rolf) < 400 and not linkedWithRolf do
 var random;
 begin
 DialogueOn;
@@ -373,7 +396,6 @@ SayRadio(Rolf, 'DRf-06-rast-f-13');
 DialogueOff;
 
 KillUnit(Rolf);
-rolfDied := true;
 
 wait(0$1);
 
@@ -418,14 +440,20 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger (bergkampfArrived and tick > 10$00) or debug do
+Every 0$1 trigger bergkampfArrived and tick > 12$00 do
 var i;
-begin  
+begin
+wait(1$20);
+
 PrepareOmarSquad;
 
 repeat
  wait(0$1);
-until not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_type, unit_human]]);
+until not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_or, [f_type, unit_human], [f_occupied]]]);
+
+for i in omarSquad do
+    if GetLives(i) < 750 then
+       SetLives(i, 1000);
 
 for i in FilterUnitsInArea(ruOmarBase, [f_type, unit_building]) do
     SetSide(i, 5);
@@ -457,10 +485,13 @@ if IsOk(Kurt) then
 
 DialogueOff;
 
+ChangeMissionObjectives('M4');
+
+ComEnterUnit(Omar, HexInfo(341, 232));
+
 omarArrived := true;
 omarScriptBase := true;
-
-ChangeMissionObjectives('M4');
+omarWantVehicles := true;
 End;
 
 Every 0$1 trigger IsOk(Rolf) and linkedWithRolf and omarArrived do
@@ -478,4 +509,332 @@ Say(Rolf, 'DRf-06-Veh-14');
 DialogueOff;
 
 ChangeMissionObjectives('M5');
+rolfWantVehicles := true;
+End;
+
+Every 0$1 trigger omarWantVehicles do
+var i, tmp, eng, mech, workshop, armoury;
+begin
+wait(0$3);
+
+Hint('OmarVehicles');
+SetAreaMapShow(omarVehiclesArea, 1);
+
+repeat
+ wait(0$1);
+ omarWaitingForVehiclesTimer := omarWaitingForVehiclesTimer - 0$1;
+ display_strings := ['#X106-1', toNaturalNumber(omarVehiclesCounter - FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]))];
+
+ if omarWaitingForVehiclesTimer <= 0$00 then
+    begin
+    display_strings := [];
+    ChangeMissionObjectives('M4a');
+    SetAreaMapShow(omarVehiclesArea, 0);
+
+    DialogueOn;
+
+    SayRadio(Omar, 'DOm-06-Veh-b-15');
+    Say(Heike, 'DH-06-Veh-b-16');
+    SayRadio(Omar, 'DOm-06-Veh-b-17');
+    Say(Kaia, 'DK-06-Veh-b-18');
+
+    DialogueOff;
+
+    omarAttack := true;
+    omarScriptBase := false;
+    exit;
+    end;
+
+until omarVehiclesCounter <= FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]);
+
+DialogueOn;
+
+SayRadio(Omar, 'DOm-06-Veh-a-15');
+Say(Kaia, 'DK-06-Veh-a-16');
+
+DialogueOff;
+
+ChangeMissionObjectives('M4a');
+SetAreaMapShow(omarVehiclesArea, 0);
+omarHasVehicles := true;
+omarAttack := true;
+omarScriptBase := false;
+
+tmp := FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]);
+
+for i in tmp do
+    begin
+    SetFuel(i, 100);
+    SetSide(i, 8);
+    end;
+
+eng := UnitFilter(omarSquad, [f_class, 2]);
+mech := UnitFilter(omarSquad, [f_class, 3]);
+workshop := HexInfo(324, 234);
+armoury := HexInfo(334, 241);
+
+ComExitBuilding(UnitsInside(armoury));
+
+if eng then
+   begin
+   if eng + mech <= tmp then
+      begin
+      ComEnterUnit(eng, workshop);
+      AddComChangeProfession(eng, class_mechanic);
+      AddComExitBuilding(eng);
+      mech := mech union eng;
+      end
+   else
+      begin
+      ComEnterUnit(eng, armoury);
+      AddComChangeProfession(eng, class_soldier);
+      AddComExitBuilding(eng);       
+      end;
+   end;
+
+for i := 1 to mech do
+    if i > tmp then
+       break
+    else
+       AddComEnterUnit(mech[i], tmp[i]);
+End;
+
+Every 0$1 trigger IsOk(Rolf) and rolfWantVehicles do
+var i, tmp;
+begin
+tmp := [];
+
+repeat
+ wait(0$1);
+ rolfWaitingForVehiclesTimer := rolfWaitingForVehiclesTimer - 0$1;
+
+ if rolfWaitingForVehiclesTimer <= 0$00 or omarAttack then
+    begin
+    DialogueOn;
+    Say(Rolf, 'DRf-06-Veh-b-19');
+    Say(Rolf, 'DRf-06-Veh-b-20');
+    Say(Heike, 'DH-06-Veh-b-21');
+
+    if IsOk(Givi) then
+       begin
+       Say(Givi, 'DG-06-Veh-b-22');
+       Say(Heike, 'DH-06-Veh-b-23');
+       Say(Givi, 'DG-06-Veh-b-24');
+       end;
+
+    DialogueOff;
+
+    ChangeMissionObjectives('M5a');
+
+    for i in rolfSquad do
+        begin
+        SetSide(i, 8);
+
+        if IsDriver(i) then
+           SetSide(IsInUnit(i), 8)
+        else if IsInUnit(i) then
+           ComExitBuilding(i);
+        end;
+
+    wait(0$1);
+
+    ComAgressiveMove(rolfSquad, 229, 154);
+    AddComAgressiveMove(rolfSquad, 158, 162);
+    exit;
+    end;
+
+ tmp := [];
+
+ for i in rolfSquad do
+     if IsDriver(i) and GetFuel(IsInUnit(i)) >= 50 then
+        tmp := Replace(tmp, tmp + 1, IsInUnit(i));
+
+ if IsDead(Rolf) then
+    begin
+    ChangeMissionObjectives('M5a');
+    exit;
+    end;
+
+until tmp = rolfSquad;
+
+DialogueOn;
+
+CenterNowOnUnits(Rolf);
+
+Say(Rolf, 'DRf-06-Veh-a-17');
+Say(Heike, 'DH-08-Veh-a-18');
+Say(Rolf, 'DRf-06-Veh-a-19');
+
+DialogueOff;
+
+ChangeMissionObjectives('M5a');
+rolfHasVehicles := true;
+
+for i in rolfSquad union tmp do
+    SetSide(i, 8); 
+
+ComAgressiveMove(rolfSquad, 229, 154);
+AddComAgressiveMove(rolfSquad, 158, 162);
+End;
+
+// Shariff calls
+Every 0$1 trigger leninSpotted and omarAttack do
+begin
+wait(0$45);
+
+DialogueOn;
+
+SayRadio(Shariff, 'DShar-06-End-1');
+Say(Heike, 'DH-06-End-2');
+SayRadio(Shariff, 'DShar-06-End-3');
+Say(Heike, 'DH-06-End-4');
+SayRadio(Shariff, 'DShar-06-End-5');
+SayRadio(Shariff, 'DShar-06-End-6');
+
+dwait(0$2);
+
+Say(Heike, 'DH-06-End-7');
+
+DialogueOff;
+
+ChangeMissionObjectives('M6');
+SetAreaMapShow(escapeArea, 1);
+
+escapeAllowed := true;
+
+wait(0$1);
+
+Say(Kurt, 'DKs-06-End-8');
+Say(Kaia, 'DK-06-End-10');
+Say(Kurt, 'DKs-06-End-9');
+Say(Markov, 'DMar-06-End-11');
+
+if LoadVariable('05_DrugsTested', debug) then
+   Say(Mike, 'DM-06-End-12');
+
+Say(Olaf, 'DO-06-End-13');
+
+if IsOk(Sophia) then
+   begin
+   Say(Sophia, 'DS-06-End-15');
+   Say(Kaia, 'DK-06-End-16');
+   end;
+
+Say(Givi, 'DG-06-End-17');
+Say(Givi, 'DG-06-End-18');
+Say(Givi, 'DG-06-End-19');
+End;
+
+Every 0$1 trigger escapeAllowed do
+var tmp, outsiders;
+begin
+enable;
+
+display_strings := ['#X106-2', escapeTimer];
+escapeTimer := escapeTimer - 0$1;
+
+outsiders := FilterUnitsExceptArea(escapeArea, [[f_side, 2], [f_type, unit_human], [f_nation, 2]]);
+
+if not outsiders then
+   begin
+   escapeAllowed := false;
+   disable;
+   MissionWin;
+   exit;
+   end;
+
+if escapeTimer <= 0$00 then
+   YouLost('TimeOut');
+End;
+      
+// win
+Function MissionWin;
+var i, tmp, tmp2, cargo;
+begin
+Say(Heike, 'DH-06-End-20');
+
+if rolfDied then
+   AddMedal('med1', -1)
+else
+   AddMedal('med1', 1);
+
+if omarHasVehicles and rolfHasVehicles then
+   AddMedal('med2', 1)
+else if omarHasVehicles then
+   AddMedal('med2', -1)
+else if rolfHasVehicles then
+   AddMedal('med2', -2)
+else
+   AddMedal('med2', -3);
+
+if ruLoseCounter >= [40, 55, 70][Difficulty] and heikeLoseCounter = 0 then
+   AddMedal('med3', 1)
+else if heikeLoseCounter then
+   AddMedal('med3', -1)
+else
+   AddMedal('med3', -2);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+SaveCharacters(Heike, '06_Heike');
+
+if Aviradze then
+   SaveCharacters(Aviradze, '06_Aviradze');
+
+if Ibrahim  then
+   SaveCharacters(Ibrahim, '06_Ibrahim');
+
+if Kamil then
+   SaveCharacters(Kamil, '06_Kamil');
+
+if Sophia then
+   SaveCharacters(Sophia, '06_Sophia');
+
+if Kaia then
+   SaveCharacters(Kaia, '06_Kaia');
+
+if Givi then
+   SaveCharacters(Givi, '06_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '06_Mike');
+
+if Markov then
+   SaveCharacters(Markov, '06_Markov');
+
+if Kurt then
+   SaveCharacters(Kurt, '06_Kurt');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '06_others');
+
+tmp := FilterAllUnits([[f_side, 2], [f_nation, 0]]);
+
+if tmp then
+   SaveCharacters(tmp, '06_apes');
+
+if Rolf then
+   SaveCharacters(Rolf, '06_Rolf');
+
+tmp := FilterUnitsInArea(escapeArea, [f_type, unit_vehicle]);
+
+if tmp then
+   begin
+   tmp2 := [];
+
+   for i in tmp do
+       if GetWeapon(i) in [ar_cargo_bay, us_cargo_bay, ru_cargo_bay] then
+          begin
+          cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
+          tmp2 := Replace(tmp2, tmp2 + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), cargo]);
+          end
+       else
+          tmp2 := Replace(tmp2, tmp2 + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), []]);
+
+   SaveVariable(tmp2, '06_Vehicles');
+   end;
+
+YouWin;
 End;
