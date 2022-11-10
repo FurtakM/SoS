@@ -1,0 +1,82 @@
+Every 0$1 do
+IqAttack([a1], [ [19, 13], [32, 21] ]);
+
+
+Export Function IqAttack(units, path);
+var i, cr, enemy, tag, side;
+begin
+if not units or not path then
+   exit;
+
+side := GetSide(units[1]);
+
+repeat
+ wait(0$1);
+ enemy := FilterAllUnits([f_enemy, side]);
+
+ for i in units do
+     begin
+     if IsDead(i) then
+        units := units diff i;
+
+     if not HasTask(i) then
+        begin
+        tag := GetTag(i);
+        cr :=  GetCratesNearbyXY(GetX(i), GetY(i), 6);
+
+        if cr then
+           ComAttackPlaceForce(i, cr[1][1], cr[1][2])
+        else if tag < path then
+           begin
+           if GetDistUnitXY(i, path[tag + 1][1], path[tag + 1][2]) > 3 then
+              ComAgressiveMove(i, path[tag + 1][1], path[tag + 1][2])
+           else
+              SetTag(i, tag + 1);
+           end
+        else
+           begin
+           if enemy then
+              ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+           end;
+        end;
+     end;
+
+until not units;
+End;
+
+Export Function GetCratesNearbyXY(x, y, r);
+var _x, _y, min_y, min_x, max_x, max_y;
+begin
+result := [];
+
+if x - r < 0 then
+   min_x := 0
+else
+   min_x := x - r;
+
+if y - r < 0 then
+   min_y := 0
+else
+   min_y := y - r;
+
+max_x := x + r;
+max_y := y + r;
+
+for _x = min_x to max_x do
+    for _y = min_y to max_y do
+        begin
+        if not ValidHex(_x, _y) then
+           continue;
+
+        if GetResourceTypeXY(_x, _y) then
+           result := Replace(result, result + 1, [_x, _y]);
+        end;
+End;
+
+Export Function ComAttackPlaceForce(unit, x, y);
+begin
+if not unit then
+   exit;
+
+SetTaskList(unit, [['A', x, y, -1, 0, 0, 0]]);
+End;

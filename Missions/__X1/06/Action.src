@@ -128,6 +128,7 @@ End;
 Every 0$2 trigger FilterAllUnits([f_weapon, ar_mortar]) do
 var random;
 begin
+wait(0$2);
 CenterNowOnUnits(FilterAllUnits([f_weapon, ar_mortar]));
 
 DialogueOn;
@@ -234,7 +235,7 @@ KillUnit(Kaia);
 End;
 
 // Spawn Rolf
-Every 0$1 trigger tick >= 5$20 or ruLoseCounter > 6 do
+Every 0$1 trigger tick >= 10$20 or ruLoseCounter > 8 do
 var i, tmp, dep;
 begin
 PrepareRolfSquad;
@@ -256,11 +257,7 @@ for i in tmp do
 
 SetLives(HexInfo(63, 42), 320);
 
-ComEnterUnit(Rolf, dep);
-AddComChangeProfession(Rolf, class_engineer);
-AddComExitBuilding(Rolf);
-
-wait(0$20);
+wait(0$10);
 
 DialogueOn;
 
@@ -298,7 +295,7 @@ PrepareRolfBase;
 End;
 
 // Spot Rolf
-Every 0$1 trigger GetDistUnits(Heike, Rolf) < 8 do
+Every 0$1 trigger FilterUnitsInArea(ruRolfBase, [f_side, 2]) and IsOk(Rolf) do
 var i;
 begin
 DialogueOn;
@@ -440,7 +437,7 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger bergkampfArrived and tick > 12$00 do
+Every 0$1 trigger bergkampfArrived and tick > 16$00 do
 var i;
 begin
 wait(1$20);
@@ -523,8 +520,7 @@ SetAreaMapShow(omarVehiclesArea, 1);
 repeat
  wait(0$1);
  omarWaitingForVehiclesTimer := omarWaitingForVehiclesTimer - 0$1;
- display_strings := ['#X106-1', toNaturalNumber(omarVehiclesCounter - FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]))];
-
+ 
  if omarWaitingForVehiclesTimer <= 0$00 then
     begin
     display_strings := [];
@@ -547,6 +543,9 @@ repeat
 
 until omarVehiclesCounter <= FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]);
 
+omarWaitingForVehiclesTimer := 0$00;
+display_strings := [];
+
 DialogueOn;
 
 SayRadio(Omar, 'DOm-06-Veh-a-15');
@@ -565,11 +564,11 @@ tmp := FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle],
 for i in tmp do
     begin
     SetFuel(i, 100);
-    SetSide(i, 8);
+    SetSide(i, 5);
     end;
 
 eng := UnitFilter(omarSquad, [f_class, 2]);
-mech := UnitFilter(omarSquad, [f_class, 3]);
+mech := UnitFilter(omarSquad, [[f_not, [f_driving]], [f_class, 3]]);
 workshop := HexInfo(324, 234);
 armoury := HexInfo(334, 241);
 
@@ -592,24 +591,22 @@ if eng then
       end;
    end;
 
-for i := 1 to mech do
-    if i > tmp then
-       break
-    else
+for i := 1 to tmp do
+    if i <= mech then
        AddComEnterUnit(mech[i], tmp[i]);
 End;
 
 Every 0$1 trigger IsOk(Rolf) and rolfWantVehicles do
-var i, tmp;
+var i;
 begin
-tmp := [];
-
 repeat
  wait(0$1);
  rolfWaitingForVehiclesTimer := rolfWaitingForVehiclesTimer - 0$1;
 
  if rolfWaitingForVehiclesTimer <= 0$00 or omarAttack then
     begin
+    display_strings := [];
+
     DialogueOn;
     Say(Rolf, 'DRf-06-Veh-b-19');
     Say(Rolf, 'DRf-06-Veh-b-20');
@@ -639,15 +636,8 @@ repeat
     wait(0$1);
 
     ComAgressiveMove(rolfSquad, 229, 154);
-    AddComAgressiveMove(rolfSquad, 158, 162);
     exit;
     end;
-
- tmp := [];
-
- for i in rolfSquad do
-     if IsDriver(i) and GetFuel(IsInUnit(i)) >= 50 then
-        tmp := Replace(tmp, tmp + 1, IsInUnit(i));
 
  if IsDead(Rolf) then
     begin
@@ -655,7 +645,10 @@ repeat
     exit;
     end;
 
-until tmp = rolfSquad;
+until UnitFilter(rolfSquad, [f_driving]) + 0 = rolfSquad + 0;
+
+rolfWaitingForVehiclesTimer := 0$00;
+display_strings := [];
 
 DialogueOn;
 
@@ -670,11 +663,13 @@ DialogueOff;
 ChangeMissionObjectives('M5a');
 rolfHasVehicles := true;
 
-for i in rolfSquad union tmp do
-    SetSide(i, 8); 
+for i in rolfSquad do
+    begin
+    SetSide(IsInUnit(i), 8);
+    SetSide(i, 8);
+    end;
 
 ComAgressiveMove(rolfSquad, 229, 154);
-AddComAgressiveMove(rolfSquad, 158, 162);
 End;
 
 // Shariff calls

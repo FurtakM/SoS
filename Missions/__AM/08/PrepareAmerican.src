@@ -432,6 +432,7 @@ var i, k, un, others, tmp, tmp_vehs, vehicles, veh;
 begin
 vehicles := LoadVariable('07_vehicles', []);
 macmilan_squad := [];
+tmp := [];
 tmp_vehs := [];
 
 uc_side := 1;
@@ -462,7 +463,7 @@ if (gammaCommander = 1 or gammaCommander = 3) and not Brown then
    Brown = PrepareUnit('Brown', true, mission_prefix_prev);
 
    if Brown then
-      tmp := Insert(tmp, 1, Brown);
+      tmp := Replace(tmp, tmp + 1, Brown);
    end;
 
 if (gammaCommander = 2 or gammaCommander = 3) and not Donaldson then
@@ -470,7 +471,7 @@ if (gammaCommander = 2 or gammaCommander = 3) and not Donaldson then
    Donaldson = PrepareUnit('Donaldson', true, mission_prefix_prev);
 
    if Donaldson then
-      tmp := Insert(tmp, 1, Donaldson);
+      tmp := Replace(tmp, tmp + 1, Donaldson);
    end;
 
 if not Bobby then
@@ -478,7 +479,7 @@ if not Bobby then
    Bobby = PrepareUnit('Bobby', true, mission_prefix_prev);
 
    if Bobby then
-      tmp := Insert(tmp, 1, Bobby);
+      tmp := Replace(tmp, tmp + 1, Bobby);
    end;
 
 if not Cyrus then
@@ -486,7 +487,7 @@ if not Cyrus then
    Cyrus = PrepareUnit('Cyrus', true, mission_prefix_prev);
 
    if Cyrus then
-      tmp := Insert(tmp, 1, Cyrus);
+      tmp := Replace(tmp, tmp + 1, Cyrus);
    end;
 
 if not Lisa then
@@ -494,7 +495,7 @@ if not Lisa then
    Lisa = PrepareUnit('Lisa', true, mission_prefix_prev);
 
    if Lisa then
-      tmp := Insert(tmp, 1, Lisa);
+      tmp := Replace(tmp, tmp + 1, Lisa);
    end;
 
 if not Frank then
@@ -502,7 +503,7 @@ if not Frank then
    Frank = PrepareUnit('Frank', true, mission_prefix_prev);
 
    if Frank then
-      tmp := Insert(tmp, 1, Frank);
+      tmp := Replace(tmp, tmp + 1, Frank);
    end;
 
 if not Kikuchi then
@@ -510,7 +511,7 @@ if not Kikuchi then
    Kikuchi = PrepareUnit('Kikuchi', true, mission_prefix_prev);
 
    if Kikuchi then
-      tmp := Insert(tmp, 1, Kikuchi);
+      tmp := Replace(tmp, tmp + 1, Kikuchi);
    end;
 
 if not Gladstone then
@@ -518,7 +519,7 @@ if not Gladstone then
    Gladstone = PrepareUnit('Gladstone', true, mission_prefix_prev);
 
    if Gladstone then
-      tmp := Insert(tmp, 1, Gladstone);
+      tmp := Replace(tmp, tmp + 1, Gladstone);
    end;
 
 if not Khatam then
@@ -526,7 +527,7 @@ if not Khatam then
    Khatam = PrepareUnit('Khatam', true, mission_prefix_prev);
 
    if Khatam then
-      tmp := Insert(tmp, 1, Khatam);
+      tmp := Replace(tmp, tmp + 1, Khatam);
    end;
 
 others := CreateCharacterSet('07c_others');
@@ -537,7 +538,7 @@ if others then
        if GetClass(i) = 3 then
           tmp := Insert(tmp, 1, i)
        else
-          tmp := Insert(tmp, tmp+1, i);
+          tmp := Replace(tmp, tmp + 1, i);
 
 if FilterUnitsInArea(GammaSupport, [f_type, unit_building]) then
    for i in FilterUnitsInArea(GammaSupport, [f_type, unit_building]) do
@@ -545,28 +546,30 @@ if FilterUnitsInArea(GammaSupport, [f_type, unit_building]) then
 
 wait(0$1);
 
-for i in tmp do
-    begin
-    SetDir(i, 3);
-
-    if tmp_vehs then
+if tmp then
+   begin
+   for i in tmp do
        begin
-       SetDir(tmp_vehs[1], 3);
-       PlaceUnitXY(tmp_vehs[1], 78, 5, false);
-       PlaceHumanInUnit(i, tmp_vehs[1]);
-       tmp_vehs := Delete(tmp_vehs, 1);
-       end
-    else
-       PlaceUnitArea(i, GammaSupport, false);
+       SetDir(i, 3);
 
-    ComMoveXY(i, 77, 16);
-    AddComMoveXY(i, 65, 24);
+       if tmp_vehs then
+          begin
+          SetDir(tmp_vehs[1], 3);
+          PlaceUnitXY(tmp_vehs[1], 78, 5, false);
+          PlaceHumanInUnit(i, tmp_vehs[1]);
+          tmp_vehs := Delete(tmp_vehs, 1);
+          end
+       else
+          PlaceUnitArea(i, GammaSupport, false);
 
-    repeat
-     wait(0$1);
-    until not FilterUnitsInArea(GammaSupport, [f_side, 1]);
-    end;
+       ComMoveXY(i, 77, 16);
+       AddComMoveXY(i, 65, 24);
 
+       repeat
+        wait(0$1);
+       until not FilterUnitsInArea(GammaSupport, [f_side, 1]);
+       end;
+   end;
 
 // Spawn JMM
 PlaceUnitArea(JMM, GammaSupport, false);
