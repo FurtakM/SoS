@@ -1,0 +1,434 @@
+// every 0 0$1 do
+   0: GO 2
+   2: DISABLE
+// IqAttack ( [ a1 ] , [ [ 19 , 13 ] , [ 32 , 21 ] ] ) ;
+   3: LD_INT 4
+   5: PUSH
+   6: EMPTY
+   7: LIST
+   8: PPUSH
+   9: LD_INT 19
+  11: PUSH
+  12: LD_INT 13
+  14: PUSH
+  15: EMPTY
+  16: LIST
+  17: LIST
+  18: PUSH
+  19: LD_INT 32
+  21: PUSH
+  22: LD_INT 21
+  24: PUSH
+  25: EMPTY
+  26: LIST
+  27: LIST
+  28: PUSH
+  29: EMPTY
+  30: LIST
+  31: LIST
+  32: PPUSH
+  33: CALL 38 0 2
+  37: END
+// export function IqAttack ( units , path ) ; var i , cr , enemy , tag , side ; begin
+  38: LD_INT 0
+  40: PPUSH
+  41: PPUSH
+  42: PPUSH
+  43: PPUSH
+  44: PPUSH
+  45: PPUSH
+// if not units or not path then
+  46: LD_VAR 0 1
+  50: NOT
+  51: PUSH
+  52: LD_VAR 0 2
+  56: NOT
+  57: OR
+  58: IFFALSE 62
+// exit ;
+  60: GO 428
+// side := GetSide ( units [ 1 ] ) ;
+  62: LD_ADDR_VAR 0 8
+  66: PUSH
+  67: LD_VAR 0 1
+  71: PUSH
+  72: LD_INT 1
+  74: ARRAY
+  75: PPUSH
+  76: CALL_OW 255
+  80: ST_TO_ADDR
+// repeat wait ( 0 0$1 ) ;
+  81: LD_INT 35
+  83: PPUSH
+  84: CALL_OW 67
+// enemy := FilterAllUnits ( [ f_enemy , side ] ) ;
+  88: LD_ADDR_VAR 0 6
+  92: PUSH
+  93: LD_INT 81
+  95: PUSH
+  96: LD_VAR 0 8
+ 100: PUSH
+ 101: EMPTY
+ 102: LIST
+ 103: LIST
+ 104: PPUSH
+ 105: CALL_OW 69
+ 109: ST_TO_ADDR
+// for i in units do
+ 110: LD_ADDR_VAR 0 4
+ 114: PUSH
+ 115: LD_VAR 0 1
+ 119: PUSH
+ 120: FOR_IN
+ 121: IFFALSE 419
+// begin if IsDead ( i ) then
+ 123: LD_VAR 0 4
+ 127: PPUSH
+ 128: CALL_OW 301
+ 132: IFFALSE 150
+// units := units diff i ;
+ 134: LD_ADDR_VAR 0 1
+ 138: PUSH
+ 139: LD_VAR 0 1
+ 143: PUSH
+ 144: LD_VAR 0 4
+ 148: DIFF
+ 149: ST_TO_ADDR
+// if not HasTask ( i ) then
+ 150: LD_VAR 0 4
+ 154: PPUSH
+ 155: CALL_OW 314
+ 159: NOT
+ 160: IFFALSE 417
+// begin tag := GetTag ( i ) ;
+ 162: LD_ADDR_VAR 0 7
+ 166: PUSH
+ 167: LD_VAR 0 4
+ 171: PPUSH
+ 172: CALL_OW 110
+ 176: ST_TO_ADDR
+// cr := GetCratesNearbyXY ( GetX ( i ) , GetY ( i ) , 6 ) ;
+ 177: LD_ADDR_VAR 0 5
+ 181: PUSH
+ 182: LD_VAR 0 4
+ 186: PPUSH
+ 187: CALL_OW 250
+ 191: PPUSH
+ 192: LD_VAR 0 4
+ 196: PPUSH
+ 197: CALL_OW 251
+ 201: PPUSH
+ 202: LD_INT 6
+ 204: PPUSH
+ 205: CALL 433 0 3
+ 209: ST_TO_ADDR
+// if cr then
+ 210: LD_VAR 0 5
+ 214: IFFALSE 253
+// ComAttackPlaceForce ( i , cr [ 1 ] [ 1 ] , cr [ 1 ] [ 2 ] ) else
+ 216: LD_VAR 0 4
+ 220: PPUSH
+ 221: LD_VAR 0 5
+ 225: PUSH
+ 226: LD_INT 1
+ 228: ARRAY
+ 229: PUSH
+ 230: LD_INT 1
+ 232: ARRAY
+ 233: PPUSH
+ 234: LD_VAR 0 5
+ 238: PUSH
+ 239: LD_INT 1
+ 241: ARRAY
+ 242: PUSH
+ 243: LD_INT 2
+ 245: ARRAY
+ 246: PPUSH
+ 247: CALL 691 0 3
+ 251: GO 417
+// if tag < path then
+ 253: LD_VAR 0 7
+ 257: PUSH
+ 258: LD_VAR 0 2
+ 262: LESS
+ 263: IFFALSE 387
+// begin if GetDistUnitXY ( i , path [ tag + 1 ] [ 1 ] , path [ tag + 1 ] [ 2 ] ) > 3 then
+ 265: LD_VAR 0 4
+ 269: PPUSH
+ 270: LD_VAR 0 2
+ 274: PUSH
+ 275: LD_VAR 0 7
+ 279: PUSH
+ 280: LD_INT 1
+ 282: PLUS
+ 283: ARRAY
+ 284: PUSH
+ 285: LD_INT 1
+ 287: ARRAY
+ 288: PPUSH
+ 289: LD_VAR 0 2
+ 293: PUSH
+ 294: LD_VAR 0 7
+ 298: PUSH
+ 299: LD_INT 1
+ 301: PLUS
+ 302: ARRAY
+ 303: PUSH
+ 304: LD_INT 2
+ 306: ARRAY
+ 307: PPUSH
+ 308: CALL_OW 297
+ 312: PUSH
+ 313: LD_INT 3
+ 315: GREATER
+ 316: IFFALSE 367
+// ComAgressiveMove ( i , path [ tag + 1 ] [ 1 ] , path [ tag + 1 ] [ 2 ] ) else
+ 318: LD_VAR 0 4
+ 322: PPUSH
+ 323: LD_VAR 0 2
+ 327: PUSH
+ 328: LD_VAR 0 7
+ 332: PUSH
+ 333: LD_INT 1
+ 335: PLUS
+ 336: ARRAY
+ 337: PUSH
+ 338: LD_INT 1
+ 340: ARRAY
+ 341: PPUSH
+ 342: LD_VAR 0 2
+ 346: PUSH
+ 347: LD_VAR 0 7
+ 351: PUSH
+ 352: LD_INT 1
+ 354: PLUS
+ 355: ARRAY
+ 356: PUSH
+ 357: LD_INT 2
+ 359: ARRAY
+ 360: PPUSH
+ 361: CALL_OW 114
+ 365: GO 385
+// SetTag ( i , tag + 1 ) ;
+ 367: LD_VAR 0 4
+ 371: PPUSH
+ 372: LD_VAR 0 7
+ 376: PUSH
+ 377: LD_INT 1
+ 379: PLUS
+ 380: PPUSH
+ 381: CALL_OW 109
+// end else
+ 385: GO 417
+// begin if enemy then
+ 387: LD_VAR 0 6
+ 391: IFFALSE 417
+// ComAttackUnit ( i , NearestUnitToUnit ( enemy , i ) ) ;
+ 393: LD_VAR 0 4
+ 397: PPUSH
+ 398: LD_VAR 0 6
+ 402: PPUSH
+ 403: LD_VAR 0 4
+ 407: PPUSH
+ 408: CALL_OW 74
+ 412: PPUSH
+ 413: CALL_OW 115
+// end ; end ; end ;
+ 417: GO 120
+ 419: POP
+ 420: POP
+// until not units ;
+ 421: LD_VAR 0 1
+ 425: NOT
+ 426: IFFALSE 81
+// end ;
+ 428: LD_VAR 0 3
+ 432: RET
+// export function GetCratesNearbyXY ( x , y , r ) ; var _x , _y , min_y , min_x , max_x , max_y ; begin
+ 433: LD_INT 0
+ 435: PPUSH
+ 436: PPUSH
+ 437: PPUSH
+ 438: PPUSH
+ 439: PPUSH
+ 440: PPUSH
+ 441: PPUSH
+// result := [ ] ;
+ 442: LD_ADDR_VAR 0 4
+ 446: PUSH
+ 447: EMPTY
+ 448: ST_TO_ADDR
+// if x - r < 0 then
+ 449: LD_VAR 0 1
+ 453: PUSH
+ 454: LD_VAR 0 3
+ 458: MINUS
+ 459: PUSH
+ 460: LD_INT 0
+ 462: LESS
+ 463: IFFALSE 475
+// min_x := 0 else
+ 465: LD_ADDR_VAR 0 8
+ 469: PUSH
+ 470: LD_INT 0
+ 472: ST_TO_ADDR
+ 473: GO 491
+// min_x := x - r ;
+ 475: LD_ADDR_VAR 0 8
+ 479: PUSH
+ 480: LD_VAR 0 1
+ 484: PUSH
+ 485: LD_VAR 0 3
+ 489: MINUS
+ 490: ST_TO_ADDR
+// if y - r < 0 then
+ 491: LD_VAR 0 2
+ 495: PUSH
+ 496: LD_VAR 0 3
+ 500: MINUS
+ 501: PUSH
+ 502: LD_INT 0
+ 504: LESS
+ 505: IFFALSE 517
+// min_y := 0 else
+ 507: LD_ADDR_VAR 0 7
+ 511: PUSH
+ 512: LD_INT 0
+ 514: ST_TO_ADDR
+ 515: GO 533
+// min_y := y - r ;
+ 517: LD_ADDR_VAR 0 7
+ 521: PUSH
+ 522: LD_VAR 0 2
+ 526: PUSH
+ 527: LD_VAR 0 3
+ 531: MINUS
+ 532: ST_TO_ADDR
+// max_x := x + r ;
+ 533: LD_ADDR_VAR 0 9
+ 537: PUSH
+ 538: LD_VAR 0 1
+ 542: PUSH
+ 543: LD_VAR 0 3
+ 547: PLUS
+ 548: ST_TO_ADDR
+// max_y := y + r ;
+ 549: LD_ADDR_VAR 0 10
+ 553: PUSH
+ 554: LD_VAR 0 2
+ 558: PUSH
+ 559: LD_VAR 0 3
+ 563: PLUS
+ 564: ST_TO_ADDR
+// for _x = min_x to max_x do
+ 565: LD_ADDR_VAR 0 5
+ 569: PUSH
+ 570: DOUBLE
+ 571: LD_VAR 0 8
+ 575: DEC
+ 576: ST_TO_ADDR
+ 577: LD_VAR 0 9
+ 581: PUSH
+ 582: FOR_TO
+ 583: IFFALSE 684
+// for _y = min_y to max_y do
+ 585: LD_ADDR_VAR 0 6
+ 589: PUSH
+ 590: DOUBLE
+ 591: LD_VAR 0 7
+ 595: DEC
+ 596: ST_TO_ADDR
+ 597: LD_VAR 0 10
+ 601: PUSH
+ 602: FOR_TO
+ 603: IFFALSE 680
+// begin if not ValidHex ( _x , _y ) then
+ 605: LD_VAR 0 5
+ 609: PPUSH
+ 610: LD_VAR 0 6
+ 614: PPUSH
+ 615: CALL_OW 488
+ 619: NOT
+ 620: IFFALSE 624
+// continue ;
+ 622: GO 602
+// if GetResourceTypeXY ( _x , _y ) then
+ 624: LD_VAR 0 5
+ 628: PPUSH
+ 629: LD_VAR 0 6
+ 633: PPUSH
+ 634: CALL_OW 283
+ 638: IFFALSE 678
+// result := Replace ( result , result + 1 , [ _x , _y ] ) ;
+ 640: LD_ADDR_VAR 0 4
+ 644: PUSH
+ 645: LD_VAR 0 4
+ 649: PPUSH
+ 650: LD_VAR 0 4
+ 654: PUSH
+ 655: LD_INT 1
+ 657: PLUS
+ 658: PPUSH
+ 659: LD_VAR 0 5
+ 663: PUSH
+ 664: LD_VAR 0 6
+ 668: PUSH
+ 669: EMPTY
+ 670: LIST
+ 671: LIST
+ 672: PPUSH
+ 673: CALL_OW 1
+ 677: ST_TO_ADDR
+// end ;
+ 678: GO 602
+ 680: POP
+ 681: POP
+ 682: GO 582
+ 684: POP
+ 685: POP
+// end ;
+ 686: LD_VAR 0 4
+ 690: RET
+// export function ComAttackPlaceForce ( unit , x , y ) ; begin
+ 691: LD_INT 0
+ 693: PPUSH
+// if not unit then
+ 694: LD_VAR 0 1
+ 698: NOT
+ 699: IFFALSE 703
+// exit ;
+ 701: GO 750
+// SetTaskList ( unit , [ [ A , x , y , - 1 , 0 , 0 , 0 ] ] ) ;
+ 703: LD_VAR 0 1
+ 707: PPUSH
+ 708: LD_STRING A
+ 710: PUSH
+ 711: LD_VAR 0 2
+ 715: PUSH
+ 716: LD_VAR 0 3
+ 720: PUSH
+ 721: LD_INT 1
+ 723: NEG
+ 724: PUSH
+ 725: LD_INT 0
+ 727: PUSH
+ 728: LD_INT 0
+ 730: PUSH
+ 731: LD_INT 0
+ 733: PUSH
+ 734: EMPTY
+ 735: LIST
+ 736: LIST
+ 737: LIST
+ 738: LIST
+ 739: LIST
+ 740: LIST
+ 741: LIST
+ 742: PUSH
+ 743: EMPTY
+ 744: LIST
+ 745: PPUSH
+ 746: CALL_OW 446
+// end ;
+ 750: LD_VAR 0 4
+ 754: RET

@@ -198,7 +198,7 @@ rolfSquad := [ Rolf ];
 
 for i := 1 to 4 do
     begin
-    for j := 1 to [5, 0, 3, 1][i] do
+    for j := 1 to [5, 2, 3, 1][i] do
         begin
         PrepareHuman(false, i, 5);
         rolfSquad := Join(rolfSquad, CreateHuman);
@@ -236,23 +236,25 @@ End;
 Export Function PrepareRolfBase;
 var i, tmp;
 begin
+ComEnterUnit(Rolf, HexInfo(94, 63));
+
 tmp := [ [b_armoury, 82, 64, 1], [b_breastwork, 73, 58, 0] ];
 
 for i in tmp do
-    AddComBuild(Rolf, i[1], i[2], i[3], i[4]);
+    AddComBuild(UnitFilter(rolfSquad, [f_class, 2]), i[1], i[2], i[3], i[4]);
 
 ComEnterUnit(rolfSquad[2], HexInfo(63, 42));
 ComEnterUnit(rolfSquad[3], HexInfo(94, 63));
 
 repeat
  wait(0$1);
-until not HasTask(Rolf);
+until UnitFilter(rolfSquad, [[f_class, 2], [f_not, [f_hastask]]]);
 
 rolfScriptBase := true;
 End;
 
 Every 0$1 trigger rolfScriptBase do
-var i, b, p, tmp, sol, sci, mech, enemyInBase, hasVehicle;
+var i, b, p, tmp, sol, eng, sci, mech, enemyInBase, hasVehicle;
 begin
 enable;
 
@@ -262,11 +264,12 @@ if not rolfSquad then
 enemyInBase := FilterUnitsInArea(ruRolfBase, [f_enemy, 8]);
 
 sol := UnitFilter(rolfSquad, [f_class, 1]);
+eng := UnitFilter(rolfSquad, [f_class, 2]);
 mech := UnitFilter(rolfSquad, [f_class, 3]);
 sci := UnitFilter(rolfSquad, [f_class, 4]);
 
 if sol then
-   for i in sol do
+   for i in sol union Rolf do
        if not IsInUnit(i) and not HasTask(i) then
           begin
           if GetLives(i) < 500 and GetDistUnitXY(i, 80, 49) > 6 then
@@ -308,12 +311,15 @@ if mech then
           begin
           if hasVehicle and GetLives(hasVehicle) > 500 then
              ComAttackUnit(hasVehicle, NearestUnitToUnit(enemyInBase, hasVehicle))
-          else if GetDistUnitXY(hasVehicle, 86, 49) > 6 then
+          else if GetDistUnitXY(hasVehicle, 86, 49) > 8 then
+             begin
              ComMoveXY(hasVehicle, 86, 49);
+             AddComRepairVehicleAndReturn(i);
+             end
           end
        else
           begin
-          if GetDistUnitXY(i, 86, 49) > 6 then
+          if GetDistUnitXY(i, 86, 49) > 8 then
              ComMoveXY(i, 86, 49)
           else if hasVehicle and GetLives(hasVehicle) < 1000 then
              begin
@@ -325,19 +331,23 @@ if mech then
 
 tmp := FilterUnitsInArea(ruRolfBase, [[f_not, [f_lives, 1000]], [f_type, unit_building]]);
 
-if tmp and IsOk(Rolf) then
+if tmp and eng then
    begin
-   if IsInUnit(Rolf) then
-      ComExitBuilding(Rolf)
-   else
-      ComRepairBuilding(Rolf, tmp[1]);
+   for i in eng do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else if GetLives(i) = 1000 then
+          ComRepairBuilding(i, tmp[1])
+       else if GetLives(i) < 700 then
+          ComMoveXY(i, 80, 49);
    end;
 
-if not tmp then
-   if GetLives(Rolf) < 700 then
-      ComMoveXY(Rolf, 80, 49)
-   else if not IsInUnit(Rolf) then
-      ComEnterUnit(Rolf, HexInfo(86, 54));
+if not tmp and UnitFilter(eng, [f_not, [f_inside]]) then
+   for i in UnitFilter(eng, [f_not, [f_inside]]) do
+       if GetLives(i) < 1000 then
+          ComMoveXY(i, 80, 49)
+       else
+          ComEnterUnit(i, HexInfo(86, 54));
 End;
 
 Export Function PrepareOmarSquad;
@@ -354,6 +364,9 @@ for i := 1 to 4 do
         begin
         PrepareHuman(false, i, 5);
         omarSquad := Join(omarSquad, CreateHuman);
+
+        if i = 1 and Prob(50) then
+           SetClass(omarSquad[omarSquad], class_mortar);
         end;
     end;
 
@@ -370,9 +383,17 @@ for i in omarSquad do
        begin
        p := p + 1;
        uc_side := 5;
-       uc_nation := 2;
 
-       PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, [ar_rocket_launcher, ar_gun][i mod 2 + 1], 88);
+       if rand(0, 1) then
+          begin
+          uc_nation := 2;
+          PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, ar_gun, 88);
+          end
+       else
+          begin
+          uc_nation := 3;
+          PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_rocket_launcher, 88);
+          end;
 
        PlaceUnitArea(CreateVehicle, southSpawn, false);
        PlaceHumanInUnit(i, HexInfo(340, 205));
@@ -391,7 +412,7 @@ ComMoveXY(Omar, 333, 206);
 wait(0$2);
 
 ComHold(omarSquad);
-ComAgressiveMove(omar union UnitFilter(omarSquad,[f_class, 1]) union FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]), 315, 214);
+ComAgressiveMove(omar union UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]) union FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]), 315, 214);
 
 //wait(0$2);
 //ComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[1], 323, 216, 0);
@@ -412,7 +433,7 @@ if not omarSquad then
 
 enemyInBase := FilterUnitsInArea(ruOmarBase, [f_enemy, 5]);
 
-sol := UnitFilter(omarSquad, [f_class, 1]);
+sol := UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]);
 eng := UnitFilter(omarSquad, [f_class, 2]);
 mech := UnitFilter(omarSquad, [f_class, 3]);
 sci := UnitFilter(omarSquad, [f_class, 4]);
@@ -511,16 +532,16 @@ SetLives(Omar, 1000);
 End;
 
 Every 0$1 trigger omarAttack do
-var i;
+var i, nearestPoint;
 begin
-wait(0$20);
+wait(0$25);
 
-ComExitBuilding(UnitFilter(omarSquad, [f_class, 1]));
+ComExitBuilding(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]));
 
 wait(0$3);
 
-ComAgressiveMove(omarSquad union Omar, 225, 223);
-AddComAgressiveMove(FilterAllUnits([[f_side, 5], [f_or, [f_class, 1], [f_type, unit_vehicle]]]), 167, 231);
+AddComAgressiveMove(omarSquad union Omar, 225, 223);
+AddComAgressiveMove(FilterAllUnits([[f_side, 5], [f_or, [f_class, 1], [f_class, 8], [f_type, unit_vehicle]]]), 167, 231);
 AddComMoveXY(UnitFilter(omarSquad, [f_class, 4]), 222, 229);
 
 repeat
@@ -534,9 +555,9 @@ repeat
         continue;
         end;
 
-     if GetClass(i) = 1 then
+     if GetClass(i) in [1, 8] then
         begin
-        if GetLives(i) < 500 and GetTag(i) = 0 then
+        if GetLives(i) < 700 and GetTag(i) = 0 then
            begin
            SetTag(i, 1);
            ComMoveXY(i, 222, 229);
@@ -545,26 +566,37 @@ repeat
         if GetLives(i) = 1000 and GetTag(i) = 1 then
            SetTag(i, 0);
 
-        if GetTag(i) = 0 and GetLives(i) >= 500 and not HasTask(i) then
-           ComAgressiveMove(i, 167, 231);
+        if GetTag(i) = 0 and GetLives(i) >= 700 and not HasTask(i) then
+           if FilterUnitsInArea(helperBaseDef, [f_side, 3]) then
+              ComAgressiveMove(i, 167, 231)
+           else
+              ComAgressiveMove(i, 106, 153);
         end;
 
      if GetType(i) = unit_vehicle then
         begin
-        if GetLives(i) < 500 and GetTag(i) = 0 then
+        nearestPoint := [219, 219];
+
+        if GetDistUnitXY(i, 156, 202) < GetDistUnitXY(i, 219, 219) then
+           nearestPoint := [156, 202];
+
+        if GetLives(i) < 700 and GetTag(i) = 0 then
            begin
            SetTag(i, 1);
-           ComMoveXY(i, 219, 219);
+           ComMoveXY(i, nearestPoint[1], nearestPoint[2]);
            end;
 
-        if GetLives(i) < 500 and GetTag(i) = 1 and IsDrivenBy(i) and GetDistUnitXY(i, 219, 219) < 10 then
+        if GetLives(i) < 700 and GetTag(i) = 1 and IsDrivenBy(i) and GetDistUnitXY(i, nearestPoint[1], nearestPoint[2]) < 10 then
            ComRepairVehicleAndReturn(i);
 
         if GetLives(i) = 1000 and GetTag(i) = 1 and IsDrivenBy(i) then
            SetTag(i, 0);
 
-        if GetTag(i) = 0 and GetLives(i) >= 500 and IsDrivenBy(i) and not HasTask(i) then
-           ComAgressiveMove(i, 167, 231);
+        if GetTag(i) = 0 and GetLives(i) >= 700 and IsDrivenBy(i) and not HasTask(i) then
+           if FilterUnitsInArea(helperBaseDef, [f_side, 3]) then
+              ComAgressiveMove(i, 167, 231)
+           else
+              ComAgressiveMove(i, 106, 153);
         end;
      end;
 
