@@ -672,6 +672,97 @@ for i in rolfSquad do
 ComAgressiveMove(rolfSquad, 229, 154);
 End;
 
+// Morozov call
+Every 0$1 trigger leninSpotted do
+begin
+wait(0$10);
+
+DialogueOn;
+Say(Aviradze, 'DA-06-Transmission-1');
+SayRadio(Morozov, 'DMzw-06-Transmission-2');
+
+if gaidarKilled then
+   SayRadio(Morozov, 'DMzw-06-Transmission-3')
+else
+   SayRadio(Morozov, 'DMzw-06-Transmission-a-3');
+
+Say(Heike, 'DH-06-Transmission-4');
+DialogueOff;
+End;
+
+// see bazooka
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]]) and IsOk(Heike) do
+begin
+CenterOnUnits(FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]])[1]);
+Say(Heike, 'DH-06-Rubazooka-1');
+End;
+
+// see attack
+Every 0$1 trigger FilterUnitsInArea(attackIncoming, [f_side, 3]) and firstAttack do
+begin
+CenterOnUnits(FilterUnitsInArea(attackIncoming, [f_side, 3]));
+Say(Heike, 'DH-06-Ruattfirst-1');
+Say(Heike, 'DH-06-Ruattfirst-2');
+End;
+
+Every 0$1 trigger FilterUnitsInArea(attackIncoming, [f_side, 3]) and not firstAttack do
+begin
+CenterOnUnits(FilterUnitsInArea(attackIncoming, [f_side, 3]));
+Say(Heike, 'DH-06-Ruattnext-1');
+End;
+
+// non-oil
+Every 0$1 trigger GetResourceType(GetBase(arDepot), mat_oil) < 31 and IsOk(Givi) do
+var vehicle, driver, live;
+begin
+DialogueOn;
+
+Say(Heike, 'DH-06-Fuel-1');
+Say(Givi, 'DG-06-Fuel-2');
+Say(Givi, 'DG-06-Fuel-3');
+Say(Givi, 'DG-06-Fuel-4');
+
+DialogueOff;
+
+Query('Oil');
+SetAreaMapShow(oilArea, 1);
+
+repeat
+ wait(0$1);
+until FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]);
+
+SetAreaMapShow(oilArea, 0);
+
+vehicle := FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]])[1];
+driver := IsDrivenBy(vehicle);
+live := GetLives(vehicle);
+
+RemoveUnit(driver);
+RemoveUnit(vehicle);
+
+wait(rand(3$30, 5$00));
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 3], [f_distxy, 261, 71, 12]]);
+
+uc_nation := GetNation(vehicle);
+uc_side := 2;
+
+PrepareVehicle(GetChassis(vehicle), GetEngine(vehicle), GetControl(vehicle), GetWeapon(vehicle), 66);
+vehicle := CreateVehicle;
+PlaceUnitXYD(vehicle, 277, 80, 4, false);
+PlaceHumanInUnit(driver, vehicle);
+SetLives(vehicle, live);
+
+if Prob([70, 60, 50][Difficulty]) then
+   SetCargo(vehicle, mat_oil, 100)
+else if live > 333 then
+   SetLives(vehicle, 333);
+
+ComMoveXY(vehicle, 250, 119);
+End;
+
 // Shariff calls
 Every 0$1 trigger leninSpotted and omarAttack do
 begin
