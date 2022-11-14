@@ -5,9 +5,8 @@ begin
 enable;
 
 for i in FilterUnitsInArea(vulcano_area, [f_type, unit_human]) do
-    if GetLives(i) > 4 then
-       SetLives(i, 4);
-
+    if GetLives(i) then
+       KillUnit(i);
 End;
 
 
@@ -18,19 +17,16 @@ if GetSide(lab) = your_side then
    player_res_art := true;
 End;
 
-Every 0$01 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_half], [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]) and player_res_art do
-var x, y, lab;
+Every 0$03 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_half], [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]) and player_res_art do
+var xy, lab;
 begin
 enable;
 
-// display_strings := FindArtifact(1);
-
-x := FindArtifact(1)[1];
-y := FindArtifact(1)[2];
-lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_half], [f_btype, b_lab_siberium]]]), x, y);
+xy := FindArtifact(1);
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_half], [f_btype, b_lab_siberium]]]), xy[1], xy[2]);
 
 if player_artifact_ready = false then
-   if GetDistUnitXY(lab, x, y) < 6 then
+   if GetDistUnitXY(lab, xy[1], xy[2]) < 6 then
       begin
       if BuildingStatus(lab) = bs_idle then
          SetArtifactUse(your_side, art_exp_left, art_instant, lab)
@@ -41,7 +37,7 @@ if player_artifact_ready = false then
         SetArtifactUse(your_side, art_exp_left, art_gray, lab);
 
 if player_artifact_ready then
-   if GetDistUnitXY(lab, x, y) < 6 then
+   if GetDistUnitXY(lab, xy[1], xy[2]) < 6 then
       begin
       if BuildingStatus(lab) = bs_idle then
          SetArtifactUse(your_side, art_icon, art_unit, lab)
@@ -54,42 +50,41 @@ if player_artifact_ready then
 End;
 
 On ArtifactUsed(s, icon, cr1, cr2) do
-var x, y, i, lab, side;
+var xy, i, lab, side;
 begin
-x := FindArtifact(1)[1];
-y := FindArtifact(1)[2];
-lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), x, y);
+xy := FindArtifact(1);
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), xy[1], xy[2]);
 
 if icon = art_exp_left then
    begin
    SetSpecResearch(lab, time_res_art, true);
+   SetWorkingProgress(lab, artifact_progress);
    SetArtifactUse(your_side, art_exp_left, art_no, lab);
    end;
 
 if icon = art_icon then
    begin
+
    if cr1 in FilterAllUnits([f_type, unit_building]) then
-   begin
-   side := GetSide(cr1);
-
-   if FilterAllUnits([[f_side, side], [f_btype, b_siberite_power]]) > 0 then
       begin
-      for i in FilterAllUnits([[f_side, side], [f_or, [f_btype, b_oil_power], [f_btype, b_solar_power], [f_btype, b_siberite_power]]]) do
-          SetLives(i, 1);
+      side := GetSide(cr1);
 
-      player_res_art := false;
+      if FilterAllUnits([[f_side, side], [f_btype, b_siberite_power]]) > 0 then
+         begin
+         for i in FilterAllUnits([[f_side, side], [f_or, [f_btype, b_oil_power], [f_btype, b_solar_power], [f_btype, b_siberite_power]]]) do
+             KillUnit(i);
 
-      SetArtifactUse(your_side, art_icon, art_gray, lab);
-       Wait(time_to_reuse);
-      //SetArtifactUse(your_side, art_icon, art_unit, lab);
+         player_res_art := false;
 
-      player_res_art := true;
-      medal_enabled := true;
+         SetArtifactUse(your_side, art_icon, art_gray, lab);
+         wait(time_to_reuse);
+         //SetArtifactUse(your_side, art_icon, art_unit, lab);
+
+         player_res_art := true;
+         medal_enabled := true;
+         end;
       end;
-
    end;
-   end;
-
 End;
 
 
@@ -105,5 +100,6 @@ End;
 
 On SpecResearchCancel(lab, progress) do
 begin
+artifact_progress := progress;
 SetArtifactUse(your_side, art_exp_left, art_instant, lab);
 end;

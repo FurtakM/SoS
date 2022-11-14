@@ -2,6 +2,9 @@ On UnitDestroyed(un) do
 begin
 SOS_UnitDestroyed(un);
 
+if un = legion_commander then
+   YouLost('commanderDied');
+
 if un in [legion_commander, main_base] then
    game_over := true;
 
@@ -23,7 +26,7 @@ End;
 
 Every 0$01 trigger GetLives(al_commander) < 1000 do
 if GetSide(UnitShoot(al_commander)) = 8 then
-YouLost('');
+YouLost('FriendlyFire');
 
 {On EnterBuilding(b, un) do
 begin
@@ -52,100 +55,112 @@ Wait(1);
 ComTurnXY([l1, l2], 108, 1);
 End;
 
-On ArtifactUsed(side, button, p3, p4) do
-var bonus, off, units, crates, tmp, i;
-begin
-DialogueOn;
+On ArtifactUsed(side, icon, p3, p4) do
+var bonus, off, units, crates, tmp, xy, i, lab;
+begin                
+xy := FindArtifact(2);
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]), xy[1], xy[2]);
 
-uc_side := 8;
-uc_nation := 2;
+if icon = art_exp_left then
+   begin
+   SetSpecResearch(lab, time_res_art, true);
+   SetWorkingProgress(lab, artifact_progress);
+   SetArtifactUse(your_side, art_exp_left, art_no, lab);
+   end
+else
+   begin
+   DialogueOn;
 
-bonus := 'QBonus'&bonus_num;
-off := true;
-units := [];
-crates := 0;
+   uc_side := 8;
+   uc_nation := 2;
 
-SayRadio(Vervecken, 'DVr-2');
+   bonus := 'QBonus'&bonus_num;
+   off := true;
+   units := [];
+   crates := 0;
 
-Wait(0$0.3);
+   SayRadio(Vervecken, 'DVr-2');
 
-case Query(bonus) of
-1: begin
-   tmp := [1, 2, 5, 8][bonus_num];
+   wait(0$1);
 
-   for i = 1 to tmp do
-       begin
-       PrepareHuman(false, class_apeman_soldier, tmp);
-       units := units ^ CreateHuman;
-       end;
-   end;
-2: begin
-   crates := [100, 150, 350, 500][bonus_num];
-   end;
-3: begin
-   if bonus_num = 1 then
-      ignore_wave := true;
-   if bonus_num = 2 then
-      begin
-      for i = 1 to 2 do
+   case Query(bonus) of
+   1: begin
+      tmp := [1, 2, 5, 8][bonus_num];
+
+      for i = 1 to tmp do
           begin
-          uc_nation := nation_arabian;
-
-          vc_chassis := ar_half_tracked;
-          vc_engine := engine_siberite;
-          vc_control := [control_remote, control_apeman][rand(1,2)];
-          vc_weapon := [ar_rocket_launcher, ar_gun, ar_gatling_gun][rand(1,3)];
-
-          units := units ^ CreateVehicle;
-          end;
-      end;
-   if bonus_num = 3 then
-      begin
-      for i = 1 to 4 do
-          begin
-          uc_nation := nation_arabian;
-
-          vc_chassis := ar_half_tracked;
-          vc_engine := engine_siberite;
-          vc_control := [control_remote, control_apeman][rand(1,2)];
-          vc_weapon := [ar_rocket_launcher, ar_gun, ar_rocket_launcher, ar_gatling_gun][rand(1,4)];
-
-          units := units ^ CreateVehicle;
-          end;
-      end;
-   if bonus_num = 4 then
-      for i = 1 to 3 do
-          begin
-          PrepareHuman(false, 3, 8);
+          PrepareHuman(false, class_apeman_soldier, tmp);
           units := units ^ CreateHuman;
           end;
-   end;
-4: off := false;
-end;
+      end;
+   2: begin
+      crates := [100, 150, 350, 500][bonus_num];
+      end;
+   3: begin
+      if bonus_num = 1 then
+         ignore_wave := true;
+      if bonus_num = 2 then
+         begin
+         for i = 1 to 2 do
+             begin
+             uc_nation := nation_arabian;
 
-DialogueOff;
+             vc_chassis := ar_half_tracked;
+             vc_engine := engine_siberite;
+             vc_control := [control_remote, control_apeman][rand(1,2)];
+             vc_weapon := [ar_rocket_launcher, ar_gun, ar_gatling_gun][rand(1,3)];
 
-if not off then
-   exit
-  else
-   begin
-   SetArtifactUse(your_side, art_use_exclamation, art_no, main_base);
-   SayRadio(Vervecken, ['DVr-3', 'DVr-3a', 'DVr-3b'][rand(1,3)]);
-   end;
+             units := units ^ CreateVehicle;
+             end;
+         end;
+      if bonus_num = 3 then
+         begin
+         for i = 1 to 4 do
+             begin
+             uc_nation := nation_arabian;
 
-if units then
-   for i in units do
-       begin
-       PlaceUnitXYR(i, 92, 49, 20, false);
-       EffectTeleport(GetX(i), GetY(i));
-       end;
+             vc_chassis := ar_half_tracked;
+             vc_engine := engine_siberite;
+             vc_control := [control_remote, control_apeman][rand(1,2)];
+             vc_weapon := [ar_rocket_launcher, ar_gun, ar_rocket_launcher, ar_gatling_gun][rand(1,4)];
 
-if crates then
-   for i = 1 to (crates div 50) do
-       begin
-       CreateCratesXYR(5, 92, 49, 30, true);
-       wait(0$02);
-       end;
+             units := units ^ CreateVehicle;
+             end;
+         end;
+      if bonus_num = 4 then
+         for i = 1 to 3 do
+             begin
+             PrepareHuman(false, 3, 8);
+             units := units ^ CreateHuman;
+             end;
+         end;
+      4: off := false;
+      end;
+
+      DialogueOff;
+
+      if not off then
+         exit
+      else
+         begin
+         SetArtifactUse(your_side, art_use_exclamation, art_no, main_base);
+         SayRadio(Vervecken, ['DVr-3', 'DVr-3a', 'DVr-3b'][rand(1,3)]);
+         end;
+
+      if units then
+         for i in units do
+             begin
+             PlaceUnitXYR(i, 92, 49, 20, false);
+             EffectTeleport(GetX(i), GetY(i));
+             end;
+
+      if crates then
+         for i = 1 to (crates div 50) do
+             begin
+             CreateCratesXYR(5, 92, 49, 30, true);
+             wait(0$02);
+             end;
+      end;
 End;
 
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do
@@ -157,3 +172,44 @@ On Command(cmd) do
 begin
 SOS_Command(cmd);
 End;
+
+On ArtifactResearchComplete(lab) do
+begin
+if GetSide(lab) = your_side then
+   player_res_art := true;
+End;
+
+Every 0$03 trigger FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_half], [f_btype, b_lab_full], [f_btype, b_lab_siberium]]]) do //and player_res_art do
+var xy, lab;
+begin
+enable;
+
+xy := FindArtifact(2);
+lab := NearestUnitToXY(FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_half], [f_btype, b_lab_siberium]]]), xy[1], xy[2]);
+
+if player_artifact_ready = false then
+   if GetDistUnitXY(lab, xy[1], xy[2]) < 6 then
+      begin
+      if BuildingStatus(lab) = bs_idle then
+         SetArtifactUse(your_side, art_exp_left, art_instant, lab)
+          else
+           SetArtifactUse(your_side, art_exp_left, art_gray, lab);
+      end
+       else
+        SetArtifactUse(your_side, art_exp_left, art_gray, lab);
+End;
+
+On SpecResearchComplete(lab) do
+begin
+if GetSide(lab) = your_side then
+   begin
+   SetArtifactUse(your_side, art_exp_left, art_no, lab);
+   Win;
+   end;
+End;
+
+On SpecResearchCancel(lab, progress) do
+begin
+artifact_progress := progress;
+SetArtifactUse(your_side, art_exp_left, art_instant, lab);
+end;

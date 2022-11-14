@@ -887,7 +887,7 @@ game.hackPanel.basePanel.bweaponLabel = getLabelEX(
     }
 );
 
-game.hackPanel.basePanel.bweaponCombo = clComboBox(
+--[[game.hackPanel.basePanel.bweaponCombo = clComboBox(
     game.hackPanel.basePanel,
     10,
     130,
@@ -895,7 +895,19 @@ game.hackPanel.basePanel.bweaponCombo = clComboBox(
     1,
     'changeBaseWeapon(%id, "INDEX")',
     {}
+);--]]
+
+game.hackPanel.basePanel.bweaponCombo = makeCombobox_UI(
+    game.hackPanel.basePanel,
+    XYWH(10, 130, 240, 16),
+    'changeBaseWeapon(%id, "INDEX")'
 );
+
+SGUI_customlistbox_clearitems(game.hackPanel.basePanel.bweaponCombo.list.ID);
+
+for i = 1,#BASE_WEAPON_LIST do
+    SGUI_customlistbox_additem(game.hackPanel.basePanel.bweaponCombo.list.ID, '"' .. BASE_WEAPON_LIST[i] .. '"');
+end;
 
 game.hackPanel.basePanel.directionLabel = getLabelEX(
     game.hackPanel.basePanel,

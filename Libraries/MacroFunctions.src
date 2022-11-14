@@ -504,10 +504,10 @@ repeat
 until not group or group = [] or not FilterAllUnits([f_enemy, side]);
 End;
 
-Export Function BasicDefend(base, solds, area);
+Export Function BasicDefend(base, solds);
 var enemy, side, i, hex;
 begin
-if not base or not mc_bases[base] or not solds or not area then
+if not base or not mc_bases[base] or not solds then
    exit;
 
 side := mc_sides[base];
@@ -526,7 +526,7 @@ if not solds then
 
 repeat
  wait(0$2);
- enemy := ScanBase(side, area);
+ enemy := mc_scan[base];
 
  if not mc_bases[base] or mc_bases[base] = [] then
     begin
@@ -537,14 +537,6 @@ repeat
     exit;
     end;
 
- if not enemy or enemy > 3 or mc_defender[base] then
-    begin
-    for i in solds do
-        if HasTask(i) then
-           ComStop(i);
-    break;
-    end;
-
  for i in solds do
      begin
      if IsInUnit(i) then
@@ -552,9 +544,9 @@ repeat
 
      if GetLives(i) > 333 then
         ComAttackUnit(i, NearestUnitToUnit(enemy, i))
-     else
+     else if GetDistUnits(i, NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i)) > 10 then
         begin
-        hex :=  NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i);
+        hex := NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i);
         ComMoveXY(i, ShiftX(GetX(hex), 3, 5), ShiftY(GetY(hex), 3, 5));
         SetTag(i, 0);
         solds := solds diff i;
@@ -562,14 +554,14 @@ repeat
         end;
      end;
 
-until solds;
+until not solds or not enemy;
 
 MC_Reset(base, 18);
 End;
 
 // base, defenders, enemy
-Export Function Defend(base, defenders, enemy);
-var i, j, x, depot, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend, class;
+Export Function Defend(base, defenders);
+var i, j, x, depot, solds, mech, un, tmp, mechs, e, fac, components, depot_under_attack, sold_defenders, b, can_defend, class, enemy;
 begin
 mechs := UnitFilter(mc_bases[base], [f_class, 3]);
 
