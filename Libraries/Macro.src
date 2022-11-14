@@ -489,7 +489,7 @@ mech := UnitFilter(mc_bases[base], [f_class, 3]);
 sci := UnitFilter(mc_bases[base], [[f_class, 4], [f_lives, 251]]);
 
 // case 4
-if mc_scan[base] then
+if mc_is_defending[base] then
    begin
    mc_class_case_use := Replace(mc_class_case_use, base, 4);
 
@@ -503,9 +503,9 @@ if mc_scan[base] then
    if sci >= 2 then
       sci := [sci[1], sci[2]]
    else if sci = 1 then
-        sci := [sci[1]]
+      sci := [sci[1]]
    else if sci = 0 then
-        p := SortBySkill(tmp, 4)[1];
+      p := SortBySkill(tmp, 4)[1];
 
    if eng > 4 then
       for i = eng downto 4 do
@@ -1538,6 +1538,7 @@ for i = 1 to mc_bases do
 
     if not mc_scan[i] then
        begin
+       mc_is_defending := Replace(mc_is_defending, i, false);
        tmp := UnitFilter(mc_bases[i], [f_or, [f_class, 5], [f_class, 8], [f_class, 9]]);
 
        if not tmp then
@@ -1546,29 +1547,27 @@ for i = 1 to mc_bases do
        for j in tmp do
            if GetBType(IsInUnit(j)) = b_barracks and GetClass(j) = 1 and not MineOfUnit(j) and class then
               ComChangeProfession(j, class);
-
-       mc_is_defending := Replace(mc_is_defending, i, false);
        end;
 
-    if mc_scan[i] and not mc_is_defending[i] and not mc_defender[i] and not UnitFilter(mc_bases[i], [f_btype, b_bunker]) and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) then
+    if mc_scan[i] and not mc_is_defending[i] and not mc_defender[i] then
        begin
+       mc_is_defending := Replace(mc_is_defending, i, true);
        tmp := UnitFilter(mc_bases[i], [f_or, [f_class, 1], [f_class, 5], [f_class, 8], [f_class, 9]]);
        tmp := tmp diff FilterByTag(tmp, 18);
 
-       if tmp then
-          begin
-          mc_is_defending := Replace(mc_is_defending, i, true);
-          BasicDefend(i, tmp, mc_scan_area[i]);
-          exit;
-          end;
+       if not tmp and not UnitFilter(mc_bases[i], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]) then
+          tmp := UnitFilter(mc_bases[i], [f_or, [f_class, 2], [f_class, 3], [f_class, 4]]);
+
+       BasicDefend(i, tmp);
+       exit;
        end;
 
     if mc_scan[i] and not mc_is_defending[i] and mc_defender[i] then
        begin
+       mc_is_defending := Replace(mc_is_defending, i, true);
        tmp := mc_defender[i];
        mc_defender := Replace(mc_defender, i, []);
-       mc_is_defending := Replace(mc_is_defending, i, true);
-       Defend(i, tmp, mc_scan[i]);
+       Defend(i, tmp);
        exit;
        end;
     end;

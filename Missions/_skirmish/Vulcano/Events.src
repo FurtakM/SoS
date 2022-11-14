@@ -2,6 +2,9 @@ On UnitDestroyed(un) do
 begin
 SOS_UnitDestroyed(un);
 
+if un = ru_cargo then
+   ru_cargo := 0;
+
 //if un in russian_in_base then
 //   russian_in_base := russian_in_base diff un;
 
@@ -80,6 +83,10 @@ if not GetWeapon(veh) in [ar_cargo_bay, ar_control_tower] then
    if GetSide(veh) = 8 then
       legion_force := legion_force ^ veh;
    end;
+
+if GetSide(veh) = 3 and not ru_cargo and GetWeapon(veh) = ru_cargo_bay then
+   ru_cargo := veh;
+
 if GetSide(veh) = 7 and your_side <> 7 then
    al_force := al_force ^ veh;
 
@@ -105,11 +112,9 @@ End;
 
 
 Every 9$30 trigger FilterAllUnits([f_class, class_apeman]) < 9 do
-var i;
 begin
 enable;
-i := FilterAllUnits([f_class, class_apeman]);
-PrepareApeman(8-i);
+PrepareApeman(8 - (FilterAllUnits([f_class, class_apeman]) + 0));
 End;
 
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do

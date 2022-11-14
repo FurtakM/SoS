@@ -70,10 +70,11 @@ MC_SetProduceList(2, [
 ]);
 
 MC_SetBuildingList(2, [
+   [b_armoury, 42, 29, 5],
+   [b_armoury, 36, 40, 5],
    [b_lab, 13, 18, 1],
    [b_solar_power, 17, 3, 0],
    [b_oil_mine, 56, 23, 0],
-   [b_armoury, 42, 29, 5],
    [b_workshop, 11, 7, 2],
    [b_solar_power, 20, 3, 0],
    [b_solar_power, 23, 3, 0],
@@ -94,7 +95,7 @@ MC_SetUpgradeBuilding(2, b_depot);
 End;
 
 // Trigger explosion of static mines
-Every 3 trigger staticMines and FilterUnitsInArea(gensher_mines, [f_enemy, 2]) do
+Every 2 trigger staticMines and FilterUnitsInArea(gensher_mines, [f_enemy, 2]) do
 var i, j, tmp, x, y;
 begin
 enable;
@@ -184,7 +185,7 @@ repeat
 until not UnitFilter(attackers, [f_ok]);
 End;
 
-Every 15$00 + 8$00 trigger not arDestroyed and tick < 81$00 do
+Every 8$00 + 9$00 trigger not arDestroyed and tick < 91$00 do
 var i, un, tmp;
 begin
 enable;
@@ -243,7 +244,10 @@ for i := 1 to [3, 4, 5][Difficulty] do
     PlaceUnitArea(un, gensher_spawn, false);
 
     ComMoveXY(un, 66, 23);
+
     wait(0$3);
+
+    AddComAgressiveMove(un, 147, 103);
 
     tmp := Replace(tmp, tmp + 1, un);
     end;
@@ -254,14 +258,14 @@ if not tmp then
 wait(0$5);
 
 repeat
- wait(0$3);
+ wait(0$2);
 
  for i in tmp do
      begin
-     if not IsOk(i) or IsDead(i) then
+     if not IsOk(i) then
         tmp := tmp diff i;
 
-     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 2]), i));
      end;
 until not tmp;
 

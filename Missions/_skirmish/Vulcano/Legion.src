@@ -9,7 +9,7 @@ End;
 
 Export legion_force, legion_skill, legion_mines, legion_blist, legion_vlist, legion_enemy;
 Export Function PrepareLegion;
-var un, i, tmp, veh, p, l_depot, l_factory, l_lab, l_towers;
+var un, i, tmp, veh, l_depot, p, l_factory, l_lab, l_towers;
 begin
 l_depot := FilterAllUnits([[f_side, 8], [f_btype, b_warehouse]])[1];
 l_factory := FilterAllUnits([[f_side, 8], [f_btype, b_factory]])[1];
@@ -52,23 +52,19 @@ for i = 1 to 4 do
     PlaceHumanInUnit(un, l_lab);
     end;
 
-for i = 1 to 6 do
+for i = 1 to 4 do
     begin
     PrepareHuman(false, 3, legion_skill);
     un := CreateHuman;
     PlaceHumanInUnit(un, l_factory);
     end;
 
-for i = 1 to 5 do
+for i = 1 to 3 do
     begin
     PrepareHuman(false, 2, legion_skill);
     un := CreateHuman;
     PlaceHumanInUnit(un, l_depot);
     end;
-
-
-tmp := RandPointsFromArea(199, 134, 216, 141, 6);
-p := 1;
 
 for i = 1 to 3 do
     begin
@@ -78,24 +74,11 @@ for i = 1 to 3 do
     vc_weapon := ar_control_tower;
 
     veh := CreateVehicle;
-
-    if HexInfo(tmp[p], tmp[p+1]) = 0 then
-       PlaceUnitXY(veh, tmp[p], tmp[p+1], false)
-        else
-         begin
-         repeat
-          p := p + 2;
-         until  HexInfo(tmp[p], tmp[p+1]) = 0;
-
-         PlaceUnitXY(veh, tmp[p], tmp[p+1], false);
-         end;
-
+    PlaceUnitXYR(veh, 212, 135, 5, false);
     PrepareHuman(false, 3, legion_skill+1);
     un := CreateHuman;
     PlaceHumanInUnit(un, veh);
     end;
-
-
 
 // prepare camera's
    PlaceSeeing(198, 94, 8, 10);
@@ -103,30 +86,44 @@ for i = 1 to 3 do
 
 
 // mine's
-   legion_mines := [];
+tmp := AreaToList(legion_mines_area, 0);
+legion_mines := [];
 
-   legion_mines := RandPointsFromArea(176, 122, 188, 126, 6);
-   legion_mines := legion_mines ^ RandPointsFromArea(197, 91, 205, 96, 4);
-   legion_mines := legion_mines ^ RandPointsFromArea(184, 151, 178, 130, 9);
-   if Difficulty > 1 then
-      legion_mines := legion_mines ^ RandPointsFromArea(166, 126, 181, 136, 5);
-   // display_strings := legion_mines;
-
-   p := 1;
-
-   for i = 1 to 24 do
-       begin
-       PlaceMine(legion_mines[p], legion_mines[p+1], 8, 0);
-       p := p + 2;
-       end;
+for i = 1 to tmp[1] do
+    begin
+    PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
+    legion_mines := Replace(legion_mines, legion_mines + 1, [tmp[1][i], tmp[2][i]]);
+    end;
 
 // cargo
-   legion_vlist := [ar_medium_trike, 3, control_remote, ar_cargo_bay];
-
+   legion_vlist := [ar_medium_trike, 3, control_remote, ar_cargo_bay]; 
 End;
 
+Every 0$1 trigger tick >= [25$00, 22$00, 20$00][Difficulty] do
+var artifact, un;
+begin
+artifact := FindArtifact(1);
 
-Every 0$01 trigger FilterAllUnits([f_side, 8]) > 0 do
+// stole artefact
+if artifact[1] = 112 and artifact[2] = 67 then
+   begin
+   un := FilterAllUnits([[f_side, 8], [f_class, 2]]);
+
+   if not un then
+      exit;
+
+   un := un[1];
+
+   if IsInUnit(un) then
+      ComExitBuilding(un);
+
+   AddComCollect(un, artifact[1], artifact[2]);
+   AddComMoveXY(un, 207, 123);
+   AddComUnload(un);
+   end;
+End;
+
+Every 0$02 trigger FilterAllUnits([f_side, 8]) > 0 do
 var un, i, tmp, veh, b, p, cr, l_depot, l_factory, l_lab, l_towers, l_sib, l_sci, l_mech, l_sold, l_eng, l_cargo;
 begin
 enable;
@@ -239,20 +236,6 @@ if legion_enemy > 0 then
       end;
    end;
 
-
-// remote mine
-   p := 1;
-
-   for i = 1 to 24 do
-       begin
-       if HexInfo(legion_mines[p], legion_mines[p+1]) > 0 then
-          if GetSide(HexInfo(legion_mines[p], legion_mines[p+1])) = legion_enemy then
-             LaunchMineAtPos(legion_mines[p], legion_mines[p+1], 8);
-
-       p := p + 2;
-       end;
-
-
 // cargo
    if FilterAllUnits([[f_side, 8], [f_weapon, ar_cargo_bay]]) then
       begin
@@ -269,20 +252,6 @@ if legion_enemy > 0 then
          end;
 
       end;
-
-// stole artefact
-   if tick = [25$00,22$00,20$00][Difficulty] and FindArtifact(1)[1] = 112 and FindArtifact(1)[2] = 67 then
-      begin
-      un := l_eng[1];
-
-      if IsInUnit(un) then
-         ComExitBuilding(un);
-
-      AddComCollect(un, FindArtifact(1)[1], FindArtifact(1)[2]);
-      AddComMoveXY(un, 207, 123);
-      AddComUnload(un);
-      end;
-
 End;
 
 Every 9$00 trigger difficulty > 1 do

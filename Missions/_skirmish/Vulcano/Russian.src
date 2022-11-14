@@ -58,11 +58,31 @@ for i = 1 to 6 do
 
 End;
 
+// remote mine
+Every 0$1 trigger legion_mines do
+var i, p;
+begin
+enable;
 
+p := 1;
 
-Every 0$01 trigger FilterAllUnits([f_side, 3]) > 0 and russian_prepared do
+for i = legion_mines div 2 downto 1 do
+    begin
+    if HexInfo(legion_mines[p], legion_mines[p+1]) > 0 then
+       if GetSide(HexInfo(legion_mines[p], legion_mines[p+1])) = legion_enemy then
+          begin
+          LaunchMineAtPos(legion_mines[p], legion_mines[p+1], 8);
+          legion_mines := Delete(legion_mines, p);
+          legion_mines := Delete(legion_mines, p);
+          end
+       else
+          p := p + 2;
+    end;
+End;
+
+Every 0$02 trigger FilterAllUnits([f_side, 3]) > 0 and russian_prepared do
 var ru_depot, ru_factory, ru_teleport, ru_bunkers, ru_buildings, ru_vehicles, ru_humans, ru_barracks,
-    ru_engs, ru_mech, ru_sci, i, tmp, filter, p, cr, sib_bomb;
+    ru_engs, ru_mech, ru_sci, i, tmp, filter, cr, sib_bomb;
 begin
 enable;
 
@@ -100,18 +120,17 @@ ru_sci  := UnitFilter(ru_humans, [f_class, 4]);
           else
            begin
 
-           if not HasTask(ru_cargo) and GetCargo(ru_cargo, mat_cans) < 100 then
+           if not HasTask(ru_cargo) and GetCargo(ru_cargo, mat_cans) < 100 and not IsInArea(ru_cargo, cargoa) then
               begin
               cr := GetListOfCratesInArea(ru_crates);
 
-              if cr > 0 then
+              if cr then
                  ComCollect(ru_cargo, cr[1], cr[2])
-                  else
-                   ComMoveToArea(ru_cargo, ru_crates);
-
+              else if not IsInArea(ru_cargo, ru_crates) then
+                 ComMoveToArea(ru_cargo, ru_crates);
               end;
 
-           if not HasTask(ru_cargo) and not IsInArea(ru_cargo, cargoa) and GetCargo(ru_cargo, mat_cans) = 100 then
+           if not HasTask(ru_cargo) and not IsInArea(ru_cargo, cargoa) and (GetCargo(ru_cargo, mat_cans) = 100 or See(your_side, ru_cargo)) then
               ComMoveToArea(ru_cargo, cargoa);
 
            if IsInArea(ru_cargo, cargoa) and ru_barracks then
@@ -169,7 +188,7 @@ ru_sci  := UnitFilter(ru_humans, [f_class, 4]);
 if ru_can_attack then
 // ru_time
    if ru_time > 0$00 then
-      ru_time := ru_time - 0$01
+      ru_time := ru_time - 0$03
        else
         begin
         ru_time := Rand(9$39, 14$39);
@@ -252,7 +271,7 @@ End;
 
 
 // ru_crates
-Every 2$40+0$45 trigger russian_prepared and GetListOfCratesInArea(ru_crates) < 20 do
+Every 2$40+0$45 trigger russian_prepared and GetListOfCratesInArea(ru_crates) < 10 do
 begin
 enable;
 
@@ -263,7 +282,7 @@ End;
 
 
 // chance_to_bomb
-Every 15$00+25$00 trigger ru_sib_bomb = false do
+Every 15$00+25$00 trigger not ru_sib_bomb do
 var i, tmp;
 begin
 enable;
@@ -292,4 +311,15 @@ begin
 enable;
 i := [1,3][Rand(1,2)];
 TeleportExit(FilterAllUnits([[f_side, 3], [f_btype, b_teleport]])[1], ru_teleport_exit[i], ru_teleport_exit[i+1]);
+End;
+
+Every 30$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) do
+var ru_depot;
+begin
+enable;
+
+ru_depot := FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1];
+
+AddResourceType(GetBase(ru_depot), mat_cans, 3000);
+AddResourceType(GetBase(ru_depot), mat_oil, 300);
 End;
