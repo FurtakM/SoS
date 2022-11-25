@@ -1,0 +1,216 @@
+Export Function Action;
+var i, j, veh, tmp;
+begin
+Video(true);
+
+music_nat := 1;
+music_class := music_recon;
+
+PlaceSeeing(184, 142, 2, -10);
+RemoveSeeing(184, 142, 2);
+
+PlaceSeeing(204, 151, 2, -10);
+RemoveSeeing(204, 151, 2);
+
+CenterNowOnXY(184, 142);
+
+wait(0$2);
+
+tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf,
+        Kurt, Aviradze] union heikeSecondSquad;
+
+if heikeVehicles then
+   begin
+   tmp := SortByClass(tmp, class_mechanic);
+
+   for i in heikeVehicles do
+       begin
+       if not tmp then
+          break;
+
+       // track engine control weapon nation lives [cans, oil]
+       uc_side := 2;
+       uc_nation := i[5];
+
+       vc_chassis := i[1];
+       vc_engine := i[2];
+       vc_control := i[3];
+       vc_weapon := i[4];
+
+       veh := CreateVehicle;
+
+       SetDir(veh, 4);
+
+       if i[3] = control_manual then
+          begin
+          PlaceUnitArea(veh, startArea, false);
+
+          if i[4] = ar_control_tower then
+             SetClass(tmp[1], class_mechanic);
+
+          PlaceHumanInUnit(tmp[1], veh);
+          tmp := Delete(tmp, 1);
+          end
+       else if FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) then
+          begin
+          PlaceUnitArea(veh, startArea, false);
+          Connect(veh);
+          wait(0$2);
+          end;
+
+       SetLives(veh, i[6]);
+       SetFuel(veh, 20);
+
+       if i[7] and GetWeapon(veh) in [ru_cargo_bay, ar_cargo_bay] then
+          begin
+          for j := 1 to 2 do
+              AddCargo(veh, j, i[7][j]);
+          end;
+
+       ComMoveXY(veh, 185, 144);
+       AddComWait(veh, 0$2);
+       AddComMoveXY(veh, 179, 129);
+       AddComMoveXY(veh, 170, 103);
+       wait(0$2);
+       end;
+   end;
+
+if tmp then
+   begin
+   for i in tmp do
+       begin
+       SetDir(i, 4);
+       PlaceUnitArea(i, startArea, false);
+
+       ComMoveXY(i, 185, 144);
+       AddComMoveXY(i, 179, 129);
+       AddComMoveXY(i, 170, 103);
+
+       wait(0$2);
+       end;
+   end;
+
+AddComMoveXY(Heike, 163, 89);
+
+wait(0$2);
+
+CenterOnXY(175, 117);
+
+CenterOnUnits(Heike);
+
+Say(Heike, 'DH-Intro-1');
+
+if Markov then
+   begin
+   Say(Markov, 'DMar-Intro-2');
+   Say(Markov, 'DMar-Intro-3');
+
+   wait(0$1);
+   CenterOnUnits(Heike);
+
+   if Kurt then
+      begin
+      if IsInUnit(Kurt) then
+         ComExit(Kurt);
+
+      AddComMoveXY(Kurt, 130, 56);
+      AddComTurnXY(Kurt, 129, 56);
+      end;
+
+   if Kaia then
+      begin
+      Say(Kaia, 'DK-Intro-4');
+      Say(Markov, 'DMar-Intro-5');
+      Say(Markov, 'DMar-Intro-6');
+      Say(Olaf, 'DO-Intro-7');
+
+      CenterOnXY(160, 85);
+
+      Say(Markov, 'DMar-Intro-8');
+      Say(Markov, 'DMar-Intro-9');
+      Say(Markov, 'DMar-Intro-10');
+      Say(Markov, 'DMar-Intro-11');
+      Say(Givi, 'DG-Intro-12');
+      Say(Givi, 'DG-Intro-13');
+      Say(Givi, 'DG-Intro-14');
+      Say(Givi, 'DG-Intro-15');
+      Say(Heike, 'DH-Intro-16');
+      Say(Markov, 'DMar-Intro-17');
+      end;
+
+   if Kurt and Mike then
+      begin
+      CenterNowOnUnits(Kurt);
+
+      ComTurnUnit(Kurt, Heike);
+
+      Say(Kurt, 'DKs-Intro-18');
+      Say(Kurt, 'DKs-Intro-19');
+
+      CenterNowOnUnits(Mike);
+
+      if IsInUnit(Mike) then
+         ComExit(Mike);
+
+      AddComMoveXY(Mike, 129, 53);
+      AddComHold(Mike);
+
+      wait(0$2);
+
+      Say(Mike, 'DM-Intro-20');
+
+      scoutActive := Query('Scout');
+
+      if scoutActive = 1 then
+         begin
+         CenterNowOnUnits(Kurt);
+
+         Say(Heike, 'DH-Intro-21');
+         Say(Mike, 'DM-Intro-22');
+         Say(Kurt, 'DKs-Intro-23');
+
+         SetSide(Kurt, 5);
+         SetSide(Mike, 5);
+
+         ComMoveXY([Kurt, Mike], 104, 66);
+         end
+      else
+         begin
+         Say(Heike, 'DH-Intro-a-21');
+         Say(Mike, 'DM-Intro-a-22');
+         Say(Kurt, 'DKs-Intro-a-23');
+         end;
+      end;
+   end;
+
+Video(false);
+
+music_nat := music_auto;
+music_class := music_auto;
+
+ChangeMissionObjectives('M1');
+
+wait(0$3);
+
+Say(Heike, 'DH-Base-1');
+
+if Kaia then
+   begin
+   Say(Kaia, 'DK-Base-2');
+   Say(Heike, 'DH-Base-3');
+
+   if Aviradze then
+      begin
+      Say(Aviradze, 'DA-Base-4');
+      Say(Kaia, 'DK-Base-5');
+
+      if Markov then
+         begin
+         Say(Markov, 'DMar-Base-6');
+         Say(Kaia, 'DK-Base-7');
+         Say(Markov, 'DMar-Base-8');
+         Say(Markov, 'DMar-Base-9');
+         end;
+      end;
+   end;
+End;

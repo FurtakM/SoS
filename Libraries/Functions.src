@@ -826,7 +826,7 @@ End;
 Export Function Connect(vehicle);
 var i, t, mech, tmp, j;
 begin
-if not vehicle or not GetControl(vehicle) = control_remote then
+if not vehicle or GetControl(vehicle) <> control_remote then
    exit;
 
 tmp := FilterAllUnits([[f_side, GetSide(vehicle)], [f_or, [f_btype, b_control_tower], [f_weapon, ar_control_tower]]]);
@@ -842,7 +842,7 @@ for i in tmp do
 
     if t then
        for j in t do
-           result := Insert(result, result+1, j);
+           result := Replace(result, result + 1, j);
     end;
 
 if not result then
@@ -851,6 +851,7 @@ if not result then
 mech := result[1];
 
 if result > 1 then
+   begin
    for i = 2 to result do
        begin
        t := GetSkill(result[i], 3) - UnitsLinked(result[i]);
@@ -858,6 +859,7 @@ if result > 1 then
        if t >= (GetSkill(mech, 3) - UnitsLinked(mech)) then
           mech := result[i];
        end;
+   end;
 
 ComLinkTo(vehicle, mech);
 End;
@@ -2388,6 +2390,21 @@ result := number div 1;
 
 if number < 0 then
    result := 0;
+End;
+
+Export Function SortByClass(units, class);
+var un;
+begin
+if not units or not class then
+   exit;
+
+result := [];
+
+for un in units do
+    if GetClass(un) = class then
+       result := Insert(result, 1, un)
+    else
+       result := Replace(result, result + 1, un);
 End;
 
 

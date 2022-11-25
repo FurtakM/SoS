@@ -2,6 +2,22 @@ BIO_HEIKE = 1;
 BIO_KAIA = 2;
 BIO_GIVI = 3;
 BIO_MIKE = 4;
+BIO_KRAY = 5;
+BIO_AVIR = 6;
+BIO_SOPH = 7;
+BIO_KAMI = 8;
+BIO_OLAF = 9;
+BIO_KURT = 10;
+BIO_OMAR = 11;
+BIO_IBRA = 12;
+BIO_SHUL = 13;
+BIO_JENN = 14;
+BIO_FARM = 15;
+BIO_KARL = 16;
+BIO_GENS = 17;
+BIO_SHAR = 20;
+BIO_ROLF = 22;
+BIO_NIA  = 28;
 
 avatarPath = 'SGUI/Bio/avatars/';
 biographics = {
@@ -489,7 +505,7 @@ menu.window_bio.popup.panel.desc = getLabelEX(
     menu.window_bio.popup.panel, 
     anchorLT, 
     XYWH(426, 40, 330, 300), 
-    Arial_12, 
+    ADMUI3L, 
     '',
     {
         wordwrap = true,
@@ -502,7 +518,7 @@ menu.window_bio.popup.panel.desc = getLabelEX(
 menu.window_bio.popup.panel.name = getLabelEX(
     menu.window_bio.popup.panel, 
     anchorT, 
-    XYWH(65, 430, 300, 40),
+    XYWH(65, 434, 300, 40),
     Tahoma_30B, 
     '',
     {

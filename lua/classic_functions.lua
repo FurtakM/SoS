@@ -403,7 +403,7 @@ function clScrollBarEX2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, P
         end;
     end;
 
-    return ELEMENT;
+    return ELEMENT.bar;
 end;
 
 function clScrollUpEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
