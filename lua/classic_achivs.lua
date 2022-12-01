@@ -281,6 +281,8 @@ function displayAchivs(category, filter, filterMission)
     else
         updateAchievCounter(achievGained, achievTotal);
     end;
+
+    timer:single(0.1, 'SGUI_scrollbar_scroll(' .. menu.window_achivs.panel.scrollV.ID .. ', 9999);');
 end;
 
 function achivCategoryclButton(X, Y, CAPTION, EVENT, CATEGORY)

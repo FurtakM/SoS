@@ -469,7 +469,7 @@ if IsOk(Kamil) then
 
    Say(Givi, 'DG-1-apeeng');
    Say(Kaia, 'DK-2-apeeng');
-   // Say(Kaia, 'DK-3-apeeng');  // brak dubbingu 21.12
+   Say(Kaia, 'DK-3-apeeng');
    end;
 
 InGameOff;
@@ -1141,11 +1141,16 @@ End;
 // end mission
 Every 0$1 trigger retreatAllowed and omarCargoCounter < 1 do
 begin
-ChangeSideFog(1, 2);
+if FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 3]]]) then
+   begin
+   ChangeSideFog(1, 2);
 
-repeat
- wait(0$1);
-until FilterAllUnits([[f_side, 1], [f_class, 1]]) = 0;
+   Query('DestroyEnemy');
+
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 3]]]) = 0;
+   end;
 
 DialogueOn;
 
@@ -1192,12 +1197,18 @@ if Markov then
    SaveCharacters(Markov, '03_Markov');
 
 if Ibrahim and GetSide(Ibrahim) = 2 then
+   begin
+   ToLua('enableBioCharacter(BIO_IBRA)');
    SaveCharacters(Ibrahim, '03_Ibrahim');
+   end;
 
 if heikeSecondSquad then
    SaveCharacters(heikeSecondSquad, '03_others');
 
 SaveVariable(deadCounter, '03_DeadCounter');
+
+ToLua('enableBioCharacter(BIO_OMAR)');
+ToLua('enableBioCharacter(BIO_FARM)');
 
 YouWin;
 

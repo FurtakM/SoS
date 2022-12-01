@@ -1,5 +1,5 @@
 {
-   General information:
+General information:
 Map scripts: Nefarem
 
 Status: 100%
@@ -37,55 +37,72 @@ Export deadsCounter;
 
 Export spotCorpses;
 
-Export mission_prefix;
+Export mission_prefix, debug;
 
 Starting
 begin
-     // Variable
-     mission_prefix := '02_';
+RandomizeAll;
+ResetFog;
+AnimateTrees(true);
 
-     RuSoldMinLevel = 0; // Minimum russian soldiers level
-     RuSoldMaxLevel = 0; // Maximum russian soldiers level
+Init;
 
-     hpJMM = 0; // JMM's HP from before mission
-     hpBobby = 0; // Bobby's HP from before mission
-     hpCyrus = 0; // Cyrus's HP from before mission
+if debug then
+   begin
+   Difficulty := 4;
+   FogOff(1);
+   end;
 
-     cargoEscape = 0; // If one cargo escape, will be russian attack
+PrepareDifficulty;
+PrepareRussianCommander;
+PrepareSouthBase;
+PrepareNorthBase;
+PrepareOtherRussians;
 
-     mikhailStatus = 0; // 0 - n, 1 - capture, 2 - killed durring escape, 3 - escape, 4 - prepare to escape
-     mikhailInBase = 0; // Check Mikhail status in base 1 - in depo, 2 - in patrol, 3 - free/kill, 4 - outside not busy
-     mikhailDepot = 0; // Depot where is Mikhail
+PrepareHeroes;
+PrepareLisSquad;
+PrepareOtherAmericans;
 
-     tigersRespawn = 0;
-     cargoRespawn = 0;
-     cargoSee = 0;
-     lastBattle = 0; // 1 - ready to end mission if you defeat enemy attack
+Action;
+End;
 
-     deadsCounter = 0; // How much people you lost
+Function Init;
+begin
+debug := false;
+mission_prefix := '02_';
 
-     spotCorpses = 0; // 0 - disable, 1 - set alltime 250hp
+RuSoldMinLevel := 0; // Minimum russian soldiers level
+RuSoldMaxLevel := 0; // Maximum russian soldiers level
 
-     southBaseDefenders = []; // Group soldiers in barrack who will attack you
-     northBaseDefenders = []; // Same
-     attackGroup = []; // Group who attack you at end mission
-     
-     // Other
-     RandomizeAll;
-     InGameOn;
-     Resetfog;
+hpJMM := 0; // JMM's HP from before mission
+hpBobby := 0; // Bobby's HP from before mission
+hpCyrus := 0; // Cyrus's HP from before mission
 
-     AnimateTrees(true);
+cargoEscape := 0; // If one cargo escape, will be russian attack
 
-     // Execude functions
-     PrepareDifficulty;
+mikhailStatus := 0; // 0 - n, 1 - capture, 2 - killed durring escape, 3 - escape, 4 - prepare to escape
+mikhailInBase := 0; // Check Mikhail status in base 1 - in depo, 2 - in patrol, 3 - free/kill, 4 - outside not busy
+mikhailDepot := 0; // Depot where is Mikhail
 
-     PrepareRussianCommander;
-     PrepareSouthBase;
-     PrepareNorthBase;
-     PrepareOtherRussians;
+tigersRespawn := 0;
+cargoRespawn := 0;
+cargoSee := 0;
+lastBattle := 0; // 1 - ready to end mission if you defeat enemy attack
 
-     PrepareHeroes;
-     PrepareLisSquad;
-     PrepareOtherAmericans;
-end;
+deadsCounter := 0; // How much people you lost
+
+spotCorpses := 0; // 0 - disable, 1 - set alltime 250hp
+
+southBaseDefenders := []; // Group soldiers in barrack who will attack you
+northBaseDefenders := []; // Same
+attackGroup := []; // Group who attack you at end mission
+End;
+
+Every 0$1 trigger debug do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]]]) do
+    SetLives(i, 1000);
+End;

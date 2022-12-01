@@ -1,223 +1,255 @@
 Export function PrepareRussianHeroes;
 var tmp;
 begin
+tmp = FilterAllUnits([[f_side, 1], [f_nation, 1], [f_class, 2], [f_ok], [f_outside]]) diff [JMM];
 
-    // Mikhail
-    tmp = FilterAllUnits([[f_side, 1], [f_nation, 1], [f_class, 2], [f_ok], [f_outside]]) diff [JMM];
+if not tmp then
+   exit;
 
-    uc_side = 6;
-    Mikhail = NewCharacter('Mikhail');
-    SetClass(Mikhail, 3);
-    PlaceUnitXYR(Mikhail, GetX(tmp[1]),  GetY(tmp[1]), 5, true);
+uc_side = 6;
+Mikhail = NewCharacter('Mikhail');
+SetClass(Mikhail, 3);
+PlaceUnitXYR(Mikhail, GetX(tmp[1]),  GetY(tmp[1]), 5, true);
 end;
 
 Export function PrepareRussianCommander;
 begin
-     uc_side = 3;
-     uc_nation = 3;
+uc_side = 3;
+uc_nation = 3;
 
-     Natasza = NewCharacter('Natasza');
+Natasza = NewCharacter('Natasza');
 
-     PlaceUnitArea(Natasza, NataszaSpawn, false);
-     ComTurnXY(Natasza, 56, 16);
+PlaceUnitArea(Natasza, NataszaSpawn, false);
+ComTurnXY(Natasza, 56, 16);
 
-     northBaseDefenders = northBaseDefenders ^ Natasza;
-
-end;
+northBaseDefenders = Replace(northBaseDefenders, northBaseDefenders + 1, Natasza);
+End;
 
 Export function PrepareSouthBase;
 var i, un;
 begin
+for i = 1 to 2 do
+    begin
+    uc_side = 3;
+    uc_nation = 3;
 
-   for i = 1 to 2 do
-   begin
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(1, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
+    hc_importance = 0;
 
-           uc_side = 3;
-           uc_nation = 3;
+    un = CreateHuman;
+    PlaceUnitArea(un, SouthBaseRussianSpawn1, false);
+    ComTurnXY(un, 111, 38);
+    end;
 
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(1, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
-           hc_importance = 0;
+for i = 1 to 2 do
+    begin
+    uc_side = 3;
+    uc_nation = 3;
 
-           un = CreateHuman;
-           PlaceUnitArea(un, SouthBaseRussianSpawn1, false);
-           ComTurnXY(un, 111, 38);
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, 3, rand(RuSoldMinLevel, RuSoldMaxLevel));
 
-   end;
+    un = CreateHuman;
+    PlaceHumanInUnit(un, dep2);
+    end;
 
-   for i = 1 to Difficulty do
-   begin
+RespawnInside(3, 3, arm2, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, [1, 2, 2, 3][Difficulty]);
 
-           uc_side = 3;
-           uc_nation = 3;
-
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(false, 3, rand(RuSoldMinLevel, RuSoldMaxLevel));
-
-           un = CreateHuman;
-           PlaceHumanInUnit(un, dep2);
-
-   end;
-
-   RespawnInside(3, 3, arm2, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, [1, rand(1,2), rand(1,2)][Difficulty]);
-
-   for i in UnitsInside(arm2) do southBaseDefenders = southBaseDefenders ^ i;
-
-end;
+for i in UnitsInside(arm2) do
+    southBaseDefenders = Replace(southBaseDefenders, southBaseDefenders + 1, i);
+End;
 
 Export function PrepareNorthBase;
 var i, un;
 begin
+for i = 1 to [rand(1,2), rand(2,3), rand(3,4), 4][Difficulty] do
+    begin
+    uc_side = 3;
+    uc_nation = 3;
 
-   for i = 1 to [rand(1,2), rand(2,3), rand(3,4)][Difficulty] do
-   begin
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
 
-           uc_side = 3;
-           uc_nation = 3;
+    un = CreateHuman;
+    PlaceUnitArea(un, NorthBaseRussianSpawn1, false);
+    end;
 
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(false, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
+RespawnInside(3, 3, arm1, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, [Rand(1,2), Rand(1, 3), Rand(1, 3), 4][Difficulty]);
+RespawnInside(3, 3, llab1, rand(RuSoldMinLevel, RuSoldMaxLevel), 4, [0, 1, 2, 2][Difficulty]);
+RespawnInside(3, 3, dep1, rand(RuSoldMinLevel, RuSoldMaxLevel), 2, [1, 2, 2, 3][Difficulty]);
 
-           un = CreateHuman;
-           PlaceUnitArea(un, NorthBaseRussianSpawn1, false);
-
-   end;
-
-   RespawnInside(3, 3, arm1, rand(RuSoldMinLevel, RuSoldMaxLevel), 1, [Rand(1,2), Rand(1, 3), Rand(1, 3)][Difficulty]);
-   RespawnInside(3, 3, llab1, rand(RuSoldMinLevel, RuSoldMaxLevel), 4, [0, 1, 2][Difficulty]);
-   RespawnInside(3, 3, dep1, rand(RuSoldMinLevel, RuSoldMaxLevel), 2, [1, 2, 2][Difficulty]);
-
-   for i in UnitsInside(arm1) do northBaseDefenders = northBaseDefenders ^ i;
-
-end;
+for i in UnitsInside(arm1) do
+    northBaseDefenders = Replace(northBaseDefenders, northBaseDefenders + 1, i);
+End;
 
 Export function PrepareOtherRussians;
 var i, un;
 begin
+for i = 1 to 2 do
+    begin
+    uc_side = 3;
+    uc_nation = 3;
 
-   for i = 1 to 2 do
-   begin
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
 
-           uc_side = 3;
-           uc_nation = 3;
+    un = CreateHuman;
+    PlaceUnitArea(un, RussiansWaterSpawn, false);
+    ComTurnXY(un, 80, 73);
+    end;
 
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(false, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
-
-           un = CreateHuman;
-           PlaceUnitArea(un, RussiansWaterSpawn, false);
-           ComTurnXY(un, 80, 73);
-
-   end;
-
-   // Bunkers
-
-   for i in FilterAllUnits([[f_side, 3], [f_btype, 31]]) do PrepareSolBun(rand(RuSoldMinLevel, RuSoldMaxLevel), i);
-
-
-end;
+for i in FilterAllUnits([[f_side, 3], [f_btype, 31]]) do
+    PrepareSolBun(rand(RuSoldMinLevel, RuSoldMaxLevel), i);
+End;
 
 Export function PrepareCargoBays;
 begin
-        uc_side = 3;
-        uc_nation = 3;
+uc_side = 3;
+uc_nation = 3;
         
-        vc_engine = 1;
-        vc_control = 1;
-        vc_weapon = 51;
-        vc_chassis = 22;
+vc_engine = 1;
+vc_control = 1;
+vc_weapon = 51;
+vc_chassis = 22;
 
-        cargo1 = CreateVehicle;
-        cargo2 = CreateVehicle;
+cargo1 = CreateVehicle;
+cargo2 = CreateVehicle;
 
-        PlaceUnitArea(cargo1, RussianAttack, false);
-        PlaceUnitArea(cargo2, RussianAttack, false);
+PlaceUnitArea(cargo1, RussianAttack, false);
+PlaceUnitArea(cargo2, RussianAttack, false);
 
-        AddCargo(cargo1, 2, [70, 50, 30][Difficulty]);
-        AddCargo(cargo2, 2, [70, 50, 30][Difficulty]);
+AddCargo(cargo1, 2, [70, 50, 30, 20][Difficulty]);
+AddCargo(cargo2, 2, [70, 50, 30, 20][Difficulty]);
 
-        hc_gallery = '';
-        hc_name = '';
-        PrepareHuman(1, 3, rand(1,2));
+hc_gallery = '';
+hc_name = '';
+PrepareHuman(1, 3, rand(1,2));
 
-        driver1 = CreateHuman;
-        PlaceHumanInUnit(driver1, cargo1);
+driver1 = CreateHuman;
+PlaceHumanInUnit(driver1, cargo1);
 
-        hc_name = 'Nikolai Andreyev';
+hc_name = 'Nikolai Andreyev';
 
-        driver2 = CreateHuman;
-        PlaceHumanInUnit(driver2, cargo2);
-end;
+driver2 = CreateHuman;
+PlaceHumanInUnit(driver2, cargo2);
+End;
 
 Export function PrepareRussianAttack(count, area);
-var i, veh, un, tmp, target1, target2;
+var i, veh, un, tmp, mech;
 begin
-        uc_side = 3;
-        uc_nation = 3;
+uc_side = 3;
+uc_nation = 3;
 
-        for i := 1 to count + rand(1, 3) do
+for i := 1 to count do
+    begin
+    vc_engine = 1;
+    vc_control = 1;
+    vc_weapon = ru_heavy_machine_gun;
+
+    if Difficulty = 3 then
+       vc_weapon := [ru_heavy_machine_gun, ru_gatling_gun][rand(1, 2)];
+
+    if Difficulty = 4 then
+       vc_weapon := [ru_heavy_machine_gun, ru_gatling_gun, ru_gatling_gun, ru_gun][rand(1, 4)];
+
+    vc_chassis = [21, 22, 22, 22][Difficulty];
+
+    veh = CreateVehicle;     
+    PlaceUnitArea(veh, area, false);
+    attackGroup = attackGroup ^ veh;
+
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, 3, rand(RuSoldMinLevel, RuSoldMaxLevel));
+
+    un = CreateHuman;
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 14, 9);
+    end;
+
+wait(0$1);
+
+PrepareHuman(false, 2, rand(RuSoldMinLevel,RuSoldMaxLevel));
+un = CreateHuman;
+
+for i := 1 to count + 2 * 2 do
+    begin
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(sex_male, 1, rand(RuSoldMinLevel,RuSoldMaxLevel));
+
+    un = CreateHuman;
+
+    PlaceUnitXYR(un, 9, 13, 4, false);
+    attackGroup = attackGroup ^ un;
+    end;
+
+tmp := FilterUnitsInArea(Battlefield, [[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]);
+
+Say(tmp[1], 'D9-Rus3-1');
+Say(tmp[2], 'D9-Russ-1');
+
+ComAgressiveMove(attackGroup, 31, 13);
+
+wait(0$3);
+
+repeat
+ wait(0$1);
+
+ for i in attackGroup do
+     begin
+     if IsDead(i) then
         begin
-                vc_engine = 1;
-                vc_control = 1;
-                vc_weapon = 42;
-                vc_chassis = [21, 22, 22][Difficulty];
-
-                veh = CreateVehicle;     
-                PlaceUnitArea(veh, area, false);
-                attackGroup = attackGroup ^ veh;
-
-                hc_gallery = '';
-                hc_name = '';
-                PrepareHuman(false, 3, rand(RuSoldMinLevel,RuSoldMaxLevel));
-
-                un = CreateHuman;
-
-                PlaceHumanInUnit(un, veh);
-                attackGroup = attackGroup ^ un;
+        attackGroup := attackGroup diff i;
+        continue;
         end;
 
-        PrepareHuman(false, 2, rand(RuSoldMinLevel,RuSoldMaxLevel));
-        un = CreateHuman;
+     if not HasTask(i) and not GetTag(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
 
-        for i := 1 to count + 2 * 2 do
+     if not GetTag(i) and GetLives(i) < 650 and GetType(i) = unit_vehicle then
         begin
-
-                hc_gallery = '';
-                hc_name = '';
-                PrepareHuman(1, 1, rand(RuSoldMinLevel,RuSoldMaxLevel));
-
-                un = CreateHuman;
-
-                PlaceUnitArea(un, area, false);
-                attackGroup = attackGroup ^ un;
+        SetTag(i, 1);
+        ComMoveXY(i, 20, 8);
         end;
 
-        tmp = FilterUnitsInArea(Battlefield, [[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]);
+     if GetTag(i) = 1 and GetDistUnitXY(i, 20, 8) < 6 then
+        SetTag(i, 2);
 
-        Say(tmp[1], 'D9-Rus3-1');
-        Say(tmp[2], 'D9-Russ-1');
+     if GetTag(i) = 2 then
+        begin  
+        if GetLives(i) = 1000 then
+           SetTag(i, 3)
+        else if IsDrivenBy(i) then
+           begin
+           mech := IsDrivenBy(i);
 
-        repeat
-                wait(0$1);
+           if not See(1, mech) and GetLives(mech) < 1000 then
+              SetLives(mech, 1000);
 
-                for i in FilterUnitsInArea(Battlefield, [[f_side, 3]]) do
-                begin
-                        target1 := NearestUnitToUnit(FilterAllUnits([f_side, 1]), i);
-                        target2 := NearestUnitToUnit(FilterAllUnits([[[f_side, 1], [f_or,[f_occupied], [f_type, unit_human], [f_type, unit_vehicle]]]]), i);
+           ComRepairVehicleAndReturn(mech);
+           end;
+        end;
 
-                        If GetDistUnits(i, target1)+8 < GetDistUnits(i, target2) then
-                        begin
-                                ComAttackUnit(i, target1);
-                        end
-                        else
-                        begin
-                                ComAttackUnit(i, target2);
-                        end;
-                end;
-
-        until FilterUnitsInArea(Battlefield, [[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_occupied]]]) = 0;
+     if GetTag(i) = 3 and IsDrivenBy(i) then
+        SetTag(i, 0);
+     end;
+until not attackGroup;
 end;
+
+Every 0$1 trigger UnitFilter(attackGroup, [f_type, unit_vehicle]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(attackGroup, [f_type, unit_vehicle]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;

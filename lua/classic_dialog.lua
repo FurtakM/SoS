@@ -277,7 +277,7 @@ function getCustomDialog(DATA)
         ELEMENT.dialog, 
         anchorLT, 
         XYWH(18, 24, 262, 64 + questionHeight),
-        Arial_12, 
+        ADMUI3L, 
         DATA.QUESTION,
         {
             wordwrap = true,
