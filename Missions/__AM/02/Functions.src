@@ -1,270 +1,207 @@
 // Support function to fast spawn people in buildings - Author: Nefarem
-
 Export function RespawnInside(side, nation, build, skill, class, count);
-var i,l, un;
+var i, un;
 begin
+for i = 1 to count do
+    begin
+    uc_side = side;
+    uc_nation = nation;
 
-   for i = 1 to count do
-   begin
+    hc_gallery = '';
+    hc_name = '';
+    PrepareHuman(false, class, skill);
 
-           uc_side = side;
-           uc_nation = nation;
-
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(false, class, skill);
-
-           un = CreateHuman;
-           PlaceHumanInUnit(un,build);
-
-   end;
-
-END;
-
+    un = CreateHuman;
+    PlaceHumanInUnit(un, build);
+    end;
+End;
 
 // Function by Serpent
 Export Function PrepareSolBun(skill, b);
 var un, dir;
 begin
-     uc_side := GetSide(b);
-     uc_nation := GetNation(b);
+uc_side := GetSide(b);
+uc_nation := GetNation(b);
 
-     PrepareHuman(false, 1, skill);
-     un = CreateHuman;
+PrepareHuman(false, 1, skill);
+un = CreateHuman;
 
-     dir := GetDir(b)  - 3;
+dir := GetDir(b)  - 3;
 
-     if dir < 0 then dir := 6 + dir;
+if dir < 0 then
+   dir := 6 + dir;
 
-     SetDir(un, dir);
-     PlaceHumanInUnit(un, b);
+SetDir(un, dir);
+PlaceHumanInUnit(un, b);
 End;
 
 // AI Functions by Nefarem
 Export function RepairBuilding(side, building, area);
-var buildings_list, i,engineerOk_list, j;
+var buildingsList, i, engineerOkList;
+begin                                  
+engineerOkList = FilterAllUnits([[f_side, side], [f_class, 2], [f_lives, 1000]]);
+buildingsList = FilterUnitsInArea(area, [[[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
+
+if not buildingsList and not engineerOkList then
+   exit;
+
+if not buildingsList and UnitFilter(engineerOkList, [f_not, [f_inside]]) and IsOk(building) then
+   ComEnterUnit(UnitFilter(engineerOkList, [f_not, [f_inside]]), building);
+
+if buildingsList then
+   begin
+   for i in engineerOkList do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else if GetLives(i) > 650 then
+          ComRepairBuilding(i, NearestUnitToUnit(buildingsList, i))
+       else if GetDistUnitXY(i, 56, 10) > 8 then
+          ComMoveXY(i, 56, 10);
+   end;
+End;
+
+Export function HealUnitInBase(side, healArea, baseArea, building);
+var sciList,  i, damageUnits;
 begin
+sciList := FilterAllUnits([[f_side, side], [f_class, 4], [f_lives, 250]]);
+damageUnits := FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_human], [f_not, [f_lives, 650]]]);
 
-        engineerOk_list = FilterAllUnits([[f_side, side], [f_class, 2], [f_lives, 1000]]);
-        buildings_list = FilterUnitsInArea(area, [[[f_side, side], [f_type, unit_building], [f_not, [f_lives, 1000]]]]);
+if not damageUnits and not sciList then
+   exit;
 
-        if buildings_list > 0 and engineerOk_list > 0 then
-        begin
+if damageUnits then
+   begin
+   for i in sciList do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else if not HasTask(i) then
+          ComHeal(i, NearestUnitToUnit(damageUnits, i));
+   end
+else if UnitFilter(sciList, [f_not, [f_inside]]) then
+   ComEnterUnit(UnitFilter(sciList, [f_not, [f_inside]]), building);
+End;
 
-                for i in engineerOk_list do
-                begin
-                     for j in buildings_list do
-                     begin
-
-                        AddComExitBuilding(i);
-                        wait(0$1);
-                        AddComRepairBuilding(i, j);
-
-                    end;
-                end;
-        end;
-
-        if buildings_list = 0 then
-        begin
-
-           for i in engineerOK_list do
-           begin
-             ComEnterUnit(i, building);
-          end;
-
-        end;
-END;
-
-Export function HealUnitInBase(side, healArea, baseArea, build);
-var sci_list,  i, j, damageUnits;
+Export function DefendBases(area, enemySide, defendersList, building);
+var i, enemy, nearestUnit;
 begin
+if not defendersList then
+   exit;
 
-        sci_list = FilterAllUnits([[f_side, side], [f_class, 4], [f_lives, 250]]);
+enemy := FilterUnitsInArea(area, [[f_side, enemySide], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]);
 
-        damageUnits = FilterUnitsInArea(baseArea, [[f_side, side], [f_type, unit_human], [f_not, [f_lives, 650]]]);
-
-        if damageUnits > 0 and sci_list > 0 then
-        begin
-
-                for i = 1 to damageUnits do
-                        ComMoveToArea(damageUnits[i], healArea);
-
-                for i in sci_list do
-                begin
-
-                ComExitBuilding(i);
-
-                for j in FilterUnitsInArea(healArea,[f_side, side]) do
-                begin
-
-                    AddComHeal(i, j);
-                    wait(1$0);
-
-            end;
-        end;
-
-        end else
-        begin
-
-        AddComEnterUnit(sci_list, build);
-
+if enemy then
+   begin
+   for i in defendersList do
+       begin
+       if IsInUnit(i) and GetLives(i) > 500 then
+          ComExitBuilding(i)
+       else if GetLives(i) > 650 then
+          begin
+          nearestUnit := NearestUnitToUnit(enemy, i);
+          ComAgressiveMove(i, GetX(nearestUnit), GetY(nearestUnit));
+          end
+       else if FilterAllUnits([[f_side, 3], [f_class, 4]]) then
+          begin
+          if GetDistUnitXY(i, 56, 10) > 8 then
+             ComMoveXY(i, 56, 10);
+          end
+       else if GetLives(i) <= 500 then
+          ComEnterUnit(i, building);
        end;
-END;
-
-Export function RepairVehicle(side, repairArea, area);
-var i,j, vehicleOK_list, damageVehicle_list, emptyVehicle_list, mechanicInside_list, mechanicOutside_list;
-begin
-
-    vehicleOK_list = FilterUnitsInArea(area, [[f_side, side], [f_type, unit_vehicle], [f_lives, 550], [f_weapon, 46]]);
-    damageVehicle_list = FilterUnitsInArea(area, [[f_side, side], [f_type, unit_vehicle], [f_weapon, 46], [f_not,[f_lives, 550]]]);
-    emptyVehicle_list = FilterUnitsInArea(repairArea, [[f_side, side], [f_type, unit_vehicle], [f_weapon, 46], [f_lives, 1000], [f_empty]]);
-
-    for i in damageVehicle_list do mechanicInside_list =  UnitsInside(i);
-        mechanicOutside_list =  FilterUnitsInArea(repairArea, [[f_side, side], [f_class, 3]]);
-
-    IF damageVehicle_list > 0 then
-    begin
-
-            for i in damageVehicle_list do
-            begin
-                for j in mechanicInside_list do
-                begin
-                    ComMoveToArea(damageVehicle_list, repairArea);
-                    AddComExitVehicle(j);
-                    AddComRepairVehicle(j, i);
-                end;
-            end;
-
-    end;
-
-    IF emptyVehicle_list > 0 then
-    begin
-
-        for i in emptyVehicle_list  do
-        begin
-            for j in mechanicOutside_list do
-            begin
-            AddComEnterUnit(j, i);
-            end;
-
-    end;
-
-    end;
-
-    IF VehicleOK_list > 0 then
-    begin
-        for i in VehicleOK_list  do ComAgressiveMove(i, 110, 29);
-    end;
-end;
-
-Export function DefendBases(area, enemySide, defendersList, build, count);
-var i, j;
-begin
-    if FilterUnitsInArea(area, [[f_side, enemySide], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) > count then
-    begin
-        for i in defendersList do
-        begin
-            AddComExitBuilding(i);
-            wait(0$1);
-
-            for j in FilterUnitsInArea(area, [[f_side, enemySide], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) do
-                AddComAgressiveMove(i, GetX(j), GetY(j));
-        end;
-    end else
-    begin
-        for i in defendersList do ComEnterUnit(i, build);          
-    end;
-end;
+   end
+else
+    if UnitFilter(defendersList, [[f_outside], [f_not, [f_hastask]], [f_lives, 1000]]) then
+       ComEnterUnit(UnitFilter(defendersList, [[f_outside], [f_not, [f_hastask]], [f_lives, 1000]]), building);
+End;
 
 Export function RussianTrap;
 var i;
 begin
-       IF GetSide(Brian) = 4 then SetLives([Brian, Jerry], 0);
-       for i in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
-       begin
-          ComExitBuilding(i);
-          wait(0$1);
-          AddComAgressiveMove(i, 120, 56);
-          AddComAgressiveMove(i, 111, 37);
-          if GetSide(arm2) = 3 and IsOk(arm2) then
-          begin
-               AddComEnterUnit(i, arm2);
-          end else
-          begin
-             AddComCrawl(i);
-             AddComAgressiveMove(i, 109, 30);
-          end;
-       end;
-end;
+iF GetSide(Brian) = 4 then
+   SetLives([Brian, Jerry], 0);
+
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+    begin
+    ComExitBuilding(i);
+
+    wait(0$1);
+
+    AddComAgressiveMove(i, 120, 56);
+    AddComAgressiveMove(i, 111, 37);
+
+    if GetSide(arm2) = 3 and IsOk(arm2) then
+       AddComEnterUnit(i, arm2)
+    else
+        begin
+        AddComCrawl(i);
+        AddComAgressiveMove(i, 109, 30);
+        end;
+    end;
+End;
     
 
 // Function by Altar from original 02 mission
 Export Function Nearest(un, units);
-var nearest_dist, nearest_un, sold, dist;
+var nearestDist, nearestUn, sold, dist;
+begin
+nearestDist := 1000;
+nearestUn := un;
 
- begin
-  nearest_dist= 1000;
-  nearest_un= un;
-  for sold in units do
-   begin
-    dist = GetDistUnits(un, sold);
-    if dist < nearest_dist then
-      begin
-        nearest_un=sold;
-        nearest_dist=dist;
-      end;
-   end;
-   result:=nearest_un;
-end;
+for sold in units do
+    begin
+    dist := GetDistUnits(un, sold);
+
+    if dist < nearestDist then
+       begin
+       nearestUn := sold;
+       nearestDist := dist;
+       end;
+    end;
+
+result := NearestUn;
+End;
 
 Export function PrepareDifficulty;
 begin
+if Difficulty = 1 then
+   begin
+   RemoveUnit(brw2);
+   RemoveUnit(brw3);
+   RemoveUnit(brw4);
+   RemoveUnit(brw5);
 
-     IF Difficulty = 1 then
-     begin
-         RemoveUnit(brw2);
-         RemoveUnit(brw3);
-         RemoveUnit(brw4);
-         RemoveUnit(brw5);
+   SetFuel([vehicle1, vehicle2], 60);
+   RuSoldMinLevel = 0;
+   RuSoldMaxLevel = 1;
+   end;
 
-         SetFuel([vehicle1, vehicle2], 60);
-         RuSoldMinLevel = 0;
-         RuSoldMaxLevel = 1;
-     end;
+if Difficulty = 2 then
+   begin
+   RemoveUnit(brw4);
 
-     IF Difficulty = 2 then
-     begin
-         RemoveUnit(brw4);
+   SetFuel([vehicle1, vehicle2], 50);
+   RuSoldMinLevel = 1;
+   RuSoldMaxLevel = 2;
+   end;
 
-         SetFuel([vehicle1, vehicle2], 50);
-         RuSoldMinLevel = 1;
-         RuSoldMaxLevel = 2;
-     end;
+if Difficulty >= 3 then
+   begin
+   SetFuel([vehicle1, vehicle2], 40);
+   RuSoldMinLevel = 2;
+   RuSoldMaxLevel = 3;
+   end;
+End;
 
-     IF Difficulty = 3 then
-     begin
-         SetFuel([vehicle1, vehicle2], 40);
-         RuSoldMinLevel = 2;
-         RuSoldMaxLevel = 3;
-     end;
-
-
-end;
-
-
-//     SaveVariable([GetChassis(tmp[2]),GetEngine(tmp[2]),GetControl(tmp[2]),GetWeapon(tmp[2]), GetLives(tmp[2])], '02_tank2_3');
 Export Function SaveVehicles(vehicles, ident);
 var i, tmp;
 begin
-tmp = [];
 if not vehicles then
    exit;
 
+tmp := [];
 
 for i in vehicles do
-    begin
-    tmp := Insert(tmp, 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetFuel(i), GetLives(i)]);
-    end;
+    tmp := Replace(tmp, tmp + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetFuel(i), GetLives(i)]);
 
 SaveVariable(tmp, ident);
 End;

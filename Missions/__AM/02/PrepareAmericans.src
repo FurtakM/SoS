@@ -1,156 +1,134 @@
 // Spawn JMM, Bobby, Cyrus
-
 Export function PrepareHeroes;
 var plive;
 begin
+uc_side := 1;
 
-    uc_side = 1;
+JMM = PrepareUnit('JMM', (not debug), mission_prefix);
+plive := LoadVariable('01_JMMLifePoints_1', 1000);
 
-    JMM = CreateCharacter('01_JMM');
-    plive := LoadVariable('01_JMMLifePoints_1', 1000);
+if plive < 250 then
+   plive := 300;
 
-    if plive < 250 then
-       plive := 300;
+SetLives(JMM, plive);
 
-    SetLives(JMM, plive);
+Powell := NewCharacter('Powell');
+Bobby := PrepareUnit('Bobby', (not debug), mission_prefix);
 
-    Powell = NewCharacter('Powell');
+if Bobby then
+   begin
+   plive := LoadVariable('01_BobbyLifePoints_1', 1000);
 
-    Bobby = CreateCharacter('01_Bobby');
+   if plive < 250 then
+      plive := 300;
 
-    if Bobby then
-       begin
-       plive := LoadVariable('01_BobbyLifePoints_1', 1000);
+   SetLives(Bobby, plive);
+   end;
 
-       if plive < 250 then
-          plive := 300;
+Cyrus := PrepareUnit('Cyrus', (not debug), mission_prefix);
 
-       SetLives(Bobby, plive);
-       end;
+if Cyrus then
+   begin
+   plive := LoadVariable('01_CyrusLifePoints_1', 1000);
 
-    Cyrus = CreateCharacter('01_Cyrus');
+   if plive < 250 then
+      plive := 300;
 
-    if Cyrus then
-       begin
-       plive := LoadVariable('01_CyrusLifePoints_1', 1000);
+   SetLives(Cyrus, plive);
+   end;
 
-       if plive < 250 then
-          plive := 300;
+Khatam := NewCharacter('Khatam');
 
-       SetLives(Cyrus, plive);
-       end;
+uc_side := 4;
 
-    Khatam = NewCharacter('Khatam');
+Lisa = NewCharacter('Lisa');
 
-    uc_side = 4;
+PlaceUnitArea(JMM, StartArea, false);
+PlaceUnitArea(Bobby, StartArea, false);
+PlaceUnitArea(Cyrus, StartArea, false);
+PlaceUnitArea(Lisa, LisaSpawn, false);
 
-    Lisa = NewCharacter('Lisa');
-
-    PlaceUnitArea(JMM, StartArea, false);
-    PlaceUnitArea(Bobby, StartArea, false);
-    PlaceUnitArea(Cyrus, StartArea, false);
-    PlaceUnitArea(Lisa, LisaSpawn, false);
-
-    ComCrawl(Lisa);
-
-
-end;
+ComCrawl(Lisa);
+End;
 
 Export function PrepareLisSquad;
 var i, un;
 begin
+uc_side := 4;
+uc_nation := 1;
 
-   uc_side = 4;
-   uc_nation = 1;
+hc_class := 2;
+hc_sex := sex_male;
+hc_gallery := '';
+hc_name := '';
+hc_basic_skills := [0, 1, 0, 0];
+hc_skills := [1, 2, 0, 0];
 
-   hc_class := 2;
-   hc_sex := sex_male;
-   hc_gallery := '';
-   hc_name := '';
-   hc_basic_skills := [0, 1, 0, 0];
-   hc_skills := [1, 2, 0, 0];
+un := CreateHuman;
+PlaceUnitArea(un, LisaEngs, false);
 
-   un := CreateHuman;
-   PlaceUnitArea(un, LisaEngs, false);
+hc_sex := sex_female;
+hc_basic_skills := [0, 0, 0, 1];
+hc_skills := [0, 1, 0, 1];
 
-   hc_sex := sex_female;
-   hc_gallery := '';
-   hc_name := '';
-   hc_basic_skills := [0, 0, 0, 1];
-   hc_skills := [0, 1, 0, 1];
+un := CreateHuman;
+PlaceUnitArea(un, LisaEngs, false);
 
-   un := CreateHuman;
-   PlaceUnitArea(un, LisaEngs, false);
-
-
-   If NOT Bobby and NOT Cyrus then
+if not Bobby and not Cyrus then
    begin
-      hc_class := 1;
-      hc_sex := sex_male;
-      hc_gallery := '';
-      hc_name := '';
-      hc_basic_skills := [2, 3, 1, 0];
-      hc_skills := [2, 3, 1, 0];
+   hc_class := 1;
+   hc_sex := sex_male;
+   hc_basic_skills := [2, 3, 1, 0];
+   hc_skills := [2, 3, 1, 0];
 
-      un := CreateHuman;
-      PlaceUnitArea(un, AmNewSpawn, false);
-
+   un := CreateHuman;
+   PlaceUnitArea(un, AmNewSpawn, false);
    end;
 
-   InitHc;
-
-end;
+InitHc;
+End;
 
 Export function PrepareOtherAmericans;
 begin
+uc_side := 4;
+uc_nation := 1;
 
-   uc_side = 4;
-   uc_nation = 1;
+hc_gallery := '';
 
-   hc_gallery = '';
+hc_name := 'Tom Garvin';
+PrepareHuman(1, 1, 2);
 
-   hc_name = 'Tom Garvin';
-   PrepareHuman(1, 1, rand(1,2));
+Brian := CreateHuman;
+PlaceUnitArea(Brian, OtherAmericanSpawn, false);
 
-   Brian = CreateHuman;
-   PlaceUnitArea(Brian, OtherAmericanSpawn, false);
+hc_name := 'Jerry White';
+PrepareHuman(1, 3, 2);
 
-   hc_name = 'Jerry White';
-   PrepareHuman(1, 3, rand(1,2));
+Jerry := CreateHuman;
+PlaceUnitArea(Jerry, OtherAmericanSpawn, false);
 
-   Jerry = CreateHuman;
-   PlaceUnitArea(Jerry, OtherAmericanSpawn, false);
-
-   ComHold([Brian, Jerry]);
-
-
-
-end;
+ComHold([Brian, Jerry]);
+End;
 
 Export DyingSold;
 Export function PrepareDeadSoldiers;
 var i, un;
 begin
+for i = 1 to 6 do
+    begin
+    uc_side := 4;
+    uc_nation := 1;
 
-   for i = 1 to 6 do
-   begin
+    hc_gallery := '';
+    hc_name := '';
+    PrepareHuman(false, rand(1,4), 1);
 
-           uc_side = 4;
-           uc_nation = 1;
+    un := CreateHuman;
+    PlaceUnitArea(un, DeadsSpawn, false);
+    SetLives(un, 1);
+    end;
 
-           hc_gallery = '';
-           hc_name = '';
-           PrepareHuman(false, rand(1,4), 1);
-
-           un = CreateHuman;
-           PlaceUnitArea(un, DeadsSpawn, false);
-
-           SetLives(un, 1);
-
-   end;
-
-       DyingSold = CreateHuman;
-       PlaceUnitArea(DyingSold, DeadsSpawn, false);
-       SetLives(DyingSold, 250);
-
-end;
+DyingSold := CreateHuman;
+PlaceUnitArea(DyingSold, DeadsSpawn, false);
+SetLives(DyingSold, 250);
+End;

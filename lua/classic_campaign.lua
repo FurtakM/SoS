@@ -445,7 +445,7 @@ menu.window_campaign_tree.panel.sidebar.text = getLabelEX(
 menu.window_campaign_tree.panel.sidebar.checkboxEasy = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
-	menu.window_campaign_tree.panel.sidebar.height - 200, 
+	menu.window_campaign_tree.panel.sidebar.height - 220, 
 	'selectDifficulty(1)', 
 	{
 		W = 14,
@@ -460,7 +460,7 @@ menu.window_campaign_tree.panel.sidebar.labelEasy = getLabelEX(
 	anchorLT,
 	XYWH(
 		56, 
-		menu.window_campaign_tree.panel.sidebar.height - 200, 
+		menu.window_campaign_tree.panel.sidebar.height - 220, 
 		50, 
 		14
 	),
@@ -475,7 +475,7 @@ menu.window_campaign_tree.panel.sidebar.labelEasy = getLabelEX(
 menu.window_campaign_tree.panel.sidebar.checkboxMedium = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
-	menu.window_campaign_tree.panel.sidebar.height - 180, 
+	menu.window_campaign_tree.panel.sidebar.height - 200, 
 	'selectDifficulty(2)', 
 	{
 		W = 14,
@@ -491,7 +491,7 @@ menu.window_campaign_tree.panel.sidebar.labelMedium = getLabelEX(
 	anchorLT,
 	XYWH(
 		56, 
-		menu.window_campaign_tree.panel.sidebar.height - 180, 
+		menu.window_campaign_tree.panel.sidebar.height - 200, 
 		50, 
 		14
 	),
@@ -506,7 +506,7 @@ menu.window_campaign_tree.panel.sidebar.labelMedium = getLabelEX(
 menu.window_campaign_tree.panel.sidebar.checkboxHard = clCheckbox(
 	menu.window_campaign_tree.panel.sidebar, 
 	35, 
-	menu.window_campaign_tree.panel.sidebar.height - 160, 
+	menu.window_campaign_tree.panel.sidebar.height - 180, 
 	'selectDifficulty(3)', 
 	{
 		W = 14,
@@ -517,6 +517,36 @@ menu.window_campaign_tree.panel.sidebar.checkboxHard = clCheckbox(
 );
 
 menu.window_campaign_tree.panel.sidebar.labelHard = getLabelEX(
+	menu.window_campaign_tree.panel.sidebar,
+	anchorLT,
+	XYWH(
+		56, 
+		menu.window_campaign_tree.panel.sidebar.height - 180, 
+		50, 
+		14
+	),
+	ADMUI3L,
+	loc(528),
+   	{
+   		font_colour = WHITE(), 
+   		nomouseevent = true,
+   	}
+);
+
+menu.window_campaign_tree.panel.sidebar.checkboxVHard = clCheckbox(
+	menu.window_campaign_tree.panel.sidebar, 
+	35, 
+	menu.window_campaign_tree.panel.sidebar.height - 160, 
+	'selectDifficulty(4)', 
+	{
+		W = 14,
+		H = 15,
+		textureChecked = 'classic/edit/campaign/window/checkbox-am-very-hard.png',
+		textureUnchecked = 'classic/edit/campaign/window/checkbox-am-unchecked.png',
+	}
+);
+
+menu.window_campaign_tree.panel.sidebar.labelVHard = getLabelEX(
 	menu.window_campaign_tree.panel.sidebar,
 	anchorLT,
 	XYWH(
@@ -582,6 +612,7 @@ function FROMOW_SET_CAMP_DIFF(DIFF) -- Called by OW!
 	setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, false);
     setChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium, false);
     setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, false);
+    setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, false);
 
 	if (DIFF == 1) then
         setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, true);
@@ -593,6 +624,10 @@ function FROMOW_SET_CAMP_DIFF(DIFF) -- Called by OW!
 
 	if (DIFF == 3) then
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, true);
+	end;
+
+	if (DIFF == 4) then
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, true);
 	end;
 
 	OW_campdiff(DIFF);
@@ -627,6 +662,7 @@ function selectDifficulty(DIFFICULTY)
 	if DIFFICULTY == 1 then
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium, false);
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, false);
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, false);
 
 		if (not getChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy)) then
 			setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, true);
@@ -634,6 +670,7 @@ function selectDifficulty(DIFFICULTY)
 	elseif DIFFICULTY == 2 then
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, false);
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, false);
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, false);
 
 		if (not getChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium)) then
 			setChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium, true);
@@ -641,9 +678,18 @@ function selectDifficulty(DIFFICULTY)
 	elseif DIFFICULTY == 3 then
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, false);
 		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium, false);
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, false);
 
 		if (not getChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard)) then
 			setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, true);
+		end;
+	elseif DIFFICULTY == 4 then
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxEasy, false);
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxMedium, false);
+		setChecked(menu.window_campaign_tree.panel.sidebar.checkboxHard, false);
+
+		if (not getChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard)) then
+			setChecked(menu.window_campaign_tree.panel.sidebar.checkboxVHard, true);
 		end;
 	end;
 
@@ -763,9 +809,11 @@ function runCampaign(ID)
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxEasy, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxMedium, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxHard, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
+	setTexture(menu.window_campaign_tree.panel.sidebar.checkboxVHard, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-unchecked.png');
 	setTexture2(menu.window_campaign_tree.panel.sidebar.checkboxEasy, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-easy.png');
 	setTexture2(menu.window_campaign_tree.panel.sidebar.checkboxMedium, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-medium.png');
 	setTexture2(menu.window_campaign_tree.panel.sidebar.checkboxHard, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-hard.png');
+	setTexture2(menu.window_campaign_tree.panel.sidebar.checkboxVHard, 'classic/edit/campaign/window/checkbox-' .. lowerCamp .. '-very-hard.png');
 
 	set_Callback(menu.window_campaign_tree.panel.sidebar.delete.ID, CALLBACK_MOUSEUP, 'deleteCampaign(' .. ID .. ');');
 
