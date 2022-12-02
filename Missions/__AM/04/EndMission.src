@@ -1,137 +1,147 @@
-Every 0$1 trigger IsDead(Stolypin) and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < [14, 13, 12][Difficulty] do
+Every 0$1 trigger IsDead(Stolypin) and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) < [14, 13, 12, 11][Difficulty] do
 var i, tmp, p;
 begin
-     AIEnable = 0;
-     escapeAvalaible = 1;
-     Video(true);
-     SetAttitude(3, 1, att_friend, false);
-     SetAttitude(6, 1, att_friend, false);
-     SetAttitude(5, 1, att_friend, false);
-     ChangeSideFog(3, 1);
-     CenterOnXY(97, 91);
+AIEnable = 0;
+escapeAvalaible = 1;
 
-     ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
-     wait(0$01);
-     AddComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 124, 98);
-     ComExitVehicle(FilterAllUnits([[f_side, 5], [f_type, unit_human]]));
-     wait(0$01);
-     AddComMoveXY(FilterAllUnits([[f_side, 5], [f_type, unit_human]]), 124, 98);
-     ComExitVehicle(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
-     wait(0$01);
-     AddComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 124, 98);
-     ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 124, 96);
+Video(true);
 
-     wait(0$1);
+SetAttitude(3, 1, att_friend, false);
+SetAttitude(6, 1, att_friend, false);
+SetAttitude(5, 1, att_friend, false);
 
-     CenterOnXY(124, 96);
+ChangeSideFog(3, 1);
+CenterOnXY(97, 91);
 
-     p := 0$0;
-     tmp := FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_human]]);
+ComExitVehicle(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
+wait(0$01);
+AddComMoveXY(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 124, 98);
+ComExitVehicle(FilterAllUnits([[f_side, 5], [f_type, unit_human]]));
+wait(0$01);
+AddComMoveXY(FilterAllUnits([[f_side, 5], [f_type, unit_human]]), 124, 98);
+ComExitVehicle(FilterAllUnits([[f_side, 6], [f_type, unit_human]]));
+wait(0$01);
+AddComMoveXY(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), 124, 98);
+ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 124, 96);
 
-     repeat
-      wait(0$1);
-      p := p + 0$1;
-      ComMoveToArea(tmp, RussianEscape);
+wait(0$1);
 
-      for i in tmp do
-          if IsInArea(tmp, RussianEscape) then
-             RemoveUnit(i);
+CenterOnXY(124, 96);
 
-     until FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 or p >= 0$7;
+p := 0$0;
+tmp := FilterAllUnits([[f_or, [f_side, 3], [f_side, 6]], [f_type, unit_human]]);
 
-     FinishMission;
-end;
+repeat
+ wait(0$1);
+ p := p + 0$1;
+ ComMoveToArea(tmp, RussianEscape);
 
+ for i in tmp do
+     if IsInArea(tmp, RussianEscape) then
+        RemoveUnit(i);
+until FilterAllUnits([[f_nation, 3], [f_type, unit_human], [f_lives, 250]]) = 0 or p >= 0$7;
 
-// Finish mission
+FinishMission;
+End;
 
 Export function FinishMission;
 var tmp, m1, m2, m3;
 begin
-        if not vehicleProduceCounter then
-           SetAchievement('ACH_INFANTRY');
+if not vehicleProduceCounter then
+   SetAchievement('ACH_INFANTRY');
 
-        if tick <= 20$00 then
-           begin
-           wait(3);
-           SetAchievement('ACH_ASPEED_4');
-           end;
+if tick <= 20$00 then
+   begin
+   wait(3);
+   SetAchievement('ACH_ASPEED_4');
+   end;
 
-        SaveBase(GammBaseArea);
-        SaveVariable(GetTech(tech_gatling, 1), 'GatlingInGamma');
+SaveBase(GammBaseArea);
+SaveVariable(GetTech(tech_gatling, 1), 'GatlingInGamma');
 
-        m1 := false;
-        m2 := false;
-        m3 := false;
+m1 := false;
+m2 := false;
+m3 := false;
 
-        if buildOil = 1 and buildPower = 1 then
-        begin
-        AddMedal('oil', 1);
-        m1 := true;
-        end else
-        begin
-                if buildOil = 1 and buildPower = 0 then AddMedal('oil', -1);
-                if buildOil = 0 and buildPower = 1 then AddMedal('oil', -2);
-                if buildOil = 0 and buildPower = 0 then AddMedal('oil', -3);
-        end;
+if buildOil = 1 and buildPower = 1 then
+   begin
+   AddMedal('oil', 1);
+   m1 := true;
+   end
+else
+   begin
+   if buildOil = 1 and buildPower = 0 then
+      AddMedal('oil', -1);
 
-        if lostCounter > 3 then
-           AddMedal('deaths', -1)
-        else
-           begin
-           AddMedal('deaths', 1);
-           m2 := true;
-           end;
+   if buildOil = 0 and buildPower = 1 then
+      AddMedal('oil', -2);
 
-        if honor = 1 then
-           begin
-           AddMedal('honour', 1);
-           m3 := true;
-           end
-        else
-           begin
-           AddMedal('honour', -1);
-           end;
+   if buildOil = 0 and buildPower = 0 then
+      AddMedal('oil', -3);
+   end;
 
-        if m1 and m2 and m3 and Difficulty = 3 then
-           SetAchievementEX('ACH_AMER', 4);
+if lostCounter > 3 then
+   AddMedal('deaths', -1)
+else
+   begin
+   AddMedal('deaths', 1);
+   m2 := true;
+   end;
 
-        GiveMedals('Main');
+if honor = 1 then
+   begin
+   AddMedal('honour', 1);
+   m3 := true;
+   end
+else
+   AddMedal('honour', -1);
 
-        RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]));
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_AMER', 4);
 
-        SaveCharacters(JMM, mission_prefix&'JMM');
-        If IsOK(Bobby) then SaveCharacters(Bobby, mission_prefix&'Bobby');
-        If IsOK(Cyrus) then SaveCharacters(Cyrus, mission_prefix&'Cyrus');
-        If IsOK(Lisa) then SaveCharacters(Lisa, mission_prefix&'Lisa');
-        If IsOK(Brown) then SaveCharacters(Brown, mission_prefix&'Brown');
-        If not IsDead(Donaldson) then SaveCharacters(Donaldson, mission_prefix&'Donaldson');
-        If not IsDead(Frank) then SaveCharacters(Frank, mission_prefix&'Frank');
+GiveMedals('Main');
 
-        SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Brown, Donaldson, Frank],'04_other_survivors');
+RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]));
 
-        YouWin;
+SaveCharacters(JMM, mission_prefix&'JMM');
 
-end;
+if IsOK(Bobby) then
+   SaveCharacters(Bobby, mission_prefix&'Bobby');
+
+if IsOK(Cyrus) then
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+
+if IsOK(Lisa) then
+   SaveCharacters(Lisa, mission_prefix&'Lisa');
+
+if IsOK(Brown) then
+   SaveCharacters(Brown, mission_prefix&'Brown');
+
+if not IsDead(Donaldson) then
+   SaveCharacters(Donaldson, mission_prefix&'Donaldson');
+
+if not IsDead(Frank) then
+   SaveCharacters(Frank, mission_prefix&'Frank');
+
+SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Brown, Donaldson, Frank],'04_other_survivors');
+YouWin;
+End;
 
 Export function SaveBase(area);
 var i, gammaBase, buildings;
 begin
+gammaBase = [];
+buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building]]);
 
-    gammaBase = [];
-    buildings = FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building]]);
-
-    for i in buildings do
+for i in buildings do
     begin
-                if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
-                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
-                else
-                if GetBType(i) in [b_bunker] then
-                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
-                else
-                        gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+    if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then 
+       gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+    else if GetBType(i) in [b_bunker] then
+       gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+    else
+       gammaBase = gammaBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
     end;
 
-        SaveVariable(gammaBase,'GammaBase');
-
-end;
+SaveVariable(gammaBase,'GammaBase');
+End;

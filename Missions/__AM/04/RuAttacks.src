@@ -1,20 +1,60 @@
 Every 10$0 do 
-begin
-RespawnAttackInfantry(5, 3, 2 + [2, 3, 4][Difficulty], 0, 0, 0, 0, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 2);
-end;
+RespawnAttackInfantry(5, 3, 2 + [2, 3, 4, 4][Difficulty], 0, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 2);
 
 Every 20$0 do
-begin
-RespawnAttackInfantry(5, 3, 4 + [2, 3, 4][Difficulty], 0, 0, 0, 2, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 1);
-end;
+RespawnAttackInfantry(5, 3, 4 + [2, 3, 4, 5][Difficulty], 2, rand(ruSoldMinLevel, ruSoldMaxLevel), RussianAttack, RussianAttackHeal, 1, 1);
 
 Every 25$0 do
+var i, un, veh, hex, tmp;
 begin
+hex := [123, 95];
+tmp := [];
+
 if Difficulty > 1 then
    specAttack := true;
 
-RespawnAttackVehicle(RussianAttack, 5, [4, 5, 6][Difficulty], rand(ruSoldMinLevel, ruSoldMaxLevel), 3, 1, 1, [ [42, 42, 43], [42, 43], [43, 43, 43, 44]  ][Difficulty], [], [], 1);
-end;
+for i := 1 to [4, 5, 6, 7][Difficulty] do
+    begin
+    uc_side := 5;
+    uc_nation := 3;
+
+    vc_chassis := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked][i mod Difficulty + 1];
+    vc_engine := engine_combustion;
+    vc_control := control_manual;
+    vc_weapon := [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_gun][i mod Difficulty + 1];
+
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+
+    repeat
+     wait(0$1);
+    until HexInfo(hex[1], hex[2]) = 0;
+
+    PlaceUnitXY(veh, hex[1], hex[2], false);
+
+    uc_side := 5;
+    uc_nation := 3;
+
+    PrepareMechanic(false, 2 + Difficulty);
+    PlaceHumanInUnit(CreateHuman, veh);
+
+    ComMoveXY(veh, 101, 77);
+
+    tmp := Replace(tmp, tmp + 1, veh);
+
+    wait(0$3);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+until not tmp;
+End;
 
 Every 0$1 trigger specAttack do
 var un, tmp, i, eng;
@@ -35,7 +75,7 @@ PlaceUnitXYR(eng, 78, 2, 4, false);
 
 for i = 1 to 2 + Difficulty do
     begin
-    PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 6, 6][Difficulty]);
     un := CreateHuman;
     PlaceUnitXYR(un, 78, 2, 4, false);
 
@@ -60,6 +100,5 @@ repeat
      else
        if not HasTask(i) then
           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
-until not tmp;
-
+until not tmp; 
 End;
