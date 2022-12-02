@@ -58,74 +58,81 @@ Export mission_prefix, mission_prefix_prev;
 
 Starting
 begin
-    Resetfog;
-    InGameOn;
-    RandomizeAll;
+Resetfog;
+Init;
+RandomizeAll;
 
-    // Variables
-    mission_prefix := '04_';
-    mission_prefix_prev := '03_';
+if debugMode then
+   FogOff(1);
 
-    ruSoldMinLevel = 0; // Minimum russian soldiers level
-    ruSoldMaxLevel = 0; // Maximum russian soldiers level
+PrepareDifficulty;
+PrepareRussianBase;
+PrepareRussianCommander;
+PrepareHeroes;
 
-    baseReadyToBuild = 0; // 0 - Depot no build, 1 - depot build, 2 - base finish
+SetBName(ambdept0, 'gamma');
+SetBName(rubware0, 'fyodor');
 
-    debugMode = 0; // 0 - Off (normal players) , 1 - ON (developers)
-    vehicleProduceCounter := 0;
+Action;
+End;
 
-    bonusAvalaible = 0; // avalaible to get bonus
-    firstRussianAttack = 0; // first attack and dialog
-    saveDonaldson = 0; // 0 - no save, 1 - save
-    frankScoutBase = 0; // 0 - Frank die in before missions, 1 - if you save Donaldson, Frank show you russian base
+Function Init;
+begin
+mission_prefix := '04_';
+mission_prefix_prev := '03_';
 
-    harrAnswer = 0; // 1 - good answer, 2 - support, 3 - bad answer
+ruSoldMinLevel = 0; // Minimum russian soldiers level
+ruSoldMaxLevel = 0; // Maximum russian soldiers level
 
-    timeToDestroyRuBase = 0; // if you choose "good answer" you have 15 min + [5, 4, 3][Difficulty] , "need support" 13 min + [4, 4, 3][Difficulty], "bad ansewer" 10 min + [4, 3, 2][Difficulty] 
-    timeToSupport = 9$00; // when support arrive
-    timerStatus = 0; // 1 - timer 1st support, 2 - 2nd support, 3 - destory base
-    startTimer = 0; // start timer
+baseReadyToBuild = 0; // 0 - Depot no build, 1 - depot build, 2 - base finish
 
-    factoryDialog = 0; // var to block event
-    bunkerDialog = 0; // var to block event
-    energyVDialog = 0; // var to block event
+debugMode = 0; // 0 - Off (normal players) , 1 - ON (developers)
+vehicleProduceCounter := 0;
 
-    buildOil = 0; // 0 - player dont build second oil drilling mine , 1 - build
-    buildPower = 0; // 0 - player dont build second oil power , 1 - build
+bonusAvalaible = 0; // avalaible to get bonus
+firstRussianAttack = 0; // first attack and dialog
+saveDonaldson = 0; // 0 - no save, 1 - save
+frankScoutBase = 0; // 0 - Frank die in before missions, 1 - if you save Donaldson, Frank show you russian base
 
-    supply = [14, 12, 11, 10][Difficulty]; // how many crates will spawn
-    AIEnable = 1; // active/deactive red AI
+harrAnswer = 0; // 1 - good answer, 2 - support, 3 - bad answer
 
-    donaldsonCoopAttack = 0; // donaldson ask you about coop attack within magenta base
+timeToDestroyRuBase = 0; // if you choose "good answer" you have 15 min + [5, 4, 3][Difficulty] , "need support" 13 min + [4, 4, 3][Difficulty], "bad ansewer" 10 min + [4, 3, 2][Difficulty]
+timeToSupport = 9$00; // when support arrive
+timerStatus = 0; // 1 - timer 1st support, 2 - 2nd support, 3 - destory base
+startTimer = 0; // start timer
 
-    lostCounter = 0; // you lost
-    honor = 1;  // when you don't destroy ru base before time set 0
+factoryDialog = 0; // var to block event
+bunkerDialog = 0; // var to block event
+energyVDialog = 0; // var to block event
 
-    escapeAvalaible = 0; // delete units from map
-    specAttack := false;
-    ruMobile := [];
-    ruMech := [3, 4, 5, 6][Difficulty];
+buildOil = 0; // 0 - player dont build second oil drilling mine , 1 - build
+buildPower = 0; // 0 - player dont build second oil power , 1 - build
 
-    PrepareDifficulty;
-    PrepareRussianBase;
-    PrepareRussianCommander;
+supply = [14, 12, 11, 10][Difficulty]; // how many crates will spawn
+AIEnable = 1; // active/deactive red AI
 
-    PrepareHeroes;
+donaldsonCoopAttack = 0; // donaldson ask you about coop attack within magenta base
 
-    SetBName(ambdept0, 'gamma');
-    SetBName(rubware0, 'fyodor');
-end;
+lostCounter = 0; // you lost
+honor = 1;  // when you don't destroy ru base before time set 0
 
-Every 0$1 trigger debugMode = 1 do
+escapeAvalaible = 0; // delete units from map
+specAttack := false;
+ruMobile := [];
+ruMech := [3, 4, 5, 6][Difficulty];
+End;
+
+Every 0$1 trigger debugMode do
 var i;
 begin
-    enable;
-    fogoff(true);
-    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
-    SetResourceType(GetBase(ambdept0), 1, 9999);        
-    SetResourceType(GetBase(ambdept0), 2, 9999);
+enable;
 
-end;
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+    SetLives(i, 1000);
+
+SetResourceType(GetBase(ambdept0), 1, 9999);
+SetResourceType(GetBase(ambdept0), 2, 9999);
+End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_weapon, ru_gun]]) do
 SetAchievement('ACH_GUN');
