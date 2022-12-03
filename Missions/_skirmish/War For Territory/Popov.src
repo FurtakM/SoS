@@ -1,14 +1,66 @@
 Export Popov, popov_side, extraPopovForces, popovAttackGroup;
 Export Function PreparePopov;
-var i, un, tmp;
+var i, un, tmp, b, list;
 begin
 popov_side := 3;
 
 uc_side := popov_side;
 uc_nation := 3;
 
+list := [
+   [b_barracks, 103, 147, 3],
+   [b_barracks, 70, 117, 3],
+   [b_lab, 76, 145, 1, b_lab_weapon, b_lab_siberium],
+   [b_oil_power, 87, 144, 0],
+   [b_oil_mine,  86, 118, 0],
+   [b_oil_mine, 98, 121, 0],
+   [b_oil_power, 87, 147, 1],
+   [b_siberite_mine, 123, 151, 1],
+   [b_factory, 94, 161, 0],
+   [b_lab, 81, 155, 1, b_lab_computer, b_lab_spacetime],
+   [b_oil_power, 96, 152, 0],
+   [b_oil_power, 96, 149, 3],
+   [b_bunker, 109, 142, 3, ru_heavy_gun],
+   [b_bunker, 112, 148, 3, ru_heavy_gun],
+   [b_turret, 120, 159, 4, ru_rocket_launcher],
+   [b_turret, 122, 163, 4, ru_rocket_launcher],
+   [b_turret, 123, 167, 4, ru_rocket_launcher],
+   [b_turret, 59, 111, 3, ru_rocket_launcher],
+   [b_turret, 65, 111, 3, ru_heavy_gun],
+   [b_turret, 76, 117, 3, ru_rocket_launcher],
+   [b_turret, 80, 119, 3, ru_heavy_gun],
+   [b_turret, 87, 125, 3, ru_rocket_launcher],
+   [b_barracks, 92, 129, 3],
+   [b_siberite_power, 85, 165, 0],
+   [b_siberite_power, 83, 161, 4],
+   [b_siberite_power, 91, 166, 3],
+   [b_siberite_power, 102,166, 2]
+];
+
+for i in list do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    bc_type := i[1];
+    bc_kind1 := -1;
+    bc_kind2 := -1;
+
+    if i[1] = b_lab then
+       begin
+       bc_type := b_lab_full;
+       bc_kind1 = i[5];
+       bc_kind2 = i[6];
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if i[1] in [b_turret, b_bunker] then
+       PlaceWeaponTurret(b, i[5]);
+    end;
+
 tmp := PrepareBase(ru_depot, popov_base, '', [8, 7, 6][Difficulty], [11500, 1100, 60], [6, 6, 6, 6]);
-mc_bases := Replace(mc_bases, 3, tmp);
+mc_bases := Replace(mc_bases, 3, tmp union FilterAllUnits([[f_side, 3], [f_type, unit_building]]));
 
 extraPopovForces := [];
 
@@ -57,7 +109,7 @@ MC_SetProduceList(3, [
    [ru_medium_wheeled, engine_combustion, control_computer, ru_rocket_launcher]
 ]);
 
-MC_SetBuildingList(3, [
+{MC_SetBuildingList(3, [
    [b_armoury, 103, 147, 3],
    [b_armoury, 70, 117, 3],
    [b_lab, 76, 145, 1],
@@ -87,9 +139,8 @@ MC_SetBuildingList(3, [
    // [b_teleport, 91, 147, 3]
 ]);
 
-MC_SetLabKind(3, [b_lab_weapon, b_lab_computer, b_lab_spacetime, b_lab_siberium]);
+MC_SetLabKind(3, [b_lab_weapon, b_lab_computer, b_lab_spacetime, b_lab_siberium]);  }
 MC_SetFactoryExtension(3, 94, 161, 0, [b_ext_noncombat, b_ext_gun, b_ext_rocket, b_ext_computer, b_ext_siberium]);
-MC_SetUpgradeBuilding(3, b_depot);
 
 MC_InsertProduceList(3, [[ru_medium_wheeled, engine_combustion, control_computer, ru_cargo_bay]]);
 End;

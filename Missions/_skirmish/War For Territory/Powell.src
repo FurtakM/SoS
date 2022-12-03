@@ -1,6 +1,6 @@
 Export Powell, powell_side, powellAttackGroup;
 Export Function PreparePowell;
-var i, tmp;
+var i, list, b, tmp;
 begin
 powell_side := 4;
 
@@ -16,8 +16,55 @@ SetSkill(Powell, 4, 4);
 
 PlaceHumanInUnit(Powell, us_depot);
 
+list := [
+   [b_barracks, 178, 117, 2],
+   [b_oil_mine, 167, 102, 0],
+   [b_lab, 200, 111, 4, b_lab_weapon, b_lab_siberium],
+   [b_factory, 201, 140, 4],
+   [b_solar_power, 206, 124, 3],
+   [b_solar_power, 209, 128, 3],
+   [b_solar_power, 211, 132, 3],
+   [b_siberite_mine, 173, 83, 3],
+   [b_lab, 186, 103, 2, b_lab_computer, b_lab_opto],
+   [b_turret, 173, 99, 2, us_heavy_gun],
+   [b_bunker, 174, 102, 2, us_heavy_gun],
+   [b_bunker, 178, 100, 2, us_heavy_gun],
+   [b_turret, 174, 108, 1, us_rocket_launcher],
+   [b_turret, 182, 122, 1, us_rocket_launcher],
+   [b_control_tower, 194, 124, 5],
+   [b_turret, 184, 141, 1, us_heavy_gun],
+   [b_turret, 183, 131, 2, us_radar],
+   [b_turret, 194, 146, 4, us_rocket_launcher],
+   [b_turret, 190, 142, 4, us_rocket_launcher],
+   [b_siberite_power, 204, 133, 3],
+   [b_solar_power, 201, 133, 3],
+   [b_siberite_power, 199, 119, 5]
+];
+
+for i in list do
+    begin
+    uc_side := 4;
+    uc_nation := 1;
+
+    bc_type := i[1];
+    bc_kind1 := -1;
+    bc_kind2 := -1;
+
+    if i[1] = b_lab then
+       begin
+       bc_type := b_lab_full;
+       bc_kind1 = i[5];
+       bc_kind2 = i[6];
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+        
+    if i[1] in [b_turret, b_bunker] then
+       PlaceWeaponTurret(b, i[5]);
+    end;
+
 tmp := PrepareBase(us_depot, powell_base, '', [8, 7, 6][Difficulty], [5500, 500, 0], [6, 6, 6, 6]);
-mc_bases := Replace(mc_bases, 1, tmp);
+mc_bases := Replace(mc_bases, 1, tmp union FilterAllUnits([[f_side, 4], [f_type, unit_building]]));
 
 powellAttackGroup := [];
 End;
@@ -47,7 +94,7 @@ MC_SetProduceList(1, [
    [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun]
 ]);
 
-MC_SetBuildingList(1, [
+{MC_SetBuildingList(1, [
    [b_armoury, 178, 117, 2],
    [b_oil_mine, 167, 102, 0],
    [b_lab, 200, 111, 4],
@@ -72,9 +119,8 @@ MC_SetBuildingList(1, [
    [b_siberite_power, 199, 119, 5]
 ]);
 
-MC_SetLabKind(1, [b_lab_weapon, b_lab_opto, b_lab_computer, b_lab_siberium]);
+MC_SetLabKind(1, [b_lab_weapon, b_lab_opto, b_lab_computer, b_lab_siberium]);}
 MC_SetFactoryExtension(1, 201, 140, 4, [b_ext_noncombat, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
-MC_SetUpgradeBuilding(1, b_depot);
 End;
 
 Every 8$00 + 2$00 trigger IsOk(us_depot) do
