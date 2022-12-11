@@ -1,5 +1,5 @@
 Export Function Action;
-var i, j, veh, tmp;
+var i, j, veh, tmp, hasEng, hasCamera, driver;
 begin
 Video(true);
 
@@ -18,6 +18,12 @@ wait(0$2);
 
 tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf,
         Kurt, Aviradze] union heikeSecondSquad;
+
+hasEng := UnitFilter(tmp, [f_class, 2]) > 0;
+hasCamera := false;
+
+if not hasEng then
+   SetClass(tmp[rand(1, tmp)], class_engineer);
 
 if heikeVehicles then
    begin
@@ -68,22 +74,45 @@ if heikeVehicles then
           end;
 
        ComMoveXY(veh, 185, 144);
-       AddComWait(veh, 0$2);
-       AddComMoveXY(veh, 179, 129);
-       AddComMoveXY(veh, 170, 103);
+
+       if GetControl(veh) = control_manual and not hasCamera and GetClass(IsDrivenBy(veh)) = 2 then
+          begin
+          hasCamera := true;
+          driver := IsDrivenBy(veh);
+          AddComMoveXY(veh, 177, 138);
+          AddComExitVehicle(driver);
+          AddComHiddenCamera(driver, 190, 150);
+          AddComEnterUnit(driver, veh);
+          AddComMoveXY(driver, 170, 103);
+          end
+       else
+          begin
+          AddComWait(veh, 0$2);
+          AddComMoveXY(veh, 179, 129);
+          AddComMoveXY(veh, 170, 103);
+          end;
+
        wait(0$2);
        end;
    end;
 
 if tmp then
-   begin
+   begin 
    for i in tmp do
        begin
        SetDir(i, 4);
        PlaceUnitArea(i, startArea, false);
 
        ComMoveXY(i, 185, 144);
-       AddComMoveXY(i, 179, 129);
+
+       if GetClass(i) = 2 and not hasCamera then
+          begin
+          hasCamera := true;
+          AddComHiddenCamera(i, 190, 150);
+          end
+       else
+          AddComMoveXY(i, 179, 129);
+
        AddComMoveXY(i, 170, 103);
 
        wait(0$2);
@@ -213,4 +242,416 @@ if Kaia then
          end;
       end;
    end;
+
+SaveForQuickRestart;
 End;
+
+Every 0$1 trigger scoutSuccess do
+var i, tmp;
+begin
+InGameOn;
+
+ComTurnUnit([Mike, Kurt], Heike);
+ComExit(Heike);
+
+if IsOk(Mike) then
+   AddComTurnUnit(Heike, Mike)
+else
+   AddComTurnUnit(Heike, Kurt);   
+
+if IsOk(Mike) and IsOk(Kurt) then
+   begin
+   CenterNowOnUnits(Mike);
+
+   Say(Mike, 'DM-Scout-1');
+   Say(Heike, 'DH-Scout-2');
+   Say(Kurt, 'DKs-Scout-3');
+   Say(Heike, 'DH-Scout-4');
+   Say(Heike, 'DH-Scout-5');
+
+   tmp := [ [72, 122], [89, 131], [99, 139], [100, 148] ];
+
+   for i in tmp do
+       begin
+       PlaceSeeing(i[1], i[2], 2, -6);
+       RemoveSeeing(i[1], i[2], 2);
+       end;
+
+   CenterOnXY(83, 132);
+
+   Say(Kurt, 'DKs-Scout-6');
+   Say(Mike, 'DM-Scout-7');
+   Say(Mike, 'DM-Scout-8');
+   Say(Kurt, 'DKs-Scout-9');
+   end;
+
+if IsDead(Mike) then
+   begin
+   CenterNowOnUnits(Kurt);
+   Say(Kurt, 'DKs-Scout-b-1');
+   Say(Kurt, 'DKs-Scout-b-2');  
+
+   if IsOk(Givi) then
+      begin
+      ComExit(Givi);
+      AddComTurnUnit(Givi, Kurt);
+
+      Say(Givi, 'DG-Scout-b-3');
+      Say(Givi, 'DG-Scout-b-4');
+      Say(Givi, 'DG-Scout-b-5');
+      Say(Heike, 'DH-Scout-b-6');
+      end
+   else
+      Say(Heike, 'DH-Scout-a-4');
+
+   Say(Kurt, 'DKs-Scout-b-7');
+   Say(Kurt, 'DKs-Scout-b-8');
+   Say(Kurt, 'DKs-Scout-b-9');
+   end;
+
+if IsDead(Kurt) then
+   begin
+   CenterNowOnUnits(Mike);
+   Say(Mike, 'DM-Scout-a-1');
+   Say(Mike, 'DM-Scout-a-2');
+
+   if GetLives(Mike) < 1000 then
+      Say(Heike, 'DH-Scout-a-3')
+   else
+      Say(Heike, 'DH-Scout-a-4');
+
+   Say(Mike, 'DM-Scout-a-5');
+
+   if IsOk(Kaia) then
+      begin
+      ComExit(Kaia);
+      AddComMoveUnit(Kaia, Mike);
+
+      wait(0$2);
+
+      ComTurnUnit(Kaia, Mike);
+      ComTurnUnit(Mike, Kaia);
+
+      Say(Kaia, 'DK-Scout-a-6');
+      Say(Mike, 'DM-Scout-a-7');
+      Say(Kaia, 'DK-Scout-a-8');
+      Say(Kaia, 'DK-Scout-a-9');
+      Say(Heike, 'DH-Scout-a-10');
+
+      ComTurnUnit(Mike, Heike);
+
+      Say(Mike, 'DM-Scout-a-11');
+      Say(Mike, 'DM-Scout-a-12');
+      Say(Mike, 'DM-Scout-a-13');
+      Say(Mike, 'DM-Scout-a-14');
+      end;
+   end;
+
+if IsOk(Givi) then
+   begin
+   Say(Givi, 'DG-Scout-10');
+   Say(Givi, 'DG-Scout-11');
+   end
+else if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Scout-10') then
+   SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-Scout-10');
+
+Say(Heike, 'DH-Scout-12');
+Say(Heike, 'DH-Scout-13');
+
+InGameOff;
+
+usAttacksAllowed := true;
+End;
+
+Every 0$1 trigger scoutFailed do
+begin
+wait(0$30);
+
+Say(Heike, 'DH-Scout-c-1');
+
+if not IsOk(Givi) then
+   exit;
+
+Say(Givi, 'DG-Scout-c-2');
+Say(Givi, 'DG-Scout-c-3');
+Say(Heike, 'DH-Scout-c-4');
+End;
+
+// lab
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_lab_half]]) and IsOk(Aviradze) do
+begin
+DialogueOn;
+
+Say(Aviradze, 'DA-Lab-1');
+Say(Heike, 'DH-Lab-2');
+Say(Aviradze, 'DA-Lab-3');
+Say(Aviradze, 'DA-Lab-4');
+Say(Aviradze, 'DA-Lab-5');
+Say(Heike, 'DH-Lab-6');
+
+DialogueOff;
+End;
+
+// materialization
+Every 0$1 trigger GetTech(tech_MatDet, 2) = state_researched and IsOk(Givi) do
+begin
+DialogueOn;
+
+Say(Givi, 'DG-Opt-1');
+Say(Heike, 'DH-Opt-2');
+Say(Givi, 'DG-Opt-3');
+Say(Givi, 'DG-Opt-4');
+Say(Heike, 'DH-Opt-5');
+Say(Givi, 'DG-Opt-6');
+Say(Heike, 'DH-Opt-7');
+Say(Givi, 'DG-Opt-8');
+Say(Givi, 'DG-Opt-9');
+Say(Heike, 'DH-Opt-10');
+Say(Givi, 'DG-Opt-11');
+Say(Givi, 'DG-Opt-12');
+Say(Heike, 'DH-Opt-13');
+
+DialogueOff;
+End;
+
+// rocket
+Every 0$1 trigger GetTech(tech_rocket, 2) = state_researched and IsOk(Ibrahim) do
+begin
+DialogueOn;
+
+Say(Ibrahim, 'DI-Roc-1');
+Say(Heike, 'DH-Roc-2');
+Say(Ibrahim, 'DI-Roc-3');
+Say(Ibrahim, 'DI-Roc-4');
+Say(Kaia, 'DK-Roc-5');
+Say(Kaia, 'DK-Roc-6');
+Say(Givi, 'DG-Roc-7');
+Say(Givi, 'DG-Roc-8');
+
+if IsOk(Markov) and IsOk(Kaia) and IsOk(Givi) then
+   begin
+   Say(Markov, 'DMar-Roc-9');
+   Say(Markov, 'DMar-Roc-10');
+   Say(Kaia, 'DK-Roc-11');
+   Say(Markov, 'DMar-Roc-12');
+   Say(Kaia, 'DK-Roc-13');
+   Say(Givi, 'DG-Roc-14');
+   Say(Markov, 'DMar-Roc-15');
+   Say(Markov, 'DMar-Roc-16');
+   Say(Kaia, 'DK-Roc-17');
+   end;
+
+DialogueOff;
+End;
+
+// us surrender
+Every 0$3 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, nation_american]]) < 6 or FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, class_soldier]]) < 2 do
+var i, hurts, sci;
+begin
+usAttacksAllowed := false;
+usSurrender := true;
+
+SetAttitude(1, 2, att_friend, true);
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_hastask]]) do
+    ComStop(i);
+
+for i in FilterAllUnits([[f_side, 2], [f_not, [f_ok]], [f_type, unit_human]]) do
+    SetLives(i, 251);
+
+InGameOn;
+
+ComExit(usCommander);
+AddComMoveXY(usCommander, 81, 143);
+AddComTurnXY(usCommander, 81, 139);
+
+PlaceSeeing(81, 144, 2, -10);
+
+CenterNowOnUnits(usCommander);
+
+wait(0$2);
+
+Say(usCommander, 'DCa-Surrender-1');
+Say(Heike, 'DH-Surrender-2');
+
+if GetType(IsInUnit(Heike)) = unit_building then
+   begin
+   ComExit(Heike);
+   wait(3);
+   end;
+
+ComMoveXY(Heike, 82, 133);
+AddComTurnUnit(Heike, usCommander);
+
+wait(0$3);
+
+Say(Heike, 'DH-Surrender-3');
+Say(Heike, 'DH-Surrender-4');
+
+RemoveSeeing(81, 144, 2);
+ChangeSideFog(1, 2);
+
+for i in FilterAllUnits([[f_side, 1], [f_nation, 1], [f_inside]]) do
+    ComExit(i);
+
+sci := FilterAllUnits([[f_side, 1], [f_class, 4]]);
+hurts := FilterAllUnits([[f_side, 1], [f_not, [f_ok]]]);
+
+if sci and hurts then
+   begin
+   for i := 1 to hurts do
+       if i <= sci then
+          AddComHeal(sci[i], hurts[i]);
+   end;
+
+if IsOk(Givi) then
+   Say(Givi, 'DG-Surrender-5');
+// todo
+
+Say(usCommander, 'DCa-Surrender-6');
+Say(usCommander, 'DCa-Surrender-7');
+Say(Givi, 'DG-Surrender-8');
+Say(usCommander, 'DCa-Surrender-9');
+Say(Heike, 'DH-Surrender-10');
+Say(usCommander, 'DCa-Surrender-11');
+Say(Heike, 'DH-Surrender-12');
+Say(usCommander, 'DCa-Surrender-13');
+Say(usCommander, 'DCa-Surrender-14');
+Say(usCommander, 'DCa-Surrender-15');
+Say(usCommander, 'DCa-Surrender-16');
+Say(Kaia, 'DK-Surrender-17');
+Say(Olaf, 'DO-Surrender-18');
+Say(Olaf, 'DO-Surrender-19');
+Say(Kurt, 'DKs-Surrender-20');
+Say(Kurt, 'DKs-Surrender-21');
+Say(Markov, 'DMar-Surrender-22');
+Say(Markov, 'DMar-Surrender-23');
+Say(Sophia, 'DS-Surrender-24');
+Say(Aviradze, 'DA-Surrender-25');
+Say(Ibrahim, 'DI-Surrender-26');
+Say(Kamil, 'DKam-Surrender-27');
+Say(Givi, 'DG-Surrender-28');
+Say(Givi, 'DG-Surrender-29');
+Say(Givi, 'DG-Surrender-30');
+
+PrepareRussianFirstWaveAttack;
+
+if not IsEnvironment(190, 150) then
+   PlaceSeeing(190, 150, 2, -8);
+
+CenterOnXY(193, 150);
+
+Say(Markov, 'DMar-Surrender-31');
+Say(Heike, 'DH-Surrender-32');
+
+InGameOff;
+
+ChangeMissionObjectives('M2');
+
+wait(0$20);
+
+PrepareRussianLastWaveAttack;
+
+russianAttack := true;
+
+RemoveSeeing(190, 150, 2);
+End;
+
+// kaia dead
+Every 0$1 trigger GetLives(Kaia) < 3 do
+begin
+DialogueOn;
+ForceSay(Kaia, 'DK-Dead-1');
+ForceSay(Kaia, 'DK-Dead-2');
+DialogueOff;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_type, ar_rocket_launcher]]) do
+hasRockets := true;
+
+// end
+Every 0$1 trigger russianAttack and not FilterAllUnits([f_side, 3]) do
+begin
+DialogueOn;
+
+CenterNowOnUnits(Heike);
+
+Say(Heike, 'DH-End-1');
+SayRadio(Shariff, 'DShar-End-2');
+Say(Kaia, 'DK-End-3');
+Say(Heike, 'DH-End-4');
+SayRadio(Shariff, 'DShar-End-5');
+
+if IsOk(Markov) then
+   Say(Kaia, 'DK-End-6');
+
+Say(Kaia, 'DK-End-7');
+
+if IsOk(Kaia) then
+   begin
+   Say(Givi, 'DG-End-8');
+   Say(Givi, 'DG-End-9');
+   Say(Heike, 'DH-End-10');
+   end;
+
+Say(Heike, 'DH-End-11');
+
+if GetTech(tech_MatDet, 2) = state_researched then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if hasRockets then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if tick < [50$00, 45$00, 40$00, 35$00][Difficulty] then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+SaveCharacters(usCommander, '07_UsCommander');
+SaveCharacters(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]) diff usCommander, '07_Americans');
+
+SaveCharacters(Heike, '07_Heike');
+
+if Aviradze then
+   SaveCharacters(Aviradze, '07_Aviradze');
+
+if Ibrahim  then
+   SaveCharacters(Ibrahim, '07_Ibrahim');
+
+if Kamil then
+   SaveCharacters(Kamil, '07_Kamil');
+
+if Sophia then
+   SaveCharacters(Sophia, '07_Sophia');
+
+if Kaia then
+   SaveCharacters(Kaia, '07_Kaia');
+
+if Givi then
+   SaveCharacters(Givi, '07_Givi');
+
+if Mike then
+   SaveCharacters(Mike, '07_Mike');
+
+if Markov then
+   SaveCharacters(Markov, '07_Markov');
+
+if Kurt then
+   SaveCharacters(Kurt, '07_Kurt');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '07_others');
+
+YouWin;
+DialogueOff;
+End;
+
+

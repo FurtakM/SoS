@@ -55,3 +55,55 @@ if heikeVehicles then
        end;
    end;
 End;
+
+Every 0$1 trigger scoutActive do
+var i, tmp;
+begin
+tmp := [
+         [ [96,50], [49,52], [34,55], [41,70], [53,96], [103,64] ],
+         [ [104,70], [111,103], [131,147], [130,153], [110,93], [103,65] ]
+       ];
+
+
+for i in tmp[1] do
+    begin
+    AddComAgressiveMove(Mike, i[1], i[2]);
+    AddComHold(Mike);
+    AddComWait(Mike, 0$5);
+    end;
+
+for i in tmp[2] do
+    begin
+    AddComAgressiveMove(Kurt, i[1], i[2]);
+    AddComHold(Kurt);
+    AddComWait(Kurt, 0$5);
+    end;
+
+wait(0$1);
+
+repeat
+ wait(0$1);
+until (not HasTask(Mike) or IsDead(Mike))
+and (not HasTask(Kurt) or IsDead(Kurt));
+
+if IsDead(Kurt) and IsDead(Mike) then
+   begin
+   scoutFailed := true;
+   exit;
+   end;
+
+ComMoveXY([Kurt, Mike], 132, 52);
+AddComMoveUnit([Kurt, Mike], FilterAllUnits([f_side, 2])[1]);
+
+repeat
+ wait(0$1);
+until See(2, Kurt) or See(2, Mike);
+
+if IsLive(Kurt) then
+   SetSide(Kurt, 2);
+
+if IsLive(Mike) then
+   SetSide(Mike, 2);
+
+scoutSuccess := true;
+End;

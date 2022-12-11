@@ -1,14 +1,56 @@
 Export Gensher, gensher_side, gensherAttackGroup;
 Export Function PrepareGensher;
-var i, tmp, un;
+var i, b, tmp, un, list;
 begin
 gensher_side := 2;
 
 uc_side := gensher_side;
 uc_nation := 2;
 
+list := [
+   [b_barracks, 42, 29, 5],
+   [b_barracks, 36, 40, 5],
+   [b_lab, 13, 18, 1, b_lab_weapon, b_lab_opto],
+   [b_solar_power, 17, 3, 0],
+   [b_oil_mine, 56, 23, 0],
+   [b_factory, 11, 7, 2],
+   [b_solar_power, 20, 3, 0],
+   [b_solar_power, 23, 3, 0],
+   [b_solar_power, 26, 3, 0],
+   [b_lab, 17, 27, 1, b_lab_biological, b_lab_siberium],
+   [b_bunker, 27, 44, 5, ar_gun],
+   [b_bunker, 41, 41, 5, ar_gun],
+   [b_bunker, 45, 24, 5, ar_rocket_launcher],
+   [b_bunker, 48, 19, 5, ar_rocket_launcher],
+   [b_bunker, 41,  3, 4, ar_rocket_launcher],
+   [b_barracks, 44, 9, 4],
+   [b_siberite_mine, 52, 40, 3]
+];
+
+for i in list do
+    begin
+    uc_side := 2;
+    uc_nation := 2;
+
+    bc_type := i[1];
+    bc_kind1 := -1;
+    bc_kind2 := -1;
+
+    if i[1] = b_lab then
+       begin
+       bc_type := b_lab_full;
+       bc_kind1 = i[5];
+       bc_kind2 = i[6];
+       end;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if i[1] in [b_turret, b_bunker] then
+       PlaceWeaponTurret(b, i[5]);
+    end;
+
 tmp := PrepareBase(ar_depot, gensher_base, '', [8, 7, 6][Difficulty], [11500, 1100, 60], [6, 6, 6, 6]);
-mc_bases := Replace(mc_bases, 2, tmp);
+mc_bases := Replace(mc_bases, 2, tmp union FilterAllUnits([[f_side, 2], [f_type, unit_building]]));
 
 // hill
 tmp := FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]]);
@@ -69,7 +111,7 @@ MC_SetProduceList(2, [
    [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower]
 ]);
 
-MC_SetBuildingList(2, [
+{MC_SetBuildingList(2, [
    [b_armoury, 42, 29, 5],
    [b_armoury, 36, 40, 5],
    [b_lab, 13, 18, 1],
@@ -89,9 +131,8 @@ MC_SetBuildingList(2, [
    [b_siberite_mine, 52, 40, 3]
 ]);
 
-MC_SetLabKind(2, [b_lab_weapon, b_lab_opto, b_lab_biological, b_lab_siberium]);
+MC_SetLabKind(2, [b_lab_weapon, b_lab_opto, b_lab_biological, b_lab_siberium]);}
 MC_SetFactoryExtension(2, 11, 7, 2, [b_ext_stitch, b_ext_track, b_ext_gun, b_ext_rocket, b_ext_radio]);
-MC_SetUpgradeBuilding(2, b_depot);
 End;
 
 // Trigger explosion of static mines
