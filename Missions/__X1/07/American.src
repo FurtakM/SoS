@@ -1,8 +1,14 @@
+Export usCommander, usForces, usCargo;
 Export Function PrepareAmerican;
-var i, b;
+var i, b, veh;
 begin
 uc_side := 1;
 uc_nation := 1;
+
+SetResourceType(GetBase(usDepot), mat_cans, [2000, 2500, 3000, 3500][Difficulty]);
+SetResourceType(GetBase(usDepot), mat_oil, 600);
+
+usForces := [];
 
 for i in FilterAllUnits([f_btype, b_bunker]) do
     begin
@@ -12,18 +18,176 @@ for i in FilterAllUnits([f_btype, b_bunker]) do
        PrepareHuman(false, class_apeman_engineer, 2);
        end
     else
-       PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+       PrepareHuman(false, 1, [5, 6, 7, 8][Difficulty]);
 
     PlaceHumanInUnit(CreateHuman, i);
     end;
 
 b := HexInfo(74, 120);
 
-for i := 1 to [1, 2, 3][Difficulty] do
+uc_nation := 1;
+
+for i := 1 to [1, 2, 3, 4][Difficulty] do
     begin
-    PrepareHuman(false, 1, [5, 6, 7][Difficulty]);
+    PrepareHuman(false, 1, [5, 6, 7, 8][Difficulty]);
     PlaceHumanInUnit(CreateHuman, b);
     end;
 
 SetClass(UnitsInside(b), class_sniper);
+
+for i := 1 to 6 do
+    begin
+    PrepareHuman(false, 4, 6);
+    PlaceHumanInUnit(CreateHuman, [amLab1, amLab2][i mod 2 + 1]);
+    end;
+
+for i := 1 to 4 do
+    begin
+    PrepareHuman(false, 3, 6);
+    PlaceHumanInUnit(CreateHuman, amFac);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareHuman(false, 3, [6, 7, 7, 7][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, HexInfo(84, 154));
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareVehicle(us_medium_wheeled, engine_solar, control_manual, us_crane, 100);
+    veh := CreateVehicle;
+    SetDir(veh, 3);
+    PlaceUnitArea(veh, usCraneArea, false);
+    PrepareHuman(false, 3, 6);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;   
+
+InitHc;
+
+hc_gallery := 'us';
+hc_face_number := 26;
+hc_name := 'Max Caldera';
+hc_sex := sex_male;
+hc_attr := [10, 11];
+hc_basic_skills := [2, 1, 0, 0];
+hc_skills := [8, 4, 3, 1];
+
+usCommander := CreateHuman;
+PlaceHumanInUnit(usCommander, usDepot);
+
+InitHC_All();
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay, 100);
+usCargo := CreateVehicle;
+PlaceUnitXY(usCargo, 81, 143, false);
+Connect(usCargo);
+
+DoNotAttack(5, usCargo);
+End;
+
+Every 6$00 trigger not usForces and usAttacksAllowed and IsOk(amFac) and BuildingStatus(amFac) = bs_idle do
+var i, chassis, weapon;
+begin
+enable;
+
+for i := 1 to [4, 5, 6, 7][Difficulty] do
+    begin
+    chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][rand(1, 3)];
+
+    if chassis = us_heavy_tracked then
+       weapon := us_heavy_gun
+    else
+       weapon := [us_double_gun, us_rocket_launcher, us_gatling_gun][rand(1, 3)];
+
+    AddComConstruct(amFac, chassis, engine_combustion, control_remote, weapon);
+    end;
+End;
+
+Every 0$10 trigger usForces >= [4, 5, 6, 7][Difficulty] do
+var i, tmp;
+begin
+enable;
+
+tmp := usForces;
+usForces := [];
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        ComUnlink(i);
+        tmp := tmp diff i;
+        end
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 2]), i));
+     end;
+until not tmp;
+End;
+
+// player cheat while scout
+Every 0$1 trigger scoutActive and not scoutSuccess and FilterUnitsInArea(southScoutArea, [f_side, 2]) do
+var i, un, tmp;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+tmp := [];
+
+for i := 1 to 2 do
+    begin
+    PrepareSoldier(false, 7);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 130, 153, 3, false);
+    SetClass(un, class_sniper);
+
+    AddComAgressiveMove(un, 108, 108);
+    end;
+End;
+
+Every 0$1 trigger scoutActive and not scoutSuccess and FilterUnitsInArea(northScoutArea, [f_side, 2]) do
+var i, un, tmp;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+tmp := [];
+
+for i := 1 to 2 do
+    begin
+    PrepareSoldier(false, 7);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 56, 101, 3, false);
+    SetClass(un, class_sniper);
+
+    AddComAgressiveMove(un, 72, 92);
+    end;
+End;
+
+Every 0$1 trigger IsOk(usCargo) do
+var cr;
+begin
+enable;
+
+if GetFuel(usCargo) < 10 and not See(2, usCargo) then
+   SetFuel(usCargo, 100);
+
+if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not IsInArea(usCargo, usCratesArea) then
+   begin
+   cr := GetListOfCratesInArea(usCratesArea);
+
+   if cr then
+      ComCollect(usCargo, cr[1], cr[2])
+   else if not IsInArea(usCargo, usCratesArea) then
+      ComMoveToArea(usCargo, usCratesArea);
+   end;
+
+if GetCargo(usCargo, mat_cans) = 100 then
+   ComGive(usCargo, usDepot);
 End;
