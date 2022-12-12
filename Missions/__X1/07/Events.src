@@ -2,6 +2,48 @@ On UnitDestroyed(un) do
 begin
 if un = Heike then
    YouLost('Heike');
+
+if GetSide(un) = 1 then
+   begin
+   if GetWeapon(un) = us_crane and IsOk(amFac) then
+      AddComConstruct(amFac, us_medium_wheeled, engine_solar, control_remote, us_crane);
+
+   if GetWeapon(un) = us_cargo_bay and IsOk(amFac) then
+      AddComConstruct(amFac, us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay);
+
+   if GetBType(un) = b_bunker then
+      usToBuild := Replace(usToBuild, usToBuild + 1, [b_bunker, GetX(un), GetY(un), GetDir(un)]);
+
+   if GetBType(un) in [b_barracks, b_armoury] then
+      usToBuild := Replace(usToBuild, usToBuild + 1, [b_armoury, GetX(un), GetY(un), GetDir(un)]);
+   end;
+End;
+
+On UnitGoesToRed(un) do
+begin
+if GetSide(un) = 1 and GetTag(un) = 1 then
+   SetTag(un, 0);
+End;
+
+On BuildingComplete(b) do
+var i, barracks;
+begin
+if GetSide(b) = 1 then
+   begin
+   usToBuild := Delete(usToBuild, 1);
+
+   if GetBType(b) = b_armoury then
+      ComUpgrade(b);
+
+   if GetBType(b) = b_bunker then
+      begin
+      AddComPlaceWeapon(b, [us_heavy_gun, us_rocket_launcher][rand(1, 2)]);
+      barracks := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
+
+      if barracks then
+         ComExitBuilding(UnitsInside(barracks[1])[1]);
+      end;
+   end;
 End;
 
 On VehicleConstructed(vehicle, factory) do
@@ -11,6 +53,28 @@ if GetSide(factory) = 1 then
    if GetControl(vehicle) = control_remote then
       Connect(vehicle);
 
-   usForces := Replace(usForces, usForces + 1, vehicle);
+   if GetWeapon(vehicle) = us_cargo_bay then
+      usCargo := vehicle;
+
+   if not GetWeapon(vehicle) in [us_cargo_bay, us_crane] then
+      usForces := Replace(usForces, usForces + 1, vehicle);
    end;
+End;
+
+On EvacuateVehicle(un, veh, p1, p2) do
+begin
+if GetSide(veh) = 1 and GetWeapon(veh) = us_crane then
+   AddComEnterUnit(un, amFac);
+End;
+
+On EvacuateBuilding(b, un) do
+begin
+if GetSide(b) = 1 and GetBType(b) = b_bunker and GetClass(un) in [class_soldier, class_sniper] and FilterAllUnits([[f_side, 1], [f_btype, b_barracks], [f_ok]]) then
+   if UnitsInside(HexInfo(74, 120)) < 6 then
+      begin
+      ComEnterUnit(un, HexInfo(74, 120));
+
+      if GetClass(un) = class_soldier then
+         AddComChangeProfession(un, class_sniper);
+      end;
 End;
