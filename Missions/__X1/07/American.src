@@ -11,6 +11,9 @@ SetResourceType(GetBase(usDepot), mat_oil, 600);
 usForces := [];
 usToBuild := [];
 
+for i in FilterAllUnits([f_type, unit_building]) do
+    SetBLevel(i, [6, 7, 8, 8][Difficulty]);
+
 for i in FilterAllUnits([f_btype, b_bunker]) do
     begin
     if GetBWeapon(i) = us_radar then
@@ -69,10 +72,11 @@ InitHc;
 hc_gallery := 'us';
 hc_face_number := 26;
 hc_name := 'Max Caldera';
+hc_class := class_engineer;
 hc_sex := sex_male;
 hc_attr := [10, 11];
 hc_basic_skills := [2, 1, 0, 0];
-hc_skills := [8, 4, 3, 1];
+hc_skills := [4, 6, 3, 1];
 
 usCommander := CreateHuman;
 PlaceHumanInUnit(usCommander, usDepot);
@@ -92,7 +96,7 @@ var i, chassis, weapon;
 begin
 enable;
 
-for i := 1 to [4, 5, 6, 7][Difficulty] do
+for i := 1 to [5, 6, 7, 8][Difficulty] do
     begin
     chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][rand(1, 3)];
 
@@ -105,7 +109,7 @@ for i := 1 to [4, 5, 6, 7][Difficulty] do
     end;
 End;
 
-Every 0$10 trigger usForces >= [4, 5, 6, 7][Difficulty] do
+Every 0$10 trigger usForces >= [5, 6, 7, 8][Difficulty] do
 var i, tmp;
 begin
 enable;
@@ -274,4 +278,15 @@ for i in tmp do
           SetTag(btmp[1], 0);
        end;
     end;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_ok], [f_not, [f_linked]]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_ok], [f_not, [f_linked]]]);
+
+for i in tmp do
+    Connect(i);
 End;
