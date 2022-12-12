@@ -1,9 +1,118 @@
 Export Function PrepareRussianFirstWaveAttack;
+var i, tmp, un, veh;
 begin
+uc_side := 3;
+uc_nation := 3;
 
+tmp := [ [184, 144, 5], [191, 147, 5], [202, 151, 4], [210, 152, 4] ];
+
+for i := 1 to 4 do
+    begin
+    PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_gun, ru_heavy_gun][i mod 3 + 1], 40);
+    veh := CreateVehicle;
+    SetDir(veh, tmp[i][3]);
+    PlaceUnitXY(veh, tmp[i][1], tmp[i][2], false);
+    PrepareMechanic(false, [6, 7, 8, 8][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+
+for i := 1 to 4 do
+    begin
+    PrepareSoldier(false, [6, 7, 8, 8][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 185, 145, 6, false);
+    end;
 End;
 
 Export Function PrepareRussianLastWaveAttack;
+var i, veh;
 begin
+uc_side := 3;
 
+
+if Difficulty > 1 then
+   begin
+   uc_nation := 0;
+
+   for i := 1 to [4, 5, 6][Difficulty + 1] do
+       begin
+       hc_class := class_apeman_soldier;
+       hc_gallery := '';
+       hc_name := ['Treci', 'Ivan', 'Yaromir', 'Nadzieia', 'Krasna', 'Piaty'][rand(1, 6)];
+       hc_skills := [5, 0, 0, 0];
+       hc_sex := sex_male;
+
+       PlaceUnitXYR(CreateHuman, 178, 148, 6, false);
+       end;
+   end;
+
+for i := 1 to [4, 6, 7, 9][Difficulty] do
+    begin
+    uc_nation := 3;
+
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_rocket_launcher, ru_gatling_gun, ru_gun][i mod 3 + 1], 44);
+    veh := CreateVehicle;
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, startArea, false);
+    PrepareMechanic(false, [6, 7, 8, 8][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, veh);
+
+    ComMoveXY(veh, 178, 137);
+    wait(0$2);
+    end;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]);
+
+for i in tmp do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+Every 0$1 trigger russianAttack and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+var i, mech, tmp, nearest, isInBase, isInAmericanBase, enemy;
+begin
+enable;
+
+isInBase := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_distxy, 137, 28, 30]]);
+isInAmericanBase := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_distxy, 82, 138, 30]]);
+enemy := FilterAllUnits([f_enemy, 3]);
+
+mech := FilterAllUnits([[f_side, 3], [f_class, class_mechanic], [f_not, [f_driving]]]);
+
+if mech then
+   for i in mech do
+       begin
+       if IsInArea(i, escapeArea) then
+          RemoveUnit(i)
+       else if IsOk(i) then
+          ComMoveXY(i, 196, 155);
+       end;
+
+tmp := FilterAllUnits([[f_side, 3], [f_or, [f_class, class_soldier], [f_class, class_apeman_soldier], [f_type, unit_vehicle]], [f_ok]]);
+
+if tmp then
+   for i in tmp do
+       begin
+       if isInBase then
+          begin
+          nearest := NearestUnitToUnit(isInBase, i);
+          ComAgressiveMove(i, GetX(nearest), GetY(nearest));
+          end
+       else if isInAmericanBase then
+          begin
+          nearest := NearestUnitToUnit(isInAmericanBase, i);
+          ComAgressiveMove(i, GetX(nearest), GetY(nearest));
+          end
+       else
+          begin
+          nearest := NearestUnitToUnit(enemy, i);
+          ComAttackUnit(i, nearest);
+          end;
+       end;
 End;

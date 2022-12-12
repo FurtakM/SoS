@@ -1,4 +1,4 @@
-Export usCommander, usForces, usCargo;
+Export usCommander, usForces, usCargo, usToBuild;
 Export Function PrepareAmerican;
 var i, b, veh;
 begin
@@ -9,6 +9,7 @@ SetResourceType(GetBase(usDepot), mat_cans, [2000, 2500, 3000, 3500][Difficulty]
 SetResourceType(GetBase(usDepot), mat_oil, 600);
 
 usForces := [];
+usToBuild := [];
 
 for i in FilterAllUnits([f_btype, b_bunker]) do
     begin
@@ -41,7 +42,7 @@ for i := 1 to 6 do
     PlaceHumanInUnit(CreateHuman, [amLab1, amLab2][i mod 2 + 1]);
     end;
 
-for i := 1 to 4 do
+for i := 1 to 3 do
     begin
     PrepareHuman(false, 3, 6);
     PlaceHumanInUnit(CreateHuman, amFac);
@@ -170,7 +171,7 @@ for i := 1 to 2 do
     end;
 End;
 
-Every 0$1 trigger IsOk(usCargo) do
+Every 0$1 trigger IsOk(usCargo) and not usSurrender do
 var cr;
 begin
 enable;
@@ -178,7 +179,7 @@ enable;
 if GetFuel(usCargo) < 10 and not See(2, usCargo) then
    SetFuel(usCargo, 100);
 
-if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not IsInArea(usCargo, usCratesArea) then
+if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not IsInArea(usCargo, usCratesArea) and not FilterUnitsInArea(americanBaseArea, [[f_enemy, 1], [f_ok]]) then
    begin
    cr := GetListOfCratesInArea(usCratesArea);
 
@@ -190,4 +191,87 @@ if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not IsInArea(u
 
 if GetCargo(usCargo, mat_cans) = 100 then
    ComGive(usCargo, usDepot);
+End;
+
+Every 0$3 trigger not usSurrender and FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_ok]]]) and FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_class, 4]]) do
+var i, sci;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_ok]]]) do
+    begin
+    sci := FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_class, 4]]);
+
+    if not sci then
+       break;
+
+    sci := sci[1];
+
+    if IsInUnit(sci) then
+       ComExit(sci)
+    else
+       begin
+       ComHeal(sci, i);
+       AddComEnterUnit(sci, [amLab1, amLab2][rand(1, 2)]);
+       end;
+    end;
+End;
+
+Every 0$2 trigger not usSurrender and FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_ok], [f_weapon, us_crane]]) and FilterAllUnits([[f_side, 1], [f_not, [f_lives, 1000]], [f_type, unit_building], [f_not, [f_btype, b_oil_mine]]]) do
+var i, tmp, tmp2;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_not, [f_lives, 1000]], [f_type, unit_building], [f_not, [f_btype, b_oil_mine]]]);
+tmp2 := FilterAllUnits([[f_side, 1], [f_not, [f_lives, 600]], [f_type, unit_building], [f_not, [f_btype, b_oil_mine]]]);
+
+for i in FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_ok], [f_weapon, us_crane]]) do
+    begin
+    if tmp2 then
+       ComRepairBuilding(i, NearestUnitToUnit(tmp2, i))
+    else
+       ComRepairBuilding(i, NearestUnitToUnit(tmp, i));
+    end;
+End;
+
+Every 0$1 trigger not usSurrender and not FilterUnitsInArea(americanBaseArea, [[f_enemy, 1], [f_ok]]) and usToBuild and FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_ok], [f_weapon, us_crane]]) do
+begin                                                                                                           
+enable;
+ComCraneBuild(FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_ok], [f_weapon, us_crane]]), usToBuild[1][1], usToBuild[1][2], usToBuild[1][3], usToBuild[1][4]);
+End;
+
+Every 0$10 trigger FilterAllUnits([[f_side, 1], [f_ok], [f_not, [f_inside]], [f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_apeman_engineer]]]) do
+var i, tmp, btmp, barracks;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 1], [f_ok], [f_not, [f_inside]], [f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_apeman_engineer]]]);
+btmp := FilterAllUnits([[f_side, 1], [f_ok], [f_type, unit_building], [f_btype, b_bunker], [f_empty]]);
+barracks := FilterAllUnits([[f_side, 1], [f_ok], [f_btype, b_barracks]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    btmp := FilterByTag(btmp, 0);
+
+    if not btmp then
+       begin          
+       if GetClass(i) <> class_apeman_engineer and barracks then
+          ComEnterUnit(i, barracks[1]);
+
+       continue;
+       end
+    else
+       begin
+       SetTag(btmp[1], 1);  
+       ComEnterUnit(i, btmp[1]);
+
+       wait(0$9);
+
+       if IsEmpty(btmp[1]) then
+          SetTag(btmp[1], 0);
+       end;
+    end;
 End;
