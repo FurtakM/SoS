@@ -2407,4 +2407,72 @@ for un in units do
        result := Replace(result, result + 1, un);
 End;
 
+Export Function GetCratesNearbyXY(x, y, r);
+var _x, _y, min_y, min_x, max_x, max_y;
+begin
+result := [];
+
+if x - r < 0 then
+   min_x := 0
+else
+   min_x := x - r;
+
+if y - r < 0 then
+   min_y := 0
+else
+   min_y := y - r;
+
+max_x := x + r;
+max_y := y + r;
+
+for _x = min_x to max_x do
+    for _y = min_y to max_y do
+        begin
+        if not ValidHex(_x, _y) then
+           continue;
+
+        if GetResourceTypeXY(_x, _y) then
+           result := Replace(result, result + 1, [_x, _y]);
+        end;
+End;
+
+Export Function AgressiveMove(units, path);
+var i, enemy, cr, side, tag;
+begin
+if not units then
+   exit;
+
+side := GetSide(units[1]);
+
+for i in units do
+    begin
+    if IsOk(i) then
+       begin
+       tag := GetTag(i) + 1;
+       cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
+
+       if cr then
+          ComAttackPlace(i, cr[1][1], cr[1][2])
+       else if path > tag then
+          begin
+          enemy := FilterAllUnits([[f_enemy, side], [f_dist, i, 12]]);
+
+          if enemy then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+          else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
+             ComAgressiveMove(i, path[tag][1], path[tag][2])
+          else
+             SetTag(i, tag);
+          end
+       else
+          begin
+          enemy := FilterAllUnits([f_enemy, side]);
+
+          if enemy then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end;
+       end;
+    end;
+End;
+
 
