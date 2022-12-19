@@ -543,7 +543,7 @@ menu.window_campaign_tree.panel.sidebar.checkboxVHard = clCheckbox(
 		H = 15,
 		textureChecked = 'classic/edit/campaign/window/checkbox-am-very-hard.png',
 		textureUnchecked = 'classic/edit/campaign/window/checkbox-am-unchecked.png',
-		visible = false
+		--visible = false
 	}
 );
 
@@ -561,7 +561,7 @@ menu.window_campaign_tree.panel.sidebar.labelVHard = getLabelEX(
    	{
    		font_colour = WHITE(), 
    		nomouseevent = true,
-   		visible = false
+   		--visible = false
    	}
 );
 

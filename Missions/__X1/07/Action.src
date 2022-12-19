@@ -372,13 +372,31 @@ else if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Scout-10
 Say(Heike, 'DH-Scout-12');
 Say(Heike, 'DH-Scout-13');
 
+if IsOk(Mike) and IsOk(Kurt) then
+   begin
+   Say(Mike, 'DM-Scout-14');
+   Say(Heike, 'DH-Scout-c-14');
+   end
+else if IsOk(Mike) xor IsOk(Kurt) then
+   begin
+   if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Scout-a-14') then
+      SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-Scout-a-14');
+   end
+else
+   Say(Heike, 'DH-Scout-d-14');
+
+Say(Heike, 'DH-Scout-15');
+
 InGameOff;
 
 usAttacksAllowed := true;
 End;
 
 Every 0$1 trigger scoutFailed do
+var spoken;
 begin
+spoken := true;
+
 wait(0$30);
 
 Say(Heike, 'DH-Scout-c-1');
@@ -386,9 +404,21 @@ Say(Heike, 'DH-Scout-c-1');
 if not IsOk(Givi) then
    exit;
 
-Say(Givi, 'DG-Scout-c-2');
-Say(Givi, 'DG-Scout-c-3');
-Say(Heike, 'DH-Scout-c-4');
+if IsOk(Givi) then
+   begin
+   Say(Givi, 'DG-Scout-c-2');
+   Say(Givi, 'DG-Scout-c-3');
+   end
+else
+   begin
+   spoken := SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Scout-c-3');
+
+   if not spoken then
+      spoken := SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-Scout-c-3');;
+   end;
+
+if spoken then
+   Say(Heike, 'DH-Scout-c-4');
 End;
 
 // lab
@@ -519,12 +549,18 @@ if sci and hurts then
    end;
 
 if IsOk(Givi) then
-   Say(Givi, 'DG-Surrender-5');
-// todo
+   Say(Givi, 'DG-Surrender-5')
+else
+   Say(Heike, 'DH-Surrender-a-5');
 
 Say(usCommander, 'DCa-Surrender-6');
 Say(usCommander, 'DCa-Surrender-7');
-Say(Givi, 'DG-Surrender-8');
+
+if IsOk(Givi) then
+   Say(Givi, 'DG-Surrender-8')
+else
+   Say(Heike, 'DH-Surrender-a-8');
+
 Say(usCommander, 'DCa-Surrender-9');
 Say(Heike, 'DH-Surrender-10');
 Say(usCommander, 'DCa-Surrender-11');
@@ -544,9 +580,19 @@ Say(Sophia, 'DS-Surrender-24');
 Say(Aviradze, 'DA-Surrender-25');
 Say(Ibrahim, 'DI-Surrender-26');
 Say(Kamil, 'DKam-Surrender-27');
-Say(Givi, 'DG-Surrender-28');
-Say(Givi, 'DG-Surrender-29');
-Say(Givi, 'DG-Surrender-30');
+
+if IsOk(Givi) then
+   begin
+   Say(Givi, 'DG-Surrender-28');
+   Say(Givi, 'DG-Surrender-29');
+   Say(Givi, 'DG-Surrender-30');
+   end
+else
+   begin
+   Say(Heike, 'DH-Surrender-a-28');
+   Say(Heike, 'DH-Surrender-a-29');
+   Say(Heike, 'DH-Surrender-a-30');
+   end;
 
 PrepareRussianFirstWaveAttack;
 
@@ -557,7 +603,11 @@ if not IsEnvironment(190, 150) then
 
 CenterOnXY(193, 150);
 
-Say(Markov, 'DMar-Surrender-31');
+if IsOk(Markov) then
+   Say(Markov, 'DMar-Surrender-31')
+else if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Surrender-a-31') then
+   SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-Surrender-a-31');
+
 Say(Heike, 'DH-Surrender-32');
 
 InGameOff;
@@ -571,6 +621,63 @@ PrepareRussianLastWaveAttack;
 russianAttack := true;
 
 RemoveSeeing(190, 150, 2);
+End;
+
+// talk about heavy gun
+Every 0$3 trigger seeHeavyGun and not InBattle(2) and IsOk(Heike) and FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) and (IsOk(Markov) or UnitFilter(heikeSecondSquad, [f_ok])) do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Heavy-1');
+
+if IsOk(Markov) then
+   begin
+   Say(Markov, 'DMar-Heavy-2');
+
+   CenterNowOnUnits(FilterAllUnits([[f_side, 2], [f_btype, b_factory]])[1]);
+
+   Say(Markov, 'DMar-Heavy-3');
+   Say(Markov, 'DMar-Heavy-4');
+   Say(Markov, 'DMar-Heavy-5');
+   Say(Markov, 'DMar-Heavy-6');
+   Say(Heike, 'DH-Heavy-7');
+   Say(Heike, 'DH-Heavy-8');    
+   end
+else
+   begin
+   if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-Heavy-a-2') then
+      SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-Heavy-a-2');
+   end;
+
+Say(Heike, 'DH-Heavy-9');
+
+DialogueOff;
+End;
+
+// see remote vehicles
+Every 0$3 trigger seeRemoteVehicle do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-USRC-1');
+
+if IsOk(Markov) then
+   Say(Markov, 'DMar-USRC-2')
+else if not SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_male]), 'DArm-USRC-a-2') then
+   SayX(UnitFilter(heikeSecondSquad, [f_sex, sex_female]), 'DArf-USRC-a-2');
+
+DialogueOff;
+
+wait(0$10);
+
+Say(Heike, 'DH-USRC-3');
+
+repeat
+ wait(0$1);
+until See(2, FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]])[1]);
+
+CenterNowOnUnits(FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]])[1]);
+Say(Heike, 'DH-USRCFound-1');
 End;
 
 // kaia dead

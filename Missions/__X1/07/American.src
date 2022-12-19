@@ -1,4 +1,4 @@
-Export usCommander, usForces, usCargo, usToBuild;
+Export usCommander, usForces, usCargo, usToBuild, usAdditionalForces;
 Export Function PrepareAmerican;
 var i, b, veh;
 begin
@@ -10,6 +10,7 @@ SetResourceType(GetBase(usDepot), mat_oil, 600);
 
 usForces := [];
 usToBuild := [];
+usAdditionalForces := [];
 
 for i in FilterAllUnits([f_type, unit_building]) do
     SetBLevel(i, [6, 7, 8, 8][Difficulty]);
@@ -121,18 +122,8 @@ if not tmp then
    exit;
 
 repeat
- wait(0$1);
-
- for i in tmp do
-     begin
-     if not IsOk(i) then
-        begin
-        ComUnlink(i);
-        tmp := tmp diff i;
-        end
-     else
-        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 2]), i));
-     end;
+ wait(0$1);   
+ AgressiveMove(tmp, [ [98,50], [114,50], [127,51], [131,35] ]);
 until not tmp;
 End;
 
@@ -175,25 +166,30 @@ for i := 1 to 2 do
     end;
 End;
 
-Every 0$1 trigger IsOk(usCargo) and not usSurrender do
-var cr;
+Every 0$2 trigger IsOk(usCargo) and not usSurrender do
+var cr, enemyInArea;
 begin
 enable;
+
+enemyInArea := FilterUnitsInArea(americanBaseArea, [[f_enemy, 1], [f_ok]]);
+cr := GetListOfCratesInArea(usCratesArea);
 
 if GetFuel(usCargo) < 10 and not See(2, usCargo) then
    SetFuel(usCargo, 100);
 
-if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not IsInArea(usCargo, usCratesArea) and not FilterUnitsInArea(americanBaseArea, [[f_enemy, 1], [f_ok]]) then
+if not HasTask(usCargo) and GetCargo(usCargo, mat_cans) < 100 and not enemyInArea then
    begin
-   cr := GetListOfCratesInArea(usCratesArea);
-
    if cr then
       ComCollect(usCargo, cr[1], cr[2])
    else if not IsInArea(usCargo, usCratesArea) then
       ComMoveToArea(usCargo, usCratesArea);
+
+   exit;
    end;
 
-if GetCargo(usCargo, mat_cans) = 100 then
+if enemyInArea and not IsInArea(usCargo, americanBaseArea) then
+   ComMoveXY(usCargo, 80, 143)
+else if GetCargo(usCargo, mat_cans) then
    ComGive(usCargo, usDepot);
 End;
 
@@ -290,3 +286,4 @@ tmp := FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_ok], [f_not,
 for i in tmp do
     Connect(i);
 End;
+
