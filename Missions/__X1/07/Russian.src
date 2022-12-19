@@ -57,7 +57,7 @@ for i := 1 to [4, 6, 7, 9][Difficulty] do
     PrepareMechanic(false, [6, 7, 8, 8][Difficulty]);
     PlaceHumanInUnit(CreateHuman, veh);
 
-    ComMoveXY(veh, 178, 137);
+    AgressiveMove(veh, [ [178, 137] ]);
     wait(0$2);
     end;
 End;
@@ -75,13 +75,9 @@ for i in tmp do
 End;
 
 Every 0$1 trigger russianAttack and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
-var i, mech, tmp, nearest, isInBase, isInAmericanBase, enemy;
+var i, mech, tmp;
 begin
 enable;
-
-isInBase := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_distxy, 137, 28, 30]]);
-isInAmericanBase := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_distxy, 82, 138, 30]]);
-enemy := FilterAllUnits([f_enemy, 3]);
 
 mech := FilterAllUnits([[f_side, 3], [f_class, class_mechanic], [f_not, [f_driving]]]);
 
@@ -97,22 +93,5 @@ if mech then
 tmp := FilterAllUnits([[f_side, 3], [f_or, [f_class, class_soldier], [f_class, class_apeman_soldier], [f_type, unit_vehicle]], [f_ok]]);
 
 if tmp then
-   for i in tmp do
-       begin
-       if isInBase then
-          begin
-          nearest := NearestUnitToUnit(isInBase, i);
-          ComAgressiveMove(i, GetX(nearest), GetY(nearest));
-          end
-       else if isInAmericanBase then
-          begin
-          nearest := NearestUnitToUnit(isInAmericanBase, i);
-          ComAgressiveMove(i, GetX(nearest), GetY(nearest));
-          end
-       else
-          begin
-          nearest := NearestUnitToUnit(enemy, i);
-          ComAttackUnit(i, nearest);
-          end;
-       end;
+   AgressiveMove(tmp, [ [171,106], [145,69], [132,38], [126,15] ]);
 End;
