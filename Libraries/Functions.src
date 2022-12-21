@@ -2442,35 +2442,36 @@ begin
 if not units then
    exit;
 
+result := UnitFilter(units, [f_ok]);
 side := GetSide(units[1]);
 
-for i in units do
+if not result then
+   exit;
+
+for i in result do
     begin
-    if IsOk(i) then
+    tag := GetTag(i) + 1;
+    cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
+
+    if cr then
+       ComAttackPlace(i, cr[1][1], cr[1][2])
+    else if path > tag then
        begin
-       tag := GetTag(i) + 1;
-       cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
+       enemy := FilterAllUnits([[f_enemy, side], [f_dist, i, 12]]);
 
-       if cr then
-          ComAttackPlace(i, cr[1][1], cr[1][2])
-       else if path > tag then
-          begin
-          enemy := FilterAllUnits([[f_enemy, side], [f_dist, i, 12]]);
-
-          if enemy then
-             ComAttackUnit(i, NearestUnitToUnit(enemy, i))
-          else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
-             ComAgressiveMove(i, path[tag][1], path[tag][2])
-          else
-             SetTag(i, tag);
-          end
+       if enemy then
+          ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+       else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
+          ComAgressiveMove(i, path[tag][1], path[tag][2])
        else
-          begin
-          enemy := FilterAllUnits([f_enemy, side]);
+          SetTag(i, tag);
+       end
+    else
+       begin
+       enemy := FilterAllUnits([f_enemy, side]);
 
-          if enemy then
-             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
-          end;
+       if enemy then
+          ComAttackUnit(i, NearestUnitToUnit(enemy, i));
        end;
     end;
 End;

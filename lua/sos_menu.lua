@@ -341,6 +341,106 @@ footer.contact = getLabelEX(
 	}
 );--]]
 
+function displayChangeLogMessage()
+    local dialogSave;
+    local version = parseInt(MOD_DATA.Mod_Main_Ver);
+
+    if (not saveExists('sos_changelog')) then
+        dialogSave = OW_CUSTOMSAVE_NEW();
+    else
+        dialogSave = OW_CUSTOMSAVE_LOAD('sos_changelog');
+    end;
+
+    local hasBeenRead = OW_CUSTOMSAVE_READ(dialogSave, version);
+
+    if hasBeenRead then
+        OW_CUSTOMSAVE_CLOSE(dialogSave);
+        return;
+    end;
+
+    OW_CUSTOMSAVE_WRITE(dialogSave, version, true);
+    OW_CUSTOMSAVE_SAVE(dialogSave, 'sos_changelog');
+    OW_CUSTOMSAVE_CLOSE(dialogSave);
+
+    local ELEMENT = getElementEX(
+        nil,
+        anchorLTRB,
+        XYWH(0, 0, ScrWidth, ScrHeight),
+        true,
+        {
+            colour1 = BLACKA(150)
+        }
+    );
+
+    -- w: 450
+    -- h: 600
+    ELEMENT.dialog = getElementEX(
+        ELEMENT,
+        anchorNone,
+        XYWH(ScrWidth / 2 - 225, ScrHeight / 2 - 300, 450, 600),
+        true,
+        {
+            texture = 'classic/edit/query_changelog.png'
+        }
+    );
+
+    ELEMENT.dialog.label = getLabelEX(
+        ELEMENT.dialog, 
+        anchorLT, 
+        XYWH(16, 28, 200, 24),
+        ADMUI3L, 
+        'Lista zmian',
+        {
+            wordwrap = true,
+            font_colour = BLACK(),
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP
+        }
+    );
+
+    ELEMENT.dialog.content = getElementEX(
+        ELEMENT.dialog,
+        anchorNone,
+        XYWH(20, 62, 410, 520),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.dialog.content.text = getLabelEX(
+        ELEMENT.dialog.content, 
+        anchorLT, 
+        XYWH(0, 0, 410, 520),
+        ADMUI3L, 
+        loc(TID_Changelog),
+        {
+            wordwrap = true,
+            autosize = true,
+            font_colour = BLACK(),
+            scissor = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+        }
+    );
+
+    ELEMENT.close = getElementEX(
+        ELEMENT,
+        anchorLTRB,
+        XYWH(0, 0, LayoutWidth, LayoutHeight),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    set_Callback(
+        ELEMENT.close.ID,
+        CALLBACK_MOUSEDOWN,
+        'setVisibleID(' .. ELEMENT.ID .. ', false);'
+    );
+end;
+
 -- @override
 function showMenuButton(windowNumber)
     setVisible(menu.window, false);
@@ -367,6 +467,7 @@ function showMenuButton(windowNumber)
 
     if (windowNumber == 2) then
         setVisible(menu.window2, true);
+        displayChangeLogMessage();
     end;
 
     if (windowNumber == 3) then
