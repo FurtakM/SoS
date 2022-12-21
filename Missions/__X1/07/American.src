@@ -55,7 +55,7 @@ for i := 1 to 3 do
 for i := 1 to 3 do
     begin
     PrepareHuman(false, 3, [6, 7, 7, 7][Difficulty]);
-    PlaceHumanInUnit(CreateHuman, HexInfo(84, 154));
+    PlaceHumanInUnit(CreateHuman, HexInfo(78, 130));
     end;
 
 for i := 1 to 3 do
@@ -122,8 +122,8 @@ if not tmp then
    exit;
 
 repeat
- wait(0$1);   
- AgressiveMove(tmp, [ [98,50], [114,50], [127,51], [131,35] ]);
+ wait(0$1);
+ tmp := AgressiveMove(tmp, [ [98,50], [114,50], [127,51], [131,35] ]);
 until not tmp;
 End;
 
@@ -285,5 +285,48 @@ tmp := FilterAllUnits([[f_side, 1], [f_control, control_remote], [f_ok], [f_not,
 
 for i in tmp do
     Connect(i);
+End;
+
+Every 1$00 trigger usAttacksAllowed and Difficulty > 1 do
+var i, un, veh, chassis, weapon;
+begin
+wait([10$00, 9$00, 8$00, 7$00][Difficulty]);
+
+if usSurrender then
+   exit;
+
+for i := 1 to [4, 5, 5, 6][Difficulty] do
+    begin
+    uc_side := 1;
+    uc_nation := 1;
+
+    PrepareHuman(false, 3, [5, 6, 7, 8][Difficulty]);
+    un := CreateHuman;
+
+    chassis := [us_medium_wheeled, us_medium_tracked, us_heavy_tracked][i mod 3 + 1];
+
+    if chassis = us_heavy_tracked then
+       weapon := [us_heavy_gun, us_gatling_gun, us_double_gun][rand(1,3)]
+    else
+       weapon := [us_heavy_gun, us_double_gun, us_rocket_launcher, us_gatling_gun][rand(1,4)];
+
+    PrepareVehicle(chassis, engine_combustion, control_manual, weapon, 30);
+    veh := CreateVehicle;
+
+    usAdditionalForces := Replace(usAdditionalForces, usAdditionalForces + 1, veh);
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, americanEastArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 153, 45);
+
+    wait(0$2);
+    end;
+
+repeat
+ wait(0$1);
+ usAdditionalForces := AgressiveMove(usAdditionalForces, [ [150,36], [138,25] ]);
+until not usAdditionalForces;
 End;
 

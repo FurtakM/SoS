@@ -299,7 +299,7 @@ PrepareRolfBase;
 End;
 
 // Spot Rolf
-Every 0$1 trigger FilterUnitsInArea(ruRolfBase, [f_side, 2]) and IsOk(Rolf) do
+Every 0$1 trigger FilterUnitsInArea(ruRolfBase, [f_side, 2]) and IsOk(Rolf) and canRolfJoin do
 var i;
 begin
 rolfScriptBase := false;
@@ -385,8 +385,24 @@ for i in FilterAllUnits([f_side, 8]) do
     SetSide(i, 2);
 End;
 
+// Player not linked with Rolf, Rolf attack when Omar attacks
+Every 0$1 trigger omarAttack and not linkedWithRolf and canRolfJoin do
+var i;
+begin
+canRolfJoin := false;
+ChangeMissionObjectives('M3');
+
+for i in rolfSquad do
+    begin
+    ComExit(i);
+    AddComAgressiveMove(i, 147, 162);
+    AddComWait(i, 0$30);
+    AddComAgressiveMove(i, 103, 162);
+    end;
+End;
+
 // Rolf dies
-Every 0$1 trigger bergkampfArrived and GetLives(Rolf) < 400 and not linkedWithRolf do
+Every 0$1 trigger bergkampfArrived and GetLives(Rolf) < 400 and not linkedWithRolf and canRolfJoin do
 var random;
 begin
 DialogueOn;
@@ -496,6 +512,8 @@ End;
 
 Every 0$3 trigger IsOk(Rolf) and linkedWithRolf and omarArrived do
 begin
+wait(0$20);
+
 CenterNowOnUnits(Rolf);
 
 DialogueOn;
@@ -559,6 +577,9 @@ DialogueOff;
 ChangeMissionObjectives('M4a');
 SetAreaMapShow(omarVehiclesArea, 0);
 omarHasVehicles := true;
+
+wait(1$00);
+
 omarAttack := true;
 omarScriptBase := false;
 
@@ -759,7 +780,7 @@ PlaceUnitXYD(vehicle, 277, 80, 4, false);
 PlaceHumanInUnit(driver, vehicle);
 SetLives(vehicle, live);
 
-if Prob([70, 60, 50][Difficulty]) then
+if Prob([70, 60, 50, 40][Difficulty]) then
    SetCargo(vehicle, mat_oil, 100)
 else if live > 333 then
    SetLives(vehicle, 333);
@@ -792,7 +813,7 @@ SetAreaMapShow(escapeArea, 1);
 
 escapeAllowed := true;
 
-wait(0$1);
+wait(0$2);
 
 Say(Kurt, 'DKs-End-8');
 Say(Kaia, 'DK-End-10');
@@ -845,6 +866,8 @@ Say(Heike, 'DH-End-20');
 
 if rolfDied then
    AddMedal('med1', -1)
+else if not canRolfJoin then
+   AddMedal('med1', -2)
 else
    AddMedal('med1', 1);
 
@@ -857,7 +880,7 @@ else if rolfHasVehicles then
 else
    AddMedal('med2', -3);
 
-if ruLoseCounter >= [40, 55, 70][Difficulty] and heikeLoseCounter = 0 then
+if ruLoseCounter >= [40, 55, 70, 82][Difficulty] and heikeLoseCounter = 0 then
    AddMedal('med3', 1)
 else if heikeLoseCounter then
    AddMedal('med3', -2)

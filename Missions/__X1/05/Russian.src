@@ -26,7 +26,7 @@ SetResourceType(GetBase(ruEastBase), mat_oil, 300);
 
 for i := 1 to 2 do
     begin
-    PrepareHuman(false, 1, [3, 4, 5][Difficulty]);
+    PrepareHuman(false, 1, [3, 4, 5, 6][Difficulty]);
     un := CreateHuman;
     oilBaseGuard := Replace(oilBaseGuard, oilBaseGuard + 1, un);
     PlaceHumanInUnit(un, [HexInfo(198, 106), HexInfo(205, 114)][i]);
@@ -41,13 +41,18 @@ for i := 1 to 2 do
     end;
 
 // north group
-for i := 1 to [4, 5, 6][Difficulty] do
+for i := 1 to [4, 5, 6, 7][Difficulty] do
     begin
-    PrepareHuman(false, [1, 1, 2, 4, 1][rand(1, 5)], [3, 4, 5][Difficulty]);
+    PrepareHuman(false, [1, 1, 2, 4, 1][rand(1, 5)], [3, 4, 5, 5][Difficulty]);
     un := CreateHuman;
 
-    if PlaceUnitInArea(un, northGroup2Area, false) then
+    if PlaceUnitInArea(un, northGroupArea, false) then
+       begin
        ruNorthGroup := Replace(ruNorthGroup, ruNorthGroup + 1, un);
+
+       if Prob(50) then
+          ForceSleep(un, true);
+       end;
     end;
 
 for i := 1 to 3 do
@@ -60,13 +65,18 @@ for i := 1 to 3 do
     end;
 
 // south
-for i := 1 to [5, 6, 7][Difficulty] do
+for i := 1 to [5, 6, 7, 8][Difficulty] do
     begin
-    PrepareHuman(false, [1, 1, 2, 4, 1][rand(1, 5)], [3, 4, 5][Difficulty]);
+    PrepareHuman(false, [1, 1, 2, 4, 1][rand(1, 5)], [3, 4, 5, 5][Difficulty]);
     un := CreateHuman;
 
     if PlaceUnitInArea(un, southGroupArea, false) then
+       begin
        ruSouthGroup := Replace(ruSouthGroup, ruSouthGroup + 1, un);
+
+       if Prob(50) then
+          ForceSleep(un, true);
+       end;
     end;
 End;
 
@@ -128,7 +138,7 @@ AddComAttackUnit(apeEngGroup, FilterAllUnits([[f_side, 2], [f_distxy, 54, 77, 8]
 End;
 
 Export Function PrepareConvoy;
-var i, spawnPoint, dir, spawnArea, outerSpawnArea, movePoints, un, tag;
+var i, spawnPoint, dir, spawnArea, outerSpawnArea, movePoints, un, tag, enemy;
 begin
 spawnPoint := rand(1, 3);
 spawnArea := [eastNorthSpawnArea, eastSouthSpawnArea, eastSpawnArea][spawnPoint];
@@ -283,8 +293,15 @@ repeat
 
            if GetType(un) = unit_vehicle or GetClass(un) = 3 then
               begin
-              AddComWait(un, 0$4);
-              AddComAgressiveMove(un, movePoints[tag + 1][1], movePoints[tag + 1][2]);
+              enemy := FilterAllUnits([[f_side, 2], [f_dist, un, 8]]);
+
+              if enemy then
+                 ComAttackUnit(un, NearestUnitToUnit(enemy, un))
+              else
+                 begin
+                 AddComWait(un, 0$4);
+                 AddComAgressiveMove(un, movePoints[tag + 1][1], movePoints[tag + 1][2]);
+                 end;
               end;
            end
         else
@@ -337,4 +354,14 @@ for i in tmp do
     AddComAgressiveMove(i, 75, 101);
     AddComAgressiveMove(i, 57, 83);
     end;
+End;
+
+Every 0$1 trigger UnitFilter(ruNorthGroup, [f_not, [f_lives, 1000]]) or UnitFilter(ruSouthGroup, [f_not, [f_lives, 1000]]) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(ruNorthGroup, [f_not, [f_lives, 1000]]) union UnitFilter(ruSouthGroup, [f_not, [f_lives, 1000]]) do
+    if IsSleeping(i) then
+       ForceSleep(i, false);
 End;

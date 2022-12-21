@@ -1,5 +1,5 @@
-SOS_MUSIC_LIST = {'Hudba/Menu/MenuLeg.wav', 'Hudba/Menu/MenuAmer.wav', 'Hudba/Menu/MenuRus.wav', 'Hudba/Menu/MenuMain.wav', 'Hudba/Menu/MenuRus2.wav'};
-SOS_MUSIC_TRACK = 0;
+SOS_MUSIC_LIST = {'Hudba/Menu/MenuOriginal.wav', 'Hudba/Menu/MenuLeg.wav', 'Hudba/Menu/MenuAmer.wav', 'Hudba/Menu/MenuRus.wav', 'Hudba/Menu/MenuMain.wav', 'Hudba/Menu/MenuRus2.wav'};
+SOS_MUSIC_TRACK = -1;
 SOS_MUSIC_CREDITS = 'Hudba/Menu/Credits.wav';
 SOS_MUSIC_MENU_ID = 0;
 SOS_MUSIC_CREDITS_ID = 0;
@@ -30,7 +30,11 @@ function playMenuMusic(MODE)
         end;
     else
         if (SOS_MUSIC_MENU_ID == 0) then
-            SOS_MUSIC_TRACK = math.random(0, #SOS_MUSIC_LIST - 1);
+            if (SOS_MUSIC_TRACK == -1) then
+                SOS_MUSIC_TRACK = 0;
+            else
+                SOS_MUSIC_TRACK = math.random(0, #SOS_MUSIC_LIST - 1);
+            end;
             playNextTrack(SOS_MUSIC_TRACK);
         end;
     end;
