@@ -1,51 +1,49 @@
-// Start mission
-Every 0$01 do
+Export Function Action;
 begin
+CenterNowOnXY(66, 4);
 
-    if FilterAllUnits([[f_side, 1], [f_class, 2]]) = 0 then
-       SetClass(JMM, 2);
+if FilterAllUnits([[f_side, 1], [f_class, 2]]) = 0 then
+   SetClass(JMM, 2);
 
-    ChangeMissionObjectives('M1');
+ChangeMissionObjectives('M1');
 
-    case difficulty of
-        1: ChangeMissionObjectives('M1-1');
-        2: ChangeMissionObjectives('M1-2');
-        3: ChangeMissionObjectives('M1-3');
-    end;
+case Difficulty of
+     1: ChangeMissionObjectives('M1-1');
+     2: ChangeMissionObjectives('M1-2');
+     3..4:
+        ChangeMissionObjectives('M1-3');
+     end;
 
-    ChangeMissionObjectives('M1cont');
+ChangeMissionObjectives('M1cont');
 
-    wait(0$2);
+wait(0$2);
 
-    SaveForQuickRestart;
+SaveForQuickRestart;
 
-    wait(rand(0$15, 0$20));
+wait(rand(0$15, 0$20));
 
-    CreateCratesXYR(5, 82, 38, 10, true);
+CreateCratesXYR(5, 82, 38, 10, true);
 
-    wait(0$14);
+wait(0$14);
 
-    firstCrateSpawn := true;
-end;
+firstCrateSpawn := true;
+End;
 
 // First crate spawn
 Every 0$02 trigger firstCrateSpawn do
 begin
+if IsOk(Lisa) then
+   Say(Lisa, 'DR0-Lisa-1')
+else
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol1-1', 'DR0-Sol1-1');
 
-    if IsOk(Lisa) then
-       Say(Lisa, 'DR0-Lisa-1')
-     else
-       DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol1-1', 'DR0-Sol1-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol2-1', 'DR0-Sol2-1');
 
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol2-1', 'DR0-Sol2-1');
+if IsOk(Cyrus) then
+   Say(Cyrus, 'DR0-Cyrus-1');
 
-    if IsOk(Cyrus) then
-       Say(Cyrus, 'DR0-Cyrus-1');
-
-    Say(JMM, 'DR0-JMM-1');
-
+Say(JMM, 'DR0-JMM-1');
 End;
-
 
 // Frank dialog
 Every 5$0 trigger IsOk(Frank) and FilterAllUnits([[f_side, 1], [f_class, 16]]) > 0 and not InBattle(1) do
@@ -112,204 +110,196 @@ end;
 Export Function SpawnDenis;
 var tmp;
 begin
-    PrepareDenis;
-    CenterNowOnUnits(Denis);
+PrepareDenis;
 
-    tmp := FilterAllUnits([f_side, 1]);
+if not Denis then
+   exit;
 
-    ComMoveUnit(Denis, NearestUnitToUnit(tmp, Denis));
+CenterNowOnUnits(Denis);
 
-    repeat
-     wait(0$1);
-    until FilterAllUnits([[f_side, 1], [f_dist, Denis, 10]]);
+tmp := FilterAllUnits([f_side, 1]);
 
-    SetSide(Denis, 1);
+ComMoveUnit(Denis, NearestUnitToUnit(tmp, Denis));
 
-    DialogueOn;
-    Say(Denis, 'DDen-Den-1');
-    Say(JMM, 'DDen-JMM-1');
-    Say(Denis, 'DDen-Den-2');
-    Say(JMM, 'DDen-JMM-2');
-    Say(Denis, 'DDen-Den-3');
-    Say(JMM, 'DDen-JMM-3');
-    DialogueOff;
-    SetRestrict(36, 1, true);
-    SetTech(15, 1, state_enabled);
-    ChangeMissionObjectives('MR');
-end;
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 1], [f_dist, Denis, 10]]);
+
+SetSide(Denis, 1);
+
+DialogueOn;
+Say(Denis, 'DDen-Den-1');
+Say(JMM, 'DDen-JMM-1');
+Say(Denis, 'DDen-Den-2');
+Say(JMM, 'DDen-JMM-2');
+Say(Denis, 'DDen-Den-3');
+Say(JMM, 'DDen-JMM-3');
+DialogueOff;
+
+SetRestrict(36, 1, true);
+SetTech(15, 1, state_enabled);
+ChangeMissionObjectives('MR');
+End;
 
 // Build opto lab
-Every 0$6 trigger CheckOptoLab and IsOk(Denis) and not InBattle(1) do
+Every 0$6 trigger FilterAllUnits([[f_side, 1], [f_btype, b_lab_opto]]) and IsOk(Denis) and not InBattle(1) do
 begin
-    Say(Denis, 'DR1-Den-1');
-    Say(JMM, 'DR1-JMM-1');
-end;
-
-Function CheckOptoLab;
-var i;
-begin
-    result = false;
-
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype,b_lab_half],[f_btype,b_lab_full]]]) do
-    begin     
-        if (GetLabKind(i, 1) = b_lab_opto) or (GetLabKind(i, 2) = b_lab_opto) then
-        begin
-            result = true;
-            break;
-        end;
-    break;
-    end;
-end;
+Say(Denis, 'DR1-Den-1');
+Say(JMM, 'DR1-JMM-1');
+End;
 
 // Research remote control
 Every 0$1 trigger GetTech(15, 1) = state_researched and IsOK(Denis) and not InBattle(1) do
 begin
-    DialogueOn;
+DialogueOn;
 
-    if IsOK(Denis) then
-    begin
-        Say(Denis, 'DR2-Den-1');
-    end
-    else
-    begin
-         DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 4]]) diff [JMM], 'DR2-Sci1-1', 'DR2-FSci1-1');
-    end;
-    Say(JMM, 'DR2-JMM-1');
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Denis, Gladstone], 'DR2-Sol1-1', 'DR2-Sol1-11');
-    Say(JMM, 'DR2-JMM-2');
-    DialogueOff;
-end;
+if IsOK(Denis) then
+   Say(Denis, 'DR2-Den-1')
+else
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 4]]) diff [JMM], 'DR2-Sci1-1', 'DR2-FSci1-1');
+
+Say(JMM, 'DR2-JMM-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Denis, Gladstone], 'DR2-Sol1-1', 'DR2-Sol1-11');
+Say(JMM, 'DR2-JMM-2');
+DialogueOff;
+End;
 
 // Build first remote vehicle without tower control
 Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, 36]]) = 0 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) > 0 and firstTower = 0 and not InBattle(1) do
 begin
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, sex_male]]) diff [JMM, Brown, Donaldson, Denis, Joan, Bobby, Cyrus, Lisa, Frank, Gladstone], 'D3a-Mech1-1', 'D3a-Mech1-1');
-    firstTower = 2;
-end;
+DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, 3], [f_sex, sex_male]]) diff [JMM, Brown, Donaldson, Denis, Joan, Bobby, Cyrus, Lisa, Frank, Gladstone], 'D3a-Mech1-1', 'D3a-Mech1-1');
+firstTower = 2;
+End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 do
 var i;
 begin
-     for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
-         AddExperience(i, 1, 10000);
-
-end;
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) do
+    AddExperience_NoLimit(i, 1, 7500);
+End;
 
 // All ready to test remote veh
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, 36]]) > 0 and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) > 0 and CheckMehInside and not InBattle(1) do
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) and FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]) and CheckMehInside and not InBattle(1) do
 var i, j,  tmpControlTowers, tmpRemoteVehs, tmpMechanicInside;
 begin
+tmpControlTowers = FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]);
+tmpRemoteVehs = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]);
+tmpMechanicInside = [];
 
-    tmpControlTowers = FilterAllUnits([[f_side, 1], [f_btype, 36]]);
-    tmpRemoteVehs = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_control, control_remote]]);
-    tmpMechanicInside = [];
-
-    for i in tmpControlTowers do
+for i in tmpControlTowers do
     begin
+    if IsInUnit(JMM) = i and GetClass(JMM) = class_mechanic then
+       begin
+       InGameOn;
+       CenterNowOnUnits(tmpRemoteVehs[1]);
+       Say(JMM, 'D4a-JMM-1');
+       LinkVehicleToHuman(tmpRemoteVehs[1], JMM);
 
-        if IsInUnit(JMM) = i and GetClass(JMM) = 3 then
-        begin
-            InGameOn;
-            CenterNowOnUnits(tmpRemoteVehs[1]);
-            Say(JMM, 'D4a-JMM-1');
-            LinkVehicleToHuman(tmpRemoteVehs[1], JMM);
-            wait(0$1);
-            ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
-            wait(0$2);
-            Say(JMM, 'D4b-JMM-1');
-            InGameOff;
-        end else
-        begin
+       wait(0$1);
+       ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
 
-            InGameOn;
-            for j in UnitsInside(i) do
-                if GetClass(j) = 3 then tmpMechanicInside = tmpMechanicInside ^ j;
+       wait(0$2);
 
-            if GetSex(tmpMechanicInside[1]) = 1 then Say(tmpMechanicInside[1], 'D4a-Mech1-1');
-            if GetSex(tmpMechanicInside[1]) = 2 then Say(tmpMechanicInside[1], 'D4a-FMech1-1');
+       Say(JMM, 'D4b-JMM-1');
+       InGameOff;
+       exit;
+       end
+    else
+       begin
+       InGameOn;
 
-            CenterNowOnUnits(tmpRemoteVehs[1]);
-            LinkVehicleToHuman(tmpRemoteVehs[1], tmpMechanicInside[1]);
-            wait(0$1);
-            ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
-            wait(0$2);
-            if GetSex(tmpMechanicInside[1]) = 1 then Say(tmpMechanicInside[1], 'D4b-Mech1-1');
-            if GetSex(tmpMechanicInside[1]) = 2 then Say(tmpMechanicInside[1], 'D4b-FMech1-1');
-            InGameOff;
+       tmpMechanicInside := UnitFilter(UnitsInside(i), [f_class, class_mechanic]);
 
-        end;
+       if not tmpMechanicInside then
+          continue;
+
+       if GetSex(tmpMechanicInside[1]) = sex_male then
+          Say(tmpMechanicInside[1], 'D4a-Mech1-1')
+       else
+          Say(tmpMechanicInside[1], 'D4a-FMech1-1');
+
+       CenterNowOnUnits(tmpRemoteVehs[1]);
+       LinkVehicleToHuman(tmpRemoteVehs[1], tmpMechanicInside[1]);
+
+       wait(0$1);
+
+       ComMoveXY(tmpRemoteVehs[1], GetX(tmpRemoteVehs[1]) + 3, GetY(tmpRemoteVehs[1]) - 2);
+       wait(0$2);
+
+       if GetSex(tmpMechanicInside[1]) = sex_male then
+          Say(tmpMechanicInside[1], 'D4b-Mech1-1')
+       else
+          Say(tmpMechanicInside[1], 'D4b-FMech1-1');
+
+       InGameOff;
+       exit;
+       end;
     end;
-end;
+End;
 
-function CheckMehInside;
-var i, j;
+Function CheckMehInside;
+var i, j, tmp;
 begin
-    result = false;
+result := false;
+tmp := FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]);
 
-    for i in FilterAllUnits([[f_side, 1], [f_btype, 36]]) do 
-    begin
-        for j in UnitsInside(i) do 
-        begin
-            if GetClass(j) = 3 then
-            begin
-                result = true;
-                break;
-            end;
-                
-        end;
-    end;
-    
-end;
+if not tmp then
+   exit;
+
+for i in tmp do
+    for j in UnitsInside(i) do
+        if GetClass(j) = class_mechanic then
+           begin
+           result := true;
+           break;
+           end;
+End;
 
 // Spawn Kurt + dialog
 Every 12$0 do
 begin
- repeat
-  wait(0$1);
- until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
+repeat
+ wait(0$1);
+until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
 
- PrepareKurt;
-end;
-
+PrepareKurt;
+End;
 
 // Dialog about Joan
-Every 0$10+1$00 trigger IsOk(Joan) and GetSide(Joan) = 1 and Lisa do
+Every 0$10 + 1$00 trigger IsOk(Joan) and GetSide(Joan) = 1 and Lisa do
 begin
+wait(0$50);
 
-    wait(0$50);
+if not IsOk(Joan) then
+   exit;
 
-    if not IsOk(Joan) then
-       exit;
-
-    If IsOK(Lisa) then
-    begin
-        DialogueOn;
-        Say(Lisa, 'D7-Lisa-1');
-        Say(JMM, 'D7-JMM-1');
-        Say(Lisa, 'D7-Lisa-2');
-        Say(JMM, 'D7-JMM-2');
-        Say(Lisa, 'D7-Lisa-3');
-        Say(JMM, 'D7-JMM-3');
-        Say(Lisa, 'D7-Lisa-4');
-        Say(JMM, 'D7-JMM-4');
-        Say(JMM, 'D7-JMM-4a');
-        Say(Lisa, 'D7-Lisa-5');
-        DialogueOff;
-    end;
-end;
+if IsOK(Lisa) then
+   begin
+   DialogueOn;
+   Say(Lisa, 'D7-Lisa-1');
+   Say(JMM, 'D7-JMM-1');
+   Say(Lisa, 'D7-Lisa-2');
+   Say(JMM, 'D7-JMM-2');
+   Say(Lisa, 'D7-Lisa-3');
+   Say(JMM, 'D7-JMM-3');
+   Say(Lisa, 'D7-Lisa-4');
+   Say(JMM, 'D7-JMM-4');
+   Say(JMM, 'D7-JMM-4a');
+   Say(Lisa, 'D7-Lisa-5');
+   DialogueOff;
+   end;
+End;
 
 // Charles dialog near Americans
 Every 0$1 trigger tempCharles and FilterAllUnits([[f_side, 1], [f_dist, tempCharles, 10], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) > 1 do
-begin
 Say(tempCharles, 'D5-Sol1-1');
-End;
 
 // Remote vehicles
 Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_control, control_remote]]) >= 2 do
 begin
-    ChangeMissionObjectives('MRa');
-    remoteVehiclesBuild = 1;
-end; 
+ChangeMissionObjectives('MRa');
+remoteVehiclesBuild := 1;
+End;
 
 // Spawn randoms
 Every 2$00 do
@@ -327,66 +317,49 @@ End;
 // Dialogs from Delta base  
 Every 5$20 do
 begin
-    DialogueOn;
-    SayRadio(DeltaDoctor, 'D12a-Sci-1');
-    Say(JMM, 'D12a-JMM-1');
-    DialogueOff;
-    cratesStatus = 1;
-end; 
+DialogueOn;
+SayRadio(DeltaDoctor, 'D12a-Sci-1');
+Say(JMM, 'D12a-JMM-1');
+DialogueOff;
+cratesStatus = 1;
+End;
 
 Every 13$0 do 
 begin
-    DialogueOn;
-    SayRadio(DeltaDoctor, 'D12b-Sci-1');
-    DialogueOff;
-    cratesStatus = 2;
-end;
+DialogueOn;
+SayRadio(DeltaDoctor, 'D12b-Sci-1');
+DialogueOff;
+cratesStatus = 2;
+End;
 
 Every 32$0 do 
 begin
-    DialogueOn;
-    SayRadio(DeltaDoctor, 'D12c-Sci-1');
-    DialogueOff;
-    wait(3$0);
-    DialogueOn;
-    SayRadio(DeltaDoctor, 'D12d-Sci-1');
-    DialogueOff;
-    cratesStatus = 1;
+DialogueOn;
+SayRadio(DeltaDoctor, 'D12c-Sci-1');
+DialogueOff;
 
-    wait(0$40);
+wait(3$0);
 
-    repeat
-     wait(0$1);
-    until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
+DialogueOn;
+SayRadio(DeltaDoctor, 'D12d-Sci-1');
+DialogueOff;
+cratesStatus = 1;
+PrepareRussianAdditionalAttack;
 
-    PrepareJoan;
-end;
+wait(2$30);
+
+repeat
+ wait(0$1);
+ until not InBattle(1) and not FilterUnitsInArea(scanArea, [f_enemy, 1]);
+
+PrepareJoan;
+End;
 
 Every 42$0 do 
 begin
-    DialogueOn;
-    SayRadio(DeltaDoctor, 'D12e-Sci-1');
-    Say(JMM, 'D12e-JMM-1');
-    DialogueOff;
-    cratesStatus = 2;
-end;
-
-// Send russian convoy
-Every 0$1 trigger FilterAllUnits([[f_side, 6], [f_type, unit_vehicle], [f_weapon, 51]]) > 0 do 
-var i;
-begin
-    enable;
-    for i in FilterAllUnits([[f_side, 6], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do ComAgressiveMove(i, 138, 168);
-end;
-
-// Remove russian convoy
-Every 0$1 do
-var i;
-begin
-    enable;
-    for i in FilterUnitsInArea(ConvoyEscape, [[f_or, [f_side, 3], [f_side, 6]]]) do
-    begin
-        if FilterUnitsInArea(ConvoyEscape, [[f_side, 6], [f_weapon, 51]]) > 0 then sendedConvoys = sendedConvoys + 1;
-        RemoveUnit(i);
-    end;
-end;
+DialogueOn;
+SayRadio(DeltaDoctor, 'D12e-Sci-1');
+Say(JMM, 'D12e-JMM-1');
+DialogueOff;
+cratesStatus := 2;
+End;

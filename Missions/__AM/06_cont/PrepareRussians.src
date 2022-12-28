@@ -1,17 +1,95 @@
+Export ruAttackers, ruAttackersInForest;
 Export function PrepareRussian;
 var i;
 begin
+ruAttackers := [];
+ruAttackersInForest := [];
 
-    if Difficulty < 3 then
-       RemoveUnit(HexInfo(130, 81));
+if Difficulty < 3 then
+   RemoveUnit(HexInfo(130, 81));
 
-    RespawnInside(3, 3, rudepo, rand(RuSolMinLevel, RuSolMaxLevel), 2, 4);
-    RespawnInside(3, 3, ruarm1, rand(RuSolMinLevel, RuSolMaxLevel), 1, 4);
-    RespawnInside(3, 3, ruarm2, rand(RuSolMinLevel, RuSolMaxLevel), 1, 2);
-    RespawnInside(3, 3, rufab, rand(RuSolMinLevel, RuSolMaxLevel), 3, 6);
-    RespawnInside(3, 3, rufabsupp, rand(RuSolMinLevel, RuSolMaxLevel), 3, 6);
-    RespawnInside(3, 3, rulab, rand(RuSolMinLevel, RuSolMaxLevel), 4, 2);
+RespawnInside(3, 3, rudepo, rand(RuSolMinLevel, RuSolMaxLevel), 2, 4);
+RespawnInside(3, 3, ruarm1, rand(RuSolMinLevel, RuSolMaxLevel), 1, 4);
+RespawnInside(3, 3, ruarm2, rand(RuSolMinLevel, RuSolMaxLevel), 1, 2);
+RespawnInside(3, 3, rufab, rand(RuSolMinLevel, RuSolMaxLevel), 3, 6);
+RespawnInside(3, 3, rufabsupp, rand(RuSolMinLevel, RuSolMaxLevel), 3, 6);
+RespawnInside(3, 3, rulab, rand(RuSolMinLevel, RuSolMaxLevel), 4, 2);
 
-    for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_bunker]]) do RespawnInside(3, 3, i, rand(RuSolMinLevel, RuSolMaxLevel), 1, 1);
-    for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, 31]]) do PrepareSolBun(rand(RuSolMinLevel, RuSolMaxLevel), i);
-end;
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_bunker]]) do
+    RespawnInside(3, 3, i, rand(RuSolMinLevel, RuSolMaxLevel), 1, 1);
+
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_btype, b_breastwork]]) do
+    PrepareSolBun(rand(RuSolMinLevel, RuSolMaxLevel), i);
+
+ResAllTechs(3, rulab, 3);
+End;
+
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+// send troops to forest
+Every 9$00 trigger Difficulty > 1 do
+var i, un, points, tag;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+for i := 1 to 2 do
+    begin
+    PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 91, 87, 3, false);
+    ruAttackersInForest := Replace(ruAttackersInForest, ruAttackersInForest + 1, un);
+
+    ComAgressiveMove(un, 46, 78);
+    end;
+
+if Difficulty > 2 then
+   begin
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+       un := CreateHuman;
+       PlaceUnitXYR(un, 91, 87, 3, false);
+       ruAttackersInForest := Replace(ruAttackersInForest, ruAttackersInForest + 1, un);
+
+       ComAgressiveMove(un, 89, 148);
+       end;
+   end;
+
+points := [ [33,61], [49,85], [76,99], [81,135], [111,155], [147,158] ];
+
+repeat
+ wait(0$30);
+
+ for i := 1 to ruAttackersInForest do
+     begin
+     un := ruAttackersInForest[i];
+     tag := GetTag(un);
+
+     if IsOk(un) and not HasTask(un) then
+        begin
+        if tag <> i then
+           begin
+           SetTag(un, i);
+           tag := i;
+           end
+        else
+           begin
+           SetTag(un, i + 1);
+           tag := i + 1;
+           end;
+
+        ComAgressiveMove(un, points[tag][1], points[tag][2]);
+        end;
+     end;
+
+until not ruAttackersInForest;
+End;

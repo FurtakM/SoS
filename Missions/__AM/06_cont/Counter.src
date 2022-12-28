@@ -1,20 +1,26 @@
 Every 0$1 trigger timerStatus = 1 do
 var i, tmp, yourCrates;
 begin
+enable;
 
-    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
-    for i in tmp do yourCrates = yourCrates + GetResourceType(GetBase(i), 1);
-    strings = [];
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
-    if tmp = 0 then strings = strings ^ ['#Am06-1', needCrates];
-    if tmp > 0 and needCrates > yourCrates then strings = strings ^ ['#Am06-1', needCrates - yourCrates];
-    if tmp > 0 and needCrates <= yourCrates then strings = strings ^ ['#Am06-1', 0];
+for i in tmp do
+    yourCrates = yourCrates + GetResourceType(GetBase(i), 1);
 
-    timeToEnd = timeToEnd - 0$01;
-    strings = strings ^ ['#Am06-2', timeToEnd];
+strings = [];
 
-    display_strings = strings;
+if tmp = 0 then
+   strings = strings ^ ['#Am06-1', needCrates];
 
-    enable;
+if tmp and needCrates > yourCrates then
+   strings = strings ^ ['#Am06-1', needCrates - yourCrates];
 
-end;
+if tmp and needCrates <= yourCrates then
+   strings = strings ^ ['#Am06-1', 0];
+
+timeToEnd = timeToEnd - 0$01;
+strings = strings ^ ['#Am06-2', timeToEnd];
+
+display_strings = strings;
+End;

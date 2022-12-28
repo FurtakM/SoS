@@ -1,179 +1,233 @@
 Export function PrepareKurt; // team #Kurt ; )
 var i, depot, tmp, rnd, dec, dec2;
 begin
+// spawn Kurt nearby main depot
+repeat
+ depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+ wait(0$1);
+until depot;
 
-    // spawn Kurt nearby main depot
-    repeat
-     depot := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
-     wait(0$1);
-    until depot;
+repeat
+ wait(0$1);
+ tmp := FilterAllUnits([ [f_side, 1], [f_dist, depot[1], 15], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], [f_not, [f_inside]], [f_not, [f_driving]] ]) diff ([Lisa, Bobby, Cyrus, Frank, Donaldson, Gladstone, Denis] ^ arrivals);
+until tmp and not InBattle(1);
 
-    repeat
-     wait(0$1);
-     tmp := FilterAllUnits([ [f_side, 1], [f_dist, depot[1], 15], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], [f_not, [f_inside]], [f_not, [f_driving]] ]) diff ([Lisa, Bobby, Cyrus, Frank, Donaldson, Gladstone, Denis] ^ arrivals);
-    until tmp and not InBattle(1);
+tmp := tmp[rand(1, tmp)];
 
-    tmp := tmp[rand(1, tmp)];
+blockSpawn := 1;
 
-    blockSpawn = 1;
-    uc_side = 2;
-    uc_nation = 2;
+uc_side := 2;
+uc_nation := 2;
 
-    Kurt = PrepareUnit('Kurt', false, '');
-    PlaceUnitXYR(Kurt, GetX(tmp), GetY(tmp), 5, true);
-    InGameOn;
-    CenterNowOnUnits(Kurt);
-    wait(0$2);
-    ComTurnUnit(Kurt, tmp);
+Kurt := PrepareUnit('Kurt', false, '');
+PlaceUnitXYR(Kurt, GetX(tmp), GetY(tmp), 5, true);
 
-    ComMoveUnit(tmp, Kurt);
+InGameOn;
+CenterNowOnUnits(Kurt);
 
-    wait(0$1);
+wait(0$2);
 
-    ComTurnUnit(tmp, Kurt);
+ComTurnUnit(Kurt, tmp);
+ComMoveUnit(tmp, Kurt);
 
-    DialogueOn;
-    Say(Kurt, 'D2-Kurt-1');
+wait(0$1);
 
-    if tmp = JMM then 
-    begin
-        Say(JMM, 'D2-JMM-1');
-        Say(Kurt, 'D2-Kurt-2');
-        Say(JMM, 'D2-JMM-2');
-        Say(Kurt, 'D2-Kurt-3');
-        Say(JMM, 'D2-JMM-3');
-        Say(Kurt, 'D2-Kurt-4');
-        Say(JMM, 'D2-JMM-4');
-        DialogueOff;
-    end else
-    begin
-        if GetSex(tmp) = 1 then Say(tmp, 'D2-Sol1-1');
-        if GetSex(tmp) = 2 then Say(tmp, 'D2-FSol1-1'); 
-        Say(Kurt, 'D2-Kurt-2');
-        if GetSex(tmp) = 1 then Say(tmp, 'D2-Sol1-2');
-        if GetSex(tmp) = 2 then Say(tmp, 'D2-FSol1-2');    
-        Say(Kurt, 'D2-Kurt-3');
-        if GetSex(tmp) = 1 then Say(tmp, 'D2-Sol1-3');
-        if GetSex(tmp) = 2 then Say(tmp, 'D2-FSol1-3');  
-        Say(Kurt, 'D2-Kurt-4');
-        if GetSex(tmp) = 1 then Say(tmp, 'D2-Sol1-4');
-        if GetSex(tmp) = 2 then Say(tmp, 'D2-FSol1-4');  
-        if GetSex(tmp) = 1 then Say(tmp, 'D2-Sol1-5');
-        if GetSex(tmp) = 2 then Say(tmp, 'D2-FSol1-5'); 
-        DialogueOff;
-    end;
+ComTurnUnit(tmp, Kurt);
 
-    dec = ShowQuery1;
+DialogueOn;
+Say(Kurt, 'D2-Kurt-1');
 
-    if dec = 1 then
-    begin
-        DialogueOn;
-        Say(Kurt, 'D2a-Kurt-1');
-        DialogueOff;
-        InGameOff;
-        SetAttitude(1, 2, att_enemy, true);
-        ComMoveToArea(Kurt, KurtEscape);
-        readyToEscape = 1;
-    end;
+if tmp = JMM then 
+   begin
+   Say(JMM, 'D2-JMM-1');
+   Say(Kurt, 'D2-Kurt-2');
+   Say(JMM, 'D2-JMM-2');
+   Say(Kurt, 'D2-Kurt-3');
+   Say(JMM, 'D2-JMM-3');
+   Say(Kurt, 'D2-Kurt-4');
+   Say(JMM, 'D2-JMM-4');
+   DialogueOff;
+   end
+else
+   begin
+   if GetSex(tmp) = 1 then
+      Say(tmp, 'D2-Sol1-1')
+   else
+      Say(tmp, 'D2-FSol1-1');
 
-    if dec = 2 then
-    begin
-        DialogueOn;
-        if tmp = JMM then 
-        begin
-            Say(JMM, 'D2b-JMM-1'); 
-            Say(Kurt, 'D2b-Kurt-1');
-            Say(JMM, 'D2b-JMM-2');
-            Say(Kurt, 'D2b-Kurt-2'); 
-            DialogueOff;
-        end else
-        begin
-            if GetSex(tmp) = 1 then Say(tmp, 'D2b-Sol1-1');
-            if GetSex(tmp) = 2 then Say(tmp, 'D2b-FSol1-1'); 
-            Say(Kurt, 'D2b-Kurt-1');
-            if GetSex(tmp) = 1 then Say(tmp, 'D2b-Sol1-2');
-            if GetSex(tmp) = 2 then Say(tmp, 'D2b-FSol1-2');    
-            Say(Kurt, 'D2b-Kurt-2'); 
-            if GetSex(tmp) = 1 then Say(tmp, 'D2c-Sol1-2');
-            if GetSex(tmp) = 2 then Say(tmp, 'D2c-FSol1-2');   
-            DialogueOff;
-        end;
-        dec2 = ShowQuery2;
+   Say(Kurt, 'D2-Kurt-2');
 
-        if dec2 = 1 then
-        begin
-            DialogueOn;
-            Say(Kurt, 'D2a-Kurt-1');
-            DialogueOff;
-            InGameOff;
-            SetAttitude(1, 2, att_enemy, true);
-            ComMoveToArea(Kurt, KurtEscape);
-            readyToEscape = 1;
-        end;
+   if GetSex(tmp) = 1 then
+      Say(tmp, 'D2-Sol1-2')
+   else
+      Say(tmp, 'D2-FSol1-2');
 
-        if dec2 = 2 then
-        begin
-            if tmp = JMM then 
+   Say(Kurt, 'D2-Kurt-3');
+
+   if GetSex(tmp) = 1 then
+      Say(tmp, 'D2-Sol1-3')
+   else
+      Say(tmp, 'D2-FSol1-3');
+
+   Say(Kurt, 'D2-Kurt-4');
+
+   if GetSex(tmp) = 1 then
+      begin
+      Say(tmp, 'D2-Sol1-4');
+      Say(tmp, 'D2-Sol1-5');
+      end
+   else
+      begin
+      Say(tmp, 'D2-FSol1-4');
+      Say(tmp, 'D2-FSol1-5'); 
+      end;
+
+   DialogueOff;
+   end;
+
+dec := ShowQuery1;
+
+if dec = 1 then
+   begin
+   DialogueOn;
+   Say(Kurt, 'D2a-Kurt-1');
+   DialogueOff;
+   InGameOff;
+
+   SetAttitude(1, 2, att_enemy, true);
+   ComMoveToArea(Kurt, KurtEscape);
+   readyToEscape := 1;
+   end;
+
+if dec = 2 then
+   begin
+   DialogueOn;
+
+   if tmp = JMM then
+      begin
+      Say(JMM, 'D2b-JMM-1'); 
+      Say(Kurt, 'D2b-Kurt-1');
+      Say(JMM, 'D2b-JMM-2');
+      Say(Kurt, 'D2b-Kurt-2'); 
+      DialogueOff;
+      end
+   else
+      begin
+      if GetSex(tmp) = 1 then
+         Say(tmp, 'D2b-Sol1-1')
+      else
+         Say(tmp, 'D2b-FSol1-1');
+
+      Say(Kurt, 'D2b-Kurt-1');
+
+      if GetSex(tmp) = 1 then
+         Say(tmp, 'D2b-Sol1-2')
+      else
+         Say(tmp, 'D2b-FSol1-2');
+
+      Say(Kurt, 'D2b-Kurt-2');
+
+      if GetSex(tmp) = 1 then
+         Say(tmp, 'D2c-Sol1-2')
+      else
+         Say(tmp, 'D2c-FSol1-2');
+
+      DialogueOff;
+      end;
+
+      dec2 := ShowQuery2;
+
+      if dec2 = 1 then
+         begin
+         DialogueOn;
+         Say(Kurt, 'D2a-Kurt-1');
+         DialogueOff;
+         InGameOff;
+
+         SetAttitude(1, 2, att_enemy, true);
+         ComMoveToArea(Kurt, KurtEscape);
+         readyToEscape := 1;
+         end;
+
+      if dec2 = 2 then
+         begin
+         if tmp = JMM then 
             begin
-                DialogueOn;
-                Say(JMM, 'D2c-JMM-1'); 
-                Say(Kurt, 'D2c-Kurt-1');
-                DialogueOff;
-                InGameOff;
-                ComMoveToArea(Kurt, KurtEscape);
-                readyToEscape = 1;
-            end else
-            begin
-                DialogueOn;
-                if GetSex(tmp) = 1 then Say(tmp, 'D2c-Sol1-1');
-                if GetSex(tmp) = 2 then Say(tmp, 'D2c-FSol1-1'); 
-                Say(Kurt, 'D2c-Kurt-1');
-                DialogueOff;
-                InGameOff;
-                ComMoveToArea(Kurt, KurtEscape);
-                readyToEscape = 1;
-            end;
-        end;
-    end;
-
-    if dec = 3 then
-    begin
-        DialogueOn;
-        if tmp = JMM then 
-        begin
             DialogueOn;
             Say(JMM, 'D2c-JMM-1'); 
             Say(Kurt, 'D2c-Kurt-1');
             DialogueOff;
             InGameOff;
+
             ComMoveToArea(Kurt, KurtEscape);
-            readyToEscape = 1;
-        end else
-        begin
+            readyToEscape := 1;
+            end
+         else
+            begin
             DialogueOn;
-            if GetSex(tmp) = 1 then Say(tmp, 'D2c-Sol1-1');
-            if GetSex(tmp) = 2 then Say(tmp, 'D2c-FSol1-1'); 
+
+            if GetSex(tmp) = 1 then
+               Say(tmp, 'D2c-Sol1-1')
+            else
+               Say(tmp, 'D2c-FSol1-1'); 
+
             Say(Kurt, 'D2c-Kurt-1');
             DialogueOff;
             InGameOff;
+
             ComMoveToArea(Kurt, KurtEscape);
-            readyToEscape = 1;
+            readyToEscape := 1;
+            end;
         end;
     end;
 
-    blockSpawn = 0;
+if dec = 3 then
+   begin
+   DialogueOn;
 
-    repeat
-     wait(0$1);
-    until (IsInArea(Kurt, KurtEscape) and readyToEscape) or IsDead(Kurt);
+   if tmp = JMM then
+      begin
+      DialogueOn;
+      Say(JMM, 'D2c-JMM-1'); 
+      Say(Kurt, 'D2c-Kurt-1');
+      DialogueOff;
+      InGameOff;
 
-    if IsDead(Kurt) then
-       exit;
+      ComMoveToArea(Kurt, KurtEscape);
+      readyToEscape := 1;
+      end
+   else
+      begin
+      DialogueOn;
 
-    RemoveUnit(Kurt);
-    SaveCharacters(Kurt, 'Kurt');
+      if GetSex(tmp) = 1 then
+         Say(tmp, 'D2c-Sol1-1')
+      else
+         Say(tmp, 'D2c-FSol1-1');
 
-    if GetAttitude(1, 2) = att_neutral then KurtStatus = 1;
-    if GetAttitude(1, 2) = att_enemy then KurtStatus = 2;
-        
-end;
+      Say(Kurt, 'D2c-Kurt-1');
+      DialogueOff;
+      InGameOff;
+
+      ComMoveToArea(Kurt, KurtEscape);
+      readyToEscape := 1;
+      end;
+   end;
+
+blockSpawn := 0;
+
+repeat
+ wait(0$1);
+until (IsInArea(Kurt, KurtEscape) and readyToEscape) or IsDead(Kurt);
+
+if IsDead(Kurt) then
+   exit;
+
+RemoveUnit(Kurt);
+SaveCharacters(Kurt, 'Kurt');
+
+if GetAttitude(1, 2) = att_neutral then
+   kurtStatus = 1
+else
+   kurtStatus = 2;
+End;

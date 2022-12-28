@@ -32,7 +32,7 @@ if not gaidarKilled then
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
 
 for i in tmp do
-    SetBLevel(i, [5, 5, 6][Difficulty]);
+    SetBLevel(i, [5, 6, 7, 8][Difficulty]);
 
 // north base fakes
 for i := 1 to 3 do
@@ -62,11 +62,21 @@ for i in tmp do
     SetResourceType(i, mat_oil, 200);
     end;
 
-tmp := [ [198, 158], [203, 166], [177, 114], [138, 96], [181, 209], [178, 196], [181, 212] ];
+tmp := [ [177, 114], [138, 96] ];
 
 for i := 1 to tmp do
     begin
-    PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+    PrepareHuman(false, class_bazooker, 6);
+    un := CreateHuman;
+    SetDir(un, 2);
+    PlaceHumanInUnit(un, HexInfo(tmp[i][1], tmp[i][2]));
+    end;
+
+tmp := [ [198, 158], [203, 166], [181, 209], [178, 196], [181, 212] ];
+
+for i := 1 to tmp do
+    begin
+    PrepareHuman(false, 1, [4, 5, 6, 7][Difficulty]);
     un := CreateHuman;
     b := HexInfo(tmp[i][1], tmp[i][2]);
 
@@ -87,11 +97,27 @@ for i := 1 to 3 do
 
 uc_nation := 3;
 
+PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_gun, 10);
+un := CreateVehicle;
+PlaceUnitXYD(un, 199, 162, 1, false);
+ComHold(un);
+
+PrepareHuman(false, 3, 4);
+PlaceHumanInUnit(CreateHuman, un);
+
+PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_rocket_launcher, 10);
+un := CreateVehicle;
+PlaceUnitXYD(un, 129, 93, 1, false);
+ComHold(un);
+
 if Difficulty > 1 then
    begin
-   PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_gun, 10);
+   PrepareHuman(false, 3, 4);
+   PlaceHumanInUnit(CreateHuman, un);
+
+   PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_rocket_launcher, 10);
    un := CreateVehicle;
-   PlaceUnitXYD(un, 199, 162, 1, false);
+   PlaceUnitXYD(un, 134, 92, 2, false);
    ComHold(un);
 
    PrepareHuman(false, 3, 4);
@@ -99,29 +125,33 @@ if Difficulty > 1 then
 
    PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_rocket_launcher, 10);
    un := CreateVehicle;
-   PlaceUnitXYD(un, 129, 93, 1, false);
+   PlaceUnitXYD(un, 200, 173, 1, false);
    ComHold(un);
-
-   PrepareHuman(false, 3, 4);
-   PlaceHumanInUnit(CreateHuman, un);
-
-   bc_type := b_armoury;
-   bc_level := 6;
-
-   CreateAndPlaceBuildingXYD(120, 100, 5);
-
-   for i := 1 to 3 do
-       begin
-       PrepareHuman(false, 1, 5);
-       PlaceHumanInUnit(CreateHuman, HexInfo(120, 100));
-       end;
    end;
+
+PrepareHuman(false, 3, 4);
+PlaceHumanInUnit(CreateHuman, un);
+
+bc_type := b_armoury;
+
+if Difficulty > 1 then
+   bc_type := b_barracks;
+
+bc_level := 6;
+
+CreateAndPlaceBuildingXYD(120, 100, 5);
+
+for i := 1 to [3, 3, 4, 4][Difficulty] do
+    begin
+    PrepareHuman(false, [class_soldier, class_soldier, class_bazooker, class_bazooker][Difficulty], 5);
+    PlaceHumanInUnit(CreateHuman, HexInfo(120, 100));
+    end;
 
 tmp := [ [135, 100], [137, 92] ];
 
 for i := 1 to tmp do
     begin
-    PrepareVehicle([ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty + rand(0, 1)], engine_combustion, control_manual, ru_gun, 25);
+    PrepareVehicle([ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty + rand(0, 1)], engine_combustion, control_manual, ru_gun, 25);
     veh := CreateVehicle;
     SetDir(veh, 2);
     PlaceUnitXY(veh, tmp[i][1], tmp[i][2], false);
@@ -141,16 +171,16 @@ ruBlockadeTank := CreateVehicle;
 SetDir(ruBlockadeTank, 2);
 PlaceUnitXY(ruBlockadeTank, 191, 122, false);
 
-PrepareMechanic(sex_male, [5, 6][Difficulty - 1]);
+PrepareMechanic(sex_male, [5, 6, 7][Difficulty - 1]);
 PlaceHumanInUnit(CreateHuman, ruBlockadeTank);
 
 ComHold(ruBlockadeTank);
 
 ruBlockadeSquad := [];
 
-for i := 1 to [3, 4, 6][Difficulty] do
+for i := 1 to [3, 4, 6, 6][Difficulty] do
     begin
-    PrepareHuman(false, 1, [4, 5, 6][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 6, 7][Difficulty]);
     un := CreateHuman;
     PlaceUnitArea(un, ruRoadBlockade, false);
     ComTurnXY(un, 198, 129);
@@ -176,7 +206,7 @@ tmp := HexInfo(169, 229);
 
 for i := 1 to 3 do
     begin
-    PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
     un := CreateHuman;
     PlaceHumanInUnit(un, tmp);
 
@@ -187,7 +217,7 @@ tmp := [ [165, 227], [173, 231] ];
 
 for i := 1 to tmp do
     begin
-    PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
     un := CreateHuman;
     PlaceHumanInUnit(un, HexInfo(tmp[i][1], tmp[i][2]));
 
@@ -228,14 +258,14 @@ for i := 1 to tmp do
        begin
        for j := 1 to Difficulty do
            begin
-           PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+           PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
            un := CreateHuman;
            PlaceHumanInUnit(un, b);
            end;
        end
     else
        begin
-       PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+       PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
        un := CreateHuman;
        PlaceHumanInUnit(un, b);
        SetClass(un, class_bazooker);
@@ -246,10 +276,10 @@ for i := 1 to tmp do
 
 for b in FilterUnitsInArea(ruMainBase, [[f_side, 3], [f_btype, b_bunker], [f_empty]]) do
     begin
-    if not Prob([40, 50, 75][Difficulty] - (gaidarKilled * 10)) then
+    if not Prob([40, 50, 75, 80][Difficulty] - (gaidarKilled * 10)) then
        continue;
 
-    PrepareHuman(false, 1, [4, 5, 5][Difficulty]);
+    PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
     un := CreateHuman;
     PlaceHumanInUnit(un, b);
 
@@ -258,7 +288,7 @@ for b in FilterUnitsInArea(ruMainBase, [[f_side, 3], [f_btype, b_bunker], [f_emp
 
 for i := 1 to 5 do
     begin
-    PrepareHuman(false, 2, [4, 5, 5][Difficulty]);
+    PrepareHuman(false, 2, [4, 5, 5, 6][Difficulty]);
     un := CreateHuman;
     PlaceUnitXYR(un, 66, 101, 3, false);
 
@@ -271,7 +301,7 @@ tmp := [ ruFac1, ruFac2 ];
 for i := 1 to tmp do
     for j := 1 to 6 do
         begin
-        PrepareHuman(false, 3, [4, 5, 5][Difficulty]);
+        PrepareHuman(false, 3, [4, 5, 5, 6][Difficulty]);
         un := CreateHuman;
         PlaceHumanInUnit(un, tmp[i]);
 
@@ -280,14 +310,14 @@ for i := 1 to tmp do
 
 for i := 1 to 3 do
     begin
-    PrepareHuman(false, 4, [4, 5, 5][Difficulty]);
+    PrepareHuman(false, 4, [4, 5, 5, 6][Difficulty]);
     un := CreateHuman;
     PlaceHumanInUnit(un, ruLab1);
 
     ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
     end;
 
-for i := 1 to [2, 3, 3][Difficulty] do
+for i := 1 to [2, 3, 3, 3][Difficulty] do
     begin
     PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_crane, 100);
     veh := CreateVehicle;
@@ -304,7 +334,7 @@ for i := 1 to [2, 3, 3][Difficulty] do
 // others
 InitHc;
 
-for i := 1 to [6, 8, 10][Difficulty] do
+for i := 1 to [6, 8, 10, 12][Difficulty] do
     begin
     uc_nation := 0;
     hc_class := class_apeman_soldier;
@@ -315,7 +345,7 @@ for i := 1 to [6, 8, 10][Difficulty] do
 
 uc_nation := 3;
 
-if convoySaveCounter < [10, 8, 6][Difficulty] then
+if convoySaveCounter < [10, 8, 6, 5][Difficulty] then
    begin
    PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay, 12);
    veh := CreateVehicle;
@@ -503,10 +533,10 @@ var i, un, veh, tmp;
 begin
 enable;
 
-if Prob([35, 45, 55][Difficulty]) then
+if Prob([35, 45, 55, 60][Difficulty]) then
    waveStrength := waveStrength + 1;
 
-if waveStrength > [4, 5, 6][Difficulty] then
+if waveStrength > [4, 5, 6, 7][Difficulty] then
    begin
    waveStrength := waveStrength + Difficulty;
    disableAttackOnHeike := true;

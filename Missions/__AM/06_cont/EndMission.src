@@ -1,103 +1,100 @@
 Every 0$01 trigger timeToEnd <= 0$00 do
 var i, tmp, yourCrates;
 begin 
-    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
-    for i in tmp do
-        yourCrates = yourCrates + GetResourceType(GetBase(i), 1);
+for i in tmp do
+    yourCrates = yourCrates + GetResourceType(GetBase(i), 1);
 
-    if yourCrates >= needCrates then
-       FinishMission(yourCrates)
-    else
-       YouLost('matmin');
-end;
+if yourCrates >= needCrates then
+   FinishMission(yourCrates)
+else
+   YouLost('matmin');
+End;
 
 Export function FinishMission(crates);
 var m1, m2, m3;
 begin
-    if killCounter = 0 then
-       SetAchievement('ACH_SURV');
+if killCounter = 0 then
+   SetAchievement('ACH_SURV');
 
-    if FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 then
-       begin
-       wait(3);
-       SetAchievement('ACH_BASEDESTROYER');
-       end;
+if FilterAllUnits([[f_side, 3], [f_type, unit_building]]) = 0 then
+   begin
+   wait(3);
+   SetAchievement('ACH_BASEDESTROYER');
+   end;
 
-    m1 := false;
-    m2 := false;
-    m3 := false;
+m1 := false;
+m2 := false;
+m3 := false;
 
-    if crates + 100 > crates then
-       begin
-       AddMedal('cans', 1);
-       SaveVariable(1, '06_crates_1');
-       m1 := true;
-       end
-    else
-       begin
-       AddMedal('cans', -1);
-       SaveVariable(0, '06_crates_1');
-    end;
+if crates + 100 > crates then
+   begin
+   AddMedal('cans', 1);
+   SaveVariable(1, '06_crates_1');
+   m1 := true;
+   end
+else
+   begin
+   AddMedal('cans', -1);
+   SaveVariable(0, '06_crates_1');
+   end;
 
-    if unitLost < 3 then
-    begin
-        AddMedal('people', 1);
-        m2 := true;
-    end else begin
-        AddMedal('people', -1);
-    end;
+if unitLost < 3 then
+   begin
+   AddMedal('people', 1);
+   m2 := true;
+   end
+else
+   AddMedal('people', -1);
 
-    SaveVariable(remoteVehiclesBuild, '06_remoteVehs_1');
+SaveVariable(remoteVehiclesBuild, '06_remoteVehs_1');
 
-    if remoteVehiclesBuild = 1 then
-    begin
-        AddMedal('remote', 1);
-        m3 := true;
-    end else begin
-        if GetTech(18, 1) = state_enabled then
-        begin
-            AddMedal('remote', - 1);
-        end else
-        begin
-            AddMedal('remote', - 2);
-        end;
-    end;
+if remoteVehiclesBuild = 1 then
+   begin
+   AddMedal('remote', 1);
+   m3 := true;
+   end
+else
+   begin
+   if GetTech(18, 1) = state_enabled then
+      AddMedal('remote', - 1)
+   else
+      AddMedal('remote', - 2);
+   end;
 
-    if m1 and m2 and m3 then
-       begin
-       wait(3);
-       SetAchievement('ACH_ASPEED_6');
-       end;
+if m1 and m2 and m3 then
+   begin
+   wait(3);
+   SetAchievement('ACH_ASPEED_6');
+   end;
 
-    if Difficulty = 3 and m1 and m2 and m3 then
-       SetAchievementEX('ACH_AMER', 6);
+if Difficulty >= 3 and m1 and m2 and m3 then
+   SetAchievementEX('ACH_AMER', 6);
 
-    SaveVariable(KurtStatus, '06_KurtStatus_1');
+SaveVariable(kurtStatus, '06_KurtStatus_1');
 
-    GiveMedals('Main');
-    RewardPeople(FilterAllUnits([[f_side, 1],[f_type,unit_human], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]));
+GiveMedals('Main');
+RewardPeople(FilterAllUnits([[f_side, 1], [f_type,unit_human], [f_ok], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]));
 
-    SaveCharacters(JMM, mission_prefix&'JMM');
-    EnchancedSaveCharacters(Lisa, mission_prefix&'Lisa');
-    EnchancedSaveCharacters(Bobby, mission_prefix&'Bobby');
-    EnchancedSaveCharacters(Cyrus, mission_prefix&'Cyrus');
-    EnchancedSaveCharacters(Frank, mission_prefix&'Frank');
-    EnchancedSaveCharacters(Brown, mission_prefix&'Brown');
-    EnchancedSaveCharacters(Donaldson, mission_prefix&'Donaldson');
-    EnchancedSaveCharacters(Gladstone, mission_prefix&'Gladstone');
-    EnchancedSaveCharacters(Denis, mission_prefix&'Denis');
-    EnchancedSaveCharacters(Joan, mission_prefix&'Joan');
+SaveCharacters(JMM, mission_prefix&'JMM');
+EnchancedSaveCharacters(Lisa, mission_prefix&'Lisa');
+EnchancedSaveCharacters(Bobby, mission_prefix&'Bobby');
+EnchancedSaveCharacters(Cyrus, mission_prefix&'Cyrus');
+EnchancedSaveCharacters(Frank, mission_prefix&'Frank');
+EnchancedSaveCharacters(Brown, mission_prefix&'Brown');
+EnchancedSaveCharacters(Donaldson, mission_prefix&'Donaldson');
+EnchancedSaveCharacters(Gladstone, mission_prefix&'Gladstone');
+EnchancedSaveCharacters(Denis, mission_prefix&'Denis');
+EnchancedSaveCharacters(Joan, mission_prefix&'Joan');
 
-    if IsLive(Joan) then
-       SaveCharacters(Joan, 'Joan');
+if IsLive(Joan) then
+   SaveCharacters(Joan, 'Joan');
 
-    SaveVariable(JoanStatus, '06_JoanStatus_1');
+SaveVariable(joanStatus, '06_JoanStatus_1');
 
-    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone, Denis, Joan], '06_other_survivors');
-    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human], [f_or, [f_class, 12], [f_class, 16]]]), '06_other_apemans');
+SaveCharacters(FilterAllUnits([[f_ok], [f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Lisa, Bobby, Cyrus, Frank, Brown, Donaldson, Gladstone, Denis, Joan], '06_other_survivors');
+SaveCharacters(FilterAllUnits([[f_ok], [f_side, 1], [f_type, unit_human], [f_or, [f_class, 12], [f_class, 16]]]), '06_other_apemans');
 
-
-    YouWin;
-
-end;
+YouWin;
+End;
