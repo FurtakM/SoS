@@ -1,6 +1,53 @@
-Every 1$0 trigger sendedConvoys = 3 do
+Every 0$1 trigger ruAttackers and tick > [10$00, 9$00, 8$00, 7$00][Difficulty] do
+var i, tmp, path, driver;
 begin
-    enable;
-    sendedConvoys = 0;
-    RespawnAttackInfantry(6, 3, [3, 4, 6, 8][Difficulty], 0, 0, 0, 0, rand(RuSolMinLevel, RuSolMaxLevel), RussianAttackSpawn, AttackAreaHeal, 1, rand(1,2));
-end;
+enable;
+
+for i in ruAttackers do
+    begin
+    if not IsDrivenBy(i) then
+       continue;
+
+    if i mod 2 = 0 then
+       path := [ [91,52], [82,34], [90,26], [80,12] ]
+    else
+       path := [ [91,52], [68,46], [48,43], [33,34], [30,19] ];
+   
+    if GetLives(i) = 1000 then
+       AgressiveMove(i, path)
+    else if GetLives(i) < 650 then
+       begin
+       if not IsInArea(i, russianRepairArea) then
+          begin
+          SetTag(i, 0);
+
+          if GetFuel(i) < 50 and IsOk(rufab) then
+             ComMoveUnit(i, rufab)
+          else
+             ComMoveXY(i, 121, 99);
+          end
+       else
+          ComRepairVehicleAndReturn(IsDrivenBy(i));
+       end;
+    end;
+End;
+
+Export Function PrepareRussianAdditionalAttack;
+var i, un;
+begin
+for i := 1 to [4, 5, 6, 6][Difficulty] do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 127, 62, 3, false);
+    ruAttackersInForest := Replace(ruAttackersInForest, ruAttackersInForest + 1, un);
+
+    ComAgressiveMove(un, 83, 49);
+    AddComAgressiveMove(un, 49, 43);
+    AddComAgressiveMove(un, 31, 15);
+    AddComAgressiveMove(un, 63, 9);
+    end;
+End;
