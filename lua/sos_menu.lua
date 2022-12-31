@@ -366,9 +366,9 @@ footer.support.paypal = getElementEX(
 );
 
 footer.support.hover = getElementEX(
-    footer,
+    footer.support,
     anchorLTRB,
-    XYWH(0, 0, footer.width, footer.height),
+    XYWH(0, 0, footer.support.width, footer.support.height),
     true,
     {
         colour1 = WHITEA(),
