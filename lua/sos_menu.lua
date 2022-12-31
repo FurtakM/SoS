@@ -83,12 +83,12 @@ setVisible(menu.window2, false);
 menu.window3 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 92, 194, 184),
+    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 134, 194, 268),
     true,
     {}
 );
 
-setTexture(menu.window3, 'classic/edit/mainmenu2.png');
+setTexture(menu.window3, 'classic/edit/mainmenu4.png');
 setVisible(menu.window3, false);
 
 -- buttons
@@ -246,10 +246,32 @@ menu.window3.achivs = clButton(
     {}
 );
 
-menu.window3.back = clButton(
+menu.window3.changelog = clButton(
     menu.window3, 
     12, 
     145,
+    170,
+    30,  
+    loc(TID_Main_Menu_Changelog), 
+    'displayChangeLogMessage(true);',
+    {}
+);
+
+menu.window3.contact = clButton(
+    menu.window3, 
+    12, 
+    187,
+    170,
+    30,  
+    loc(TID_Main_Menu_Contact), 
+    'OW_SOS_CLICKED("contact");',
+    {}
+);
+
+menu.window3.back = clButton(
+    menu.window3, 
+    12, 
+    229,
     170,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
@@ -277,7 +299,7 @@ footer.gameVer = getLabelEX(
     loc_format(TID_Main_Menu_Version, {getvalue(OWV_VERSION)}),
     {
         font_colour = RGB(255, 255, 255),
-        shadowtext = false,
+        shadowtext = true,
         nomouseevent = true,
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
@@ -295,7 +317,7 @@ footer.modVer = getLabelEX(
     loc_format(TID_Main_Menu_ModVersion, {getvalue(OWV_MODVER)}),
     {
         font_colour = RGB(255, 255, 255),
-        shadowtext = false,
+        shadowtext = true,
         nomouseevent = true,
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
@@ -305,24 +327,58 @@ footer.modVer = getLabelEX(
     }
 );
 
---[[footer.website = getLabelEX(
-	footer,
-	anchorL,
-	XYWH(10, 0, 320, 14),
-	Tahoma_14B,
-	loc(TID_Website),
+footer.support = getElementEX(
+    footer,
+    anchorL,
+    XYWH(0, 0, 200, footer.height),
+    true,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+footer.support.label = getLabelEX(
+	footer.support,
+	anchorNone,
+	XYWH(10, 4, 160, 10),
+	Tahoma_16B,
+	loc(TID_Main_Menu_Support),
 	{
-		font_colour = RGB(255, 255, 255),
-        shadowtext = false,
+		font_colour = RGB(222, 222, 222),
+        shadowtext = true,
         nomouseevent = true,
         text_halign = ALIGN_LEFT,
         text_valign = ALIGN_TOP,
         wordwrap = false,
         scissor = true,
-        font_size = 14
+        font_size = 16
 	}
 );
 
+footer.support.paypal = getElementEX(
+    footer.support,
+    anchorR,
+    XYWH(150, 2, 24, 24),
+    true,
+    {
+        texture = 'SGUI/paypal.png'
+    }
+);
+
+footer.support.hover = getElementEX(
+    footer.support,
+    anchorLTRB,
+    XYWH(0, 0, footer.support.width, footer.support.height),
+    true,
+    {
+        colour1 = WHITEA(),
+        callback_mouseleave = 'setFontColourID(' .. footer.support.label.ID .. ', RGB(222, 222, 222));',
+        callback_mouseover = 'setFontColourID(' .. footer.support.label.ID .. ', RGB(254, 235, 89));',
+        callback_mousedown = 'OW_SOS_CLICKED("support");'
+    }
+);
+
+--[[
 footer.contact = getLabelEX(
 	footer,
 	anchorNone,
@@ -341,26 +397,28 @@ footer.contact = getLabelEX(
 	}
 );--]]
 
-function displayChangeLogMessage()
+function displayChangeLogMessage(fromButton)
     local dialogSave;
     local version = parseInt(MOD_DATA.Mod_Main_Ver);
 
-    if (not saveExists('sos_changelog')) then
-        dialogSave = OW_CUSTOMSAVE_NEW();
-    else
-        dialogSave = OW_CUSTOMSAVE_LOAD('sos_changelog');
-    end;
+    if (not fromButton) then        
+        if (not saveExists('sos_changelog')) then
+            dialogSave = OW_CUSTOMSAVE_NEW();
+        else
+            dialogSave = OW_CUSTOMSAVE_LOAD('sos_changelog');
+        end;
 
-    local hasBeenRead = OW_CUSTOMSAVE_READ(dialogSave, version);
+        local hasBeenRead = OW_CUSTOMSAVE_READ(dialogSave, version);
 
-    if hasBeenRead then
+        if hasBeenRead then
+            OW_CUSTOMSAVE_CLOSE(dialogSave);
+            return;
+        end;
+
+        OW_CUSTOMSAVE_WRITE(dialogSave, version, true);
+        OW_CUSTOMSAVE_SAVE(dialogSave, 'sos_changelog');
         OW_CUSTOMSAVE_CLOSE(dialogSave);
-        return;
     end;
-
-    OW_CUSTOMSAVE_WRITE(dialogSave, version, true);
-    OW_CUSTOMSAVE_SAVE(dialogSave, 'sos_changelog');
-    OW_CUSTOMSAVE_CLOSE(dialogSave);
 
     local ELEMENT = getElementEX(
         nil,
@@ -437,7 +495,7 @@ function displayChangeLogMessage()
     set_Callback(
         ELEMENT.close.ID,
         CALLBACK_MOUSEDOWN,
-        'setVisibleID(' .. ELEMENT.ID .. ', false);'
+        'setVisibleID(' .. ELEMENT.ID .. ', false); sgui_deletechildren(' .. ELEMENT.ID .. ')'
     );
 end;
 
@@ -467,7 +525,7 @@ function showMenuButton(windowNumber)
 
     if (windowNumber == 2) then
         setVisible(menu.window2, true);
-        displayChangeLogMessage();
+        displayChangeLogMessage(false);
     end;
 
     if (windowNumber == 3) then

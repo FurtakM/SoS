@@ -1730,6 +1730,10 @@ function hasSkirmishInMod(mod)
     return hasFilesInMod(mod, 'missions/_skirmish') or hasFilesInMod(mod, 'Missions/_Skirmish');
 end;
 
+function setFontColourID(ID, COLOR)
+    setFontColour({ID=ID}, COLOR);
+end;
+
 function saveExists(NAME)
     local saves = OW_CUSTOMSAVE_SAVELIST();
 
