@@ -8,7 +8,7 @@ InitHc;
 uc_side := 3;
 uc_nation := 3;
 
-skill := [5, 6, 7, 8][Difficulty];
+skill := [5, 6, 6, 7][Difficulty];
 
 ru_force := [];
 ru_rebuild := [];
@@ -182,7 +182,7 @@ if fac then
    ru_produce_list := [ru_heavy_tracked, engine_combustion, control_computer, ru_gatling_gun];
 
    if wave > 1 then
-      for i = 1 to Difficulty do
+      for i = 1 to [1, 2, 3, 3][Difficulty] do
           ru_produce_list := ru_produce_list ^ [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket_launcher];
 
    repeat
@@ -246,13 +246,13 @@ uc_nation := 3;
 
 InitHc;
 
-skill := [5, 6, 7, 8][Difficulty];
+skill := [5, 6, 6, 7][Difficulty];
 chassis := [ru_medium_tracked, ru_heavy_tracked][rand(1,2)];
 
 if chassis = ru_medium_tracked then
-   weapon := [ru_rocket_launcher, ru_gatling_gun, ru_gun][rand(1,3)]
-  else
-   weapon := [ru_heavy_gun, ru_gun, ru_rocket_launcher][rand(1,3)];
+   weapon := [ru_rocket_launcher, ru_gatling_gun, ru_gun, ru_gun][rand(1,4)]
+else
+   weapon := [ru_heavy_gun, ru_gun, ru_gun, ru_rocket_launcher][rand(1,4)];
 
 un := PrepareTank(3, 3, chassis, engine_combustion, [control_computer, control_computer, control_computer, control_manual][rand(1,4)], weapon, 99);
 
@@ -274,7 +274,7 @@ End;
 Every 0$1 do
 var i, time, wave;
 begin
-time := [12$00, 11$30, 11$00, 11$00][Difficulty];
+time := [12$00, 11$30, 11$20, 11$00][Difficulty];
 
 wait(time);
 
@@ -321,17 +321,17 @@ for i in ru_force do
        begin
        if GetType(i) = unit_human and GetClass(i) = 1 and un in FilterAllUnits([[f_type, unit_vehicle], [f_empty]]) then
           ComEnterUnit(i, un)
-         else
+       else
           if not un in FilterAllUnits([[f_type, unit_vehicle], [f_empty]]) then
              ComAttackUnit(i, un)
-            else
+          else
              ComAttackUnit(i, JMM);
        end
-      else
+    else
        begin
        if (GetDistUnitXY(i, points1[1], points1[2]) > GetDistUnitXY(i, points2[1], points2[2]) and ru_can_attack_terminal) or FilterUnitsInArea(ovsyenkoArea, [f_enemy, 3]) = 0 then
           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
-         else
+       else
           begin
           if GetWeapon(i) = ru_rocket_launcher and UnitFilter(ru_force, [f_not, [f_weapon, ru_rocket_launcher]]) > 6 then
              begin
@@ -351,13 +351,13 @@ for i in ru_force do
                  end;
 
              end
-            else
+          else
              begin
              un := NearestUnitToUnit(all_units diff i, i);
 
              if not Attacks(i) and (un in FilterAllUnits([[f_type, unit_vehicle], [f_control, control_manual], [f_empty]]) or un in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_lives, 249]]])) then
                 ComAttackUnit(i, un)
-               else
+             else
                 ComAttackUnit(i, NearestUnitToUnit(FilterUnitsInArea(ovsyenkoArea, [f_enemy, 3]), i));
              end;
 

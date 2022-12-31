@@ -109,4 +109,7 @@ TID_Iraq = 9026;
 TID_Sweden = 9027;
 TID_Finland = 9028;
 
+TID_Main_Menu_Support = 9996;
+TID_Main_Menu_Contact = 9997;
+TID_Main_Menu_Changelog = 9998;
 TID_Changelog = 9999;
