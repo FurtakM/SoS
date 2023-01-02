@@ -156,86 +156,6 @@ function split(source, delimiters)
     return elements;
 end;
 
-function getLanguagesKey()
-    return {
-        'ENG',
-        'CZE',
-        'FRA',
-        'GER',
-        'POL',
-        'SPA',
-        'JAP',        
-        'RUS',
-        'SLO',        
-        'SWE',
-        'ITA',
-    }
-end;
-
-function getLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-        'Nihonjin',        
-        'Pусский',
-        'Slovenščina',        
-        'Svenska',
-        'Italiano',
-    }
-end;
-
-function getAudioLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-    }
-end;
-
-function getSubtitles()
-    return {
-        loc(TID_Options_Subtitles_Off),
-        loc(TID_Options_Subtitles_Video),
-        loc(TID_Options_Subtitles_Audio),
-        loc(TID_Options_Subtitles_Both)
-    };
-end;
-
-function getWindowedList()
-    return {
-        loc(TID_Options_Windowed_Fullscreen),
-        loc(TID_Options_Windowed_Window),
-        loc(TID_Options_Windowed_Bordeless)
-    };
-end;
-
-function getAchivFilter()
-    return {
-        loc(TID_Main_Menu_Filter_Achiv_All),
-        loc(TID_Main_Menu_Filter_Achiv_Done),
-        loc(TID_Main_Menu_Filter_Achiv_Undone)
-    };
-end;
-
-function getAchivFilterMission() 
-    local tmp = {
-        loc(TID_Main_Menu_Filter_Achiv_All)
-    };
-
-    for i = 1, 20 do
-        tmp[i+1] = loc(417) .. ' ' .. i;
-    end;
-
-    return tmp;
-end;
-
 function setVisibleAll(ARRAY, MODE)
     local result = false;
 
@@ -406,4 +326,8 @@ end;
 
 function isMultiplayer()
     return getvalue(OWV_MULTIPLAYER);
+end;
+
+function setFontColourID(ID, COLOR)
+    setFontColour({ID=ID}, COLOR);
 end;
