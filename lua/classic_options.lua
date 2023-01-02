@@ -39,6 +39,84 @@ OPTION_CONTROLS_PING = 23;
 OPTION_GAME_LOCKSPEED = 24;
 OPTION_INTERFACE_FACTORY = 25;
 
+function getLanguagesKey()
+    local languagesKey = MOD_DATA.Languages_Key;
+
+    if languagesKey then
+        return languagesKey;
+    end;
+
+    return {
+        'ENG',
+        'CZE',
+        'FRA',
+        'GER',
+        'POL',
+        'SPA',
+        'JAP',        
+        'RUS',
+        'SLO',        
+        'SWE',
+        'ITA',
+    }
+end;
+
+function getLanguages()
+    local languages = MOD_DATA.Languages;
+
+    if languages then
+        return languages;
+    end;
+
+    return {
+        'English',
+        'Ceština',
+        'Français',
+        'Deutsche',
+        'Polski',
+        'Español',
+        'Nihonjin',        
+        'Pусский',
+        'Slovenščina',        
+        'Svenska',
+        'Italiano',
+    }
+end;
+
+function getAudioLanguages()
+    local languages = MOD_DATA.Languages;
+
+    if languages then
+        return languages;
+    end;
+
+    return {
+        'English',
+        'Ceština',
+        'Français',
+        'Deutsche',
+        'Polski',
+        'Español',
+    }
+end;
+
+function getSubtitles()
+    return {
+        loc(TID_Options_Subtitles_Off),
+        loc(TID_Options_Subtitles_Video),
+        loc(TID_Options_Subtitles_Audio),
+        loc(TID_Options_Subtitles_Both)
+    };
+end;
+
+function getWindowedList()
+    return {
+        loc(TID_Options_Windowed_Fullscreen),
+        loc(TID_Options_Windowed_Window),
+        loc(TID_Options_Windowed_Bordeless)
+    };
+end;
+
 function getSetting(setting)
     if setting == OPTION_STEAMOVERLAY then
         return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_STEAMOVERLAY', true);

@@ -28,6 +28,26 @@ function showAchivs(mode)
     end;
 end;
 
+function getAchivFilter()
+    return {
+        loc(TID_Main_Menu_Filter_Achiv_All),
+        loc(TID_Main_Menu_Filter_Achiv_Done),
+        loc(TID_Main_Menu_Filter_Achiv_Undone)
+    };
+end;
+
+function getAchivFilterMission() 
+    local tmp = {
+        loc(TID_Main_Menu_Filter_Achiv_All)
+    };
+
+    for i = 1, 20 do
+        tmp[i+1] = loc(417) .. ' ' .. i;
+    end;
+
+    return tmp;
+end;
+
 function changeCategory(category)
     category = parseInt(category);
     displayAchivs(category, -1, -1);
