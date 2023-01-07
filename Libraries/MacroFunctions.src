@@ -505,7 +505,7 @@ until not group or group = [] or not FilterAllUnits([f_enemy, side]);
 End;
 
 Export Function BasicDefend(base, solds);
-var enemy, side, i, hex;
+var enemy, e, side, i, hex;
 begin
 if not base or not mc_bases[base] or not solds then
    exit;
@@ -542,8 +542,11 @@ repeat
      if IsInUnit(i) then
         ComExitBuilding(i);
 
-     if GetLives(i) > 333 then
-        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     if GetLives(i) > 500 then
+        begin
+        e := NearestUnitToUnit(enemy, i);
+        ComAgressiveMove(i, GetX(e), GetY(e));
+        end
      else if GetDistUnits(i, NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i)) > 10 then
         begin
         hex := NearestUnitToUnit(UnitFilter(mc_bases[base], [f_or, [f_btype, b_depot], [f_btype, b_warehouse], [f_btype, b_lab]]), i);

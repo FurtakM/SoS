@@ -1,38 +1,43 @@
 Export function PrepareCommander;
 begin
-     uc_side = 3;
-     uc_nation = 3;
+uc_side := 3;
+uc_nation := 3;
 
-     Eisenstein = PrepareUnit('Eisenstein', false, '');
-     PlaceUnitArea(Eisenstein, CommanderSpawn, false);
-
-
-end;
+Eisenstein := PrepareUnit('Eisenstein', false, '');
+PlaceUnitArea(Eisenstein, CommanderSpawn, false);
+End;
 
 Export baseGuard;
-
 Export function PrepareRussianBase;
+var i;
 begin
-    uc_nation := 3;
-    uc_side := 3;
+uc_nation := 3;
+uc_side := 3;
 
-    if Difficulty > 1 then
-       begin
-       PrepareHuman(sex_male, 1, [8, 8, 9, 10][Difficulty]);
-       baseGuard := CreateHuman;
-       PlaceUnitXY(baseGuard, 39, 67, false);
-       end;
+if Difficulty > 1 then
+   begin
+   PrepareHuman(sex_male, 1, [8, 8, 9, 10][Difficulty]);
+   baseGuard := CreateHuman;
+   PlaceUnitXY(baseGuard, 39, 67, false);
+   end;
 
-    TeleportExit(ruTeleport, 50, 74);
+if russianRocketsDisabled then
+   begin
+   for i in FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_turret], [f_btype, b_bunker]]]) do
+       if GetBWeapon(i) = ru_rocket then
+          PlaceWeaponTurret(i, ru_rocket_launcher);
+   end;
 
-    RespawnInside(3, 3, ru_barac, 10, 9, 2);
-    RespawnInside(3, 3, ru_depot, 10, 2, 2);
-    RespawnInside(3, 3, ru_fact1, 10, 3, 3);
-    RespawnInside(3, 3, ru_fact2, 10, 3, 3);
-    RespawnInside(3, 3, ru_lab1, 10, 4, 1);
-    RespawnInside(3, 3, ru_lab2, 10, 4, 2);
+TeleportExit(ruTeleport, 50, 74);
 
-    SetResourceType(GetBase(ru_depot), mat_cans, [3500, 4500, 6000, 9000][Difficulty]);
-    SetResourceType(GetBase(ru_depot), mat_oil, [500, 1000, 2000, 3000][Difficulty]);
-    SetResourceType(GetBase(ru_depot), mat_siberit, [150, 250, 300, 450][Difficulty]);
-end;
+RespawnInside(3, 3, ru_barac, 10, 9, 2);
+RespawnInside(3, 3, ru_depot, 10, 2, 2);
+RespawnInside(3, 3, ru_fact1, 10, 3, 3);
+RespawnInside(3, 3, ru_fact2, 10, 3, 3);
+RespawnInside(3, 3, ru_lab1, 10, 4, 1);
+RespawnInside(3, 3, ru_lab2, 10, 4, 2);
+
+SetResourceType(GetBase(ru_depot), mat_cans, [3500, 4500, 6000, 9000][Difficulty]);
+SetResourceType(GetBase(ru_depot), mat_oil, [500, 1000, 2000, 3000][Difficulty]);
+SetResourceType(GetBase(ru_depot), mat_siberit, [150, 250, 300, 450][Difficulty]);
+End;
