@@ -142,6 +142,10 @@ function slideEcoPanel()
 	end;
 end;
 
+function hideEcoPanel()
+    setVisible(game.ecoPanel, false);
+end;
+
 function displayEcoPanel()
 	if not getVisible(gamewindow.pause) then
 		OW_PAUSE();
