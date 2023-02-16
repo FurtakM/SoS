@@ -575,6 +575,9 @@ function backToMenu()
 
     if not isSkirmish() then
         showCampaign(1);
-        runCampaign(CAMPAIGN_ID - 1);
+
+        if CAMPAIGN_ID > 0 then
+            runCampaign(CAMPAIGN_ID - 1);
+        end;
     end;        
 end;

@@ -707,7 +707,9 @@ end;
 
 function showCampaign(mode)
 	if mode == 1 then    
-		if parseInt(OW_SAVENEXIT_CHECK()) == 2 then
+		local loadGameStatus = parseInt(OW_SAVENEXIT_CHECK());
+
+		if loadGameStatus == 0 or loadGameStatus == 2 then
 	        return;
 	    end;
 

@@ -35,12 +35,28 @@ begin
    player_commander := ar_commander;
 
 // okno wyboru
-   team := CharacterSelection('text', [14,13,12][Difficulty], [14,13,12][Difficulty],[sel_change_class, ar_commander, sel_changeable, sel_not_hired]^ ar_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], class_mortar]);
+   team := CharacterSelection('text', [14,13,12][Difficulty], [14,13,12][Difficulty], [sel_dont_change_class, ar_commander, sel_not_hired,sel_changeable, sel_change_class] ^ ar_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], class_mortar]);
    team := team ^ ar_commander;
 
-   for i = 1 to team do
-       PlaceUnitArea(team[i], center_resp, false);
+   for i = 1 to 4 do
+       begin
+       vc_chassis := ar_medium_trike;
+       vc_engine := engine_siberite;
+       vc_control := control_manual;
+       vc_weapon := [ar_gun, ar_cargo_bay, ar_crane, ar_gun][i];
 
+       un := CreateVehicle;
+       SetDir(un, 2);
+       PlaceUnitXYR(un, 54, 15, 6, false);
+       end;
+
+   for i = 1 to team do
+       begin
+       if FilterAllUnits([[f_side, 2], [f_empty]]) then
+          PlaceHumanInUnit(team[i], FilterAllUnits([[f_side, 2], [f_empty]])[1])
+       else
+          PlaceUnitArea(team[i], center_resp, false);
+       end;
 
    uc_side := 0;
    uc_nation := 0;

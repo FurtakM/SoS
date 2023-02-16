@@ -208,7 +208,10 @@ if ru_can_attack then
          ComPlaceWeapon(UnitFilter(ru_bunkers, [f_bweapon, 0])[1], ru_rocket);
 
 // ru_force
-   if ru_force = ru_amount then
+   if ru_force >= ru_amount then
+      RaiseSailEvent(event_russian_attack);
+
+   {if ru_force = ru_amount then
       begin
       for i = 1 to ru_force do
           if IsInArea(ru_force[i], ru_base) then
@@ -225,7 +228,7 @@ if ru_can_attack then
            for i = 1 to tmp do
                if not HasTask(tmp[i]) then
                   ComAttackUnit(ru_force[i], NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), ru_force[i]));
-           end;
+           end;  }
 
 // repair buildings
    if ru_engs > 0 then
@@ -271,7 +274,7 @@ End;
 
 
 // ru_crates
-Every 2$40+0$45 trigger russian_prepared and GetListOfCratesInArea(ru_crates) < 10 do
+Every 3$40+0$45 trigger russian_prepared and GetListOfCratesInArea(ru_crates) < 10 do
 begin
 enable;
 
@@ -320,6 +323,45 @@ enable;
 
 ru_depot := FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]])[1];
 
-AddResourceType(GetBase(ru_depot), mat_cans, 3000);
-AddResourceType(GetBase(ru_depot), mat_oil, 300);
+AddResourceType(GetBase(ru_depot), mat_cans, 6000);
+AddResourceType(GetBase(ru_depot), mat_oil, 600);
+End;
+
+Export Function RussianAttack();
+var path, units, p, i, teleport;
+begin
+units := ru_force;
+teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
+ru_force := [];
+
+if not teleport then
+   begin
+   for i in units do
+       TeleportUnit(i, 150, 65, 12, true);
+   end
+else
+   begin
+     repeat
+      for i = 1 to units do
+          if IsInArea(units[i], ru_base) then
+             ComEnterUnit(units[i], teleport[1]);
+
+      wait(0$10);
+     until not UnitFilter(units, [f_inarea, ru_base]);
+   end;
+
+p := rand(1, 2);
+
+case p of
+     1: path := [ [159,71], [152,99], [107,119], [104,127] ];
+     2: path := [ [116,36], [91,52], [53,67], [58,107] ];
+     end;
+
+if FilterAllUnits([f_side, 7]) and p > 1 then
+   path := [ [116,36], [91,52] ];
+
+repeat
+ wait(0$1);
+ AgressiveMove(units, path);
+until not UnitFilter(units, [f_ok]);
 End;
