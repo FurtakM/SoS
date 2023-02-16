@@ -1,4 +1,117 @@
 Export Function Action;
+var i;
 begin
+music_nat := nation_russian;
 
+Video(true);
+
+PlaceSeeing(111, 168, 2, -25);
+PlaceSeeing(102, 47, 2, -40);
+
+CenterNowOnUnits(Heike);  
+startAttackOnKabul := true;
+
+wait(0$2);
+
+CenterOnXY(102, 47);
+
+if Givi then
+   begin
+   ComMoveXY(Givi, 113, 162);
+   AddComTurnUnit(Givi, Heike);
+
+   Say(Givi, 'DG-Intro-1');
+   Say(Givi, 'DG-Intro-2');
+
+   CenterOnUnits(Heike);
+   RemoveSeeing(102, 47, 2);
+
+   wait(0$0.3);
+
+   Say(Heike, 'DH-Intro-3');
+
+   if Mike then
+      begin
+      PlaceSeeing(92, 129, 2, -18);
+
+      CenterOnXY(92, 129);
+
+      ComTurnUnit([Mike, Kaia], Heike);
+
+      Say(Mike, 'DM-Intro-4');
+      Say(Kaia, 'DK-Intro-5');
+
+      RemoveSeeing(92, 129, 2);
+      end;
+   end
+else
+   begin
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Intro-b-1') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Intro-b-1');
+
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Intro-b-2') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Intro-b-2');
+
+   if Kaia then
+      Say(Kaia, 'DK-Intro-5');
+
+   PlaceSeeing(92, 129, 2, -18);
+   CenterOnXY(92, 129);
+      
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Intro-b-4') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Intro-b-4');
+
+   RemoveSeeing(92, 129, 2);  
+   end;
+
+CenterOnUnits(Heike);
+
+SayRadio(Burlak, 'DB-Intro-6');
+Say(Heike, 'DH-Intro-7');
+SayRadio(Burlak, 'DB-Intro-8');
+SayRadio(Burlak, 'DB-Intro-9');
+
+if Givi then
+   begin
+   Say(Givi, 'DG-Intro-10');
+   Say(Kaia, 'DK-Intro-11');
+   end
+else
+   if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Intro-b-10') then
+      Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Intro-b-10');
+
+Say(Mike, 'DM-Intro-12');
+Say(Kurt, 'DKs-Intro-13');
+Say(Kamil, 'DKam-Intro-14');
+// Say(Sophia, 'DS-Intro-15');
+
+case Query('QSurrender') of
+     1: begin
+        Say(Heike, 'DH-Intro-16');
+        missionEnd;
+        end;    
+     2: begin
+        Say(Heike, 'DH-Intro-a-16');
+        SayRadio(Burlak, 'DB-Intro-a-17');
+        startAttackOnHeike := true;
+        end;
+end;
+
+for i in FilterAllUnits([f_side, 2]) do
+    ComAgressiveMove(i, 98, 143);
+
+CenterOnXY(98, 143);
+
+repeat
+ wait(0$1);
+until IsDead(Heike);
+
+YouLost('HeikeNoSurrender');
+
+// Video(false);
+End;
+
+Function MissionEnd();
+begin
+ChangeMap(1, '%_cont');
 End;

@@ -91,7 +91,7 @@ legion_mines := [];
 
 for i = 1 to tmp[1] do
     begin
-    PlaceMine(tmp[1][i], tmp[2][i], 2, 0);
+    PlaceMine(tmp[1][i], tmp[2][i], 8, 0);
     legion_mines := Replace(legion_mines, legion_mines + 1, [tmp[1][i], tmp[2][i]]);
     end;
 
@@ -204,12 +204,16 @@ if legion_enemy > 0 then
       legion_vlist := legion_vlist ^ [ar_medium_trike, engine_combustion, control_remote];
       legion_vlist := legion_vlist ^ [ar_rocket_launcher, ar_gun, ar_selfpropelled_bomb][Rand(1,3)];
       legion_vlist := legion_vlist ^ [ar_medium_trike, engine_combustion, control_remote];
-      legion_vlist := legion_vlist ^ [ar_rocket_launcher, ar_gun, ar_selfpropelled_bomb][Rand(1,3)];
+      legion_vlist := legion_vlist ^ [ar_rocket_launcher, ar_mortar, ar_selfpropelled_bomb][Rand(1,3)];
       legion_vlist := legion_vlist ^ [ar_medium_trike, engine_combustion, control_remote];
       legion_vlist := legion_vlist ^ [ar_rocket_launcher, ar_gun, ar_selfpropelled_bomb][Rand(1,3)];
       end;
 
    if legion_force >= 7 then
+      RaiseSailEvent(event_legion_attack);
+   end;
+  
+   {if legion_force >= 7 then
       begin
       for i = 1 to legion_force do
           begin
@@ -234,7 +238,7 @@ if legion_enemy > 0 then
           if not HasTask(tmp[i]) and GetTag(legion_force[i]) = 11 then
              ComAttackUnit(tmp[i], NearestUnitToUnit(FilterAllUnits([f_side, legion_enemy]), tmp[i]));
       end;
-   end;
+   end;      }
 
 // cargo
    if FilterAllUnits([[f_side, 8], [f_weapon, ar_cargo_bay]]) then
@@ -280,4 +284,22 @@ Every 3$30 trigger GetListOfCratesInArea(legion_crates) < 20 do
 begin
 enable;
 CreateCratesArea(Rand(1,5), legion_crates, true);
+End;
+
+Export Function LegionAttack();
+var path, units;
+begin
+units := legion_force;
+legion_force := [];
+
+case legion_enemy of
+     1: path := [ [174,135], [153,146], [118,122] ];
+     2: path := [ [164,73], [130,48], [96,48] ];
+     7: path := [ [174,135], [153,146], [118,122] ];
+     end;
+
+repeat
+ wait(0$1);
+ AgressiveMove(units, path);
+until not UnitFilter(units, [f_ok]); 
 End;

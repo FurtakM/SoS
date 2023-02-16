@@ -201,7 +201,7 @@ if al_vehs then
 
 if al_force = 0 and tick mod 23100 = 0 then
    begin
-   for i = 1 to [4,5,6][Difficulty] do
+   for i = 1 to [6,7,8][Difficulty] do
        begin
        al_vehs := al_vehs ^ ru_heavy_wheeled;
        al_vehs := al_vehs ^ engine_combustion;
@@ -213,7 +213,7 @@ if al_force = 0 and tick mod 23100 = 0 then
 if FilterAllUnits([[f_side, 7], [f_weapon, ru_cargo_bay]]) = 0 then
    ComConstruct(al_fac, ru_medium_wheeled, engine_combustion, control_computer, ru_cargo_bay);
 
-if al_force and tick mod 10$00 = 0 then
+{if al_force and tick mod 10$00 = 0 then
    begin
    for i = 1 to al_force do
        if GetTag(al_force[i]) <> 11 then
@@ -228,5 +228,27 @@ if al_force then
           if not HasTask(al_force[i]) then
              ComAttackUnit(al_force[i], NearestUnitToUnit(FilterAllUnits([f_enemy, 7]), al_force[i]));
           end;
-       end;
+       end; }
+
+if al_force >= [6,7,8][Difficulty] then
+   RaiseSailEvent(event_alliance_attack);
+End;
+
+Export Function AllianceAttack();
+var path, units;
+begin
+units := al_force;
+al_force := [];
+
+
+if rand(0, 1) then
+   path := [ [49,53], [52,90], [63,114] ]
+else
+   path := [ [89,52], [143,50] ];
+
+
+repeat
+ wait(0$1);
+ AgressiveMove(units, path);
+until not UnitFilter(units, [f_ok]);
 End;
