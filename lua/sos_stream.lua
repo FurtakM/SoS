@@ -160,6 +160,15 @@ STREAM_ITEMS_INIT_HARDCORE = {
 	{
 		NAME = 'sRanger', ITEM_ID = 115, PROB = 8, LABEL = loc(6257),
 	},
+	{
+		NAME = 'sComputer', ITEM_ID = 116, PROB = 10, LABEL = loc(6261),
+	},
+	{
+		NAME = 's30', ITEM_ID = 117, PROB = 6, LABEL = loc(6262),
+	},
+	{
+		NAME = 's60', ITEM_ID = 118, PROB = 6, LABEL = loc(6263),
+	}
 };
 STREAM_ITEMS_NORMAL = {};
 STREAM_ITEMS_HARDCORE = {};
@@ -442,7 +451,7 @@ end;
 streamPanel.troll = getElementEX(
     game.ui.minimap, 
     anchorL, 
-    XYWH(30, 60, 198, 159), 
+    XYWH(10, 10, 198, 159), 
     false,
     {
         texture = 'SGUI/Stream/troll.png'
@@ -518,6 +527,14 @@ end;
 
 function playSibBomb()
 	sound.play('Sound/Stream/SibExplosion.wav', '', VOLUME_EFFECTS);
+end;
+
+function playRanger()
+	sound.play('Sound/Stream/Ranger.wav', '', VOLUME_EFFECTS);
+end;
+
+function playComputer()
+	sound.play('Sound/Stream/Computer.wav', '', VOLUME_EFFECTS);
 end;
 
 function earthquake(gamePos, point, lastPoint)
