@@ -437,7 +437,7 @@ for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
 	clButton(
 		streamPanel.activatorPanel.list, 
 		0, 
-		32 * (i + #STREAM_ITEMS_INIT_NORMAL - 1) + 6, 
+		32 * (i + #STREAM_ITEMS_INIT_HARDCORE - 1) + 6, 
 		streamPanel.activatorPanel.list.width, 
 		30, 
 		STREAM_ITEMS_INIT_HARDCORE[i].LABEL,
@@ -650,6 +650,7 @@ function animateRoullete(point, time)
 end;
 
 function resetStreamRoullete()
+	STREAM_ITEMS_ACTIVE = {};
 	newStreamInstance();
 end;
 
@@ -782,16 +783,6 @@ function saveStreamToFile()
 	OW_TXT_FREE(TXT2);
 end;
 
-function StreamNotRepeat(item)
-	for i = 1, #STREAM_ITEMS_ACTIVE do
-		if (item.ITEM_ID == STREAM_ITEMS_ACTIVE[i].ITEM_ID) then
-			return false;
-		end;
-	end;
-
-	return true;
-end;
-
 function newStreamInstance()
 	sgui_deletechildren(streamPanel.content.ID);
 
@@ -813,11 +804,13 @@ function newStreamInstance()
 		tmp = STREAM_ITEMS_HARDCORE;
 	end;
 
-	if (#tmp == 0) then
-		STREAM_ITEMS = {};
-	else
+	STREAM_ITEMS = {};
+
+	if (#tmp > 0) then
 		for i = 1, #tmp do
-			STREAM_ITEMS = addToArray(STREAM_ITEMS, tmp[i]);
+			if not inArray(STREAM_ITEMS_ACTIVE, tmp[i]) then
+				STREAM_ITEMS = addToArray(STREAM_ITEMS, tmp[i]);
+			end;
 		end;
 	end;
 
@@ -836,7 +829,7 @@ function newStreamInstance()
 	repeat
 		local chance = math.random(1, 100);
 
-		if (STREAM_ITEMS[j % #STREAM_ITEMS + 1].PROB > chance and StreamNotRepeat(STREAM_ITEMS[j % #STREAM_ITEMS + 1])) then
+		if (STREAM_ITEMS[j % #STREAM_ITEMS + 1].PROB > chance) then
 			item = getElementEX(
 			    streamPanel.content, 
 			    anchorL, 
