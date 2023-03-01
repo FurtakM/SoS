@@ -22,7 +22,6 @@ Denis := PrepareUnit('Denis', (not debug), '13a_');
 
 DeltaDoctor := PrepareUnit('DeltaDoctor', (not debug), '13a_');
 
-
 if DeltaDoctor then
    tmp := tmp ^ DeltaDoctor;
 
@@ -220,7 +219,9 @@ if not debug then
                      ]
    )
 else
-  selected := [Titov, Fadeev, Dolgov, Petrosyan, Scholtze, Oblukov, Kapitsova, Lipshchin, Petrovova, Kovalyuk, Kuzmov, Karamazov];
+  selected := [Titov, Fadeev, Dolgov, Petrosyan, Scholtze, Oblukov, Kapitsova];
+
+allianceTeam := tmp diff selected;
 
 uc_nation := 1;
 
@@ -384,4 +385,52 @@ veh := CreateVehicle;
 SetDir(veh, 3);
 PlaceUnitXY(veh, 214, 20, false);
 SetCargo(veh, mat_artifact, 40);
+End;
+
+Export Function AllianceSupport;
+var i, veh;
+begin
+if not allianceTeam then
+   exit;
+
+for i := 1 to 6 do
+    begin
+    uc_side := 7;
+    uc_nation := [1, 3][i mod 2 + 1];
+
+    if uc_nation = 1 then
+       PrepareVehicle(us_morphling, engine_siberite, control_manual, [us_heavy_gun, us_rocket_launcher][rand(1, 2)], 100)
+    else
+       PrepareVehicle(ru_heavy_wheeled, engine_siberite, control_manual, [ru_heavy_gun, ru_rocket][rand(1, 2)], 100);
+
+    if not allianceTeam then
+       break;
+
+    veh := CreateVehicle;
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, allianceSouthSupp, false);
+
+    if GetSkill(allianceTeam[1], class_mechanic) > 4 then
+       SetClass(allianceTeam[1], class_mechanic);
+
+    if GetSkill(allianceTeam[1], class_scientistic) > 8 then
+       SetClass(allianceTeam[1], class_scientistic);
+
+    PlaceHumanInUnit(allianceTeam[1], veh);
+    allianceTeam := Delete(allianceTeam, 1);
+
+    ComHold(veh);
+    end;
+
+uc_side := 7;
+uc_nation := 1;
+
+PrepareVehicle(us_morphling, engine_siberite, control_computer, us_radar, 100);
+veh := CreateVehicle;
+SetDir(veh, 4);
+PlaceUnitXY(veh, 305, 218, false);
+ComHold(veh);
+
+
+CenterNowOnXY(313, 220);
 End;
