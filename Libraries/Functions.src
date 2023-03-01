@@ -2437,42 +2437,41 @@ for _x = min_x to max_x do
 End;
 
 Export Function AgressiveMove(units, path);
-var i, enemy, cr, side, tag;
+var i, enemy, nearEnemy, cr, side, tag, ignoreCratesWeapon;
 begin
 if not units then
    exit;
 
 result := UnitFilter(units, [f_ok]);
 side := GetSide(units[1]);
+ignoreCratesWeapon := [ar_selfpropelled_bomb, ar_bio_bomb];
 
 if not result then
    exit;
+
+enemy := FilterAllUnits([f_enemy, side]);
 
 for i in result do
     begin
     tag := GetTag(i) + 1;
     cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
 
-    if cr then
+    if cr and not GetWeapon(i) in ignoreCratesWeapon then
        ComAttackPlace(i, cr[1][1], cr[1][2])
     else if path > tag then
        begin
-       enemy := FilterAllUnits([[f_enemy, side], [f_dist, i, 12]]);
+       nearEnemy := UnitFilter(enemy, [f_dist, i, 12]);
 
-       if enemy then
-          ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+       if nearEnemy then
+          ComAttackUnit(i, NearestUnitToUnit(nearEnemy, i))
        else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
           ComAgressiveMove(i, path[tag][1], path[tag][2])
        else
           SetTag(i, tag);
        end
     else
-       begin
-       enemy := FilterAllUnits([f_enemy, side]);
-
        if enemy then
           ComAttackUnit(i, NearestUnitToUnit(enemy, i));
-       end;
     end;
 End;
 

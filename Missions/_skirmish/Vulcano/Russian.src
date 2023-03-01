@@ -59,27 +59,6 @@ for i = 1 to 6 do
 End;
 
 // remote mine
-Every 0$1 trigger legion_mines do
-var i, p;
-begin
-enable;
-
-p := 1;
-
-for i = legion_mines div 2 downto 1 do
-    begin
-    if HexInfo(legion_mines[p], legion_mines[p+1]) > 0 then
-       if GetSide(HexInfo(legion_mines[p], legion_mines[p+1])) = legion_enemy then
-          begin
-          LaunchMineAtPos(legion_mines[p], legion_mines[p+1], 8);
-          legion_mines := Delete(legion_mines, p);
-          legion_mines := Delete(legion_mines, p);
-          end
-       else
-          p := p + 2;
-    end;
-End;
-
 Every 0$02 trigger FilterAllUnits([f_side, 3]) > 0 and russian_prepared do
 var ru_depot, ru_factory, ru_teleport, ru_bunkers, ru_buildings, ru_vehicles, ru_humans, ru_barracks,
     ru_engs, ru_mech, ru_sci, i, tmp, filter, cr, sib_bomb;
@@ -142,10 +121,6 @@ ru_sci  := UnitFilter(ru_humans, [f_class, 4]);
       if ru_cargo = 0 and ru_factory and BuildingStatus(ru_factory) = bs_idle then
          ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
 
-
-// bazooka
-   if UnitFilter(ru_humans, [f_class, class_bazooker]) then
-      IntBazooka(UnitFilter(ru_humans, [f_class, class_bazooker]), FilterAllUnits([[f_side, Your_Side], [f_not, [f_type, unit_building]]]));
 
 // factory
    if ru_factory and ru_vlist > 0 then
@@ -362,6 +337,5 @@ if FilterAllUnits([f_side, 7]) and p > 1 then
 
 repeat
  wait(0$1);
- AgressiveMove(units, path);
-until not UnitFilter(units, [f_ok]);
+until not AgressiveMove(units, path);
 End;

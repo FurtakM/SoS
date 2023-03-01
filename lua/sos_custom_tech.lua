@@ -13,7 +13,7 @@ IT_LR_MultiBarrels = 88;
 SOS_TECH = {
 	{
 		TECH = IT_LR_Artillery,
-		BUTTON = 68,
+		BUTTON = 1,
 	},
 	{
 		TECH = IT_LR_RadMat,

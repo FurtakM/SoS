@@ -1,8 +1,17 @@
 Export Function Action;
 var un, gamemode, speaker;
-begin    
-Difficulty := GetMultiplayerSetting(0);
-gamemode := GetMultiplayerSetting(1);
+begin
+if debug then
+   begin
+   Difficulty := 2;
+   gamemode := 3;
+   FogOff(7);
+   end
+else
+   begin
+   Difficulty := GetMultiplayerSetting(0);
+   gamemode := GetMultiplayerSetting(1);
+   end;
 
 if gamemode = 1 then
    begin
@@ -397,7 +406,7 @@ begin
 End;
 
 // player spot legion
-Every 0$01 trigger See(8, NearestUnitToSide(FilterAllUnits([f_side, your_side]), 8)) do
+Every 0$01 trigger FilterAllUnits([[f_side, your_side], [f_see, 8]]) do
 var speaker;
 begin
 if your_side = 1 then
@@ -424,48 +433,11 @@ begin
 Say(player_commander, 'VD-vulc-mines');
 End;
 
-Every 0$03 trigger difficulty > 1 do
-var mines, p, i;
-begin
-mines := [123,95, 119,89, 115,81];
-p := 1;
-
-for i = 1 to 3 do
-    begin
-    PlaceMine(mines[p], mines[p+1], 8, 0);
-    p := p + 2;
-    end;
-
-End;
-
-
-Every 0$01 trigger difficulty > 1 and FilterUnitsInArea(vulc_mines, [f_side, your_side]) do
-var p, i, mines;
-begin
-enable;
-
-p := 1;
-mines := [123,95, 119,89, 115,81];
-
-for i = 1 to 3 do
-    begin
-    if HexInfo(mines[p], mines[p+1]) > 0 then
-       if GetSide(HexInfo(mines[p], mines[p+1])) = your_side then
-          begin
-          LaunchMineAtPos(mines[p], mines[p+1], 8);
-          mine_vulc := true;
-          end;
-
-    p := p + 2;
-    end;
-End;
-
 Every 0$01 trigger FilterAllUnits([f_side, 3]) = 0 and your_side <> 2 do
 Win;
 
 Every 0$01 trigger FilterAllUnits([f_or, [f_side, 8], [f_side, 3]]) = 0 and your_side = 2 do
 Win;
-
 
 Function Win;
 var points;

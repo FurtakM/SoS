@@ -527,3 +527,31 @@ if Difficulty > 1 then
        end;
    end;
 End;
+
+Every 6$00 trigger tick >= 20$00 and Difficulty > 1 and russianOmicronAttackers > 4 and not retreatFromOmicron do
+var i, un, tmp, path;
+begin
+enable;
+
+tmp := [];
+path := [ [55,91], [47,80], [39,67], [36,60], [33,52] ];
+
+for i := 1 to [2, 3, 3][Difficulty - 1] do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_heavy_machine_gun, ru_gun][i mod 3 + 1], 100);
+    un := CreateVehicle;
+    PlaceUnitXYR(un, 57, 103, 4, false);
+
+    tmp := Replace(tmp, tmp + 1, un);
+
+    PrepareHuman(false, 3, 5);
+    PlaceHumanInUnit(CreateHuman, un);
+    end;
+
+repeat
+ wait(0$1);
+until not AgressiveMove(tmp, path);
+End;
