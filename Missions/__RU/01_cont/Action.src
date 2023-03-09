@@ -30,6 +30,8 @@ begin
     SaveForQuickRestart;
 
     introEnd = true;
+
+    LakeApes = FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]);
 end;
 
 // Burlak comment waterfall
@@ -132,7 +134,7 @@ begin
         if (GetSide(Gnyevko) = 3 and IsOK(Gnyevko)) then
             Say(Gnyevko,'D2a-Gny-1');
 
-        if (GetSide(Gnyevko) = 8) then
+        if (GetSide(Gnyevko) = 5) then
         begin
             Say(Burlak, 'D12-Bur-1');
 
@@ -149,9 +151,9 @@ begin
   enable;
   SetLives(Gnyevko, gnyevkoStartHP);
 end;
-
+                                                                    
 // Find Gnyevko
-every 0$1 trigger See(3, Gnyevko) do
+every 0$1 trigger See(3, Gnyevko) do //AND GetDistUnits(FilterAllUnits([[f_side, 3]]), Gnyevko) < 8 do
 var nearUnit, randomUnit;
 begin
     CenterNowOnUnits(Gnyevko);
@@ -305,7 +307,8 @@ begin
 
         Say(Burlak, 'D4-Bur-4');
         Say(Pokryshkin, 'D4-Pok-5');
-        SayRadio(Charles, 'D4-Sol1-5');
+        SayEX(Charles, 'D4-Sol1-5', false, false,true,false);
+
         Say(Pokryshkin, 'D4-Pok-6');
         SayRadio(Pokryshkin, 'D4-Pok-6a');
         Say(Burlak, 'D4-Bur-6');
@@ -327,14 +330,15 @@ begin
 
     Say(Pokryshkin, 'D4-Pok-1');
 
-    if GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
-        Say(Gnyevko, 'D4-Gny-1');
+   // if GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
+    //    
+    
 
-
-    if GetDistUnits(Burlak, NearestUnitToUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), Burlak)) > 8 AND GetDistUnits(Burlak, Gnyevko) > 8 AND GetSide(Gnyevko) = 3 AND IsOK(Gnyevko) then
+    if GetDistUnits(Gnyevko, Pokryshkin) <= 15   AND GetDistUnits(Burlak, Pokryshkin) > 20 then
     begin
         ComWalk(Gnyevko);
 
+        Say(Gnyevko, 'D4-Gny-1');
         Say(Pokryshkin, 'D4-Pok-2');
         Say(Gnyevko, 'D4-Gny-2');
         Say(Pokryshkin, 'D4-Pok-3');
@@ -375,7 +379,7 @@ begin
 
         Say(Burlak, 'D4-Bur-4');
         Say(Pokryshkin, 'D4-Pok-5');
-        SayRadio(Charles, 'D4-Sol1-5');
+        SayEX(Charles, 'D4-Sol1-5', false, false,true,false);
         Say(Pokryshkin, 'D4-Pok-6');
         SayRadio(Pokryshkin, 'D4-Pok-6a');
         Say(Burlak, 'D4-Bur-6');
@@ -530,7 +534,7 @@ begin
     Say(Pokryshkin, 'D6-Pok-3');
 
     CenterNowOnUnits(Burlak);
-    SayRadio(Kurin, 'D6-Kur-3');
+    SayRadioNoFace(Kurin, 'D6-Kur-3');
 
     CenterNowOnUnits(Burlak);
     Say(Pokryshkin, 'D6-Pok-4');
@@ -542,15 +546,21 @@ begin
 
     interface_hidden = false;
 
-    ComAttackUnit(Pokryshkin, am_bun);
+    ComMoveToArea(Pokryshkin, PokryszkinAttack);
+    ComMoveToArea(FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Pokryshkin , PokryszkinAttack);
+    
 
-    wait(0$5);
+end;
+every 0$1 trigger IsInArea(Pokryshkin,PokryszkinAttack) do
+begin
+    Say(Pokryshkin, 'D7-Pok-1');
 
-    ComAttackUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]), am_bun);
+       // wait(0$5);
+    AddComAttackUnit(Pokryshkin, am_bun);
+    AddComAttackUnit(FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Pokryshkin , am_bun);
 
     DoNotAttack(1, Gnyevko);
 end;
-
 // Focus fire on Pokryshkin
 every 0$1 trigger See(1, Pokryshkin) and IsDead(Charles) do
     ComAttackUnit(Johanna, Pokryshkin);
@@ -558,8 +568,8 @@ every 0$1 trigger See(1, Pokryshkin) and IsDead(Charles) do
 // Pokryshkin attack bunker
 every 0$1 trigger See(3, am_bun) do
 begin
-    Say(Pokryshkin, 'D7-Pok-1');
-    Say(Johanna, 'D7-FSol1-1');
+    
+    SayNoName(Johanna, 'D7-FSol1-1');
 end;
 
 // Pokryshkin dying
@@ -582,7 +592,7 @@ begin
     AddComTurnXY(Belkov, 88, 66);
 
     Say(Saseda, 'D7a-RSol1-1');
-    Say(Johanna, 'D7a-FSol1-1');
+    SayNoName(Johanna, 'D7a-FSol1-1');
 
     wait(0$12);
 
@@ -619,12 +629,12 @@ begin
             secondAttack = true;
             
             exit;
-        end else
-          belkovWaitForGorky = true;
+        end;
 
     Say(Belkov, 'D7b-Bel-3');
     InGameOff;
 
+    belkovWaitForGorky = true;
 end;
 
 // Belkov wait for Gorky
@@ -638,9 +648,6 @@ begin
     for unit in ruSolds do
         if (GetDistUnits(Burlak, unit)) < 7 then
         begin
-             if NOT IsInUnit(Johanna) then
-                ComEnterUnit(Johanna, am_bun);
-
             belkovWaitForGorky = false;
             InGameOn;
 
@@ -674,25 +681,51 @@ end;
 
 // Second attack  - execute in event On Contact
 Export Function Dial_SecondAttack;
-var nearRuUnit;
+var units, i;
 begin
 
-    Say(Johanna, 'D8-FSol1-1');
-    Say(Gladstone, 'D8-Glad-1');
+    SayEX(Johanna, 'D8-FSol1-1',true,false,false,false);
+    SayEX(Gladstone, 'D8-Glad-1',false,false,false,false);
     Say(Burlak, 'D8-Bur-1');
 
     secondAttack = false;
 
-    nearRuUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), am_bun);
-
+    units = FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
     ComExitBuilding(amApemans);
     wait(0$1);
-    AddComAttackUnit(amApemans, nearRuUnit);
+
+    repeat
+     wait(0$1);
+     //display_strings := tick;
+
+     for i in amApemans do
+         begin
+         if rand(0, 1) then 
+            ComAttackUnit(i, NearestUnitToUnit(units, i))
+         else
+            ComAttackUnit(i, SecondNearestUnitToUnit(units, i));
+         end;
+    until not UnitFilter(amApemans, [f_ok]);
 end;
+
+
+
+Export Function SecondNearestUnitToUnit(group, unit);
+var tmp;
+begin
+if group < 2 then
+   begin
+   result := NearestUnitToUnit(group, unit);
+   exit;
+   end;
+
+tmp := NearestUnitToUnit(group, unit);
+result := NearestUnitToUnit(group diff tmp, unit);
+End;
 
 // Dialog about camp in trees
 every 0$1 trigger GetLives(am_bun) < 350 AND GetLives(am_bun) > 250 AND FilterUnitsInArea(TreeArea, [[f_side, 3], [f_type, unit_human]]) > 0  AND NOT amRetreat do
-    Say(Johanna, 'D8-FSol1-2');
+    SayEX(Johanna, 'D8-FSol1-2',true,false,false,false);
 
 
 // Destroy bunker
@@ -700,11 +733,11 @@ every 0$1 trigger IsDying(am_bun) AND IsOK(am_lab) AND NOT amRetreat do
 begin
     amRetreat = true;
 
-    Say(Johanna, 'D8-FSol1-2a');
+    SayNoName(Johanna, 'D8-FSol1-2a');
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    Say(Gladstone, 'D8-Glad-2');
+    SayNoName(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 end;
 
@@ -717,20 +750,34 @@ begin
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    Say(Gladstone, 'D8-Glad-2');
+    SayEX(Gladstone, 'D8-Glad-2',true,false,false,false);
     Say(Burlak, 'D8-Bur-2');
 end;
 
+every 0$1 trigger (IsDead(amApemans) AND Difficulty = 3) AND NOT amRetreat do
+begin
+
+    amRetreat = true;
+
+    SayEX(Johanna, 'D8-FSol1-2a',true,false,false,false);
+    
+    ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
+
+    SayNoName(Gladstone, 'D8-Glad-2');
+    Say(Burlak, 'D8-Bur-2');
+
+end;
+
 // Retreat if bunker have less than 50% HP - only hard difficulty
-every 0$1 trigger GetLives(am_bun) < 500 AND Difficulty >= 3 AND NOT amRetreat do
+every 0$1 trigger GetLives(am_bun) < 500 AND Difficulty = 3 AND NOT amRetreat do
 begin
     amRetreat = true;
 
-    Say(Johanna, 'D8-FSol1-2a');
+    SayEX(Johanna, 'D8-FSol1-2a',true,false,false,false);
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    Say(Gladstone, 'D8-Glad-2');
+    SayNoName(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 end;
 
@@ -815,11 +862,11 @@ begin
 
     jelenaSpawned = true;
 
-    if GetDistUnits(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova), Kirilenkova) < 9 then
+    if GetDistUnits(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]), Kirilenkova), Kirilenkova) < 20 then
        exit;
 
     DialogueOn;
-    SayRadio(Kirilenkova, 'D11b-Kir-1');
+    SayRadioNoFace(Kirilenkova, 'D11b-Kir-1');
 
     if IsOK(Belkov) then
     begin
@@ -832,9 +879,9 @@ begin
     end;
 
     if FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
-        SayRadio(Kirilenkova, 'D11b1-Kir-1')
+        SayRadioNoFace(Kirilenkova, 'D11b1-Kir-1')
     else
-        SayRadio(Kirilenkova, 'D11b2-Kir-1');
+        SayRadioNoFace(Kirilenkova, 'D11b2-Kir-1');
 
     if attackedByApemanNearLake AND FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
     begin
@@ -887,8 +934,35 @@ begin
     exit;
 end;
 
+// Ucieczka malp
+every 0$1.8 trigger FilterUnitsInArea(ApeLakeArea,[f_side,3]) do
+  var un,saved;
+  begin
+    if not LakeApes then
+      exit;
+
+    if FilterUnitsInArea(ApeLakeArea,[f_side,3])>2 then
+      begin
+        ComAttackUnit(LakeApes[1],NearestUnitToUnit(your_units,LakeApes[1]));
+        ComMoveToArea(LakeApes diff LakeApes[1],ApeEscape);
+        AddComWait(LakeApes diff LakeApes[1],0$1);
+        repeat
+          wait(0$0.3);
+          saved:=FilterUnitsInArea(ApeEscape,[f_side,0]);
+          for un in saved do
+            begin
+              RemoveUnit(un);
+              LakeApes:=LakeApes diff un;
+            end;
+        until not LakeApes;
+      end
+    else
+      enable;
+  end;
+
+
 // Save Jelena
-every 0$1 trigger See(3, Kirilenkova) AND jelenaSpawned do
+every 0$1 trigger See(3, Kirilenkova) AND jelenaSpawned do //AND GetDistUnits(FilterAllUnits([[f_side, 3]]), Kirilenkova) < 8 do
 var nearUnit;
 begin
     SetSide(Kirilenkova, 3);
