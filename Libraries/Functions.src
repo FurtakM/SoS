@@ -2296,32 +2296,36 @@ begin
 result := not value;
 End;
 
+// Find nearest point between two hexes
 Export Function GetDirFromHex(x1, y1, x2, y2);
+var i, _x, _y, tmp, distance, centerDist, centerPoint;
 begin
-if x1 = x2 then
+if not ValidHex(x1, y1) or not ValidHex(x2, y2) then
    begin
-   if y1 > y2 then
-      result := 0
-   else
-      result := 3;
-
+   result := -1;
    exit;
    end;
 
-if y1 = y2 then
-   begin
-   if x1 > x2 then
-      result := 1
-   else
-      result := 4;
+centerPoint := PointBetweenXY(x1, y1, x2, y2);
+centerDist := GetDistXY(x1, y1, centerPoint[1], centerPoint[2]);
+distance := 9999;
 
-   exit;
-   end;
+for i := 0 to 5 do
+    begin
+    _x := ShiftX(x1, i, centerDist);
+    _y := ShiftY(y1, i, centerDist);
 
-if x1 > x2 and y1 > y2 then
-   result := 2
-else
-   result := 5;
+    if not ValidHex(_x, _y) then
+       continue;
+
+    tmp := GetDistXY(centerPoint[1], centerPoint[2], _x, _y);
+
+    if tmp < distance then
+       begin
+       result := i;
+       distance := tmp;
+       end;
+    end;
 End;
 
 Export Function ComRepairVehicleAndReturn(driver);
