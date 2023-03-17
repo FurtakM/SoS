@@ -1,0 +1,107 @@
+On CrateSpawn(id, x, y, amount, mode) do
+begin
+wait(0$12);
+PlatonovFoundCrates(x, y);
+End;
+
+On UnitDestroyed(un) do
+begin
+if un = Burlak then
+   YouLost('Burlak');
+
+if un = Platonov then
+   YouLost('Platonov');
+
+if un = Kurin then
+   YouLost('Kurin');
+
+if un = Belkov then
+   belkovDied := true;
+
+if un in belkovTeam then
+   begin
+   belkovTeam := belkovTeam diff un;
+   belkovTeamDeadCounter := Inc(belkovTeamDeadCounter);
+   end;
+
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]) then
+   playerTeamDeadCounter := Inc(playerTeamDeadCounter);
+
+if un in usWestForces then
+   usWestForces := usWestForces diff un;
+
+if un in usEastForces then
+   usEastForces := usEastForces diff un;
+End;
+
+On BuildingComplete(b) do
+var mech;
+begin
+if GetSide(b) = 3 then
+   begin
+   if GetBType(b) in [b_lab, b_lab_half, b_lab_full] then
+      hasLab := true;
+
+   if GetBType(b) = b_workshop then
+      hasWorkshop := true;
+   end;
+
+if GetSide(b) = 6 then
+   begin
+   if GetBType(b) = b_workshop then
+      begin
+      mech := UnitFilter(kirovBaseSquad, [f_class, class_mechanic]);
+
+      if not mech then
+         exit;
+
+      ComExit(mech);
+      AddComEnterUnit(mech, b);
+      end;
+   end;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+if GetSide(vehicle) = 3 then
+   begin
+   hasTank := true;
+   vehCounter := Inc(vehCounter);
+   end;
+
+if GetSide(vehicle) = 6 then
+   KirovAttack(vehicle);
+End;
+
+On SailEvent(event) do
+begin
+if event = eventBelkovAttack then
+   BelkovAttackScript;
+End;
+
+On VehicleCaptured(new, old, side, unit) do
+var fac;
+begin
+if side = 1 then
+   vehCaptured := true;
+
+if side = 6 then
+   if FilterAllUnits([[f_side, 6], [f_class, class_mechanic]]) then
+      begin
+      fac := FilterAllUnits([[f_side, 6], [f_btype, b_workshop]]);
+
+      if not fac then
+         exit;
+
+      fac := fac[1];
+
+      ComConstruct(fac, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
+      ComEnterUnit(FilterAllUnits([[f_side, 6], [f_class, class_mechanic]]), fac);
+      end;
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 3 and s2 = 6 then
+   allianceAttacked := true;
+End;

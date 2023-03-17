@@ -1,0 +1,397 @@
+// 01_OtherSurvivors
+// Burlak, Gnyevko, Belkov, Kirilenkova
+Export Burlak, Gnyevko, Belkov, Kirilenkova,
+       Kurin, Kovalyuk, Platonov, Kuklajs, Benko;
+Export kirovBaseSquad, beriaBaseSquad, belkovTeam;
+Export Function PrepareRussian;
+var i, j, tmp, un;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+// kirov
+SetBName(kirov, 'kirov');
+
+Kurin := NewCharacter('Kurin');
+PlaceUnitXY(Kurin, 117, 108, false);
+ComLookAtDir(Kurin, 2);
+
+Kovalyuk := NewCharacter('Kovalyuk');
+PlaceHumanInUnit(Kovalyuk, kirov);
+
+tmp := [
+    [ru2_arm1, class_soldier, 2],
+    [ru2_arm2, class_soldier, 3],
+    [ru_lab, class_scientistic, 2],
+    [kirov, class_engineer, 2],
+    [kirov, class_mechanic, 1]
+];
+
+for i in tmp do
+    for j := 1 to i[3] do
+        begin
+        PrepareHuman(false, i[2], 2);
+        un := CreateHuman;
+        PlaceHumanInUnit(un, i[1]);
+        kirovBaseSquad := Replace(kirovBaseSquad, kirovBaseSquad + 1, un);
+        end;
+
+// beria
+SetBName(beria, 'beria');
+
+Platonov := NewCharacter('Platonov');
+PlaceUnitXY(Platonov, 66, 99, false);
+ComLookAtDir(Platonov, 0);
+
+Kuklajs := NewCharacter('Kuklajs');
+Benko := NewCharacter('Benko');
+
+PlaceUnitXY(Kuklajs, 76, 99, false);
+PlaceUnitXY(Benko, 68, 88, false);
+
+ComHold([Kuklajs, Benko]);
+
+beriaBaseSquad := Replace(beriaBaseSquad, beriaBaseSquad + 1, Kuklajs);
+beriaBaseSquad := Replace(beriaBaseSquad, beriaBaseSquad + 1, Benko);
+
+tmp := [ [63, 86, 0], [74, 94, 1], [77, 103, 1] ];
+
+for i in tmp do
+    begin
+    PrepareHuman(false, class_soldier, [3, 2, 2, 1][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, i[3]);
+    PlaceHumanInUnit(un, HexInfo(i[1], i[2]));
+    beriaBaseSquad := Replace(beriaBaseSquad, beriaBaseSquad + 1, un);
+    end;
+
+if not TestCharacters(prevMissionPrefix & 'Gnyevko') and not debug then
+   begin
+   PrepareHuman(sex_male, class_engineer, 1);
+   PlaceHumanInUnit(CreateHuman, beria);
+   end;
+End;
+
+Export Function PrepareBurlak;
+var i;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+Burlak := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
+
+uc_side := 6;
+
+Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
+Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
+Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
+
+belkovTeam := CreateCharacterSet('01_OtherSurvivors');
+
+result := [Burlak, Gnyevko, Kirilenkova, Belkov] union belkovTeam;
+End;
+
+Every 0$2 trigger beriaVisited do
+var tmp;
+begin
+tmp := UnitFilter(kirovBaseSquad, [f_class, 2]);
+
+if not tmp then
+   exit;
+
+wait(0$5);
+
+ComExit(tmp);
+AddComBuild(tmp, b_workshop, 113, 113, 0);
+
+ComResearch(ru_lab, tech_oilpow);
+AddComResearch(ru_lab, tech_oileng);
+
+AddComBuild(tmp, b_oil_power, 116, 98, 0);
+
+repeat
+ wait(0$1);
+until not UnitFilter(tmp, [f_hastask]);
+
+ComEnterUnit(tmp, kirov);
+End;
+
+Export Function BelkovAttackScript;
+var i, belkovTank, mech, tmp, fuel;
+begin
+belkovTank := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]);
+
+if not belkovTank then
+   begin
+   uc_side := 6;
+   uc_nation := 3;
+
+   PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, 100);
+   belkovTank := CreateVehicle;
+   SetDir(belkovTank, 5);
+   PlaceUnitXY(belkovTank, 127, 118, false);
+
+   ComEnterUnit(Belkov, belkovTank);
+   end
+else
+   begin
+   belkovTank := belkovTank[1];
+   end;
+
+ComMoveUnit(belkovTank, kirov);
+AddComRefuel(belkovTank, kirov);
+
+if GetLives(belkovTank) < 1000 then
+   begin
+   mech := UnitFilter(kirovBaseSquad, [f_class, class_mechanic]);
+
+   if not mech then
+      SetLives(belkovTank, 1000)
+   else
+      begin
+      ComExit(mech);
+      AddComRepairVehicle(mech, belkovTank);
+      AddComEnterUnit(mech, FilterAllUnits([[f_side, 6], [f_btype, b_workshop]])[1]);
+      end;
+   end;
+
+repeat
+ wait(0$2);
+until GetLives(belkovTank) = 1000;
+
+if mech then
+   ComEnterUnit(mech, FilterAllUnits([[f_side, 6], [f_btype, b_workshop]])[1]);
+
+AddComMoveXY(Belkov, 107, 104);
+AddComMoveXY(Belkov, 95, 101);
+AddComMoveXY(Belkov, 89, 100);
+
+wait(0$2);
+
+for i in belkovTeam do
+    begin
+    ComExit(i);
+    AddComMoveXY(i, 89, 100);
+    end;
+
+tmp := Belkov union belkovTeam;
+
+repeat
+ wait(0$1);
+until not UnitFilter(tmp, [f_hastask]);
+
+ComMoveXY(tmp, 71, 65);
+AddComMoveXY(tmp, 61, 37);
+AddComMoveXY(tmp, 67, 17);
+AddComWait(tmp, 0$2);
+AddComMoveXY(Belkov, 63, 8);
+AddComWait(Belkov, 0$3);
+AddComMoveXY(Belkov, 86, 37);
+AddComWait(Belkov, 0$3);
+AddComMoveXY(tmp, 88, 29);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not HasTask(i) then
+        AddComMoveXY(tmp, 88, 29);
+
+ if UnitFilter(tmp, [f_inarea, belkovOutArea]) then
+    for i in UnitFilter(tmp, [f_inarea, belkovOutArea]) do
+        begin           
+        if i = Belkov then
+           begin
+           belkovTank := IsInUnit(Belkov);
+           fuel := GetFuel(belkovTank);
+           RemoveUnit(belkovTank);
+           end;
+
+        RemoveUnit(i);
+        end;   
+until not UnitFilter(tmp, [f_placed]);
+
+wait(1$20);
+
+if fuel < 50 then
+   fuel := 50;
+
+uc_side := 6;
+uc_nation := 3;
+
+PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, fuel - 5);
+belkovTank := CreateVehicle;
+
+SetDir(belkovTank, 2);
+PlaceUnitXY(belkovTank, 60, 3, false);
+PlaceHumanInUnit(Belkov, belkovTank);
+
+ComMoveXY(Belkov, 72, 26);
+
+wait(0$2);
+
+for i in belkovTeam do
+    begin
+    PlaceUnitXY(i, 60, 3, false);
+    ComMoveXY(i, 65, 18);
+    wait(0$0.8);
+    end;
+
+repeat
+ wait(0$1);
+until hasAllTanks and not UnitFilter(belkovTeam, [f_hastask]);
+
+americanTrap := true;
+End;
+
+// crates spawn and platonov movement
+Every 0$25 trigger beriaVisited and IsOk(Platonov) do
+var x, y, amount, dir;
+begin
+enable;
+
+if cratesSpawnAmount > 0 and not HasTask(Platonov) then
+   begin
+   dir := rand(0, 5);
+   x := ShiftX(GetX(Platonov), dir, 5);
+   y := ShiftY(GetY(Platonov), dir, 5);
+
+   if ValidHex(x, y) and GetDistUnitXY(beria, x, y) < 26 then
+      AddComMoveXY(Platonov, x, y)
+   else
+      AddComMoveXY(Platonov, 64, 96);
+
+   AddComWait(Platonov, rand(0$3, 0$9));
+   end;
+
+if cratesSpawnAmount <= 0 then
+   begin
+   if not IsAt(Platonov, 64, 96) then
+      begin
+      ComMoveXY(Platonov, 64, 96);
+      AddComHold(Platonov);
+      end;
+   end
+else if tick mod 0$75 = 0$00 then
+   begin
+   amount := rand(2, 5);
+   cratesSpawnAmount := cratesSpawnAmount - (amount * 10);
+   CreateCratesArea(amount, cratesArea, true);
+   end;
+End;
+
+// beria not has oil
+Every 0$3 trigger GetResourceType(GetBase(beria), mat_oil) < 30 do
+var i, eng;
+begin
+eng := UnitFilter(kirovBaseSquad, [[f_not, [f_hastask]], [f_class, 2]]);
+
+if not eng then
+   exit;
+
+ComExit(eng);
+
+for i := 1 to 5 do
+    begin
+    AddComTransport(eng, kirov, mat_oil);
+    AddComMoveXY(eng, 67, 99);
+    AddComUnload(eng);
+    end;
+
+AddComMoveUnit(eng, kirov);
+AddComEnterUnit(eng, kirov);
+End;
+
+Export Function SendReinforcements;
+var i;
+begin
+reinforcementsGained := true;
+
+for i := 1 to [3, 3, 2, 2][Difficulty] do
+    begin
+    if ComExit(beriaBaseSquad[i]) then
+       wait(0$0.3);
+
+    AddComMoveXY(beriaBaseSquad[i], 75, 84);
+    AddComHold(beriaBaseSquad[i]);
+
+    SetSide(beriaBaseSquad[i], 3);
+    end;
+End;
+
+Every 0$10 trigger eastOutpostDiscovered and belkovTrapped and UnitFilter(kirovBaseSquad, [f_class, 3]) do
+var mech, fac;
+begin
+mech := UnitFilter(kirovBaseSquad, [f_class, 3]);
+fac := FilterAllUnits([[f_side, 6], [f_btype, b_workshop]]);
+
+if not fac then
+   exit;
+
+fac := fac[1];
+
+if UnitsInside(fac) = 0 then
+   begin
+   ComExit(mech);
+   wait(3);
+   AddComEnterUnit(mech, fac);
+   end;
+
+ComConstruct(fac, ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun);
+End;
+
+Export Function KirovAttack(vehicle);
+var i, tag;
+begin
+ComMoveXY(vehicle, 90, 100);
+
+wait(0$10);
+
+SetTag(vehicle, 0);
+
+repeat
+ wait(0$1);
+
+ tag := GetTag(vehicle);
+
+ if tag = 0 then
+    begin
+    if not HasTask(vehicle) then
+       ComAgressiveMove(vehicle, 83, 68);
+
+    if GetLives(vehicle) < 750 then
+       begin
+       SetTag(vehicle, 1);
+
+       ComMoveXY(vehicle, 93, 102);
+       end;
+    end;
+
+ if tag = 1 then
+    begin      
+    if not IsAt(vehicle, 113, 106) and not HasTask(vehicle) then
+       ComMoveXY(vehicle, 113, 106);
+
+    if IsAt(vehicle, 113, 106) then
+       begin
+       SetTag(vehicle, 2);
+       ComRepairVehicleAndReturn(IsDrivenBy(vehicle));
+       end;
+    end;
+
+ if tag = 2 then
+    begin
+    if GetLives(vehicle) = 1000 and IsDrivenBy(vehicle) then
+       begin
+       ComMoveUnit(vehicle, kirov);
+       AddComRefuel(vehicle, kirov);
+
+       SetTag(vehicle, 0);
+       end;
+    end;
+
+until IsDead(vehicle) or eastOutpostDestroyed;
+
+if eastOutpostDestroyed then
+   ComMoveXY(vehicle, 111, 105);
+End;

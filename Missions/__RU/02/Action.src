@@ -1,0 +1,1297 @@
+Export Function Action;
+var i, tmp;
+begin
+InGameOn;
+
+PlaceSeeing(112, 107, 3, -12);
+CenterNowOnXY(121, 113);
+
+tmp := PrepareBurlak;
+
+for i in tmp do
+    begin
+    SetDir(i, 5);
+    PlaceUnitArea(i, startArea, false);
+    ComMoveXY(i, 121, 111);
+    wait(0$0.8);
+    end;
+
+CenterOnUnits(Kurin);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Burlak, Kurin) < 6;
+
+AddComTurnUnit([Burlak, Gnyevko], Kurin);
+
+for i in tmp diff [Burlak, Gnyevko] do
+    if GetClass(i) = class_soldier then
+       ComEnterUnit(i, ru2_arm1)
+    else
+       ComEnterUnit(i, ru_lab);
+
+Say(Kurin, 'D1-Kur-1');
+Say(Burlak, 'D1-Bur-1');
+
+wait(0$0.3);
+
+Say(Kurin, 'D1-Kur-2');
+
+ComExit(Kovalyuk);
+AddComMoveXY(Kovalyuk, 115, 108);
+AddComHold(Kovalyuk);
+
+Say(Burlak, 'D1-Bur-2');
+Say(Kurin, 'D1-Kur-3');
+
+if Gnyevko then
+   Say(Kurin, 'D1-Kur-3a');
+
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+RemoveSeeing(112, 107, 3);   
+PlaceSeeing(66, 99, 3, -7);
+RemoveSeeing(66, 99, 3);
+
+SetSide(Kovalyuk, 3);
+
+if Gnyevko then
+   SetSide(Gnyevko, 3);
+
+SaveForQuickRestart;
+
+ComEnterUnit(Kurin, kirov);
+
+wait(0$2);
+
+ComExit(kirovBaseSquad[1]);
+AddComEnterUnit(kirovBaseSquad[1], HexInfo(98, 98));
+
+wait(0$12);
+
+kurinDontWannaTalk := true;
+End;
+
+// kurin dont wanna talk and you still here?
+Every 0$5 trigger kurinDontWannaTalk and FilterAllUnits([[f_side, 3], [f_dist, kirov, 8]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_dist, kirov, 14]]);
+
+InGameOn;
+PlaceSeeing(116, 107, 3, 3);
+
+ComExit(Kurin);
+AddComTurnUnit(Kurin, tmp[1]);
+
+CenterNowOnUnits(Kurin);
+ComMoveXY(tmp, 87, 99);
+
+if kirovHasTank then
+   Say(Kurin, 'D1a-Kur-1a')
+else
+   Say(Kurin, 'D1a-Kur-1');
+
+ComEnterUnit(Kurin, kirov);
+RemoveSeeing(116, 107, 3);
+
+wait(0$3);
+InGameOff;
+End;
+
+// dont go to north
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_inarea, northBlockArea]]) and blockNorth do
+var i, tmp, x, y, d;
+begin
+enable;
+
+blockNorth := false;
+
+InGameOn;
+DialogueOn;
+
+tmp := FilterAllUnits([[f_side, 3], [f_inarea, northBlockArea]]);
+
+if Kovalyuk in tmp and IsOk(Kovalyuk) then
+   Say(Kovalyuk, 'D1b-Kov-1')
+else if Burlak in tmp and IsOk(Burlak) then
+   Say(Burlak, 'D1b-Bur-1');
+
+DialogueOff;
+
+ComStop(FilterAllUnits([[f_side, 3], [f_not, [f_type, unit_building]]]));
+
+for i in tmp do
+    begin
+    d := rand(2, 3);
+    x := ShiftX(GetX(i), d, 6);
+    y := ShiftY(GetY(i), d, 6);
+
+    if ValidHex(x, y) then
+       ComMoveXY(i, x, y)
+    else
+       ComMoveXY(i, 79, 85);
+    end;
+
+wait(0$5);
+InGameOff;
+
+blockNorth := true;
+End;
+
+// visit beria for the first time
+Every 0$2 trigger UnitFilter(beriaBaseSquad, [f_see, 3]) and not beriaVisited do
+var i, p, x, y, nearestGuard;
+begin
+nearestGuard := NearestUnitToUnit(beriaBaseSquad, Burlak);
+
+InGameOn;
+
+PlaceSeeing(GetX(nearestGuard), GetY(nearestGuard), 3, 6);
+CenterNowOnUnits(nearestGuard);
+
+ComTurnUnit(nearestGuard, Burlak);
+
+Say(nearestGuard, 'D2-RSol1-1');
+
+x := ShiftX(GetX(nearestGuard), GetDir(nearestGuard), 3);
+y := ShiftY(GetY(nearestGuard), GetDir(nearestGuard), 3);
+
+if ValidHex(x, y) then
+   ComMoveXY([Gnyevko, Kovalyuk], x, y)
+else
+   ComMoveUnit([Gnyevko, Kovalyuk], nearestGuard);
+
+ComMoveUnit(Burlak, nearestGuard);
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := p + 1;
+until p > 10 or GetDistUnits(Burlak, nearestGuard) < 6;
+
+ComTurnUnit([Burlak, Gnyevko, Kovalyuk], nearestGuard);
+
+Say(Burlak, 'D2-Bur-1');
+Say(nearestGuard, 'D2-RSol1-2');
+
+ComHold(nearestGuard);
+
+RemoveSeeing(GetX(nearestGuard), GetY(nearestGuard), 3);  
+InGameOff;
+End;
+
+// spot platonov
+Every 0$2 trigger See(3, Platonov) do
+var p;
+begin
+InGameOn;
+beriaVisited := true;
+
+ComMoveUnit(Burlak, Platonov);
+ComMoveXY([Gnyevko, Kovalyuk], 68, 99);
+
+ComTurnUnit(Platonov, Burlak);
+Say(Platonov, 'D2-Pla-2');
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := p + 1;
+until GetDistUnits(Burlak, Platonov) < 6 or p > 8;
+
+ComTurnUnit([Burlak, Gnyevko, Kovalyuk], Platonov);
+
+Say(Burlak, 'D2-Bur-2');
+
+ChangeSideFog(6, 3);
+
+Say(Platonov, 'D2-Pla-3');
+Say(Burlak, 'D2-Bur-3');
+Say(Platonov, 'D2-Pla-4');
+Say(Burlak, 'D2-Bur-4');
+Say(Platonov, 'D2-Pla-5');
+
+AskPlatonov([1, 2, 3, 4]);
+
+Say(Platonov, 'D3-Pla-1');
+Say(Burlak, 'D3-Bur-1');
+
+InGameOff;
+
+ChangeMissionObjectives('M2a');
+
+SetSide(beria, 3);
+
+if not Gnyevko then
+   SetSide(UnitsInside(beria)[1], 3);
+
+ComFree(Platonov);
+End;
+
+Function AskPlatonov(questions);
+var q;
+begin
+q := SelectiveQuery('QMoreInfo', questions);
+
+case q of
+     1: begin
+        Say(Burlak, 'D2a-Bur-1');
+        Say(Platonov, 'D2a-Pla-1');
+        end;
+     2: begin
+        Say(Burlak, 'D2b-Bur-1');
+        Say(Platonov, 'D2b-Pla-1');
+        end;
+     3: begin
+        Say(Burlak, 'D2c-Bur-1');
+        Say(Platonov, 'D2c-Pla-1');
+        end;
+     end;
+
+if q < 4 and questions > 2 then
+   AskPlatonov(questions diff q);
+End;
+
+Export Function PlatonovFoundCrates(x, y);
+begin
+ComMoveXY(Platonov, x, y);
+
+repeat
+ wait(0$1);
+until GetDistUnitXY(Platonov, x, y) < 5;
+
+ComStop(Platonov);
+Say(Platonov, 'D4-Pla-1');
+End;
+
+// lab build
+Every 0$2 trigger hasLab do
+begin
+DialogueOn;
+
+Say(Burlak, 'D5a-Bur-1');
+
+if hasWorkshop then
+   Say(Platonov, 'D5a-Pla-1')
+else
+   Say(Platonov, 'D5a-Pla-1a');
+
+DialogueOff;
+
+ChangeMissionObjectives('M2b');
+End;
+
+// workshop build
+Every 0$2 trigger hasWorkshop do
+begin
+DialogueOn;
+
+Say(Burlak, 'D5b-Bur-1');
+
+if hasLab then
+   Say(Platonov, 'D5b-Pla-1')
+else
+   Say(Platonov, 'D5b-Pla-1a');
+
+DialogueOff;
+
+ChangeMissionObjectives('M2c');
+End;
+
+// has lab and workshop
+Every 0$2 trigger hasLab and hasWorkshop do
+begin
+wait(0$2);
+
+DialogueOn;
+
+if GetTech(tech_oileng, 3) = state_researched then
+   begin
+   Say(Burlak, 'D7b-Bur-1');
+   Say(Platonov, 'D7b-Pla-1');
+   end
+else
+   begin
+   Say(Burlak, 'D7a-Bur-1');
+   Say(Platonov, 'D7a-Pla-1');
+   end;
+
+DialogueOff;
+
+ChangeMissionObjectives('M2');
+
+hasToBuildTank := true;
+End;
+
+// has to build tank
+Every 0$5+0$10 trigger beriaVisited and (not hasLab or not hasWorkshop or hasToBuildTank) and FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 32]]]) do
+var tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 32]]]);
+
+InGameOn;
+
+CenterNowOnUnits(tmp[1]);
+
+ComMoveXY(tmp, 66, 99);
+Say(Platonov, 'D8-Pla-1');
+
+wait(0$3);
+
+InGameOff;
+End;
+
+// build wrong building
+Every 0$3 trigger FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]) do
+var tmp;
+begin
+enable;
+
+InGameOn;
+
+tmp := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+
+ComMoveUnit(Platonov, tmp[1]);
+
+wait(0$2);
+
+ComHold(Platonov);
+
+Say(Platonov, 'D6-Pla-1');
+Say(Burlak, 'D6-Bur-1');
+
+RemoveUnit(tmp[1]);
+
+InGameOff;
+End;
+
+// swamp
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_distxy, 112, 155, 8]]) < 2 and GetDistUnitXY(Burlak, 112, 155) < 8 do
+var Dickens;
+begin
+PlaceSeeing(112, 155, 3, -4);
+DoNotAttack(1, Burlak);
+
+uc_side := 1;
+uc_nation := 1;
+
+Dickens := NewCharacter('Dickens');
+PlaceUnitXY(Dickens, 112, 155, true);
+
+wait(0$2);
+
+ComTurnUnit(Dickens, Burlak);
+
+Say(Dickens, 'DUsSpawnSol');
+
+NormalAttack(1, Burlak);
+RemoveSeeing(112, 155, 3);
+
+ComAgressiveMove(Dickens, 77, 152);
+
+repeat
+ wait(0$1);
+until not IsOk(Dickens) or IsAt(Dickens, 77, 152);
+
+if not IsOk(Dickens) then
+   exit;
+
+RemoveUnit(Dickens);
+
+SaveCharacters(Dickens, currentMissionPrefix & 'Dickens');
+End;
+
+// burlak is hurt
+Every 0$2 trigger GetLives(Burlak) < 600 do
+Say(Burlak, 'DUsSpawnBur');
+
+// has tank
+Every 0$2 trigger hasTank do
+var i, tmp, p, un;
+begin
+hasToBuildTank := false;
+kurinDontWannaTalk := false;
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]);
+
+InGameOn;
+
+CenterOnUnits(tmp[1]);
+
+wait(0$1);
+
+Say(Burlak, 'D9-Bur-1');
+
+ComMoveUnit(Platonov, tmp[1]);
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := p + 1;
+until GetDistUnits(Platonov, tmp[1]) < 8 or p > 8;
+
+ComTurnUnit(Platonov, tmp[1]);
+
+Say(Platonov, 'D9-Pla-1');
+
+ComFree(Platonov);
+AddComMoveXY(Platonov, 64, 98);
+
+InGameOff;
+
+ChangeMissionObjectives('M3');
+
+ComMoveXY(Kuklajs, 70, 108);
+AddComHold(Kuklajs);
+
+belkovBrother := false;
+
+if not TestCharacters(prevMissionPrefix & 'Belkov') and not debug then
+   begin
+   Belkov := NewCharacter('Belkov2');
+   PlaceHumanInUnit(Belkov, kirov);
+   belkovBrother := true;
+   end;
+
+wait(1);
+
+ComExit(Belkov);
+AddComMoveXY(Belkov, 113, 104);
+AddComTurnXY(Belkov, 116, 108);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_dist, kirov, 8]]);
+
+InGameOn;
+
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_dist, kirov, 8]]);
+
+if belkovTeam < 3 then
+   begin
+   for i := belkovTeam to 3 do
+       begin
+       un := kirovBaseSquad[2];
+       kirovBaseSquad := Delete(kirovBaseSquad, 2);
+       belkovTeam := Replace(belkovTeam, belkovTeam + 1, un);
+       end;
+   end;
+
+ComExit(Kurin);
+AddComTurnUnit(Kurin, tmp[1]);
+
+wait(0$1);
+
+ComStop(tmp[1]);
+
+Say(Kurin, 'D10-Kur-1');
+Say(Belkov, 'D10-Bel-1');
+
+if belkovBrother then
+   begin
+   Say(Burlak, 'D10-Bur-1');
+   Say(Belkov, 'D10-Bel-2');
+   Say(Burlak, 'D10-Bur-2');
+   Say(Kurin, 'D10-Kur-2a');
+   end
+else
+   begin
+   Say(Kurin, 'D10-Kur-2')
+   end;
+
+un := IsDrivenBy(tmp[1]);
+
+ComExit(un);
+AddComTurnUnit(un, Kurin);
+
+wait(0$0.3);
+
+ComEnterUnit(Belkov, tmp[1]);
+
+wait(0$2);
+
+Say(Kurin, 'D10-Kur-2b');
+
+ComMoveXY(un, 66, 97);
+
+wait(0$5);
+
+InGameOff;
+
+RaiseSailEvent(eventBelkovAttack);
+
+ChangeMissionObjectives('M4');
+
+wait(0$6);
+
+kurinDontWannaTalk := true;
+
+wait(0$4);
+
+repeat
+ wait(0$1);
+until IsInUnit(Burlak) or GetDistUnits(Burlak, beria) < 12;
+
+DialogueOn;
+
+Say(Platonov, 'D11-Pla-1');
+Say(Burlak, 'D11-Bur-1');
+
+if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) > 1 then
+   Say(Burlak, 'D11-Bur-1a');
+
+DialogueOff;
+
+cratesSpawnAmount := [160, 150, 140, 120][Difficulty];
+
+ChangeMissionObjectives('M5');
+
+kirovHasTank := true;
+hasToBuildTank := true;
+End;
+
+// attack on alliance
+Every 0$2 trigger allianceAttacked do
+begin
+DialogueOn;
+Say(Kurin, 'DArestKur');
+dwait(0$1);
+YouLost('SelfAttack');
+DialogueOff;
+End;
+
+// has all tanks
+Every 0$3 trigger FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) >= FilterAllUnits([[f_side, 3], [f_type, unit_human]]) and kirovHasTank do
+begin
+hasToBuildTank := false;
+blockNorth := false;
+
+InGameOn;
+
+wait(0$2);
+
+CenterNowOnUnits(beria);
+
+ComMoveXY(Platonov, 65, 97);
+AddComTurnUnit(Platonov, Burlak);
+
+Say(Burlak, 'D12-Bur-1');
+
+wait(0$1);
+
+Say(Platonov, 'D12-Pla-1');
+Say(Burlak, 'D12-Bur-2');
+Say(Platonov, 'D12-Pla-2');
+Say(Burlak, 'D12-Bur-3');
+Say(Platonov, 'D12-Pla-3');
+
+hasAllTanks := true;
+
+InGameOff;
+
+ChangeMissionObjectives('M6');
+
+PrepareAmerican;
+End;
+
+Every 0$1 trigger americanTrap do
+var i, usSol, tmp, sol, sci, belkovTank, timer;
+begin
+PrepareAmericanTrap;
+
+usSol := UnitFilter(usTrapForces, [f_sex, sex_male])[1];
+
+InGameOn;
+
+CenterNowOnXY(69, 22);
+
+wait(0$1);
+
+DialogueOn;
+
+game_speed := 4;
+
+SayRadio(usSol, 'D13-Sol1-1');
+SayRadio(Belkov, 'D13-Bel-1');
+SayRadio(Kurin, 'D13-Kur-1');
+
+dwait(0$0.3);
+
+SayRadio(Belkov, 'D13-Bel-2');
+
+DialogueOff;
+
+ComMoveXY(Belkov, 76, 20);
+ComMoveXY(belkovTeam, 72, 20);
+
+wait(0$2);
+
+for i in usTrapForces do
+    begin
+    PlaceUnitArea(i, usTrapArea, false);
+    ComTurnUnit(i, Belkov);
+    end;
+
+wait(0$0.3);
+
+AddComAgressiveMove(usTrapForces, 65, 18);
+
+repeat
+ wait(0$02);
+until UnitFilter(usTrapForces, [f_see, 3]) > 3;
+
+PlaceSeeing(65, 18, 3, -26);
+
+DialogueOn;
+
+Say(usSol, 'D14-Sol1-1');
+Say(Belkov, 'D14-Bel-1');
+
+DialogueOff;
+
+RemoveSeeing(65, 18, 3);
+
+ComMoveXY(belkovTeam, 31, 9);
+AddComAgressiveMove(usTrapForces, 50, 16);
+
+wait(0$2);
+
+belkovTank := IsInUnit(Belkov);
+
+if not belkovTank then
+   belkovTank := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]])[1];
+
+ComMoveXY(Belkov, 58, 21);
+AddComExitVehicle(Belkov);
+AddComMoveXY(Belkov, 53, 18);
+AddComMoveXY(Belkov, 31, 9);
+
+repeat
+ wait(0$1);
+
+ for i in Belkov union belkovTeam do
+     if GetLives(i) < 800 then
+        SetLives(i, 800);
+
+until GetDistUnitXY(Belkov, 31, 9) < 4;
+
+for i := 1 to Difficulty do
+    if i <= belkovTeam then
+       SetLives(belkovTeam[i], rand(600, 800));
+
+SetLives(Belkov, 820);
+
+InGameOff;
+
+DialogueOn;
+
+SayRadio(Belkov, 'D14-Bel-1a');
+SayRadio(Kurin, 'D14-Kur-1');
+SayRadio(Belkov, 'D14-Bel-2');
+SayRadio(Kurin, 'D14-Kur-2');
+
+CenterNowOnUnits(Burlak);
+
+Say(Burlak, 'D14a-Bur-1');
+Say(Platonov, 'D14a-Pla-1');
+Say(Burlak, 'D14a-Bur-2');
+Say(Platonov, 'D14a-Pla-2');
+Say(Burlak, 'D14a-Bur-3');
+Say(Platonov, 'D14a-Pla-3');
+Say(Burlak, 'D14a-Bur-4');
+Say(Platonov, 'D14a-Pla-4');
+
+DialogueOff;
+
+belkovTrapped := true;
+
+ComMoveXY(usTrapForces, 68, 16);
+
+if belkovTank then
+   begin
+   ComEnterUnit(usTrapForces[1], belkovTank);
+   AddComMoveXY(usTrapForces[1], 69, 20);
+   end;
+
+ComMoveXY(Belkov, 40, 17);
+AddComHold(Belkov);
+
+tmp := [ [44,18], [42,16], [40,15], [44,20], [42,20], [42,12], [42,8] ];
+
+for i in belkovTeam do
+    begin
+    ComMoveXY(i, tmp[1][1], tmp[1][2]);
+    tmp := Delete(tmp, 1);
+
+    AddComCrawl(i);
+    end;
+
+timer := [4$30, 4$00, 3$10, 2$30][Difficulty];
+
+repeat
+ wait(0$1);
+ timer := timer - 0$1;
+
+ if FilterUnitsInArea(hillTrackArea, [f_side, 3]) then
+    timer := 0$0;
+
+until timer <= 0;
+
+if not UnitFilter(usTrapForces, [f_ok]) then
+   exit;
+
+sol := UnitFilter(usTrapForces, [[f_class, 1], [f_not, [f_inside]]]);
+sci := UnitFilter(usTrapForces, [[f_class, 4], [f_not, [f_inside]]]);
+
+for i in sol do
+    SetTag(i, 0);
+
+ComMoveXY(sci, 60, 8);
+
+if FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) then
+   ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 53, 24);
+
+repeat
+ wait(0$0.5);
+
+ sol := UnitFilter(usTrapForces, [[f_class, 1], [f_ok], [f_not, [f_inside]]]);
+
+ if FilterByTag(sol, 0) = sol then
+    begin
+    wait(0$3);
+    ComAgressiveMove(sol, 41, 18);
+    ComMoveXY(sci, 60, 8);
+    end;
+
+ for i in sol do
+     if GetLives(i) < 800 then
+        begin
+        SetTag(i, 1);
+        ComMoveXY(i, 60, 8);
+        end
+     else
+        if GetLives(i) = 1000 then
+           SetTag(i, 0);
+
+until belkovDied or not sol;
+
+if not sol then
+   exit;
+
+ComMoveXY(sol ^ sci, 56, 25);
+
+wait(0$30);
+
+AddComAgressiveMove(usTrapForces, 66, 96);
+ComMoveUnit(sci, sol[1]);
+End;
+
+// bielkov trap
+Every 0$2 trigger not initiative and belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
+begin
+case Query('QAttackAm') of
+     1: begin
+        initiative := true;
+
+        DialogueOn;
+
+        Say(Burlak, 'D17-Bur-1');
+        SayRadio(Platonov, 'D17-Pla-1');
+        Say(Burlak, 'D17-Bur-2');
+        SayRadio(Platonov, 'D17-Pla-2');
+
+        DialogueOff;
+        end;
+
+     2: begin
+        initiative := true;
+
+        DialogueOn;
+
+        Say(Burlak, 'D18-Bur-1');
+        SayRadio(Platonov, 'D18-Pla-1');
+        Say(Burlak, 'D18-Bur-2');
+
+        if not reinforcementsGained then
+           begin
+           SayRadio(Platonov, 'D18-Pla-2');
+           SendReinforcements;
+           end
+        else
+           SayRadio(Platonov, 'D22-Pla-1b');
+
+        DialogueOff;
+        end;
+
+     3: begin
+        if IsOk(Gnyevko) then
+           Say(Gnyevko, 'D19A-Gny-1')
+        else if IsOk(Kovalyuk) then
+           Say(Kovalyuk, 'D19A-Kov-1');
+
+        exit;
+        end;
+     end;
+
+if IsOk(Gnyevko) then
+   begin
+   Say(Gnyevko, 'D19-Gny-1');
+   Say(Burlak, 'D19-Bur-1');
+   end;
+
+if IsOk(Kovalyuk) then
+   begin
+   Say(Kovalyuk, 'D19-Kov-1');
+   Say(Burlak, 'D19-Bur-2');
+   end;
+End;
+
+Every 0$2 trigger not initiative and belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
+begin
+case Query('QAttackBw') of
+     1: begin
+        initiative := true;
+
+        DialogueOn;
+
+        Say(Burlak, 'D21-Bur-1');
+        SayRadio(Platonov, 'D21-Pla-1');
+
+        DialogueOff;
+        end;
+
+     2: begin
+        initiative := true;
+
+        DialogueOn;
+
+        Say(Burlak, 'D22-Bur-1');
+
+        if not reinforcementsGained and westOutpostDestroyed then
+           begin
+           SayRadio(Platonov, 'D22-Pla-1');
+           SendReinforcements;
+           end
+        else if not westOutpostDestroyed then
+           SayRadio(Platonov, 'D22-Pla-1a')
+        else
+           SayRadio(Platonov, 'D22-Pla-1b');
+
+        DialogueOff;
+        end;
+
+     3: begin
+
+        end;
+     end;
+
+ChangeMissionObjectives('M9');
+
+wait(0$1);
+
+if IsOk(Gnyevko) then
+   begin
+   Say(Gnyevko, 'D23-Gny-1');
+   Say(Burlak, 'D23-Bur-1');
+   end;
+End;
+
+Every 0$1 trigger belkovTrapped and belkovDied and not belkovSaved and UnitFilter(belkovTeam, [f_dist, Burlak, 8]) do
+var i;
+begin
+for i in belkovTeam do
+    SetSide(i, 3);
+
+ChangeMissionObjectives('M9a');
+End;
+
+Every 0$1 trigger GetDistUnits(Burlak, Belkov) < 6 and belkovTrapped and IsOk(Belkov) and not InBattle(3) do
+var i, p;
+begin
+InGameOn;
+
+CenterNowOnUnits(Burlak);
+
+ComMoveXY(Burlak, 37, 17);
+AddComMoveUnit(Burlak, Belkov);
+ComTurnUnit(Belkov, Burlak);
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := p + 1;
+until GetDistUnits(Burlak, Belkov) < 4 or p > 6;
+
+ComTurnUnit(Burlak, Belkov);
+
+DialogueOn;
+
+Say(Belkov, 'D24-Bel-1');
+Say(Burlak, 'D24-Bur-1');
+
+if belkovBrother then
+   Say(Burlak, 'D24-Bur-1a');
+
+Say(Belkov, 'D24-Bel-2');
+Say(Burlak, 'D24-Bur-2');
+
+if vehCaptured then
+   Say(Burlak, 'D24-Bur-2a');
+
+SayRadio(Platonov, 'D24-Pla-2');
+
+if not westOutpostDestroyed then
+   SayRadio(Platonov, 'D24-Pla-2a');
+
+DialogueOff;
+
+InGameOff;
+
+belkovSaved := true;
+
+for i in belkovTeam union Belkov do
+    SetSide(i, 3);
+
+ChangeMissionObjectives('M9a');
+End;
+
+// see western outpost
+Every 0$2 trigger SeeUnits(3, FilterAllUnits([[f_side, 1], [f_inarea, usWestOutpostArea]])) do
+begin
+DialogueOn;
+
+PlaceSeeing(49, 57, 3, -12);
+RemoveSeeing(49, 57, 3);
+
+CenterOnXY(49, 57);
+
+if not eastOutpostDiscovered then
+   begin
+   Say(Burlak, 'D15-Bur-1');
+   Say(Gnyevko, 'D15-Gny-1');
+   Say(Kovalyuk, 'D15-Kov-1');
+   end
+else
+   begin
+   Say(Kovalyuk, 'D16-Kov-1');
+   Say(Burlak, 'D16-Bur-1');
+   Say(Gnyevko, 'D16-Gny-1');
+   end;
+
+Say(Burlak, 'D15-Bur-2');
+Say(Kovalyuk, 'D15-Kov-2');
+Say(Burlak, 'D15-Bur-3');
+
+DialogueOff;
+
+westOutpostDiscovered := true;
+
+ChangeMissionObjectives('M7');
+End;
+
+
+// see eastern outpost
+Every 0$2 trigger SeeUnits(3, FilterAllUnits([[f_side, 1], [f_inarea, usEastOutpostArea]])) do
+begin
+DialogueOn;
+
+PlaceSeeing(95, 65, 3, -12);
+RemoveSeeing(95, 65, 3);
+
+CenterOnXY(95, 65);
+
+if not westOutpostDiscovered then
+   begin
+   Say(Kovalyuk, 'D16-Kov-1');
+   Say(Burlak, 'D16-Bur-1');
+   Say(Gnyevko, 'D16-Gny-1');
+   end
+else
+   begin
+   Say(Burlak, 'D15-Bur-1');
+   Say(Gnyevko, 'D15-Gny-1');
+   Say(Kovalyuk, 'D15-Kov-1');
+   end;
+
+DialogueOff;
+
+eastOutpostDiscovered := true;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(usWestOutpostArea, [[f_side, 1], [f_ok]]) = 0 and westOutpostDiscovered do
+begin
+Say(Burlak, 'D20-Bur-1');
+SayRadio(Platonov, 'D20-Pla-1');
+
+westOutpostDestroyed := true;
+
+ChangeMissionObjectives('M8');
+End;
+
+Every 0$1 trigger FilterUnitsInArea(usEastOutpostArea, [[f_side, 1], [f_ok]]) = 0 and eastOutpostDiscovered do
+var i;
+begin
+Say(Burlak, 'D20-Bur-1');
+SayRadio(Platonov, 'D20-Pla-1');
+
+eastOutpostDestroyed := true;
+
+wait(0$1);
+
+stop_talking := true;
+
+for i in FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) do
+    AddExperience_NoLimit(i, skill_combat, 1500);
+
+stop_talking := false;
+End;
+
+// track
+Every 0$1 trigger FilterUnitsInArea(hillTrackArea, [[f_side, 3], [f_type, unit_vehicle]]) do
+begin
+DialogueOn;
+
+CenterNowOnUnits(FilterUnitsInArea(hillTrackArea, [[f_side, 3], [f_type, unit_vehicle]]));
+
+Say(Burlak, 'D26-Bur-1');
+Say(Kovalyuk, 'D26-Kov-1');
+
+if IsOk(Gnyevko) then
+   begin
+   Say(Gnyevko, 'D26-Gny-1');
+   Say(Burlak, 'D26-Bur-2');
+   end;
+
+DialogueOff;
+End;
+
+Every 0$3 trigger eastOutpostDiscovered and not eastOutpostDestroyed and FilterUnitsInArea(eastStrongPointArea, [[f_side, 3], [f_not, [f_lives, 1000]]]) > 1 do
+begin
+Say(Gnyevko, 'D16A-Gny-1');
+Say(Kovalyuk, 'D16A-Kov-1');
+
+if IsOk(Gnyevko) or IsOk(Kovalyuk) then
+   Say(Burlak, 'D16A-Bur-1');
+End;
+
+Every 0$1 trigger SeeArea(3, westWeakPointArea) do
+begin
+westOutpostWeakPointSpotted := true;
+End;
+
+Every 0$1 trigger SeeArea(3, spot1Area) do
+mapSpotCounter := Inc(mapSpotCounter);
+
+Every 0$1 trigger SeeArea(3, spot2Area) do
+mapSpotCounter := Inc(mapSpotCounter);
+
+Every 0$1 trigger SeeArea(3, spot3Area) do
+mapSpotCounter := Inc(mapSpotCounter);
+
+Every 0$1 trigger SeeArea(3, spot4Area) do
+mapSpotCounter := Inc(mapSpotCounter);
+
+Every 0$1 trigger SeeArea(3, spot5Area) do
+mapSpotCounter := Inc(mapSpotCounter);
+
+Every 0$1 trigger mapSpotCounter >= 5 and hasAllTanks do
+begin
+allMapPointsSpotted := true;
+ChangeMissionObjectives('M10');
+End;
+
+Every 0$2 trigger allMapPointsSpotted and westOutpostDestroyed do
+begin
+ChangeMissionObjectives('M10a');
+End;
+
+Every 0$1 trigger hasAllTanks do
+var timer, wantToTalk, wasOutsideBeria, westOutpostReported, eastOutpostReported;
+begin
+wasOutsideBeria := false;
+wantToTalk := false;
+westOutpostReported := false;
+eastOutpostReported := false;
+
+timer := 0$0;
+
+repeat
+ wait(0$2);
+ timer := timer + 0$2;
+
+ if timer >= 0$30 then
+    wantToTalk := true;
+
+ if FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 30]]]) then
+    wasOutsideBeria := true;
+
+ if wantToTalk and wasOutsideBeria and (GetDistUnits(Burlak, Platonov) < 8 or GetDistUnits(IsInUnit(Burlak), Platonov) < 8) then
+    begin
+    timer := 0$0;
+    wantToTalk := false;
+    wasOutsideBeria := false;
+
+    CenterNowOnUnits(Platonov);
+
+    DialogueOn;
+    Say(Platonov, 'D25-Pla-1');
+
+    if not westOutpostReported and not eastOutpostReported and
+       westOutpostDiscovered and eastOutpostDiscovered then
+       begin
+       westOutpostReported := true;
+       eastOutpostReported := true;
+
+       Say(Burlak, 'D25-Bur-1');
+
+       if westOutpostWeakPointSpotted and not westOutpostDestroyed then
+          begin
+          Say(Burlak, 'D25b-Bur-1');
+
+          if not reinforcementsGained then
+             begin
+             Say(Platonov, 'D25b-Pla-1');
+             SendReinforcements();
+             end;
+          end;
+       end
+    else if not westOutpostReported and westOutpostDiscovered then
+       begin
+       westOutpostReported := true;
+
+       Say(Burlak, 'D25a-Bur-1b');
+
+       if westOutpostWeakPointSpotted and not westOutpostDestroyed then
+          begin
+          Say(Burlak, 'D25b-Bur-1');
+
+          if not reinforcementsGained then
+             begin
+             Say(Platonov, 'D25b-Pla-1');
+             SendReinforcements();
+             end;
+          end;
+       end
+    else if not eastOutpostReported and eastOutpostDiscovered then
+       begin
+       eastOutpostReported := true;
+
+       Say(Burlak, 'D25a-Bur-1a');
+       end
+    else if not westOutpostDiscovered or not eastOutpostDiscovered then
+       begin
+       Say(Burlak, 'D25a-Bur-1');
+       Say(Platonov, 'D25c-Pla-1');
+       end
+    else if not allMapPointsSpotted then
+       begin
+       Say(Burlak, 'D25a-Bur-1');
+       Say(Platonov, 'D25c-Pla-1a');
+       end;
+
+    DialogueOff;
+    end;
+
+until allMapPointsSpotted and westOutpostDestroyed;
+
+repeat
+ if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, Platonov, 10]]) then
+    begin
+    if not belkovDied and not belkovSaved then
+       begin
+       if Query('QContMission') = 1 then
+          begin
+          EndMission;
+          exit;
+          end;
+       end
+    else
+        begin
+        EndMission;
+        exit;
+        end;
+    end;
+
+ wait(0$10);
+until false;
+
+End;
+
+Function EndMission;
+var i, tmp;
+begin
+if initiative then
+   AddMedal('Initiative', 1)
+else if not eastOutpostDestroyed then
+   AddMedal('Initiative', -2)
+else
+   AddMedal('Initiative', -1);
+
+if not belkovDied and belkovSaved then
+   AddMedal('Belkov', 1)
+else if UnitFilter(belkovTeam, [f_side, 3]) then
+   AddMedal('Belkov', 2)
+else if belkovDied then
+   AddMedal('Belkov', -1)
+else if not belkovSaved then
+   AddMedal('Belkov', -2)
+else if belkovDied and belkovSaved then
+   AddMedal('Belkov', -3);
+
+if playerTeamDeadCounter = 0 then
+   AddMedal('NoLosses', 1)
+else
+   AddMedal('NoLosses', -1);
+
+GiveMedals('Main');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]));
+
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Gnyevko) then
+   SaveCharacters(Gnyevko, currentMissionPrefix & 'Gnyevko');
+
+if IsLive(Kovalyuk) then
+   SaveCharacters(Kovalyuk, currentMissionPrefix & 'Kovalyuk');
+
+if IsLive(Belkov) and belkovSaved then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+SaveCharacters(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova], currentMissionPrefix & 'burlakTeam');
+SaveCharacters(FilterAllUnits([[f_side, 6], [f_nation, 3], [f_type, unit_human]]) diff ([Platonov, Kurin, Belkov] union belkovTeam), currentMissionPrefix & 'kirovTeam');
+
+SaveVariable(eastOutpostDestroyed, '02_EasternOutpostDestroyed');
+
+tmp := [];
+
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) do
+    tmp := Join(tmp, [GetBType(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
+
+SaveVariable(tmp, '02_Beria');
+
+tmp := [];
+
+for i in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) do
+    tmp := Join(tmp, [GetBType(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
+
+SaveVariable(tmp, '02_Kirov');
+
+SaveVariable(Count(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]])), '02_VehiclesCount');
+SaveVariable(Count(FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]])), '02_KirovVehiclesCount');
+
+YouWin;
+End;
