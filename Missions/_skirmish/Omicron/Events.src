@@ -57,6 +57,29 @@ if killerSide in [1, 4] and GetType(un) = unit_vehicle and GetSide(un) in [3, 6]
    tanksCounter := tanksCounter + 1;
 End;
 
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if GetSide(driver) in [3, 6] then
+   begin
+   ComRepairVehicle(driver, veh);
+
+   repeat
+    wait(0$1);
+   until IsDead(veh) or IsDead(driver) or GetLives(veh) > 250;
+
+   if GetLives(veh) > 250 then
+      begin
+      ComEnterUnit(driver, veh);
+      AddComMoveXY(driver, 71, 29);
+     
+      SetTag(veh, 1);
+
+      if not veh in russianOmicronAttackers then
+         russianOmicronAttackers := Join(russianOmicronAttackers, veh);
+      end;
+   end;
+End;
+
 On Command(cmd) do
 begin
 SOS_Command(cmd);

@@ -2296,6 +2296,16 @@ begin
 result := not value;
 End;
 
+Export Function Inc(value);
+begin
+result := value + 1;
+End;
+
+Export Function Dec(value);
+begin
+result := value - 1;
+End;
+
 // Find nearest point between two hexes
 Export Function GetDirFromHex(x1, y1, x2, y2);
 var i, _x, _y, tmp, distance, centerDist, centerPoint;
@@ -2479,4 +2489,52 @@ for i in result do
     end;
 End;
 
+Export Function ComLookAtDir(unit, direction);
+var x, y;
+begin
+if not unit or IsInUnit(unit) then
+   exit;
+
+x := ShiftX(GetX(unit), direction, 1);
+y := ShiftY(GetY(unit), direction, 1);
+
+if ValidHex(x, y) then
+   ComTurnXY(unit, x, y);
+End;
+
+Export Function SeeUnits(side, units);
+var i;
+begin
+result := false;
+
+if not units then
+   exit;
+
+for i in units do
+    if See(side, i) then
+       begin
+       result := true;
+       exit;
+       end;
+End;
+
+Export Function GetNearestPoint(unit, points);
+var i, dist, tmpDist;
+begin
+if not unit or not points then
+   exit;
+
+dist := 99999;
+
+for i in points do
+    begin
+    tmpDist := GetDistUnitXY(unit, i[1], i[2]);
+
+    if tmpDist < dist then
+       begin
+       result := i;
+       dist := tmpDist;
+       end;
+    end;
+End;
 

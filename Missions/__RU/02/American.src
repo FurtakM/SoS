@@ -1,0 +1,152 @@
+Export usWestForces, usEastForces, usTrapForces;
+Export Function PrepareAmerican;
+var i, un, tmp;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+usWestForces := [];
+usEastForces := [];
+
+// west base
+bc_type := b_depot;
+bc_level := Difficulty - 1;
+
+CreateAndPlaceBuildingXYD(48, 54, 5);
+
+tmp := [ [55, 55, 4], [59, 61, 4] ];
+
+if Difficulty > 1 then
+   tmp := Insert(tmp, tmp, [46, 64, 0]);
+
+if Difficulty > 2 then
+   tmp := Insert(tmp, tmp, [36, 48, 3]);
+
+bc_type := b_breastwork;
+
+for i in tmp do
+    begin
+    CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+    PrepareSoldier(false, Difficulty);
+    un := CreateHuman;
+    usWestForces := Replace(usWestForces, usWestForces + 1, un);
+    SetDir(un, (i[3] + 3) mod 6);
+    PlaceHumanInUnit(un, HexInfo(i[1], i[2]));
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareEngineer(false, Difficulty);
+    un := CreateHuman;
+    usWestForces := Replace(usWestForces, usWestForces + 1, un);
+    PlaceUnitXYR(un, 54, 58, 2, false);
+    end;
+
+// east base
+tmp := [ [87, 62, 1], [89, 67, 1] ];
+
+if Difficulty > 2 then
+   tmp := Insert(tmp, tmp, [88, 53, 2]);
+
+bc_type := b_breastwork;
+
+for i in tmp do
+    begin
+    CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+    PrepareSoldier(false, Difficulty);
+    un := CreateHuman;
+    usEastForces := Replace(usEastForces, usEastForces + 1, un);
+    SetDir(un, (i[3] + 3) mod 6);
+    PlaceHumanInUnit(un, HexInfo(i[1], i[2]));
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareEngineer(false, Difficulty);
+    un := CreateHuman;
+    usEastForces := Replace(usEastForces, usEastForces + 1, un);
+    PlaceUnitXYR(un, 95, 65, 2, false);
+    end;
+End;
+
+Export Function PrepareAmericanTrap;
+var i, un;
+begin
+usTrapForces := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+PrepareSoldier(sex_male, Difficulty);
+un := CreateHuman;
+usTrapForces := Join(usTrapForces, un);
+
+for i := 1 to [5, 6, 7, 8][Difficulty] do
+    begin
+    PrepareSoldier(false, Difficulty);
+    un := CreateHuman;
+    usTrapForces := Join(usTrapForces, un);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareScientist(false, Difficulty);
+    un := CreateHuman;
+    usTrapForces := Join(usTrapForces, un);
+    end;
+End;
+
+Every 0$2 trigger usWestForces do
+var i, tmp, base, eng, sol;
+begin
+enable;
+
+base := FilterUnitsInArea(usWestOutpostArea, [[f_side, 1], [f_type, unit_building]]);
+eng := UnitFilter(usWestForces, [f_class, class_engineer]);
+sol := UnitFilter(usWestForces, [f_class, class_soldier]);
+
+if eng then
+   if UnitFilter(base, [f_not, [f_lives, 1000]]) then
+      begin
+      for i in eng do
+          if IsInUnit(i) then
+             ComExit(i)
+          else if IsOk(i) and not HasTask(i) then
+             ComRepairBuilding(i, NearestUnitToUnit(UnitFilter(base, [f_not, [f_lives, 1000]]), i));
+      end
+   else if UnitFilter(base, [f_btype, b_depot]) then
+      ComEnterUnit(eng, UnitFilter(base, [f_btype, b_depot])[1]);
+
+if UnitFilter(sol, [f_ok]) and FilterUnitsInArea(westWeakPointArea2, [f_enemy, 1]) > 1 and not FilterUnitsInArea(westWeakPointArea2, [f_side, 1]) then
+   begin
+   for i in UnitFilter(sol, [f_ok]) do
+       begin
+       ComExit(i);
+       AddComAgressiveMove(i, 46, 62);
+       end;
+   end;
+
+if not FilterUnitsInArea(westWeakPointArea2, [f_enemy, 1]) and UnitFilter(sol, [[f_not, [f_inside]], [f_ok]]) and UnitFilter(base, [[f_btype, b_breastwork], [f_empty]]) then
+   ComEnterUnit(UnitFilter(sol, [[f_not, [f_inside]], [f_ok]])[1], UnitFilter(base, [[f_btype, b_breastwork], [f_empty]])[1]);
+End;
+
+Every 0$2 trigger usEastForces do
+var i, base, eng;
+begin
+enable;
+
+base := FilterUnitsInArea(usEastOutpostArea, [[f_side, 1], [f_type, unit_building]]);
+eng := UnitFilter(usEastForces, [f_class, class_engineer]);
+
+if eng then
+   if UnitFilter(base, [f_not, [f_lives, 1000]]) then
+      begin
+      for i in eng do
+          if IsInUnit(i) then
+             ComExit(i)
+          else if IsOk(i) and not HasTask(i) then
+             ComRepairBuilding(i, NearestUnitToUnit(UnitFilter(base, [f_not, [f_lives, 1000]]), i));
+      end
+   else if UnitFilter(base, [f_btype, b_depot]) then
+      ComEnterUnit(eng, UnitFilter(base, [f_btype, b_depot])[1]);
+End;

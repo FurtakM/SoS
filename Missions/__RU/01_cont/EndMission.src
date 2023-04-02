@@ -1,7 +1,7 @@
 every 0$1 trigger evacuationAvailable AND FilterUnitsExceptArea(ExitArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
 var dec;
 begin
-   if (IsOK(Kirilenkova) and GetSide(Kirilenkova) = 8) OR (IsOK(Gnyevko) and GetSide(Gnyevko) = 8) then
+   if (IsOK(Kirilenkova) and GetSide(Kirilenkova) = 8) OR not gnyevkoSaved then
    begin
       case Query('QExit2') of
       1:begin
@@ -10,9 +10,17 @@ begin
             Say(Belkov, 'D12-Bel-1')
         else
             DialogRandom(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok], [f_sex, sex_male]]), 'D12-RSol1-1', '', false);
-            FinishMission;
 
-      end;
+        if not gnyevkoSaved then
+           begin
+           Say(Burlak, 'D12-Bur-1');
+
+           if GetSide(Belkov) = 3 AND IsOK(Belkov) then
+              Say(Belkov, 'D12-Bel-2');
+           end;
+
+        FinishMission; 
+        end;
       2:begin
         wait(0$5);
         enable;

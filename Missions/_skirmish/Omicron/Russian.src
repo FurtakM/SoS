@@ -299,12 +299,13 @@ if russianPatrol then
 End;
 
 Every 0$1 trigger startAttackOnOmicron and not retreatFromOmicron do
-var i, filter, tmp, enemy, x;
+var i, filter, tmp, enemy, x, points, point;
 begin
 enable;
 
 filter := UnitFilter(russianOmicronAttackers, [f_type, unit_vehicle]);
 enemy := FilterAllUnits([f_side, 1]);
+points := [ [44,15], [54,39] ];
 
 for i in filter do
     begin
@@ -330,11 +331,14 @@ for i in filter do
     if GetLives(i) < 600 and not GetTag(i) then
        begin
        SetTag(i, 1);
-       ComMoveXY(i, 61, 28);
+
+       point := GetNearestPoint(i, points);
+
+       ComMoveXY(i, point[1], point[2]);
        AddComMoveXY(i, 71, 29);
        end;
 
-    if GetTag(i) = 1 and GetDistUnitXY(i, 71, 29) < 6 and tmp then
+    if GetTag(i) = 1 and GetDistUnitXY(i, 71, 29) < 9 and tmp then
        begin
        ComExitVehicle(tmp);
        AddComRepairVehicle(tmp, i);
@@ -400,16 +404,6 @@ repeat
         ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
 
 until not tmp;
-End;
-
-Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
-var i;
-begin
-enable;
-
-for i in FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
-    if GetFuel(i) < 1 then
-       ComExitVehicle(IsDrivenBy(i));
 End;
 
 Every 0$2 trigger FilterUnitsInArea(eastKirovArea, [f_enemy, 6]) do
@@ -554,4 +548,14 @@ for i := 1 to [2, 3, 3][Difficulty - 1] do
 repeat
  wait(0$1);
 until not AgressiveMove(tmp, path);
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
 End;
