@@ -32,6 +32,35 @@ begin
 
 End;
 
+Export Function SOS_VehicleConstructed(vehicle, factory);
+var driver;
+begin
+if not vehicle or not factory then
+   exit;
+
+if factoryWaypoints >= factory then
+   if factoryWaypoints[factory] then
+      begin
+      if GetControl(vehicle) = control_manual then
+         begin
+         driver := IsDrivenBy(vehicle);
+
+         AddComMoveXY(driver, factoryWaypoints[factory][1], factoryWaypoints[factory][2]);
+         AddComExitVehicle(driver);
+         AddComEnterUnit(driver, factory);
+         end
+      else if GetControl(vehicle) = control_remote then
+         begin
+         wait(0$2);
+
+         if Connect(vehicle) then
+            AddComMoveXY(vehicle, factoryWaypoints[factory][1], factoryWaypoints[factory][2]);
+         end
+      else
+         AddComMoveXY(vehicle, factoryWaypoints[factory][1], factoryWaypoints[factory][2]);
+      end;
+End;
+
 Export Function SOS_TargetableSAIL(cmd, unit, selectedUnit, x, y);
 begin
 if cmd = 250 and GetWeapon(unit) = ar_miner then
@@ -46,19 +75,42 @@ if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = contro
    HackDestroyVehicle(unit, selectedUnit);
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
    CutTreeXYR(unit, x, y, 12);
+if cmd = 256 then
+   SetFactoryWaypoint(unit, x, y);
 End;
 
-// plant mine script
-Export initPlantMineScript, plantMineList;
-{Every 1 trigger not initPlantMineScript do
+Export factoryWaypoints;
+Export Function SetFactoryWaypoint(factory, x, y);
+var i;
 begin
-initPlantMineScript := true;
-plantMineList := [];
-End;}
+if not factory or not ValidHex(x, y) or (GetBType(factory) <> b_factory and not GetType(factory) = unit_human) then
+   exit;
 
-Export Function ComGroupPlantMineXY(units, x, y);
+if GetType(factory) = unit_human then
+   factory := IsInUnit(factory);
+
+if GetBType(factory) <> b_factory then
+   exit;
+
+if HexInfo(x, y) = factory then
+   factoryWaypoints := Replace(factoryWaypoints, factory, 0)
+else
+   factoryWaypoints := Replace(factoryWaypoints, factory, [GetSide(factory), factory, x, y]);
+
+UpdateFactoryWaypoints;
+End;
+
+Export Function UpdateFactoryWaypoints();
+var i;
 begin
+ToLua('resetFactoryWaypoint();');
 
+if factoryWaypoints then
+   begin
+   for i := 1 to factoryWaypoints do
+       if factoryWaypoints[i] then
+          ToLua('setFactoryWaypointXY(' & factoryWaypoints[i][1] & ',' & factoryWaypoints[i][2] & ',' & factoryWaypoints[i][3] & ',' & factoryWaypoints[i][4] & ')');
+   end;
 End;
 
 Function CutTreeXYR(bulldozer, x, y, r);

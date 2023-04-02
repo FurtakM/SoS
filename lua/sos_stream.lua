@@ -580,14 +580,35 @@ function addStreamBonus(bonus)
 	hideActiveList();
 end;
 
+function getStreamItemByID(ID)
+	if (#STREAM_ITEMS_NORMAL > 0) then
+		for i = 1, #STREAM_ITEMS_NORMAL do
+			if STREAM_ITEMS_NORMAL[i].ITEM_ID == ID then
+				return STREAM_ITEMS_NORMAL[i];
+			end;
+		end;
+	end;	
+
+	if (#STREAM_ITEMS_HARDCORE > 0) then
+		for i = 1, #STREAM_ITEMS_HARDCORE do
+			if STREAM_ITEMS_HARDCORE[i].ITEM_ID == ID then
+				return STREAM_ITEMS_HARDCORE[i];
+			end;
+		end;
+	end;	
+
+	return nil;
+end;
 
 -- sail function
-function getStreamItemsFromMission(normal, hardcore)
-	local _normal = stringToArray(normal);
-	local _hardcore = stringToArray(hardcore);
+function getStreamItemsFromMission(normal, hardcore, active)
+	local _normal = stringBitToArray(normal);
+	local _hardcore = stringBitToArray(hardcore);
+	local _active = stringNumberToArray(active);
 
 	STREAM_ITEMS_NORMAL = {};
 	STREAM_ITEMS_HARDCORE = {};
+	STREAM_ITEMS_ACTIVE = {};
 
 	if (#_normal > 0) then
 		for i = 1, #STREAM_ITEMS_INIT_NORMAL do
@@ -603,6 +624,18 @@ function getStreamItemsFromMission(normal, hardcore)
 				STREAM_ITEMS_HARDCORE = addToArray(STREAM_ITEMS_HARDCORE, STREAM_ITEMS_INIT_HARDCORE[i]);
 			end;
 		end;
+	end;
+
+	if (#_active > 0) then
+		for i = 1, #_active do
+			local item = getStreamItemByID(parseInt(_active[i]));
+
+			if item then
+				STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, item);
+			end;
+		end;
+
+		saveStreamToFile();
 	end;
 
 	STREAM_MODE_BLOCK = 0;

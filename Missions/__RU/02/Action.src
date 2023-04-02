@@ -18,6 +18,8 @@ for i in tmp do
 
 CenterOnUnits(Kurin);
 
+ComMoveUnit(Burlak, Kurin);
+
 repeat
  wait(0$1);
 until GetDistUnits(Burlak, Kurin) < 6;
@@ -26,7 +28,7 @@ AddComTurnUnit([Burlak, Gnyevko], Kurin);
 
 for i in tmp diff [Burlak, Gnyevko] do
     if GetClass(i) = class_soldier then
-       ComEnterUnit(i, ru2_arm1)
+       ComEnterUnit(i, [ru2_arm1, ru2_arm2][i mod 2 + 1])
     else
        ComEnterUnit(i, ru_lab);
 
@@ -66,8 +68,8 @@ ComEnterUnit(Kurin, kirov);
 
 wait(0$2);
 
-ComExit(kirovBaseSquad[1]);
-AddComEnterUnit(kirovBaseSquad[1], HexInfo(98, 98));
+ComExit(kirovBaseSquad[2]);
+AddComEnterUnit(kirovBaseSquad[2], HexInfo(98, 98));
 
 wait(0$12);
 
@@ -187,7 +189,7 @@ InGameOff;
 End;
 
 // spot platonov
-Every 0$2 trigger See(3, Platonov) do
+Every 0$2 trigger GetDistUnits(Burlak, Platonov) < 10 and See(3, Platonov) do
 var p;
 begin
 InGameOn;
@@ -265,7 +267,7 @@ ComMoveXY(Platonov, x, y);
 
 repeat
  wait(0$1);
-until GetDistUnitXY(Platonov, x, y) < 5;
+until GetDistUnitXY(Platonov, x, y) < 5 and GetResourceTypeXY(x, y) = mat_cans;
 
 ComStop(Platonov);
 Say(Platonov, 'D4-Pla-1');
@@ -351,14 +353,14 @@ InGameOff;
 End;
 
 // build wrong building
-Every 0$3 trigger FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]) do
+Every 0$3 trigger FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]) and not initiative do
 var tmp;
 begin
 enable;
 
 InGameOn;
 
-tmp := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
 
 ComMoveUnit(Platonov, tmp[1]);
 
@@ -371,7 +373,44 @@ Say(Burlak, 'D6-Bur-1');
 
 RemoveUnit(tmp[1]);
 
+if GetBType(tmp[1]) = b_breastwork then
+   AddResourceType(GetBase(beria), mat_cans, 10)
+else
+   AddResourceType(GetBase(beria), mat_cans, 30);
+
 InGameOff;
+End;
+
+// build outside beria
+Every 0$1 trigger beriaVisited and FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]]) do
+var tmp, amount;
+begin
+enable;
+
+tmp := FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]])[1];
+
+InGameOn;
+
+ComMoveUnit(Platonov, tmp);
+Say(Platonov, 'DPlatAngry');
+Say(Burlak, 'D6-Bur-1');
+
+RemoveUnit(tmp);
+
+InGameOff;
+
+amount := 0;
+
+case GetBType(tmp) of
+     b_breastwork: amount := 10;
+     b_lab: amount := 20;
+     b_armoury: amount := 30;
+     b_workshop: amount := 40;
+     b_oil_power: amount := 20;
+     end;
+
+if amount then
+   AddResourceType(GetBase(beria), mat_cans, amount);
 End;
 
 // swamp
@@ -453,15 +492,6 @@ ChangeMissionObjectives('M3');
 ComMoveXY(Kuklajs, 70, 108);
 AddComHold(Kuklajs);
 
-belkovBrother := false;
-
-if not TestCharacters(prevMissionPrefix & 'Belkov') and not debug then
-   begin
-   Belkov := NewCharacter('Belkov2');
-   PlaceHumanInUnit(Belkov, kirov);
-   belkovBrother := true;
-   end;
-
 wait(1);
 
 ComExit(Belkov);
@@ -480,11 +510,16 @@ if belkovTeam < 3 then
    begin
    for i := belkovTeam to 3 do
        begin
-       un := kirovBaseSquad[2];
-       kirovBaseSquad := Delete(kirovBaseSquad, 2);
+       un := kirovBaseSquad[1];
+       kirovBaseSquad := Delete(kirovBaseSquad, 1);
        belkovTeam := Replace(belkovTeam, belkovTeam + 1, un);
        end;
    end;
+
+//if Kirilenkova then
+//   belkovTeam := Join(belkovTeam, Kirilenkova)
+//else
+//   belkovTeam := Join(belkovTeam, UnitFilter(kirovBaseSquad, [f_class, 4])[1]);
 
 ComExit(Kurin);
 AddComTurnUnit(Kurin, tmp[1]);
@@ -678,7 +713,7 @@ AddComMoveXY(Belkov, 31, 9);
 repeat
  wait(0$1);
 
- for i in Belkov union belkovTeam do
+ for i in Belkov union belkovTeam union belkovTank do
      if GetLives(i) < 800 then
         SetLives(i, 800);
 
@@ -727,13 +762,16 @@ AddComHold(Belkov);
 
 tmp := [ [44,18], [42,16], [40,15], [44,20], [42,20], [42,12], [42,8] ];
 
-for i in belkovTeam do
+for i in UnitFilter(belkovTeam, [f_class, 1]) do
     begin
     ComMoveXY(i, tmp[1][1], tmp[1][2]);
     tmp := Delete(tmp, 1);
 
     AddComCrawl(i);
     end;
+
+if UnitFilter(belkovTeam, [f_class, 4]) then
+   ComMoveXY(UnitFilter(belkovTeam, [f_class, 4]), 38, 18);
 
 timer := [4$30, 4$00, 3$10, 2$30][Difficulty];
 
@@ -796,7 +834,7 @@ ComMoveUnit(sci, sol[1]);
 End;
 
 // bielkov trap
-Every 0$2 trigger not initiative and belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
+Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
 begin
 case Query('QAttackAm') of
      1: begin
@@ -855,7 +893,7 @@ if IsOk(Kovalyuk) then
    end;
 End;
 
-Every 0$2 trigger not initiative and belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
+Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
 begin
 case Query('QAttackBw') of
      1: begin
@@ -1010,7 +1048,7 @@ RemoveSeeing(95, 65, 3);
 
 CenterOnXY(95, 65);
 
-if not westOutpostDiscovered then
+if westOutpostDiscovered then
    begin
    Say(Kovalyuk, 'D16-Kov-1');
    Say(Burlak, 'D16-Bur-1');
