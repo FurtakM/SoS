@@ -1,4 +1,20 @@
 // SoS Lua Script module
+// SoS Timer
+Every 0$1 do
+begin
+enable;   
+ToLua('updateTimer(' & tick & ');');
+End;
+
+// On map start/load
+On MapStart(p) do
+begin
+if streamModeActive then
+   DefineStreamItems(true);
+
+UpdateFactoryWaypoints();
+End;
+
 // SoS Stream Mode by Serpent
 // SoS Hack Mode by Serpent
 // 01.04.2021
@@ -206,14 +222,14 @@ Every 0$1 do
 begin
 ToLua('initStreamRollete();');
 InitStreamMode;
-DefineStreamItems();
+DefineStreamItems(false);
 End;
 
 Function InitStreamMode;
 begin
 streamModeActive := false;
 normalCounter := 36;
-hardcoreCounter := 16;
+hardcoreCounter := 18;
 
 sRocket := false; // 1
 sSpeed := false; // 2
@@ -272,8 +288,8 @@ s30 := false; // 117
 s60 := false; // 118
 End;
 
-Function DefineStreamItems();
-var tmp, normal, hardcore, i;
+Function DefineStreamItems(isGameLoad);
+var tmp, flags, normal, hardcore, active, i;
 begin
 result := [];
 
@@ -308,6 +324,7 @@ if result then
    begin
    normal := '';
    hardcore := '';
+   active := '';
 
    for i = 1 to normalCounter do
        begin
@@ -337,10 +354,87 @@ if result then
        hardcore := hardcore & tmp;
        end;
 
-   ToLua('getStreamItemsFromMission("' & normal & '","' & hardcore & '")');
+   if isGameLoad then
+      begin
+      flags := [
+        sRocket,
+        sSpeed,
+        sEngine,
+        sSpec,
+        sLevel,
+        sArmoury,
+        sRadar,
+        sBunker,
+        sHack,
+        sFire,
+        sRefresh,
+        sExp,
+        sDepot,
+        sFlag,
+        sKamikadze,
+        sTroll,
+        sSlow,
+        sLack,
+        sTank,
+        sRemote,
+        sPowell,
+        sTeleport,
+        sOilTower,
+        sShovel,
+        sSheik,
+        sEarthquake,
+        sAI,
+        sCargo,
+        sDLaser,
+        sExchange,
+        sFac,
+        sPower,
+        sRandom,
+        sShield,
+        sTime,
+        sTools,
+        sSold, // hardcore
+        sDiff,
+        sFog,
+        sReset,
+        sSun,
+        sTiger,
+        sBomb,
+        sWound,
+        sBetray,
+        sContamin,
+        sOil,
+        sStu,
+        sBazooka,
+        sMortar,
+        sRanger,
+        sComputer,
+        s30,
+        s60
+      ];
+
+      tmp := '';
+
+      for i = 1 to normalCounter do
+          begin
+          if flags[i] then
+             tmp := tmp & i & ';';
+          end;
+
+      for i = 1 to hardcoreCounter do
+          begin
+          if flags[normalCounter + i] then
+             tmp := tmp & (100 + i) & ';';
+          end;
+
+      if tmp then
+         active := tmp;
+      end;
+
+   ToLua('getStreamItemsFromMission("' & normal & '","' & hardcore & '","' & active & '")');
    end
 else
-   ToLua('getStreamItemsFromMission("","")');
+   ToLua('getStreamItemsFromMission("","","")');
 End;
 
 Every 0$2 trigger StreamModeActive and sRocket do

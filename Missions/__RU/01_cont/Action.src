@@ -560,7 +560,7 @@ every 0$1 trigger See(1, Pokryshkin) and IsDead(Charles) do
 every 0$1 trigger See(3, am_bun) do
 begin
     
-    SayNoName(Johanna, 'D7-FSol1-1');
+    Say(Johanna, 'D7-FSol1-1');
 end;
 
 // Pokryshkin dying
@@ -583,7 +583,7 @@ begin
     AddComTurnXY(Belkov, 88, 66);
 
     Say(Saseda, 'D7a-RSol1-1');
-    SayNoName(Johanna, 'D7a-FSol1-1');
+    Say(Johanna, 'D7a-FSol1-1');
 
     wait(0$12);
 
@@ -675,8 +675,8 @@ Export Function Dial_SecondAttack;
 var units, i;
 begin
 
-    SayEX(Johanna, 'D8-FSol1-1',true,false,false,false);
-    SayEX(Gladstone, 'D8-Glad-1',false,false,false,false);
+    Say(Johanna, 'D8-FSol1-1');
+    Say(Gladstone, 'D8-Glad-1');
     Say(Burlak, 'D8-Bur-1');
 
     secondAttack = false;
@@ -716,7 +716,7 @@ End;
 
 // Dialog about camp in trees
 every 0$1 trigger GetLives(am_bun) < 350 AND GetLives(am_bun) > 250 AND FilterUnitsInArea(TreeArea, [[f_side, 3], [f_type, unit_human]]) > 0  AND NOT amRetreat do
-    SayEX(Johanna, 'D8-FSol1-2',true,false,false,false);
+    Say(Johanna, 'D8-FSol1-2');
 
 
 // Destroy bunker
@@ -724,11 +724,11 @@ every 0$1 trigger IsDying(am_bun) AND IsOK(am_lab) AND NOT amRetreat do
 begin
     amRetreat = true;
 
-    SayNoName(Johanna, 'D8-FSol1-2a');
+    Say(Johanna, 'D8-FSol1-2a');
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    SayNoName(Gladstone, 'D8-Glad-2');
+    Say(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 end;
 
@@ -741,34 +741,34 @@ begin
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    SayEX(Gladstone, 'D8-Glad-2',true,false,false,false);
+    Say(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 end;
 
-every 0$1 trigger (IsDead(amApemans) AND Difficulty = 3) AND NOT amRetreat do
+every 0$1 trigger (IsDead(amApemans) AND Difficulty >= 3) AND NOT amRetreat do
 begin
 
     amRetreat = true;
 
-    SayEX(Johanna, 'D8-FSol1-2a',true,false,false,false);
+    Say(Johanna, 'D8-FSol1-2a');
     
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    SayNoName(Gladstone, 'D8-Glad-2');
+    Say(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 
 end;
 
 // Retreat if bunker have less than 50% HP - only hard difficulty
-every 0$1 trigger GetLives(am_bun) < 500 AND Difficulty = 3 AND NOT amRetreat do
+every 0$1 trigger GetLives(am_bun) < 500 AND Difficulty >= 3 AND NOT amRetreat do
 begin
     amRetreat = true;
 
-    SayEX(Johanna, 'D8-FSol1-2a',true,false,false,false);
+    Say(Johanna, 'D8-FSol1-2a');
 
     ComMoveToArea([Gladstone, Johanna], AmericanExitArea);
 
-    SayNoName(Gladstone, 'D8-Glad-2');
+    Say(Gladstone, 'D8-Glad-2');
     Say(Burlak, 'D8-Bur-2');
 end;
 
@@ -857,7 +857,7 @@ begin
        exit;
 
     DialogueOn;
-    SayRadioNoFace(Kirilenkova, 'D11b-Kir-1');
+    SayRadio(Kirilenkova, 'D11b-Kir-1');
 
     if IsOK(Belkov) then
     begin
@@ -870,9 +870,9 @@ begin
     end;
 
     if FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
-        SayRadioNoFace(Kirilenkova, 'D11b1-Kir-1')
+        SayRadio(Kirilenkova, 'D11b1-Kir-1')
     else
-        SayRadioNoFace(Kirilenkova, 'D11b2-Kir-1');
+        SayRadio(Kirilenkova, 'D11b2-Kir-1');
 
     if attackedByApemanNearLake AND FilterUnitsInArea(ApeLakeArea, [[f_side, 0], [f_class, class_apeman]]) > 0 then
     begin
@@ -985,6 +985,10 @@ begin
     DialogueOff;
 
     wait(0$5);
+
+    repeat
+     wait(0$1);
+    until GetDistUnits(Burlak, Kirilenkova) < 6;
 
     Say(Kirilenkova, 'D11c-Kir-1');
     Say(Burlak, 'D11c-Bur-1');

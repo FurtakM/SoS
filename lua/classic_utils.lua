@@ -282,7 +282,7 @@ function copy(obj, seen)
     return res;
 end;
 
-function stringToArray(str)
+function stringBitToArray(str)
     local t = {};
 
     for i = 1, #str do
@@ -290,6 +290,27 @@ function stringToArray(str)
     end;
 
     return t;
+end;
+
+function stringNumberToArray(str)
+    if (strlen(str) == 0) then
+        return {};
+    end;
+
+    local result = {};
+
+    repeat
+      local match = string.match(str, "%d+");
+
+      if match then
+         result[#result + 1] = match;
+         str = string.sub(str, strlen(match) + 2, -1);
+      else
+         break;
+      end;
+    until strlen(str) == 0;
+
+    return result;
 end;
 
 function setFocusID(ID)

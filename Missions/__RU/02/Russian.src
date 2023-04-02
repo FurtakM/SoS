@@ -21,11 +21,28 @@ PlaceHumanInUnit(Kovalyuk, kirov);
 
 tmp := [
     [ru2_arm1, class_soldier, 2],
-    [ru2_arm2, class_soldier, 3],
+    [ru2_arm2, class_soldier, 2],
     [ru_lab, class_scientistic, 2],
     [kirov, class_engineer, 2],
     [kirov, class_mechanic, 1]
 ];
+
+InitHC_All(); 
+
+belkovBrother := false;
+
+if not TestCharacters(prevMissionPrefix & 'Belkov') and not debug then
+   begin
+   Belkov := NewCharacter('Belkov2');
+   PlaceHumanInUnit(Belkov, kirov);
+   belkovBrother := true;
+   end
+else
+   begin
+   un := NewCharacter('Belkov2');
+   kirovBaseSquad := Replace(kirovBaseSquad, kirovBaseSquad + 1, un);
+   PlaceHumanInUnit(un, ru2_arm2);
+   end;
 
 for i in tmp do
     for j := 1 to i[3] do
@@ -91,7 +108,7 @@ belkovTeam := CreateCharacterSet('01_OtherSurvivors');
 result := [Burlak, Gnyevko, Kirilenkova, Belkov] union belkovTeam;
 End;
 
-Every 0$2 trigger beriaVisited do
+Every 0$2 trigger beriaVisited and GetTech(tech_oileng, 3) = state_researched do
 var tmp;
 begin
 tmp := UnitFilter(kirovBaseSquad, [f_class, 2]);
@@ -106,6 +123,7 @@ AddComBuild(tmp, b_workshop, 113, 113, 0);
 
 ComResearch(ru_lab, tech_oilpow);
 AddComResearch(ru_lab, tech_oileng);
+AddComResearch(ru_lab, tech_tech1);
 
 AddComBuild(tmp, b_oil_power, 116, 98, 0);
 
@@ -291,12 +309,21 @@ if not eng then
 
 ComExit(eng);
 
-for i := 1 to 5 do
+i := 5;
+
+repeat
+ wait(0$1);
+
+ if not UnitFilter(eng, [f_hastask]) and eng then
     begin
-    AddComTransport(eng, kirov, mat_oil);
+    ComTransport(eng, kirov, mat_oil);
     AddComMoveXY(eng, 67, 99);
     AddComUnload(eng);
+    AddComMoveXY(eng, 107, 104);
+    i := i - 1;
     end;
+
+until i = 0;
 
 AddComMoveUnit(eng, kirov);
 AddComEnterUnit(eng, kirov);
@@ -307,7 +334,7 @@ var i;
 begin
 reinforcementsGained := true;
 
-for i := 1 to [3, 3, 2, 2][Difficulty] do
+for i := 1 to 2 do
     begin
     if ComExit(beriaBaseSquad[i]) then
        wait(0$0.3);
