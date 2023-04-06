@@ -2,11 +2,13 @@ if (parseInt(MOD_DATA.Static_Menu) == 0) then
     include('Extensions/transition');
 
     TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
-    TEXTURE2 = loadOGLTexture('mainbackground2.png', true);
-    TEXTURE3 = loadOGLTexture('mainbackground3.png', true);
-    TEXTURE4 = loadOGLTexture('mainbackground4.png', true);
-    TEXTURE5 = loadOGLTexture('mainbackground5.png', true);
-    TEXTURE6 = loadOGLTexture('mainbackground6.png', true);
+    TEXTURE2 = loadOGLTextureBG('mainbackground2.png', true, false, true);
+    TEXTURE3 = loadOGLTextureBG('mainbackground3.png', true, false, true);
+    TEXTURE4 = loadOGLTextureBG('mainbackground4.png', true, false, true);
+    TEXTURE5 = loadOGLTextureBG('mainbackground5.png', true, false, true);
+    TEXTURE6 = loadOGLTextureBG('mainbackground6.png', true, false, true);
+    TEXTURE7 = loadOGLTextureBG('mainbackground7.png', true, false, true);
+
 
     LAST_USED_TEXTURE = 1;
 
@@ -17,7 +19,7 @@ if (parseInt(MOD_DATA.Static_Menu) == 0) then
     end;
 
     function changeBackgroundMenuImage();
-        local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5, TEXTURE6};
+        local tmp = {TEXTURE1, TEXTURE2, TEXTURE3, TEXTURE4, TEXTURE5, TEXTURE6, TEXTURE7};
         local texture = tmp[LAST_USED_TEXTURE];
         LAST_USED_TEXTURE = LAST_USED_TEXTURE + 1;
 
