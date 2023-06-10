@@ -1,11 +1,9 @@
 // Start
-Every 1 do
+Export function Action;
 var i;
 begin
-    TeleportExit(ruteleprt, 122, 145);
-    TeleportExit(rutp, 84, 61);
-    CenterNowOnUnits(IsInUnit(JMM));
-    InGameOn;
+   InGameOn;
+   CenterNowOnUnits(IsInUnit(JMM));
 
    ComMoveXY(FilterAllUnits([f_side, 1]), 130, 103);
    AddComMoveXY(i, 114, 102);
@@ -430,7 +428,10 @@ End;
 
 // Spawn enemy Legion
 Every 0$10 trigger warWithLegion = 1 do
+begin
+wait(0$30);
 PrepareAttackLegion;
+End;
 
 // Set side cargos
 Every 0$1 trigger IsPlaced(amCargo1) and not GetCargo(amCargo1, 1) and not GetCargo(amCargo1, 2) and not GetCargo(amCargo1, 3) do SetSide(amCargo1, 4);
@@ -588,76 +589,103 @@ begin
 end;
 
 // attack vehs
-Every 0$1 trigger ruEscape = 0 do
+Every 0$1 trigger ruEscape = 0 and (FilterUnitsInArea(RuEastBase, [f_side, 1]) or FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_not, [f_lives, 1000]], [f_type, unit_vehicle], [f_empty]])) do
 var i;
 begin
-     enable;
-
-     for i in FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_type, unit_vehicle], [f_empty]]) do
-         if GetLives(i) < 1000 then ruEscape = 1;
-
-end;
-
+ruEscape := 1;
+End;
 
 // Escape
-Every 0$1 trigger IsDying(ruheadlab) or IsDying(rueastdepot) or FilterUnitsInArea(EscapeTriggerArea, [f_side, 1]) > 0 or ruEscape = 1 do
-var i,j, vehs;
+Every 0$3 trigger IsDying(ruheadlab) or IsDying(rueastdepot) or FilterUnitsInArea(EscapeTriggerArea, [f_side, 1]) > 0 or ruEscape = 1 do
+var i, unit, tmp;
 begin
-    ruAI = 0;
-    vehs = FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_type, unit_vehicle], [f_empty]]);
+ruAI := 0;
 
-    ComExitBuilding(RuScientists);
-    wait(0$1);
+ComExitBuilding(RuScientists);
 
-    DialogueOn;
-    Say(JMM, 'D6-JMM-1');
-    DialogueOff;
+wait(0$1);
 
-    if vehs > 0 then
-       for i := 1 to RuScientists do ComEnterUnit(UnitFilter(RuScientists[i], [f_not, [f_hastask]]), vehs[i])
-    else ComMoveToArea(UnitFilter(RuScientists[i], [f_not, [f_hastask]]), [EscapeArea1, EscapeArea2][Rand(1,2)]);
+DialogueOn;
 
+PlaceSeeing(75, 21, 1, 12);
+CenterNowOnXY(75, 21);
 
+dwait(0$0.3);
+
+Say(JMM, 'D6-JMM-1');
+
+RemoveSeeing(75, 21, 1);
+
+DialogueOff;
+
+for i in RuScientists do
+    begin
+    SetSide(i, 6);
+    SetTag(i, rand(1, 3));
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in RuScientists do
+     begin
+     tmp := FilterAllUnits([[f_side, 3], [f_dist, i, 10], [f_type, unit_vehicle], [f_empty]]);
+
+     if tmp and not IsInUnit(i) then
+        begin
+        ComEnterUnit(i, NearestUnitToUnit(tmp, i));
+        continue;
+        end;
+
+     if IsInUnit(i) then
+        unit := IsInUnit(i)
+     else
+        unit := i;
+
+     case GetTag(i) of
+          1: begin
+             if GetDistUnits(unit, rutp) < 13 then
+                ComEnterUnit(unit, rutp)
+             else
+                ComMoveXY(unit, 16, 28);
+             end;
+          2: ComMoveXY(unit, 97, 2);
+          3: begin
+             if GetDistUnits(unit, rutp) < 13 then
+                ComEnterUnit(unit, rutp)
+             else
+                ComMoveXY(unit, 128, 155);
+             end;
+          11: ComMoveXY(unit, 16, 28);
+          13: ComEnterUnit(unit, ruteleprt);
+          23: ComMoveXY(unit, 128, 155);
+          end;
+     end;
+until not RuScientists;
 end;
 
 // Remove sci from map
-Every 0$0.3 trigger ruAI = 0 do
+Every 0$1 trigger ruAI = 0 and RuScientists and FilterAllUnits([[f_side, 6], [f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2], [f_inarea, EscapeArea3]]]) do
 var i, unit, veh, tmp;
 begin
 enable;
 
-    if UnitFilter(RuScientists, [f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2]]) or FilterAllUnits([[f_control, control_manual], [f_nation, 3], [f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2]]]) then
+for i in FilterAllUnits([[f_side, 6], [f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2], [f_inarea, EscapeArea3]]]) do
     begin
+    if i in RuScientists then
+       begin
+       RuScientists = RuScientists diff i;
+       RemoveUnit(i);
+       continue;
+       end;
 
-        unit := UnitFilter(RuScientists, [f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2]])[1];
+    if i in FilterAllUnits([[f_side, 6], [f_control, control_manual]]) then
+       begin
+       if IsDrivenBy(i) in RuScientists then
+          RuScientists = RuScientists diff i;
 
-        if not unit then
-        begin
-            tmp := FilterAllUnits([[f_or, [f_inarea, EscapeArea1], [f_inarea, EscapeArea2]], [f_control, control_manual], [f_nation, 3]]);
-
-            if not tmp then exit;
-
-            for i in tmp do
-                if IsDrivenBy(i) in RuScientists then
-                begin
-                        unit := IsDrivenBy(i);
-                        veh := i;
-                        break;
-                    end;
-                end;
-        end;
-
-        if not unit then
-        exit;
-
-    RuScientists = RuScientists diff unit;
-    RemoveUnit(unit);
-
-if veh then
-begin
-   if GetWeapon(veh) = 49 then KillUnit(veh)
-   else RemoveUnit(veh);
-end;
-
-
+       RemoveUnit(IsDrivenBy(i)); 
+       RemoveUnit(i);
+       end;
+    end;
 End;

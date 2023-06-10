@@ -1,17 +1,22 @@
 On UnitDestroyed(unit) Do
 var i;
 begin
-    if unit in russianTanks then
-       russianTanks := russianTanks diff unit;
+SOS_UnitDestroyed(unit);
 
-    if unit in russianTimeLapsers then
-       russianTimeLapsers := russianTimeLapsers diff unit;
+if unit = JMM then
+   YouLost('JMM');
 
-    if unit in RuScientists then
-       begin
-       RuScientists = RuScientists diff unit;
-       sciCounter = sciCounter + 1;
-       end;
+if unit in russianTanks then
+   russianTanks := russianTanks diff unit;
+
+if unit in russianTimeLapsers then
+   russianTimeLapsers := russianTimeLapsers diff unit;
+
+if unit in RuScientists then
+   begin
+   RuScientists := RuScientists diff unit;
+   sciCounter := sciCounter + 1;
+   end;
 End;
 
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do
@@ -22,75 +27,78 @@ End;
 
 On UnitTeleported(building, human) Do
 begin
-    if building = ruteleprt and GetSide(human) = 1 and eventVar1 = 0 then
-    begin
-        eventVar1 = 1;
-        teleportExplored = 1;
-        ChangeMissionObjectives('M2a');
-        wait(0$2);
-        DialogueOn;
-        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 'DT3a-Sol1-1', 'DT3a-FSol1-1');
-        Say(JMM, 'DT3a-JMM-1');
-        CenterNowOnUnits(human);
-        Say(JMM, 'DT3a-JMM-1a');
-        DialogueOff;
-    end;
+if human in FilterAllUnits([f_side, 6]) then
+   begin
+   if GetType(human) = unit_vehicle then
+      human := IsDrivenBy(human);
+      
+   SetTag(human, GetTag(human) + 10);
+   end;
 
-    if building = ruteleprt and GetType(human) = unit_vehicle and GetSide(human) = 3 and vehicleTeleported = 0 then begin wait(0$3); vehicleTeleported = 1; end;
-    if building = ruteleprt and GetType(human) = unit_vehicle and GetSide(human) = 3 and vehicleTeleported = 2 then begin wait(0$3); vehicleTeleported = 3; end;
-    if building = ruteleprt and GetType(human) = unit_vehicle and GetSide(human) = 3 then tpCounter = tpCounter + 1;
-end;
+if building = ruteleprt and GetSide(human) = 1 and eventVar1 = 0 then
+   begin
+   eventVar1 = 1;
+   teleportExplored = 1;
+   ChangeMissionObjectives('M2a');
+
+   wait(0$2);
+
+   DialogueOn;
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 'DT3a-Sol1-1', 'DT3a-FSol1-1');
+   Say(JMM, 'DT3a-JMM-1');
+   CenterNowOnUnits(human);
+   Say(JMM, 'DT3a-JMM-1a');
+   DialogueOff;
+   end;
+
+if building = ruteleprt and GetType(human) = unit_vehicle and GetSide(human) = 3 then
+   begin
+   if vehicleTeleported = 0 then
+      begin
+      wait(0$3);
+      vehicleTeleported := 1;
+      end;
+
+   if vehicleTeleported = 2 then
+      begin
+      wait(0$3);
+      vehicleTeleported := 3;
+      end;
+
+   tpCounter := tpCounter + 1;
+   end;
+End;
 
 On VehicleConstructed(vehicle, factory) Do
 begin
-    if GetWeapon(vehicle) = us_rocket_launcher then
-       rocketBuilded := true;
+SOS_VehicleConstructed(vehicle, factory);
 
-    if factory = ru_fact or factory = rufab2 then
-        if GetSide(vehicle) = 3 then
-        begin
-            if GetWeapon(vehicle) = 46 or GetWeapon(vehicle) = 45 or GetWeapon(vehicle) = 44 then
-            begin
-            russianTanks = russianTanks ^ vehicle; 
-            end;
+if GetWeapon(vehicle) = us_rocket_launcher then
+   rocketBuilded := true;
 
-            if GetWeapon(vehicle) = 49 then
-            begin
-            russianTimeLapsers = russianTimeLapsers ^ vehicle;
-            ComEnterUnit(vehicle, rutp);
-            end;
+if GetSide(vehicle) <> 3 then
+   exit;
 
-        end;
-end;
+if factory in [ru_fact, rufab2] then
+   begin
+   if GetWeapon(vehicle) = ru_time_lapser then
+      begin
+      russianTimeLapsers := Join(russianTimeLapsers, vehicle);
+      ComEnterUnit(vehicle, rutp);
+      end
+   else if not GetWeapon(vehicle) in [ru_cargo_bay, ru_big_cargo_bay, ru_crane, ru_bulldozer] then
+      begin
+      russianTanks := Join(russianTanks, vehicle);
+      end;
+   end;
+End;
 
 On LeaveVehicle(vehicle, human) Do
 var i;
 begin
-    if GetSide(human) = 3 and GetClass(human) = 3 and GetSide(ru_fact) = 3 and IsOk(ru_fact) then ComEnterUnit(human, ru_fact);
-
-
-    if GetClass(human) = 4 and GetSide(human) = 3 and ruAI = 0 then
-       for i in RuScientists do
-           if i = human then
-              ComMoveToArea(i, [EscapeArea1, EscapeArea2][Rand(1,2)]);
-end;
-
-On EnterVehicle(vehicle, human) Do
-var i, rnd;
-begin
-     if GetSide(human) = 3 and GetClass(human) = 4 then
-        for i in RuScientists do
-            if i = human then
-               if IsOk(rutp) then
-               begin
-                  rnd = rand(1, 2);
-                  if rnd = 1 then ComEnterUnit(vehicle, rutp);
-                  AddComMoveToArea(vehicle, [EscapeArea1, EscapeArea2][Rand(1,2)]);
-               end else
-               begin
-                  ComMoveToArea(vehicle, [EscapeArea1, EscapeArea2][Rand(1,2)]);
-               end;
-end;
+if GetSide(human) = 3 and GetClass(human) = 3 and GetSide(ru_fact) = 3 and IsOk(ru_fact) then
+   ComEnterUnit(human, ru_fact);
+End;
 
 On Command(cmd) do
 begin

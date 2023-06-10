@@ -1,18 +1,29 @@
 On Command(comandid) Do
 var i;
 begin
-
-     if comandid = 65 then
-          for i in FilterAllUnits([[f_side, 1]]) do ComStop(i);
-end;
+if comandid = 65 then
+   for i in FilterAllUnits([[f_side, 1]]) do
+       ComStop(i);
+End;
 
 On ApemanTamed(apeman, human) Do
 var tmp;
 begin
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_btype, b_depot]]);
 
-    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_btype, b_depot]]);
+if not tmp then
+   exit;
 
-    ComEnterUnit(apeman, tmp[1]);
-    SetSide(apeman, 4);
+ComEnterUnit(apeman, tmp[1]);
+SetSide(apeman, 4);
+End;
 
-end;
+On UnitDestroyed(un) do
+begin
+SOS_UnitDestroyed(un);
+End;
+
+On VehicleConstructed(veh, fac) do
+begin
+SOS_VehicleConstructed(veh, fac);
+End;

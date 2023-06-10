@@ -3,6 +3,39 @@ begin
 SOS_UnitExtraDestroyed(un, killerSide, killerUnit);
 End;
 
+On UnitDestroyed(un) do
+begin
+SOS_UnitDestroyed(un);
+
+if un = jota_base then
+   YouLost('jota-lose'); 
+
+if game_type = 2 and depot_captured = false then
+   begin
+
+   if GetSide(un) = 1 and un in FilterUnitsInArea(def_area, [f_type, unit_building]) diff FilterAllUnits([[[[[f_or, [f_btype, b_lab], [f_btype, b_lab_weapon], [f_btype, b_lab_half], [f_btype, b_lab_full]]]]]]) then
+      begin
+      ai_build := ai_build ^ GetBType(un);
+      ai_build := ai_build ^ GetX(un);
+      ai_build := ai_build ^ GetY(un);
+      ai_build := ai_build ^ GetDir(un);
+      end;
+
+   if GetSide(un) = 1 and un in FilterAllUnits([f_type, unit_vehicle]) then
+      begin
+      ai_vehs := ai_vehs ^ GetChassis(un);
+      ai_vehs := ai_vehs ^ GetEngine(un);
+      ai_vehs := ai_vehs ^ GetControl(un);
+      ai_vehs := ai_vehs ^ GetWeapon(un);
+      end;
+   end;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+begin
+SOS_VehicleConstructed(vehicle, factory);
+End;
+
 On Command(cmd) do
 begin
 SOS_Command(cmd);

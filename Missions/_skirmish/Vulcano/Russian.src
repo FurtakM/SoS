@@ -51,11 +51,15 @@ for i = 1 to 6 do
     PlaceHumanInUnit(un, ru_depot);
     end;
 
-    russian_prepared := true;
+if Difficulty > 1 then
+   begin
+   un := CreateBehemoth(3, 160, 36, 3);
+   ComHold(un);
+   end;
 
-    // cargo
-       ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
+russian_prepared := true;
 
+ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
 End;
 
 // remote mine
@@ -283,12 +287,55 @@ ru_sib_bomb := true;
 End;
 
 // change teleport exit
-Every 15$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]) do
+Every 10$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]) do
 var i;
 begin
 enable;
 i := [1,3][Rand(1,2)];
 TeleportExit(FilterAllUnits([[f_side, 3], [f_btype, b_teleport]])[1], ru_teleport_exit[i], ru_teleport_exit[i+1]);
+End;
+
+// extra attack
+Every 12$00 trigger tick >= [28$00, 25$00][Difficulty - 1] and Difficulty > 1 and FilterAllUnits([f_side, 3]) do
+var i, un, tmp, p, path;
+begin
+enable;
+
+if tick > 60$00 then
+   disable;
+
+tmp := [];
+
+for i := 1 to 8 do
+    begin
+    uc_side := 6;
+    uc_nation := 3;
+
+    vc_chassis := [ru_medium_wheeled, ru_heavy_wheeled, ru_heavy_tracked][i mod 3 + 1];
+    vc_engine := engine_siberite;
+    vc_control := control_computer;
+    vc_weapon := [ru_rocket_launcher, ru_flamethrower, ru_rocket][i mod 3 + 1];
+
+    un := CreateVehicle;
+    SetDir(un, 2);
+    PlaceUnitArea(un, start_north, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+if FilterAllUnits([[f_side, your_side], [f_distxy, 58, 15, 18]]) > 1 then
+   p := 2
+else
+   p := 1;
+
+case p of
+     1: path := [ [29,29], [49,70], [49,70], [61,110], [74,129] ];
+     2: path := [ [24,23], [49,39], [52,27] ];
+     end;
+
+repeat
+ wait(0$1);
+until not AgressiveMove(tmp, path);
 End;
 
 Every 30$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) do
