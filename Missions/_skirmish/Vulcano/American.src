@@ -33,12 +33,29 @@ begin
    player_commander := us_commander;
 
 // okno wyboru
-   team := CharacterSelection('text', [6,5,4][Difficulty], [6,5,4][Difficulty],[sel_change_class, us_commander, sel_changeable, sel_not_hired]^ us_force, [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1], [5,5,-1][Difficulty]]);
+   team := CharacterSelection('text', [7,6,5][Difficulty], [7,6,5][Difficulty],[sel_change_class, us_commander, sel_changeable, sel_not_hired]^ us_force, [class_soldier, [class_mechanic, 1], [class_engineer, 1], [class_scientistic, 1], [5,5,-1][Difficulty]]);
    team := team ^ us_commander;
 
    for i = 1 to team do
-       PlaceUnitArea(team[i], start_north, false);
+       begin
+       if GetClass(team[i]) = class_mechanic then
+          begin
+          vc_chassis := [us_medium_tracked, us_heavy_tracked, us_morphling][i mod 3 + 1];
+          vc_engine := engine_siberite;
+          vc_control := control_manual;
+          vc_weapon := [us_gatling_gun, us_double_gun, us_laser][rand(1, 3)];
 
+          un := CreateVehicle;
+          SetDir(un, 2);
+          PlaceUnitArea(un, start_north, false);
+          PlaceHumanInUnit(team[i], un);
+          end
+       else
+          begin
+          PlaceUnitArea(team[i], start_north, false);
+          ComHold(team[i]);
+          end;
+       end;
 End;
 
 // us_crates

@@ -1,26 +1,37 @@
-// Events module
-
 On UnitDestroyed(un) do
 begin
+SOS_UnitDestroyed(un);
+
 if un = JMM then
    YouLost('JMM');
+
 if un = Delta then
    begin
    Delta := 0;
    SetRestrict(b_depot, 1, true);
    end;
+
 if un in ar_forces then
    ar_forces := ar_forces diff un;
+
 if un in ap_killers then
    ap_killers := ap_killers diff un;
+
 if un in FilterAllUnits([f_or, [f_class, class_apeman], [f_class, class_apeman_engineer]]) then
    apeKillCounter := apeKillCounter + 1;
 End;
 
+On VehicleConstructed(veh, fac) do
+begin
+SOS_VehicleConstructed(veh, fac);
+End;
+
 // Arab Spotted
 On Contact(s1, s2) do
+begin
 if s1 = 1 and s2 = 2 and not arab_spotted then
    arab_spotted := true;
+End;
 
 // User want to end this crappy mission
 On EndTheMissionRaised(p) do

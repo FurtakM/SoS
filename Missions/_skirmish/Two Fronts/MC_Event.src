@@ -100,35 +100,38 @@ End;
 
 On VehicleConstructed(veh, b) do
 var i, side, tmp, c1, c2, c3, c4;
-if MREG_SidesList[GetSide(b)] then
 begin
-side := GetSide(veh);
+SOS_VehicleConstructed(veh, b);
 
-c1 := GetChassis(veh);
-c2 := GetEngine(veh);
-c3 := GetControl(veh);
-c4 := GetWeapon(veh);
-
-LogEvent('VehicleConstructed [side: ' & side & '; id:' & veh & '; components: [' & c1 & ', ' & c2 & ', ' & c3 & ', ' & c4 & ']]');
-
-if not GetWeapon(veh) in [us_crane, us_cargo_bay, us_bulldozer, ru_cargo_bay, ru_bulldozer, ru_crane, ar_cargo_bay] then
-   MREG_VCombat := Replace2(MREG_VCombat, side, MREG_VCombat[side]+1, veh);
-
-if GetWeapon(veh) = ar_control_tower then
-   SetTag(GetDriver(veh), 9);
-
-if GetWeapon(veh) in [us_bulldozer, ru_bulldozer] then
+if MREG_SidesList[GetSide(b)] then
    begin
-   MREG_Bulldozer := Replace2(MREG_Bulldozer, GetSide(veh), 2, veh);
-   exit;
-   end;
+   side := GetSide(veh);
 
-if GetChassis(veh) in MREG_DefSquad[side][1] and GetEngine(veh) in MREG_DefSquad[side][1] and
-   GetControl(veh) in MREG_DefSquad[side][1] and GetWeapon(veh) in MREG_DefSquad[side][1] then
-   begin
-   MREG_DefVeh := Replace2(MREG_DefVeh, side, MREG_DefVeh[side]+1, veh);
-   exit;
-   end;
+   c1 := GetChassis(veh);
+   c2 := GetEngine(veh);
+   c3 := GetControl(veh);
+   c4 := GetWeapon(veh);
+
+   LogEvent('VehicleConstructed [side: ' & side & '; id:' & veh & '; components: [' & c1 & ', ' & c2 & ', ' & c3 & ', ' & c4 & ']]');
+
+   if not GetWeapon(veh) in [us_crane, us_cargo_bay, us_bulldozer, ru_cargo_bay, ru_bulldozer, ru_crane, ar_cargo_bay] then
+      MREG_VCombat := Replace2(MREG_VCombat, side, MREG_VCombat[side]+1, veh);
+
+   if GetWeapon(veh) = ar_control_tower then
+      SetTag(GetDriver(veh), 9);
+
+   if GetWeapon(veh) in [us_bulldozer, ru_bulldozer] then
+      begin
+      MREG_Bulldozer := Replace2(MREG_Bulldozer, GetSide(veh), 2, veh);
+      exit;
+      end;
+
+   if GetChassis(veh) in MREG_DefSquad[side][1] and GetEngine(veh) in MREG_DefSquad[side][1] and
+      GetControl(veh) in MREG_DefSquad[side][1] and GetWeapon(veh) in MREG_DefSquad[side][1] then
+      begin
+      MREG_DefVeh := Replace2(MREG_DefVeh, side, MREG_DefVeh[side]+1, veh);
+      exit;
+      end;
 
    if (c1 = MREG_ToAttack[side][1] and c2 = MREG_ToAttack[side][2] and c3 = MREG_ToAttack[side][3] and c4 = MREG_ToAttack[side][4]) then
       begin
@@ -145,7 +148,8 @@ if GetChassis(veh) in MREG_DefSquad[side][1] and GetEngine(veh) in MREG_DefSquad
       exit;
       end;
 
-MCV_Parking(GetSide(veh), veh);
+   MCV_Parking(GetSide(veh), veh);
+   end;
 End;
 
 On ApemanTamed(ape, unit) do

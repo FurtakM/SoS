@@ -1,5 +1,6 @@
+Export russians_in_base;
 Export Function PrepareVulcanoBase;
-var i, filter, hp, un, area, russian_in_base;
+var i, filter, hp, un, area;
 begin
 filter := FilterAllUnits([[f_side, 4], [f_type, unit_building]]);
 hp := [470, 370, 290][Difficulty];
@@ -17,24 +18,46 @@ End;
 for i = 1 to filter do
     SetLives(filter[i], hp+Rand(-29, 29));
 
-// nazwa sk³adu
-   SetBName(us_depot, 'Vulcano1');
-
+SetBName(us_depot, 'Vulcano1');
 
 hc_importance := 0;
 
 uc_side := 3;
 uc_nation := nation_russian;
 
-russian_in_base := [];
+vc_chassis := ru_medium_tracked;
+vc_engine := engine_combustion;
+vc_control := control_manual;
+vc_weapon := ru_cargo_bay;
+
+un := CreateVehicle;
+PlaceUnitXY(un, 97, 138, false);
+SetCargo(un, mat_cans, 100);
+SetFuel(un, 45);
+
+un := CreateVehicle;
+PlaceUnitXY(un, 109, 154, false);
+SetCargo(un, mat_cans, 100);
+SetDir(un, 1);
+SetFuel(un, 50);
+
+russians_in_base := [];
 
 for i = 1 to [6,6,7][Difficulty] do
     begin
     PrepareHuman(false, 1, [4,5,6][Difficulty]);
     un := CreateHuman;
-    russian_in_base := russian_in_base ^ un;
+    russians_in_base := russians_in_base ^ un;
     PlaceUnitXYR(un, 94, 145, 10, false);
-    end; 
+    end;
+
+End;
+
+Every 0$2 trigger UnitFilter(russians_in_base, [f_see, 1]) do
+var enemy;
+begin
+enemy := UnitFilter(russians_in_base, [f_see, 1])[1];
+ComAgressiveMove(russians_in_base, GetX(enemy), GetY(enemy));
 End;
 
 
