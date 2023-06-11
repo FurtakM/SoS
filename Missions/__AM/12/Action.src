@@ -1,50 +1,49 @@
 // Start
 Export function Action;
-var i;
+var i, tmp, group;
 begin
-   InGameOn;
-   CenterNowOnUnits(IsInUnit(JMM));
+InGameOn;
 
-   ComMoveXY(FilterAllUnits([f_side, 1]), 130, 103);
-   AddComMoveXY(i, 114, 102);
+group := FilterAllUnits([f_side, 1]);
+tmp := IsInUnit(JMM);
 
-    Say(JMM, 'D1-JMM-1');
-    CenterNowOnUnits(IsInUnit(JMM));
+CenterNowOnUnits(tmp);
 
-    if IsOk(Donaldson) then
-    begin
-      Say(Donaldson, 'D1-Don-1');
-      CenterNowOnUnits(IsInUnit(JMM));
-      Say(JMM, 'D1-JMM-2');
-      CenterNowOnUnits(IsInUnit(JMM));
-      Say(Donaldson, 'D1-Don-2');
-      CenterNowOnUnits(IsInUnit(JMM));
-    end;
-    AddComMoveXY(FilterAllUnits([f_side, 1]), 110, 101);
-    wait(0$1);
-    CenterNowOnUnits(IsInUnit(JMM));
-    wait(0$1);
-    CenterNowOnUnits(IsInUnit(JMM));
-    wait(0$1);
-    CenterNowOnUnits(IsInUnit(JMM));
-    wait(0$1);
-    CenterNowOnUnits(IsInUnit(JMM));
+ComMoveXY(group, 130, 103);
+AddComMoveXY(tmp, 114, 102);
 
-end;
+Say(JMM, 'D1-JMM-1');
 
-// Near river
-Every 0$1 trigger SeeXY(1, 102, 94) do
-var i;
-begin
-    CenterOnXY(102, 94);
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]), 'D1-Sol1-2', '');
-    Say(JMM, 'D1-JMM-3');
-    ChangeMissionObjectives('M1');
+CenterNowOnUnits(tmp);
 
-    for i in FilterAllUnits([f_side, 1]) do
-        ComMoveXY(i, 95, 84);
+if IsOk(Donaldson) then
+   begin
+   Say(Donaldson, 'D1-Don-1');
+   CenterNowOnUnits(tmp);
+   Say(JMM, 'D1-JMM-2');
+   CenterNowOnUnits(tmp);
+   Say(Donaldson, 'D1-Don-2');
+   CenterNowOnUnits(tmp);
+   end;
 
-end;
+AddComMoveXY(group, 110, 101);
+
+repeat
+ wait(0$1);
+ CenterNowOnUnits(tmp);
+until SeeXY(1, 102, 94);
+
+CenterOnXY(102, 94);
+
+DialogRandom(UnitFilter(group, [f_sex, sex_male]), 'D1-Sol1-2', '');
+
+Say(JMM, 'D1-JMM-3');
+
+ChangeMissionObjectives('M1');
+
+for i in group do
+    ComMoveXY(i, 95, 84);
+End;
 
 // Bazooker attack ambush
 Every 0$1 do 
@@ -285,11 +284,8 @@ if dec1 = 4 then // zapytaj czy stan¹ po twojej stronie
    else if crates >= [120, 60][KurtStatus + 1] and siberite >= [120, 60][KurtStatus + 1] then
       dec2 = SelectiveQuery(['Q2a', 'Q2aK'][KurtStatus + 1], [1, 2, 4])
    else
-      begin
-
-      case Query(['Q2d', 'Q2dK'][KurtStatus + 1]) of
-      1:;
-      end;
+      begin  
+      Query(['Q2d', 'Q2dK'][KurtStatus + 1]);
 
       dec2 := 0;
       Say(JMM, 'D3Kc1-JMM-1');
@@ -433,24 +429,22 @@ wait(0$30);
 PrepareAttackLegion;
 End;
 
-// Set side cargos
-Every 0$1 trigger IsPlaced(amCargo1) and not GetCargo(amCargo1, 1) and not GetCargo(amCargo1, 2) and not GetCargo(amCargo1, 3) do SetSide(amCargo1, 4);
-Every 0$1 trigger IsPlaced(amCargo2) and not GetCargo(amCargo2, 1) and not GetCargo(amCargo2, 2) and not GetCargo(amCargo2, 3) do SetSide(amCargo2, 4);
-Every 0$1 trigger IsPlaced(amCargo3) and not GetCargo(amCargo3, 1) and not GetCargo(amCargo3, 2) and not GetCargo(amCargo3, 3) do SetSide(amCargo3, 4);
-Every 0$1 trigger IsPlaced(amCargo4) and not GetCargo(amCargo4, 1) and not GetCargo(amCargo4, 2) and not GetCargo(amCargo4, 3) do SetSide(amCargo4, 4);
-Every 0$1 trigger IsPlaced(amCargo5) and not GetCargo(amCargo5, 1) and not GetCargo(amCargo5, 2) and not GetCargo(amCargo5, 3) and not GetCargo(amCargo5, 2)  do SetSide(amCargo5, 4);
-Every 0$1 trigger IsPlaced(amCargo6) and not GetCargo(amCargo6, 1) and not GetCargo(amCargo6, 2) and not GetCargo(amCargo6, 3) do SetSide(amCargo6, 4);
-Every 0$1 trigger IsPlaced(amCargo7) and not GetCargo(amCargo7, 1) and not GetCargo(amCargo7, 2) and not GetCargo(amCargo7, 3) do SetSide(amCargo7, 4);
-
 // Remove cargo from map
-Every 0$1 do
+Every 0$1 trigger FilterAllUnits([[f_tag, 17], [f_placed]]) do
 var i;
 begin
-    enable;
-    for i in FilterAllUnits([f_side, 4]) do
+enable;
+
+for i in FilterAllUnits([[f_tag, 17], [f_placed]]) do
     begin
-        ComMoveToArea(i, PlayerSpawn);
-        if IsInArea(i, PlayerSpawn) then RemoveUnit(i);
+    if GetMultiCargo(i)[4] = 0 and GetSide(i) = 1 then
+       SetSide(i, 4);
+
+    if GetSide(i) = 4 then
+       if not IsInArea(i, PlayerSpawn) then
+          ComMoveToArea(i, PlayerSpawn)
+       else
+          RemoveUnit(i);
     end;
 end;
 
@@ -590,10 +584,7 @@ end;
 
 // attack vehs
 Every 0$1 trigger ruEscape = 0 and (FilterUnitsInArea(RuEastBase, [f_side, 1]) or FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_not, [f_lives, 1000]], [f_type, unit_vehicle], [f_empty]])) do
-var i;
-begin
 ruEscape := 1;
-End;
 
 // Escape
 Every 0$3 trigger IsDying(ruheadlab) or IsDying(rueastdepot) or FilterUnitsInArea(EscapeTriggerArea, [f_side, 1]) > 0 or ruEscape = 1 do
