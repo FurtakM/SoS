@@ -62,10 +62,16 @@ un := CreateHuman;
 PlaceUnitXY(un, 175, 128, false);
 ComEnterUnit(un, ar_ibun);
 
+PrepareHuman(false, class_soldier, 10);
+un := CreateHuman;
+PlaceHumanInUnit(un, HexInfo(240, 128));
+
+un := CreateHuman;
+SetDir(un, 1);
+PlaceHumanInUnit(un, HexInfo(260, 147));
 
 for i = 1 to 2 do
     AddComConstruct(fac, ar_half_tracked, engine_solar, control_manual, ar_control_tower);
-
 End;
 
 
@@ -110,47 +116,24 @@ PrepareHovercraft(n1);
 
 repeat
  wait(0$01);
-until legion_force = n1;
+until legion_force >= n1;
 
 l_allow_attack := true;
-
 
 for i = 1 to n2 do
     begin
     AddKamikaze();
     end;
-
-ComBrutalAttack(legion_force, 6);
 End;
 
 // ct control
-Every 0$01 trigger FilterAllUnits([[f_side, 8], [f_control, control_remote]]) do
-var i, j, cts, vehs, best, best_mechanic, p;
+Every 0$02 trigger FilterAllUnits([[f_side, 8], [f_ok], [f_control, control_remote], [f_not, [f_linked]]]) do
+var i;
 begin
 enable;
 
-vehs := FilterAllUnits([[f_side, 8], [f_control, control_remote], [f_not, [f_linked]]]);
-cts := FilterAllUnits([[f_side, 8], [f_weapon, ar_control_tower]]);
-best := 10;
-best_mechanic := -1;
-
-if vehs then
-   begin
-   for j in cts do
-       begin
-       p := UnitsLinked(GetDriver(j));
-
-       if p < best then
-          begin
-          best := p;
-          best_mechanic := GetDriver(j);
-          end;
-       end;
-
-   ComLinkTo(vehs[1], best_mechanic);
-   end;
-
-
+for i in FilterAllUnits([[f_side, 8], [f_ok], [f_control, control_remote], [f_not, [f_linked]]]) do
+    Connect(i);
 End;
 
 
@@ -160,6 +143,16 @@ begin
 enable;
 Wait([2$30, 1$00, 0$30][Difficulty]);
 PrepareAttack((legion_attack_strenght - 2 + Difficulty), 2);
+End;
+
+Every 0$1 trigger l_allow_attack and UnitFilter(legion_force, [[f_not, [f_hastask]], [f_linked], [f_ok]]) do
+var path, units;
+begin
+enable;
+
+units := UnitFilter(legion_force, [[f_not, [f_hastask]], [f_linked], [f_ok]]);
+path := [ [150,93], [232,88], [209,50], [208,29], [191,17] ];
+AgressiveMove(units, path);
 End;
 
 Every 0$01 trigger FilterUnitsInArea(islandArea, [[f_side, 8], [f_class, 17]]) do
