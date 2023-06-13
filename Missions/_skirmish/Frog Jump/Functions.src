@@ -75,119 +75,18 @@ end;
 
 Export Function DestinationReachable(unit, x, y);
 begin
-if unit in unreachableList then
-   unreachableList := unreachableList diff unit;
-
 if ValidHex(x, y) then
-      ComAttackUnit(unit, HexInfo(x, y));
+   ComAttackUnit(unit, HexInfo(x, y));
 
 wait(0$1);
 
 if unit in unreachableList then
    result := false
-    else
-     result := true;
-End;
+else
+   result := true;
 
-Export Function ComBombAttack(unit, side);
-var i, enemy, t, x, y, change_target_counter, last_target;
-begin
-enemy := FilterAllUnits([f_side, side]);
-change_target_counter := 0;
-last_target := 0;
-
-if not enemy then
-   exit;
-
-while (IsLive(unit) and change_target_counter < 4) do
-   begin
-   if UnitFilter(enemy, [f_occupied]) then
-      begin
-      t := NearestUnitToUnit(UnitFilter(enemy, [f_occupied]), unit);
-
-      if (last_target <> t) then
-         change_target_counter := change_target_counter + 1;
-
-      last_target := t;
-
-      x := GetX(t);
-      y := GetY(t);
-
-      if DestinationReachable(unit, x, y) then
-         ComAttackUnit(unit, t);
-      end
-       else
-        ComAttackUnit(unit, NearestUnitToUnit(enemy, unit));
-
-   Wait(0$0.3);
-   end;
-End;
-
-Export Function ComBrutalAttack(units, side);
-var i, enemy, t, x, y, target, unit;
-begin
-enemy := FilterAllUnits([f_side, side]);
-target := 0;
-
-if not enemy then
-   exit;
-
-while units do
-    begin
-    wait(0$1);
-
-    for unit in units do
-        begin
-
-        if not IsPlaced(unit) then
-           begin
-           units := units diff unit;
-           continue;
-           end;
-
-        if not IsPlaced(target) then
-           target := 0;
-
-        if not target and UnitFilter(enemy, [[f_type, unit_human], [f_not, [f_inside]]]) then
-           begin
-           t := NearestUnitToUnit(UnitFilter(enemy, [[f_type, unit_human], [f_not, [f_inside]]]), unit);
-
-           x := GetX(t);
-           y := GetY(t);
-
-           if DestinationReachable(unit, x, y) then
-              target := t
-               else
-                if UnitFilter(enemy, [f_occupied]) then
-                   begin
-                   t := NearestUnitToUnit(UnitFilter(enemy, [f_occupied]), unit);
-
-                   x := GetX(t);
-                   y := GetY(t);
-
-                   if DestinationReachable(unit, x, y) then
-                      target := t
-                     else
-                      ComAttackUnit(unit, NearestUnitToUnit(FilterAllUnits([f_side, 6]), unit));
-                   end;
-           end;
-
-        if not target or not DestinationReachable(unit, GetX(target), GetY(target)) then
-           target := NearestUnitToUnit(FilterAllUnits([f_side, side]), unit);
-
-        if (GetDistUnits(target, unit) < 4 and GetLives(unit) < 600) or (GetLives(unit) < 200 and GetSide(NearestUnitToUnit(all_units diff unit, unit)) <> GetSide(unit)) then
-           begin
-           for i = 1 to 4 do
-               MineExplosion(GetX(unit), GetY(unit), 1);
-           end
-            else
-             if GetType(target) <> unit_human then
-                ComAttackUnit(unit, target)
-                 else
-                  ComMoveXY(unit, GetX(target), GetY(target));
-        end;
-    end;
-
+if not result then
+   unreachableList := unreachableList diff unit;
 End;
 
 
