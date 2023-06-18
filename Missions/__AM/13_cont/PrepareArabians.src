@@ -1,34 +1,121 @@
-Every 15$0 trigger sibDeposits do
+Export Function DestroySibDeposit;
 var un, rnd;
 begin
-    enable;
+rnd := 0;
 
-    rnd = 0;
+uc_side := 8;
+uc_nation := 2;
 
-    uc_side = 8;
-    uc_nation = 2;
-    
-    hc_name = '';
-    hc_gallery = '';
-    PrepareHuman(false, 4, 10);
+hc_name := '';
+hc_gallery := '';
+hc_attr := [[10, 11, 12, 12][Difficulty], [10, 11, 12, 12][Difficulty]];
+PrepareHuman(false, 4, [7, 8, 9, 10][Difficulty]);
 
-    un = CreateHuman;
-    PlaceUnitArea(un, [ArabianSpawn1, ArabianSpawn2][Rand(1, 2)], false);
-    SetTag(un, 1);
+un := CreateHuman;
+PlaceUnitArea(un, [ArabianSpawn1, ArabianSpawn2][Rand(1, 2)], false);
+SetTag(un, 1);
 
-    rnd = Rand(1, sibDeposits);
+rnd := rand(1, sibDeposits);
+ComContaminate(un, sibDeposits[rnd][1], sibDeposits[rnd][2]);
+End;
 
-    ComContaminate(un, sibDeposits[rnd][1], sibDeposits[rnd][2]);
-end;
-
-Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_not, [f_linked]], [f_control, control_remote]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_not, [f_linked]], [f_ok], [f_control, control_remote]]) do
 var i;
 begin
 enable;
 
-for i in FilterAllUnits([[f_side, 8], [f_not, [f_linked]], [f_control, control_remote]]) do
+for i in FilterAllUnits([[f_side, 8], [f_not, [f_linked]], [f_ok], [f_control, control_remote]]) do
     begin
     wait(0$0.3);
     Connect(i);
     end;
+End;
+
+Export Function PrepareArabianAttack;
+var i, veh, xy, un, area, counter, tmp, dir;
+begin
+result := [];
+arabianAttacksCounter := arabianAttacksCounter + 1;
+
+if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) < 2 then
+   begin
+   uc_side := 8;
+   uc_nation := 2;
+
+   PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_control_tower, 100);
+
+   for i = FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) + 1 to 2 do
+       begin
+       veh := CreateVehicle;
+       SetDir(veh, 5);
+       xy := [ [181, 105], [137, 6] ][i mod 2 + 1];
+       PlaceUnitXYR(veh, xy[1], xy[2], 12, false);
+
+       PrepareMechanic(false, [7, 9, 10, 10][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+   end;
+
+dir := rand(1, 2);
+area := [ArabianSpawn1, ArabianSpawn2][dir];
+counter := [4, 5, 6, 7][Difficulty] + arabianAttacksCounter;
+
+if counter > 20 then
+   counter := 20;
+
+for i := 1 to counter do
+    begin
+    PrepareVehicle(
+       [ar_medium_trike, ar_half_tracked][rand(1, 2)],
+       engine_siberite,
+       [control_manual, control_remote, control_apeman][rand(1, 3)],
+       [ar_gun, ar_rocket_launcher, ar_mortar, ar_selfpropelled_bomb, ar_gatling_gun][rand(1, 5)],
+       100
+    );
+
+    if vc_weapon = ar_selfpropelled_bomb then
+       vc_control := control_remote;
+
+    veh := CreateVehicle;
+    result := Join(result, veh);
+    SetDir(veh, [3, 5][dir]);
+    PlaceUnitArea(veh, area, false);
+
+    if vc_control = control_manual then
+       begin
+       PrepareMechanic(false, [7, 8, 9, 10][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+ 
+    wait(0$0.3);
+
+    if GetControl(veh) = control_remote and not IsControledBy(veh) then
+       begin
+       Connect(veh);
+       wait(0$0.3);
+       end;
+
+    ComAgressiveMove(veh, 100, 55);
+
+    wait(0$0.3);
+    end;
+
+if sibDeposits and arabianAttacksCounter mod 5 = 0 then
+   begin
+   for i := 1 to [3, 4, 4, 5][Difficulty] do
+       begin
+       PrepareHuman(false, class_soldier, [7, 8, 9, 10][Difficulty]);
+       un := CreateHuman;
+       result := Join(result, un);
+       SetClass(un, class_mortar);
+       PlaceUnitArea(un, ArabianInfSpawn, false);
+       end;
+
+   DestroySibDeposit;
+   end;
+
+for i in result do
+    SetTag(i, 10);
+
+RaiseSailEvent(eventArabianAttack);
 End;

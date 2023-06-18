@@ -29,80 +29,75 @@ Export Powell; // Am commander
 Export others13; // Others selected
 Export Burlak, Masha; // Ru hero
 Export Gnyevko, Titov, Xavier, Belkov, Lipshchin; // Burlak's friends
-Export resources, vehicles;
-
-Export AmSciSib;
-
+Export resources, vehicles;  
+Export AmSciSib;  
 Export spawnBurlak, burlakStatus;
 Export radationResearched;
-Export radarOnSpot;
-
+Export radarOnSpot;  
 Export sibDeposits;
 Export sibDestroyedCounter;
-
-export arabianAttacksCounter;
-
-Export mission_prefix;
-
-Export eventVar1, eventVar2, eventVar3, eventVar4, eventVar5;
-
-Export debugMode, achivCounter, destroyCounter;
-
+export arabianAttacksCounter;  
+Export mission_prefix;      
+Export eventVar1, eventVar2, eventVar3, eventVar4, eventVar5; 
+Export debugMode, achivCounter, destroyCounter;      
+Export eventArabianAttack, eventRussianAttack;
 
 Starting
 begin
-    Resetfog;
-    AnimateTrees(true);
-    RandomizeAll;
+Resetfog;
+AnimateTrees(true);
+RandomizeAll;
 
-    spawnBurlak = 0;
-    burlakStatus = 0; // 0 = escaped, 1 - killed
+spawnBurlak := 0;
+burlakStatus := 0; // 0 = escaped, 1 - killed
+radarOnSpot := 0; // 0 - no, 1 - yes
+radationResearched := 0; // 0 - no or sci dead, 1 - yes
+sibDestroyedCounter := 0; // how many Siberite deposit was destroyed
+sibDeposits := [ [91, 111], [23, 37] ]; // location sib deposits in map
+arabianAttacksCounter := 0;
+destroyCounter := 0;
 
-    radarOnSpot = 0; // 0 - no, 1 - yes
+resources := [];
+vehicles := [];
 
-    radationResearched = 0; // 0 - no or sci dead, 1 - yes
+eventVar1 := 0;
+eventVar2 := 0;
+eventVar3 := 0;
+eventVar4 := 0;
+eventVar5 := 0;
 
-    sibDestroyedCounter = 0; // how many Siberite deposit was destroyed
+eventArabianAttack := 1;
+eventRussianAttack := 2;
 
-    sibDeposits = [ [91, 111], [23, 37] ]; // location sib deposits in map
+mission_prefix := '13f_';
 
-    arabianAttacksCounter = 0;
-    destroyCounter := 0;
+debugMode := 0;
+achivCounter := 0;
 
-    resources = [];
-    vehicles = [];
-
-    eventVar1 = 0;
-    eventVar2 = 0;
-    eventVar3 = 0;
-    eventVar4 = 0;
-    eventVar5 = 0;
-
-    mission_prefix = '13f_';
-
-    debugMode = 0;
-    achivCounter := 0;
-
-    if Difficulty = 1 then
-       RemoveEnvironmentArea(oilBlockArea);
+if Difficulty = 1 then
+   RemoveEnvironmentArea(oilBlockArea);
     
-    PrepareVehicles;
-    PrepareHeroes;
-    PrepareAmericansRandom;
+PrepareVehicles;
+PrepareHeroes;
+PrepareAmericansRandom;
 
-    PrepareDifficulty;
-end;
+PrepareDifficulty;
+Action;
+End;
 
-Every 0$1 trigger debugMode = 1 do
-var i;
+Every 0$1 trigger debugMode do
+var i, j;
 begin
-    enable;
-    fogoff(true);
-    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
-end;
+enable;
+FogOff(true);
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+    SetLives(i, 1000);
+
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do
+    for j := 1 to 3 do
+        SetResourceType(GetBase(i), j, 9999);
+End;
 
 Every 0$1 trigger achivCounter >= 2 do
 SetAchievement('ACH_REMOTE');

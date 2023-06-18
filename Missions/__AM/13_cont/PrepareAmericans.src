@@ -3,22 +3,22 @@ var tmp, tmp2, i;
 begin
 uc_side = 1;
 
-JMM = PrepareUnit('JMM', (not debugMode), '13c_');
-Stevens = PrepareUnit('Stevens', (not debugMode), '13c_');
-Lisa = PrepareUnit('Lisa', (not debugMode), '13c_');
-Donaldson = PrepareUnit('Donaldson', (not debugMode), '13c_');
-Bobby = PrepareUnit('Bobby', (not debugMode), '13c_');
-Cyrus = PrepareUnit('Cyrus', (not debugMode), '13c_');
-Denis = PrepareUnit('Denis', (not debugMode), '13c_');
-Brown = PrepareUnit('Brown', (not debugMode), '13c_');
-Gladstone = PrepareUnit('Gladstone', true, '13c_');
-Houten = PrepareUnit('Houten', true, '13c_');
-Cornel = PrepareUnit('Cornel', true, '13c_');
-Gary = PrepareUnit('Gary', true, '13c_');
-Frank = PrepareUnit('Frank', true, '13c_');
-Kikuchi = PrepareUnit('Kikuchi', true, '13c_');
+JMM := PrepareUnit('JMM', (not debugMode), '13c_');
+Stevens := PrepareUnit('Stevens', (not debugMode), '13c_');
+Lisa := PrepareUnit('Lisa', (not debugMode), '13c_');
+Donaldson := PrepareUnit('Donaldson', (not debugMode), '13c_');
+Bobby := PrepareUnit('Bobby', (not debugMode), '13c_');
+Cyrus := PrepareUnit('Cyrus', (not debugMode), '13c_');
+Denis := PrepareUnit('Denis', (not debugMode), '13c_');
+Brown := PrepareUnit('Brown', (not debugMode), '13c_');
+Gladstone := PrepareUnit('Gladstone', true, '13c_');
+Houten := PrepareUnit('Houten', true, '13c_');
+Cornel := PrepareUnit('Cornel', true, '13c_');
+Gary := PrepareUnit('Gary', true, '13c_');
+Frank := PrepareUnit('Frank', true, '13c_');
+Kikuchi := PrepareUnit('Kikuchi', true, '13c_');
 
-Powell = PrepareUnit('Powell', false, '');
+Powell := PrepareUnit('Powell', false, '');
 
 tmp := [JMM, Stevens, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
 tmp2 := FilterAllUnits([[f_side, 1], [f_control, control_manual], [f_type, unit_vehicle]]);
@@ -96,29 +96,37 @@ End;
 Export function PowellSupport;
 var i, veh, un;
 begin
-for i = 1 to 3 do
+for i := 1 to [4, 3, 2, 2][Difficulty] do
     begin
-    uc_nation = 1;
-    uc_side = 1;
+    uc_nation := 1;
+    uc_side := 1;
 
-    vc_engine = 3;
-    vc_control = 1;
-    vc_weapon = [9, 5, 4, 7, 6][Rand(1, 5)];
+    vc_engine := engine_siberite;
+    vc_control := control_manual;
+    vc_weapon := [us_laser, us_heavy_gun, us_laser, us_double_gun, us_double_gun][Difficulty + rand(0, 1)];
 
-    if vc_weapon = 6 then
-       vc_chassis = 4
+    if vc_weapon = us_heavy_gun then
+       vc_chassis := [us_morphling, us_heavy_tracked, us_heavy_tracked][Difficulty]
     else
-       vc_chassis = 3;
+       vc_chassis := [us_morphling, us_heavy_tracked, us_medium_tracked, us_medium_tracked, us_medium_wheeled][rand(1, 5)];
 
     veh = CreateVehicle;
     PlaceUnitArea(veh, PlayerSpawn, false);
     SetDir(veh, 1);
 
-    hc_gallery = '';
-    hc_name = '';
-    PrepareHuman(false, 3, rand(7, 10));
+    hc_gallery := '';
+    hc_name := '';
+    PrepareHuman(false, class_mechanic, [9, 8, 8, 7][Difficulty]);
 
-    un = CreateHuman;
+    un := CreateHuman;
     PlaceHumanInUnit(un, veh);
+    end;
+
+for i := 1 to [2, 2, 2, 1][Difficulty] do
+    begin
+    PrepareHuman(false, class_soldier, [9, 8, 8, 7][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, 1);
+    PlaceUnitArea(un, PlayerSpawn, false);
     end;
 End;

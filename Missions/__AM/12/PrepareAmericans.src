@@ -1,152 +1,142 @@
 Export function PrepareAmericanHeroes;
 var tmp, i;
 begin
-    uc_side = 1;
+uc_side := 1;
+others11 := CreateCharacterSet('11c_others') union CreateCharacterSet('11_others');
 
-    others11 =  CreateCharacterSet('11c_others') union CreateCharacterSet('11_others');
+JMM := PrepareUnit('JMM', true, '11_');
+SetClass(JMM, 1);
+PlaceHumanInUnit(JMM, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]])[1]);
 
+if TestCharacters('11_Lisa') then
+   begin          
+   Lisa := PrepareUnit('Lisa', true, '11_');
+   SetClass(Lisa, 1);
+   PlaceUnitArea(Lisa, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    JMM = PrepareUnit('JMM', true, '11_');
-    SetClass(JMM, 1);
-    PlaceHumanInUnit(JMM, FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]])[1]);
+if TestCharacters('11_Donaldson') then
+   begin          
+   Donaldson := PrepareUnit('Donaldson', true, '11_');
+   SetClass(Donaldson, 1);
+   PlaceUnitArea(Donaldson, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    if TestCharacters('11_Lisa') = true then
-    begin          
-        Lisa = PrepareUnit('Lisa', true, '11_');
-        SetClass(Lisa, 1);
-        PlaceUnitArea(Lisa, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+if TestCharacters('11_Cyrus') then
+   begin          
+   Cyrus := PrepareUnit('Cyrus', true, '11_');
+   SetClass(Cyrus, 1);
+   PlaceUnitArea(Cyrus, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    if TestCharacters('11_Donaldson') = true then
-    begin          
-        Donaldson = PrepareUnit('Donaldson', true, '11_');
-        SetClass(Donaldson, 1);
-        PlaceUnitArea(Donaldson, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+if TestCharacters('11_Denis') then
+   begin          
+   Denis := PrepareUnit('Denis', true, '11_');
+   SetClass(Denis, 4);
+   PlaceUnitArea(Denis, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    if TestCharacters('11_Cyrus') = true then
-    begin          
-        Cyrus = PrepareUnit('Cyrus', true, '11_');
-        SetClass(Cyrus, 1);
-        PlaceUnitArea(Cyrus, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+if TestCharacters('11_Frank') then
+   begin          
+   Frank := PrepareUnit('Frank', true, '11_');
+   SetClass(Frank, 1);
+   PlaceUnitArea(Frank, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    if TestCharacters('11_Denis') = true then
-    begin          
-        Denis = PrepareUnit('Denis', true, '11_');
-        SetClass(Denis, 4);
-        PlaceUnitArea(Denis, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+if TestCharacters('11_Cornell') then
+   begin          
+   Cornel := PrepareUnit('Cornell', true, '11_');
+   SetClass(Cornel, 1);
+   PlaceUnitArea(Cornel, PlayerSpawn, false);
+   end
+else
+   PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
-    if TestCharacters('11_Frank') = true then
-    begin          
-        Frank = PrepareUnit('Frank', true, '11_');
-        SetClass(Frank, 1);
-        PlaceUnitArea(Frank, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+tmp := UnitFilter(others11, [f_sex, 1]);
 
-    if TestCharacters('11_Cornell') = true then
-    begin          
-        Cornel = PrepareUnit('Cornell', true, '11_');
-        SetClass(Cornel, 1);
-        PlaceUnitArea(Cornel, PlayerSpawn, false);
-    end else
-    begin
-            PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    end;
+if not tmp then
+   begin
+   PrepareSoldier(sex_male, 8);
+   PlaceUnitArea(CreateHuman, PlayerSpawn, false);
+   end
+else
+   begin
+   if GetClass(tmp[1]) <> class_soldier then
+      SetClass(tmp[1], class_soldier);
 
-    // one men
-    tmp := UnitFilter(others11, [f_sex, 1]);
+   PlaceUnitArea(tmp[1], PlayerSpawn, false);
+   others11 := others11 diff tmp[1];
+   end;
 
-    if not tmp then
-       begin
-       PrepareSoldier(sex_male, 8);
-       PlaceUnitArea(CreateHuman, PlayerSpawn, false);
-       end
-    else
-       begin
-       if GetClass(tmp[1]) <> class_soldier then
-          SetClass(tmp[1], class_soldier);
-
-       PlaceUnitArea(tmp[1], PlayerSpawn, false);
-       others11 := others11 diff tmp[1];
-       end;
-
-    Powell = PrepareUnit('Powell', false, '');
-end;
+Powell = PrepareUnit('Powell', false, '');
+End;
 
 Export function PrepareAmericansRandom(area, veh, spawnMode, mech);
 var i, un, tmp, mecha;
 begin
+if mech = 1 then
+   begin
+   if others11 then
+      begin 
+      for i := 1 to others11 - 1 do
+          begin
+          if GetSkill(others11[i], 3) < GetSkill(others11[i + 1], 3) then
+             begin
+             mecha = others11[i + 1];
+             SetClass(mecha, 3);
+             break;
+             end;
+          end;
 
-    if mech = 1 then
-    begin   
-        if others11 > 0 then
-        begin
+      if spawnMode = 1 then
+         PlaceUnitArea(mecha, area, false)
+      else
+         PlaceHumanInUnit(mecha, veh);
 
-            for i := 1 to others11 - 1 do
-            begin
-                if GetSkill(others11[i], 3) < GetSkill(others11[i + 1], 3) then
-                begin
-                    mecha = others11[i + 1];
-                    SetClass(mecha, 3);
-                    break;
-                end;
-            end;
+      others11 := others11 diff mecha;
+      end
+   else
+      begin
+      hc_name := '';
+      hc_gallery := '';
 
-            if spawnMode = 1 then PlaceUnitArea(mecha, area, false)
-            else PlaceHumanInUnit(mecha, veh);
+      PrepareMechanic(false, rand(7, 9));
+      un := CreateHuman;
+      PlaceHumanInUnit(un, veh);
+      end;
+    end
+else
+   begin
+   if others11 then
+      begin
+      if spawnMode = 1 then
+         PlaceUnitArea(others11[1], area, false)
+      else
+         PlaceHumanInUnit(others11[1], veh);
 
-            others11 = others11 diff mecha;
+      others11 := Delete(others11, 1);
+      end
+   else
+      begin
+      hc_name := '';
+      hc_gallery := '';
 
-        end else
-        begin
-            hc_name = '';
-            hc_gallery = '';
-
-            PrepareMechanic(false, rand(7, 9));
-            un = CreateHuman;
-            PlaceHumanInUnit(un, veh);
-        end;
-        
-    end else
-    begin
-
-        if others11 > 0 then
-        begin
-            if spawnMode = 1 then PlaceUnitArea(others11[1], area, false)
-            else PlaceHumanInUnit(others11[1], veh);
-
-            others11 = Delete(others11, 1);
-        end else
-        begin
-            hc_name = '';
-            hc_gallery = '';
-
-            PrepareHuman(false, [1, 2, 3, 4][Rand(1,4)], rand(7, 9));
-            un = CreateHuman;
-            PlaceHumanInUnit(un, veh);
-        end;
-
-
-    end;
-
-end;
+      PrepareHuman(false, [1, 2, 3, 4][Rand(1,4)], rand(7, 9));
+      un := CreateHuman;
+      PlaceHumanInUnit(un, veh);
+      end;
+   end;
+End;
 
 Export function PrepareVehicles;
 var veh;
@@ -301,10 +291,7 @@ SetTag(veh, 17);
 
 PlaceUnitArea(veh, PlayerSpawn, false);
 
-if kurtStatus then
-   AddCargo(veh, mat_cans, 100)
-else
-   AddCargo(veh, mat_siberit, 60);
+AddCargo(veh, mat_cans, 100);
 
 veh := CreateVehicle;
 
@@ -314,9 +301,12 @@ SetTag(veh, 17);
 PlaceUnitArea(veh, PlayerSpawn, false);
 
 if kurtStatus then
-   AddCargo(veh, mat_siberit, 80)
+   begin
+   AddCargo(veh, mat_siberit, 60);
+   AddCargo(veh, mat_cans, 40);
+   end
 else
-   AddCargo(veh, mat_siberit, 100);
+   AddCargo(veh, mat_cans, 100);
 
 veh := CreateVehicle;
 
@@ -335,6 +325,7 @@ begin
 uc_side := 1;
 uc_nation := 1;
 
+PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
 
 for i := 1 to 2 do
