@@ -1,63 +1,78 @@
 Export function PrepareHeroes;
-var i, others, tmp;
+var i, others, tmp, x, y, base;
 begin
-    tmp = FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, 1]]]);
+tmp := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
-    uc_side = 1; //12 -> 11 -> 10
+if tmp then
+   begin
+   x := GetX(tmp[1]);
+   y := GetY(tmp[1]);
 
-    JMM := PrepareUnit2('JMM', true);
-    Lisa := PrepareUnit2('Lisa', true);
-    Donaldson := PrepareUnit2('Donaldson', true);
-    Bobby := PrepareUnit2('Bobby', true);
-    Cyrus := PrepareUnit2('Cyrus', true);
-    Denis := PrepareUnit2('Denis', true);
-    Brown := PrepareUnit2('Brown', true);
-    Gladstone := PrepareUnit2('Gladstone', true);
-    Houten := PrepareUnit2('Houten', true);
-    Cornel := PrepareUnit2('Cornell', true);
-    Gary := PrepareUnit2('Gary', true);
-    Frank := PrepareUnit2('Frank', true);
-    Kikuchi := PrepareUnit2('Kikuchi', true);
+   SetBName(tmp[1], 'epsilon');
 
-    Stevens = PrepareUnit2('Stevens', false);
+   base := GetBase(tmp[1]);
 
-    Powell = PrepareUnit2('Powell', false);
+   SetResourceType(base, 1, 3000);
+   SetResourceType(base, 2, 500);
+   SetResourceType(base, 3, 200);
+   end
+else
+   begin
+   x := 104;
+   y := 32;
+   end;
 
-    PlaceUnitXYR(JMM, GetX(tmp[1]), GetY(tmp[1]), 4, false);
-    PlaceUnitXYR(Stevens, GetX(tmp[1]), GetY(tmp[1]), 4, false);
+uc_side := 1; //12 -> 11 -> 10
 
-    PlaceUnitXYR(Lisa, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Donaldson, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Bobby, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Cyrus, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Denis, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Brown, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Gladstone, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Houten, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Cornel, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Gary, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Frank, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
-    PlaceUnitXYR(Kikuchi, GetX(tmp[1]), GetY(tmp[1]), 35,  false);
+JMM := PrepareUnit2('JMM', true);
+Lisa := PrepareUnit2('Lisa', true);
+Donaldson := PrepareUnit2('Donaldson', true);
+Bobby := PrepareUnit2('Bobby', true);
+Cyrus := PrepareUnit2('Cyrus', true);
+Denis := PrepareUnit2('Denis', true);
+Brown := PrepareUnit2('Brown', true);
+Gladstone := PrepareUnit2('Gladstone', true);
+Houten := PrepareUnit2('Houten', true);
+Cornel := PrepareUnit2('Cornell', true);
+Gary := PrepareUnit2('Gary', true);
+Frank := PrepareUnit2('Frank', true);
+Kikuchi := PrepareUnit2('Kikuchi', true);
 
-    SetBName(tmp[1], 'epsilon');
-    SetResourceType(GetBase(tmp[1]), 1, 3000);
-    SetResourceType(GetBase(tmp[1]), 2, 500);
-    SetResourceType(GetBase(tmp[1]), 3, 200);
+Stevens := PrepareUnit2('Stevens', false);
 
-    SetClass(JMM, 1);
+Powell := PrepareUnit2('Powell', false);
 
-    others12 = CreateCharacterSet('12_other_survivors');
-    others11 = CreateCharacterSet('12_others');
+PlaceUnitXYR(JMM, x, y, 4, false);
+PlaceUnitXYR(Stevens, x, y, 4, false);
 
-    for i in others11 do PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
-    for i in others12 do PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
+PlaceUnitXYR(Lisa, x, y, 35,  false);
+PlaceUnitXYR(Donaldson, x, y, 35,  false);
+PlaceUnitXYR(Bobby, x, y, 35,  false);
+PlaceUnitXYR(Cyrus, x, y, 35,  false);
+PlaceUnitXYR(Denis, x, y, 35,  false);
+PlaceUnitXYR(Brown, x, y, 35,  false);
+PlaceUnitXYR(Gladstone, x, y, 35,  false);
+PlaceUnitXYR(Houten, x, y, 35,  false);
+PlaceUnitXYR(Cornel, x, y, 35,  false);
+PlaceUnitXYR(Gary, x, y, 35,  false);
+PlaceUnitXYR(Frank, x, y, 35,  false);
+PlaceUnitXYR(Kikuchi, x, y, 35,  false);
 
+SetClass(JMM, 1);
+
+others12 := CreateCharacterSet('12_other_survivors');
+others11 := CreateCharacterSet('12_others');
+
+for i in others11 do
+    PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
+
+for i in others12 do
+    PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
 end;
 
 Export Function PrepareEpsilonBase;
 var blist, i, b, un, baseCorrect, building;
-begin
-
+begin   
 SetResourceVisibility (113, 50, 1);
 SetResourceVisibility (104, 24, 1);
 
@@ -76,107 +91,103 @@ if not blist then
    exit;
 
 for i in blist do
-  if i[1] = 0 or i[1] = 1 then
-     baseCorrect = 1;
-
+    if i[1] = 0 or i[1] = 1 then
+       baseCorrect := 1;
 
 if baseCorrect = 0 then
-begin
-    uc_side = 1;
-    uc_nation = 1;
+   begin
+   uc_side := 1;
+   uc_nation := 1;
 
-    bc_level = 10;
+   bc_level := 10;
 
-    bc_type = b_warehouse;
-    CreateAndPlaceBuildingXYD(99, 24, 2);
+   bc_type := b_warehouse;
+   CreateAndPlaceBuildingXYD(99, 24, 2);
 
-    bc_type = b_bunker;
+   bc_type := b_bunker;
 
-    building = CreateAndPlaceBuildingXYD(124, 42, 4);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
-    building = CreateAndPlaceBuildingXYD(111, 16, 4);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
-    building = CreateAndPlaceBuildingXYD(113, 21, 4);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(124, 42, 4);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(111, 16, 4);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(113, 21, 4);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
 
-    bc_type = 33;
+   bc_type := 33;
 
-    building = CreateAndPlaceBuildingXYD(95, 41, 1);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
-    building = CreateAndPlaceBuildingXYD(97, 48, 1);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
-    building = CreateAndPlaceBuildingXYD(86, 19, 1);
-    PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(95, 41, 1);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(97, 48, 1);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
+   building := CreateAndPlaceBuildingXYD(86, 19, 1);
+   PlaceWeaponTurret(building, [4, 5, 6][Rand(1,3)]);
 
-    bc_type = 30;
-    CreateAndPlaceBuildingXYD(104, 24, 1);
+   bc_type := 30;
+   CreateAndPlaceBuildingXYD(104, 24, 1);
 
-    bc_type = 29;
-    CreateAndPlaceBuildingXYD(113, 50, 3);
+   bc_type := 29;
+   CreateAndPlaceBuildingXYD(113, 50, 3);
 
-    bc_type = 27;
-    CreateAndPlaceBuildingXYD(98, 26, 2);
-    CreateAndPlaceBuildingXYD(95, 23, 3);
+   bc_type := 27;
+   CreateAndPlaceBuildingXYD(98, 26, 2);
+   CreateAndPlaceBuildingXYD(95, 23, 3);
 
-    bc_type = 28;
-    CreateAndPlaceBuildingXYD(107, 32, 1);
+   bc_type := 28;
+   CreateAndPlaceBuildingXYD(107, 32, 1);
 
-    bc_type = 3;
-    CreateAndPlaceBuildingXYD(106, 42, 0);
+   bc_type := 3;
+   CreateAndPlaceBuildingXYD(106, 42, 0);
 
-    bc_type = 16;
-    CreateAndPlaceBuildingXYD(109, 45, 5);
+   bc_type := 16;
+   CreateAndPlaceBuildingXYD(109, 45, 5);
 
-    bc_type = 17;
-    CreateAndPlaceBuildingXYD(106, 46, 0);
+   bc_type := 17;
+   CreateAndPlaceBuildingXYD(106, 46, 0);
 
-    bc_type = 19;
-    CreateAndPlaceBuildingXYD(103, 42, 1);
+   bc_type := 19;
+   CreateAndPlaceBuildingXYD(103, 42, 1);
 
-    bc_type = 21;
-    CreateAndPlaceBuildingXYD(110, 42, 4);
+   bc_type := 21;
+   CreateAndPlaceBuildingXYD(110, 42, 4);
 
-    bc_type = 5;
-    CreateAndPlaceBuildingXYD(114, 55, 5);
+   bc_type := 5;
+   CreateAndPlaceBuildingXYD(114, 55, 5);
 
-    bc_type = 36;
-    CreateAndPlaceBuildingXYD(96, 28, 2);
+   bc_type := 36;
+   CreateAndPlaceBuildingXYD(96, 28, 2);
 
-    bc_type = b_lab_full;
-    bc_kind1 = b_lab_opto;
-    bc_kind2 = b_lab_siberium;
-    CreateAndPlaceBuildingXYD(116, 38, 4);
+   bc_type := b_lab_full;
+   bc_kind1 := b_lab_opto;
+   bc_kind2 := b_lab_siberium;
+   CreateAndPlaceBuildingXYD(116, 38, 4);
 
-    bc_type = b_lab_full;
-    bc_kind1 = b_lab_weapon;
-    bc_kind2 = b_lab_computer;
-    CreateAndPlaceBuildingXYD(112, 29, 4);
-    end
- else
-    begin
-    uc_side := 1;
-    uc_nation := 1;
+   bc_type := b_lab_full;
+   bc_kind1 := b_lab_weapon;
+   bc_kind2 := b_lab_computer;
+   CreateAndPlaceBuildingXYD(112, 29, 4);
+   end
+else
+   begin
+   uc_side := 1;
+   uc_nation := 1;
 
-    for i in blist do
-        begin
-        bc_type := i[1];
-        bc_level := i[5];
+   for i in blist do
+       begin
+       bc_type := i[1];
+       bc_level := i[5];
 
-        if i[1] in [b_lab_half, b_lab_full] then
-        begin
-        bc_kind1 := i[7];
-        bc_kind2 := i[8];
-        end;
+   if i[1] in [b_lab_half, b_lab_full] then
+      begin
+      bc_kind1 := i[7];
+      bc_kind2 := i[8];
+      end;
 
-        b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+   b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
 
-        if GetBType(b) = b_bunker or GetBType(b) = b_turret then
-        begin
-        PlaceWeaponTurret(b, i[7]);
-        end;
-
-        end;
-end;
+   if GetBType(b) = b_bunker or GetBType(b) = b_turret then
+      PlaceWeaponTurret(b, i[7]);
+   end;
+End;
 
 uc_side := 1;
 uc_nation := 1;
@@ -197,24 +208,22 @@ End;
 Export function PrepareRandoms;
 var i, un, tmp;
 begin
+if FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 6 then
+   begin
+   tmp := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, 1]]]);
 
-    if FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi, Stevens] < 6 then 
-    begin
-        tmp = FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, 1]]]);
+   uc_side := 1;
+   uc_nation := 1;
 
-        uc_side = 1;
-        uc_nation = 1;
+   for i := 1 to 6 do
+       begin
+       hc_gallery := '';
+       hc_name := '';
+       PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(5, 8));
 
-        for i = 1 to 6 do 
-        begin
-            hc_gallery = '';
-            hc_name = '';
-            PrepareHuman(false, [1, 2, 3, 4][Rand(1, 4)], rand(5, 8));
-
-            un = CreateHuman;
-            randomsEpsilon = randomsEpsilon ^ un;
-            PlaceUnitXYR(un, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
-        end;
-    end;
-
-end;
+       un := CreateHuman;
+       randomsEpsilon := Join(randomsEpsilon, un);
+       PlaceUnitXYR(un, GetX(tmp[1]), GetY(tmp[1]), 15, false);
+       end;
+   end;
+End;

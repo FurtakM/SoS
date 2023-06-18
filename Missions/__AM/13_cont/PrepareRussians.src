@@ -1,74 +1,126 @@
 Export function PrepareBurlak;
 begin
-    uc_side = 7;
-    uc_nation = 3;
+uc_side := 7;
+uc_nation := 3;
 
-    vc_engine = 3;
-    vc_control = 1;
-    vc_weapon = 46;
-    vc_chassis = 24;
+vc_engine := engine_siberite;
+vc_control := control_manual;
+vc_weapon := [ru_gun, ru_rocket_launcher, ru_heavy_gun,ru_heavy_gun][Difficulty];
+vc_chassis := ru_heavy_tracked;
 
-    Masha = CreateVehicle;
-    PlaceUnitArea(Masha, GorkySpawn, false);
-    SetMark(Masha, 1);
+Masha := CreateVehicle;
+SetDir(Masha, 2);
+PlaceUnitArea(Masha, GorkySpawn, false);
+SetMark(Masha, 1);
 
-    Burlak = PrepareUnit('Burlak', false, '');
-    PlaceHumanInUnit(Burlak, Masha);
+Burlak = PrepareUnit('Burlak', false, '');
+PlaceHumanInUnit(Burlak, Masha);
 
-    ComAgressiveMove(Masha, 107, 118);
-    spawnBurlak = 1;
-end;
-
+ComAgressiveMove(Masha, 107, 118);
+spawnBurlak := 1;
+End;   
 
 Export function BurlakArmy;
-var i, veh, tmp;
+var i, veh, tmp, bazooka;
 begin
-    uc_side = 7;
-    uc_nation = 3;
+uc_side := 7;
+uc_nation := 3;
 
-    Gnyevko = PrepareUnit('Gnyevko', false, '');
-    Titov = PrepareUnit('Titov', false, '');
-    Xavier = PrepareUnit('Xavier2', false, '');
-    Belkov = PrepareUnit('Belkov', false, '');
-    Lipshchin = PrepareUnit('Lipshchin', false, '');
+Gnyevko := PrepareUnit('Gnyevko', false, '');
+Titov := PrepareUnit('Titov', false, '');
+Xavier := PrepareUnit('Xavier2', false, '');
+Belkov := PrepareUnit('Belkov', false, '');
+Lipshchin := PrepareUnit('Lipshchin', false, '');
 
-    for i = 1 to 5 do 
+for i = 1 to 5 do 
     begin
-        vc_engine = 3;
-        vc_control = 1;
-        vc_weapon = [43, 44, 45, 49][Rand(1,4)];
-        vc_chassis = 22;
+    vc_engine := engine_siberite;
+    vc_control := control_manual;
+    vc_weapon := [ru_gatling_gun, ru_rocket_launcher, ru_rocket_launcher, ru_gun, ru_time_lapser][rand(1,5)];
+    vc_chassis := [ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty];
 
-        veh = CreateVehicle;
-        PlaceUnitArea(veh, GorkySpawn, false);
+    veh = CreateVehicle;
+    SetDir(veh, 2);
+    PlaceUnitArea(veh, GorkySpawn, false);
     end;
 
-    tmp := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle], [f_empty]]);
+tmp := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle], [f_empty]]);
 
-    PlaceHumanInUnit(Gnyevko, tmp[1]);
-    PlaceHumanInUnit(Titov, tmp[2]);
-    PlaceHumanInUnit(Xavier, tmp[3]);
-    PlaceHumanInUnit(Belkov, tmp[4]);
-    PlaceHumanInUnit(Lipshchin, tmp[5]);
+PlaceHumanInUnit(Gnyevko, tmp[1]);
+PlaceHumanInUnit(Titov, tmp[2]);
+PlaceHumanInUnit(Xavier, tmp[3]);
+PlaceHumanInUnit(Belkov, tmp[4]);
+PlaceHumanInUnit(Lipshchin, tmp[5]);
 
-    SetClass(Gnyevko, 3);
-    SetClass([Titov, Lipshchin], 9);
+SetClass(Gnyevko, class_mechanic);
+SetClass([Titov, Lipshchin], class_bazooker);
 
-    tmp := FilterAllUnits([f_side, 7]);
-    ComAgressiveMove(tmp, 107, 118);
+tmp := FilterAllUnits([f_side, 7]);
+ComAgressiveMove(tmp, 107, 118);
 
-    repeat
-     wait(0$1);
-     ComMoveUnit(UnitFilter(tmp, [f_weapon, 49]), Masha);
-     ComAgressiveMove(UnitFilter(tmp, [f_not, [f_weapon, 49]]), 107, 118);
-    until UnitFilter(tmp, [f_weapon, 49]) = 0 or IsDying(Masha);
+repeat
+ wait(0$1);
+ ComMoveUnit(UnitFilter(tmp, [f_weapon, ru_time_lapser]), Masha);
+ ComAgressiveMove(UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]), 107, 118);
 
-    repeat
-     wait(0$1);
-     tmp := FilterAllUnits([f_side, 7]) diff Burlak;
-     ComAgressiveMove(tmp, 107, 118);
+ bazooka := UnitFilter([Titov, Lipshchin], [[f_ok], [f_not, [f_inside]]]);
 
-     if IsOk(Burlak) and not IsInUnit(Burlak) then
-        ComMoveXY(Burlak, 107, 118);
-    until not tmp;
-end;
+ if bazooka then
+    begin
+    for i in bazooka do
+        if See(1, i) then
+           ComSpaceTimeShoot(i);
+    end;
+until UnitFilter(tmp, [f_weapon, ru_time_lapser]) = 0 or IsDying(Masha);
+
+repeat
+ wait(0$1);
+ tmp := FilterAllUnits([f_side, 7]) diff Burlak;
+ ComAgressiveMove(tmp, 107, 118);
+
+ bazooka := UnitFilter([Titov, Lipshchin], [[f_ok], [f_not, [f_inside]]]);
+
+ if bazooka then
+    begin
+    for i in bazooka do
+        if See(1, i) then
+           ComSpaceTimeShoot(i);
+    end;
+
+ if IsOk(Burlak) and not IsInUnit(Burlak) then
+    ComMoveXY(Burlak, 107, 118);
+until not tmp;
+End;
+
+Export Function PrepareRussianAttack;
+var i, un, veh, area, dir;
+begin
+result := [];
+
+dir := rand(1, 2);
+area := [ArabianSpawn1, ArabianSpawn2][dir];
+
+for i := 1 to [6, 7, 8, 9][Difficulty] do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle(ru_heavy_tracked, engine_siberite, [control_manual, control_computer][rand(1,2)], [ru_heavy_gun, ru_heavy_gun, ru_rocket_launcher, ru_rocket, ru_time_lapser][rand(1,5)], 100);
+    veh := CreateVehicle;  
+
+    result := Join(result, veh);
+    SetDir(veh, [3, 5][dir]);
+    PlaceUnitArea(veh, area, false);
+
+    if vc_control = control_manual then
+       begin
+       PrepareMechanic(false, [7, 8, 9, 10][Difficulty]);
+       PlaceHumanInUnit(CreateHuman, veh);
+       end;
+    end;
+
+for i in result do
+    SetTag(i, 10);
+
+RaiseSailEvent(eventRussianAttack);
+End;

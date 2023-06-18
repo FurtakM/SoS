@@ -49,74 +49,86 @@ Export westPathUsed, laserCounterDestroy, rocketBuilded;
 
 Starting
 begin
-    Resetfog;
-    AnimateTrees(true);
-    RandomizeAll;
+Resetfog;
+AnimateTrees(true);
+RandomizeAll;
+Init;
 
-    SetBName(rueastdepot, 'ryutin');
-    SetBName(ruwestdepot, 'yegorov');
+SetBName(rueastdepot, 'ryutin');
+SetBName(ruwestdepot, 'yegorov');
 
-    RuScientists = [];
-    sciCounter = 0; // How many scientists from head lab player killed. 
+CreateNature;
 
-    ruDestroyedBuildings = [];
-    russianTanks = [];
-    russianTimeLapsers = [];
-
-    arabianMines = [];
-
-    kurtStatus = LoadVariable('06_KurtStatus_1', 0);
-
-    secondPass = 0; // 0 - off,  2 - durring query you select option 1 or 2, 1 - option 3
-
-    teleportExplored = 0; // 0 - no  explored, 1 - explored
-    attackTactic = 0; // after second TP, rand between TP or attack from river  1 - tp , 2 - river
-
-    tpCounter = 0; // counter teleported units
-
-    askSiberite = 0; // 0 - legion didin't ask about Siberite, 1 - asked
-    warWithLegion = 0; // 0 - neutral, 1 - enemy
-    fakeInfo = 0;
-
-    cratesSpawned = 0; // How many crates spawned
-
-    ruAI = 0;
-    ruEscape = 0;
-
-    eventVar1 = 0; // block event
-
-    mission_prefix = '12_';
-
-    debugMode = 0; // 0 - players, 1 - developers
-    westPathUsed := false;
-    laserCounterDestroy := 0;
-    rocketBuilded := false;
-
-    CreateNature;
-
-    PrepareDifficulty;
+PrepareDifficulty;
     
-    PrepareVehicles;
-    PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
-    PrepareAmericanHeroes;
+PrepareVehicles;
+PrepareAmericansRandom(PlayerSpawn, 0, 1, 0);
+PrepareAmericanHeroes;
 
-    PrepareRussianCommander;
-    PrepareWestBase;
-    PrepareEastBase;
-    PrepareOtherRussians;
-    Action;
+PrepareRussianCommander;
+PrepareWestBase;
+PrepareEastBase;
+PrepareOtherRussians;
+Action;
 End;
 
-Every 0$1 trigger debugMode = 1 do
+Function Init;
+begin
+RuScientists := [];
+sciCounter := 0; // How many scientists from head lab player killed.
+
+ruDestroyedBuildings := [];
+russianTanks := [];
+russianTimeLapsers := [];
+
+arabianMines := [];
+
+kurtStatus := LoadVariable('06_KurtStatus_1', 0);
+
+secondPass := 0; // 0 - off,  2 - durring query you select option 1 or 2, 1 - option 3
+
+teleportExplored := 0; // 0 - no  explored, 1 - explored
+attackTactic := 0; // after second TP, rand between TP or attack from river  1 - tp , 2 - river
+
+tpCounter := 0; // counter teleported units
+
+askSiberite := 0; // 0 - legion didin't ask about Siberite, 1 - asked
+warWithLegion := 0; // 0 - neutral, 1 - enemy
+fakeInfo := 0;
+
+cratesSpawned := 0; // How many crates spawned
+
+ruAI := 0;
+ruEscape := 0;
+
+eventVar1 := 0; // block event
+
+mission_prefix := '12_';
+
+debugMode := 0; // 0 - players, 1 - developers
+westPathUsed := false;
+laserCounterDestroy := 0;
+rocketBuilded := false;
+End;
+
+Every 0$1 trigger debugMode do
 var i;
 begin
-    enable;
-    fogoff(true);
-    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
-end;
+enable;
+FogOff(true);
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+    SetLives(i, 1000);
+
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do
+    SetResourceType(GetBase(i), 1, 9999);
+
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do
+    SetResourceType(GetBase(i), 2, 9999);
+
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do
+    SetResourceType(GetBase(i), 3, 9999);
+End;
 
 Every 0$1 trigger FilterUnitsInArea(westPathArea, [f_side, 1]) do
 westPathUsed := true;

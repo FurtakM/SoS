@@ -1,40 +1,33 @@
-Export Function PrepareUnit2(ident, exist_mode);
+Export Function PrepareUnit2(ident, existMode);
 var unit;
-begin
-
-if exist_mode then
-begin
-   if TestCharacters(mission_prefix_prev&ident) = true then
+begin     
+if existMode then
    begin
-     unit := CreateCharacter(mission_prefix_prev&ident);
-   end else
-   begin
-     if TestCharacters('11_'&ident) = true then
-     begin
-          unit := CreateCharacter('11_'&ident);
-     end else
-     begin
-       if TestCharacters('10c_'&ident) = true then unit := CreateCharacter('10c_'&ident)
-       else unit := CreateCharacter('10_'&ident);
-     end;
-  end;
-
-  end else
-  begin
-
+   if TestCharacters(mission_prefix_prev & ident) then
+      unit := CreateCharacter(mission_prefix_prev & ident)
+   else
+      begin
+      if TestCharacters('11_' & ident) then
+         unit := CreateCharacter('11_' & ident)
+      else if TestCharacters('10c_' & ident) then
+         unit := CreateCharacter('10c_' & ident)
+      else
+         unit := CreateCharacter('10_' & ident);
+      end;
+   end
+else
    unit := NewCharacter(ident);
-  end;
 
 result := unit;
 End;
 
 Export function SaveCharactersAfterSelect(unit, unitString, selectedTab);
 begin
-   if unit in selectedTab then
-      SaveCharacters(unit, '13c_' & unitString)
-   else
-      SaveCharacters(unit, '13s_' & unitString);
-end;
+if unit in selectedTab then
+   SaveCharacters(unit, '13c_' & unitString)
+else
+   SaveCharacters(unit, '13s_' & unitString);
+End;
 
 {
    13s_IdentPostaci  - Glowna postac nie zostala wybrana na misje (13_cont).
@@ -47,62 +40,52 @@ Export selected, othersSelect;
 Export function SelectAndSaveCharacters;
 var i, tmp, othersInBase;
 begin
+selected := [];
+othersSelect := [];
 
-     selected := [];
-     othersSelect := [];
+tmp := [Lisa, Donaldson, Bobby, Cyrus, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
+tmp := tmp ^ others11;
+tmp := tmp ^ others12;
+tmp := tmp ^ randomsEpsilon;
 
-     tmp = [Lisa, Donaldson, Bobby, Cyrus, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
-     tmp = tmp ^ others11;
-     tmp = tmp ^ others12;
-     tmp = tmp ^ randomsEpsilon;
+for i in tmp do
+    if GetClass(i) = 8 then
+       SetClass(i, rand(1, 4));
 
-     for i in tmp do if GetClass(i) = 8 then
-         SetClass(i, rand(1, 4));
+selected := CharacterSelection('1', 6, 6,
+            [sel_change_class, JMM, Stevens,
+            sel_not_hired,sel_changeable, sel_change_class] ^ tmp ^
+            [sel_dont_change_class, sel_not_changeable, Powell],
+            [[class_soldier, 0], [class_engineer, 1], [class_mechanic, 0], [class_scientistic, 2], [class_sniper, 0, 2]]);
 
-     selected := CharacterSelection('1', 6, 6,
-      [sel_change_class, JMM, Stevens,
-      sel_not_hired,sel_changeable, sel_change_class]^tmp^
-      [sel_dont_change_class, sel_not_changeable, Powell],
-      [[class_soldier, 0], [class_engineer, 1], [class_mechanic, 0], [class_scientistic, 2], [class_sniper, 0, 2]]);
+othersSelect := selected diff [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
 
-      othersSelect := selected diff [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
+othersInBase = tmp diff selected;
+othersInBase = othersInBase diff [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
 
-      othersInBase = tmp diff selected;
-      othersInBase = othersInBase diff [Lisa, Donaldson, Bobby, Cyrus, Denis, Brown, Gladstone, Houten, Cornel, Gary, Frank, Kikuchi];
-
-      SaveCharacters(othersInBase, '13s_others');
+SaveCharacters(othersInBase, '13s_others');
+SaveCharacters(othersSelect, '13c_others');
       
-      SaveCharacters(othersSelect, '13c_others');
-      
-      SaveCharacters(JMM, '13c_JMM');
-      SaveCharacters(Stevens, '13c_Stevens');
+SaveCharacters(JMM, '13c_JMM');
+SaveCharacters(Stevens, '13c_Stevens');
 
-      SaveCharactersAfterSelect(Lisa, 'Lisa', selected);
-      SaveCharactersAfterSelect(Brown, 'Brown', selected);
-      SaveCharactersAfterSelect(Donaldson, 'Donaldson', selected);
-      SaveCharactersAfterSelect(Bobby, 'Bobby', selected);
-      SaveCharactersAfterSelect(Cyrus, 'Cyrus', selected);
-      SaveCharactersAfterSelect(Denis, 'Denis', selected);
-      SaveCharactersAfterSelect(Gladstone, 'Gladstone', selected);
-      SaveCharactersAfterSelect(Houten, 'Houten', selected);
-      SaveCharactersAfterSelect(Cornel, 'Cornel', selected);
-      SaveCharactersAfterSelect(Gary, 'Gary', selected);
-      SaveCharactersAfterSelect(Frank, 'Frank', selected);
-      SaveCharactersAfterSelect(Kikuchi, 'Kikuchi', selected);
-      
+SaveCharactersAfterSelect(Lisa, 'Lisa', selected);
+SaveCharactersAfterSelect(Brown, 'Brown', selected);
+SaveCharactersAfterSelect(Donaldson, 'Donaldson', selected);
+SaveCharactersAfterSelect(Bobby, 'Bobby', selected);
+SaveCharactersAfterSelect(Cyrus, 'Cyrus', selected);
+SaveCharactersAfterSelect(Denis, 'Denis', selected);
+SaveCharactersAfterSelect(Gladstone, 'Gladstone', selected);
+SaveCharactersAfterSelect(Houten, 'Houten', selected);
+SaveCharactersAfterSelect(Cornel, 'Cornel', selected);
+SaveCharactersAfterSelect(Gary, 'Gary', selected);
+SaveCharactersAfterSelect(Frank, 'Frank', selected);
+SaveCharactersAfterSelect(Kikuchi, 'Kikuchi', selected);
 
-      SetSide(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 4);
-      SetSide(selected, 1);
-      SetSide([JMM, Stevens], 1);
+SetSide(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 4);
+SetSide(selected, 1);
+SetSide([JMM, Stevens], 1);
 
-      
-      for i in FilterAllUnits([[f_type, unit_human], [f_side, 4]]) do
-          RemoveUnit(i);
-end;
-
-
-Export Function GetMultiCargo(cargo_bay);
-var i;
-begin
-  result := [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
+for i in FilterAllUnits([[f_type, unit_human], [f_side, 4]]) do
+    RemoveUnit(i);
 End;

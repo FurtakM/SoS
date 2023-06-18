@@ -115,7 +115,7 @@ for i in tech do
     AddComResearch(lab, i);
 End;
 
-Every 6$00+2$00 trigger allowConvoys and convoyCounter <= maxConvoys do
+Every 4$00+4$00 trigger allowConvoys and convoyCounter <= maxConvoys do
 begin
 enable;
 wait(rand(0$1, 0$59));
@@ -134,9 +134,9 @@ else
 SendAttack;
 
 repeat
- wait([6$40, 5$40, 4$40, 4$00][Difficulty]);
+ wait([6$40, 5$40, 5$20, 4$50][Difficulty]);
  SendAttack;
-until attackWave < [6, 7, 8, 9][Difficulty];
+until attackWave < [5, 6, 7, 8][Difficulty];
 
 End;
 
@@ -171,7 +171,7 @@ PrepareHuman(false, 1, Difficulty);
 un := CreateHuman;
 PlaceHumanInUnit(un, veh);
 
-if (Prob([60, 56, 52, 48][Difficulty]) + tick mod 30) or convoyCounter < 4 then
+if (Prob([70, 66, 62, 58][Difficulty]) + tick mod 30) or convoyCounter < 4 then
    SetCargo(veh, mat_cans, 100);
 
 for i := 2 to points do
@@ -201,12 +201,18 @@ var un, veh, i;
 begin
 if ingame_video then
    begin
-
    repeat
     wait(0$1);
    until not ingame_video;
 
    wait(0$5);
+   end;
+
+if FilterAllUnits([[f_side, 1], [f_type, unit_human]]) > 10 then
+   begin
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 1], [f_type, unit_human]]) <= 10;  
    end;
 
 IncomingAttack;

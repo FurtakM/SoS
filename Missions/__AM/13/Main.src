@@ -7,100 +7,73 @@ Export yourVehicles, resources;
 Export mission_prefix_prev;
 
 Starting
-begin
+begin    
+yourVehicles := [];
+resources := [];
+randomsEpsilon := [];
 
-    yourVehicles = [];
-    resources = [];
-    randomsEpsilon = [];
+Resetfog;
+PlaceSeeing(1, 1, 1, -37963);
+RemoveSeeing(1, 1, 1);
+PrepareEnv;
+AnimateTrees(true);
+RandomizeAll;
 
-    Resetfog;
-    PlaceSeeing(1, 1, 1, -37963);
-    RemoveSeeing(1, 1, 1);
-    PrepareEnv;
-    AnimateTrees(true);
-    RandomizeAll;
+mission_prefix_prev := '12_';
 
-    InGameOn;
+PrepareEpsilonBase;
+PrepareHeroes;
+PrepareRandoms;
 
-    mission_prefix_prev = '12_';
-
-    PrepareEpsilonBase;
-    PrepareHeroes;
-    PrepareRandoms;
-
-    CenterNowOnUnits(JMM);
-
-    wait(0$1);
-
-    Say(JMM, 'D1-JMM-1');
-    SayRadio(Powell, 'D1-Pow-1');
-    SayRadio(Powell, 'D1-Pow-1a');
-    SayRadio(Powell, 'D1-Pow-1b');
-    SayRadio(Powell, 'D1-Pow-1c');
-    Say(JMM, 'D1-JMM-2');
-    SayRadio(Powell, 'D1-Pow-2');
-    Say(JMM, 'D1-JMM-3');
-    SayRadio(Powell, 'D1-Pow-3');
-    Say(JMM, 'D1-JMM-4');
-    SayRadio(Powell, 'D1-Pow-4');
-
-    SelectAndSaveCharacters;
-    InGameOff;
-    Query('Q1');
-
-    SetAreaMapShow(ExitArea, 1);
-end;
+Action;
+End;
 
 Every 0$1 trigger FilterUnitsExceptArea(ExitArea, [[f_side, 1], [f_type, unit_human]]) = 0 and FilterUnitsInArea(ExitArea, [[f_side, 1], [f_type, unit_vehicle], [f_engine, 3], [f_control, 1], [f_not, [f_empty]]]) = 8 do
 var i, cargoType;
 begin
+if FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_control, 1], [f_not, [f_empty]]]) then
+   begin
+   for i in FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_control, 1], [f_not, [f_empty]]]) do
+       begin
+       cargoType := GetCargoType(i);
 
-    if FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_control, 1], [f_not, [f_empty]]]) > 0 then
-    begin
-        for i in FilterUnitsInArea(ExitArea, [[f_type, unit_vehicle], [f_control, 1], [f_not, [f_empty]]]) do
-        begin
-            cargoType = GetCargoType(i);
-            if GetWeapon(i) = us_cargo_bay then
-            begin
-                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), cargoType, GetCargo(i, cargoType) ] ];
-            end else 
-            begin
-                yourVehicles = yourVehicles ^ [ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)] ];
-            end;
-        end;  
+       if GetWeapon(i) = us_cargo_bay then
+          yourVehicles := Replace(yourVehicles, yourVehicles + 1, [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), cargoType, GetCargo(i, cargoType)])
+       else 
+          yourVehicles := Replace(yourVehicles, yourVehicles + 1, [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)]);
 
-        SaveVariable(yourVehicles, '13_VehiclesIn13_1');
-        
-    end;
+       SaveVariable(yourVehicles, '13_VehiclesIn13_1');
+       end;
+   end;
 
-    SaveCharacters(othersSelect, '13c_others');
+SaveCharacters(othersSelect, '13c_others');
 
-    SaveCharacters(JMM, '13c_JMM');
-    SaveCharacters(Stevens, '13c_Stevens');
+SaveCharacters(JMM, '13c_JMM');
+SaveCharacters(Stevens, '13c_Stevens');
 
-    SaveCharactersAfterSelect(Lisa, 'Lisa', selected);
-    SaveCharactersAfterSelect(Brown, 'Brown', selected);
-    SaveCharactersAfterSelect(Donaldson, 'Donaldson', selected);
-    SaveCharactersAfterSelect(Bobby, 'Bobby', selected);
-    SaveCharactersAfterSelect(Cyrus, 'Cyrus', selected);
-    SaveCharactersAfterSelect(Denis, 'Denis', selected);
-    SaveCharactersAfterSelect(Gladstone, 'Gladstone', selected);
-    SaveCharactersAfterSelect(Houten, 'Houten', selected);
-    SaveCharactersAfterSelect(Cornel, 'Cornel', selected);
-    SaveCharactersAfterSelect(Gary, 'Gary', selected);
-    SaveCharactersAfterSelect(Frank, 'Frank', selected);
-    SaveCharactersAfterSelect(Kikuchi, 'Kikuchi', selected);
+SaveCharactersAfterSelect(Lisa, 'Lisa', selected);
+SaveCharactersAfterSelect(Brown, 'Brown', selected);
+SaveCharactersAfterSelect(Donaldson, 'Donaldson', selected);
+SaveCharactersAfterSelect(Bobby, 'Bobby', selected);
+SaveCharactersAfterSelect(Cyrus, 'Cyrus', selected);
+SaveCharactersAfterSelect(Denis, 'Denis', selected);
+SaveCharactersAfterSelect(Gladstone, 'Gladstone', selected);
+SaveCharactersAfterSelect(Houten, 'Houten', selected);
+SaveCharactersAfterSelect(Cornel, 'Cornel', selected);
+SaveCharactersAfterSelect(Gary, 'Gary', selected);
+SaveCharactersAfterSelect(Frank, 'Frank', selected);
+SaveCharactersAfterSelect(Kikuchi, 'Kikuchi', selected);
 
-    SaveCargos;
-    ChangeMap(13, '%_cont');
-end;
+SaveCargos;
+ChangeMap(13, '%_cont');
+End;
 
 Export function SaveCargos;
 var i;
 begin
-   for i in FilterUnitsInArea(ExitArea,[[f_side, 1], [f_control, 1], [f_weapon, us_cargo_bay]]) do resources = resources ^ [GetMultiCargo(i)];
-   SaveVariable(resources, '13_ResourcesInCargo13_1');
-end;
+for i in FilterUnitsInArea(ExitArea,[[f_side, 1], [f_control, 1], [f_weapon, us_cargo_bay]]) do resources = resources ^ [GetMultiCargo(i)];
+    SaveVariable(resources, '13_ResourcesInCargo13_1');
+End;
 
 Export Function PrepareEnv;
 var tmp, list, i, j, exist;
@@ -128,6 +101,5 @@ for i in list do
 
     if not exist then
        RemoveEnvironment(i[1], i[2]);
-    end;
-
+    end; 
 End;

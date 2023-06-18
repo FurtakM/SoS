@@ -2460,7 +2460,7 @@ if not units then
 
 result := UnitFilter(units, [f_ok]);
 side := GetSide(units[1]);
-ignoreCratesWeapon := [ar_selfpropelled_bomb, ar_bio_bomb];
+ignoreCratesWeapon := [ar_selfpropelled_bomb, ar_bio_bomb, ru_time_lapser];
 
 if not result then
    exit;
@@ -2479,7 +2479,12 @@ for i in result do
        nearEnemy := UnitFilter(enemy, [f_dist, i, 12]);
 
        if nearEnemy then
-          ComAttackUnit(i, NearestUnitToUnit(nearEnemy, i))
+          begin
+          if GetWeapon(i) = ru_time_lapser then
+             ComMoveUnit(i, NearestUnitToUnit(nearEnemy, i))
+          else
+             ComAttackUnit(i, NearestUnitToUnit(nearEnemy, i));
+          end
        else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
           ComAgressiveMove(i, path[tag][1], path[tag][2])
        else
@@ -2487,7 +2492,12 @@ for i in result do
        end
     else
        if enemy then
-          ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          begin
+          if GetWeapon(i) = ru_time_lapser then
+             ComMoveUnit(i, NearestUnitToUnit(enemy, i))
+          else
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end;
     end;
 End;
 
