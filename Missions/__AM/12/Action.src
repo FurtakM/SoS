@@ -529,39 +529,40 @@ until UnitFilter(vehicles, [f_see, 1]);
 CenterNowOnUnits(UnitFilter(vehicles, [f_see, 1])[1]);
 
 DialogueOn;
-DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1-Sol1-1', 'DT1-FSol1-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_nation, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1-Sol1-1', 'DT1-FSol1-1');
 Say(JMM, 'DT1-JMM-1');
 DialogueOff;
+
+repeat
+ wait(0$05);
+until FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_ok], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) = 0 and tpCounter > 2;
+
+DialogueOn;
+Say(JMM, 'DT1a-JMM-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_nation, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1a-Sol1-1', 'DT1a-FSol1-1');
+Say(JMM, 'DT1a-JMM-2');
+DialogueOff;
+
+vehicleTeleported := 2;
 End;
 
-// Dialog after destroy tanks
-Every 0$10 trigger vehicleTeleported = 1 and FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_ok], [f_or, [f_type, unit_vehicle], [f_type, unit_human]]]) = 0 and tpCounter do
-begin
-    vehicleTeleported = 2;
-    DialogueOn;
-    Say(JMM, 'DT1a-JMM-1');
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT1a-Sol1-1', 'DT1a-FSol1-1');
-    Say(JMM, 'DT1a-JMM-2');
-    DialogueOff;
-end;
-
 // Second tp
-Every 0$2 trigger vehicleTeleported = 3 and FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_see, 1]])  do
+Every 0$2 trigger vehicleTeleported = 3 and FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_see, 1]]) do
 var i, vehicles, speaker;
 begin
 wait(0$0.3);
 
 DialogueOn;
-speaker := DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT2-Sol1-1', 'DT2-FSol1-1');
+speaker := DialogRandom(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT2-Sol1-1', 'DT2-FSol1-1');
 DialogueOff;   
 
 repeat
- wait(0$1);
+ wait(0$5);
 until not FilterUnitsInArea(OutsideArea1, [[f_side, 3], [f_ok]]);
 
 wait(0$2);
 
-vehicleTeleported = 4;
+vehicleTeleported := 4;
 
 DialogueOn;
 Say(JMM, 'DT2a-JMM-1');
@@ -581,7 +582,7 @@ Every 0$1 trigger SeeXY(1, 45, 74) do
 begin
 DialogueOn;
 CenterOnXY(36, 55);
-DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'D5-Sol1-1', 'D5-FSol1-');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'D5-Sol1-1', 'D5-FSol1-');
 
 if warWithLegion and IsOk(Donaldson) then
    Say(Donaldson, 'D5-Don-1');
@@ -593,7 +594,7 @@ End;
 Every 0$1 trigger See(1, ruteleprt) or See(1, rutp) do
 begin
 DialogueOn;
-DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT3-Sol1-1', 'DT3-FSol1-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'DT3-Sol1-1', 'DT3-FSol1-1');
 Say(JMM, 'DT3-JMM-1');
 DialogueOff;
 
@@ -601,11 +602,11 @@ ChangeMissionObjectives('M2');
 End;
 
 // attack vehs
-Every 0$1 trigger ruEscape = 0 and (FilterUnitsInArea(RuEastBase, [f_side, 1]) or FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_not, [f_lives, 1000]], [f_type, unit_vehicle], [f_empty]])) do
+Every 0$1 trigger ruEscape = 0 and (FilterUnitsInArea(RuEastBase, [f_side, 1]) or FilterUnitsInArea(RuEastBase, [[f_side, 3], [f_not, [f_lives, 800]], [f_type, unit_vehicle], [f_empty]])) do
 ruEscape := 1;
 
 // Escape
-Every 0$3 trigger IsDying(ruheadlab) or IsDying(rueastdepot) or FilterUnitsInArea(EscapeTriggerArea, [f_side, 1]) > 0 or ruEscape = 1 do
+Every 0$3 trigger IsDying(ruheadlab) or IsDying(rueastdepot) or ruEscape = 1 do
 var i, unit, tmp;
 begin
 ruAI := 0;
