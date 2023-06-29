@@ -31,80 +31,95 @@ End;
 
 // First crate spawn
 Every 0$02 trigger firstCrateSpawn do
+var hasSpeaker;
 begin
 if IsOk(Lisa) then
    Say(Lisa, 'DR0-Lisa-1')
 else
    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol1-1', 'DR0-Sol1-1');
 
-DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol2-1', 'DR0-Sol2-1');
+hasSpeaker := DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Gladstone, Frank, Lisa, Brown, Donaldson, Cyrus, Bobby], 'DR0-Sol2-1', 'DR0-Sol2-1');
 
 if IsOk(Cyrus) then
    Say(Cyrus, 'DR0-Cyrus-1');
 
-Say(JMM, 'DR0-JMM-1');
+if IsOk(Lisa) or hasSpeaker then
+   Say(JMM, 'DR0-JMM-1');
 End;
 
 // Frank dialog
 Every 5$0 trigger IsOk(Frank) and FilterAllUnits([[f_side, 1], [f_class, 16]]) > 0 and not InBattle(1) do
 begin
-    DialogueOn;
-    Say(Frank, 'D10-Frank-1');
-    DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human],[f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank, Lisa], 'D10-Sol1-1', 'D10-FSol1-1');
-    Say(Frank, 'D10-Frank-2');
-    if IsOK(Lisa) then
-    begin
-        Say(Lisa, 'D10-Lisa-2');
-    end
-    else
-    begin
-        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank], 'D10-Sol1-2', 'D10-FSol1-2');
-    end;
-    DialogueOff;
+DialogueOn;
 
-end;
+Say(Frank, 'D10-Frank-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human],[f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank, Lisa], 'D10-Sol1-1', 'D10-FSol1-1');
+Say(Frank, 'D10-Frank-2');
+
+if IsOk(Lisa) then
+   Say(Lisa, 'D10-Lisa-2')
+else
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM, Frank], 'D10-Sol1-2', 'D10-FSol1-2');
+
+DialogueOff;
+End;
 
 // Harrison support and dialog with him
 Every 10$30 trigger not InBattle(1) do
 begin
-    HarrisonSupport;
-    CenterNowOnUnits(IsInUnit(HarrSupp1));
-    Say(HarrSupp1, 'DEng-Eng1-1');
+HarrisonSupport;
 
-    wait(1$0);
-    DialogueOn;
-    SayRadio(Harisson, 'DRem-Har-1');
-    if contactWithRussian = 1 then begin Say(JMM, 'DRem-JMM-1');
-    end else begin Say(JMM, 'DRem-JMM-1a'); end;
-    SayRadio(Harisson, 'DRem-Har-2');  
-    if LoadVariable('DenisInDelta', 0) = 1 then begin Say(JMM, 'DRem-JMM-2');
-    end else begin Say(JMM, 'DRem-JMM-2a'); end;  
-    SayRadio(Harisson, 'DRem-Har-3'); 
-    Say(JMM, 'DRem-JMM-3');  
-    SayRadio(Harisson, 'DRem-Har-4'); 
+CenterNowOnUnits(IsInUnit(HarrSupp1));
 
-    if LoadVariable('DenisInDelta', 0) = 1 then
-    begin
-        Say(JMM, 'DRem-JMM-4');  
-        SayRadio(Harisson, 'DRem-Har-5');
+Say(HarrSupp1, 'DEng-Eng1-1');
 
-        DialogueOff;
+wait(1$0);
 
-        wait(4$00);
+DialogueOn;
 
-        repeat
-         wait(0$1);
-        until not InBattle(1);
+SayRadio(Harisson, 'DRem-Har-1');
 
-        SpawnDenis;
-    end else
-    begin
-        DialogueOff;
-        SetRestrict(36, 1, true);
-        SetTech(15, 1, state_enabled);
-        ChangeMissionObjectives('MR');
-    end;
-end;
+if contactWithRussian then
+   Say(JMM, 'DRem-JMM-1')
+else
+   Say(JMM, 'DRem-JMM-1a');
+
+SayRadio(Harisson, 'DRem-Har-2');  
+
+if LoadVariable('DenisInDelta', 0) then
+   Say(JMM, 'DRem-JMM-2')
+else
+   Say(JMM, 'DRem-JMM-2a');
+
+SayRadio(Harisson, 'DRem-Har-3'); 
+Say(JMM, 'DRem-JMM-3');  
+SayRadio(Harisson, 'DRem-Har-4'); 
+
+if LoadVariable('DenisInDelta', 0) then
+   begin
+   Say(JMM, 'DRem-JMM-4');  
+   SayRadio(Harisson, 'DRem-Har-5');
+
+   DialogueOff;
+
+   wait(4$00);
+
+   repeat
+    wait(0$1);
+   until not InBattle(1);
+
+   SpawnDenis;
+   end
+else
+   begin
+   DialogueOff;
+
+   SetRestrict(36, 1, true);
+   SetTech(15, 1, state_enabled);
+
+   ChangeMissionObjectives('MR');
+   end;
+End;
 
 // Denis spawn
 Export Function SpawnDenis;

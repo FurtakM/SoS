@@ -701,25 +701,38 @@ Say(driver1, 'D5-Rus2-1a');
 End;
 
 // Escape cargo from map
-Every 0$1 trigger cargoEscape do
+Every 0$1 trigger cargoEscape and UnitFilter([cargo1, cargo2], [[f_ok], [f_side, 3], [f_placed]]) do
+var cr, i, x, y;
 begin
 enable;
 
-ComMoveToArea([cargo1, cargo2], RussianAttack);
+for i in [cargo1, cargo2] do
+    begin
+    cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
 
-if IsInArea(cargo1, RussianAttack) OR IsInArea(driver1, RussianAttack) then
-   begin
-   RemoveUnit(cargo1);
-   RemoveUnit(driver1);
-   cargoEscape = cargoEscape + 1;
-   end;
-     
-if IsInArea(cargo2, RussianAttack) OR IsInArea(driver2, RussianAttack) then
-   begin
-   RemoveUnit(cargo2);
-   RemoveUnit(driver2);
-   cargoEscape = cargoEscape + 1;
-   end;
+    if cr and GetMultiCargo(i)[4] < 60 then
+       ComCollect(i, cr[1][1], cr[1][2])
+    else if not IsInArea(i, RemoveArea) then
+       begin
+       x := ShiftX(GetX(i), 4, 3);
+       y := GetY(i);
+
+       if HexInfo(x, y) then
+          x := ShiftX(x, 4, 3);
+
+       if HexInfo(x, y) or not ValidHex(x, y) then
+          ComMoveToArea(i, RemoveArea)
+       else
+          ComMoveXY(i, x, y);
+       end
+    else
+       begin
+       RemoveUnit(IsDrivenBy(i));
+       RemoveUnit(i);
+       cargoEscape := cargoEscape + 1;
+       continue;
+       end;
+    end;
 End;
 
 Every 0$1 trigger cargoEscape > 1 do
