@@ -49,34 +49,34 @@ if not un or not IsOk(un) then
 
 side := GetSide(un);
 
-filter := FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_ok], [f_empty]]) diff b;
+filter := FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_not, [f_tag, 7]], [f_ok], [f_empty]]) diff b;
 barracks := FilterAllUnits([[f_side, side], [f_btype, b_barracks]]);
 
 if not filter then
-   begin
-   ComMoveXY(un, x, y);
-
+   begin 
    if barracks then
       for i in barracks do
           begin
           if UnitsInside(i) < 6 and IsOk(i) then
              begin
-             AddComEnterUnit(un, i);
+             ComEnterUnit(un, i);
              exit;
              end;
           end;
+
+   ComMoveXY(un, x, y);
    end
 else
    begin
    filter := SortByDistanceUnit(un, filter, true, true);
 
-   for i in filter do
-       if GetTag(i) <> 7 then
-          begin
-          ComEnterUnit(un, i);
-          SetTag(i, 7);
-          exit;
-          end;
+   if filter then
+      begin
+      SetTag(filter[1], 7);
+      ComEnterUnit(un, filter[1]);
+      end
+   else
+      ComMoveXY(un, x, y);
    end;
 End;
 
