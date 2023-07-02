@@ -1,6 +1,14 @@
+On SailEvent(event) do
+begin
+if event = 1 then
+   PrepareRussianAttack(Difficulty + 3);
+End;
+
 On UnitDestroyed(un) do
 var tmp, chassis, weapon, btype;
 begin
+SOS_UnitDestroyed(un);
+
 if un = JMM then
    YouLost('JMM');
 
@@ -42,6 +50,9 @@ if GetSide(un) = 3 then
          if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
             weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
 
+         if tick < [15$00, 13$00, 11$00, 10$00][Difficulty] then
+            weapon := [ru_gun, ru_gatling_gun][rand(1,2)];
+
          AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
          end;
       end;
@@ -56,7 +67,7 @@ if GetSide(un) = 3 then
       uc_side := 3;
       uc_nation := 3;
 
-      PrepareMechanic(false, [6, 7, 8, 9][Difficulty]);
+      PrepareMechanic(false, [5, 6, 7, 8][Difficulty]);
       tmp := CreateHuman;
       PlaceUnitXY(tmp, 145, 133, false);
 
@@ -117,7 +128,15 @@ if GetSide(b) = 3 then
    begin
    if GetBType(b) in [b_bunker, b_barracks] then
       begin
-      tmp := FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_barracks]]);
+      tmp := FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_bunker], [f_empty]]);
+
+      if tmp then
+         begin
+         ComEnterUnit(un, tmp[1]);
+         exit;
+         end;
+
+      tmp := FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
 
       if not tmp then
          begin
@@ -139,8 +158,8 @@ On UnitGoesToRed(un) do
 begin
 if GetSide(un) in [3, 6] and GetControl(un) = control_computer and not seenComputer then
    begin
-   DialogSeenComputer(un);
    seenComputer := true;
+   DialogSeenComputer(un);     
    end;
 End;
 

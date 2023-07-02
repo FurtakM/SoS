@@ -34,6 +34,9 @@ if Difficulty > 2 then
        end;
    end;
 
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) do
+    SetBLevel(i, 6);
+
 tmp := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
 
 for i in tmp do
@@ -99,7 +102,7 @@ for i := 1 to 3 do
     veh := CreateVehicle;
     SetDir(veh, 5);
     PlaceUnitArea(veh, russianAttackArea2, false);
-    PrepareMechanic(false, 0);
+    PrepareMechanic(false, 5);
     PlaceHumanInUnit(CreateHuman, veh);
     tmp := Join(tmp, veh);
     end;
@@ -198,7 +201,7 @@ for i in ruMobile do
           enemy := FilterAllUnits([f_enemy, 3]);
 
           if enemy then
-             AgressiveMove(i, [ [103, 83], [80, 56] ]);
+             AgressiveMove(i, [ [116, 95], [84, 68], [58, 53], [44, 35], [45, 23] ]);
           end;
        end;
     end;
@@ -224,6 +227,9 @@ weapon := [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_heavy_gun, ru_rocket
 
 if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
    weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
+
+if tick < [15$00, 13$00, 11$00, 10$00][Difficulty] then
+   weapon := [ru_gun, ru_gatling_gun][rand(1,2)];
 
 AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
 End;
@@ -310,6 +316,9 @@ for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
     if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
        weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
 
+    if tick < [17$00, 15$00, 13$00, 11$00][Difficulty] then
+       weapon := [ru_gun, ru_gatling_gun, ru_heavy_machine_gun][rand(1,3)];
+
     PrepareVehicle(chassis, engine_combustion, control_computer, weapon, 90);
     un := CreateVehicle;
     PlaceUnitXY(un, 140, 146, false);
@@ -324,8 +333,8 @@ for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
 russianAttackers := JoinUnion(russianAttackers, tmp);
 End;
 
-Every 0$2 trigger russianAttackers do
+Every 0$3 trigger russianAttackers do
 begin
 enable; 
-AgressiveMove(russianAttackers, [ [126,108], [107,85], [82,62], [73,46] ]);
+AgressiveMove(russianAttackers, [ [126,108], [107,85], [82,62], [73,46], [62,31], [52,17] ]);
 End;

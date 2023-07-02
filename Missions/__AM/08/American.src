@@ -135,13 +135,6 @@ if tmp then
 for i in others do
     SetTag(i, 106);
 
-if HexInfo(61, 29) = 0 then
-   begin
-   bc_type := b_barracks;
-   bc_level := 6;
-   CreateAndPlaceBuildingXYD(61, 29, 5);
-   end;
-
 bun := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
 
 for i in bun do
@@ -312,6 +305,10 @@ if not amDepot then
    amDepot := CreateAndPlaceBuildingXYD(52, 12, 3);
    end;
 
+bc_type := b_barracks;
+bc_level := 6;
+CreateAndPlaceBuildingXYD(61, 29, 5);
+
 SetBName(amDepot, 'gamma');
 SetResourceType(GetBase(amDepot), 1, [400, 320, 270, 230][Difficulty]);
 SetResourceType(GetBase(amDepot), 2, 130);
@@ -368,26 +365,39 @@ if LoadVariable('06_remoteVehs_1', 0) then
        end;
    end;
 
-for i := 1 to [2, 2, 1, 1][Difficulty] do
-    begin
-    vc_chassis := [us_medium_tracked, us_medium_wheeled][rand(1,2)];
-    vc_engine := [engine_combustion, engine_solar][rand(1,2)];
-    vc_control := control_manual;
-    vc_weapon := [us_gatling_gun, us_double_gun][rand(1,2)];
-    veh := CreateVehicle;
+if gammaCommander = 1 then
+   begin
+   for i := 1 to [3, 3, 2, 2][Difficulty] do
+       begin
+       vc_chassis := [us_medium_tracked, us_medium_wheeled][rand(1,2)];
+       vc_engine := [engine_combustion, engine_solar][rand(1,2)];
+       vc_control := control_manual;
+       vc_weapon := [us_gatling_gun, us_double_gun][rand(1,2)];
+       veh := CreateVehicle;
 
-    SetDir(veh, 3);
-    PlaceUnitXYR(veh, 61, 23, 9, false);
-    end;
+       SetDir(veh, 3);
+       PlaceUnitXYR(veh, 61, 23, 9, false);
+       end;
+   end
+else if gammaCommander = 2 then
+   begin
+   bc_type := b_bunker;
+   bc_level := 6;
+   b := CreateAndPlaceBuildingXYD(67, 36, 5);
+   PlaceWeaponTurret(b, us_gatling_gun);
 
-vc_chassis := us_medium_wheeled;
-vc_engine := engine_combustion;
-vc_control := control_manual;
-vc_weapon := us_crane;
-veh := CreateVehicle;
+   b := CreateAndPlaceBuildingXYD(61, 40, 5);
+   PlaceWeaponTurret(b, us_double_gun);
 
-SetDir(veh, 3);
-PlaceUnitXYR(veh, 61, 23, 9, false);
+   vc_chassis := us_medium_wheeled;
+   vc_engine := engine_combustion;
+   vc_control := control_manual;
+   vc_weapon := us_crane;
+   veh := CreateVehicle;
+
+   SetDir(veh, 3);
+   PlaceUnitXYR(veh, 61, 23, 9, false);
+   end;
 End;
 
 Export function PrepareSupportFromDelta;
@@ -475,13 +485,30 @@ ComMoveXY(FilterUnitsInArea(gammaSupportArea,[[f_side, 1], [f_type, unit_human]]
 End;
 
 Export Function PrepareMacmillanSquad;
-var i, k, un, others, squad, tmp, tmpVehs, vehicles, veh, prefix;
+var i, k, un, others, squad, tmp, tmpVehs, vehicles, veh, prefix, area, dir, point2, point;
 begin
 prefix := '07c_';
 vehicles := LoadVariable('07_vehicles', []);
 
 if not vehicles and debug then
    vehicles := [ us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun ];
+
+if not vehicles then
+   begin
+   area := westGammaSupportArea;
+   point := [37, 70];
+   point2 := [43, 67];
+   dir := 1;
+
+   wait(2$00);
+   end
+else
+   begin
+   area := southGammaSupportArea;
+   point := [87, 147];
+   point2 := [74, 129];
+   dir := 0;
+   end;
 
 squad := [];
 tmp := [];
@@ -599,28 +626,28 @@ if tmp then
    begin
    for i in tmp do
        begin
-       SetDir(i, 3);
+       SetDir(i, dir);
 
        if tmpVehs then
           begin
           SetDir(tmpVehs[1], 0);
-          PlaceUnitXY(tmpVehs[1], 87, 147, false);
+          PlaceUnitXY(tmpVehs[1], point[1], point[2], false);
           PlaceHumanInUnit(i, tmpVehs[1]);
           tmpVehs := Delete(tmpVehs, 1);
           end
        else
-          PlaceUnitArea(i, southGammaSupportArea, false);
+          PlaceUnitArea(i, area, false);
 
-       ComMoveXY(i, 74, 129);
+       ComMoveXY(i, point2[1], point2[2]);
 
        repeat
         wait(0$1);
-       until not FilterUnitsInArea(southGammaSupportArea, [f_side, 1]);
+       until not FilterUnitsInArea(area, [f_side, 1]);
        end;
    end;
 
-PlaceUnitXY(JMM, 87, 147, false); 
-ComMoveXY(JMM, 79, 131);
+PlaceUnitXY(JMM, point[1], point[2], false);
+ComMoveXY(JMM, point2[1], point2[2]);
 
 jmmArrival := true;
 End;
