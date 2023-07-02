@@ -1,0 +1,806 @@
+Export JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Khatam;
+Export Houten;
+Export Denis, Joan;
+Export Sikorski;
+Export Harisson, Powell;
+Export amDepot;
+
+Export function PrepareAmerican;
+var i, j, tmp, tmp2, others, arm, bun, lab, fac, ct, placed, x, y, d, b;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+PrepareGammaBase;
+
+x := 52;
+y := 16;
+
+case gammaCommander of
+     1: begin
+        Donaldson := PrepareUnit('Donaldson', true, '04_');
+
+        if HexInfo(x, y) then
+           PlaceHumanInUnit(Donaldson, amDepot)
+        else
+           PlaceUnitXY(Donaldson, x, y, false);
+
+        ComHold(Donaldson);
+        end;
+
+     2: begin
+        Brown := PrepareUnit('Brown', true, '04_');
+
+        if HexInfo(x, y) then
+           PlaceHumanInUnit(Brown, amDepot)
+        else
+           PlaceUnitXY(Brown, x, y, false);
+
+        ComHold(Brown);
+        end;
+
+     3: begin
+        Houten := PrepareUnit('VanHouten', false, '');
+
+        if HexInfo(x, y) then
+           PlaceHumanInUnit(Houten, amDepot)
+        else
+           PlaceUnitXY(Houten, x, y, false);
+        
+        ComHold(Houten);
+        end;
+     end;
+
+Harisson := PrepareUnit('Harisson', false, '');
+Powell := PrepareUnit('Powell', false, '');
+
+// load main characters from 4th mission
+// conditions:
+// - save after 4th mission
+// - not in Delta
+// - not in 7th mission
+tmp := [];
+
+if TestCharacters(['04_Lisa']) and not LoadVariable('LisaInDelta', 0) and not TestCharacters(['07_Lisa']) then
+   begin
+   Lisa := PrepareUnit('Lisa', true, '04_');
+   tmp2 := Join(tmp2, Lisa);
+   end
+else if not Lisa and not LoadVariable('LisaIn07', false) then
+   begin
+   Lisa := PrepareUnit('Lisa', true, '07_');
+   tmp2 := Join(tmp2, Lisa);
+   end;
+
+if TestCharacters(['04_Bobby']) and not LoadVariable('BobbyInDelta', 0) and not TestCharacters(['07_Bobby']) then
+   begin
+   Bobby := PrepareUnit('Bobby', true, '04_');
+   tmp2 := Join(tmp2, Bobby);
+   end
+else if not Bobby and not LoadVariable('BobbyIn07', false) then
+   begin
+   Bobby := PrepareUnit('Bobby', true, '07_');
+   tmp2 := Join(tmp2, Bobby);
+   end;
+
+if TestCharacters(['04_Cyrus']) and not LoadVariable('CyrusInDelta', 0) and not TestCharacters(['07_Cyrus']) then
+   begin
+   Cyrus := PrepareUnit('Cyrus', true, '04_');
+   tmp2 := Join(tmp2, Cyrus);
+   end
+else if not Cyrus and not LoadVariable('CyrusIn07', false) then
+   begin
+   Cyrus := PrepareUnit('Cyrus', true, '07_');
+   tmp2 := Join(tmp2, Cyrus);
+   end;
+
+if TestCharacters(['04_Brown']) and not LoadVariable('BrownInDelta', 0) and not TestCharacters(['07_Brown']) and gammaCommander <> 2 {not Brown} then
+   begin
+   Brown := PrepareUnit('Brown', true, '04_');
+   tmp2 := Join(tmp2, Brown);
+   end
+else if not Brown and not LoadVariable('BrownIn07', false) and gammaCommander <> 2 then
+   begin
+   Brown := PrepareUnit('Brown', true, '07_');
+   tmp2 := Join(tmp2, Brown);
+   end;
+
+if TestCharacters(['04_Donaldson']) and not LoadVariable('DonaldsonInDelta', 0) and not TestCharacters(['07_Donaldson']) and gammaCommander <> 1 {not Donaldson} then
+   begin
+   Donaldson := PrepareUnit('Donaldson', true, '04_');
+   tmp2 := Join(tmp2, Donaldson);
+   end
+else if not Donaldson and not LoadVariable('DonaldsonIn07', false) and gammaCommander <> 1 then
+   begin
+   Donaldson := PrepareUnit('Donaldson', true, '07_');
+   tmp2 := Join(tmp2, Donaldson);
+   end;
+
+if not LoadVariable('KhatamIn07', false) then
+   begin
+   Khatam := PrepareUnit('Khatam', true, '07_');
+   tmp2 := Join(tmp2, Khatam);
+   end;
+
+others := CreateCharacterSet('07_othersGamma');
+tmp := 5 - others;
+
+if tmp then
+   for i := tmp downto 1 do
+       begin
+       PrepareHuman(false, 1, 5);
+       others := Join(others, CreateHuman);
+       end;
+
+for i in others do
+    SetTag(i, 106);
+
+if HexInfo(61, 29) = 0 then
+   begin
+   bc_type := b_barracks;
+   bc_level := 6;
+   CreateAndPlaceBuildingXYD(61, 29, 5);
+   end;
+
+bun := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
+
+for i in bun do
+    begin
+    x := GetX(i);
+    y := GetY(i);
+    d := GetDir(i);
+
+    RemoveUnit(i);
+
+    bc_type := b_bunker;
+    bc_level := 6;
+    b := CreateAndPlaceBuildingXYD(x, y, d);
+    PlaceWeaponTurret(b, [us_double_gun, us_gatling_gun][i mod 2 + 1]);
+    end;
+
+arm := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
+lab := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+fac := FilterAllUnits([[f_side, 1], [f_btype, b_factory]]);
+ct  := FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]);
+bun := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+
+for i in others union tmp2 do
+    begin
+    placed := false;
+
+    if GetClass(i) = class_soldier then
+       begin
+       if UnitFilter(bun, [f_empty]) then
+          begin
+          PlaceHumanInUnit(i, UnitFilter(bun, [f_empty])[1]);
+          placed := true;
+          end;
+
+       if arm and not placed then
+          begin
+          for j in arm do
+              if UnitsInside(j) < 6 then
+                 begin
+                 PlaceHumanInUnit(i, j);
+                 placed := true;
+                 break;
+                 end;
+          end;
+       end;
+
+    if GetClass(i) = class_engineer then
+       begin
+       PlaceUnitXYR(i, 52, 20, 6, false);
+       placed := true;
+       continue;
+       end;
+
+    if GetClass(i) = class_mechanic then
+       begin
+       if fac then
+          begin
+
+          if ct then
+             begin
+             PlaceHumanInUnit(i, ct[1]);
+             placed := true;
+             end;
+
+          if placed then
+             continue;
+
+          for j in fac do
+              if UnitsInside(j) < 6 then
+                 begin
+                 PlaceHumanInUnit(i, j);
+                 placed := true;
+                 break;
+                 end;
+          end;
+       end;
+
+    if GetClass(i) = class_scientistic then
+       begin
+       if lab then
+          begin
+          for j in lab do
+              if UnitsInside(j) < 6 then
+                 begin
+                 PlaceHumanInUnit(i, j);
+                 placed := true;
+                 break;
+                 end;
+          end;
+
+       if not placed then
+          begin
+          PlaceUnitArea(i, gammaSpawnArea, false);
+          ComHold(i);
+          end; 
+       end;
+
+    if ct then
+       if UnitsInside(ct[1]) then
+          begin
+          for i in FilterAllUnits([[f_side, 1], [f_control, control_remote]]) do
+              Connect(i);
+          end;
+    end;
+End;
+
+Function PrepareGammaBase;
+var blist, i, b, veh, tmp;
+begin
+SetResourceVisibility(71, 5, 1);
+
+blist := LoadVariable('GammaBase', []);
+
+if not blist then
+   blist := [ [b_warehouse, 52, 12, 3, 3, 0, 0] ];
+
+uc_side := 1;
+uc_nation := 1;
+
+bc_kind1 := -1;
+bc_kind2 := -1;
+
+for i in blist do
+    begin
+    bc_type := i[1];
+    bc_level := i[5];
+
+    if bc_type in [b_lab, b_lab_half] then
+       begin
+       if not LoadVariable('06_remoteVehs_1', 0) then
+          begin
+          bc_type := b_lab_full;
+          bc_kind1 := b_lab_weapon;
+          bc_kind2 := b_lab_opto;
+          end
+       else
+          begin
+          bc_type := b_lab_half;
+          bc_kind1 := b_lab_weapon;
+          bc_kind2 := -1;
+          end;
+       end;
+
+    if bc_type = b_workshop then
+       bc_type := b_factory;
+
+    if bc_type = b_depot then
+       begin
+       bc_type := b_warehouse;
+       amDepot := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+       continue;
+       end;
+
+    if bc_type = b_armoury then
+       bc_type = b_barracks;
+
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if GetBType(b) = b_bunker then
+       PlaceWeaponTurret(b, i[7]);
+    end;
+
+if not amDepot then
+   begin
+   bc_type := b_warehouse;
+   bc_level := 6;
+
+   amDepot := CreateAndPlaceBuildingXYD(52, 12, 3);
+   end;
+
+SetBName(amDepot, 'gamma');
+SetResourceType(GetBase(amDepot), 1, [400, 320, 270, 230][Difficulty]);
+SetResourceType(GetBase(amDepot), 2, 130);
+
+// fac extension's
+if FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) then
+   begin
+   b := FilterAllUnits([[f_side, 1], [f_btype, b_factory]])[1];
+   tmp := GetFacExtXYD(GetX(b), GetY(b), GetDir(b));
+   blist := [b_ext_noncombat, b_ext_gun];
+
+   if LoadVariable('06_remoteVehs_1', 0) then
+      blist := Insert(blist, 1, b_ext_radio);
+
+   for i in tmp do
+       if HexInfo(i[1], i[2]) = 0 then
+          begin
+          bc_type := blist[1];
+          CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+          blist := Delete(blist, 1);
+
+          if blist = 0 then
+             break;
+          end;
+   end;
+
+if LoadVariable('06_remoteVehs_1', 0) then
+   begin
+   bc_type := b_control_tower;
+   bc_level := 4;
+
+   if CanBeBuilt(amDepot, b_control_tower, 62, 12, 3) and not FilterAllUnits([f_distxy, 62, 12, 3]) then
+      CreateAndPlaceBuildingXYD(62, 12, 3)
+   else if CanBeBuilt(amDepot, b_control_tower, 37, 18, 2) and not FilterAllUnits([f_distxy, 37, 18, 3]) then
+      CreateAndPlaceBuildingXYD(37, 18, 2)
+   else if CanBeBuilt(amDepot, b_control_tower, 66, 14, 4) and not FilterAllUnits([f_distxy, 66, 14, 3]) then
+      CreateAndPlaceBuildingXYD(66, 14, 4)
+   else if CanBeBuilt(amDepot, b_control_tower, 74, 26, 4) then
+      CreateAndPlaceBuildingXYD(74, 26, 4);
+
+   if not FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) then
+      exit;
+
+   for i := 1 to [3, 2, 2, 2][Difficulty] do
+       begin
+       vc_chassis := [us_medium_tracked, us_medium_wheeled][rand(1,2)];
+       vc_engine := [engine_combustion, engine_solar][rand(1,2)];
+       vc_control := control_remote;
+       vc_weapon := [us_gatling_gun, us_light_gun, us_double_gun][rand(1,3)];
+       veh := CreateVehicle;
+
+       SetDir(veh, 3);
+       PlaceUnitXYR(veh, 61, 23, 9, false);
+       end;
+   end;
+
+for i := 1 to [2, 2, 1, 1][Difficulty] do
+    begin
+    vc_chassis := [us_medium_tracked, us_medium_wheeled][rand(1,2)];
+    vc_engine := [engine_combustion, engine_solar][rand(1,2)];
+    vc_control := control_manual;
+    vc_weapon := [us_gatling_gun, us_double_gun][rand(1,2)];
+    veh := CreateVehicle;
+
+    SetDir(veh, 3);
+    PlaceUnitXYR(veh, 61, 23, 9, false);
+    end;
+End;
+
+Export function PrepareSupportFromDelta;
+var i, j, others;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+Denis := PrepareUnit('Denis', (not debug), '06c_');
+PlaceUnitArea(Denis, gammaSupportArea, false);
+
+Joan := PrepareUnit('Joan', (not debug), '06c_');
+PlaceUnitArea(Joan, gammaSupportArea, false);
+
+if not LoadVariable('GladstoneIn07', 0) then
+   begin
+   Gladstone := PrepareUnit('Gladstone', (not debug), '06c_');
+
+   if not Gladstone and LoadVariable('GladstoneStayInDelta', 0) then
+      Gladstone := PrepareUnit('Gladstone', (not debug), '05_');
+
+   PlaceUnitArea(Gladstone, gammaSupportArea, false);
+   end;
+
+if LoadVariable('LisaStayInDelta', 0) then
+   begin
+   Lisa := PrepareUnit('Lisa', true, '05_');
+   PlaceUnitArea(Lisa, gammaSupportArea, false);
+   end;
+
+if LoadVariable('BobbyStayInDelta', 0) then
+   begin
+   Bobby := PrepareUnit('Bobby', true, '05_');
+   PlaceUnitArea(Bobby, gammaSupportArea, false);
+   end;
+
+if LoadVariable('CyrusStayInDelta', 0) then
+   begin
+   Cyrus := PrepareUnit('Cyrus', true, '05_');
+   PlaceUnitArea(Cyrus, gammaSupportArea, false);
+   end;
+
+if LoadVariable('BrownStayInDelta', 0) then
+   begin
+   Brown := PrepareUnit('Brown', true, '05_');
+   PlaceUnitArea(Brown, gammaSupportArea, false);
+   end;
+
+if LoadVariable('DonaldsonStayInDelta', 0) then
+   begin
+   Donaldson := PrepareUnit('Donaldson', true, '05_');
+   PlaceUnitArea(Donaldson, gammaSupportArea, false);
+   end;
+
+others := CreateCharacterSet('OthersStayInDelta');
+
+if others > 2 then
+   begin
+   for j := 1 to 2 do
+       PlaceUnitArea(others[j], gammaSupportArea, false);
+   end
+else
+   begin
+   for j := 1 to others do
+       PlaceUnitArea(others[j], gammaSupportArea, false);
+   end;
+
+others := CreateCharacterSet('06_other_apemans');
+
+if others >= [3, 2, 2, 1][Difficulty] then
+   j := [3, 2, 2, 1][Difficulty]
+else
+   j := others;
+
+for i := 1 to j do
+    begin
+    PlaceUnitArea(others[i], gammaSupportArea, false);
+    SetTag(others[i], 107);
+    end;
+
+ComMoveXY(FilterUnitsInArea(gammaSupportArea,[[f_side, 1], [f_type, unit_human]]), 53, 19);
+End;
+
+Export Function PrepareMacmillanSquad;
+var i, k, un, others, squad, tmp, tmpVehs, vehicles, veh, prefix;
+begin
+prefix := '07c_';
+vehicles := LoadVariable('07_vehicles', []);
+
+if not vehicles and debug then
+   vehicles := [ us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun ];
+
+squad := [];
+tmp := [];
+tmpVehs := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+if vehicles then
+   begin
+   k := 1;
+
+   for i := 1 to vehicles div 4 do
+       begin
+       vc_chassis := vehicles[k];
+       vc_engine := vehicles[k+1];
+       vc_control := vehicles[k+2];
+       vc_weapon := vehicles[k+3];
+       k := k + 4;
+
+       veh := CreateVehicle;
+       tmpVehs := Join(tmpVehs, veh);
+       end;
+   end;
+
+JMM := PrepareUnit('JMM', (not debug), prefix);
+
+if gammaCommander in [1, 3] and not Brown then
+   begin
+   Brown := PrepareUnit('Brown', (not debug), prefix);
+
+   if Brown then
+      tmp := Replace(tmp, tmp + 1, Brown);
+   end;
+
+if gammaCommander in [2, 3] and not Donaldson then
+   begin
+   Donaldson := PrepareUnit('Donaldson', (not debug), prefix);
+
+   if Donaldson then
+      tmp := Replace(tmp, tmp + 1, Donaldson);
+   end;
+
+if not Bobby then
+   begin
+   Bobby := PrepareUnit('Bobby', true, prefix);
+
+   if Bobby then
+      tmp := Replace(tmp, tmp + 1, Bobby);
+   end;
+
+if not Cyrus then
+   begin
+   Cyrus := PrepareUnit('Cyrus', true, prefix);
+
+   if Cyrus then
+      tmp := Replace(tmp, tmp + 1, Cyrus);
+   end;
+
+if not Lisa then
+   begin
+   Lisa := PrepareUnit('Lisa', (not debug), prefix);
+
+   if Lisa then
+      tmp := Replace(tmp, tmp + 1, Lisa);
+   end;
+
+if not Frank then
+   begin
+   Frank := PrepareUnit('Frank', (not debug), prefix);
+
+   if Frank then
+      tmp := Replace(tmp, tmp + 1, Frank);
+   end;
+
+if not Kikuchi then
+   begin
+   Kikuchi := PrepareUnit('Kikuchi', true, prefix);
+
+   if Kikuchi then
+      tmp := Replace(tmp, tmp + 1, Kikuchi);
+   end;
+
+if not Gladstone then
+   begin
+   Gladstone := PrepareUnit('Gladstone', (not debug), prefix);
+
+   if Gladstone then
+      tmp := Replace(tmp, tmp + 1, Gladstone);
+   end;
+
+if not Khatam then
+   begin
+   Khatam := PrepareUnit('Khatam', true, prefix);
+
+   if Khatam then
+      tmp := Replace(tmp, tmp + 1, Khatam);
+   end;
+
+others := CreateCharacterSet('07c_others');
+squad := others;
+
+if others then
+   for i in others do
+       begin
+       SetTag(i, 108);
+
+       if GetClass(i) = class_mechanic then
+          tmp := Insert(tmp, 1, i)
+       else
+          tmp := Replace(tmp, tmp + 1, i);
+       end;
+
+if tmp then
+   begin
+   for i in tmp do
+       begin
+       SetDir(i, 3);
+
+       if tmpVehs then
+          begin
+          SetDir(tmpVehs[1], 0);
+          PlaceUnitXY(tmpVehs[1], 87, 147, false);
+          PlaceHumanInUnit(i, tmpVehs[1]);
+          tmpVehs := Delete(tmpVehs, 1);
+          end
+       else
+          PlaceUnitArea(i, southGammaSupportArea, false);
+
+       ComMoveXY(i, 74, 129);
+
+       repeat
+        wait(0$1);
+       until not FilterUnitsInArea(southGammaSupportArea, [f_side, 1]);
+       end;
+   end;
+
+PlaceUnitXY(JMM, 87, 147, false); 
+ComMoveXY(JMM, 79, 131);
+
+jmmArrival := true;
+End;
+
+Export function PrepareSikorsky;
+var i, un, veh, tmp;
+begin
+tmp := FilterUnitsInArea(northGammaSupportArea, [f_not, [f_type, unit_building]]);
+
+if tmp then
+   begin
+   ComMoveXY(tmp, 33, 39);
+   wait(0$3);
+   end;
+
+uc_side := 4;
+uc_nation := 1;
+
+Sikorski := PrepareUnit('Sikorski', false, '');
+
+vc_engine := engine_combustion;
+vc_control = control_manual;
+vc_weapon = [us_heavy_gun, us_double_gun, us_double_gun, us_double_gun][Difficulty];
+vc_chassis = us_heavy_tracked;
+
+veh := CreateVehicle;
+SetDir(veh, 3);
+SetMark(veh, -4);
+SetFuel(veh, 70);
+
+PlaceUnitArea(veh, northGammaSupportArea, false);
+PlaceHumanInUnit(Sikorski, veh);
+ComMoveXY(Sikorski, 37, 30);
+
+wait(0$0.3);
+
+InitHc_All();
+
+for i := 1 to [3, 2, 2, 2][Difficulty] do
+    begin
+    uc_side = 4;
+    uc_nation = 1;
+
+    PrepareHuman(false, class_soldier, rand(4, 7));
+
+    un := CreateHuman;
+    SetDir(un, 3);
+    SetTag(un, 101);
+    PlaceUnitArea(un, northGammaSupportArea, false);
+    ComMoveXY(un, 25, 27);
+
+    wait(0$1);
+    end;
+
+for i := 1 to 2 do
+    begin
+    uc_side = 4;
+    uc_nation = 1;
+
+    PrepareHuman(false, class_scientistic, rand(3, 5));
+
+    un := CreateHuman;
+    SetDir(un, 3);
+    SetTag(un, 101);
+    PlaceUnitArea(un, northGammaSupportArea, false);
+    ComMoveXY(un, 25, 27);
+
+    wait(0$1);
+    end;
+
+for i := 1 to [5, 4, 3, 3][Difficulty] do
+    begin
+    uc_side := 4;
+    uc_nation := 1;
+
+    vc_engine := engine_combustion;
+    vc_control := control_manual;
+    vc_weapon := [us_double_gun, us_rocket_launcher, us_double_gun, us_gatling_gun][i mod 4 + 1];
+    vc_chassis := [us_medium_tracked, us_medium_tracked, us_heavy_tracked, us_heavy_tracked][i mod 4 + 1];
+
+    veh := CreateVehicle;
+    SetDir(veh, 3);
+    SetTag(veh, 0);
+    SetFuel(veh, 70);
+
+    PlaceUnitArea(veh, northGammaSupportArea, false);
+
+    InitHc;
+    PrepareHuman(false, class_mechanic, rand(4, 7));
+
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+    ComMoveXY(un, 30, 22);
+
+    wait(0$3);
+    end;
+
+wait(0$10);
+End;
+
+Export function SaveBase(area);
+var i, gammaBase, buildings;
+begin
+gammaBase := [];
+buildings := FilterUnitsInArea(area, [[f_side, 1], [f_type, unit_building], [f_ok]]);
+
+for i in buildings do
+    begin
+    if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then
+       gammaBase = gammaBase ^ [[GetBType(i), GetX(i), GetY(i) ,GetDir(i), GetBLevel(i), GetNation(i), GetLabKind(i, 1), GetLabKind(i, 2)]]
+    else if GetBType(i) = b_bunker then
+       gammaBase = gammaBase ^ [[GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)]]
+    else if GetBType(i) = b_factory then
+       gammaBase = Insert(gammaBase, 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)])
+    else
+       gammaBase = gammaBase ^ [[GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)]];
+    end;
+
+SaveVariable(gammaBase, '08_GammaBase');
+End;
+
+Export Function SikorskiAttack;
+var i, tmp, enemy, points, point, filter;
+begin
+tmp := FilterAllUnits([f_side, 4]);
+
+ComAgressiveMove(tmp, 55, 62);
+AddComWait(tmp, 0$05);
+
+AddComAgressiveMove(UnitFilter(tmp, [f_tag, 101]), 58, 96);
+AddComHold(UnitFilter(tmp, [f_tag, 101]));
+
+AddComAgressiveMove(UnitFilter(tmp, [[f_tag, 101], [f_class, 4]]), 52, 93);
+AddComFree(UnitFilter(tmp, [[f_tag, 101], [f_class, 4]]));
+
+filter := UnitFilter(tmp, [f_type, unit_vehicle]);
+enemy := FilterAllUnits([f_enemy, 1]);
+points := [ [57,66], [62,58] ];
+
+repeat
+ wait(0$1);
+
+ for i in filter do
+     begin
+     if IsDead(i) then
+        begin
+        filter := filter diff i;
+        continue;
+        end;
+
+     tmp := IsDrivenBy(i);
+  
+     if not tmp then
+        continue;
+
+     if GetFuel(i) > 30 and GetTag(i) = 2 then
+        SetTag(i, 0)
+     else if GetTag(i) = 2 then
+        begin
+        ComMoveXY(i, 52, 50);
+        AddComMoveUnit(i, amDepot);
+        end;
+
+     if GetLives(i) >= 600 and not GetTag(i) then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+     if GetLives(i) < 600 and not GetTag(i) then
+        begin
+        SetTag(i, 1);
+
+        point := GetNearestPoint(i, points);
+
+        ComMoveXY(i, point[1], point[2]);
+        AddComMoveXY(i, 40, 49);
+        end;
+
+     if GetTag(i) = 1 and GetDistUnitXY(i, 40, 49) < 9 and tmp then
+        begin
+        ComExitVehicle(tmp);
+        AddComRepairVehicle(tmp, i);
+
+        repeat
+         wait(0$1);
+        until GetLives(i) = 1000;
+  
+        ComEnterUnit(tmp, i);
+
+        if GetFuel(i) <= 40 then
+           SetTag(i, 2)
+         else
+           SetTag(i, 0);
+        end;
+     end;
+   until not filter;
+End;

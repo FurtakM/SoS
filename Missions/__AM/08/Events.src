@@ -1,156 +1,196 @@
-On BuildingComplete(building) Do
-var tmp, un;
+On UnitDestroyed(un) do
+var tmp, chassis, weapon, btype;
 begin
+if un = JMM then
+   YouLost('JMM');
 
-    if GetSide(building) = 3 then
-    begin
-        if GetBType(building) = b_depot then
-        begin
-            SetResourceType(GetBase(building), 1, 5000);
-            SetResourceType(GetBase(building), 2, 5000);
-            SetBName(building, 'konev');
-            ruDepot = building;
-            BuildRussianBase;
-        end;
+if GetSide(un) = 1 and GetBType(un) in [b_depot, b_warehouse] then
+   YouLost('Destroyed');
 
-        if GetBType(building) = 0 or GetBType(building) = 2 or GetBType(building) = 4 then ComUpgrade(building);
+if un in ruMobile then
+   ruMobile := ruMobile diff un;
 
-        if GetBType(building) = b_lab then
-        begin
-            AddComUpgradeLab(building, b_lab_weapon);
-            AddComUpgradeLab(building, b_lab_computer);
-            ResAllTechs(3, building, 3);
-            ruLab = building;
-        end;
+if GetSide(un) = 3 then
+   begin
+   if GetType(un) = unit_building then
+      begin
+      btype := GetBType(un);
 
-        if GetBType(building) = b_bunker then
-        begin
-            uc_side = 3;
-            uc_nation = 3;
+      if btype = b_warehouse then
+         btype := b_depot;
 
-            hc_gallery = '';
-            hc_name = '';
-            PrepareHuman(false, 1, rand(RuSolMinLevel, RuSolMaxLevel));
+      if btype = b_barracks then
+         btype := b_armoury;
 
-            un = CreateHuman;
-            PlaceHumanInUnit(un, building);
+      if btype = b_lab_full then
+         btype := b_lab;
 
-            AddComPlaceWeapon(building, [43, 44, 46][Rand(1,3)]);
-        end;
-        if GetBType(building) = b_turret then AddComPlaceWeapon(building, [43, 44, 46][Rand(1,3)]);
-        if GetBType(building) = b_bunker then AddComPlaceWeapon(building, [43, 44, 46][Rand(1,3)]);
+      ruBuildList := Replace(ruBuildList, ruBuildList + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
+      end;
 
-        if GetBType(building) = b_ext_computer then russianAI = 1;
+   if GetType(un) = unit_vehicle then
+      begin
+      if GetWeapon(un) in [ru_crane, ru_cargo_bay] then
+         begin
+         AddComConstruct(ruFac, ru_medium_tracked, engine_combustion, control_computer, GetWeapon(un));
+         end
+      else
+         begin
+         chassis := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked][rand(1,4)];
+         weapon := [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_heavy_gun, ru_rocket_launcher, ru_heavy_gun, ru_rocket_launcher][Difficulty + rand(0, 3)];
 
-        if ruDestroyedBuildings > 0 then
-        begin
-            ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-            ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-            ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-            ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-        end;
+         if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
+            weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
 
-    end;
+         AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
+         end;
+      end;
 
+   if GetClass(un) = class_mechanic then
+      begin
+      if ruMechCounter = 0 or not IsOk(ruFac) then
+         exit;
 
-end;
+      ruMechCounter := Dec(ruMechCounter);
 
-On UpgradeComplete(building) Do
-var i;
-begin
+      uc_side := 3;
+      uc_nation := 3;
 
-    if GetSide(building) = 3 then
-    begin
+      PrepareMechanic(false, [6, 7, 8, 9][Difficulty]);
+      tmp := CreateHuman;
+      PlaceUnitXY(tmp, 145, 133, false);
 
-        if GetBType(building) = b_factory then
-        begin
-            for i in FilterAllUnits([[f_side, 3], [f_class, 3]]) do ComEnterUnit(i, building);
-            ruFab = building;
-        end;
-
-       if GetBType(building) = b_lab_full then
-            for i in FilterAllUnits([[f_side, 3], [f_class, 4]]) do ComEnterUnit(i, building);
-
-        if GetBType(building) = b_warehouse then
-        begin
-            ComEnterUnit(Borodin, building);
-        end;
-
-    end;
-
-end;
-
-On UnitGoesToRed(unit) Do
-begin
-
-    if GetType(unit) = unit_vehicle and GetControl(unit) = control_computer and varEvent1 = 0 then
-    begin
-        varEvent1 = 1;
-        CenterNowOnUnits(unit);
-        DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]]]) diff [JMM], 'DC-Sol1-1', 'DC-FSol1-1');
-    end;
-
-end;
-
-On UnitDestroyed(unit) do
-var i;
-begin
-SOS_UnitDestroyed(unit);
-
-    if unit = Joan then
-       DeleteCharacters('Joan');
-
-    if GetSide(unit) = 3 then
-    begin
-        if GetType(unit) = unit_building then
-        begin
-            if GetBType(unit) = 31 or  GetBType(unit) = 32 or  GetBType(unit) = 36 or  GetBType(unit) = 0 or  GetBType(unit) = 24 or  GetBType(unit) = 17 or  GetBType(unit) = 25 or  GetBType(unit) = 19 or  GetBType(unit) = 20 or  GetBType(unit) = 18 or  GetBType(unit) = 21 or  GetBType(unit) = 23 or  GetBType(unit) = 16  or  GetBType(unit) = 6 or  GetBType(unit) = 29 or  GetBType(unit) = 26 or  GetBType(unit) = 30 or  GetBType(unit) = 28 or  GetBType(unit) = 27 or  GetBType(unit) = 33 or  GetBType(unit) = 2 or GetBType(unit) = 4 then
-            begin
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetBType(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-            end;
-
-            if GetBType(unit) = 1  then
-            begin
-                ruDestroyedBuildings = ruDestroyedBuildings ^  0;
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-            end;
-
-            if GetBType(unit) = 3  then
-            begin
-                ruDestroyedBuildings = ruDestroyedBuildings ^  2;
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-            end;
-
-            if GetBType(unit) = 5  then
-            begin
-                ruDestroyedBuildings = ruDestroyedBuildings ^  4;
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-                ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-            end;
-        end;
-
-        if GetType(unit) = unit_human then
-        begin
-            for i in defenders_list do
-                if i = unit then defenders_list = defenders_list diff [unit];
-        end;
-    end;
-end;
-
-On VehicleConstructed(veh, fac) do
-begin
-SOS_VehicleConstructed(veh, fac);
+      ComEnterUnit(tmp, ruFac);
+      end;
+   end;
 End;
 
-On Command(cmd) do
+On EvacuateVehicle(driver, veh, p1, p2) do
 begin
-SOS_Command(cmd);
+if GetSide(driver) = 4 then
+   ComMoveXY(driver, 40, 47);
+
+if GetSide(driver) = 3 then
+   begin
+   ComMoveXY(driver, 90, 97);
+
+   if IsOk(ruFac) then
+      begin
+      repeat
+       wait(0$1);
+      until UnitsInside(ruFac) < 6 or IsDead(driver);
+
+      if IsDead(driver) then
+         exit;
+
+      repeat
+       wait(0$10);
+
+       if not HasTask(driver) and UnitsInside(ruFac) < 6 then
+          ComEnterUnit(driver, ruFac);
+      until not IsOk(ruFac) or IsDead(driver) or IsInUnit(driver);
+      end
+   else
+      begin
+      ComMoveXY(driver, 142, 148);
+
+      repeat
+       wait(0$1);
+      until IsDead(driver) or IsAt(driver, 142, 148);
+
+      if IsAt(driver, 142, 148) then
+         RemoveUnit(driver);
+      end;
+   end;
+End;
+
+On EnterBuilding(b, un) do
+begin
+if GetClass(un) = class_mechanic and GetSide(b) = 3 and b = ruFac then
+   SetLives(un, 1000);
+End;
+
+On EvacuateBuilding(b, un) do
+var i, tmp;
+begin
+if GetSide(b) = 3 then
+   begin
+   if GetBType(b) in [b_bunker, b_barracks] then
+      begin
+      tmp := FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_barracks]]);
+
+      if not tmp then
+         begin
+         ComMoveXY(un, 92, 99);
+         exit;
+         end;
+
+      for i in tmp do
+          if UnitsInside(i) < 6 then
+             begin
+             ComEnterUnit(un, i);
+             exit;
+             end;
+      end;
+   end;
+End;
+
+On UnitGoesToRed(un) do
+begin
+if GetSide(un) = 3 and GetControl(un) = control_computer and not seenComputer then
+   begin
+   DialogSeenComputer(un);
+   seenComputer := true;
+   end;
+End;
+
+On VehicleConstructed(vehicle, building) do
+var driver;
+begin
+SOS_VehicleConstructed(vehicle, building);
+
+if GetSide(vehicle) = 3 and GetControl(vehicle) = control_manual and GetWeapon(vehicle) in [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_heavy_gun, ru_rocket_launcher] then
+   ruMobile := ruMobile union vehicle;
+End;
+
+On CrateSpawn(id, x, y, amount, mode) do
+var cargo;
+begin
+if InArea(x, y, ruCrates) then
+   begin
+   cargo := FilterAllUnits([[f_side, 3], [f_ok], [f_weapon, ru_cargo_bay]]);
+
+   if not cargo then
+      exit;
+
+   AddComCollect(cargo, x, y);
+   end;
+End;
+
+On BuildingComplete(b) do
+var i, tmp;
+begin
+if GetSide(b) = 3 then
+   begin
+   ruBuildList := Delete(ruBuildList, 1);
+
+   if GetBType(b) in [b_bunker, b_turret] then
+      begin
+      AddComPlaceWeapon(b, [ru_heavy_gun, ru_rocket_launcher][rand(1,2)]);
+
+      if GetBType(b) = b_bunker then
+         begin
+         tmp := FilterAllUnits([[f_side, 3], [f_class, 1], [f_tag, 0]]);
+
+         if tmp then
+            for i in tmp do
+                if not IsInUnit(i) or GetBType(IsInUnit(i)) <> b_bunker then
+                   begin
+                   ComExit(i);
+                   AddComEnterUnit(i, b);
+                   exit;
+                   end;
+         end;
+      end;
+   end;
 End;

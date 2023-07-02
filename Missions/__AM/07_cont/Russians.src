@@ -237,7 +237,7 @@ until not tmp;
 End;
 
 // Idle
-Every 0$01 trigger GetLives(ru_dep_main) > 250 and FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) do
+{Every 0$01 trigger GetLives(ru_dep_main) > 250 and FilterAllUnits([[[f_side, 3], [f_class, 1], [f_outside]]]) do
 var i, tmp;
 begin
 enable;
@@ -249,7 +249,7 @@ if not tmp then
 
 for i in tmp do
     GoToAnotherTower(i, 0, 143, 143);
-End;
+End; }
 
 // Heal
 Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_class, 4]]) do
@@ -279,7 +279,7 @@ ComHeal(doc, tmp[1]);
 End;
 
 Every 0$01 trigger FilterAllUnits([[f_side, 3], [f_class, 3]]) and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle]]) do
-var i, tmp, attacking, areas, area;
+var i, tmp, attacking, areas, area, mech;
 begin
 enable;
 
@@ -289,11 +289,43 @@ area := 0;
 attacking := false;
 
 for i in tmp do
-    if GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i)) < 10 then
+    begin
+    if GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i)) < 10 and not HasTask(i) and not GetTag(i) and GetLives(i) > 650 then
        begin
        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
        attacking := true;
        end;
+
+    if not GetTag(i) and GetLives(i) < 650 and GetType(i) = unit_vehicle then
+       begin
+       SetTag(i, 1);
+       ComMoveXY(i, 130, 139);
+       end;
+
+    if GetTag(i) = 1 and GetDistUnitXY(i, 130, 139) < 6 then
+       SetTag(i, 2);
+
+    if GetTag(i) = 2 then
+       begin
+       if GetLives(i) = 1000 then
+          SetTag(i, 3)
+       else if IsDrivenBy(i) then
+          begin
+          mech := IsDrivenBy(i);
+
+          if not See(1, mech) and GetLives(mech) < 1000 then
+             SetLives(mech, 1000);
+
+          if not See(1, i) then
+             SetFuel(i, 100);
+
+          ComRepairVehicleAndReturn(mech);
+          end;
+       end;
+
+    if GetTag(i) = 3 and IsDrivenBy(i) then
+       SetTag(i, 0);
+    end;
 
 if attacking then
    exit;
@@ -309,12 +341,12 @@ if area then
    begin
    for i in tmp do
        begin
+       if GetTag(i) then
+          continue;
+
        if GetFuel(i) < 33 then
           SetFuel(i, 33);
 
-       if GetDistUnits(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i)) < 10 then
-          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i))
-       else
        if not IsInArea(i, area) then
           ComMoveToArea(i, area);
        end;
