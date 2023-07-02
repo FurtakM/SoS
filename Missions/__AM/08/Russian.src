@@ -1,0 +1,317 @@
+Export ruCommander;
+Export ruMechCounter, ruMobile, ruBuildList, russianAttackers;
+
+Export function PrepareRussian;
+var i, j, tmp, weapons;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+ruMechCounter := [8, 12, 16, 20][Difficulty];
+ruMobile := [];
+ruBuildList := [];
+russianAttackers := [];
+weapons := [ru_gatling_gun, ru_gun, ru_heavy_gun];
+
+if Difficulty > 2 then
+   weapons := weapons ^ [ru_rocket_launcher, ru_heavy_gun];
+
+ruCommander := NewCharacter('Borodin');
+PlaceHumanInUnit(ruCommander, ruDep);
+
+SetResourceType(GetBase(ruDep), 1, [3000, 4000, 5000, 6000][Difficulty]);
+SetResourceType(GetBase(ruDep), 2, 1000);
+
+if Difficulty > 2 then
+   begin
+   tmp := [ [99, 130, 2], [121, 127, 4], [117, 121, 4] ];
+
+   for i in tmp do
+       begin
+       bc_type := b_turret;
+       bc_level := 6;
+       CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+       end;
+   end;
+
+tmp := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
+
+for i in tmp do
+    PlaceWeaponTurret(i, weapons[rand(1, weapons)]);
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do
+    begin
+    PrepareSoldier(false, [5, 6, 7, 8][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+for i in FilterAllUnits([[f_side, 3], [f_btype, b_barracks]]) do
+    begin
+    for j := 1 to [2, 2, 3, 3][Difficulty] do
+        begin
+        PrepareSoldier(false, [5, 6, 7, 8][Difficulty]);
+        PlaceHumanInUnit(CreateHuman, i);
+        end;
+    end;
+
+for i := 1 to [3, 4, 5, 5][Difficulty] do
+    begin
+    PrepareEngineer(false, [5, 6, 7, 8][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, ruDep);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareScientist(false, 6);
+    PlaceHumanInUnit(CreateHuman, HexInfo(81, 93));
+    end;
+
+PrepareVehicle(ru_medium_tracked, engine_combustion, control_computer, ru_cargo_bay, 100);
+PlaceUnitXYR(CreateVehicle, 91, 94, 3, false);
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_computer, ru_crane, 100);
+    PlaceUnitXYR(CreateVehicle, 91, 94, 4, false);
+    end;
+End;
+
+Export function PrepareStartRussianAttack;
+var i, un, veh, tmp;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+for i := 1 to 4 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][rand(1, 3)], 40);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, russianAttackArea1, false);
+    PrepareMechanic(false, 5);
+    PlaceHumanInUnit(CreateHuman, veh);
+    tmp := Join(tmp, veh);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][rand(1, 3)], 40);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, russianAttackArea2, false);
+    PrepareMechanic(false, 0);
+    PlaceHumanInUnit(CreateHuman, veh);
+    tmp := Join(tmp, veh);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareSoldier(false, 5);
+    un := CreateHuman;
+    PlaceUnitArea(un, russianAttackArea2, false);
+    tmp := Join(tmp, un);
+    end;
+
+for i in tmp do
+    ComAgressiveMove(i, 51, 16);
+End;
+
+Every 0$1 trigger ruMobile do
+var i, mech, enemy;
+begin
+enable;
+
+if not ruMobile then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in ruMobile do
+    begin
+    if not IsOk(i) or GetSide(i) <> 3 then
+       begin
+       ruMobile := ruMobile diff i;
+       continue;
+       end;
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 93, 100);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 93, 100) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, ruParkingArea) then
+          ComMoveToArea(i, ruParkingArea)
+       else
+          SetTag(i, 1);
+       end;
+
+    if GetTag(i) = 1 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 2);
+       end;
+
+    if GetTag(i) = 2 then
+       begin
+       enemy := FilterUnitsInArea(ruDefendArea, [f_enemy, 3]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if ruMobile > 2 then
+          begin
+          enemy := FilterAllUnits([f_enemy, 3]);
+
+          if enemy then
+             AgressiveMove(i, [ [103, 83], [80, 56] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+Every 0$1 trigger IsOk(ruDep) do
+var i, tmp, b, eng, crane, tag, sci, lab;
+begin
+enable;
+
+b := FilterUnitsInArea(ruBaseArea, [[f_not, [f_lives, 1000]], [f_type, unit_building]]);
+eng := FilterAllUnits([[f_side, 3], [f_class, 2]]);
+crane := FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]);
+sci := FilterAllUnits([[f_side, 3], [f_class, 4]]);
+lab := HexInfo(81, 93);
+
+if sci and UnitFilter(eng, [f_tag, 2]) then
+   ComExitAll(sci)
+else if sci then
+   if UnitFilter(sci, [f_not, [f_inside]]) and IsOk(lab) then
+      ComEnterUnit(UnitFilter(sci, [f_not, [f_inside]]), lab);
+
+if UnitFilter(crane, [f_ok]) and b then
+   ComRepairBuilding(UnitFilter(crane, [f_ok]), b[1]);
+
+if eng then
+   begin
+   for i in eng do
+       begin
+       tag := GetTag(i);
+
+       if not b and not ruBuildList and tag = 1 then
+          begin
+          SetTag(i, 0);
+          ComEnterUnit(i, ruDep);
+          end;
+
+       if (b or ruBuildList) and tag = 0 then
+          SetTag(i, 1);
+
+       if IsInUnit(i) and tag = 1 then
+          ComExit(i);
+
+       if GetLives(i) < 500 and tag = 1 then
+          SetTag(i, 2); // need heal
+
+       if GetLives(i) = 1000 and tag = 2 then
+          SetTag(i, 1); // ok
+
+       if tag = 2 then
+          begin
+          if GetDistUnitXY(i, 84, 93) > 6 then
+             begin
+             ComMoveXY(i, 84, 93);
+             AddComHold(i);
+             end;
+          end;
+
+       if IsInArea(i, ruDefendArea) then
+          ComMoveToArea(i, ruBaseArea);
+
+       if tag = 1 then // can work
+          begin
+          if b then
+             ComRepairBuilding(i, NearestUnitToUnit(b, i))
+          else if ruBuildList and FilterUnitsInArea(ruDefendArea, [f_enemy, 3]) = 0 and CanBeBuilt(ruDep, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]) then
+             ComBuild(i, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]);
+          end;
+       end;
+   end;
+End;
+
+Export function PrepareRussianAttack(strength);
+var i, un, tmp, chassis, weapon;
+begin
+
+for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
+    begin
+    uc_side := 6;
+    uc_nation := 3;
+
+    chassis := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_wheeled, ru_heavy_tracked][rand(1,4)];
+    weapon := [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_heavy_gun, ru_rocket_launcher, ru_heavy_gun, ru_rocket_launcher][Difficulty + rand(0, 3)];
+
+    if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
+       weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
+
+    PrepareVehicle(chassis, engine_combustion, control_computer, weapon, 90);
+    un := CreateVehicle;
+    PlaceUnitXY(un, 140, 146, false);
+
+    ComMoveXY(un, 131, 128);
+
+    wait(0$3);
+
+    tmp := Join(tmp, un);
+    end;
+
+russianAttackers := JoinUnion(russianAttackers, tmp);
+End;
+
+Every 0$2 trigger russianAttackers do
+begin
+enable; 
+AgressiveMove(russianAttackers, [ [126,108], [107,85], [82,62], [73,46] ]);
+End;
