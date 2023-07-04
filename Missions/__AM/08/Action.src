@@ -104,7 +104,7 @@ End;
 
 // support from delta
 Every 0$45 trigger FilterAllUnits([[f_side, 1], [f_see, 3]]) = 0 and tick > 5$00 do
-var dialog;
+var dialog, p;
 begin
 PrepareSupportFromDelta;
 
@@ -141,11 +141,18 @@ CenterNowOnUnits(JMM);
 
 wait(0$10);
 
-PrepareRussianAttack(Difficulty + 2);
+RaiseSailEvent(1);
+
+p := 0;
 
 repeat
  wait(0$1);
-until IsInArea(JMM, gammaBaseArea) or IsInArea(IsInUnit(JMM), gammaBaseArea);
+ p := Inc(p);
+
+ if p > 100 then
+    exit;
+
+until IsInArea(JMM, gammaBaseArea) or IsInArea(IsInUnit(JMM), gammaBaseArea) or GetDistUnits(JMM, Joan) < 10 or FilterAllUnits([[f_side, 1], [f_or, [f_tag, 106], [f_tag, 107]], [f_dist, JMM, 12]]);
 
 DialogueOn;
 
