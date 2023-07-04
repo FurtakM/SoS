@@ -169,7 +169,10 @@ begin
 SOS_VehicleConstructed(vehicle, building);
 
 if GetSide(vehicle) = 3 and GetControl(vehicle) = control_manual and GetWeapon(vehicle) in [ru_heavy_machine_gun, ru_gatling_gun, ru_gun, ru_heavy_gun, ru_rocket_launcher] then
+   begin
+   SetTag(vehicle, 300);
    ruMobile := ruMobile union vehicle;
+   end;
 End;
 
 On CrateSpawn(id, x, y, amount, mode) do
@@ -181,6 +184,11 @@ if InArea(x, y, ruCrates) then
 
    if not cargo then
       exit;
+
+   wait(0$5);
+
+   if GetDistUnits(cargo[1], ruDep) < 6 and GetFuel(cargo[1]) < 50 then
+      ComMoveUnit(cargo, ruDep);
 
    AddComCollect(cargo, x, y);
    end;
