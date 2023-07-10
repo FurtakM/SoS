@@ -109,7 +109,7 @@ result := [Burlak, Gnyevko, Kirilenkova, Belkov] union belkovTeam;
 End;
 
 Every 0$2 trigger beriaVisited and GetTech(tech_oileng, 3) = state_researched do
-var tmp;
+var tmp,i;
 begin
 tmp := UnitFilter(kirovBaseSquad, [f_class, 2]);
 
@@ -119,6 +119,14 @@ if not tmp then
 wait(0$5);
 
 ComExit(tmp);
+//OIL BARRELS preparation
+for i in 2 do
+begin
+    AddComTransport(tmp, kirov, mat_oil);
+    AddComMoveXY(tmp, 121, 111);
+    AddComUnload(tmp);
+end;
+///////////////////////////
 AddComBuild(tmp, b_workshop, 113, 113, 0);
 
 ComResearch(ru_lab, tech_oilpow);
@@ -217,7 +225,7 @@ repeat
 
  if UnitFilter(tmp, [f_inarea, belkovOutArea]) then
     for i in UnitFilter(tmp, [f_inarea, belkovOutArea]) do
-        begin           
+        begin
         if i = Belkov then
            begin
            belkovTank := IsInUnit(Belkov);
@@ -226,7 +234,7 @@ repeat
            end;
 
         RemoveUnit(i);
-        end;   
+        end;
 until not UnitFilter(tmp, [f_placed]);
 
 wait(1$20);
@@ -395,7 +403,7 @@ repeat
     end;
 
  if tag = 1 then
-    begin      
+    begin
     if not IsAt(vehicle, 113, 106) and not HasTask(vehicle) then
        ComMoveXY(vehicle, 113, 106);
 
@@ -422,3 +430,10 @@ until IsDead(vehicle) or eastOutpostDestroyed;
 if eastOutpostDestroyed then
    ComMoveXY(vehicle, 111, 105);
 End;
+
+
+
+
+
+
+

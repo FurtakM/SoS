@@ -308,9 +308,9 @@ ChangeMissionObjectives('M2c');
 End;
 
 // has lab and workshop
-Every 0$2 trigger hasLab and hasWorkshop do
+Every 0$4 trigger hasLab and hasWorkshop do
 begin
-wait(0$2);
+//wait(0$2);
 
 DialogueOn;
 
@@ -516,10 +516,10 @@ if belkovTeam < 3 then
        end;
    end;
 
-//if Kirilenkova then
-//   belkovTeam := Join(belkovTeam, Kirilenkova)
-//else
-//   belkovTeam := Join(belkovTeam, UnitFilter(kirovBaseSquad, [f_class, 4])[1]);
+if Kirilenkova then
+   belkovTeam := Join(belkovTeam, Kirilenkova)
+else
+   belkovTeam := Join(belkovTeam, UnitFilter(kirovBaseSquad, [f_class, 4])[1]);
 
 ComExit(Kurin);
 AddComTurnUnit(Kurin, tmp[1]);
@@ -528,8 +528,19 @@ wait(0$1);
 
 ComStop(tmp[1]);
 
+un := IsDrivenBy(tmp[1]);
+
+ComExit(un);
+wait(0$1);
+AddComTurnUnit(un, Kurin);
+ComEnterUnit(Belkov, tmp[1]);
+wait(0$0.3);
 Say(Kurin, 'D10-Kur-1');
+//OIL BARRELS Shot
+ComAttackPlace(Belkov,122,112);
+wait(0$2);
 Say(Belkov, 'D10-Bel-1');
+/////////////////////////////
 
 if belkovBrother then
    begin
@@ -542,15 +553,6 @@ else
    begin
    Say(Kurin, 'D10-Kur-2')
    end;
-
-un := IsDrivenBy(tmp[1]);
-
-ComExit(un);
-AddComTurnUnit(un, Kurin);
-
-wait(0$0.3);
-
-ComEnterUnit(Belkov, tmp[1]);
 
 wait(0$2);
 
@@ -655,7 +657,7 @@ DialogueOn;
 
 game_speed := 4;
 
-SayRadio(usSol, 'D13-Sol1-1');
+SayRadioNoFace(usSol, 'D13-Sol1-1');
 SayRadio(Belkov, 'D13-Bel-1');
 SayRadio(Kurin, 'D13-Kur-1');
 
@@ -688,7 +690,7 @@ PlaceSeeing(65, 18, 3, -26);
 
 DialogueOn;
 
-Say(usSol, 'D14-Sol1-1');
+SayNoName(usSol, 'D14-Sol1-1');
 Say(Belkov, 'D14-Bel-1');
 
 DialogueOff;
@@ -1170,7 +1172,8 @@ repeat
  if timer >= 0$30 then
     wantToTalk := true;
 
- if FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 30]]]) then
+ //if FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 30]]]) then
+ if GetDistUnits(Burlak, Platonov) > 9 then
     wasOutsideBeria := true;
 
  if wantToTalk and wasOutsideBeria and (GetDistUnits(Burlak, Platonov) < 8 or GetDistUnits(IsInUnit(Burlak), Platonov) < 8) then
