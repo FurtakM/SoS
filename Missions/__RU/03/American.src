@@ -1,0 +1,44 @@
+//
+Export amIntroUnits;
+Export Function PrepareAmericansMissionIntro;
+var i, veh, human;
+begin
+    amIntroUnits = [];
+
+    uc_side = 1;
+    uc_nation = nation_american;
+
+    vc_chassis = us_medium_tracked;
+    vc_control = control_manual;
+    vc_engine = engine_combustion;
+    vc_weapon = us_light_gun;
+    vc_fuel_battery = 100;
+    veh = CreateVehicle;
+
+    SetDir(veh, 4);
+    amIntroUnits = amIntroUnits ^ veh;
+    PlaceUnitArea(veh, AmTroopsSpawnIntro, false);
+
+    for i := 1 to 3 do
+    begin
+        hc_name := '';
+        hc_gallery := '';
+
+        PrepareSoldier(false, enemySkillLevel);
+
+        human = CreateHuman;
+        amIntroUnits = amIntroUnits ^ human;
+
+        if i < 3 then
+            PlaceUnitArea(human, AmTroopsSpawnIntro, false)
+        else
+        begin
+            PrepareMechanic(false, enemySkillLevel);
+            human = CreateHuman;
+
+            PlaceHumanInUnit(human, veh);
+        end;
+    end;
+    HiddenCamera(120, 36, 3);
+    ComMoveXY(amIntroUnits, 26, 34);
+end;

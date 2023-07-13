@@ -1,0 +1,235 @@
+Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Benko, Kuklajs; // Heroes with Burlak
+Export Scholtze; // Other heroes
+Export other_survivors; // Other survivors from 02
+Export playerVehicles; // Vehicles from mission 02  -> [Chassis, Engine, Control, Weapon, HP, Fuel]
+Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 ->  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                               // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
+                                               // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+
+Export Kurin, Popov, BelkovDialog;
+Export ruScout;
+Export otherKirovUnits;
+Export kirovBase, kirovDepot, kirovOilDepot; // Beria base buildings from 02 >  Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+                                             // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
+                                             // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+Export ru2_bar1, ru2_bar2;
+Export kirovEng;
+Export kirovBunkersToMountWeapon, kirovBunkersToOccupy;
+Export kirovTransportCargo;
+Export kirovAttackCargo, kirovAttackVehicles;
+Export kirovBunkerCounter;
+
+Export secondBaseTeam;
+
+Export survivorsArabianAttack; // Characters which survive arabian attack in Kirov base, 9 randoms + Popov, prio have heroes
+Export survivorsToSpawn;
+Export neededUnitsSpawn; // [sold, eng, mech, sci]
+
+Export Grishko, Gaydar, Bukov;
+
+Export burlakTeam;
+
+Export Function PrepareRussians;
+begin
+
+    neededUnitsSpawn = [0, 0, 0, 0];
+    kirovAttackCargo = [];
+
+    PrepareHeroes;
+    PrepareBeriaBase;
+    PrepareKirovBase;
+    MissionIntro;
+{
+    PrepareKirovBase;
+    PrepareHeroes;
+    PrepareKirovPersonel;
+    PrepareBeriaBase;
+    PrepareSecondBaseTeam;
+    PrepareGrishko;
+    PrepareOtherBuildings;
+    PrepareVehicles;
+    }
+end;
+
+Function PrepareHeroes;
+var un;
+begin
+
+    uc_side := 6;
+    otherBeriaUnits := CreateCharacterSet('02_burlakTeam');
+
+    uc_side = 3;
+    Burlak := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
+    Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
+    Kovalyuk := PrepareUnit('Kovalyuk', (not debug), prevMissionPrefix);
+    Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
+    Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
+    Benko := PrepareUnit('Benko', (not debug), prevMissionPrefix);
+    Kuklajs := PrepareUnit('Kuklajs', (not debug), prevMissionPrefix);
+
+    uc_side := 6;
+    //Kurin := PrepareUnit('Kurin', (not debug), prevMissionPrefix);   //BUG CZY CO BO GO NIE RESPI
+    Kurin := NewCharacter('Kurin');
+    Popov := NewCharacter('Popov');
+    Grishko := NewCharacter('Grishko');
+    Gaydar := NewCharacter('Gaydar');
+    Bukov := NewCharacter('SBukov');
+
+    SetClass([Burlak, Gnyevko, Kovalyuk], 3);
+    SetClass(Kirilenkova, 4);
+
+    PlaceUnitXY(Kurin, 153, 103, false);
+    AddComHold(Kurin); 
+    AddComTurnXY(Kurin, 155, 106);
+
+    PlaceUnitXY(Popov, 131, 49, false);
+    AddComHold(Popov);
+    AddComTurnXY(Popov, 131, 31);
+
+    PlaceUnitXY(Gaydar, 91, 15, false);
+    AddComHold(Gaydar);
+    AddComTurnXY(Gaydar, 131, 31);
+
+    PlaceUnitXY(Bukov, 86, 17, false);
+    AddComHold(Bukov);
+    AddComTurnXY(Bukov, 94, 32);
+
+    PlaceUnitXY(Belkov, 155, 106, false);
+    AddComHold(Belkov);
+    AddComTurnUnit(Belkov, Kurin);
+
+    PlaceUnitXY(Burlak, 154, 106, false);
+    AddComHold(Burlak);
+    AddComTurnUnit(Burlak, Kurin);
+
+    burlakTeam := [Gnyevko, Kovalyuk, Kirilenkova];
+
+    for un in otherBeriaUnits do
+    begin
+        PlaceUnitArea(un, kirovSpawn, false);
+        AddComHold(un);         
+        AddComTurnUnit(un, Kurin);
+    end;
+
+    for un in BurlakTeam do
+    begin
+        PlaceUnitArea(un, kirovSpawn, false);
+        AddComHold(un);
+        AddComTurnUnit(un, Kurin);
+    end;
+
+end;                                     
+
+Export Function PrepareBeriaBase;
+var i, bonusResources;
+begin
+beriaBase := LoadVariable('02_Beria', []);
+
+uc_side = 3;
+uc_nation = 3;
+
+for i := 1 to beriaBase do
+    begin
+    bc_type := beriaBase[i][1];
+    bc_level := beriaBase[i][2];
+
+    if bc_type = b_lab then
+        begin
+            bc_kind1 = b_lab_basic;
+            bc_kind2 = b_lab_basic;
+        end;
+
+    CreateAndPlaceBuildingXYD(beriaBase[i][3] + 46, beriaBase[i][4], beriaBase[i][5]);
+    end;
+End;
+
+Export Function PrepareKirovBase;
+var i, j, bonusResources;
+begin
+kirovBase := LoadVariable('02_Kirov', []);
+
+uc_side = 6;
+uc_nation = 3;
+otherKirovUnits := CreateCharacterSet('02_kirovTeam');
+
+for i := 1 to kirovBase do
+    begin
+        bc_type := kirovBase[i][1];
+        bc_level := kirovBase[i][2];
+                                                                                             
+        CreateAndPlaceBuildingXYD(kirovBase[i][3] + 46, kirovBase[i][4], kirovBase[i][5]);
+    end;
+
+for i in otherKirovUnits do
+    begin
+         for j in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) do
+         begin
+         PlaceHumanInUnit(i,j);
+         end;
+    end;
+End;
+
+Export function SelectCharacters(maxUnitToChoose);
+var charsToChoose, selectedPeople;
+begin
+   charsToChoose = otherKirovUnits;
+   charsToChoose = charsToChoose ^ otherBeriaUnits;
+
+   selectedPeople = CharacterSelection('text', maxUnitToChoose, maxUnitToChoose,
+                                [sel_change_class, Burlak, Gnyevko, Kovalyuk, Kirilenkova, Belkov, Benko, Kuklajs,
+                                 sel_dont_change_class,
+                                 sel_not_hired,sel_changeable, sel_change_class]^charsToChoose^
+                                [sel_dont_change_class, sel_not_changeable, Kurin, Popov],
+                                [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1]]);
+   SetSide(charsToChoose, 6);
+   SetSide(selectedPeople, 3);
+end;
+
+Export Function MissionIntro;
+begin
+    CenterNowOnUnits([Burlak, Kurin]);
+
+    //BELKOV TEAM DEAD
+    if NOT Belkov then
+    begin
+    Say(Kurin, 'D1a-Kur-1');
+    Say(Burlak, 'D1a-Bur-1');
+    Say(Kurin, 'D1a-Kur-2');
+    end;
+    //ANGRY PLATO
+    //Say(Kurin, 'D1a-Kur-2a');
+    //Say(Kurin, 'D1a-Kur-2b');
+    //Say(Burlak, 'D1a-Bur-2');
+
+    if Belkov then
+    begin
+    Say(Kurin, 'D1b-Kur-1');
+    Say(Belkov, 'D1b-Bel-1');
+    Say(Kurin, 'D1b-Kur-2');
+    end;
+
+    Say(Kurin, 'D2-Kur-1');
+    Say(Burlak, 'D2-Bur-1');
+    Say(Kurin, 'D2-Kur-2');
+    Say(Burlak, 'D2-Bur-2');
+    Say(Kurin, 'D2-Kur-3');
+    PrepareAmericansMissionIntro;
+    SetAttitude(1, 6, att_friend, true);
+    RevealFogArea(3, RevealMapPartArea);
+    CenterNowOnUnits([Popov, Gaydar]);
+    wait(0$3);
+    SayRadio(Popov, 'D2-Pop-3');
+    wait(0$0.3);
+    CenterNowOnUnits([Burlak, Kurin]);
+    Say(Kurin, 'D2-Kur-4');
+    Say(Burlak, 'D2-Bur-4');
+    Say(Kurin, 'D2-Kur-5');
+    Say(Burlak, 'D2-Bur-5');
+    Say(Kurin, 'D2-Kur-6');
+    Say(Burlak, 'D2-Bur-4');
+
+    SelectCharacters(8);
+    AddComMoveXY(Popov, 135, 67);
+    AddComMoveXY(Gaydar, 209, 164);
+
+End;
