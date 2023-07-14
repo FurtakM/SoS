@@ -1,1 +1,90 @@
-//
+Export currentTeam, kirovBaseUnits;
+Export Function MissionIntro;
+var un, selectedPeople;
+begin
+CenterNowOnUnits([Burlak, Kurin]);
+
+//BELKOV TEAM DEAD
+if NOT Belkov then
+   begin
+   Say(Kurin, 'D1a-Kur-1');
+   Say(Burlak, 'D1a-Bur-1');
+   Say(Kurin, 'D1a-Kur-2');
+   //ANGRY PLATO
+   Say(Kurin, 'D1a-Kur-2a');
+   Say(Kurin, 'D1a-Kur-2b');
+   Say(Burlak, 'D1a-Bur-2');
+   end
+else
+   begin
+   Say(Kurin, 'D1b-Kur-1');
+   Say(Belkov, 'D1b-Bel-1');
+   Say(Kurin, 'D1b-Kur-2');
+   end;
+
+Say(Kurin, 'D2-Kur-1');
+Say(Burlak, 'D2-Bur-1');
+Say(Kurin, 'D2-Kur-2');
+Say(Burlak, 'D2-Bur-2');
+Say(Kurin, 'D2-Kur-3');
+PrepareAmericansMissionIntro;
+SetAttitude(1, 6, att_friend, true);
+RevealFogArea(3, RevealMapPartArea);
+CenterNowOnUnits([Popov, Gaydar]);
+wait(0$3);
+SayRadio(Popov, 'D2-Pop-3');
+wait(0$0.3);
+CenterNowOnUnits([Burlak, Kurin]);
+Say(Kurin, 'D2-Kur-4');
+Say(Burlak, 'D2-Bur-4');
+Say(Kurin, 'D2-Kur-5');
+Say(Burlak, 'D2-Bur-5');
+Say(Kurin, 'D2-Kur-6');
+Say(Burlak, 'D2-Bur-4');
+
+
+kirovBaseUnits = otherKirovUnits;
+kirovBaseUnits = kirovBaseUnits ^ otherBeriaUnits;
+
+selectedPeople = CharacterSelection('text', 6, 6,
+                                [sel_change_class, Burlak, Gnyevko, Kovalyuk, Kirilenkova, Belkov,
+                                 sel_dont_change_class,
+                                 sel_not_hired,sel_changeable, sel_change_class]^kirovBaseUnits^
+                                [sel_dont_change_class, sel_not_changeable, Kurin, Popov],
+                                [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1]]);
+SetSide(kirovBaseUnits, 6);
+SetSide(selectedPeople, 3);
+
+AddComMoveXY(Popov, 135, 67);
+AddComMoveXY(Gaydar, 209, 164);
+
+kirovBarracks := FilterAllUnits([[f_side, 6], [f_btype, b_armoury]]);
+kirovBaseUnits := kirovBaseUnits diff selectedPeople;
+SetClass(kirovBaseUnits[1], 2);
+
+for un in selectedPeople do
+    ComExitBuilding(un);
+
+currentTeam := selectedPeople union [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova];
+AddComMoveXY(currentTeam, 113, 97);
+
+for un in kirovBaseUnits do
+    begin
+    if IsInUnit(un) = 0 then
+       ComEnterUnit(un, kirovBarracks[1]);
+    end;
+
+ChangeMissionObjectives('M1');
+
+Query('QReadyInfo');
+wait(0$5);
+
+for un in kirovBaseUnits do
+    begin
+    if IsInUnit(un) = 0 AND NOT GetClass(un) = 2 then
+    ComEnterUnit(un, kirovBarracks[2]);
+    end;
+
+UpgradeKirovBase;
+
+End;

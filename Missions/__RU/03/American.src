@@ -1,44 +1,120 @@
-//
+Export omicronSquad, Omikron;
 Export amIntroUnits;
+
 Export Function PrepareAmericansMissionIntro;
 var i, veh, human;
 begin
-    amIntroUnits = [];
+amIntroUnits = [];
 
-    uc_side = 1;
-    uc_nation = nation_american;
+uc_side = 1;
+uc_nation = nation_american;
 
-    vc_chassis = us_medium_tracked;
-    vc_control = control_manual;
-    vc_engine = engine_combustion;
-    vc_weapon = us_light_gun;
-    vc_fuel_battery = 100;
-    veh = CreateVehicle;
+vc_chassis = us_medium_tracked;
+vc_control = control_manual;
+vc_engine = engine_combustion;
+vc_weapon = us_light_gun;
+vc_fuel_battery = 100;
+veh = CreateVehicle;
 
-    SetDir(veh, 4);
-    amIntroUnits = amIntroUnits ^ veh;
-    PlaceUnitArea(veh, AmTroopsSpawnIntro, false);
+SetDir(veh, 4);
+amIntroUnits = amIntroUnits ^ veh;
+PlaceUnitArea(veh, AmTroopsSpawnIntro, false);
 
-    for i := 1 to 3 do
-    begin
-        hc_name := '';
-        hc_gallery := '';
+for i := 1 to 3 do
+begin
+    hc_name := '';
+    hc_gallery := '';
 
-        PrepareSoldier(false, enemySkillLevel);
+    PrepareSoldier(false, enemySkillLevel);
 
-        human = CreateHuman;
-        amIntroUnits = amIntroUnits ^ human;
+    human = CreateHuman;
+    amIntroUnits = amIntroUnits ^ human;
 
-        if i < 3 then
-            PlaceUnitArea(human, AmTroopsSpawnIntro, false)
-        else
-        begin
-            PrepareMechanic(false, enemySkillLevel);
-            human = CreateHuman;
+    if i < 3 then
+       PlaceUnitArea(human, AmTroopsSpawnIntro, false)
+       else
+       begin
+       PrepareMechanic(false, enemySkillLevel);
+       human = CreateHuman;
 
-            PlaceHumanInUnit(human, veh);
-        end;
+       PlaceHumanInUnit(human, veh);
+       end;
     end;
-    HiddenCamera(120, 36, 3);
-    ComMoveXY(amIntroUnits, 26, 34);
+
+HiddenCamera(120, 36, 3);    
+ComMoveXY(amIntroUnits, 26, 34);
 end;
+
+Export Function PrepareOmikron;
+var i, un, tmp, veh, omikronDepot, omiBuildingArray;
+begin
+omiBuildingArray := [
+    [b_warehouse, 20, 33, 2],          
+    [b_oil_mine, 38, 30, 5],
+    [b_barracks, 34, 25, 4],
+    [b_barracks, 35, 45, 4],
+    [b_lab, 27, 27, 3],
+    [b_breastwork, 25, 8, 5],
+    [b_bunker, 37, 35, 4],
+    [b_bunker, 42, 45, 4],   
+    [b_bunker, 29, 17, 4],
+    [b_bunker, 30, 53, 0],
+    [b_bunker, 42, 56, 4],
+    [b_bunker, 30, 20, 4],
+    [b_solar_power, 7, 8, 1],
+    [b_solar_power, 10, 8, 1],
+    [b_solar_power, 13, 8, 1],
+    [b_oil_power, 23, 42, 4],
+    [b_factory, 13, 14, 1],
+    [b_ext_noncombat, 10, 11, 2],
+    [b_ext_gun, 9, 14, 1],
+    [b_ext_track, 13, 17, 0]
+];
+
+for i in omiBuildingArray do
+    PrepareBuilding(1, 1, 5, i[1], i[2], i[3], i[4], false);
+
+omikronDepot := FilterAllUnits([[f_side, 1], [f_btype, b_warehouse]])[1];
+SetBName(omikronDepot, 'omikron');
+
+for i := 1 to 2 do
+    SetResourceType(GetBase(omikronDepot), i, 500);
+
+
+uc_side := 1;
+uc_nation := 1;
+                            
+omicronSquad := [];                             
+
+for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) do
+    begin
+    PrepareHuman(sex_male, 1, [3, 4, 5][Difficulty]);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    SetDir(un, GetDir(i) - 3);
+    PlaceHumanInUnit(un, i);
+    PlaceWeaponTurret(i, GetTurretWeapon(i, areaOmicron));
+    end;
+
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    PrepareHuman(false, 2, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, omikronDepot);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle([us_medium_wheeled, us_medium_tracked][i], engine_solar, control_manual, [us_light_gun, us_gatling_gun][i], 100);
+    veh := CreateVehicle;
+    PlaceUnitXYR(veh, 28, 37, 6, false);
+
+    PrepareHuman(false, 3, 2);
+    un := CreateHuman;
+    omicronSquad := omicronSquad union un;
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, GetX(un) + 3, GetY(un));
+    end;
+End;
