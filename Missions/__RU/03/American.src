@@ -1,5 +1,6 @@
 Export omicronSquad, Omikron;
 Export amIntroUnits;
+Export amConvoyGroups;
 
 Export Function PrepareAmericansMissionIntro;
 var i, veh, human;
@@ -48,6 +49,15 @@ end;
 Export Function PrepareOmikron;
 var i, un, tmp, veh, omikronDepot, omiBuildingArray;
 begin
+//sol sci veh
+amConvoyGroups := [
+[[1, 2, 2, 3][Difficulty], [0, 1, 1, 2][Difficulty], [0, 0, 0, 1][Difficulty]],
+[[1, 2, 3, 4][Difficulty], [0, 1, 2, 3][Difficulty], [0, 0, 1, 1][Difficulty]],
+[[1, 2, 2, 3][Difficulty], [0, 1, 2, 2][Difficulty], [0, 0, 2, 3][Difficulty]],
+[[1, 2, 2, 3][Difficulty], [0, 1, 2, 2][Difficulty], [0, 0, 1, 2][Difficulty]],
+[[2, 2, 2, 3][Difficulty], [1, 2, 3, 3][Difficulty], [0, 0, 2, 2][Difficulty]]
+];
+
 omiBuildingArray := [
     [b_warehouse, 20, 33, 2],          
     [b_oil_mine, 38, 30, 5],
@@ -118,3 +128,59 @@ for i := 1 to 2 do
     ComMoveXY(un, GetX(un) + 3, GetY(un));
     end;
 End;
+
+//NEFEK CODE
+Export amConvoyTroops;
+Export Function PrepareAmericanConvoy(soldiersAmount, scientistsAmount, vehiclesAmount, area);
+var i, un, veh, road;
+begin
+    uc_side := 1;
+    uc_nation := 1;
+
+    hc_name := '';
+    hc_gallery := '';
+
+    // Soldiers
+    for i := 1 to soldiersAmount do
+    begin
+        PrepareSoldier(false, enemySkillLevel);
+        un = CreateHuman;
+        amConvoyTroops := amConvoyTroops ^ un;
+
+        PlaceUnitArea(un, area, false);
+    end;
+
+    // Scientists
+    for i := 1 to scientistsAmount do
+    begin
+        PrepareScientist(false, enemySkillLevel);
+        un = CreateHuman;
+        amConvoyTroops := amConvoyTroops ^ un;
+
+        PlaceUnitArea(un, area, false);
+    end;
+
+    // Vehicles
+    for i := 1 to vehiclesAmount do
+    begin
+
+        vc_weapon = [us_machine_gun, us_gatling_gun, us_light_gun][Rand(1, 3)];
+        vc_chassis = us_medium_tracked;
+        vc_control = control_manual;
+        vc_engine = engine_combustion;
+        veh = CreateVehicle;
+        amConvoyTroops = amConvoyTroops ^ veh;
+
+        PlaceUnitArea(veh, area, false);
+
+        PrepareMechanic(false, enemySkillLevel);
+        un = CreateHuman;
+        amConvoyTroops = amConvoyTroops ^ un;
+
+        PlaceHumanInUnit(un, veh);
+
+        SetFuel(veh, 100);
+    end;
+
+    ComAgressiveMove(amConvoyTroops, 25, 31);
+end;

@@ -77,6 +77,7 @@ for un in kirovBaseUnits do
 ChangeMissionObjectives('M1');
 
 Query('QReadyInfo');
+counterEnable := true;
 wait(0$5);
 
 for un in kirovBaseUnits do
@@ -88,3 +89,69 @@ for un in kirovBaseUnits do
 UpgradeKirovBase;
 
 End;
+
+//COUNTER
+Export counterEnable, counterIndex, ticks, timeToPrepareAttack, timeToArabAttack;
+every 0$1 trigger counterEnable do
+var veh, hum, i;
+begin
+
+    enable;
+
+    veh = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay]]]);
+    hum = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) + kurinVehNeeded;
+
+   ticks = ticks + 0$01;
+
+   VehNeeded = hum - veh;
+
+   timeToArabAttack = timeToArabAttack  - 0$01;
+
+  // if(timeToArabAttack) = 0 then
+   //   OmiRunB = true;
+
+    case counterIndex of
+        1:begin
+
+              if VehNeeded <= 0 then
+              display_strings = ['#Ru03-5a'] ^ ['#Ru03-4', timeToPrepareAttack]
+              else
+              display_strings = ['#Ru03-5', VehNeeded] ^ ['#Ru03-4', timeToPrepareAttack];  //#Ru03-5'
+
+              timeToPrepareAttack = timeToPrepareAttack - 0$01;
+
+         end;
+
+        2:begin
+            display_strings=['#Ru03-1', timeToArrive];
+            timeToArrive = timeToArrive - 0$01;
+        end;
+
+        3:begin
+            display_strings=['#Ru03-2', timeToArrive];
+            timeToArrive = timeToArrive - 0$01;
+        end;
+
+        4:begin
+            display_strings=['#Ru03-3', extraTime];
+            extraTime = extraTime - 0$01;
+        end;
+    end;
+
+    //CONVOYS
+    if ticks = 0$10 then
+    PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], AmTroopsSpawn);
+
+    if ticks = 12$0 then
+    PrepareAmericanConvoy(amConvoyGroups[2][1], amConvoyGroups[2][2], amConvoyGroups[2][3], [AmTroopsSpawn, AmTroopsSpawnSwamp][Rand(1, 2)]);
+
+    if ticks = 20$0 then
+    PrepareAmericanConvoy(amConvoyGroups[3][1], amConvoyGroups[3][2], amConvoyGroups[3][3], [AmTroopsSpawn, AmTroopsSpawnSwamp][Rand(1, 2)]);
+
+    if ticks = 23$0 then
+    PrepareAmericanConvoy(amConvoyGroups[4][1], amConvoyGroups[4][2], amConvoyGroups[4][3], [AmTroopsSpawn, AmTroopsSpawnSwamp][Rand(1, 2)]);
+
+    if ticks = 26$0 then
+    PrepareAmericanConvoy(amConvoyGroups[5][1], amConvoyGroups[5][2], amConvoyGroups[5][3], [AmTroopsSpawn, AmTroopsSpawnSwamp][Rand(1, 2)]);
+End;
+
