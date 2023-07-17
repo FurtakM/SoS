@@ -1,11 +1,12 @@
-Export currentTeam, kirovBaseUnits;
+Export currentTeam, kirovBaseUnits, bukovMsg;
 Export counterEnable, counterIndex, ticks, convoyTime, timeToPrepareAttack, timeToArabAttack;
 Export Function MissionIntro;
-var un, selectedPeople;
+var i, un, selectedPeople;
 begin
 CenterNowOnUnits([Burlak, Kurin]);
 
 convoyTime := [0$10, 15$00, 20$00, 25$00];
+bukovMsg := ['D3a-RSol1-1', 'D3b-RSol1-1'];
 
 //BELKOV TEAM DEAD
 if NOT Belkov then
@@ -15,7 +16,7 @@ if NOT Belkov then
    Say(Kurin, 'D1a-Kur-2');
    //ANGRY PLATO
    Say(Kurin, 'D1a-Kur-2a');
-   Say(Kurin, 'D1a-Kur-2b');
+   Say(Kurin, 'D1a-Kur-2b'); 
    Say(Burlak, 'D1a-Bur-2');
    end
 else
@@ -64,6 +65,8 @@ AddComMoveXY(Gaydar, 209, 164);
 kirovBarracks := FilterAllUnits([[f_side, 6], [f_btype, b_armoury]]);
 kirovBaseUnits := kirovBaseUnits diff selectedPeople;
 SetClass(kirovBaseUnits[1], 2);
+for i:=2 to 3 do
+SetClass(kirovBaseUnits[i], 3);
 
 for un in selectedPeople do
     ComExitBuilding(un);
@@ -81,6 +84,7 @@ ChangeMissionObjectives('M1');
 
 Query('QReadyInfo');
 counterEnable := true;
+SaveForQuickRestart;
 wait(0$5);
 
 for un in kirovBaseUnits do
@@ -121,6 +125,7 @@ else
    display_strings = ['#Ru03-5', VehNeeded] ^ ['#Ru03-4', timeToPrepareAttack];  //#Ru03-5'
 
 timeToPrepareAttack = timeToPrepareAttack - 0$01;
+
 end;
 
 2:begin
@@ -143,12 +148,27 @@ End;
 //CONVOYS
 if ticks = convoyTime[1] then
    begin
+   SayRadio(Bukov, bukovMsg[1]);
+   if bukovMsg[1] = 'D3a-RSol1-1' then
+   begin
+      SayRadio(Burlak, 'D3a-Bur-1');
+      if IsOk(Gnyevko) then
+         Say(Gnyevko, 'D3b-Gny-1');
+         Say(Burlak, 'D3b-Bur-1');
+      if IsOK(Kovalyuk) then
+         Say(Kovalyuk, 'D3b-Kov-1');
+         Say(Bukov, 'D3b-Rsol1-2');
+   bukovMsg := bukovMsg diff bukovMsg[1];
+   end;
+                                     
    PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], amConvoyGroups[1][4], amConvoyGroups[1][5], AmTroopsSpawn);
    //ATTACKS ON BERIA/KAGAN
    PrepareAttackOnRus();
    wait(0$1);
-   Delete(amConvoyGroups, 1);
-   Delete(convoyTime, 1);
+   //Delete(amConvoyGroups, 1);
+   amConvoyGroups := amConvoyGroups diff amConvoyGroups[1];
+   convoyTime := convoyTime diff convoyTime[1];
+   //Delete(convoyTime, 1);
    end;
 End;
 
@@ -169,6 +189,87 @@ for i := 1 to amIntroUnits do
     if GetLives(amIntroUnits[i]) <= 700 then
        ComMoveToArea(amIntroUnits[i], amRetreatArea);
     end;
+end;
+
+// Dialog track
+every 0$1 trigger NOT dialog_track do
+var vehicle;
+begin
+enable;
+
+for vehicle in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_or, [f_chassis, ru_medium_wheeled], [f_chassis, ru_heavy_wheeled]]]) do
+    if GetDistUnitXY(vehicle, 48, 81) < 7 then
+    begin
+    dialog_track = true;
+
+    CenterNowOnXY(48, 81);
+
+    DialogueOn;
+    Say(Burlak, 'D5a-Bur-1');
+    DialogueOff;
+
+    // 82 - basic tools
+    if GetTech(82, 3) = state_disabled then
+       SetTech(82, 3, state_enabled);
+
+    // 84 - track
+    SetTech(84, 3, state_enabled);
+
+    SetRestrict(b_ext_track, 3, state_enabled);
+
+    exit;
+    end;
+end;
+
+// Spawn Scholtze
+every 5$30 do
+begin
+PrepareScholtze;
+
+wait(0$2);
+
+DialogueOn;
+SayNoFaceRadio(Scholtze2, 'D4-Sch-1');
+SayRadio(Burlak, 'D4-Bur-1');
+DialogueOff;
+
+ChangeMissionObjectives('M4');
+
+ComHold(Scholtze);
+
+scholtzeSpawned = true;
+end;
+
+// Contact with Scholtze
+every 0$1 trigger See(3, Scholtze) AND scholtzeSpawned AND NOT scholtzeSaved do
+begin
+scholtzeSaved = true;
+
+CenterNowOnUnits(Scholtze);
+
+SetSide(Scholtze, 3);
+
+DialogueOn;
+
+Say(Scholtze, 'D4a-Sch-1');
+Say(Burlak, 'D4a-Bur-1');
+Say(Scholtze, 'D4a-Sch-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('MScholtzeOut');
+
+SetTech(tech_Tech2, 3, state_enabled);
+SetTech(tech_Weap1, 3, state_enabled);
+
+// 82 - basic tools
+if GetTech(82, 3) = state_disabled then
+   SetTech(82, 3, state_enabled);
+
+// 83 - cargo
+SetTech(83, 3, state_enabled);
+
+SetRestrict(b_ext_noncombat, 3, state_enabled);
 end;
 
 

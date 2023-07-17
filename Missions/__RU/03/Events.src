@@ -1,9 +1,9 @@
 //
 On BuildingComplete(building) do
-var un, bunkers, sols;
+var un, i, bunkers, sols, labT1;
 begin
 if GetSide(building) = 6 and (GetBType(building) = b_bunker or GetBType(building) = b_armoury) then
-   begin
+begin
    sols := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_soldier], [f_inside]]);
    for un in sols do
        begin
@@ -13,5 +13,44 @@ if GetSide(building) = 6 and (GetBType(building) = b_bunker or GetBType(building
        AddComEnterUnit(un, building);
        break;
        end;
+   if labT1 = false then
+      begin
+      labT1 = true;
+      AddComUpgradeLab(kirovLab, b_lab_weapon);
+      end;
+end;
+
+End;
+
+On UpgradeComplete(building) do
+var i, un, weapon;
+begin
+if GetSide(building) = 6 and Length(comArray) > 0 then
+   begin
+   if comArray[1] = kirovLab then
+   AddComUpgradeLab(comArray[1], b_lab_weapon)
+   else
+   AddComUpgrade(comArray[1]);
+   comArray := comArray diff comArray[1];
+   wait(0$1);
+   AddComComplete(kirovEngs, building);
    end;
+                                              
+if GetSide(building) = 6 and GetBType(building) = b_factory or GetBType(building) = b_workshop then
+   begin
+      //un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic]]);
+      //AddComEnterUnit(un, kirovFactory);
+      
+      //AddComChangeProfession(UnitsInside(building), class_mechanic);
+      un := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_bunker]]);
+      for i in un do
+        //PlaceWeaponTurret(i, [42, 43][Rand(1,2)]);
+          AddComPlaceWeapon(i, [ru_heavy_machine_gun, ru_gatling_gun][Rand(1,2)]);
+   end;
+End;
+
+On BuildingStarted(building, hum) do
+var un, i;
+begin
+AddComComplete(kirovEngs, building);
 End;

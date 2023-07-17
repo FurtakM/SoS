@@ -1,15 +1,14 @@
 Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Benko, Kuklajs; // Heroes with Burlak
-Export Scholtze; // Other heroes
 Export otherBeriaUnits, beriaBase, beriaDepot, beriaVehs; // Beria base buildings from 02 -> Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
                                              // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
                                              // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
 Export Kurin, Popov;
 Export otherKirovUnits;
-Export kirovBase, kirovDepot, kirovOilDepot;
+Export kirovBase, kirovDepot, kirovOilDepot, kirovLab, kirovBarracks, kirovWorkshop;
+                                           
+Export Grishko, Gaydar, Bukov, Scholtze, Scholtze2;
 
-Export Grishko, Gaydar, Bukov;
-
-Export burlakTeam, kirovBarracks;
+Export burlakTeam, kirovEngs;
 
 Export Function PrepareRussians;
 var un;
@@ -125,7 +124,7 @@ SetBName(beriaDepot, 'beria');
 End;
 
 Export Function PrepareKirovBase;
-var i, tmp, buildings, x, b, bonusResources, kirovDepot;
+var i, un, tmp, buildings, x, b, bonusResources;
 begin
 kirovBase := LoadVariable('02_Kirov', []);
 
@@ -177,7 +176,7 @@ if tmp then
 End;
 
 Export Function UpgradeKirovBase;
-var i, kirovEngs, kirovBuildingArray;
+var i, un, kirovBuildingArray;
 begin
   kirovBuildingArray := [
     [b_bunker, 146, 106, 1],
@@ -186,10 +185,42 @@ begin
     [b_bunker, 172, 104, 4],
     [b_bunker, 179, 118, 4],
     [b_oil_power, 159, 96, 3]
-  ];
+  ];                          
 
-  kirovEngs := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]);
+kirovEngs := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]);
+kirovLab := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_lab]])[1];
+kirovBarracks := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_armoury]]);
+kirovWorkshop := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_workshop]])[1];
 
-  for i in kirovBuildingArray do
-      AddComBuild(kirovEngs, i[1], i[2], i[3], i[4]);
+un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic]]);
+ComExitBuilding(un);
+AddComEnterUnit(un, kirovWorkshop);
+wait(0$1);
+un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_scientistic]]);
+AddComEnterUnit(un, kirovLab);
+
+
+for i in kirovBuildingArray do
+    AddComBuild(kirovEngs, i[1], i[2], i[3], i[4]);
+
+//AddComUpgrade(kirovWorkshop);
+
+comArray := [
+kirovLab,
+kirovBarracks[1],     
+kirovBarracks[2],
+kirovDepot,         
+kirovWorkshop
+];
+
+End;
+
+Export Function PrepareScholtze;
+begin
+    uc_side := 5;
+
+    Scholtze := NewCharacter('Scholtze');
+    Scholtze2 := NewCharacter('Scholtze');
+                                          
+    PlaceUnitArea(Scholtze, ScholtzeSpawnArea, true);
 End;
