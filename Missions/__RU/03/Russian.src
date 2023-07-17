@@ -1,6 +1,6 @@
 Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Benko, Kuklajs; // Heroes with Burlak
 Export Scholtze; // Other heroes
-Export otherBeriaUnits, beriaBase, beriaDepot; // Beria base buildings from 02 -> Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+Export otherBeriaUnits, beriaBase, beriaDepot, beriaVehs; // Beria base buildings from 02 -> Lab -> ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
                                              // Depot/warehouse - > [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLives(i)], GetResourceType(GetBase(i), mat_cans), GetResourceType(GetBase(i), mat_oil), GetResourceType(GetBase(i), mat_siberit) ]
                                              // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
 Export Kurin, Popov;
@@ -92,12 +92,18 @@ begin
 end;
 
 Export Function PrepareBeriaBase;
-var i, bonusResources, beriaDepot;
+var i, veh, bonusResources, beriaDepot;
 begin
   beriaBase := LoadVariable('02_Beria', []);
+  beriaVehs := LoadVariable('02_VehiclesCount', []);
 
   uc_side := 3;
   uc_nation := 3;
+
+  vc_chassis = ru_medium_wheeled;
+  vc_control = control_manual;
+  vc_engine = engine_combustion;
+  vc_weapon = ru_heavy_machine_gun;
 
   for i := 1 to beriaBase do
   begin
@@ -112,6 +118,13 @@ begin
 
     CreateAndPlaceBuildingXYD(beriaBase[i][3] + 46, beriaBase[i][4], beriaBase[i][5]);
   end;
+
+  for i := 1 to beriaVehs do
+      begin
+      vc_fuel_battery = [20, 35, 50, 80][Rand(1,4)];
+      veh = CreateVehicle;
+      PlaceUnitArea(veh, beriaBaseArea, false);
+      end;
 
   beriaDepot := FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1];
   SetBName(beriaDepot, 'beria');
