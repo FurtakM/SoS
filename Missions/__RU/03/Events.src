@@ -23,8 +23,49 @@ end;
 End;
 
 On UpgradeComplete(building) do
-var i, un, weapon;
+var i, un, weapon, maleSci, maleOthers;
 begin
+
+if GetSide(building) = 3 then
+begin
+dialog_workshop = true;
+
+if NOT FilterAllUnits([[f_side, 3], [f_btype, b_oil_power]]) then
+   begin
+   CenterNowOnUnits(building);
+   DialogueOn;
+   Say(Burlak, 'D3aa-Bur-1');
+
+   if IsOk(Scholtze) AND GetSide(Scholtze) = 3 then
+      Say(Scholtze, 'D3aa-Sch-1')
+      else
+          begin
+          maleSci = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_class, class_scientistic], [f_sex, sex_male], [f_ok]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Belkov2];
+
+          if maleSci then
+             Say(maleSci[1], 'D3aa-Sci1-1')
+          else
+              begin
+              maleOthers = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Belkov2];
+
+              if maleOthers then
+                 Say(maleOthers[1], 'D3aa-Sci1-1')
+              else
+                 begin
+                 maleOthers = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_ok]]) diff [Burlak];
+                 Say(maleOthers[1], 'D3aa-Sci1-1');
+                 end;
+            end;
+        end;
+
+        Say(Burlak, 'D3aa-Bur-2');
+
+        DialogueOff;
+    end;
+
+    ChangeMissionObjectives('M3');
+end;
+
 if GetSide(building) = 6 and Length(comArray) > 0 then
    begin
    if comArray[1] = kirovLab then
@@ -38,13 +79,8 @@ if GetSide(building) = 6 and Length(comArray) > 0 then
                                               
 if GetSide(building) = 6 and GetBType(building) = b_factory or GetBType(building) = b_workshop then
    begin
-      //un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic]]);
-      //AddComEnterUnit(un, kirovFactory);
-      
-      //AddComChangeProfession(UnitsInside(building), class_mechanic);
       un := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_bunker]]);
       for i in un do
-        //PlaceWeaponTurret(i, [42, 43][Rand(1,2)]);
           AddComPlaceWeapon(i, [ru_heavy_machine_gun, ru_gatling_gun][Rand(1,2)]);
    end;
 End;

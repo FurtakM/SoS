@@ -157,7 +157,7 @@ if ticks = convoyTime[1] then
          Say(Burlak, 'D3b-Bur-1');
       if IsOK(Kovalyuk) then
          Say(Kovalyuk, 'D3b-Kov-1');
-         Say(Bukov, 'D3b-Rsol1-2');
+         SayRadio(Bukov, 'D3b-Rsol1-2');
    bukovMsg := bukovMsg diff bukovMsg[1];
    end;
                                      
@@ -272,7 +272,97 @@ SetTech(83, 3, state_enabled);
 SetRestrict(b_ext_noncombat, 3, state_enabled);
 end;
 
+//CRATES
+every 0$30 do
+begin
+enable;
+    CreateCratesAnywhere(rand(3, 5), true);
+end;
 
 
+// Stop move near Omicron base
+every 1 trigger NOT meetNearOmicronBase do
+var i, unit, randDialog, currentDist, tmpDist, nearUnit, index;
+begin
+    enable;
+    for unit in FilterUnitsInArea(areaOmicron, [[f_side, 1], [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building]]]) do
+        if GetDistUnits(unit, NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit)) < 17 then
+        begin
+            ComMoveXY(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit), 114, 98);
+            if NOT dialog_stop then
+            begin
 
+                if NOT IsOK(Gnyevko) then
+                    SayRadio(Kurin, 'D11-Kur-1')
+                else
+                    Say(Gnyevko, 'D11-Gny-1');
+            end;
+        end;
+end;
+
+// CANT ENTER TO KIROV BASE
+every 1 trigger SeeArea(3, areaKirov) >= 6 and counterEnable do
+var unit;
+begin
+    enable;
+
+    for unit in FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]) do
+        if IsInArea(unit, areaKirov) AND (UnitFilter(unit, [f_type, unit_human]) OR UnitsInside(unit)) then
+        begin
+            ComMoveXY(unit, 120, 98);
+
+            if NOT dialog_stop then
+            begin
+                dialog_stop = true;
+                Say(Kurin, 'D12-Kur-1');
+                wait(0$5);
+                dialog_stop = false;
+            end;
+        end;
+end;
+
+//KURIN QUERY
+every 0$1 trigger IsSelected(Kurin) do
+begin
+
+If true then
+   begin
+   case Query('QReadyToAttack') of
+   1:begin
+
+   DeselectUnits(Kurin);
+   SelectUnits(Burlak);
+   Say(Burlak, 'D6a-Bur-1');
+   SayRadio(Kurin, 'D6a-Kur-1');
+
+   meetNearOmicronBase = true;
+   kurinCheckVehicles = true;
+
+   disable;
+
+
+   end;
+
+   2:begin
+
+   DeselectUnits(Kurin);
+   SelectUnits(Burlak);
+   Say(Burlak,'D6b-Bur-1');
+   Say(Kurin,'D6b-Kur-1');
+   Say(Burlak,'D6b-Bur-2');
+
+   meetNearOmicronBase = true;
+
+   disable;
+   end;
+
+   3:begin
+   // continue;
+   DeselectUnits(Kurin);
+   SelectUnits(Burlak);
+      end;
+   end;
+end;
+enable;
+end;
 
