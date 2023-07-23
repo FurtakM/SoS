@@ -1,8 +1,10 @@
 Export currentTeam, kirovBaseUnits, bukovMsg;
 Export counterEnable, counterIndex, ticks, convoyTime, timeToPrepareAttack, timeToArabAttack;
+Export kirovAttackVehicles;
 Export Function MissionIntro;
 var i, un, selectedPeople;
 begin
+InGameOn;
 CenterNowOnUnits([Burlak, Kurin]);
 
 convoyTime := [0$10, 15$00, 20$00, 25$00];
@@ -86,6 +88,7 @@ Query('QReadyInfo');
 counterEnable := true;
 SaveForQuickRestart;
 wait(0$5);
+InGameOff;
 
 for un in kirovBaseUnits do
     begin
@@ -110,6 +113,11 @@ hum = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) + kurinVehNeeded;
 ticks = ticks + 0$01;
 
 VehNeeded = hum - veh;
+
+if VehNeeded < 0 then
+   enoughVehsForKirov = true
+else
+   enoughVehsForKirov = false;
 
 timeToArabAttack = timeToArabAttack  - 0$01;
 
@@ -244,7 +252,7 @@ end;
 every 0$1 trigger See(3, Scholtze) AND scholtzeSpawned AND NOT scholtzeSaved do
 begin
 scholtzeSaved = true;
-
+                                                           
 CenterNowOnUnits(Scholtze);
 
 SetSide(Scholtze, 3);
@@ -259,7 +267,7 @@ DialogueOff;
 
 ChangeMissionObjectives('MScholtzeOut');
 
-SetTech(tech_Tech2, 3, state_enabled);
+SetTech(tech_Tech2, 3, state_enabled);    
 SetTech(tech_Weap1, 3, state_enabled);
 
 // 82 - basic tools
@@ -329,7 +337,7 @@ If true then
    begin
    case Query('QReadyToAttack') of
    1:begin
-
+                                        
    DeselectUnits(Kurin);
    SelectUnits(Burlak);
    Say(Burlak, 'D6a-Bur-1');
@@ -364,5 +372,110 @@ If true then
    end;
 end;
 enable;
+end;
+
+Export enoughVehsForKirov;
+// Kurin ask about preparation to attack
+every 0$1 trigger timeToPrepareAttack < 0$01 do
+begin
+CenterNowOnUnits(Kurin);
+InGameOn;
+DialogueOn;
+
+SayRadio(Kurin, 'D5-Kur-1');
+
+case Query('QVehicles') of
+        1:begin
+        SayRadio(Burlak, 'D6a-Bur-1');
+        SayRadio(Kurin, 'D6a-Kur-1');
+
+        meetNearOmicronBase = true;
+        kurinCheckVehicles = true;
+        end;
+
+        2:begin
+        SayRadio(Burlak,'D6b-Bur-1');
+        SayRadio(Kurin,'D6b-Kur-1');
+        SayRadio(Burlak,'D6b-Bur-2');
+
+        meetNearOmicronBase = true;
+        end;
+
+        3:begin
+        SayRadio(Burlak,'D6c-Bur-1');
+        SayRadio(Kurin,'D6c-Kur-1');
+        SayRadio(Burlak,'D6c-Bur-2');
+
+        kurinGiveMoreTime = true;
+        kurinOpinion = 0;
+
+        counterIndex = 4;
+        end;
+    end;
+
+InGameOff;
+DialogueOff;
+end;
+
+// End more time
+every 0$1 trigger extraTime < 0$01 and kurinGiveMoreTime do
+begin
+DialogueOn;
+SayRadio(Kurin, 'D6c-Kur-2');
+DialogueOff;
+
+meetNearOmicronBase = true;
+end;
+
+// Kurin check amount vehicles
+every 0$1 trigger meetNearOmicronBase do
+var i, mech, mechs, vehs, haveVehs, beriaUnits, freeVehs;
+begin
+mechs = [];
+vehs = [];
+freeVehs := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_weapon, ru_cargo_bay]]]) - FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
+                  
+haveVehs = 0;
+
+uc_side = 6;
+uc_nation = 3;
+                                              
+for i := 1 to freeVehs do
+    begin
+    PrepareMechanic(false, 2);
+    mech = CreateHuman;
+    mechs = mechs ^ mech;      
+    PlaceUnitArea(mech, kirovSpawn, false);
+    ComExitBuilding(mech);
+    wait(0$1);
+    end;
+
+    if enoughVehsForKirov and freeVehs > 0 then
+    begin
+        vehs = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_occupied]]]);
+        for i := 1 to freeVehs do
+            kirovAttackVehicles = kirovAttackVehicles ^ vehs[i];
+
+        SetSide(kirovAttackVehicles, 6);
+
+        produceMoreVehicles = true;
+        
+        for i := 1 to freeVehs do
+            AddComEnterUnit(mechs[i], kirovAttackVehicles[i]);
+
+        if kurinCheckVehicles and not kurinOpinion = 0 then
+        kurinOpinion = 1;
+    end
+    else
+    begin
+        if kurinCheckVehicles then
+        begin
+        DialogueOn;
+        SayRadio(Kurin, 'D6d-Kur-1');
+        DialogueOff;
+
+        YouLost('Vehicles');
+        end;
+    end;
 end;
 
