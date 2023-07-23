@@ -155,7 +155,7 @@ End;
 
 //CONVOYS
 if ticks = convoyTime[1] then
-   begin
+   begin                                 
    SayRadio(Bukov, bukovMsg[1]);
    if bukovMsg[1] = 'D3a-RSol1-1' then
    begin
@@ -172,13 +172,25 @@ if ticks = convoyTime[1] then
    PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], amConvoyGroups[1][4], amConvoyGroups[1][5], AmTroopsSpawn);
    //ATTACKS ON BERIA/KAGAN
    PrepareAttackOnRus();
+
    wait(0$1);
-   //Delete(amConvoyGroups, 1);
+
    amConvoyGroups := amConvoyGroups diff amConvoyGroups[1];
    convoyTime := convoyTime diff convoyTime[1];
-   //Delete(convoyTime, 1);
    end;
 End;
+
+// Find oil deposit
+Every 0$1 trigger GetResourceVisibility(78, 112, 3) do
+begin
+    CenterOnXY(78, 112);
+    DialogueOn;
+    SayRadio(Burlak, 'D2a-Bur-1');
+    SayRadio(Kurin, 'D2a-Kur-1');
+    DialogueOff;
+
+    ChangeMissionObjectives('M2');
+end;
 
 //AM ATTACK RETREAT
 Every 0$1 trigger UnitFilter(amVehs, [f_not,  [f_lives, 700]]) or UnitFilter(amIntroUnits, [f_not,  [f_lives, 700]])  do
@@ -192,11 +204,24 @@ for i := 1 to amVehs do
        ComMoveToArea(amVehs[i], amRetreatArea);
     end;
 
-for i := 1 to amIntroUnits do
+for i := 1 to amIntroUnits and GetLives(i) <= 700 do
     begin
     if GetLives(amIntroUnits[i]) <= 700 then
        ComMoveToArea(amIntroUnits[i], amRetreatArea);
     end;
+           
+for i in amIntroUnits do
+begin
+if IsInArea(i, amRetreatArea) and GetLives(i) <= 700 then
+   SetLives(i, 1000);
+end;
+
+for i in amVehs do
+begin
+if IsInArea(i, amRetreatArea) then
+   SetLives(i, 1000);
+end;
+
 end;
 
 // Dialog track
@@ -284,7 +309,7 @@ end;
 every 0$30 do
 begin
 enable;
-    CreateCratesAnywhere(rand(3, 5), true);
+CreateCratesArea(rand(3, 5), cratesSpawn, true);
 end;
 
 
@@ -299,11 +324,14 @@ begin
             ComMoveXY(NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]), unit), 114, 98);
             if NOT dialog_stop then
             begin
-
+                dialog_stop = true;
                 if NOT IsOK(Gnyevko) then
                     SayRadio(Kurin, 'D11-Kur-1')
                 else
                     Say(Gnyevko, 'D11-Gny-1');
+
+                wait(0$5);
+                dialog_stop = false;
             end;
         end;
 end;
@@ -477,5 +505,26 @@ for i := 1 to freeVehs do
         YouLost('Vehicles');
         end;
     end;
+end;
+
+// Meet with others near Omicron base
+every 0$1 trigger meetNearOmicronBase do
+begin
+    spawnCrates = false;
+
+    SetAttitude(6, 1, att_enemy, true);
+    SetRestrict(b_depot, 3, false);
+
+    ChangeMissionObjectives('M3a');
+    ChangeMissionObjectives('M5');
+
+    SetAreaMapShow(MeetArea, 1);
+
+    ComMoveXY(kirovAttackVehicles, 75, 38);
+    counterIndex = 2;
+
+    if NOT kurinOpinion = 0 then
+        kurinOpinion = 1;
+
 end;
 
