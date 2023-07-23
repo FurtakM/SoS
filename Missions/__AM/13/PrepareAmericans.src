@@ -39,24 +39,23 @@ Frank := PrepareUnit2('Frank', true);
 Kikuchi := PrepareUnit2('Kikuchi', true);
 
 Stevens := PrepareUnit2('Stevens', false);
-
 Powell := PrepareUnit2('Powell', false);
 
-PlaceUnitXYR(JMM, x, y, 4, false);
-PlaceUnitXYR(Stevens, x, y, 4, false);
+PlaceUnit(JMM, x, y, 4, false);
+PlaceUnit(Stevens, x, y, 4, false);
 
-PlaceUnitXYR(Lisa, x, y, 35,  false);
-PlaceUnitXYR(Donaldson, x, y, 35,  false);
-PlaceUnitXYR(Bobby, x, y, 35,  false);
-PlaceUnitXYR(Cyrus, x, y, 35,  false);
-PlaceUnitXYR(Denis, x, y, 35,  false);
-PlaceUnitXYR(Brown, x, y, 35,  false);
-PlaceUnitXYR(Gladstone, x, y, 35,  false);
-PlaceUnitXYR(Houten, x, y, 35,  false);
-PlaceUnitXYR(Cornel, x, y, 35,  false);
-PlaceUnitXYR(Gary, x, y, 35,  false);
-PlaceUnitXYR(Frank, x, y, 35,  false);
-PlaceUnitXYR(Kikuchi, x, y, 35,  false);
+PlaceUnit(Lisa, x, y, 35, false);
+PlaceUnit(Donaldson, x, y, 35, false);
+PlaceUnit(Bobby, x, y, 35, false);
+PlaceUnit(Cyrus, x, y, 35, false);
+PlaceUnit(Denis, x, y, 35, false);
+PlaceUnit(Brown, x, y, 35, false);
+PlaceUnit(Gladstone, x, y, 35, false);
+PlaceUnit(Houten, x, y, 35, false);
+PlaceUnit(Cornel, x, y, 35, false);
+PlaceUnit(Gary, x, y, 35, false);
+PlaceUnit(Frank, x, y, 35, false);
+PlaceUnit(Kikuchi, x, y, 35, false);
 
 SetClass(JMM, 1);
 
@@ -64,10 +63,10 @@ others12 := CreateCharacterSet('12_other_survivors');
 others11 := CreateCharacterSet('12_others');
 
 for i in others11 do
-    PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
+    PlaceUnit(i, GetX(tmp[1]), GetY(tmp[1]), 15, false);
 
 for i in others12 do
-    PlaceUnitXYR(i, GetX(tmp[1]), GetY(tmp[1]), 15,  false);
+    PlaceUnit(i, GetX(tmp[1]), GetY(tmp[1]), 15, false);
 end;
 
 Export Function PrepareEpsilonBase;
@@ -187,8 +186,11 @@ else
 
        b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
 
-       if GetBType(b) = b_bunker or GetBType(b) = b_turret then
-          PlaceWeaponTurret(b, i[7]);
+       if GetBType(b) in [b_bunker, b_turret] then
+          if i[7] then
+             PlaceWeaponTurret(b, i[7])
+          else
+             PlaceWeaponTurret(b, [us_radar, us_rocket_launcher, us_gatling_gun, us_double_gun][rand(1,4)]);
        end;
    end;    
 
@@ -197,10 +199,14 @@ uc_nation := 1;
 
 for i := 1 to 8 do
     begin
-    vc_chassis := [us_morphling, us_medium_tracked, us_heavy_tracked][rand(1,3)];
+    vc_chassis := [us_morphling, us_morphling, us_medium_tracked, us_heavy_tracked][rand(1,4)];
     vc_engine := engine_siberite;
     vc_control := control_manual;
-    vc_weapon := [us_rocket_launcher, us_laser, us_cargo_bay, us_crane, us_double_gun, us_laser][i mod 6 + 1];
+
+    if vc_chassis = us_heavy_tracked then
+       vc_weapon := us_heavy_gun
+    else
+       vc_weapon := [us_rocket_launcher, us_laser, us_cargo_bay, us_crane, us_laser, us_laser][i mod 6 + 1];
 
     un := CreateVehicle;
     SetDir(un, rand(0, 5));
@@ -213,7 +219,7 @@ var i, un, tmp;
 begin
 if FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 6 then
    begin
-   tmp := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, 1]]]);
+   tmp := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
    uc_side := 1;
    uc_nation := 1;
@@ -226,7 +232,7 @@ if FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 6 then
 
        un := CreateHuman;
        randomsEpsilon := Join(randomsEpsilon, un);
-       PlaceUnitXYR(un, GetX(tmp[1]), GetY(tmp[1]), 15, false);
+       PlaceUnit(un, GetX(tmp[1]), GetY(tmp[1]), 15, false);
        end;
    end;
 End;
