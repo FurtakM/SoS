@@ -3,7 +3,7 @@ Export counterEnable, counterIndex, ticks, convoyTime, timeToPrepareAttack, time
 Export kirovAttackVehicles;
 Export Function MissionIntro;
 var i, un, selectedPeople;
-begin
+begin                                   
 InGameOn;
 CenterNowOnUnits([Burlak, Kurin]);
 
@@ -12,7 +12,7 @@ bukovMsg := ['D3a-RSol1-1', 'D3b-RSol1-1'];
 
 //BELKOV TEAM DEAD
 if NOT Belkov then
-   begin
+   begin                                          
    Say(Kurin, 'D1a-Kur-1');
    Say(Burlak, 'D1a-Bur-1');
    Say(Kurin, 'D1a-Kur-2');
@@ -89,6 +89,7 @@ counterEnable := true;
 SaveForQuickRestart;
 wait(0$5);
 InGameOff;
+spawnCrates := true;
 
 for un in kirovBaseUnits do
     begin
@@ -99,6 +100,12 @@ for un in kirovBaseUnits do
 UpgradeKirovBase;
 
 End;
+
+//COUNTER ARAB
+every 0$1 do
+begin
+timeToArabAttack = timeToArabAttack  - 0$01;
+end;
 
 //COUNTER
 every 0$1 trigger counterEnable do
@@ -118,11 +125,6 @@ if VehNeeded < 0 then
    enoughVehsForKirov = true
 else
    enoughVehsForKirov = false;
-
-timeToArabAttack = timeToArabAttack  - 0$01;
-
-//if(timeToArabAttack) = 0 then
-//OmiRunB = true;
 
 case counterIndex of
 1:begin
@@ -239,7 +241,7 @@ for vehicle in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, n
 
     DialogueOn;
     Say(Burlak, 'D5a-Bur-1');
-    DialogueOff;
+    DialogueOff;                                              
 
     // 82 - basic tools
     if GetTech(82, 3) = state_disabled then
@@ -264,7 +266,7 @@ wait(0$2);
 DialogueOn;
 SayNoFaceRadio(Scholtze2, 'D4-Sch-1');
 SayRadio(Burlak, 'D4-Bur-1');
-DialogueOff;
+DialogueOff;                    
 
 ChangeMissionObjectives('M4');
 
@@ -274,7 +276,7 @@ scholtzeSpawned = true;
 end;
 
 // Contact with Scholtze
-every 0$1 trigger See(3, Scholtze) AND scholtzeSpawned AND NOT scholtzeSaved do
+every 0$1 trigger See(3, Scholtze) and scholtzeSpawned and not scholtzeSaved do
 begin
 scholtzeSaved = true;
                                                            
@@ -305,8 +307,26 @@ SetTech(83, 3, state_enabled);
 SetRestrict(b_ext_noncombat, 3, state_enabled);
 end;
 
+// Kill Scholtze
+every 5$0 trigger scholtzeSpawned and not scholtzeSaved do
+begin
+DialogueOn;
+
+SayNoFaceRadio(Scholtze, 'D4b-Sch-1');
+SayRadioNoFace(Scholtze2, 'D4b-Sol1-1');
+SayRadioNoFace(Scholtze2, 'D4b-Sol2-1');
+SayNoFaceRadio(Scholtze, 'D4b-Sch-2');
+Say(Burlak, 'D4b-Bur-2');
+
+DialogueOff;
+
+SetLives(Scholtze, 0);
+end;
+
+
+
 //CRATES
-every 0$30 do
+every 0$30 trigger spawnCrates do
 begin
 enable;
 CreateCratesArea(rand(3, 5), cratesSpawn, true);
@@ -356,7 +376,7 @@ begin
             end;
         end;
 end;
-
+                                   
 //KURIN QUERY
 every 0$1 trigger IsSelected(Kurin) do
 begin
@@ -373,7 +393,7 @@ If true then
 
    meetNearOmicronBase = true;
    kurinCheckVehicles = true;
-
+   timeToArrive = 2$00;
    disable;
 
 
@@ -386,7 +406,7 @@ If true then
    Say(Burlak,'D6b-Bur-1');
    Say(Kurin,'D6b-Kur-1');
    Say(Burlak,'D6b-Bur-2');
-
+   timeToArrive = 2$00;
    meetNearOmicronBase = true;
 
    disable;
@@ -419,6 +439,7 @@ case Query('QVehicles') of
 
         meetNearOmicronBase = true;
         kurinCheckVehicles = true;
+        timeToArrive = 2$00;
         end;
 
         2:begin
@@ -436,7 +457,7 @@ case Query('QVehicles') of
 
         kurinGiveMoreTime = true;
         kurinOpinion = 0;
-
+                                        
         counterIndex = 4;
         end;
     end;
@@ -452,6 +473,7 @@ DialogueOn;
 SayRadio(Kurin, 'D6c-Kur-2');
 DialogueOff;
 
+timeToArrive = 2$00;
 meetNearOmicronBase = true;
 end;
 
@@ -509,22 +531,230 @@ end;
 
 // Meet with others near Omicron base
 every 0$1 trigger meetNearOmicronBase do
+var i;
 begin
-    spawnCrates = false;
+spawnCrates = false;
 
-    SetAttitude(6, 1, att_enemy, true);
-    SetRestrict(b_depot, 3, false);
+SetAttitude(6, 1, att_enemy, true);
+SetRestrict(b_depot, 3, false);
 
-    ChangeMissionObjectives('M3a');
-    ChangeMissionObjectives('M5');
+ChangeMissionObjectives('M3a');
+ChangeMissionObjectives('M5');
 
-    SetAreaMapShow(MeetArea, 1);
+SetAreaMapShow(MeetArea, 1);        
 
-    ComMoveXY(kirovAttackVehicles, 75, 38);
-    counterIndex = 2;
+for i := 1 to kirovAttackVehicles do
+ComMoveXY(kirovAttackVehicles[i], 75, 38);
+counterIndex = 2;
 
-    if NOT kurinOpinion = 0 then
-        kurinOpinion = 1;
+if NOT kurinOpinion = 0 then
+   kurinOpinion = 1;
 
+end;                               
+
+// Delay meet with others near Omicron base
+every 0$1 trigger (timeToArrive <= 0 and counterIndex = 2) do
+begin
+DialogueOn;
+SayRadio(Kurin, 'D7a-Kur-1');
+DialogueOff;
+
+counterIndex = 3;
+timeToArrive = 2$00;
+
+kurinOpinion = 0;
 end;
+
+// Lose when player still don't arrive
+every 0$1 trigger timeToArrive < 0$01 AND counterIndex = 3 do
+YouLost('Delay');
+
+// Attack Omicron
+Export startTheAttack;
+every 0$1 trigger meetNearOmicronBase AND FilterUnitsExceptArea(MeetArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+
+counterEnable = false;
+startTheAttack = true;      
+Display_strings = [];
+
+SetAreaMapShow(MeetArea, 0);
+
+canExitBattlefield = false;
+
+DialogueOn;
+SayRadio(Burlak, 'D7-Bur-1');
+SayRadio(Kurin, 'D7-Kur-1');
+DialogueOff;
+
+ChangeMissionObjectives('M5a');
+
+//Query('QRefuel');
+
+KirovAttackOmicron;                  
+end;
+
+//KIROV ATTACK RETREAT
+Every 0$1 trigger (UnitFilter(kirovAttackVehicles[KirovCurrentAttacker], [f_not,  [f_lives, 700]]) and startTheAttack) or not IsBusy(kirovAttackVehicles[KirovCurrentAttacker]) do
+var i;
+begin                                                                                
+enable;                                   
+                                         
+if GetLives(kirovAttackVehicles[KirovCurrentAttacker]) <= 700 then
+   begin                                                            
+   ComMoveToArea(kirovAttackVehicles[KirovCurrentAttacker], MeetAreaRetreat);
+   AddComRepairVehicleAndReturn(IsDrivenBy(kirovAttackVehicles[KirovCurrentAttacker]));
+   SetFuel(kirovAttackVehicles[KirovCurrentAttacker], 100);
+   KirovCurrentAttacker = KirovCurrentAttacker + 1;
+   KirovAttackOmicron;
+   end;
+End;
+                                                                              
+// Omicron surrender
+Export omicronNotDestroyed;
+every 0$1 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 or timeToArabAttack = ticks do
+var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding, turrets, nearTurrets, emptyVehicles;
+begin
+omicronSurrender = true;
+canExitBattlefield = true;
+
+endCutscene = true;
+
+if timeToArabAttack = 0 and not IsDead(omikronDepot) then
+   omicronNotDestroyed = true
+else
+    omicronNotDestroyed = false;
+
+SetAttitude(1, 3, att_friend, false);
+SetAttitude(2, 3, att_friend, true);
+
+CenterNowOnUnits(Burlak);
+
+SayRadioNoFace(Scholtze2, 'D8-Sol1-1');
+
+if IsOk(Kovalyuk) then
+   Say(Kovalyuk, 'D8-Kov-1');
+
+SayRadio(Bukov, 'D8-RSol1-1');
+
+if IsOk(Gnyevko) then
+   Say(Gnyevko, 'D8-Gny-1');
+
+tmpRu = FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov];
+Say(tmpRu[1], 'D8-RSol2-1');
+
+DialogueOff;
+
+//PrepareArabian;
+
+music_nat = nation_arabian;
+music_class = music_combat;
+game_speed = 4;
+
+DialogueOn;
+SayRadio(Grishko, 'D9-Gri-1');
+SayRadio(Kurin, 'D9-Kur-1');
+DialogueOff;
+
+CenterOnXY(162, 107);
+
+wait(2$0);
+
+DialogueOn;
+SayRadio(Grishko, 'D9-Gri-2');
+SayRadio(Kurin, 'D9-Kur-2');
+
+wait(1$0);
+
+SayRadio(Grishko, 'D9-Gri-3');
+DialogueOff;
+
+CenterNowOnUnits(Kurin);
+
+SayRadio(Kurin, 'D9-Kur-3');
+
+DialogueOn;
+SayRadio(Kurin, 'D9a-Kur-1');
+SayRadio(Burlak, 'D9a-Bur-1');
+SayRadio(Kurin, 'D9a-Kur-2');
+DialogueOff;
+
+wait(0$1);
+
+ComMoveUnit(Popov, Burlak);
+repeat
+      wait(0$1);
+until GetDistUnits(Burlak, Popov) < 8 OR (IsInUnit(Burlak) < 8 AND IsInUnit(Burlak));
+
+if IsInUnit(Burlak) then
+   begin
+   ComExitVehicle(Burlak);
+   wait(0$1);
+   end;                           
+
+CenterNowOnUnits([Burlak, Popov]);
+
+ComTurnUnit(Burlak, Popov);
+ComTurnUnit(Popov, Burlak);
+
+Say(Burlak, 'D10a-Bur-1');
+Say(Popov, 'D10a-Pop-1');
+Say(Burlak, 'D10a-Bur-2');
+Say(Popov, 'D10a-Pop-2');
+Say(Burlak, 'D10a-Bur-3');
+Say(Popov, 'D10a-Pop-3');
+Say(Burlak, 'D10a-Bur-4');
+Say(Popov, 'D10a-Pop-4');
+Say(Burlak, 'D10a-Bur-5');
+Say(Popov, 'D10a-Pop-5');
+
+EndMission;
+end;
+
+Export Function EndMission;
+begin
+
+if enoughVehsForKirov then
+   AddMedal('Surplus',1)
+else if produceOnlyForYou then
+   AddMedal('Surplus',-1)
+else
+   AddMedal('Surplus',-2);
+
+if scholtzeSaved and IsOK(Scholtze) then
+   AddMedal('Scholtze',1)
+else
+    AddMedal('Scholtze', -1);
+
+if omicronNotDestroyed = false then
+   AddMedal('OmiRun',1)
+else
+    AddMedal('OmiRun', -1);
+
+GiveMedals('Main');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]));
+
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Gnyevko) then
+   SaveCharacters(Gnyevko, currentMissionPrefix & 'Gnyevko');
+
+if IsLive(Kovalyuk) then
+   SaveCharacters(Kovalyuk, currentMissionPrefix & 'Kovalyuk');
+
+if IsLive(Belkov) then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+SaveCharacters(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova], currentMissionPrefix & 'burlakTeam');
+SaveCharacters(FilterAllUnits([[f_side, 6], [f_nation, 3], [f_type, unit_human]]) diff ([Kurin]), currentMissionPrefix & 'kirovTeam');
+
+SaveVariable(kurinOpinion, '03_KurinOpinion');
+
+YouWin;
+
+End;
 
