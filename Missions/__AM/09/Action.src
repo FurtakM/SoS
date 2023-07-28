@@ -1,5 +1,5 @@
 Export Function Action;
-var x, y, i, tmp, t, engs, un, speaker;
+var x, y, i, tmp, t, engs, un, speaker, com;
 begin
 ingame_video := true;
 interface_hidden := true;
@@ -7,29 +7,37 @@ interface_hidden := true;
 x := 101;
 y := 116;
 
+if sikorskiActive then
+   com := Sikorski
+else
+   com := Truman;
+
 PlaceSeeing(x, y, 1, -30);
 CenterNowOnXY(x, y);
 
-tmp := FilterAllUnits([[f_side, 4], [f_type, unit_human]]) diff Sikorski;
+tmp := FilterAllUnits([[f_side, 4], [f_type, unit_human]]) diff com;
 
 AddComTurnXY(tmp, 111, 125);
 
 wait(0$02);
-AddComMoveXY(Sikorski, 105, 111);
+AddComMoveXY(com, 105, 111);
 
 ComAgressiveMove(tmp, 108, 117);
 
-Say(Sikorski, 'D1-Sik-2');
+if sikorskiActive then
+   Say(Sikorski, 'D1-Sik-2')
+else
+   Say(Truman, 'D1-Tru-1');
 
 music_class := 1;
 
 repeat
  wait(0$01);
-until See(3, Sikorski);
+until See(3, com);
 
-un := UnitsInside(NearestUnitToUnit(FilterAllUnits([f_btype, b_breastwork]), Sikorski))[1];
+un := UnitsInside(NearestUnitToUnit(FilterAllUnits([f_btype, b_breastwork]), com))[1];
 
-AddComAttackUnit(un, Sikorski);
+AddComAttackUnit(un, com);
 
 wait(0$3);
 
@@ -39,10 +47,10 @@ repeat
  wait(0$01);
 until IsDying(un);
 
-DoNotAttack(3, Sikorski);
+DoNotAttack(3, com);
 
-AddComMoveXY(Sikorski, 110, 120);
-AddComAttackUnit(Sikorski, ru_dep);
+AddComMoveXY(com, 110, 120);
+AddComAttackUnit(com, ru_dep);
 
 Say(Yakotich, 'D1-Rus1-1');
 
@@ -53,14 +61,17 @@ ComMoveXY(tmp, 109, 119);
 AddComTurnXY(tmp, 111, 125);
 
 ComExitBuilding(Yakotich);
-AddComAttackUnit(Yakotich, Sikorski);
+AddComAttackUnit(Yakotich, com);
 
-Say(Sikorski, 'D1-Sik-1');
+if sikorskiActive then
+   Say(Sikorski, 'D1-Sik-1')
+else
+   Say(Truman, 'D1-Tru-2');
 
 wait(0$2);
 
 SayEffect('D1-smrtsikora');
-KillUnit(Sikorski);
+KillUnit(com);
 
 wait(0$1);
 
@@ -115,7 +126,7 @@ music_class := 0;
 
 wait(0$4);
 
-speaker = FilterAllUnits([[f_side, 4], [f_sex, sex_male]]) diff [Gary, Bobby, Cyrus];
+speaker := FilterAllUnits([[f_side, 4], [f_sex, sex_male]]) diff [Gary, Bobby, Cyrus];
 Say(speaker[1], 'D1-Sol-1');
 
 wait(0$2);
@@ -148,10 +159,10 @@ SaveCharacters(tmp diff [Gary, Bobby, Cyrus], '09_prev_squad');
 tmp := [];
 
 for i in FilterUnitsInArea(ovsyenko_base, [f_type, unit_building]) do
-    tmp := Replace(tmp, tmp+1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
+    tmp := Replace(tmp, tmp + 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
 
 if not FilterUnitsInArea(ovsyenko_base, [f_btype, b_depot]) then
-   tmp := Replace(tmp, tmp+1, [b_depot, 102, 118, 5, 350]);
+   tmp := Replace(tmp, tmp + 1, [b_depot, 102, 118, 5, 350]);
 
 SaveVariable(tmp, '09_ovsyenko_base');
 
@@ -166,7 +177,7 @@ var i, filter;
 begin
 enable;
 
-filter := Yakotich ^ FilterAllUnits([f_side, 4]) diff Sikorski;
+filter := Yakotich ^ FilterAllUnits([f_side, 4]) diff [Sikorski, Truman];
 
 for i in filter do
     if GetLives(i) < 1000 then

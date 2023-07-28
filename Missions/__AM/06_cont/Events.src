@@ -82,8 +82,33 @@ var i, un, crates;
 begin
 SOS_VehicleConstructed(vehicle, building);
 
-if GetSide(vehicle) = 3 and not GetWeapon(vehicle) in [ru_cargo_bay, ru_crane] then
+if GetSide(vehicle) = 3 and not GetWeapon(vehicle) in [ru_cargo_bay, ru_crane, ru_bulldozer] then
    ruAttackers := Replace(ruAttackers, ruAttackers + 1, vehicle);
+
+if GetWeapon(vehicle) = ru_bulldozer then
+   begin
+   AddComMoveXY(vehicle, 60, 85);
+   AddComMoveXY(vehicle, 43, 69);
+   AddComMoveXY(vehicle, 37, 46);
+
+   wait(0$1);
+
+   repeat
+    wait(0$1);
+   until not HasTask(vehicle);
+
+   CutTreeInArea(vehicle, cutTreeArea);
+
+   repeat
+    wait(0$1);
+   until not HasTask(vehicle);
+
+   un := IsDrivenBy(vehicle);
+
+   AddComMoveXY(un, 96, 77);
+   AddComExitVehicle(un);
+   AddComEnterUnit(un, rufabsupp);
+   end;
 End;
 
 On ApemanTamed(apeman, human) do
