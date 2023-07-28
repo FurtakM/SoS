@@ -1,123 +1,141 @@
 // Start mission
-Every 1 do 
-begin
+Every 0$1 do
+begin 
+RevealFogArea(1, EpsilonTerrain);
 
-    Video(true);
+CenterNowOnUnits(Simms);
 
-    RevealFogArea(1, EpsilonTerrain);
+wait(0$3);
 
-    CenterNowOnUnits(Simms);
+CenterOnUnits(IsInUnit(JMM));
 
-    wait(0$3);
+Wait(0$1);
 
-    CenterOnUnits(IsInUnit(JMM));
+if IsOk(Gary) then
+   begin
+   Say(Gary, 'D2-Gary-1');
+   Say(JMM, 'D2-JMM-1');
+   Say(Gary, 'D2-Gary-2');
+   end;
 
-    Wait(0$1);
+Video(false);
 
-    if IsOk(Gary) then
-    begin
-    Say(Gary, 'D2-Gary-1');
-    Say(JMM, 'D2-JMM-1');
-    Say(Gary, 'D2-Gary-2');
-    end;
+ChangeMissionObjectives('M1');
 
-    Video(false);
-
-    ChangeMissionObjectives('M1');
-
-    AddCargo(cargo1, 1, 100);
-    AddCargo(cargo2, 1, 50);
-    AddCargo(cargo2, 3, 50);
-    SaveForQuickRestart;
-end;
+AddCargo(cargo1, 1, 100);
+AddCargo(cargo2, 1, 50);
+AddCargo(cargo2, 3, 50);
+SaveForQuickRestart;
+End;
 
 // Meet Cathy and others
 Every 0$1 trigger GetDistUnits(JMM, Simms) < 15 do
 var p;
 begin
-    wait(0$3);
+wait(0$3);
 
-    Video(true);
+Video(true);
 
-    ComExitVehicle(JMM);
-    CenterNowOnUnits(JMM);
+ComExitVehicle(JMM);
 
-    AddComTurnUnit(JMM, Simms);
+CenterNowOnUnits(JMM);
 
-    p := 15;
+if Truman then
+   begin
+   ComMoveUnit(Truman, JMM);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Truman, JMM) < 6;
+
+   ComTurnUnit(Truman, JMM);
+   ComTurnUnit(JMM, Truman);
+
+   Say(Truman, 'D2-Tru-1');
+   Say(JMM, 'D2-JMM-Tru-1');
+   Say(Truman, 'D2-Tru-2');
+
+   ComMoveXY(Truman, 79, 41);
+   AddComMoveXY(Truman, 17, 31);
+   end;
+
+AddComTurnUnit(JMM, Simms);
+
+p := 15;
    
-    repeat
-        wait(0$1);
-        ComMoveUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
-        p := p - 1;
-    until GetDistUnits(JMM, Simms) < 5 or p <= 0;
+repeat
+ wait(0$1);
+ ComMoveUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
+ p := p - 1;
+until GetDistUnits(JMM, Simms) < 5 or p <= 0;
 
-    ComTurnUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
+ComTurnUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
 
-    if not IsInUnit(JMM) then
-       ComTurnUnit(JMM, Simms);
+if not IsInUnit(JMM) then
+   ComTurnUnit(JMM, Simms);
 
-    ComTurnUnit([Simms, Joan, Denis, Khatam], JMM);
+ComTurnUnit([Simms, Joan, Denis, Khatam], JMM);
 
-    CenterNowOnUnits([JMM, Simms]);
+CenterNowOnUnits([JMM, Simms]);
 
-    Say(Simms, 'D2a-Sim-1');
-    Say(JMM, 'D2a-JMM-1');
+Say(Simms, 'D2a-Sim-1');
+Say(JMM, 'D2a-JMM-1');
 
-    if IsOk(Joan) then
-       begin
+if IsOk(Joan) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Joan);
 
-       if not IsInUnit(JMM) then
-          ComTurnUnit(JMM, Joan);
+   ComTurnUnit(Joan, JMM);
 
-       ComTurnUnit(Joan, JMM);
+   Say(Joan, 'D2b-Joan-1');
+   Say(JMM, 'D2b-JMM-1');
+   Say(Joan, 'D2b-Joan-2');
+   end;
 
-       Say(Joan, 'D2b-Joan-1');
-       Say(JMM, 'D2b-JMM-1');
-       Say(Joan, 'D2b-Joan-2');
-       end;
+if IsOk(Denis) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Denis);
 
-    if IsOk(Denis) then
-    begin
-        if not IsInUnit(JMM) then
-           ComTurnUnit(JMM, Denis);
+   ComTurnUnit(Denis, JMM);
 
-        ComTurnUnit(Denis, JMM);
+   Say(Denis, 'D2c-Den-1');
+   end;
 
-        Say(Denis, 'D2c-Den-1');
-    end;
+if IsOK(Kikuchi) and not TestCharacters('08_Kikuchi') then
+   begin
+   repeat
+   wait(0$1);
+   ComMoveUnit(Kikuchi, JMM);
+   until GetDistUnits(JMM, Kikuchi) < 5;
 
-    
-    if IsOK(Kikuchi) and not TestCharacters('08_Kikuchi') then
-    begin
-        repeat
-            wait(0$1);
-            ComMoveUnit(Kikuchi, JMM);
-        until GetDistUnits(JMM, Kikuchi) < 5;
+   ComTurnUnit(Kikuchi, JMM);
 
-        ComTurnUnit(Kikuchi, JMM);
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Kikuchi);
 
-        if not IsInUnit(JMM) then
-           ComTurnUnit(JMM, Kikuchi);
+   Say(Kikuchi, 'D3b-Yam-1');
+   end;
 
-        Say(Kikuchi, 'D3b-Yam-1');
-    end;
+if IsOk(Khatam) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Khatam);
 
-    if IsOk(Khatam) then
-    begin
-        if not IsInUnit(JMM) then
-           ComTurnUnit(JMM, Khatam);
+   ComTurnUnit(Khatam, JMM);
 
-        ComTurnUnit(Khatam, JMM);
+   Say(JMM, 'D2c-JMM-1');
+   Say(Khatam, 'D2c-Khat-1');
+   end;
 
-        Say(JMM, 'D2c-JMM-1');
-        Say(Khatam, 'D2c-Khat-1');
-    end;
+Video(false);
 
-    Video(false);
-    SetSide(FilterAllUnits([f_side, 4]), 1);
-    ChangeMissionObjectives('M1a');
-    joinEpsilon = 1;
+SetSide(FilterAllUnits([f_side, 4]) diff Truman, 1);
+
+ChangeMissionObjectives('M1a');
+
+joinEpsilon := 1;
 End;
 
 // Ar cargo move
@@ -201,7 +219,7 @@ begin
         DialogueOff;
     end else
     begin
-       tmp3 = FilterAllUnits([[f_side, 1], [f_class, 4]]) diff [Simms, Khatam];
+       tmp3 = FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_class, 4]]) diff [JMM, Frank, Lisa, Simms, Khatam];
        if tmp3 > 0 then
        begin
        DialogueOn;

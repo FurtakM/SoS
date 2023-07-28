@@ -1,88 +1,95 @@
 Export function PrepareDeltaBase;
 var i, j, building, buildings, lab, tmp;
 begin
+buildings := LoadVariable('buildingsInDelta', []);
 
-    buildings = LoadVariable('buildingsInDelta', []);
+SetResourceVisibility (68, 40, 1);
 
-    SetResourceVisibility (68, 40, 1);
+uc_side := 1;
+uc_nation := 1;
 
-    uc_side = 1;
-    uc_nation = 1;
-
-    for i = 1 to buildings do
-        begin
-
-            bc_type = buildings[i][1];
-            bc_level = buildings[i][2];
-
-            if bc_type = b_lab then
-            begin
-              bc_kind1 = b_lab_basic;
-              bc_kind2 = b_lab_basic;
-            end;
-
-            if bc_type = b_lab_half or bc_type = b_lab_full then
-               begin
-               if buildings[i][6] then
-                  bc_kind1 = buildings[i][6];
-
-               if buildings[i][7] then
-                  bc_kind2 = buildings[i][7];
-
-               if not buildings[i][6] and not buildings[i][7] then
-                  bc_type := b_lab;
-               end;
-
-            building = CreateAndPlaceBuildingXYD(buildings[i][3], buildings[i][4], buildings[i][5]);
-
-            if GetBType(building) = b_bunker then PlaceWeaponTurret(building, buildings[i][8]);
-
-    end;
-
-    lab = FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
-    tmp = FilterAllUnits([[f_side, 1], [f_btype, b_depot]]);
-
-    if lab > 0 and tmp > 0 then baseCorrect = 1;
-
-    if baseCorrect = 0 then
+for i := 1 to buildings do
     begin
-        for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do RemoveUnit(i);
+    bc_type := buildings[i][1];
+    bc_level := buildings[i][2];
 
-        uc_nation = 1;
-        uc_side = 1;
+    if bc_type = b_lab then
+       begin
+       bc_kind1 := b_lab_basic;
+       bc_kind2 := b_lab_basic;
+       end;
 
-        bc_level = 5;
-        bc_type = b_depot;
-        CreateAndPlaceBuildingXYD(50, 22, 0);
+    if bc_type = b_lab_half or bc_type = b_lab_full then
+       begin
+       if buildings[i][6] then
+          begin
+          bc_kind1 := buildings[i][6];
 
-        bc_type = b_bunker;
-        building = CreateAndPlaceBuildingXYD(68, 24, 4);
-        PlaceWeaponTurret(building, [4, 11][Rand(1,2)]);
-        building = CreateAndPlaceBuildingXYD(71, 34, 4);
-        PlaceWeaponTurret(building, [4, 11][Rand(1,2)]);
+          if buildings[i][7] then
+             bc_kind1 := buildings[i][7]
+          else
+             bc_kind2 := b_lab_basic;
+          end
+       else
+          begin
+          bc_type := b_lab;
 
-        bc_type = 31;
-        CreateAndPlaceBuildingXYD(51, 7, 3);
+          bc_kind1 := b_lab_basic;
+          bc_kind2 := b_lab_basic;
+          end;
+       end;
 
-        bc_type = b_oil_mine;
-        CreateAndPlaceBuildingXYD(68, 40, 1);
+    building := CreateAndPlaceBuildingXYD(buildings[i][3], buildings[i][4], buildings[i][5]);
 
-        bc_type = b_workshop;
-        CreateAndPlaceBuildingXYD(38, 20, 2);
-
-        bc_type = b_armoury;
-        CreateAndPlaceBuildingXYD(38, 20, 2);
-
-        bc_type = b_solar_power;
-        CreateAndPlaceBuildingXYD(46, 12, 1);
-        CreateAndPlaceBuildingXYD(48, 11, 2);
-        CreateAndPlaceBuildingXYD(49, 11, 3);
-
-        bc_type = b_lab_half;
-        bc_kind1 = b_lab_opto;
-        bc_kind2 = b_lab_basic;
-        CreateAndPlaceBuildingXYD(42, 15, 2);
-
+    if GetBType(building) = b_bunker and buildings[i][8] then
+       PlaceWeaponTurret(building, buildings[i][8]);
     end;
 
+lab := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+tmp := FilterAllUnits([[f_side, 1], [f_btype, b_depot]]);
+
+if lab and tmp then
+   baseCorrect := 1;
+
+if baseCorrect = 0 then
+   begin
+   for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do
+       RemoveUnit(i);
+
+   uc_nation := 1;
+   uc_side := 1;
+
+   bc_level := 5;
+   bc_type := b_depot;
+   CreateAndPlaceBuildingXYD(50, 22, 0);
+
+   bc_type = b_bunker;
+   building = CreateAndPlaceBuildingXYD(68, 24, 4);
+   PlaceWeaponTurret(building, [4, 11][rand(1,2)]);
+
+   building := CreateAndPlaceBuildingXYD(71, 34, 4);
+   PlaceWeaponTurret(building, [4, 11][rand(1,2)]);
+
+   bc_type := b_breastwork;
+   CreateAndPlaceBuildingXYD(51, 7, 3);
+
+   bc_type := b_oil_mine;
+   CreateAndPlaceBuildingXYD(68, 40, 1);
+
+   bc_type := b_workshop;
+   CreateAndPlaceBuildingXYD(38, 20, 2);
+
+   bc_type := b_armoury;
+   CreateAndPlaceBuildingXYD(38, 20, 2);
+
+   bc_type := b_solar_power;   
+   CreateAndPlaceBuildingXYD(46, 12, 1);
+   CreateAndPlaceBuildingXYD(48, 11, 2);
+   CreateAndPlaceBuildingXYD(49, 11, 3);
+
+   bc_type := b_lab_half;
+   bc_kind1 := b_lab_opto;
+   bc_kind2 := b_lab_basic;
+   CreateAndPlaceBuildingXYD(42, 15, 2);
+   end;
 End;

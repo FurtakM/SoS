@@ -64,7 +64,7 @@ if InArea(x, y, TestArea) and eventVar3 = 0 then
 
    if FilterUnitsInArea(RadarArea, [[f_side, 1], [f_type, unit_vehicle], [f_weapon, us_radar]]) then
       begin
-      radarOnSpot = 1;
+      radarOnSpot := 1;
       ChangeMissionObjectives('M3a');
       end
    else
@@ -106,13 +106,13 @@ var i, tmp;
 begin
 if GetNation(unit) = nation_arabian then
    begin
-   sibDestroyedCounter = sibDestroyedCounter + 1;
+   sibDestroyedCounter := sibDestroyedCounter + 1;
 
-   for i := 1 to sibDeposits do
+   for i := sibDeposits downto 1 do
        if sibDeposits[i][1] = x and sibDeposits[i][2] = y then
           begin
-          sibDeposits := Delete(sibDeposits, [i][1]);
-          sibDeposits := Delete(sibDeposits, [i][2]);
+          sibDeposits := Delete(sibDeposits, i);
+          break;
           end;
 
    if eventVar5 = 0 and HexInfo(x, y) in FilterAllUnits([f_side, 1]) then
@@ -150,6 +150,25 @@ if event = eventArabianAttack then
 
 if event = eventRussianAttack then
    RussianAttack;
+End;
+
+On SailEventCustom(event, p1, p2, p3, p4, p5, p6) do
+begin
+if event = eventContaminate then
+   begin
+   if IsOk(p1) and ValidHex(p2, p3) then
+      begin
+      repeat
+       wait(0$1);
+
+       if not HasTask(p1) then
+          begin
+          ComContaminate(p1, p2, p3);
+          AddComMoveXY(p1, 42, 3);
+          end;
+      until not IsOk(p1);
+      end;
+   end;
 End;
 
 On EvacuateVehicle(driver, vehicle, p1, p2) do

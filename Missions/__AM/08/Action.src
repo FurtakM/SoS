@@ -333,7 +333,7 @@ Say(Sikorski, 'D7-Sik-1');
 
 wait(0$10);
 
-if InBattle(1) and (IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDefendArea)) then
+if IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDefendArea) then
    begin
    Say(Sikorski, 'D7a-Sik-1');
    sikorskiStatus := 1;
@@ -341,12 +341,12 @@ if InBattle(1) and (IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDef
 else
    begin
    Say(Sikorski, 'D7b-Sik-1');
-   sikorskiStatus := 2;
+   sikorskiStatus := 0;
    end;
 
 wait(0$45);
 
-if InBattle(1) and (IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDefendArea) or not IsOk(JMM)) then
+if IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDefendArea) or not IsOk(JMM) then
    begin
    Say(Sikorski, 'D7a-Sik-1');
    sikorskiStatus := 1;
@@ -354,8 +354,21 @@ if InBattle(1) and (IsInArea(JMM, ruDefendArea) or IsInArea(IsInUnit(JMM), ruDef
 else
    begin
    Say(Sikorski, 'D7b-Sik-1');
-   sikorskiStatus := 2;
+   sikorskiStatus := 0;
    end;
+End;
+
+Export Function SikorskiKilledInAction;
+begin
+wait(0$2);
+
+DialogueOn;
+
+dwait(0$1);
+
+SayRadio(Powell, 'D8b-Pow-1');
+YouLost('Dismissed');
+DialogueOff;
 End;
 
 // end mission
@@ -386,14 +399,8 @@ wait(0$08);
 
 DialogueOn;
 
-if sikorskiStatus = 1 and IsOk(Sikorski) then
-   Say(Sikorski, 'D9-Sik-1');
-
-if IsDead(Sikorski) then
-   begin
-   SayRadio(Powell, 'D8b-Pow-1');
-   YouLost('Dismissed');
-   end;
+if sikorskiStatus = 1 and IsOk(Sikorski) then    
+   Say(Sikorski, 'D9-Sik-1');        
 
 if FilterAllUnits([f_side, 4]) = 0 and sikorskiArriveCounter then
    SetAchievement('ACH_BLITZKRIEG');
@@ -461,6 +468,7 @@ if IsLive(Houten) then
 
 SaveCharacters(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, 1]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Denis, Joan, Houten, Khatam], '08_other_survivors');
 SaveBase(gammaBaseArea);
+SaveVariable(sikorskiStatus, '08_SikorskiStatus');
 
 YouWin;
 End;

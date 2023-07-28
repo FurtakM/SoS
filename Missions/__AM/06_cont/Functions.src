@@ -93,7 +93,7 @@ End;
 Export function ResAllTechs(side, lab, nation);
 var i, tech, list;
 begin
-list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25];
+list := [48, 49, 50, 20, 1, 51, 52, 69, 39, 34, 40, 53, 71, 57, 58, 44, 32, 27, 23, 33, 59, 54, 55, 56, 63, 64, 65, 30, 31, 21, 22, 25, 82, 83, 84, 85, 86];
 
 for i = 1 to list do
     if GetTech(list[i], side) = state_enabled and TechNationAvailable(list[i], nation) then
@@ -263,4 +263,69 @@ if crane then
 
        AddComRepairVehicleAndReturn(IsDrivenBy(i));
        end;
+End;
+
+Export function BuildBulldozer;
+begin
+if not IsOk(rufabsupp) or GetSide(rufabsupp) <> 3 then
+   exit;
+
+AddComConstruct(rufabsupp, ru_heavy_tracked, engine_combustion, control_manual, ru_bulldozer);
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i, list, tmp, hex;
+begin
+if not bulldozer then
+   exit;
+
+list := ListEnvironmentArea(area);
+tmp := [];
+
+for i = 1 to list do
+    if IsEnvironmentDestroyable(list[i][1], list[i][2]) then
+       begin
+       tmp := Replace(tmp, tmp+1, [list[i][1], list[i][2]]);
+       end;  
+
+ComStop(bulldozer);
+
+hex := [GetX(bulldozer), GetY(bulldozer)];
+
+for i = tmp downto 1 do
+    begin
+    hex := GetClosestPoint(hex[1], hex[2], tmp);
+    AddComCutTreeOnHex(bulldozer, hex[1], hex[2]);
+    tmp := Delete(tmp, hex[3]);
+    end;
+End;
+
+Export Function AddComCutTreeOnHex(bulldozer, x, y);
+begin
+if IsEnvironment(x, y) and IsEnvironmentDestroyable(x, y) and ValidHex(x, y) and HexInfo(x, y) = -1 then
+   AddComMoveXY(bulldozer, x, y);
+End;
+
+Export Function GetClosestPoint(x, y, list);
+var i, dist, d, _x, _y, _i;
+begin
+dist := 99999;
+
+for i = 1 to list do
+    begin
+    d := GetDistXY(x, y, list[i][1], list[i][2]);
+
+    if d = 0 then
+       continue;
+
+    if d < dist then
+       begin
+       _x := list[i][1];
+       _y := list[i][2];
+       _i := i;
+       dist := d;
+       end;
+    end;
+
+result := [_x, _y, _i, dist];
 End;

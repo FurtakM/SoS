@@ -1,21 +1,21 @@
-Every 9$00 + 7$00 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) < 4 do
+Every 8$00 + 8$00 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) < 6 do
 begin
 enable;
 PrepareArabianAttack;
 End;
 
-Every 0$30 trigger eventVar1 = 1 and FilterAllUnits([[f_side, 8], [f_type, unit_human]]) < 4 do
+Every 0$30 trigger eventVar1 = 1 and FilterAllUnits([[f_side, 8], [f_type, unit_human]]) < 6 do
 begin
-wait(3$30);
+wait(4$00);
 PrepareRussianAttack;
 
-wait(20$00);
+wait(12$00);
 
 PrepareRussianAttack;
 End;
 
 Export Function ArabianAttack;
-var i, tmp, path, path2, vehicles, infantry, units;
+var i, tmp, path, path2, vehicles, infantry, units, apes;
 begin
 units := FilterAllUnits([[f_side, 8], [f_tag, 10]]);
 
@@ -33,10 +33,15 @@ repeat
  if vehicles then
     AgressiveMove(vehicles, path);
 
- infantry := UnitFilter(units, [f_type, unit_human]);
+ infantry := UnitFilter(units, [[f_nation, 2], [f_type, unit_human]]);
 
  if infantry then
     AgressiveMove(infantry, path2);
+
+ apes := UnitFilter(units, [[f_nation, 0], [f_type, unit_human]]);
+
+ if apes then
+    ComAttackUnit(apes[1], NearestUnitToUnit(FilterAllUnits([f_side, 1]), apes[1]));
 
  units := UnitFilter(units, [f_ok]);
 until not units;

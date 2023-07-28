@@ -21,6 +21,43 @@ else
 result := unit;
 End;
 
+Export Function PlaceUnit(unit, x, y, d, mode);
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, GetSide(unit)], [f_type, unit_building], [f_not, [f_btype, b_factory]]]);
+
+if not tmp then
+   begin
+   PlaceUnitXYR(unit, x, y, d, mode);
+   exit;
+   end;
+
+for i in tmp do
+    if IsNotFull(i) then
+       begin
+       PlaceHumanInUnit(unit, i);
+
+       if GetBType(i) in [b_barracks, b_armoury, b_breastwork, b_bunker] then
+          begin
+          SetClass(unit, class_soldier);
+          SetDir(unit, ReverseDir(i));
+          end;
+
+       if GetBType(i) in [b_workshop, b_factory, b_control_tower] then
+          SetClass(unit, class_mechanic);
+
+       if GetBType(i) in [b_depot, b_warehouse] then
+          SetClass(unit, class_engineer);
+
+       if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then
+          SetClass(unit, class_scientistic);
+
+       exit;
+       end;
+
+PlaceUnitXYR(unit, x, y, d, mode);
+End;
+
 Export function SaveCharactersAfterSelect(unit, unitString, selectedTab);
 begin
 if unit in selectedTab then
@@ -86,6 +123,9 @@ SetSide(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 4);
 SetSide(selected, 1);
 SetSide([JMM, Stevens], 1);
 
-for i in FilterAllUnits([[f_type, unit_human], [f_side, 4]]) do
-    RemoveUnit(i);
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+    ComExit(i);
+
+//for i in FilterAllUnits([[f_type, unit_human], [f_side, 4]]) do
+//    RemoveUnit(i);
 End;

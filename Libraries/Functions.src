@@ -207,11 +207,25 @@ result := building in FilterAllUnits([[f_side, GetSide(building)], [f_empty]]);
 End;
 
 Export Function IsNotFull(building);
+var places;
 begin
 if not building then
    exit;
 
-result := UnitsInside(building) < 6;
+result := false;
+places := 0;
+
+case GetBType(building) of
+     b_depot, b_warehouse,
+     b_lab, b_lab_half, b_lab_full,
+     b_armoury, b_barracks,
+     b_workshop, b_factory, b_fort: places := 6;
+     b_bunker, b_breastwork: places := 1;
+     b_control_tower: places := 3;
+     end;
+
+if places then
+   result := UnitsInside(building) < places;
 End;
 
 Export Function GetFacExt(factory);
@@ -2472,11 +2486,11 @@ for i in result do
     tag := GetTag(i) + 1;
     cr := GetCratesNearbyXY(GetX(i), GetY(i), 6);
 
-    if cr and not GetWeapon(i) in ignoreCratesWeapon then
+    if GetType(i) = unit_vehicle and cr and not GetWeapon(i) in ignoreCratesWeapon then
        ComAttackPlace(i, cr[1][1], cr[1][2])
     else if path > tag then
        begin
-       nearEnemy := UnitFilter(enemy, [f_dist, i, 12]);
+       nearEnemy := UnitFilter(enemy, [f_dist, i, 8]);
 
        if nearEnemy then
           begin

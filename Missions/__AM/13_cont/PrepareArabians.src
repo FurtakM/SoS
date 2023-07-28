@@ -16,7 +16,7 @@ PlaceUnitArea(un, [ArabianSpawn1, ArabianSpawn2][Rand(1, 2)], false);
 SetTag(un, 1);
 
 rnd := rand(1, sibDeposits);
-ComContaminate(un, sibDeposits[rnd][1], sibDeposits[rnd][2]);
+RaiseSailEventCustom(eventContaminate, un, sibDeposits[rnd][1], sibDeposits[rnd][2], 0, 0, 0);
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_not, [f_linked]], [f_ok], [f_control, control_remote]]) do
@@ -100,27 +100,55 @@ for i := 1 to counter do
 
     ComAgressiveMove(veh, 100, 55);
 
-    wait(0$0.3);
+    wait(0$0.5);
     end;
 
-if sibDeposits and arabianAttacksCounter mod [6, 5, 4, 4][Difficulty] = 0 then
-   begin
-   for i := 1 to [3, 4, 4, 5][Difficulty] do
-       begin
-       uc_side := 8;
-       uc_nation := 2;
-
-       PrepareHuman(false, class_soldier, [7, 8, 9, 10][Difficulty]);
-       un := CreateHuman;
-       result := Join(result, un);
-
-       if Prob(60) then
-          SetClass(un, class_mortar);
-
-       PlaceUnitArea(un, ArabianInfSpawn, false);
-       end;
-
+if arabianAttacksCounter = 1 then
    DestroySibDeposit;
+
+if arabianAttacksCounter mod [4, 3, 3, 2][Difficulty] = 0 then
+   begin
+   tmp := rand(0, 2);
+
+   if not tmp then
+      begin
+      for i := 1 to [3, 4, 4, 5][Difficulty] do
+          begin
+          uc_side := 8;
+          uc_nation := 2;
+
+          PrepareHuman(false, class_soldier, [7, 8, 9, 10][Difficulty]);
+          un := CreateHuman;
+          result := Join(result, un);
+
+          if Prob(60) then
+             SetClass(un, class_mortar);
+
+          PlaceUnitArea(un, ArabianInfSpawn, false);
+          end;
+      end
+   else
+      begin
+      for i := 1 to [2, 3, 3, 4][Difficulty] do
+          begin
+          uc_side := 8;
+          uc_nation := 0;
+
+          hc_class := class_apeman_kamikaze;
+          hc_skills := [3, 0, 0, 0];
+          hc_attr := [10, 10];
+          hc_gallery := '';
+          hc_name := '';
+
+          un := CreateHuman;
+          result := Join(result, un);
+
+          PlaceUnitArea(un, ArabianInfSpawn, false);
+          end;
+      end;
+
+   if sibDeposits then
+      DestroySibDeposit;
    end;
 
 for i in result do
