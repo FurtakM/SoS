@@ -1,4 +1,12 @@
 //
+On EnterBuilding(building, un) do
+begin
+    if GetSide(un) = 1 and building = amBarracks[1] or building = amBarracks[2] then
+    begin
+       UpgradeOmicron;
+    end;
+end;
+
 On VehicleConstructed(veh, fac) do
 begin
     if GetSide(fac) = 3 then
@@ -10,7 +18,7 @@ var un, i, bunkers, sols, labT1, kaganReady;
 begin
 if GetSide(building) = 6 and (GetBType(building) = b_bunker or GetBType(building) = b_armoury) then
 begin
-   sols := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_soldier], [f_inside]]);
+   sols := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_soldier]]);
    for un in sols do
        begin
        if GetBType(IsInUnit(un)) = b_bunker then
@@ -44,10 +52,10 @@ begin
 end;
 
 On UpgradeComplete(building) do
-var i, un, weapon, maleSci, maleOthers;
+var i, un, weapon, maleSci, maleOthers, extraBunkers;
 begin
 
-if GetSide(building) = 3 then
+if GetSide(building) = 3 and dialog_workshop = false then
 begin
 dialog_workshop = true;
 
@@ -97,7 +105,7 @@ if GetSide(building) = 6 and Length(comArray) > 0 then
    comArray := comArray diff comArray[1];
    wait(0$1);
    AddComComplete(kirovEngs, building);
-   end;
+   end;                     
                                               
 if GetSide(building) = 6 and GetBType(building) = b_factory or GetBType(building) = b_workshop then
    begin

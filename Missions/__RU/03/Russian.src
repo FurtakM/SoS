@@ -4,7 +4,7 @@ Export otherBeriaUnits, beriaBase, beriaDepot, beriaVehs; // Beria base building
                                              // Others -> [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
 Export Kurin, Popov;
 Export otherKirovUnits;
-Export kirovBase, kirovDepot, kirovOilDepot, kirovLab, kirovBarracks, kirovWorkshop;
+Export kirovBase, kirovDepot, kirovOilDepot, kirovLab, kirovBarracks, kirovWorkshop, kirovBunkersArray;
                                            
 Export Grishko, Gaydar, Bukov, Scholtze, Scholtze2;
 
@@ -109,11 +109,10 @@ for i := 1 to beriaBase do
        bc_kind2 := b_lab_basic;
        end;
     if beriaBase[i][4] < 70 then
-       uc_nation := 1
-       else
-       uc_nation := 3;
+       uc_nation := 1;
 
     CreateAndPlaceBuildingXYD(beriaBase[i][3] + 46, beriaBase[i][4], beriaBase[i][5]);
+    uc_nation := 3;
     end;
 
 for i := 1 to beriaVehs do
@@ -136,6 +135,15 @@ kirovBase := LoadVariable('02_Kirov', []);
 
 uc_side := 6;
 uc_nation := 3;
+
+kirovBunkersArray := [
+    [b_breastwork, 146, 106, 1],
+    [b_breastwork, 175, 123, 5],
+    [b_breastwork, 179, 118, 4],
+    [b_breastwork, 144, 99,  1]
+];
+for i := 1 to kirovBunkersArray do
+PrepareBuilding(6, 3, 5, kirovBunkersArray[i][1], kirovBunkersArray[i][2], kirovBunkersArray[i][3], kirovBunkersArray[i][4], false);
 
 otherKirovUnits := CreateCharacterSet('02_kirovTeam');
 
@@ -182,22 +190,22 @@ if tmp then
 End;
 
 Export Function UpgradeKirovBase;
-var i, un, kirovBuildingArray;
+var i, un, kirovBuildingArray, kirovBunkers;
 begin
   kirovBuildingArray := [
     [b_bunker, 146, 106, 1],
     [b_bunker, 175, 123, 5],
+    [b_bunker, 179, 118, 4],
     [b_bunker, 170, 101, 3],
     [b_bunker, 172, 104, 4],
-    [b_bunker, 179, 118, 4],
     [b_oil_power, 159, 96, 3]
   ];                          
-
+                
 kirovEngs := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_engineer]]);
 kirovLab := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_lab]])[1];
 kirovBarracks := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_armoury]]);
 kirovWorkshop := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_workshop]])[1];
-
+                                
 un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic]]);
 ComExitBuilding(un);
 AddComEnterUnit(un, kirovWorkshop);
@@ -205,9 +213,19 @@ wait(0$1);
 un := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_scientistic]]);
 AddComEnterUnit(un, kirovLab);
 
+kirovBunkers := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_btype, b_breastwork]]);
+
+for i in kirovBunkersArray do
+begin         
+RemoveUnit(kirovBunkers[1]);
+kirovBunkers := Delete(kirovBunkers, 1);
+PrepareBuilding(6, 3, 5, b_bunker, i[2], i[3], i[4], true);
+end;
 
 for i in kirovBuildingArray do
+    begin
     AddComBuild(kirovEngs, i[1], i[2], i[3], i[4]);
+    end;
 
 //AddComUpgrade(kirovWorkshop);
 
@@ -215,8 +233,8 @@ comArray := [
 kirovLab,
 kirovBarracks[1],     
 kirovBarracks[2],
-kirovDepot,         
-kirovWorkshop
+kirovDepot,
+kirovWorkshop,
 ];
 
 End;

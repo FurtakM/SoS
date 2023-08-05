@@ -1,6 +1,6 @@
 Export omicronSquad, Omikron, omikronDepot;
-Export amIntroUnits;
-Export amConvoyGroups;
+Export amIntroUnits, omiBunerArray;
+Export amConvoyGroups, amFreeSols;
 Export amLabs, amBarracks, amFactory, amVehs;
 
 Export Function PrepareAmericansMissionIntro;
@@ -57,21 +57,21 @@ amConvoyGroups := [
 [[1, 2, 3, 4][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 2, 2][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 1, 2][Difficulty]],
 [[3, 4, 6, 7][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 1, 3][Difficulty]]
 ];
-                                                                                       
+
 omiBuildingArray := [
     [b_warehouse, 20, 33, 2],          
     [b_oil_mine, 38, 30, 5],
     [b_barracks, 34, 25, 4],
     [b_barracks, 35, 45, 4],
-    [b_lab, 27, 27, 3],
+//    [b_lab, 27, 27, 3],
     [b_lab, 15, 23, 1],
-    [b_breastwork, 25, 8, 5],
-    [b_bunker, 37, 35, 4],
-    [b_bunker, 42, 45, 4],   
-    [b_bunker, 29, 17, 4],
-    [b_bunker, 30, 53, 0],
-    [b_bunker, 42, 56, 4],
-    [b_bunker, 30, 20, 4],
+//    [b_breastwork, 25, 8, 5],
+//    [b_breastwork, 37, 35, 4],
+//    [b_breastwork, 42, 45, 4],
+//    [b_breastwork, 29, 17, 4],
+//    [b_breastwork, 30, 53, 0],
+//    [b_breastwork, 42, 56, 4],
+//    [b_breastwork, 30, 20, 4],
     [b_solar_power, 7, 8, 1],
     [b_solar_power, 10, 8, 1],
     [b_solar_power, 13, 8, 1],
@@ -82,6 +82,18 @@ omiBuildingArray := [
     [b_ext_track, 13, 17, 0]
 ];
 
+omiBunerArray := [
+    [b_bunker, 25, 8, 5],
+    [b_bunker, 37, 35, 4],
+    [b_bunker, 42, 45, 4],
+    [b_bunker, 29, 17, 4],
+    [b_bunker, 30, 53, 0],
+    [b_bunker, 42, 56, 4],
+    [b_bunker, 30, 20, 4]
+];                                      
+
+omicronSquad := [];
+
 for i in omiBuildingArray do
     PrepareBuilding(1, 1, 5, i[1], i[2], i[3], i[4], false);
 
@@ -91,15 +103,23 @@ SetBName(omikronDepot, 'omikron');
 amBarracks := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
 amLabs := FilterAllUnits([[f_side, 1], [f_btype, b_lab]]);
 amFactory := FilterAllUnits([[f_side, 1], [f_btype, b_factory]])[1];
+End;
+
+Export Function UpgradeOmicron;
+var i, un, amBunkers;
+begin
 
 for i := 1 to 2 do
-    SetResourceType(GetBase(omikronDepot), i, 500);
+    SetResourceType(GetBase(omikronDepot), i, 100);
 
 
 uc_side := 1;
 uc_nation := 1;
-                            
-omicronSquad := [];                             
+                             
+amBunkers := FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]);
+
+PrepareBuilding(1, 1, 5, omiBunerArray[1][1], omiBunerArray[1][2], omiBunerArray[1][3], omiBunerArray[1][4], false);
+omiBunerArray := Delete(omiBunerArray, 1);
 
 for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) do
     begin
@@ -107,31 +127,10 @@ for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_bunker], [f_btype, b_br
     un := CreateHuman;
     omicronSquad := omicronSquad union un;
     SetDir(un, GetDir(i) - 3);
-    PlaceHumanInUnit(un, i);
+    PlaceHumanInUnit(un, i);                                       
     PlaceWeaponTurret(i, GetTurretWeapon(i, areaOmicron));
     end;
 
-for i := 1 to [3, 4, 5][Difficulty] do
-    begin
-    PrepareHuman(false, 2, 2);
-    un := CreateHuman;
-    omicronSquad := omicronSquad union un;
-    PlaceHumanInUnit(un, omikronDepot);
-    end;
-
-for i := 1 to 2 do
-    begin
-    PrepareVehicle([us_medium_wheeled, us_medium_tracked][i], engine_solar, control_manual, [us_light_gun, us_gatling_gun][i], 100);
-    veh := CreateVehicle;
-    PlaceUnitXYR(veh, 28, 37, 6, false);
-
-    PrepareHuman(false, 3, 2);
-    un := CreateHuman;
-    omicronSquad := omicronSquad union un;
-    PlaceHumanInUnit(un, veh);
-
-    ComMoveXY(un, GetX(un) + 3, GetY(un));
-    end;
 End;
 
 //NEFEK CODE
@@ -145,6 +144,8 @@ uc_nation := 1;
 hc_name := '';
 hc_gallery := '';
 
+amFreeSols := FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_class, class_soldier], [f_outside]]);
+                                 
 // Soldiers
 for i := 1 to soldiersAmount do
     begin
@@ -215,7 +216,7 @@ for i := 1 to vehiclesAmount do
     ComAgressiveMove(amConvoyTroops, 25, 31);
 
 AgressiveMove(amVehs, [ [95,44] ]);
-
+                                         
 AddComEnterUnit(sols, [amBarracks[1], amBarracks[2]][Rand(1,2)]);
 AddComEnterUnit(engs, omikronDepot);
 AddComEnterUnit(mechs, amFactory);
@@ -244,7 +245,12 @@ for i := 1 to amIntroUnits do
        SetLives(i, 1000);
 end;
 
+for i := 1 to amFreeSols do
+    begin
+       SetLives(i, 1000);
+end;
+
+AgressiveMove(amFreeSols, [ [65, 91], [116, 97 ] ]);
 AgressiveMove(amIntroUnits, [ [65, 91], [116, 97 ] ]);
 AgressiveMove(amVehs, [ [65, 91], [109, 97 ] ]);
 end;
-

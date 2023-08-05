@@ -3,11 +3,12 @@ Export counterEnable, counterIndex, ticks, convoyTime, timeToPrepareAttack, time
 Export kirovAttackVehicles;
 Export Function MissionIntro;
 var i, un, selectedPeople;
-begin                                   
+begin
+if not debug then
 InGameOn;
 CenterNowOnUnits([Burlak, Kurin]);
 
-convoyTime := [10$00, 15$00, 20$00, 25$00]; 
+convoyTime := [1$00, 15$00, 20$00, 25$00]; 
 bukovMsg := ['D3a-RSol1-1', 'D3b-RSol1-1'];
 
 //BELKOV TEAM DEAD
@@ -52,7 +53,7 @@ Say(Burlak, 'D2-Bur-4');
 kirovBaseUnits = otherKirovUnits;
 kirovBaseUnits = kirovBaseUnits ^ otherBeriaUnits;
 
-selectedPeople = CharacterSelection('text', 6, 6,
+selectedPeople = CharacterSelection('text', 3, 3,
                                 [sel_change_class, Burlak, Gnyevko, Kovalyuk, Kirilenkova, Belkov,
                                  sel_dont_change_class,
                                  sel_not_hired,sel_changeable, sel_change_class]^kirovBaseUnits^
@@ -111,7 +112,7 @@ end;
 every 0$1 trigger counterEnable do
 var veh, hum, i;
 begin
-
+       
 enable;
 
 veh = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay]]]);
@@ -154,11 +155,18 @@ extraTime = extraTime - 0$01;
 end;
 
 End;
+End;
 
 //CONVOYS
+every 0$1 do
+begin
+enable;
+
 if tick = convoyTime[1] then
    begin                                 
    SayRadio(Bukov, bukovMsg[1]);
+   
+   PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], amConvoyGroups[1][4], amConvoyGroups[1][5], AmTroopsSpawn);
    if bukovMsg[1] = 'D3a-RSol1-1' then
    begin
       SayRadio(Burlak, 'D3a-Bur-1');
@@ -171,27 +179,27 @@ if tick = convoyTime[1] then
    bukovMsg := bukovMsg diff bukovMsg[1];
    end;
                                      
-   PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], amConvoyGroups[1][4], amConvoyGroups[1][5], AmTroopsSpawn);
-   //ATTACKS ON BERIA/KAGAN
-   PrepareAttackOnRus();
+//PrepareAmericanConvoy(amConvoyGroups[1][1], amConvoyGroups[1][2], amConvoyGroups[1][3], amConvoyGroups[1][4], amConvoyGroups[1][5], AmTroopsSpawn);
+//ATTACKS ON BERIA/KAGAN
+PrepareAttackOnRus();
 
-   wait(0$1);
+wait(0$1);
 
-   amConvoyGroups := amConvoyGroups diff amConvoyGroups[1];
-   convoyTime := convoyTime diff convoyTime[1];
+amConvoyGroups := amConvoyGroups diff amConvoyGroups[1];
+convoyTime := convoyTime diff convoyTime[1];
    end;
 End;
 
 // Find oil deposit
 Every 0$1 trigger GetResourceVisibility(78, 112, 3) do
 begin
-    CenterOnXY(78, 112);
-    DialogueOn;
-    SayRadio(Burlak, 'D2a-Bur-1');
-    SayRadio(Kurin, 'D2a-Kur-1');
-    DialogueOff;
+CenterOnXY(78, 112);
+DialogueOn;
+SayRadio(Burlak, 'D2a-Bur-1');
+SayRadio(Kurin, 'D2a-Kur-1');
+DialogueOff;
 
-    ChangeMissionObjectives('M2');
+ChangeMissionObjectives('M2');
 end;
 
 //AM ATTACK RETREAT
@@ -612,7 +620,7 @@ End;
                                                                               
 // Omicron surrender
 Export omicronNotDestroyed;
-every 0$1 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 or timeToArabAttack = ticks do
+every 0$1 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human]]) < 5 and startTheAttack do
 var i, tmpUs, tmpRu, building, beriaBuildings, nearBuilding, turrets, nearTurrets, emptyVehicles;
 begin
 omicronSurrender = true;
