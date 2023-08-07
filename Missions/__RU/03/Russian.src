@@ -8,7 +8,7 @@ Export kirovBase, kirovDepot, kirovOilDepot, kirovLab, kirovBarracks, kirovWorks
                                            
 Export Grishko, Gaydar, Bukov, Scholtze, Scholtze2;
 
-Export burlakTeam, kirovEngs;
+Export burlakTeam, kirovEngs, extraKirovCrew, solsKirov;
 
 Export Function PrepareRussians;
 var un;
@@ -30,8 +30,6 @@ Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
 Kovalyuk := PrepareUnit('Kovalyuk', (not debug), prevMissionPrefix);
 Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
 Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
-Benko := PrepareUnit('Benko', (not debug), prevMissionPrefix);
-Kuklajs := PrepareUnit('Kuklajs', (not debug), prevMissionPrefix);
 
 uc_side := 6;
 Kurin := NewCharacter('Kurin');
@@ -39,6 +37,8 @@ Popov := NewCharacter('Popov');
 Grishko := NewCharacter('Grishko');
 Gaydar := NewCharacter('Gaydar');
 Bukov := NewCharacter('Bukov');
+Benko := PrepareUnit('Benko', (not debug), prevMissionPrefix);
+Kuklajs := PrepareUnit('Kuklajs', (not debug), prevMissionPrefix);
 
 SetClass([Burlak, Gnyevko, Kovalyuk], 3);
 SetClass(Kirilenkova, 4);
@@ -117,9 +117,10 @@ for i := 1 to beriaBase do
 
 for i := 1 to beriaVehs do
     begin
+    uc_side := 6;
     vc_fuel_battery = [20, 35, 50, 80][Rand(1,4)];
     veh = CreateVehicle;
-    PlaceUnitArea(veh, beriaBaseArea, false);
+    PlaceUnitArea(veh, VehKirovArea, false);
     end;
 
 beriaDepot := FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1];
@@ -168,7 +169,19 @@ SetBName(kirovDepot, 'kirov');
 for i := 1 to 2 do
     SetResourceType(GetBase(kirovDepot), i, 500);
 
-tmp := otherKirovUnits;
+for i := 1 to 4 do
+    begin
+    hc_name := '';
+    hc_gallery := '';
+
+    PrepareSoldier(false, enemySkillLevel);
+
+    un = CreateHuman;
+    extraKirovCrew = extraKirovCrew ^ un;
+
+    end;
+
+tmp := otherKirovUnits union extraKirovCrew;
 buildings := FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_not, [f_btype, b_breastwork]]]);
 
 repeat
@@ -193,6 +206,7 @@ Export Function UpgradeKirovBase;
 var i, un, kirovBuildingArray, kirovBunkers;
 begin
   kirovBuildingArray := [
+    [b_bunker, 144, 99,  1],
     [b_bunker, 146, 106, 1],
     [b_bunker, 175, 123, 5],
     [b_bunker, 179, 118, 4],

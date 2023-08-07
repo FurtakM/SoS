@@ -2,13 +2,13 @@ Export currentTeam, kirovBaseUnits, bukovMsg;
 Export counterEnable, counterIndex, ticks, convoyTime, timeToPrepareAttack, timeToArabAttack;
 Export kirovAttackVehicles;
 Export Function MissionIntro;
-var i, un, selectedPeople;
+var i, un, selectedPeople, minmax, tmp;
 begin
 if not debug then
 InGameOn;
+RevealFogArea(3, RevealMapPartArea);
 CenterNowOnUnits([Burlak, Kurin]);
 
-convoyTime := [1$00, 15$00, 20$00, 25$00]; 
 bukovMsg := ['D3a-RSol1-1', 'D3b-RSol1-1'];
 
 //BELKOV TEAM DEAD
@@ -36,7 +36,6 @@ Say(Burlak, 'D2-Bur-2');
 Say(Kurin, 'D2-Kur-3');
 PrepareAmericansMissionIntro;
 SetAttitude(1, 6, att_friend, true);
-RevealFogArea(3, RevealMapPartArea);
 CenterNowOnUnits([Popov, Gaydar]);
 wait(0$3);
 SayRadio(Popov, 'D2-Pop-3');
@@ -53,9 +52,13 @@ Say(Burlak, 'D2-Bur-4');
 kirovBaseUnits = otherKirovUnits;
 kirovBaseUnits = kirovBaseUnits ^ otherBeriaUnits;
 
-selectedPeople = CharacterSelection('text', 3, 3,
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human]]);
+
+minmax := 8 - Length(tmp);
+
+selectedPeople = CharacterSelection('text', minmax, minmax,
                                 [sel_change_class, Burlak, Gnyevko, Kovalyuk, Kirilenkova, Belkov,
-                                 sel_dont_change_class,
+                                 sel_dont_change_class,        
                                  sel_not_hired,sel_changeable, sel_change_class]^kirovBaseUnits^
                                 [sel_dont_change_class, sel_not_changeable, Kurin, Popov],
                                 [class_soldier, class_mechanic, [class_engineer, 1], [class_scientistic, 1]]);
@@ -76,6 +79,9 @@ for un in selectedPeople do
 
 currentTeam := selectedPeople union [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova];
 AddComMoveXY(currentTeam, 113, 97);
+
+solsKirov := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_soldier]]);
+solsKirov := solsKirov diff [Kurin, Bukov, Gaydar, Popov];
 
 for un in kirovBaseUnits do
     begin
@@ -113,7 +119,7 @@ every 0$1 trigger counterEnable do
 var veh, hum, i;
 begin
        
-enable;
+enable;                
 
 veh = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_cargo_bay]]]);
 hum = FilterAllUnits([[f_side, 3], [f_type, unit_human]]) + kurinVehNeeded;
@@ -365,7 +371,7 @@ begin
 end;
 
 // CANT ENTER TO KIROV BASE
-every 1 trigger SeeArea(3, areaKirov) >= 6 and counterEnable do
+every 1 trigger SeeArea(3, areaKirov) >= 6 and tick > 0$10 do
 var unit;
 begin
     enable;
@@ -388,7 +394,7 @@ end;
 //KURIN QUERY
 every 0$1 trigger IsSelected(Kurin) do
 begin
-
+                 
 If true then
    begin
    case Query('QReadyToAttack') of
@@ -401,6 +407,7 @@ If true then
 
    meetNearOmicronBase = true;
    kurinCheckVehicles = true;
+   counterEnable := true;
    timeToArrive = 2$00;
    disable;
 
@@ -414,13 +421,14 @@ If true then
    Say(Burlak,'D6b-Bur-1');
    Say(Kurin,'D6b-Kur-1');
    Say(Burlak,'D6b-Bur-2');
+   counterEnable := true;
    timeToArrive = 2$00;
    meetNearOmicronBase = true;
 
    disable;
    end;
 
-   3:begin
+   3:begin           
    // continue;
    DeselectUnits(Kurin);
    SelectUnits(Burlak);
@@ -495,11 +503,10 @@ freeVehs := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nati
                   
 haveVehs = 0;
 
-uc_side = 6;
-uc_nation = 3;
-                                              
 for i := 1 to freeVehs do
     begin
+    uc_side = 6;
+    uc_nation = 3;
     PrepareMechanic(false, 2);
     mech = CreateHuman;
     mechs = mechs ^ mech;      
@@ -510,7 +517,7 @@ for i := 1 to freeVehs do
 
     if enoughVehsForKirov and freeVehs > 0 then
     begin
-        vehs = FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_occupied]]]);
+        vehs = FilterAllUnits([[f_type, unit_vehicle], [f_nation, nation_russian], [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_occupied]]]);
         for i := 1 to freeVehs do
             kirovAttackVehicles = kirovAttackVehicles ^ vehs[i];
 
@@ -521,12 +528,12 @@ for i := 1 to freeVehs do
         for i := 1 to freeVehs do
             AddComEnterUnit(mechs[i], kirovAttackVehicles[i]);
 
-        if kurinCheckVehicles and not kurinOpinion = 0 then
+        if kurinCheckVehicles and produceMoreVehicles and not kurinOpinion = 0 then
         kurinOpinion = 1;
     end
     else
     begin
-        if kurinCheckVehicles then
+        if kurinCheckVehicles = false and produceMoreVehicles = false then
         begin
         DialogueOn;
         SayRadio(Kurin, 'D6d-Kur-1');
@@ -558,6 +565,7 @@ counterIndex = 2;
 if NOT kurinOpinion = 0 then
    kurinOpinion = 1;
 
+InitOmicronDef;
 end;                               
 
 // Delay meet with others near Omicron base
@@ -578,7 +586,6 @@ every 0$1 trigger timeToArrive < 0$01 AND counterIndex = 3 do
 YouLost('Delay');
 
 // Attack Omicron
-Export startTheAttack;
 every 0$1 trigger meetNearOmicronBase AND FilterUnitsExceptArea(MeetArea, [[f_side, 3], [f_type, unit_human]]) = 0 do
 begin
 
@@ -603,6 +610,7 @@ KirovAttackOmicron;
 end;
 
 //KIROV ATTACK RETREAT
+{
 Every 0$1 trigger (UnitFilter(kirovAttackVehicles[KirovCurrentAttacker], [f_not,  [f_lives, 700]]) and startTheAttack) or not IsBusy(kirovAttackVehicles[KirovCurrentAttacker]) do
 var i;
 begin                                                                                
@@ -617,6 +625,7 @@ if GetLives(kirovAttackVehicles[KirovCurrentAttacker]) <= 700 then
    KirovAttackOmicron;
    end;
 End;
+}
                                                                               
 // Omicron surrender
 Export omicronNotDestroyed;

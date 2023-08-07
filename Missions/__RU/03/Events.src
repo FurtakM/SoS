@@ -1,9 +1,32 @@
 //
+Export labT1;
+
+On ResearchComplete(lab, res) do
+begin
+   if res = 85 then
+      SetSpecResearch(kirovLab, 100, false);
+
+End;
+
+On UpgradeStarted(un, from, toB, from1, to1, from2, to2) do
+begin
+   if GetSide(un) = 6 then
+      AddComRepairBuilding(kirovEngs, un);
+                                     
+End;                       
+
 On EnterBuilding(building, un) do
+var i;
 begin
     if GetSide(un) = 1 and building = amBarracks[1] or building = amBarracks[2] then
     begin
-       UpgradeOmicron;
+       UpgradeOmicron;                          
+    end;
+    
+    if building = kirovLab and labT1 then
+    begin
+       for i in techList do
+           AddComResearch(kirovLab, i);
     end;
 end;
 
@@ -14,12 +37,11 @@ begin
 
 End;
 On BuildingComplete(building) do
-var un, i, bunkers, sols, labT1, kaganReady;
+var un, i, bunkers, kaganReady;
 begin
 if GetSide(building) = 6 and (GetBType(building) = b_bunker or GetBType(building) = b_armoury) then
 begin
-   sols := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_soldier]]);
-   for un in sols do
+   for un in solsKirov do
        begin
        if GetBType(IsInUnit(un)) = b_bunker then
           continue;
@@ -119,5 +141,8 @@ On BuildingStarted(building, hum) do
 var un, i;
 begin
 if GetSide(building) = 6 then
+   begin
    AddComComplete(kirovEngs, building);
+   AddComRepairBuilding(kirovEngs, un);
+   end;
 End;

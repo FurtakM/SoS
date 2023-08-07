@@ -1,5 +1,5 @@
 Export omicronSquad, Omikron, omikronDepot;
-Export amIntroUnits, omiBunerArray;
+Export amIntroUnits, omiBunerArray, omiBreastworkArray;
 Export amConvoyGroups, amFreeSols;
 Export amLabs, amBarracks, amFactory, amVehs;
 
@@ -52,10 +52,10 @@ var i, un, tmp, veh, omiBuildingArray;
 begin
 //sol                      eng                       mech                      sci                       veh
 amConvoyGroups := [
-[[1, 2, 3, 5][Difficulty], [0, 0, 1, 1][Difficulty], [1, 1, 2, 2][Difficulty], [1, 1, 1, 2][Difficulty], [0, 1, 1, 2][Difficulty]],
-[[3, 4, 5, 6][Difficulty], [0, 1, 1, 2][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 2, 3][Difficulty]],
-[[1, 2, 3, 4][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 2, 2][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 1, 2][Difficulty]],
-[[3, 4, 6, 7][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 2, 3][Difficulty], [1, 1, 1, 3][Difficulty]]
+[[1, 2, 3, 4][Difficulty], [0, 0, 0, 0][Difficulty], [0, 1, 1, 2][Difficulty], [0, 0, 1, 1][Difficulty], [0, 1, 1, 2][Difficulty]],
+[[2, 3, 4, 5][Difficulty], [0, 1, 1, 1][Difficulty], [0, 0, 1, 1][Difficulty], [0, 1, 2, 1][Difficulty], [0, 0, 1, 1][Difficulty]],
+[[1, 2, 2, 3][Difficulty], [1, 1, 1, 1][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 1, 2][Difficulty], [1, 1, 1, 2][Difficulty]],
+[[2, 3, 4, 4][Difficulty], [1, 1, 1, 2][Difficulty], [2, 2, 2, 3][Difficulty], [2, 2, 2, 3][Difficulty], [2, 2, 2, 3][Difficulty]]
 ];
 
 omiBuildingArray := [
@@ -90,7 +90,17 @@ omiBunerArray := [
     [b_bunker, 30, 53, 0],
     [b_bunker, 42, 56, 4],
     [b_bunker, 30, 20, 4]
-];                                      
+];
+
+omiBreastworkArray := [
+    [b_breastwork, 25, 8, 5],
+    [b_breastwork, 37, 35, 4],
+    [b_breastwork, 42, 45, 4],
+    [b_breastwork, 29, 17, 4],
+    [b_breastwork, 30, 53, 0],
+    [b_breastwork, 42, 56, 4],
+    [b_breastwork, 30, 20, 4]
+];
 
 omicronSquad := [];
 
@@ -131,6 +141,22 @@ for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_bunker], [f_btype, b_br
     PlaceWeaponTurret(i, GetTurretWeapon(i, areaOmicron));
     end;
 
+End;
+
+Export Function InitOmicronDef;
+var i, un;
+begin
+    for i in omiBreastworkArray do
+        PrepareBuilding(1, 1, 5, i[1], i[2], i[3], i[4], false);
+
+    for i in FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]) do
+        begin
+        PrepareHuman(sex_male, 1, [3, 4, 5][Difficulty]);
+        un := CreateHuman;
+        omicronSquad := omicronSquad union un;
+        SetDir(un, GetDir(i) - 3);
+        PlaceHumanInUnit(un, i);
+        end;
 End;
 
 //NEFEK CODE
@@ -220,7 +246,7 @@ AgressiveMove(amVehs, [ [95,44] ]);
 AddComEnterUnit(sols, [amBarracks[1], amBarracks[2]][Rand(1,2)]);
 AddComEnterUnit(engs, omikronDepot);
 AddComEnterUnit(mechs, amFactory);
-AddComEnterUnit(scis, [amLabs[1], amLabs[2]][Rand(1,2)]);
+AddComEnterUnit(scis, amLabs[1]);
 amConvoyTroops := '';            
 sols := '';
 engs := '';
