@@ -12,8 +12,8 @@ IntBazooka(3);
 End;
 
 // attacks
-Every 0$30 trigger russianTanks >= [3, 4, 5, 6][Difficulty] do
-var j, tmp, target1, target2;
+Every 0$50 trigger russianTanks >= [3, 4, 5, 6][Difficulty] do
+var i, tmp;
 begin
 enable;
 
@@ -27,43 +27,25 @@ if vehicleTeleported >= 4 then
 
 if IsOk(ruteleprt) then
    begin
-   for j in tmp do
+   for i in tmp do
        if attackTactic < 2 then
-          ComEnterUnit(j, ruteleprt)
+          ComEnterUnit(i, ruteleprt)
        else
-          ComMoveXY(j, 88, 69);
+          ComMoveXY(i, 88, 69);
 
    repeat
-    wait(0$1);
+    wait(0$2);
    until not UnitFilter(tmp, [f_hastask]);
    end;
 
 repeat
  wait(0$1);
 
- for j in tmp do
-     begin
-     if IsDead(j) then
-        tmp := tmp diff j;
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i;
 
-     target1 := NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), j);
-     target2 := NearestUnitToUnit(FilterAllUnits([[[f_enemy, 3], [f_type, unit_human]]]), j);
-
-     if GetWeapon(j) = ru_time_lapser then
-        begin
-        if UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]) > 1 and UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]) then
-           ComMoveUnit(j, NearestUnitToUnit(UnitFilter(tmp, [f_not, [f_weapon, ru_time_lapser]]), j))
-        else
-           ComMoveUnit(j, NearestUnitToUnit(target1, j));
-        end
-     else
-        begin
-        if GetDistUnits(j, target2) < GetDistUnits(j, target1) + 2 then
-           ComAttackUnit(j, target2)
-        else
-           ComAttackUnit(j, target1);
-        end;
-     end;
+ AgressiveMove(tmp, [140, 112]);
 until not tmp;
 
 End;

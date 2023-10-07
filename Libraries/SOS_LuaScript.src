@@ -13,6 +13,7 @@ if streamModeActive then
    DefineStreamItems(true);
 
 UpdateFactoryWaypoints();
+UpdateWarhouseGatheringPoints();
 End;                   
 
 // SoS Stream Mode by Serpent
@@ -1429,4 +1430,125 @@ Export Function hHackTeleport(unit, x, y);
 begin
 TeleportUnit(unit, x, y, 1, true);
 CenterOnXY(x, y);
+End;
+
+// WAYPOINTS
+Export factoryWaypoints;
+Export Function SetFactoryWaypoint(factory, x, y);
+var i;
+begin
+if not factory or not ValidHex(x, y) or (GetBType(factory) <> b_factory and not GetType(factory) = unit_human) then
+   exit;
+
+if GetType(factory) = unit_human then
+   factory := IsInUnit(factory);
+
+if GetBType(factory) <> b_factory then
+   exit;
+
+if HexInfo(x, y) = factory then
+   factoryWaypoints := Replace(factoryWaypoints, factory, 0)
+else
+   factoryWaypoints := Replace(factoryWaypoints, factory, [GetSide(factory), factory, x, y]);
+
+UpdateFactoryWaypoints;
+End;
+
+Export Function UpdateFactoryWaypoints();
+var i;
+begin
+ToLua('resetFactoryWaypoint();');
+
+if factoryWaypoints then
+   begin
+   for i := 1 to factoryWaypoints do
+       if factoryWaypoints[i] then
+          ToLua('setFactoryWaypointXY(' & factoryWaypoints[i][1] & ',' & factoryWaypoints[i][2] & ',' & factoryWaypoints[i][3] & ',' & factoryWaypoints[i][4] & ')');
+   end;
+End;
+
+Export warehouseGatheringPoints, warehouseCratesCollectors;
+Export Function SetWarhouseGatheringPoint(warehouse, x, y);
+begin
+if HexInfo(x, y) = warehouse then
+   warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, 0)
+else
+   warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, [GetSide(warehouse), warehouse, x, y]);
+
+UpdateWarhouseGatheringPoints;
+End;
+
+Export Function UpdateWarhouseGatheringPoints();
+var i;
+begin
+ToLua('resetWarehouseGatheringPoints();');
+
+if warehouseGatheringPoints then
+   begin
+   for i := 1 to warehouseGatheringPoints do
+       if warehouseGatheringPoints[i] then
+          ToLua('setWarhouseGatheringPointXY(' & warehouseGatheringPoints[i][1] & ',' & warehouseGatheringPoints[i][2] & ',' & warehouseGatheringPoints[i][3] & ',' & warehouseGatheringPoints[i][4] & ')');
+   end;
+End;
+
+Every 0$20 trigger warehouseGatheringPoints do
+var i, j, list, tmp, side, x, y, depot, cratesNearbyPoint;
+begin
+enable;
+
+list := warehouseGatheringPoints diff 0;
+
+for i := 1 to list do
+    begin
+    if not list[i] then
+       continue;
+
+    depot := list[i][2];
+    side := list[i][1];
+
+    if IsDead(depot) or side <> GetSide(depot) then
+       begin
+       warehouseGatheringPoints := Replace(warehouseGatheringPoints, depot, 0);
+       exit;
+       end;
+
+    x := list[i][3];
+    y := list[i][4];
+
+    cratesNearbyPoint := GetCratesNearbyXY(x, y, 12);
+
+    if not cratesNearbyPoint then
+       exit;
+
+    tmp := FilterAllUnits([[f_side, side], [f_not, [f_hastask]], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]])
+        union UnitFilter(UnitsInside(depot), [[f_not, [f_hastask]], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]]);
+
+    if tmp then
+       begin
+       tmp := ShrinkArray(tmp, 3);
+
+       for j in tmp do
+           begin
+           if IsInUnit(j) then
+              ComExit(j);
+
+           AddComCollect(j, x, y);
+           end;
+
+       exit;
+       end;
+
+    tmp := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay],
+                                                  [f_weapon, ar_cargo_bay], [f_weapon, ru_big_cargo_bay]]]);
+
+    if tmp then
+       begin
+       for j in tmp do
+           if GetFuel(i) > 20 and not HasTask(i) and (GetControl(i) <> control_manual or IsDrivenBy(i)) then
+              begin
+              ComCollect(j, x, y);
+              exit;
+              end;
+       end;
+    end;
 End;

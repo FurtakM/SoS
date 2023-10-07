@@ -19,6 +19,13 @@ function gamewindow.overlay.onTick(FRAMETIME)
         	elseif FACTORY_ACTIVE_WAYPOINT ~= nil then
         		clearFactoryWaypoint();
         	end;
+
+            if parseInt(SELECTED_UNIT.ID) > 0 and (parseInt(SELECTED_UNIT.KIND) == 0 or parseInt(SELECTED_UNIT.KIND) == 1) and WAREHOUSE_GATEHRING_POINTS[parseInt(SELECTED_UNIT.ID)] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == parseInt(SELECTED_UNIT.ID)) then
+                local point = WAREHOUSE_GATEHRING_POINTS[parseInt(SELECTED_UNIT.ID)];
+                displayWarehouseGatheringPointXY(parseInt(point[1]), parseInt(point[2]), parseInt(point[3]), parseInt(point[4]));
+            elseif WAREHOUSE_ACTIVE_POINT ~= nil then
+                clearWarehouseGatheringPoint();
+            end;
         end;
     end;
 end;

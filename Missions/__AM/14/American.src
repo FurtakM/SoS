@@ -1,0 +1,131 @@
+Export JMM, Joan, Lisa, Connie, Powell;
+Export function PrepareAmerican;
+var i, un, veh, tmp;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+SetBName(usDep, 'deltakappa');
+
+SetResourceType(GetBase(usDep), 1, [2000, 1600, 1200, 900][Difficulty]);
+SetResourceType(GetBase(usDep), 2, 20);
+SetResourceType(GetBase(usDep), 3, 100);
+
+JMM := PrepareUnit('JMM', (not debug), '13f_');
+SetClass(JMM, class_soldier);
+
+PrepareVehicle(
+    [us_morphling, us_morphling, us_medium_tracked, us_medium_tracked][Difficulty],
+    engine_siberite,
+    control_manual,
+    [us_laser, us_laser, us_double_gun, us_double_gun][Difficulty],
+    100
+);
+
+veh := CreateVehicle;
+SetDir(veh, 1);
+PlaceUnitXY(veh, 5, 5, false);
+PlaceHumanInUnit(JMM, veh);
+
+SetMark(veh, -1);
+
+ComMoveXY(veh, 21, 8);
+
+uc_side := 4;
+Powell := PrepareUnit('Powell', false, '');
+
+Joan := PrepareUnit('Joan', (not debug), '10c_');
+Lisa := PrepareUnit('Lisa', (not debug), '13s_');
+
+if Joan then
+   begin
+   PlaceUnitArea(Joan, girlSpawnArea, false);
+   SetClass(Joan, class_scientistic);
+   JMMGirl = 1;
+   end
+else if Lisa then
+   begin
+   PlaceUnitArea(Lisa, girlSpawnArea, false);
+   SetClass(Lisa, class_soldier);
+   JMMGirl := 2;
+   end
+else
+   begin
+   Connie := NewCharacter('Coonie');
+   PlaceUnitArea(Connie, girlSpawnArea, false);
+   SetClass(Connie, class_mechanic);
+   JMMGirl := 3;
+   end;
+
+for i := 1 to [4, 3, 3, 2][Difficulty] do
+    begin
+    PrepareVehicle(
+        [us_heavy_tracked, us_medium_tracked, us_medium_wheeled, us_medium_tracked][i mod 4 + 1],
+        engine_combustion,
+        control_remote,
+        [us_laser, us_rocket_launcher, us_gatling_gun, us_double_gun][i mod 4 + 1],
+        rand(33, 55)
+    );   
+    
+    veh := CreateVehicle;
+    SetDir(veh, rand(0, 5));
+    SetLives(veh, rand(500, 950));
+    PlaceUnitArea(veh, remoteVehArea, false);
+    end;
+
+for i := 1 to [3, 3, 2, 2][Difficulty] do
+    begin
+    PrepareVehicle(
+        [us_medium_tracked, us_medium_wheeled][i mod 2 + 1],
+        engine_combustion,
+        control_computer,
+        [us_laser, us_double_gun][i mod 2 + 1],
+        0
+    );
+
+    veh := CreateVehicle;
+    SetDir(veh, rand(0, 5));
+    SetLives(veh, 1000);
+    PlaceUnitArea(veh, computerVehArea, false);
+    end;
+
+for i := 1 to [3, 2, 1, 1][Difficulty] do
+    begin
+    PrepareApeman(1);
+    uc_side := 4;
+
+    hc_class := class_apeman_engineer;
+
+    PlaceUnitXYR(CreateHuman, 84, 127, 5, false);
+    end;
+
+uc_side := 4;
+uc_nation := 1;
+
+PrepareVehicle(us_medium_wheeled, engine_siberite, control_manual, us_cargo_bay, 100);
+veh := CreateVehicle;
+SetCargo(veh, mat_cans, 100);
+SetLives(veh, 450);
+PlaceUnitXYD(veh, 122, 118, 4, false);
+
+PrepareHuman(sex_male, class_engineer, 0);
+Create_ColdMeat(CreateHuman, 124, 120, true);
+
+tmp := AreaToList(deadBodiesArea, 0);
+
+for i := 1 to 4 do
+    begin
+    PrepareHuman(sex_male, [1, 3][rand(1,2)], 0);
+    un := CreateHuman;
+    SetDir(un, rand(0, 5));
+    Create_ColdMeat(un, tmp[1][i], tmp[2][i], true);
+    end;
+End;
+
+Export function ChangeSideKappaBase;
+begin
+PlaceSeeing(70, 138, 1, -60);
+RemoveSeeing(70, 138, 1);
+
+SetSide(FilterAllUnits([f_side, 4]), 1);
+End;

@@ -77,40 +77,8 @@ if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x,
    CutTreeXYR(unit, x, y, 12);
 if cmd = 256 then
    SetFactoryWaypoint(unit, x, y);
-End;
-
-Export factoryWaypoints;
-Export Function SetFactoryWaypoint(factory, x, y);
-var i;
-begin
-if not factory or not ValidHex(x, y) or (GetBType(factory) <> b_factory and not GetType(factory) = unit_human) then
-   exit;
-
-if GetType(factory) = unit_human then
-   factory := IsInUnit(factory);
-
-if GetBType(factory) <> b_factory then
-   exit;
-
-if HexInfo(x, y) = factory then
-   factoryWaypoints := Replace(factoryWaypoints, factory, 0)
-else
-   factoryWaypoints := Replace(factoryWaypoints, factory, [GetSide(factory), factory, x, y]);
-
-UpdateFactoryWaypoints;
-End;
-
-Export Function UpdateFactoryWaypoints();
-var i;
-begin
-ToLua('resetFactoryWaypoint();');
-
-if factoryWaypoints then
-   begin
-   for i := 1 to factoryWaypoints do
-       if factoryWaypoints[i] then
-          ToLua('setFactoryWaypointXY(' & factoryWaypoints[i][1] & ',' & factoryWaypoints[i][2] & ',' & factoryWaypoints[i][3] & ',' & factoryWaypoints[i][4] & ')');
-   end;
+if cmd = 257 then
+   SetWarhouseGatheringPoint(unit, x, y);
 End;
 
 Function CutTreeXYR(bulldozer, x, y, r);

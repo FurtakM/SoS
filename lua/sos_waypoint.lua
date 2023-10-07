@@ -35,3 +35,41 @@ end;
 function resetFactoryWaypoint()
 	FACTORY_WAYPOINTS = {};
 end;
+
+WAREHOUSE_GATEHRING_POINTS = {};
+WAREHOUSE_ACTIVE_POINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
+
+function displayWarehouseGatheringPointXY(SIDE, UNIT_ID, X, Y)
+	if WAREHOUSE_ACTIVE_POINT.X ~= X and WAREHOUSE_ACTIVE_POINT.Y ~= Y then
+		clearWarehouseGatheringPoint();
+
+		local hex = OW_HEXTOSCREEN(parseInt(X), parseInt(Y));
+
+		gamewindow.overlay.waypoint = getElementEX(
+		    gamewindow.overlay,
+		    anchorNone,
+		    XYWH(hex.X - 15, hex.Y - 12, 30, 24),
+		    true,
+		    {
+		        texture = 'SGUI/waypoint/WarehouseGatheringPoint' .. SIDE .. '.png'
+		    }
+		);
+
+		WAREHOUSE_ACTIVE_POINT = {ID = gamewindow.overlay.waypoint.ID, UNIT_ID = UNIT_ID, X = X, Y = Y};
+	end;
+end;
+
+function clearWarehouseGatheringPoint()
+	if WAREHOUSE_ACTIVE_POINT.ID > 0 then
+		sgui_delete(WAREHOUSE_ACTIVE_POINT.ID);
+		WAREHOUSE_ACTIVE_POINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
+	end;
+end
+
+function setWarhouseGatheringPointXY(SIDE, ID, X, Y)
+	WAREHOUSE_GATEHRING_POINTS[ID] = {SIDE, ID, X, Y};
+end;
+
+function resetWarehouseGatheringPoints()
+	WAREHOUSE_GATEHRING_POINTS = {};
+end;

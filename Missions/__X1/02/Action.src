@@ -321,6 +321,8 @@ if sciCounterKill < 3 then
       end;
 
    ChangeMissionObjectives('OSci');
+
+   ComFree(Aviradze);
    end
 else
    begin
@@ -332,6 +334,12 @@ else
    for i in FilterAllUnits([f_side, 5]) do
        SetSide(i, 2);
    end;
+End;
+
+Every 0$2 trigger GetDistUnitXY(Aviradze, 106, 38) > 8 and GetSide(Aviradze) = 5 do
+begin
+enable;
+ComMoveXY(Aviradze, 106, 38);
 End;
 
 // alert
@@ -474,47 +482,45 @@ Say(Heike, 'DH-2-radio');
 
 if IsOk(Kamil) or IsOk(Sophia) then
    begin
+   case Query('Q1Trap') of
+        1: begin
+           if IsOk(Kamil) then
+               begin
+               Say(Kamil, 'DKam-2-radio');
+               Say(Kamil, 'DKam-3-radio');
+               SayRadio(Lynch, 'DDelta-3-radio');
 
-        Case Query('Q1Trap') of
-             1: begin
-                if IsOk(Kamil) then
-                   begin
-                   Say(Kamil, 'DKam-2-radio');
-                   Say(Kamil, 'DKam-3-radio');
-                   SayRadio(Lynch, 'DDelta-3-radio');
+               dwait(0$01);
 
-                   dwait(0$01);
+               Say(Heike, 'DH-3-radio');
+               Say(Kamil, 'DKam-4-radio');
 
-                   Say(Heike, 'DH-3-radio');
-                   Say(Kamil, 'DKam-4-radio');
+               trap := 1;
+               end
+           else
+               begin
+               Say(Sophia, 'DS-1-radio');
+               Say(Sophia, 'DS-2-radio');
+               SayRadio(Lynch, 'DDelta-2-radio-s');
+               Say(Sophia, 'DS-3-radio');
+               SayRadio(Lynch, 'DDelta-3-radio-s');
+               Say(Sophia, 'DS-4-radio-s');
+               SayRadio(Lynch, 'DDelta-4-radio-s');
 
-                   trap := 1;
-                   end
-                else
-                   begin
-                   Say(Sophia, 'DS-1-radio');
-                   Say(Sophia, 'DS-2-radio');
-                   SayRadio(Lynch, 'DDelta-2-radio-s');
-                   Say(Sophia, 'DS-3-radio');
-                   SayRadio(Lynch, 'DDelta-3-radio-s');
-                   Say(Sophia, 'DS-4-radio-s');
-                   SayRadio(Lynch, 'DDelta-4-radio-s');
+               dwait(0$01);
 
-                   dwait(0$01);
+               Say(Heike, 'DH-1-trap');
 
-                   Say(Heike, 'DH-1-trap');
+               trap := 0;
+               end;
 
-                   trap := 0;
-                   end;
-
-                DialogueOff;
-                end;
-
-             2: begin
-                DialogueOff;
-                exit;
-                end;
-        End;
+           DialogueOff;
+           end;
+        2: begin
+           DialogueOff;
+           exit;
+           end;
+        end;
 
    if trap = 1 then
       begin
