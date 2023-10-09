@@ -43,14 +43,20 @@ if GetSide(lab) = 3 and tech in ruTechList then
    ruTechList := ruTechList diff tech;
 End;
 
-On VehicleConstructed(vehicle, factory) Do
+On VehicleConstructed(vehicle, factory) do
+var i;
 begin
 SOS_VehicleConstructed(vehicle, factory);
 
 if GetSide(vehicle) <> 3 then
    begin
    if GetWeapon(vehicle) = us_double_laser then
+      begin
       amLaserCounter := Inc(amLaserCounter);
+
+      for i in UnitsInside(factory) do
+          AddExperience_NoLimit(i, skill_mechanical, 1000);
+      end;
 
    exit;
    end;

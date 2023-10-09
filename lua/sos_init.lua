@@ -1,4 +1,3 @@
-include('Instances/weapons');
 include('sos_variables');
 include('sos_music');
 include('sos_dialog');

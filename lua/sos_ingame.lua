@@ -13,16 +13,19 @@ function gamewindow.overlay.onTick(FRAMETIME)
 
     if getVisible(game) then
         if SELECTED_UNIT then
-        	if parseInt(SELECTED_UNIT.ID) > 0 and parseInt(SELECTED_UNIT.KIND) == 3 and FACTORY_WAYPOINTS[parseInt(SELECTED_UNIT.ID)] ~= nil and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == parseInt(SELECTED_UNIT.ID)) then
-        		local point = FACTORY_WAYPOINTS[parseInt(SELECTED_UNIT.ID)];
-        		displayFactoryWaypointXY(parseInt(point[1]), parseInt(point[2]), parseInt(point[3]), parseInt(point[4]));
+            local selectedUnitID = parseInt(SELECTED_UNIT.ID);
+            local unitKindID = parseInt(SELECTED_UNIT.KIND);
+
+        	if selectedUnitID > 0 and unitKindID == 3 and FACTORY_WAYPOINTS[selectedUnitID] ~= nil and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
+        		local point = FACTORY_WAYPOINTS[selectedUnitID];
+        		displayFactoryWaypointXY(point[1], point[2], point[3], point[4]);
         	elseif FACTORY_ACTIVE_WAYPOINT ~= nil then
         		clearFactoryWaypoint();
         	end;
 
-            if parseInt(SELECTED_UNIT.ID) > 0 and (parseInt(SELECTED_UNIT.KIND) == 0 or parseInt(SELECTED_UNIT.KIND) == 1) and WAREHOUSE_GATEHRING_POINTS[parseInt(SELECTED_UNIT.ID)] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == parseInt(SELECTED_UNIT.ID)) then
-                local point = WAREHOUSE_GATEHRING_POINTS[parseInt(SELECTED_UNIT.ID)];
-                displayWarehouseGatheringPointXY(parseInt(point[1]), parseInt(point[2]), parseInt(point[3]), parseInt(point[4]));
+            if selectedUnitID > 0 and (unitKindID == 0 or unitKindID == 1) and WAREHOUSE_GATEHRING_POINTS[selectedUnitID] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == selectedUnitID) then
+                local point = WAREHOUSE_GATEHRING_POINTS[selectedUnitID];
+                displayWarehouseGatheringPointXY(point[1], point[2], point[3], point[4]);
             elseif WAREHOUSE_ACTIVE_POINT ~= nil then
                 clearWarehouseGatheringPoint();
             end;

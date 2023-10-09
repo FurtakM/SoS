@@ -13,7 +13,7 @@ if streamModeActive then
    DefineStreamItems(true);
 
 UpdateFactoryWaypoints();
-UpdateWarhouseGatheringPoints();
+UpdateWarehouseGatheringPoints();
 End;                   
 
 // SoS Stream Mode by Serpent
@@ -1455,39 +1455,41 @@ UpdateFactoryWaypoints;
 End;
 
 Export Function UpdateFactoryWaypoints();
-var i;
+var i, list;
 begin
 ToLua('resetFactoryWaypoint();');
 
 if factoryWaypoints then
    begin
-   for i := 1 to factoryWaypoints do
-       if factoryWaypoints[i] then
-          ToLua('setFactoryWaypointXY(' & factoryWaypoints[i][1] & ',' & factoryWaypoints[i][2] & ',' & factoryWaypoints[i][3] & ',' & factoryWaypoints[i][4] & ')');
+   list := PrepareArray(factoryWaypoints);
+
+   for i := 1 to list do
+       ToLua('setFactoryWaypointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
    end;
 End;
 
 Export warehouseGatheringPoints, warehouseCratesCollectors;
-Export Function SetWarhouseGatheringPoint(warehouse, x, y);
+Export Function SetWarehouseGatheringPoint(warehouse, x, y);
 begin
 if HexInfo(x, y) = warehouse then
    warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, 0)
 else
    warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, [GetSide(warehouse), warehouse, x, y]);
 
-UpdateWarhouseGatheringPoints;
+UpdateWarehouseGatheringPoints;
 End;
 
-Export Function UpdateWarhouseGatheringPoints();
-var i;
+Export Function UpdateWarehouseGatheringPoints();
+var i, list;
 begin
 ToLua('resetWarehouseGatheringPoints();');
 
 if warehouseGatheringPoints then
    begin
-   for i := 1 to warehouseGatheringPoints do
-       if warehouseGatheringPoints[i] then
-          ToLua('setWarhouseGatheringPointXY(' & warehouseGatheringPoints[i][1] & ',' & warehouseGatheringPoints[i][2] & ',' & warehouseGatheringPoints[i][3] & ',' & warehouseGatheringPoints[i][4] & ')');
+   list := PrepareArray(warehouseGatheringPoints);
+
+   for i := 1 to list do
+       ToLua('setWarehouseGatheringPointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
    end;
 End;
 
@@ -1496,13 +1498,10 @@ var i, j, list, tmp, side, x, y, depot, cratesNearbyPoint;
 begin
 enable;
 
-list := warehouseGatheringPoints diff 0;
+list := PrepareArray(warehouseGatheringPoints);
 
 for i := 1 to list do
     begin
-    if not list[i] then
-       continue;
-
     depot := list[i][2];
     side := list[i][1];
 

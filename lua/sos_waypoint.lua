@@ -2,10 +2,10 @@ FACTORY_WAYPOINTS = {};
 FACTORY_ACTIVE_WAYPOINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
 
 function displayFactoryWaypointXY(SIDE, UNIT_ID, X, Y)
-	if FACTORY_ACTIVE_WAYPOINT.X ~= X and FACTORY_ACTIVE_WAYPOINT.Y ~= Y then
+	if FACTORY_ACTIVE_WAYPOINT.X ~= X or FACTORY_ACTIVE_WAYPOINT.Y ~= Y then
 		clearFactoryWaypoint();
 
-		local hex = OW_HEXTOSCREEN(parseInt(X), parseInt(Y));
+		local hex = OW_HEXTOSCREEN(X, Y);
 
 		gamewindow.overlay.waypoint = getElementEX(
 		    gamewindow.overlay,
@@ -29,7 +29,7 @@ function clearFactoryWaypoint()
 end
 
 function setFactoryWaypointXY(SIDE, ID, X, Y)
-	FACTORY_WAYPOINTS[ID] = {SIDE, ID, X, Y};
+	FACTORY_WAYPOINTS[ID] = {parseInt(SIDE), parseInt(ID), parseInt(X), parseInt(Y)};
 end;
 
 function resetFactoryWaypoint()
@@ -40,10 +40,10 @@ WAREHOUSE_GATEHRING_POINTS = {};
 WAREHOUSE_ACTIVE_POINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
 
 function displayWarehouseGatheringPointXY(SIDE, UNIT_ID, X, Y)
-	if WAREHOUSE_ACTIVE_POINT.X ~= X and WAREHOUSE_ACTIVE_POINT.Y ~= Y then
+	if WAREHOUSE_ACTIVE_POINT.X ~= X or WAREHOUSE_ACTIVE_POINT.Y ~= Y then
 		clearWarehouseGatheringPoint();
 
-		local hex = OW_HEXTOSCREEN(parseInt(X), parseInt(Y));
+		local hex = OW_HEXTOSCREEN(X, Y);
 
 		gamewindow.overlay.waypoint = getElementEX(
 		    gamewindow.overlay,
@@ -66,8 +66,8 @@ function clearWarehouseGatheringPoint()
 	end;
 end
 
-function setWarhouseGatheringPointXY(SIDE, ID, X, Y)
-	WAREHOUSE_GATEHRING_POINTS[ID] = {SIDE, ID, X, Y};
+function setWarehouseGatheringPointXY(SIDE, ID, X, Y)
+	WAREHOUSE_GATEHRING_POINTS[ID] = {parseInt(SIDE), parseInt(ID), parseInt(X), parseInt(Y)};
 end;
 
 function resetWarehouseGatheringPoints()
