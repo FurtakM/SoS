@@ -1500,6 +1500,9 @@ enable;
 
 list := PrepareArray(warehouseGatheringPoints);
 
+if not list then
+   exit;
+
 for i := 1 to list do
     begin
     depot := list[i][2];
@@ -1514,12 +1517,12 @@ for i := 1 to list do
     x := list[i][3];
     y := list[i][4];
 
-    cratesNearbyPoint := GetCratesNearbyXY(x, y, 12);
+    cratesNearbyPoint := GetCratesNearbyXY(x, y, 16);
 
     if not cratesNearbyPoint then
        exit;
 
-    tmp := FilterAllUnits([[f_side, side], [f_not, [f_hastask]], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]])
+    tmp := FilterAllUnits([[f_side, side], [f_not, [f_hastask]], [f_dist, depot, 6], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]])
         union UnitFilter(UnitsInside(depot), [[f_not, [f_hastask]], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]]);
 
     if tmp then
@@ -1537,15 +1540,17 @@ for i := 1 to list do
        exit;
        end;
 
-    tmp := FilterAllUnits([[f_side, side], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay],
-                                                  [f_weapon, ar_cargo_bay], [f_weapon, ru_big_cargo_bay]]]);
+    tmp := FilterAllUnits([[f_side, side], [f_dist, depot, 8], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay],
+                                                               [f_weapon, ar_cargo_bay], [f_weapon, ru_big_cargo_bay]]]);
+
 
     if tmp then
        begin
        for j in tmp do
-           if GetFuel(i) > 20 and not HasTask(i) and (GetControl(i) <> control_manual or IsDrivenBy(i)) then
+           if (GetEngine(j) = engine_siberite or GetFuel(j) > 20) and not HasTask(j) and (GetControl(j) <> control_manual or IsDrivenBy(j)) then
               begin
               ComCollect(j, x, y);
+              AddComMoveUnit(j, depot);
               exit;
               end;
        end;

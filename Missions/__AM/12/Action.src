@@ -48,92 +48,77 @@ for i in group do
 End;
 
 // Bazooker attack ambush
-Every 0$1 do 
-var i, bazook_list, your_units, dec;
+Every 0$1 trigger FilterUnitsInArea(WaterPass, [f_side, 1]) > 1 do
+var i, tmp, dec;
 begin
-enable;
+tmp := FilterUnitsInArea(RussianBazookersSpawn, [[f_side, 3], [f_class, 9]]);
 
-bazook_list = FilterUnitsInArea(RussianBazookersSpawn, [[f_side, 3], [f_class, 9]]);
-your_units = FilterAllUnits([[f_side, 1]]);
+ComTimeShift(tmp, 96, 85);
 
+for i := 1 to 5 do
+    AddComTimeShift(tmp, 96, 85);
 
-for i in your_units do
-    begin
-    if See(3, i) then
-       begin
-       disable;
+wait(0$2);
 
-       ComTimeShift(bazook_list, 96, 85);
-       AddComTimeShift(bazook_list, 96, 85);
-       AddComTimeShift(bazook_list, 96, 85);
-       AddComTimeShift(bazook_list, 96, 85);
-       AddComTimeShift(bazook_list, 96, 85);
-       AddComTimeShift(bazook_list, 96, 85);
+Say(JMM, 'D1a-JMM-1');
+Say(Donaldson, 'D1a-Don-1');
 
-       wait(0$2);
+for i in FilterAllUnits([f_side, 1]) do
+    ComMoveXY(i, 109, 102);
 
-       Say(JMM, 'D1a-JMM-1');
-       Say(Donaldson, 'D1a-Don-1');
+Say(JMM, 'D1a-JMM-2');
 
-       for i in FilterAllUnits([f_side, 1]) do
-           ComMoveXY(i, 109, 102);
+wait(0$10);
 
-       Say(JMM, 'D1a-JMM-2');
+CenterNowOnUnits(IsInUnit(JMM));
 
-       wait(0$10);
+Say(Donaldson, 'D1b-Don-1');
 
-       CenterNowOnUnits(IsInUnit(JMM));
+if IsOk(Donaldson) then
+   Say(JMM, 'D1b-JMM-1');
 
-       Say(Donaldson, 'D1b-Don-1');
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'D1b-Sol1-1', '');
 
-       if IsOk(Donaldson) then
-          Say(JMM, 'D1b-JMM-1');
+Say(Donaldson, 'D1b-Don-2');
+Say(JMM, 'D1b-JMM-2');
 
-       DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]), 'D1b-Sol1-1', '');
+dec := ShowQuery1;
 
-       Say(Donaldson, 'D1b-Don-2');
-       Say(JMM, 'D1b-JMM-2');
+if dec = 1 then
+   begin
+   Say(JMM, 'D2-JMM-1');
+   SayRadio(Powell, 'D2-Pow-1');
+   Say(JMM, 'D2a-JMM-1');
+   SayRadio(Powell, 'D2a-Pow-1');
+   Say(JMM, 'D2a-JMM-2');
+   SayRadio(Powell, 'D2a-Pow-2');
+   Say(JMM, 'D2a-JMM-3');
+   SayRadio(Powell, 'D2a-Pow-3');
+   secondPass := 2;
+   end;
 
-       dec = ShowQuery1;
+if dec = 2 then
+   begin
+   Say(JMM, 'D2-JMM-1');
+   SayRadio(Powell, 'D2-Pow-1');
+   Say(JMM, 'D2b-JMM-1');
+   SayRadio(Powell, 'D2b-Pow-1');
+   Say(JMM, 'D2c-JMM-1');
+   SayRadio(Powell, 'D2c-Pow-1');
+   Say(JMM, 'D2c-JMM-2');
+   secondPass := 2;
+   end;
 
-       if dec = 1 then
-          begin
-          Say(JMM, 'D2-JMM-1');
-          SayRadio(Powell, 'D2-Pow-1');
-          Say(JMM, 'D2a-JMM-1');
-          SayRadio(Powell, 'D2a-Pow-1');
-          Say(JMM, 'D2a-JMM-2');
-          SayRadio(Powell, 'D2a-Pow-2');
-          Say(JMM, 'D2a-JMM-3');
-          SayRadio(Powell, 'D2a-Pow-3');
-          secondPass = 2;
-          end;
+if dec = 3 then
+   secondPass := 1;
 
-       if dec = 2 then
-          begin
-          Say(JMM, 'D2-JMM-1');
-          SayRadio(Powell, 'D2-Pow-1');
-          Say(JMM, 'D2b-JMM-1');
-          SayRadio(Powell, 'D2b-Pow-1');
-          Say(JMM, 'D2c-JMM-1');
-          SayRadio(Powell, 'D2c-Pow-1');
-          Say(JMM, 'D2c-JMM-2');
-          secondPass = 2;
-          end;
+InGameOff;
 
-       if dec = 3 then
-          secondPass = 1;
+ruAI := 1;
 
-       InGameOff;
+SetAttitude(1, 3, att_enemy, true);
 
-       ruAI := 1;
-
-       SetAttitude(1, 3, att_enemy, true);
-
-       SaveForQuickRestart;
-       exit;
-       end;
-    end;
+SaveForQuickRestart;
 End;
 
 // Powell's support
@@ -466,51 +451,72 @@ for i in FilterAllUnits([[f_tag, 17], [f_placed]]) do
 end;
 
 // Second query if you select option 3 in first query.
-Every 0$1 trigger secondPass = 1 do 
+Every 0$3 trigger secondPass = 1 and FilterUnitsInArea(HillArea1, [[f_side, 3], [f_see, 1], [f_type, unit_vehicle]]) do
 var i, enemyVehs, dec;
 begin
-    enable;
-    enemyVehs = FilterUnitsInArea(HillArea1, [[f_side, 3], [f_type, unit_vehicle]]);
+DialogueOn;
 
-    for i in enemyVehs do
-    begin
-        if See(1, i) then
-        begin
-            Disable; 
-            DialogueOn;
-            CenterNowOnUnits(i);
-            DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]),  'DT1-Sol1-1', 'DT1-FSol1-1');
-            dec = ShowQuery2;
+CenterNowOnUnits(i);
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4],  [f_class, 5], [f_class, 8]]]),  'DT1-Sol1-1', 'DT1-FSol1-1');
 
-            if dec = 1 then
-            begin
-                Say(JMM, 'D2-JMM-1');
-                SayRadio(Powell, 'D2-Pow-1');
-                Say(JMM, 'D2a-JMM-1');
-                SayRadio(Powell, 'D2a-Pow-1');
-                Say(JMM, 'D2a-JMM-2');
-                SayRadio(Powell, 'D2a-Pow-2');
-                Say(JMM, 'D2a-JMM-3');
-                SayRadio(Powell, 'D2a-Pow-3');
-                secondPass = 2;
-            end;
+dec := ShowQuery2;
 
-            if dec = 2 then
-            begin
-                Say(JMM, 'D2-JMM-1');
-                SayRadio(Powell, 'D2-Pow-1');
-                Say(JMM, 'D2b-JMM-1');
-                SayRadio(Powell, 'D2b-Pow-1');
-                Say(JMM, 'D2c-JMM-1');
-                SayRadio(Powell, 'D2c-Pow-1');
-                Say(JMM, 'D2c-JMM-2');
-                secondPass = 2;
-            end;
-            DialogueOff; 
-            exit;    
-        end;
-    end;
-end;
+if dec = 1 then
+   begin
+   Say(JMM, 'D2-JMM-1');
+   SayRadio(Powell, 'D2-Pow-1');
+   Say(JMM, 'D2a-JMM-1');
+   SayRadio(Powell, 'D2a-Pow-1');
+   Say(JMM, 'D2a-JMM-2');
+   SayRadio(Powell, 'D2a-Pow-2');
+   Say(JMM, 'D2a-JMM-3');
+   SayRadio(Powell, 'D2a-Pow-3');
+   secondPass := 2;
+   end;
+
+if dec = 2 then
+   begin
+   Say(JMM, 'D2-JMM-1');
+   SayRadio(Powell, 'D2-Pow-1');
+   Say(JMM, 'D2b-JMM-1');
+   SayRadio(Powell, 'D2b-Pow-1');
+   Say(JMM, 'D2c-JMM-1');
+   SayRadio(Powell, 'D2c-Pow-1');
+   Say(JMM, 'D2c-JMM-2');
+   secondPass := 2;
+   end;
+
+DialogueOff;
+
+if secondPass = 2 then
+   exit;
+
+Query('HelpRequest');
+
+SetAreaMapShow(helpRequestArea, 1);
+
+repeat
+ wait(0$1);
+until IsInArea(JMM, helpRequestArea);
+
+SetAreaMapShow(helpRequestArea, 0);
+
+DialogueOn;
+
+Say(JMM, 'D2-JMM-1');
+SayRadio(Powell, 'D2-Pow-1');
+Say(JMM, 'D2b-JMM-1');
+SayRadio(Powell, 'D2a-Pow-2');
+Say(JMM, 'D2a-JMM-3');
+SayRadio(Powell, 'D2a-Pow-3');
+Say(JMM, 'D2c-JMM-1');
+SayRadio(Powell, 'D2c-Pow-1');
+Say(JMM, 'D2c-JMM-2');
+
+DialogueOff;
+
+secondPass := 2;
+End;
 
 // First tep
 Every 0$1 trigger vehicleTeleported = 1 and FilterUnitsInArea(OutsideArea1, [f_side, 3]) do

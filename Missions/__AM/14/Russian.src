@@ -22,7 +22,7 @@ if not russianRocketsDisabled then
 ruCommander := NewCharacter('Eisenstein');
 PlaceHumanInUnit(ruCommander, ruDep);
 
-SetResourceType(GetBase(ruDep), 1, [1000, 2000, 2500, 3000][Difficulty]);
+SetResourceType(GetBase(ruDep), 1, [1250, 2500, 3500, 5000][Difficulty]);
 SetResourceType(GetBase(ruDep), 2, 600);
 SetResourceType(GetBase(ruDep), 3, 100);
 
@@ -52,9 +52,9 @@ for i in FilterAllUnits([[f_side, 3], [f_btype, b_barracks]]) do
     for j := 1 to [2, 2, 3, 3][Difficulty] do
         begin
         PrepareSoldier(false, [5, 6, 7, 8][Difficulty]);
-        un := CreateHuman;
-        SetDir(un, class_bazooker);
+        un := CreateHuman;  
         PlaceHumanInUnit(un, i);
+        SetClass(un, class_bazooker);
 
         if j = 2 then
            SetUnitAttackType(un, 3);
@@ -205,9 +205,9 @@ if eng then
 
        if tag = 2 then
           begin
-          if GetDistUnitXY(i, 84, 93) > 6 then
+          if GetDistUnitXY(i, 110, 41) > 6 then
              begin
-             ComMoveXY(i, 84, 93);
+             ComMoveXY(i, 110, 41);
              AddComHold(i);
              end;
           end;
@@ -254,6 +254,13 @@ Every 20$00 trigger Difficulty > 1 and IsOk(ruFac1) do
 var i;
 begin
 for i := 1 to [3, 4, 5][Difficulty - 1] do
+    begin
+    AddComConstruct([ruFac1, ruFac2][i mod 2 + 1], ru_medium_wheeled, engine_siberite, control_manual, ru_rocket_launcher);
+    end;
+
+wait(12$00);
+
+for i := 1 to 2 do
     begin
     AddComConstruct([ruFac1, ruFac2][i mod 2 + 1], ru_medium_wheeled, engine_siberite, control_manual, ru_rocket_launcher);
     end;
@@ -336,7 +343,7 @@ for i in ruMobile do
           if not HasTask(i) then
              ComAttackUnit(i, NearestUnitToUnit(enemy, i));
           end
-       else if ruMobile > 2 then
+       else if ruMobile then
           begin
           enemy := FilterAllUnits([f_enemy, 3]);
 
