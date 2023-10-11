@@ -1727,7 +1727,103 @@ j := GetClosestHex(unit, tmp);
 ComMoveXY(unit, j[1], j[2]);
 End;
 
+Export function PrepareApemanSoldier();
+begin
+uc_nation := 0;
 
+hc_sex := sex_male;
+hc_class := class_apeman_soldier;
+hc_gallery := '';
+hc_skills := [rand(0, 3), rand(0, 3), 0, 0];
+End;   
+
+Export function PrepareApemanEngineer();
+begin
+uc_nation := 0;
+
+hc_sex := sex_male;
+hc_class := class_apeman_engineer;
+hc_gallery := '';
+hc_skills := [rand(0, 3), rand(0, 3), 0, 0];
+End;
+
+Export function PrepareApeman(agressivity);
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_sex := sex_male;
+hc_class := class_apeman;
+hc_gallery := '';
+hc_agressivity := rand(-agressivity, agressivity);
+hc_skills := [rand(0, 3), rand(0, 3), 0, 0];
+End;
+
+Export Function PrepareTiger(agressivity);
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_tiger;
+hc_gallery := '';
+hc_agressivity := rand(-agressivity, agressivity);
+End;
+
+Export Function PrepareEnchidna();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_baggie;
+hc_gallery := '';
+End;
+
+Export Function PrepareFrog();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_frog;
+hc_gallery := '';
+End;
+
+Export Function PrepareFish();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_fish;
+hc_gallery := '';
+End;
+
+Export Function PrepareBird();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_phororhacos;
+hc_gallery := '';
+End;
+
+Export Function PrepareHorse();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+hc_class := class_horse;
+hc_gallery := '';
+End;
+
+Export Function PrepareMastodont();
+begin
+uc_side := 0;
+uc_nation := 0;
+
+vc_chassis := class_mastodont;
+vc_control := control_rider;
+End;
+
+// old function
 Export Function PrepareNature(birds, tigers, apemans, enchidnas, horses, mastodonts, fishes, nat_area, wat_area);
 var i, animal;
 begin
@@ -2127,7 +2223,7 @@ End;
 
 Export Function GetBehemoths(side);
 begin
-result := FilterAllUnits([[f_side, side], [f_chassis, 25]]);
+result := FilterAllUnits([[f_side, side], [f_chassis, ru_behemoth]]);
 End;
 
 Export Function Shuffle(array);
@@ -2167,7 +2263,10 @@ var i;
 begin
 result := array;
 
-if size > 0 then
+if size >= result then
+   exit;
+
+if size then
    for i := array downto size do
        result := Delete(result, result);
 End;
@@ -2601,4 +2700,15 @@ Export Function Length(array);
 begin
 result := array + 0;
 End;
+
+// extract values from huge array and shrink first element (for some reason first element is always null)
+Export Function PrepareArray(array);
+begin
+result := array diff 0;
+
+if not result[1] then
+   result := Delete(result, 1);
+End;
+
+
 

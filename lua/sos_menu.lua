@@ -494,10 +494,12 @@ function displayChangeLogMessage(fromButton)
         }
     );
 
+    bringToFront(ELEMENT.close);
+
     set_Callback(
         ELEMENT.close.ID,
         CALLBACK_MOUSEDOWN,
-        'setVisibleID(' .. ELEMENT.ID .. ', false); sgui_deletechildren(' .. ELEMENT.ID .. ')'
+        'setVisibleID(' .. ELEMENT.ID .. ', false); sgui_deletechildren(' .. ELEMENT.ID .. ');'
     );
 end;
 

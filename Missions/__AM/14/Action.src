@@ -1,347 +1,609 @@
-Every 1 do 
-var dec1, dec2;
+Export function Action;
+var dec1, dec2, veh;
 begin
-        InGameOn;
-        SetBName(us_depot, 'deltakappa');
-        CenterNowOnUnits(JMMveh);
-        ComMoveXY(JMMveh, 30, 11);
-        CenterOnXY(30, 11);
-        SayRadio(Powell, 'D1-Pow-1');
-        ComExitVehicle(JMM);
-        CenterNowOnUnits(JMM);
-        Say(JMM, 'D1-JMM-1');
-        SayRadio(Powell, 'D1-Pow-2');
-        Say(JMM, 'D1-JMM-2');
-        ComEnterUnit(JMM, JMMveh);
-        ChangeMissionObjectives('M1');
-        repeat
-                wait(0$1);
-                ComEnterUnit(JMM, JMMveh);
-                ComMoveXY(JMMveh, 51, 21);
-                CenterNowOnUnits(JMMveh);
-        until IsInArea(JMMveh, Dialog1Area);
+veh := IsInUnit(JMM);
 
-        // Joan
-        if JMMGirl = 1 then
-        begin
-                SayRadio(Joan, 'D2J-Joan-1');
-                dec1 = query('Q1');
+InGameOn;
 
-                if dec1 = 1 then
-                begin
-                        ComExitVehicle(JMM);
-                        Say(JMM, 'D2J-JMM-1');
-                        SayRadio(Joan, 'D2J-Joan-2');
-                        Say(JMM, 'D2J-JMM-2');
-                        SayRadio(Joan, 'D2J-Joan-3');
-                        SayRadio(Powell, 'DPowell-Pow-1');
-                        dec2 = query('Q2J');
+CenterNowOnUnits(veh);
 
-                        if dec2 = 1 then
-                        begin
-                                Say(JMM, 'D2Ja-JMM-1');
-                                SayRadio(Joan, 'D2Ja-Joan-1');
-                                Say(JMM, 'D2Ja-JMM-2');
-                                InGameOff;
-                        end;
+ComMoveXY(veh, 30, 11);
+AddComMoveXY(veh, 69, 34);
+CenterOnXY(30, 11);
 
-                        if dec2 = 2 then
-                        begin
-                                Say(JMM, 'D2Jb-JMM-1');
-                                SayRadio(Joan, 'D2Jb-Joan-1');
-                                Say(JMM, 'D2Jb-JMM-2');
-                                SayRadio(Joan, 'D2Jb-Joan-2');
-                                Say(JMM, 'D2Jb-JMM-3');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
+wait(0$3);
 
-                        if dec2 = 3 then
-                        begin
-                                SayRadio(Joan, 'D2Jc-Joan-1');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
-                end;
+SayRadio(Powell, 'D1-Pow-1');
 
-                if dec1 = 2 then
-                begin
-                        fastEnd = 1;
-                        FinishMission;
-                        exit;
-                end;
-        end;
+ComExitVehicle(JMM);
+AddComHold(JMM);
 
-        // Lisa
-        if JMMGirl = 2 then
-        begin
-                SayRadio(Lisa, 'D2L-Lisa-1');
-                dec1 = query('Q1');
+CenterNowOnUnits(JMM);
 
-                if dec1 = 1 then
-                begin
-                        ComExitVehicle(JMM);
-                        Say(JMM, 'D2L-JMM-1');
-                        SayRadio(Lisa, 'D2L-Lisa-2');
-                        Say(JMM, 'D2L-JMM-2');
-                        SayRadio(Lisa, 'D2L-Lisa-3');
-                        SayRadio(Powell, 'DPowell-Pow-1');
-                        dec2 = query('Q2L');
+Say(JMM, 'D1-JMM-1');
+SayRadio(Powell, 'D1-Pow-2');
+Say(JMM, 'D1-JMM-2');
 
-                        if dec2 = 1 then
-                        begin
-                                Say(JMM, 'D2La-JMM-1');
-                                SayRadio(Lisa, 'D2La-Lisa-1');
-                                Say(JMM, 'D2La-JMM-2');
-                                SayRadio(Lisa, 'D2La-Lisa-2');
-                                Say(JMM, 'D2La-JMM-3');               
-                                InGameOff;
-                        end;
+ComEnterUnit(JMM, veh);
 
-                        if dec2 = 2 then
-                        begin
-                                Say(JMM, 'D2Lb-JMM-1');
-                                SayRadio(Lisa, 'D2Lb-Lisa-1');
-                                Say(JMM, 'D2Lb-JMM-2');
-                                SayRadio(Lisa, 'D2Lb-Lisa-2');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
+ChangeMissionObjectives('M1');
+SetAreaMapShow(exitArea, 1);
 
-                        if dec2 = 3 then
-                        begin
-                                SayRadio(Lisa, 'D2Lc-Lisa-1');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
-                end;
+repeat
+ wait(0$1);
+ ComEnterUnit(JMM, veh);
+ ComMoveXY(veh, 51, 21);
+ CenterNowOnUnits(veh);
+until GetDistUnitXY(veh, 51, 21) < 6;
 
-                if dec1 = 2 then
-                begin
-                        fastEnd = 1;
-                        FinishMission;
-                        exit;
-                end;
-        end;
+// Joan
+if JMMGirl = 1 then
+   begin
+   SayRadio(Joan, 'D2J-Joan-1');
+   dec1 := Query('Q1');
 
-        // Connie
-        if JMMGirl = 3 then
-        begin
-                SayRadio(Connie, 'D2X-Con-1');
-                dec1 = query('Q1');
+   if dec1 = 1 then
+      begin
+      ComExitVehicle(JMM);
+      AddComHold(JMM);
 
-                if dec1 = 1 then
-                begin
-                        ComExitVehicle(JMM);
-                        Say(JMM, 'D2X-JMM-1');
-                        SayRadio(Connie, 'D2X-Con-2');
-                        SayRadio(Powell, 'DPowell-Pow-1');
-                        dec2 = query('Q2X');
+      Say(JMM, 'D2J-JMM-1');
+      SayRadio(Joan, 'D2J-Joan-2');
+      Say(JMM, 'D2J-JMM-2');
+      SayRadio(Joan, 'D2J-Joan-3');
+      SayRadio(Powell, 'DPowell-Pow-1');
 
-                        if dec2 = 1 then
-                        begin
-                                Say(JMM, 'D2Xa-JMM-1');            
-                                InGameOff;
-                        end;
+      dec2 := Query('Q2J');
 
-                        if dec2 = 2 then
-                        begin
-                                Say(JMM, 'D2Xb-JMM-1');
-                                SayRadio(Connie, 'D2Xb-Con-1');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
+      if dec2 = 1 then
+         begin
+         Say(JMM, 'D2Ja-JMM-1');
+         SayRadio(Joan, 'D2Ja-Joan-1');
+         Say(JMM, 'D2Ja-JMM-2');
+         InGameOff;
+         end;
 
-                        if dec2 = 3 then
-                        begin
-                                SayRadio(Connie, 'D2Xc-Con-1');
-                                fastEnd = 1;
-                                FinishMission;
-                                exit;
-                        end;
-                end;
+      if dec2 = 2 then
+         begin
+         Say(JMM, 'D2Jb-JMM-1');
+         SayRadio(Joan, 'D2Jb-Joan-1');
+         Say(JMM, 'D2Jb-JMM-2');
+         SayRadio(Joan, 'D2Jb-Joan-2');
+         Say(JMM, 'D2Jb-JMM-3');
 
-                if dec1 = 2 then
-                begin
-                        fastEnd = 1;
-                        FinishMission;
-                        exit;
-                end;
-        end;
-end;
+         FinishMission(true);
+         exit;
+         end;
 
-Every 0$1 trigger IsInArea(JMM, Dialog2Area) do 
+      if dec2 = 3 then
+         begin
+         SayRadio(Joan, 'D2Jc-Joan-1');
+
+         FinishMission(true);
+         exit;
+         end;
+      end
+   else
+      begin
+      FinishMission(true);
+      exit;
+      end;
+   end;
+
+// Lisa
+if JMMGirl = 2 then
+   begin
+   SayRadio(Lisa, 'D2L-Lisa-1');
+   dec1 := Query('Q1');
+
+   if dec1 = 1 then
+      begin
+      ComExitVehicle(JMM);
+      AddComHold(JMM);
+
+      Say(JMM, 'D2L-JMM-1');
+      SayRadio(Lisa, 'D2L-Lisa-2');
+      Say(JMM, 'D2L-JMM-2');
+      SayRadio(Lisa, 'DL-Lisa-3');
+      SayRadio(Powell, 'DPowell-Pow-1');
+
+      dec2 := Query('Q2L');
+
+      if dec2 = 1 then
+         begin
+         Say(JMM, 'D2La-JMM-1');
+         SayRadio(Lisa, 'D2La-Lisa-1');
+         Say(JMM, 'D2La-JMM-2');
+         SayRadio(Lisa, 'D2La-Lisa-2');
+         Say(JMM, 'D2La-JMM-3');
+
+         InGameOff;
+         end;
+
+      if dec2 = 2 then
+         begin
+         Say(JMM, 'D2Lb-JMM-1');
+         SayRadio(Lisa, 'D2Lb-Lisa-1');
+         Say(JMM, 'D2Lb-JMM-2');
+         SayRadio(Lisa, 'D2Lb-Lisa-2');
+
+         FinishMission(true);
+         exit;
+         end;
+
+      if dec2 = 3 then
+         begin
+         SayRadio(Lisa, 'D2Lc-Lisa-1');
+
+         FinishMission(true);
+         exit;
+         end;
+      end
+   else
+      begin
+      FinishMission(true);
+      exit;
+      end;
+   end;
+
+// Connie
+if JMMGirl = 3 then
+   begin
+   SayRadio(Connie, 'D2X-Con-1');
+   dec1 := Query('Q1');
+
+   if dec1 = 1 then
+      begin
+      ComExitVehicle(JMM);
+      AddComHold(JMM);
+
+      Say(JMM, 'D2X-JMM-1');
+      SayRadio(Connie, 'D2X-Con-2');
+      SayRadio(Powell, 'DPowell-Pow-1');
+
+      dec2 := Query('Q2X');
+
+      if dec2 = 1 then
+         begin
+         Say(JMM, 'D2Xa-JMM-1');
+         InGameOff;
+         end;
+
+      if dec2 = 2 then
+         begin
+         Say(JMM, 'D2Xb-JMM-1');
+         SayRadio(Connie, 'D2Xb-Con-1');
+
+         FinishMission(true);
+         exit;
+         end;
+
+      if dec2 = 3 then
+         begin
+         SayRadio(Connie, 'D2Xc-Con-1');
+
+         FinishMission(true);
+         exit;
+         end;
+      end
+   else
+      begin
+      FinishMission(true);
+      end;
+   end;
+End;
+
+// John in Kappa
+Every 0$1 trigger IsInArea(JMM, kappaBaseArea) do
+var veh;
 begin
-        InGameOn;
+if tick < 5$00 then
+   begin
+   uc_side := 6;
+   uc_nation := 3;
 
-        repeat
-                wait(0$1);
-                CenterNowOnUnits(JMM);
-                ComMoveXY(JMM, 62, 104);
-        until GetDistUnits(JMM, Joan) < 4 or GetDistUnits(JMM, Lisa) < 4 or GetDistUnits(JMM, Connie) < 4;
+   if not SeeXY(1, 105, 97) then
+      begin
+      PrepareVehicle(ru_medium_tracked, engine_combustion, control_computer, ru_gun, 40);
+      veh := CreateVehicle;
+      SetLives(veh, 200);
+      PlaceUnitXYD(veh, 105, 97, 3, false);
+      end;
 
+   if not SeeXY(1, 116, 120) then
+      begin
+      PrepareVehicle(ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher, 40);
+      veh := CreateVehicle;
+      SetLives(veh, 200);
+      PlaceUnitXYD(veh, 116, 120, 4, false);
+      end;
 
-        case JMMGirl of
-                1: begin
-                        SetSide(FilterAllUnits([f_side, 4]), 1);   
-                        ComTurnUnit(Joan, JMM);
-                        ComTurnUnit(JMM, Joan);
-                        CenterNowOnUnits([Joan, JMM]);
-                        wait(0$1);
-                        DialogueOn;
-                        Say(Joan, 'D3J-Joan-1');
-                        Say(JMM, 'D3J-JMM-1');
-                        Say(Joan, 'D3J-Joan-2');
-                        Say(JMM, 'D3J-JMM-2');
-                        wait(0$1);
-                        Say(JMM, 'D4-JMM-1');
-                        Say(Joan, 'D4-Joan-1');
-                        Say(JMM, 'D4-JMM-2');
-                        Say(Joan, 'D4-Joan-2');
-                        DialogueOff;
-                        InGameOff;
-                        ChangeMissionObjectives('M2J');
-                        SaveForQuickRestart;
-                        russianAI = 1;
-                end;
+   if not SeeXY(1, 116, 120) then
+      begin
+      PrepareVehicle(ru_heavy_tracked, engine_combustion, control_computer, ru_rocket_launcher, 30);
+      veh := CreateVehicle;
+      SetLives(veh, 200);
+      PlaceUnitXYD(veh, 116, 120, 4, false);
+      end;
+   end;
+   
+InGameOn;
 
-                2:begin
-                        SetSide(FilterAllUnits([f_side, 4]), 1);   
-                        ComTurnUnit(Lisa, JMM);
-                        ComTurnUnit(JMM, Lisa);
-                        CenterNowOnUnits([Lisa, JMM]);
-                        wait(0$1);
-                        DialogueOn;
-                        Say(Lisa, 'D3L-Lisa-1');
-                        Say(JMM, 'D3L-JMM-1');
-                        Say(Lisa, 'D3L-Lisa-2');
-                        Say(JMM, 'D3L-JMM-2');
-                        wait(0$1);
-                        Say(JMM, 'D4-JMM-1');
-                        Say(Lisa, 'D4-Lisa-1');
-                        Say(JMM, 'D4-JMM-1');
-                        Say(Lisa, 'D4-Lisa-2');
-                        DialogueOff;
-                        InGameOff;
-                        ChangeMissionObjectives('M2L');
-                        SaveForQuickRestart;
-                        russianAI = 1;            
-                end;
+repeat
+ wait(0$1);
+ CenterNowOnUnits(JMM);
+ ComMoveXY(JMM, 81, 109);
+ AddComHold(JMM);
+ ComMoveUnit([Joan, Lisa, Connie], JMM);
+until UnitFilter([Joan, Lisa, Connie], [f_dist, JMM, 6]); 
 
-                3:begin
-                        SetSide(FilterAllUnits([f_side, 4]), 1);   
-                        ComTurnUnit(Connie, JMM);
-                        ComTurnUnit(JMM, Connie);
-                        CenterNowOnUnits([Joan, JMM]);
-                        wait(0$1);
-                        DialogueOn;
-                        Say(Connie, 'D3X-Con-1');
-                        Say(JMM, 'D3J-JMM-1');
-                        wait(0$1);
-                        Say(JMM, 'D4-JMM-1');
-                        Say(Connie, 'D4-Con-1');
-                        Say(JMM, 'D4-JMM-2');
-                        Say(Connie, 'D4-Con-2');
-                        DialogueOff;
-                        InGameOff;
-                        ChangeMissionObjectives('M2X');
-                        SaveForQuickRestart;
-                        russianAI = 1;    
-                end;
+case JMMGirl of
+     1: begin
+        ChangeSideKappaBase;
+
+        ComTurnUnit(Joan, JMM);
+        ComTurnUnit(JMM, Joan);
+
+        CenterNowOnUnits([Joan, JMM]);
+
+        wait(0$1);
+
+        DialogueOn;
+        Say(Joan, 'D3J-Joan-1');
+        Say(JMM, 'D3J-JMM-1');
+        Say(Joan, 'D3J-Joan-2');
+        Say(JMM, 'D3J-JMM-2');
+
+        wait(0$1);
+
+        Say(JMM, 'D4-JMM-1');
+        Say(Joan, 'D4-Joan-1');
+        Say(JMM, 'D4-JMM-2');
+        Say(Joan, 'D4-Joan-2');
+        Say(JMM, 'D4-JMM-3');
+
+        dwait(0$0.3);
+
+        SayRadio(Powell, 'D7-Pow-1');
+        Say(JMM, 'D7-JMM-1');
+        SayRadio(Powell, 'D7-Pow-2');
+        Say(JMM, 'D7-JMM-2');
+        SayRadio(Powell, 'D7-Pow-3');
+        Say(JMM, 'D7-JMM-3');
+        SayRadio(Powell, 'D7-Pow-4');
+
+        DialogueOff;
+        InGameOff;
+
+        ChangeMissionObjectives('M2J');
         end;
 
-end;
+     2: begin
+        ChangeSideKappaBase;
 
-Every 0$1 trigger IsSelected(us_lab1) do
+        ComTurnUnit(Lisa, JMM);
+        ComTurnUnit(JMM, Lisa);
+
+        CenterNowOnUnits([Lisa, JMM]);
+
+        wait(0$1);
+
+        DialogueOn;
+        Say(Lisa, 'D3L-Lisa-1');
+        Say(JMM, 'D3L-JMM-1');
+        Say(Lisa, 'D3L-Lisa-2');
+        Say(JMM, 'D3L-JMM-2');
+
+        wait(0$1);
+
+        Say(JMM, 'D4-JMM-1');
+        Say(Lisa, 'D4-Lisa-1');
+        Say(JMM, 'D4-JMM-1');
+        Say(Lisa, 'D4-Lisa-2'); 
+        Say(JMM, 'D4-JMM-3');
+
+        dwait(0$0.3);
+
+        SayRadio(Powell, 'D7-Pow-1');
+        Say(JMM, 'D7-JMM-1');
+        SayRadio(Powell, 'D7-Pow-2');
+        Say(JMM, 'D7-JMM-2');
+        SayRadio(Powell, 'D7-Pow-3');
+        Say(JMM, 'D7-JMM-3');
+        SayRadio(Powell, 'D7-Pow-4');
+
+        DialogueOff;
+        InGameOff;
+
+        ChangeMissionObjectives('M2L');
+        end;
+
+     3: begin
+        ChangeSideKappaBase;
+
+        ComTurnUnit(Connie, JMM);
+        ComTurnUnit(JMM, Connie);
+
+        CenterNowOnUnits([Joan, JMM]);
+
+        wait(0$1);
+
+        DialogueOn;
+
+        Say(Connie, 'D3X-Con-1');
+        Say(JMM, 'D3J-JMM-1');
+
+        wait(0$1);
+
+        Say(JMM, 'D4-JMM-1');
+        Say(Connie, 'D4-Con-1');
+        Say(JMM, 'D4-JMM-2');
+        Say(Connie, 'D4-Con-2');
+
+        Say(JMM, 'D4-JMM-3');
+
+        dwait(0$0.3);
+
+        SayRadio(Powell, 'D7-Pow-1');
+        Say(JMM, 'D7-JMM-1');
+        SayRadio(Powell, 'D7-Pow-2');
+        Say(JMM, 'D7-JMM-2');
+        SayRadio(Powell, 'D7-Pow-3');
+        Say(JMM, 'D7-JMM-3');
+        SayRadio(Powell, 'D7-Pow-4');
+
+        DialogueOff;
+        InGameOff;
+
+        ChangeMissionObjectives('M2X');
+        end;
+     end;
+
+SaveForQuickRestart;
+End;
+
+Every 0$1 trigger IsSelected(usLab) do
 begin
+case JMMGirl of
+     1: begin
+        Say(JMM, 'D6J-JMM-1');
 
-        case JMMGirl of
-                1:begin
-                        Say(JMM, 'D6J-JMM-1');
+        if TestCharacters('13f_Denis') or TestCharacters('13s_Denis') then
+           begin
+           Say(Joan, 'D6J-Joan-1');
+           Say(JMM, 'D6J-JMM-2');
+           Say(Joan, 'D6J-Joan-2');
+           end
+        else
+           Say(Joan, 'D6J-Joan-2a');
 
-                        if TestCharacters('13f_Denis') = true or TestCharacters('13s_Denis') = true then
-                        begin
-                                Say(Joan, 'D6J-Joan-1');
-                                Say(JMM, 'D6J-JMM-2');
-                                Say(Joan, 'D6J-Joan-2');     
-                        end else
-                        begin
-                                Say(Joan, 'D6J-Joan-2a');    
-                        end;
 
-                        Say(JMM, 'D6J-JMM-3');
-                        Say(Joan, 'D6J-Joan-3');
-                        ChangeMissionObjectives('M3');
-                end;
+        Say(JMM, 'D6J-JMM-3');
+        Say(Joan, 'D6J-Joan-3');
 
-                2:begin
-                        Say(JMM, 'D6L-JMM-1');
-                        Say(Lisa, 'D6L-Lisa-1');
-                        Say(JMM, 'D6L-JMM-2');
-                        Say(Lisa, 'D6L-Lisa-2');
-                        ChangeMissionObjectives('M3');
-                end;
-
-                3:begin
-                        Say(JMM, 'D6X-JMM-1');
-                        Say(Connie, 'D6X-Con-1');
-                        Say(JMM, 'D6X-JMM-2');
-                        Say(Connie, 'D6X-Con-2');
-                        Say(JMM, 'D6X-JMM-3');
-                        Say(Connie, 'D6X-Con-3');
-                        Say(JMM, 'D6X-JMM-4');
-                        Say(Connie, 'D6X-Con-4');
-                        Say(JMM, 'D6X-JMM-5');
-                        ChangeMissionObjectives('M3');    
-                end;
+        ChangeMissionObjectives('M3');
         end;
 
-        
+     2: begin
+        Say(JMM, 'D6L-JMM-1');
+        Say(Lisa, 'D6L-Lisa-1');
+        Say(JMM, 'D6L-JMM-2');
+        Say(Lisa, 'D6L-Lisa-2');
 
-end;
+        ChangeMissionObjectives('M3');
+        end;
+
+     3: begin
+        Say(JMM, 'D6X-JMM-1');
+        Say(Connie, 'D6X-Con-1');
+        Say(JMM, 'D6X-JMM-2');
+        Say(Connie, 'D6X-Con-2');
+        Say(JMM, 'D6X-JMM-3');
+        Say(Connie, 'D6X-Con-3');
+        Say(JMM, 'D6X-JMM-4');
+        Say(Connie, 'D6X-Con-4');
+        Say(JMM, 'D6X-JMM-5');
+
+        ChangeMissionObjectives('M3');
+        end;
+     end;
+End;
 
 Every 0$1 trigger IsSelected(FilterAllUnits([[f_side, 1], [f_control, control_remote]])) do
 begin
-
-
-        case JMMGirl of
-                1:begin
-                        Say(JMM, 'D5-JMM-1');
-                        CenterOnXY(77,87);
-                        Say(Joan, 'D5-Joan-1');    
-                end;
-
-                2:begin
-                        Say(JMM, 'D5-JMM-1');
-                        CenterOnXY(77,87);
-                        Say(Lisa, 'D5-Lisa-1');      
-                end;
-
-                3:begin
-                        Say(JMM, 'D5-JMM-1');
-                        CenterOnXY(77,87);
-                        Say(Connie, 'D5-Con-1');      
-                end;
+case JMMGirl of
+     1: begin
+        Say(JMM, 'D5-JMM-1');
+        CenterOnXY(77,87);
+        Say(Joan, 'D5-Joan-1');
         end;
-end;
+
+     2: begin
+        Say(JMM, 'D5-JMM-1');
+        CenterOnXY(77,87);
+        Say(Lisa, 'D5-Lisa-1');
+        end;
+
+     3: begin
+        Say(JMM, 'D5-JMM-1');
+        CenterOnXY(77,87);
+        Say(Connie, 'D5-Con-1');
+        end;
+     end;
+End;
 
 
-// Powell ask
-Every 15$0 trigger GetSide(us_depot) = 1 do
+Every 0$5 trigger IsInArea(IsInUnit(JMM), exitArea) do
+var JMMGirlVeh, dec;
 begin
-     DialogueOn;
-     SayRadio(Powell, 'D7-Pow-1');
-     Say(JMM, 'D7-JMM-1');
-     SayRadio(Powell, 'D7-Pow-2');
-     Say(JMM, 'D7-JMM-2');
-     SayRadio(Powell, 'D7-Pow-3');
-     Say(JMM, 'D7-JMM-3');
-     SayRadio(Powell, 'D7-Pow-4');
-     DialogueOff;
+enable;
 
-end;
+if JMMGirl = 1 then
+   JMMGirlVeh := IsInUnit(Joan);
+
+if JMMGirl = 2 then
+   JMMGirlVeh := IsInUnit(Lisa);
+
+if JMMGirl = 3 then
+   JMMGirlVeh := IsInUnit(Connie);
+
+if GetDistUnits(IsInUnit(JMM), IsInUnit(Joan)) < 10 or GetDistUnits(IsInUnit(JMM), IsInUnit(Lisa)) < 10 or GetDistUnits(IsInUnit(JMM), IsInUnit(Connie)) < 10 then
+   begin
+   case Query('Q3b') of
+        1: begin
+           SaveVariable([[GetChassis(JMMGirlVeh)], [GetEngine(JMMGirlVeh)], [GetControl(JMMGirlVeh)], [GetWeapon(JMMGirlVeh)]], '14_JMMGirlVeh_1');
+           FinishMission(false);
+           disable;
+           end;
+        end;
+   end
+else
+   begin
+   if JMMGirl = 1 then
+      dec := Query('Q3bJ')
+   else if JMMGirl = 2 then
+      dec := Query('Q3bL')
+   else
+      dec := Query('Q3bX');
+
+   if dec = 1 then
+      FinishMission(false);    
+   end;
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+DialogueOn;
+
+Say(JMM, 'DEnd-JMM-1');
+
+case JMMGirl of
+     1: Say(Joan, 'DEnd-Joan-1');
+     2: Say(Lisa, 'DEnd-Lisa-1');
+     3: Say(Connie, 'DEnd-Con-1');
+     end;
+
+DialogueOff;
+FinishMission(false);
+End;
+
+Function FinishMission(fastEnd);
+var JMMNewVeh, m1, m2, m3, ruEliminated;
+begin
+m1 := false;
+m2 := false;
+m3 := false;
+ruEliminated := FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0;
+
+SaveCharacters(JMM, '14_JMM');
+
+if tick <= 50$00 then
+   SetAchievement('ACH_ASPEED_14');
+
+if IsInUnit(JMM) and GetType(IsInUnit(JMM)) = unit_vehicle then
+   begin
+   JMMNewVeh = IsInUnit(JMM);
+   SaveVariable([[GetChassis(JMMNewVeh)], [GetEngine(JMMNewVeh)], [GetControl(JMMNewVeh)], [GetWeapon(JMMNewVeh)]], '14_JMMVeh_1');
+   end;
+
+if fastEnd then
+   begin
+   AddMedal('fastend', -1);
+   AddMedal('fastend', -1);
+   AddMedal('fastend', -1);
+
+   SaveVariable(JMMGirl, '14_JMMGirl_1');
+   SaveVariable(0, '14_JMMGirlStatus_1');
+   SaveVariable(0, '14_KappaStatus_1');
+
+   GiveMedals('Eliminate');
+
+   RewardPeople(JMM);
+
+   YouWin;
+   exit;
+   end
+else
+   begin
+   SaveVariable(JMMGirl, '14_JMMGirl_1');
+   SaveVariable(ruEliminated, '14_KappaStatus_1');
+   
+   case JMMGirl of
+        1: begin
+           if IsOk(Joan) and GetSide(Joan) = 1 and (ruEliminated or GetDistUnits(IsInUnit(JMM), IsInUnit(Joan)) < 10)  then
+              begin
+              SaveVariable(1, '14_JMMGirlStatus_1');
+              SaveCharacters(Joan, '14_Joan');
+
+              AddMedal('protect', 1);
+              m1 := true;
+              end
+           else
+              begin
+              SaveVariable(0, '14_JMMGirlStatus_1');
+              AddMedal('protect', -1);
+              end;
+           end;
+
+        2: begin
+           if IsOk(Lisa) and GetSide(Lisa) = 1 and (ruEliminated or GetDistUnits(IsInUnit(JMM), IsInUnit(Lisa)) < 10)  then
+              begin
+              SaveVariable(1, '14_JMMGirlStatus_1');
+              SaveCharacters(Lisa, '14_Lisa');
+
+              AddMedal('protect', 1);
+              m1 := true;
+              end
+           else
+              begin
+              SaveVariable(0, '14_JMMGirlStatus_1');
+              AddMedal('protect', -2);
+              end;
+           end;
+
+        3: begin
+           if IsOk(Connie) and GetSide(Connie) = 1 and (ruEliminated or GetDistUnits(IsInUnit(JMM), IsInUnit(Connie)) < 10)  then
+              begin
+              SaveVariable(1, '14_JMMGirlStatus_1');
+              SaveCharacters(Connie, '14_Connie');
+
+              AddMedal('protect', 1);
+              m1 := true;
+              end
+           else
+              begin
+              SaveVariable(0, '14_JMMGirlStatus_1');
+              AddMedal('protect', -3);
+              end;
+           end;  
+        end;
+
+   if amLaserCounter >= 2 then
+      begin
+      AddMedal('double', 1);
+      m2 := true;
+      end
+   else
+      begin
+      if amLaserCounter = 1 then
+         AddMedal('double', -2)
+      else
+         AddMedal('double', -1);
+      end;
+
+   if ruEliminated then
+      begin
+      AddMedal('base', 1);
+      m3 := true;
+      end
+   else
+      AddMedal('base', -1);
+   end;
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_AMER', 14);
+
+GiveMedals('Eliminate');
+RewardPeople(FilterAllUnits([[f_side, 1], [f_not, [f_class, class_apeman]], [f_not, [f_class, class_apeman_engineer]]]));
+YouWin;
+End;

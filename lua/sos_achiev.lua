@@ -229,6 +229,8 @@ TID_ACH_REDARMY = 6522;
 TID_ACH_REDARMY_DESC = 6523;
 TID_ACH_CRATES = 6524;
 TID_ACH_CRATES_DESC = 6525;
+TID_ACH_AMASHA = 6526;
+TID_ACH_AMASHA_DESC = 6527;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -654,6 +656,13 @@ achievements = {
     ['ACH_FORT'] = {
         loc(TID_ACH_FORT), 
         loc(TID_ACH_FORT_DESC),
+        false,
+        0,
+        0
+    },
+        ['ACH_AMASHA'] = {
+        loc(TID_ACH_AMASHA), 
+        loc(TID_ACH_AMASHA_DESC),
         false,
         0,
         0
@@ -1158,7 +1167,7 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_ARABTECH', 'ACH_FRIEND', 'ACH_EAST', 'ACH_GENERAL', 'ACH_ASPEED_11'},
         {'ACH_PATH', 'ACH_LASER', 'ACH_ROCKET', 'ACH_ASPEED_12'},
         {'ACH_MASHA', 'ACH_REMOTE', 'ACH_DEFMASTER', 'ACH_ASPEED_13'},
-        {'ACH_DOUBLE', 'ACH_APE', 'ACH_FORT', 'ACH_ASPEED_14'},
+        {'ACH_DOUBLE', 'ACH_APE', 'ACH_FORT', 'ACH_AMASHA', 'ACH_ASPEED_14'},
         {'ACH_POWELL', 'ACH_ALLIANCE', 'ACH_SIBROCKET', 'ACH_ASPEED_15'},
         {'ACH_EYE', 'ACH_ALARM', 'ACH_NOINVIS', 'ACH_TEAM', 'ACH_ASPEED_16'},
         {'ACH_COMRADE', 'ACH_HACK','ACH_ASPEED_17'},
@@ -1243,6 +1252,7 @@ achievsCategory = {
         'ACH_DOUBLE',
         'ACH_APE',
         'ACH_FORT',
+        'ACH_AMASHA',
         'ACH_ASPEED_14',
         'ACH_POWELL',
         'ACH_ALLIANCE',

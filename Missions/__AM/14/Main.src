@@ -1,133 +1,42 @@
-{
-    Lekcja historii: #1
-    Bitwa o Rostow: Listopad 1941
-
-    Dowodcy Niemieccy:
-    Dymitr von Sacharov na lewym skrzydle, Serpent von Kierpek na srodku i Nefarem von Nefek na prawym skrzydle
-
-    Dowodcy Rosyjscy:
-    Jakow Czerewiczenko, Anton Lopatin i Wladimir Kolpakczi
-
-    W poczatkowej fazie bitwy wojska Niemieckie dowodzone przez swoich dowodcow zajely strategiczne pozycje na wzgorzu na obrzezach Rostowa.
-    Jednak wojska Rosyjskie postanowily przebic sie w najslabszym punkcie Niemieckiej ofensywy jakim byla pozycja Dymitra.
-    Ich ofensywa udala sie zmuszajac do odwrotu oddzialy Dymitra, Nefarem i Serpent musieli wycofac czesc swoich oddzialow by wspomoc pozycje Dymitra.
-    Pozycje Niemieckie byly pod ciezkim ostrzalem Rosyjskich mozdzierzy, mimo to odpierdali coraz to potezniejsze i liczniejsze wojska Rosyjskie.
-    Az do czasu.....
-    Wraz z pojawieniem sie kolumny Rosyjskich czolgow ktora przebila sie od strony pozycji Dymitra i z wielkim powodzeniem miazdzyly oddzialy Niemieckie.
-    Kapitulacja byla nieunikniona.
-    Niemcom nie udalo sie zajac Rostowa.
-    Wszyscy trzej Niemieccy generalowie zostali spierdoleni ze stanowiska.
-
-[12:26]
-Sturmbannführer Sacharov:
-        no to ca³oœæ:
-        Guderian; commander and the leader
-        Model he is the joy and the laughter
-        Manstein; and he is the toughest fighter
-        Wehrmahtpuffs boys save the day
-
-        Fighting communism, trying to save the world
-        Here they come just in time, the Wehrmahtpuffs boys
-        Fighting communism, trying to save the world
-        Here they come just in time, the Wehrmahtpuffs boys
-
-        [Oh no!] It's the mad Józef Stalin
-        [Watch out!] And the repulsive ¯ukow
-        [Get him!] It's the evil Montgomery
-        Chasing Wehrmahtpuffs  out this town
-
-        Fighting communism, trying to save the world
-        Here they come just in time, the Wehrmahtpuffs boys
-        Fighting communism, trying to save the world
-        Here they come just in time, the Wehrmahtpuffs boys
-
-Studio Praha: Ja poprowadzê oddzia³ najomników, który przebrany za dostawców knedliæków z omaækou podejmie szturm od œrodka.
-Studio Praha: Podczas gdy front bêdzie sp³ywa³ krwi¹, my zdobêdziemy kod Ÿród³owy, i to byæ mo¿e nawet bez oddania ani jednego strza³u.
-
-    Global Variables:
-    14_JMMGirl_1 = 1 - Joan
-    14_JMMGirl_1 = 2 - Lisa
-    14_JMMGirl_1 = 3 - Connie
-
-    14_JMMGirlStatus_1 = 0 - Dead
-    14_JMMGirlStatus_1 = 1 - Live
-
-    14_KappaStatus_1 = 0 - Destroyed
-    14_KappaStatus_1 = 1 - Survive
-
-    14_JMMVeh_1
-    14_JMMGirlVeh_1
-
-}
-
-Export JMM;
-Export Joan, Lisa, Connie; // JMM's girls xD
-Export Powell;
-Export Eisenstein;
-
-Export JMMGirl, JMMGirlStaus;
-
-Export amLaserCounter;
-
-Export ruDestroyedBuildings, russianTanks, russianTimeLapsers;
-Export russianAI;
-Export russianRocketsDisabled;
-
-Export fastEnd;
-
-Export debugMode, destroyCounter;
+// SoS 14th mission
+// 22-09-2023
 
 Starting
 begin
-    Resetfog;
-    RandomizeAll;
+ResetFog;    
+AnimateTrees(true);
+Init;
+CreateNature;
+PrepareAmerican;
+PrepareRussian;
 
-    SetBName(ru_depot, 'vasilev');
+if debug then
+   FogOff(1);
 
-    fastEnd = 0; // 0 - pro, 1 - n00b (like Nefarem)
+Action;
+End;
 
-    JMMGirl = 0;
-    JMMGirlStaus = 0;
-
-    amLaserCounter = 0;
-    destroyCounter := 0;
-
-    ruDestroyedBuildings = [];
-    russianTanks = [];
-    russianTimeLapsers = [];
-
-    russianRocketsDisabled = LoadVariable('12_SciDed_1', false);
-
-    russianAI = 0;
-
-    debugMode = 0;
-
-    CreateNature;
-    PrepareDifficulty;
-
-    PrepareHero;
-    PrepareRemoteVehs;
-
-    PrepareRussianBase;
-    PrepareCommander;
-end;
-
-Every 0$1 trigger debugMode = 1 do
-var i;
+Export debug, JMMGirl, JMMGirlStatus, laserCounter, killCounter, russianRocketsDisabled, amLaserCounter;
+Function Init;
 begin
-    enable;
-    fogoff(true);
-    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
-    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
-end;
+debug := false;
+JMMGirl := 0;
+JMMGirlStatus := 0;
+laserCounter := 0;
+killCounter := 0;
+amLaserCounter := 0;
+russianRocketsDisabled := LoadVariable('12_SciDed_1', false);
+End;
 
-Every 0$3 trigger FilterAllUnits([[f_side, 1], [f_btype, b_turret]]) >= 15 do
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_turret]]) >= 15 do
 SetAchievement('ACH_FORT');
 
-Every 0$3 trigger FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) = 0 do
+Every 0$1 trigger FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) = 0 do
 SetAchievement('ACH_APE');
 
-Every 0$1 trigger destroyCounter >= 20 do
+Every 0$1 trigger killCounter >= 20 do
 SetAchievement('ACH_DOUBLE');
+
+Every 0$1 trigger IsInArea(JMMVeh, kappaBaseArea) do
+SetAchievement('ACH_AMASHA');
+

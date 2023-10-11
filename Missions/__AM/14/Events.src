@@ -1,89 +1,81 @@
-On BuildingComplete(building) Do
-begin
-    if GetSide(building) = 3 then
-    begin
-        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1);
-        ruDestroyedBuildings := Delete( ruDestroyedBuildings, 1); 
-    end;
-
-    if GetSide(building) = 3 and [GetBType(building) = 0 or GetBType(building) = 2 or GetBType(building) = 4] then ComUpgrade(building);
-    if GetSide(building) = 3 and GetBType(building) = b_bunker then AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
-    if GetSide(building) = 3 and GetBType(building) = b_turret then AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
-end;
-
-On UnitDestroyed(unit) do 
+On UnitDestroyed(unit) do
+var i;
 begin
 SOS_UnitDestroyed(unit);
 
-    if unit in russianTanks then
-       russianTanks := russianTanks diff unit;
+if unit = JMM then
+   YouLost('JMM');
 
-    if unit in russianTimeLapsers then
-       russianTimeLapsers := russianTimeLapsers diff unit;
+if GetSide(unit) = 4 then
+   begin
+   if unit = Joan then
+      YouLost('Joan');
 
-    if GetSide(unit) = 3 and GetType(unit) = unit_building then
-    begin
-        
-        if GetBType(unit) in [31, 32, 36, 0, 24, 17, 25, 19, 20, 18, 21, 23, 16, 6, 29, 26, 30, 28, 27, 33, 2, 4] then
-        begin
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetBType(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-        end;
+   if unit = Connie then
+      YouLost('Connie');
 
-        if GetBType(unit) = 1  then
-        begin
-            ruDestroyedBuildings = ruDestroyedBuildings ^  0;
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-        end;
+   if unit = Lisa then
+      YouLost('Lisa');
+   end;
 
-        if GetBType(unit) = 3  then
-        begin
-            ruDestroyedBuildings = ruDestroyedBuildings ^  2;
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-        end;
+if unit in ruAttackers then
+   ruAttackers := ruAttackers diff unit;
 
-        if GetBType(unit) = 5  then
-        begin
-            ruDestroyedBuildings = ruDestroyedBuildings ^  4;
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetX(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetY(unit);
-            ruDestroyedBuildings = ruDestroyedBuildings ^  GetDir(unit);
-        end;
-    end;
+if GetWeapon(unit) = ru_cargo_bay and IsOk(ruFac2) then
+   AddComConstruct(ruFac2, ru_medium_wheeled, [engine_combustion, engine_siberite][rand(1,2)], control_computer, ru_cargo_bay);
 
-end;
+if GetWeapon(unit) = ru_crane and IsOk(ruFac2) then
+   AddComConstruct(ruFac2, ru_medium_wheeled, [engine_combustion, engine_siberite][rand(1,2)], control_computer, ru_crane);
 
-On UnitDestroyed_Extra(un, killerSide, killerUnit) do
-begin
-if GetWeapon(killerUnit) = us_double_laser then
-   destroyCounter := destroyCounter + 1;
+if unit in ruMobile then
+   ruMobile := ruMobile diff i;
 End;
 
+On UnitTeleported(building, unit) do
+begin
+if GetSide(unit) = 3 then
+   SetTag(unit, 0);
+End;
 
-On VehicleConstructed(vehicle, factory) Do
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = 3 and tech in ruTechList then
+   ruTechList := ruTechList diff tech;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var i;
 begin
 SOS_VehicleConstructed(vehicle, factory);
 
-    if factory = ru_fact1 or factory = ru_fact2 then
-        if GetSide(vehicle) = 3 then
-        begin
-            if GetWeapon(vehicle) = 47 or GetWeapon(vehicle) = 46 or GetWeapon(vehicle) = 45 or GetWeapon(vehicle) = 44 then russianTanks = russianTanks ^ vehicle;
+if GetSide(vehicle) <> 3 then
+   begin
+   if GetWeapon(vehicle) = us_double_laser then
+      begin
+      amLaserCounter := Inc(amLaserCounter);
 
-            if GetWeapon(vehicle) = 49 then russianTimeLapsers = russianTimeLapsers ^ vehicle;
+      for i in UnitsInside(factory) do
+          AddExperience_NoLimit(i, skill_mechanical, 1000);
+      end;
 
-        end;
+   exit;
+   end;
 
-        if GetSide(vehicle) = 1 and GetWeapon(vehicle) = 10 then amLaserCounter = amLaserCounter + 1;
-end;
+if GetWeapon(vehicle) in [ru_cargo_bay, ru_crane] then
+   exit;
 
+if GetControl(vehicle) = control_computer then
+   ruAttackers := Join(ruAttackers, vehicle);
+
+if GetControl(vehicle) = control_manual then
+   ruMobile := Join(ruMobile, vehicle);
+End;
+
+On EvacuateVehicle(human, vehicle, p1, p2) do
+begin
+if GetSide(human) = 3 and GetClass(human) = 3 and GetSide(ruFac1) = 3 and IsOk(ruFac1) then
+   ComEnterUnit(human, ruFac1);
+End;
 
 On Command(cmd) do
 begin
