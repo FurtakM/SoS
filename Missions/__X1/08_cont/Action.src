@@ -1,6 +1,38 @@
 Export function Action;
-begin
-InGameOn;
+var speaker, i, tmp;
+begin  
+Video(true);
+
+hasNormalScene := Kaia or Givi;
+
+if hasNormalScene then
+   begin
+   for i in americanSquad do
+       begin
+       SetClass(i, 33);
+       PlaceUnitXYR(i, 78, 16, 5, false);
+       ComHold(i);
+
+       //if Prob(60) then
+       //   ForceSleep(i, true);
+       end;
+
+   tmp := [ Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf,
+            Kurt, Givi ] union heikeSecondSquad;
+
+   SetClass(Heike, 33);
+   PlaceUnitXYD(Heike, 117, 24, 3, false);
+   ComTurnXY(Heike, 123, 39);
+
+   for i in tmp do
+       begin
+       SetClass(i, 33);
+       PlaceUnitArea(i, arSpawnArea1, false);
+       ComTurnXY(i, 113, 16);
+       end;
+   end;
+
+CenterNowOnXY(124, 39);
 
 PrepareDeadBodies;
 PrepareFirstScene;
@@ -10,6 +42,176 @@ RemoveSeeing(152, 65, 2);
 
 PlaceSeeing(122, 40, 2, -8);
 
-InGameOff;
+CenterNowOnXY(124, 37);
+
+speaker := HexInfo(124, 37);
+
+Say(speaker, 'DRum-Execution-1');
+Say(speaker, 'DRum-Execution-2');
+
+wait(0$01);
+
+Say(speaker, 'DRum-Execution-3');
+
+wait(0$1);
+
+Say(speaker, 'DRum-Execution-4');
+
+ComAttackUnit(russianKillers[1], HexInfo(122, 39));
+ComAttackUnit(russianKillers[2], HexInfo(123, 41));
+
+AddComHold(russianKillers);
+
+wait(0$1);
+
+RemoveSeeing(122, 40, 2);
+
+if hasNormalScene then
+   ActionNormal
+else
+   ActionAdditional;
+End;
+
+Function ActionNormal;
+var i, tmp;
+begin
+CenterNowOnUnits(Heike);
+
+wait(0$1);
+
+ComMoveXY(Heike, 115, 19);
+AddComTurnXY(Heike, 113, 16);
+
+wait(0$2);
+
+Say(Heike, 'DH-Conspiracy-1');
+Say(Kaia, 'DK-Conspiracy-2');
+Say(Givi, 'DG-Conspiracy-3');
+Say(Givi, 'DG-Conspiracy-4');
+Say(Heike, 'DH-Conspiracy-5');
+
+if IsOk(Kamil) then
+   begin
+   hasVodka := true;
+
+   Say(Kamil, 'DKam-Conspiracy-6');
+   Say(Kamil, 'DKam-Conspiracy-7');
+   Say(Kamil, 'DKam-Conspiracy-8');
+   Say(Kamil, 'DKam-Conspiracy-9');
+   end;
+
+if IsOk(Sophia) then
+   begin
+   Say(Sophia, 'DS-Conspiracy-10');
+   Say(Markov, 'DM-Conspiracy-11');
+   Say(Sophia, 'DS-Conspiracy-12');
+
+   if johnnySaved then
+      begin
+      Say(Sophia, 'DS-Conspiracy-13');
+
+      end;
+   end;
+
+Video(false);
+End;
+
+// Scene where Heike is going to die
+Function ActionAdditional;
+var i, un, tmp;
+begin
+PlaceSeeing(115, 27, 2, -6);
+
+PlaceHumanInUnit(Heike, HexInfo(115, 27));
+SetClass(Heike, 33);
+
+CenterNowOnXY(124, 39);
+
+Say(Heike, 'DH-Fail-1');
+
+RaiseSailEvent(eventCenterCamOnHeike);
+
+ComExit(Heike);
+AddComMoveXY(Heike, 109, 33);
+AddComHold(Heike);
+
+RemoveSeeing(115, 27, 2);
+
+wait(0$2);
+
+repeat
+ wait(0$1);
+until IsAt(Heike, 109, 33);
+
+Say(Heike, 'DH-Fail-2');
+
+ComMoveXY(Heike, 111, 48);
+
+repeat
+ wait(0$1);
+until GetDistUnitXY(Heike, 111, 48) < 4;
+
+AddComMoveXY(Heike, 106, 72);
+AddComMoveXY(Heike, 103, 80);
+
+uc_side := 3;
+uc_nation := 3;
+
+PrepareHuman(sex_male, class_soldier, 6);
+hc_attr := [12, 12];
+un := CreateHuman;
+
+PlaceUnitXYD(un, 134, 52, 4, false);
+
+ComTurnUnit(un, Heike);
+ComMoveUnit(un, Heike);
+
+Say(un, 'DRum-Fail-3');
+
+for i := 1 to 3 do
+    begin
+    PrepareSoldier(false, 10);
+    un := CreateHuman;
+    tmp := Join(tmp, un);
+    PlaceUnitArea(un, failSceneGuardArea, false);
+    ComTurnUnit(un, Heike);
+    end;
+
+repeat
+ wait(0$1);
+until UnitFilter(tmp, [f_see, 2]) > 1;
+
+wait(0$1);
+
+DialogueOn;
+
+Say(Heike, 'DH-Fail-4');
+Say(Heike, 'DH-Fail-5');
+Say(Heike, 'DH-Fail-6');
+
+DialogueOff;
+
+ComAttackUnit(tmp, Heike);
+
+repeat
+ wait(0$1);
+until IsDying(Heike);
+
+KillUnit(Heike);
+
+wait(0$4);
+
+ResetFog;
+
+DialogueOn;
+
+dwait(0$1);
+
+Heike := PrepareUnit('Heike', (not debug), prefix);
+SayNoFace(Heike, 'DH-Fail-7');
+
+DialogueOff;
+
+YouLost('Fail');
 End;
 
