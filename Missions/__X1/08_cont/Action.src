@@ -402,7 +402,58 @@ DialogueOff;
 YouLost('Fail');
 End;
 
-Function ShowPlace(x, y, time);
+// spot givi
+Every 0$1 trigger See(2, Givi) and GetDistUnits(Heike, Givi) < 6 or AreInTheSameBuilding(Givi, Heike) do
 begin
-RaiseSailEventCustom(eventShowPlace, x, y, time, 0, 0, 0);
+DialogueOn;
+CenterNowOnUnits(Givi);
+
+Say(Heike, 'DH-Givi-1');
+Say(Givi, 'DG-Givi-2');
+
+DialogueOff;
+
+SetSide(Givi, 2);
+heikeSquad := Join(heikeSquad, Givi);
 End;
+
+Every 0$2 trigger not isAlarm and entranceAllowedList and IsOk(Heike) do
+var i;
+begin
+enable;
+
+for i in entranceAllowedList do
+    if InEntrance(Heike, i) then
+       begin
+       HeikeEnterBuilding(i);
+       break;
+       end;
+End;
+
+Export function HeikeEnterBuilding(building);
+begin
+if not building then
+   exit;
+
+Case Query('EnterBuilding') of
+     1: ;
+     2: exit;
+     end;
+
+InGameOn;
+
+SetSide(Heike, 5);
+SetSide(building, 5);
+
+ComEnterUnit(Heike, building);
+
+wait(0$3);
+
+ComExitBuilding(Heike);
+
+SetSide(Heike, 2);
+SetSide(building, 3);
+
+InGameOff;
+End;
+
