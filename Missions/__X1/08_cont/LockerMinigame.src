@@ -1,0 +1,52 @@
+Export lockerCodeValid, lockerBusy;
+Var step, code;
+
+Export function StartLockerMinigame;
+begin
+if not step then
+   step := 1;
+
+case Query('HEscape' & step) of
+     1: LockerMinigameSearch;
+     2: LockerMinigameSetCode;
+     end;
+
+if lockerCodeValid then
+   exit;
+
+StartLockerMinigame;
+End;
+
+Function LockerMinigameSearch;
+begin
+if code then
+   begin
+   Say(Heike, 'DH-Escape-3-Hint-0');
+   exit;
+   end;
+
+Randomize;
+
+code := rand(1, 5); // check DH-Escape-3-Hint-{validCode}
+step := 2;
+
+Say(Heike, 'DH-Escape-3-Hint-' & code);
+End;
+
+Function LockerMinigameSetCode;
+begin
+if not code then
+   code := 0;
+
+lockerBusy := true;
+
+InGameOff;
+ToLua('initLockerMinigame("' & code & '")');
+step := 3;
+
+repeat
+ wait(1);
+until not lockerBusy;
+
+InGameOn;
+End;
