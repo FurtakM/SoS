@@ -19,4 +19,5 @@ include('sos_events');
 include('sos_timer');
 include('sos_waypoint');
 include('sos_ingame');
+include('sos_locker');
 include('sos_change_interface');

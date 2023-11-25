@@ -262,15 +262,25 @@ Query('StartInfo2');
 
 PrepareGame;
 
-your_side := 2;
-
 PlaceSeeing(152, 65, 2, -70);
 RemoveSeeing(152, 65, 2);
 
 PlaceSeeing(133, 76, 2, -6);
+
+PlaceSeeing(152, 65, 8, -70);
+RemoveSeeing(152, 65, 8);
+
+PlaceSeeing(133, 76, 8, -6); 
+
 CenterNowOnUnits(ruOutpost2);
 
+dialogue_skipped := false;
+
+StartLockerMinigame;
+
 wait(0$3);
+
+your_side := 2;
 
 ComExitBuilding(Heike);
 AddComMoveXY(Heike, 128, 64);
@@ -278,8 +288,6 @@ AddComMoveXY(Heike, 128, 64);
 repeat
  wait(0$1);
 until IsAt(Heike, 128, 64);
-
-dialogue_skipped := false;
 
 ComHold(Heike);
 
@@ -402,6 +410,54 @@ DialogueOff;
 YouLost('Fail');
 End;
 
+// ACTION EVENTS
+// east road
+Every 0$1 trigger SeeXY(2, 173, 29) and GetDistUnitXY(Heike, 173, 29) < 6 do
+Say(Heike, 'DH-EastRoad');
+
+// see eastern part of the base
+Every 0$1 trigger SeeXY(2, 217, 120) and GetDistUnitXY(Heike, 217, 120) < 6 do
+Say(Heike, 'DH-EastEnd');
+
+// heike on the hill
+Every 0$1 trigger IsInArea(Heike, hillArea) do
+begin
+if not heikeSquad then
+   Say(Heike, 'DH-Hill')
+else
+   Say(Heike, 'DH-Hill-a');
+End;
+
+// heike on the border of base
+Every 0$1 trigger IsInArea(Heike, baseBorderArea) do
+var x, y, v;
+begin
+DialogueOn;
+
+CenterNowOnUnits(Heike);
+
+x := GetX(Heike);
+y := GetY(Heike);
+
+PlaceSeeing(x, y, 2, -12);
+RemoveSeeing(x, y, 2);
+
+if FilterAllUnits([f_or, [f_btype, b_bunker], [f_btype, b_turret]]) then
+   v := 3
+else
+   v := 2;
+
+disable;
+
+Say(Heike, 'DH-Outpost-' & rand(1, v));
+
+DialogueOff;
+
+wait(0$10);
+
+enable;
+End;   
+
 // spot givi
 Every 0$1 trigger See(2, Givi) and GetDistUnits(Heike, Givi) < 6 or AreInTheSameBuilding(Givi, Heike) do
 begin
@@ -417,6 +473,24 @@ SetSide(Givi, 2);
 heikeSquad := Join(heikeSquad, Givi);
 End;
 
+Function SayHEmpty();
+begin
+case rand(1, 3) of
+     1: Say(Heike, 'DH-Empty-1');
+     2: Say(Heike, 'DH-Empty-2');
+     3: Say(Heike, 'DH-Empty-3');
+     end;
+End;
+
+Function SayHVisited();
+begin
+case rand(1, 3) of
+     1: Say(Heike, 'DH-Visited-1');
+     2: Say(Heike, 'DH-Visited-2');
+     3: Say(Heike, 'DH-Visited-3');
+     end;
+End;
+
 Every 0$2 trigger not isAlarm and entranceAllowedList and IsOk(Heike) do
 var i;
 begin
@@ -430,15 +504,23 @@ for i in entranceAllowedList do
        end;
 End;
 
-Export function HeikeEnterBuilding(building);
+Function HeikeEnterBuilding(building);
 begin
 if not building then
    exit;
 
-Case Query('EnterBuilding') of
+if building in entranceVisitedList then
+   begin
+   SayHVisited();
+   exit;
+   end;
+
+case Query('EnterBuilding') of
      1: ;
      2: exit;
      end;
+
+entranceVisitedList := Join(entranceVisitedList, building);
 
 InGameOn;
 
@@ -448,6 +530,56 @@ SetSide(building, 5);
 ComEnterUnit(Heike, building);
 
 wait(0$3);
+
+case building of
+     ruFac: begin
+            if IsOk(Markov) then
+               begin
+               Say(Heike, 'DH-Krastyo-1');
+               Say(Markov, 'DMar-Krastyo-2');
+               Say(Markov, 'DMar-Krastyo-3');
+
+               SetSide(Markov, 2);
+               heikeSquad := Join(heikeSquad, Markov);
+               ComExitBuilding(Markov); 
+               end
+            else
+               SayHEmpty();
+            end;
+     ruBarKam: begin
+               if IsOk(Kamil) then
+                  begin
+                  Say(Heike, 'DH-Kamil-1');
+                  Say(Kamil, 'DKam-Kamil-2');
+
+                  if IsOk(Sophia) then
+                     if Sophia in heikeSquad then
+                        Say(Kamil, 'DKam-Kamil-a-3')
+                     else
+                        Say(Kamil, 'DKam-Kamil-3');
+                  end
+               else
+                  SayHEmpty();
+               end;
+     ruOutpost1: begin
+                 if IsOk(Kurt) then
+                    begin
+
+                    end
+                 else
+                    SayHEmpty();
+                 end;
+     ruOutpostBar: begin
+                   if not hasGuardPatrolPlan then
+                      begin
+                      Say(Heike, 'DH-PatrolPlan');
+                      hasGuardPatrolPlan := true;
+                      ChangeSideFog(6, 2);
+                      end
+                   else
+                      SayHEmpty();
+                   end;
+     end;
 
 ComExitBuilding(Heike);
 
