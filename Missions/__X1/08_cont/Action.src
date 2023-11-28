@@ -562,6 +562,9 @@ case building of
                         Say(Kamil, 'DKam-Kamil-a-3')
                      else
                         Say(Kamil, 'DKam-Kamil-3');
+                   
+                  SetSide(Kamil, 2);
+                  heikeSquad := Join(heikeSquad, Kamil);
                   end
                else
                   SayHEmpty();
@@ -569,7 +572,47 @@ case building of
      ruOutpost1: begin
                  if IsOk(Kurt) then
                     begin
+                    if hasMethanol then
+                       begin
+                       Say(Heike, 'DH-Kurt-1');
+                       Say(Kurt, 'DKs-Kurt-2');
 
+                       if GetDistUnits(Givi, ruOutpost1) < 10 and Givi in heikeSquad then
+                          begin
+                          ComMoveXY(Givi, 100, 37);
+                          AddComTurnUnit(Givi, ruOutpost1);
+
+                          repeat
+                           wait(0$1);
+                          until GetDistUnits(Givi, ruOutpost1) < 7;
+
+                          Say(Givi, 'DG-Kurt-3');
+                          ComStop(Givi);
+                          end
+                       else if GetDistUnits(Olaf, ruOutpost1) < 10 and Olaf in heikeSquad then
+                          begin
+                          ComMoveXY(Olaf, 100, 37);
+                          AddComTurnUnit(Olaf, ruOutpost1);
+
+                          repeat
+                           wait(0$1);
+                          until GetDistUnits(Olaf, ruOutpost1) < 7;
+
+                          Say(Olaf, 'DO-Kurt-a-3');
+                          ComStop(Olaf);
+                          end;
+                       end
+                    else
+                       begin
+                       Say(Heike, 'DH-Kurt-1');
+                       Say(Kurt, 'DKs-Kurt-2');
+
+                       // spawn dodatkowych stra¿ników po kilku minutach
+                       end;
+
+                    SetSide(Kurt, 2);
+                    heikeSquad := Join(heikeSquad, Kurt);
+                    ComExitBuilding(Kurt);
                     end
                  else
                     SayHEmpty();
@@ -584,6 +627,7 @@ case building of
                    else
                       SayHEmpty();
                    end;
+
      end;
 
 ComExitBuilding(Heike);
