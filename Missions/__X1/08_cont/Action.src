@@ -177,7 +177,7 @@ if IsOk(Givi) then
 
 if IsOk(Kurt) and IsOk(Kaia) then
    begin
-   hasSniperRifle := true;
+   hasWeapons := true;
 
    Say(Kurt, 'DKs-Conspiracy-27');
 
@@ -187,6 +187,9 @@ if IsOk(Kurt) and IsOk(Kaia) then
            Say(UnitFilter(heikeSecondSquad, [f_sex, sex_female])[1], 'DArf-Conspiracy-a-28');
 
    Say(Kurt, 'DKs-Conspiracy-29');
+
+   ShowPlace(192, 122, 0$3);
+
    Say(Kurt, 'DKs-Conspiracy-30');
    Say(Kaia, 'DK-Conspiracy-31');
 
@@ -198,6 +201,8 @@ if IsOk(Kurt) and IsOk(Kaia) then
       
    if IsOk(Markov) then
       begin
+      hasSniperRifle := true;
+
       Say(Markov, 'DMar-Conspiracy-35');
       Say(Kaia, 'DK-Conspiracy-36');
       Say(Markov, 'DMar-Conspiracy-37');
@@ -209,6 +214,8 @@ if IsOk(Kurt) and IsOk(Kaia) then
       end
    else if heikeSecondSquad then
       begin
+      hasSniperRifle := true;
+
       ShowPlace(137, 98, 0$3);
 
       if not Say(UnitFilter(heikeSecondSquad, [f_sex, sex_male])[1], 'DArm-Conspiracy-a-35') then
@@ -420,6 +427,10 @@ End;
 Every 0$1 trigger SeeXY(2, 173, 29) and GetDistUnitXY(Heike, 173, 29) < 6 do
 Say(Heike, 'DH-EastRoad');
 
+// top hill
+Every 0$1 trigger SeeXY(2, 149, 3) and GetDistUnitXY(Heike, 149, 3) < 6 do
+Say(Heike, 'DH-EastRoad');
+
 // see eastern part of the base
 Every 0$1 trigger SeeXY(2, 217, 120) and GetDistUnitXY(Heike, 217, 120) < 6 do
 Say(Heike, 'DH-EastEnd');
@@ -469,6 +480,9 @@ begin
 DialogueOn;
 CenterNowOnUnits(Givi);
 
+ComTurnUnit(Givi, Heike);
+ComTurnUnit(Heike, Givi);
+
 Say(Heike, 'DH-Givi-1');
 Say(Givi, 'DG-Givi-2');
 
@@ -476,6 +490,17 @@ DialogueOff;
 
 SetSide(Givi, 2);
 heikeSquad := Join(heikeSquad, Givi);
+End;
+
+// gave revolver to kaia
+Every 0$1 trigger GetDistUnits(Heike, Kaia) < 6 and GetClass(Kaia) = 33 and not isAlarm and IsOk(Kaia) and heikeHasRevolver and Kaia in heikeSquad do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Kaia-Reolver-2');
+SetClassKaiaRevolver;
+
+DialogueOff;
 End;
 
 Function SayHEmpty();
@@ -496,7 +521,7 @@ case rand(1, 3) of
      end;
 End;
 
-Every 0$2 trigger not isAlarm and entranceAllowedList and IsOk(Heike) do
+Every 0$2 trigger not isAlarm and entranceAllowedList and IsOk(Heike) marked 1 do
 var i;
 begin
 enable;
@@ -504,12 +529,19 @@ enable;
 for i in entranceAllowedList do
     if InEntrance(Heike, i) then
        begin
+       disable(1);
+
        HeikeEnterBuilding(i);
+
+       wait(0$3);
+
+       enable(1);
        break;
        end;
 End;
 
 Function HeikeEnterBuilding(building);
+var tmp;
 begin
 if not building then
    exit;
@@ -538,7 +570,7 @@ wait(0$3);
 
 case building of
      ruFac: begin
-            if IsOk(Markov) then
+            if IsOk(Markov) and not Markov in heikeSquad then
                begin
                Say(Heike, 'DH-Krastyo-1');
                Say(Markov, 'DMar-Krastyo-2');
@@ -552,7 +584,7 @@ case building of
                SayHEmpty();
             end;
      ruBarKam: begin
-               if IsOk(Kamil) then
+               if IsOk(Kamil) and not Kamil in heikeSquad then
                   begin
                   Say(Heike, 'DH-Kamil-1');
                   Say(Kamil, 'DKam-Kamil-2');
@@ -570,7 +602,7 @@ case building of
                   SayHEmpty();
                end;
      ruOutpost1: begin
-                 if IsOk(Kurt) then
+                 if IsOk(Kurt) and not Kurt in heikeSquad then
                     begin
                     if hasMethanol then
                        begin
@@ -607,7 +639,7 @@ case building of
                        Say(Heike, 'DH-Kurt-1');
                        Say(Kurt, 'DKs-Kurt-2');
 
-                       // spawn dodatkowych stra¿ników po kilku minutach
+                       SpawnAdditionalRuGuards;
                        end;
 
                     SetSide(Kurt, 2);
@@ -626,6 +658,123 @@ case building of
                       end
                    else
                       SayHEmpty();
+                   end;
+     ruKaiaBar: begin
+                if IsOk(Kaia) and not Kaia in heikeSquad then
+                   begin
+                   Say(Heike, 'DH-Kaia-1');
+                   Say(Kaia, 'DK-Kaia-2');
+
+                   if hasSniperRifle then
+                      begin
+                      if IsOk(Markov) then
+                         Say(Kaia, 'DK-Kaia-3')
+                      else
+                         Say(Kaia, 'DK-Kaia-a-3');
+
+                      Say(Heike, 'DH-Kaia-4');
+                      end;
+
+                   SetSide(Kaia, 2);
+                   heikeSquad := Join(heikeSquad, Kaia);
+                   ComExitBuilding(Kaia);
+                   end;
+                end;
+     ruWeaponsBar: begin
+                   if hasWeapons then
+                      begin
+                      entranceVisitedList := entranceVisitedList diff ruWeaponsBar; // exception
+                      tmp := UnitFilter(heikeSquad, [f_dist, Heike, 8]);
+
+                      if not heikeSquad or not tmp then
+                         Say(Heike, 'DH-Weapons-Alone')
+                      else
+                         begin
+                         entranceVisitedList := Join(entranceVisitedList, ruWeaponsBar);
+
+                         Say(Heike, 'DH-Weapons-1');
+                         Say(Heike, 'DH-Weapons-2');
+
+                         if hasRevolver and Kaia in tmp then
+                            begin
+                            SetSide(Kaia, 5);
+                            ComEnterUnit(Kaia, ruWeaponsBar);
+
+                            repeat
+                             wait(0$1);
+                            until IsInUnit(Kaia);
+
+                            Say(Heike, 'DH-Kaia-Revolver-2');
+
+                            SetClassKaiaRevolver;
+
+                            hasRevolver := false;
+
+                            SetSide(Kaia, 2);
+                            ComExitBuilding(Kaia);
+                            end;
+
+                         if Givi in tmp then
+                            begin
+                            SetSide(Givi, 5);
+                            ComEnterUnit(Givi, ruWeaponsBar);
+
+                            repeat
+                             wait(0$1);
+                            until IsInUnit(Givi);
+
+                            Say(Givi, 'DG-Weapons-3');
+                            Say(Givi, 'DH-Weapons-4');
+                            Say(Givi, 'DG-Weapons-5');
+
+                            SetClass(Givi, class_desert_warior);
+
+                            ComExitBuilding(Givi);
+                            SetSide(Givi, 2);
+
+                            if hasRevolver then
+                               begin
+                               Say(Heike, 'DH-Kaia-Revolver-1');
+                               heikeHasRevolver := true;
+                               end;  
+                            end
+                         else if Kamil in tmp then
+                            begin
+                            SetSide(Kamil, 5);
+                            ComEnterUnit(Kamil, ruWeaponsBar);
+
+                            repeat
+                             wait(0$1);
+                            until IsInUnit(Kamil);
+
+                            Say(Kamil, 'DKam-Weapons-a-3');
+                            Say(Heike, 'DH-Weapons-a-4');
+
+                            SetClass(Kamil, class_desert_warior);
+
+                            ComExitBuilding(Kamil);
+                            SetSide(Kamil, 2);
+
+                            if hasRevolver then
+                               begin
+                               Say(Heike, 'DH-Kaia-Revolver-1');
+                               heikeHasRevolver := true;
+                               end;
+                            end
+                         else
+                            begin
+                            Say(Heike, 'DH-Weapons-Alone-2');
+
+                            if hasRevolver then
+                               begin                                  
+                               Say(Heike, 'DH-Kaia-Revolver-1a');
+                               heikeHasRevolver := true;
+                               end;
+                            end;
+                         end;
+                      end
+                   else
+                      Say(Heike, 'DH-Locked');
                    end;
 
      end;
