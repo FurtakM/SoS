@@ -76,6 +76,10 @@ TID_Credits_Thanks_2 = 6109;
 TID_Credits_Thanks_3 = 6110;
 TID_Credits_Thanks_4 = 6111;
 TID_Credits_Thanks_5 = 6112;
+TID_Credits_Ares_Voice_Actors = 6113;
+TID_Credits_American_Soldier = 6114;
+TID_Credits_Arabian_Soldier = 6115;
+TID_Credits_Russian_Soldier = 6116;
 
 TID_Biographies = 8000;
 
