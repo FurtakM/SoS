@@ -1,21 +1,19 @@
 Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze,
        heikeSecondSquad, americanSquad, Harris, Doug;
+Export HeikeTmp, GiviTmp;
 Export Function PrepareArabian;
 var i;
 begin
-uc_side := 8;
-uc_nation := 2;
-
-PrepareHuman(false, 1, 0);
-CreateHuman;
-
 uc_side := 4;
 uc_nation := 1;
 americanSquad := CreateCharacterSet('07_Americans');
 
 if americanSquad < 5 then
    begin
-   for i := americanSquad to 5 do
+   if not americanSquad then
+      americanSquad := [];
+
+   for i := americanSquad to [3, 4, 5, 5][Difficulty] do
        begin
        PrepareHuman(false, 2, 6);
        americanSquad := Join(americanSquad, CreateHuman);
@@ -23,12 +21,18 @@ if americanSquad < 5 then
    end;
 
 Doug := PrepareUnit('UsCommander', (not debug), '07_');
-americanSquad := Join(americanSquad, Doug);
+
+if not Doug then
+   begin
+   PrepareSoldier(sex_male, 6);
+   Doug := CreateHuman;
+   SetClass(Doug, class_prison);
+   end;
 
 if johnnySaved or debug then
    begin
    Harris := NewCharacter('Harris');
-   americanSquad := Join(americanSquad, Harris);
+   SetClass(Harris, class_prison);
    end;
 
 uc_side := 2;
@@ -51,6 +55,7 @@ End;
 
 // Place Heike and the others in different places
 Export Function PrepareGame;
+var i;
 begin
 // heike in west outpost
 PlaceHumanInUnit(Heike, ruOutpost2);
@@ -70,10 +75,122 @@ if Markov then
    PlaceHumanInUnit(Markov, ruFac);
    end;
 
+// olaf nearby factory
+if Olaf then
+   begin
+   SetSide(Olaf, 5);
+   PlaceUnitArea(Olaf, olafArea, false);
+   ComLookAtDir(Olaf, 3);
+   end;
+
 // kamil in barracks
 if Kamil then
    begin
    SetSide(Kamil, 5);
    PlaceHumanInUnit(Kamil, ruBarKam);
    end;
+
+// kurt in outpost
+if Kurt then
+   begin
+   SetSide(Kurt, 5);
+   PlaceHumanInUnit(Kurt, ruOutpost1);
+   end;
+
+// kaia in barracks
+if Kaia then
+   begin
+   SetSide(Kaia, 5);
+   PlaceHumanInUnit(Kaia, ruKaiaBar);
+   end;
+
+// harris nearby factory
+if Harris then
+   begin
+   SetSide(Harris, 4);
+   PlaceUnitArea(Harris, harrisArea, false);
+   ComHold(i);
+   end;
+
+// doug in barracks
+if Doug then
+   begin
+   SetSide(Doug, 4);
+   PlaceHumanInUnit(Doug, dougBar);
+   end;
+
+if Aviradze then
+   begin
+   SetSide(Aviradze, 5);
+   PlaceHumanInUnit(Aviradze, ruLab);
+   end;
+
+if Ibrahim then
+   begin
+   SetSide(Ibrahim, 5);
+   PlaceHumanInUnit(Ibrahim, ruLab);
+   end;
+
+PlaceHumanInUnit(ruCommisar, ruLab);
+
+for i in americanSquad do
+    begin
+    PlaceUnitArea(i, americansRandomArea, false);
+    ComHold(i);
+    end;
+
+for i in heikeSecondSquad do
+    begin
+    PlaceUnitArea(i, arabiansRandomArea, false);
+    ComHold(i);
+    end;
+
+if not hasVodka then
+   for i in FilterAllUnits([f_or, [f_side, 2], [f_side, 5]]) do
+       SetLives(i, 500);
+
+for i in FilterAllUnits([f_side, 4]) do
+    SetLives(i, 500);
+End;
+
+Export function SetClassKaiaRevolver;
+begin
+if IsOk(Kaia) then
+   SetClass(Kaia, class_revolver); // revolver
+End;
+
+Export function SpawnHeikeAsRussian;
+begin
+RemoveUnit(Heike);
+
+heikeTmp := Heike;
+
+uc_side := 2;
+
+Heike := NewCharacter('HeikeRu');
+CopySkills(heikeTmp, Heike);
+
+PlaceHumanInUnit(Heike, laundry);
+
+heikeAsRussian := true;
+
+ChangeMissionObjectives_Silent('M1-laundry-out');
+End;
+
+Export function SpawnGiviAsRussian;
+begin
+RemoveUnit(Givi);
+
+giviTmp := Givi;
+
+uc_side := 2;
+
+Givi := NewCharacter('GiviRu');
+CopySkills(giviTmp, Givi);
+
+PlaceHumanInUnit(Givi, laundry);
+
+giviAsRussian := true;
+
+ChangeMissionObjectives_Silent('M1-laundry-out');
 End;
