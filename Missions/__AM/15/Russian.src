@@ -138,20 +138,20 @@ case strength of
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_gatling_gun, ru_gun, ru_rocket_launcher,
-                       ru_gun, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_gun, ru_heavy_gun, ru_heavy_gun, ru_time_lapser][i mod 7 + 1],
                       80
                      );
        result := result union CreateVehicle;
        end;
    end;
 3: begin
-   for i = 1 to [5, 7, 8, 9][Difficulty] do
+   for i = 1 to [6, 7, 8, 9][Difficulty] do
        begin
        PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_gatling_gun, ru_rocket, ru_rocket_launcher,
-                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun, ru_time_lapser][i mod 7 + 1],
                       80
                      );
        result := result union CreateVehicle;
@@ -166,7 +166,7 @@ case strength of
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_rocket_launcher, ru_rocket, ru_rocket,
-                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun, ru_time_lapser][i mod 7 + 1],
                       80
                      );
        result := result union CreateVehicle;
@@ -307,21 +307,10 @@ repeat
     repeat
      wait(0$1);
 
-     for i in tmp do
-         begin
-         if FilterAllUnits([[f_enemy, 6], [f_dist, i, 12]]) then
-            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([[f_enemy, 6], [f_dist, i, 12]]), i))
-         else if FilterUnitsInArea(powellBase, [f_enemy, 6]) then
-           begin
-              if GetDistUnitXY(i, xy[1][1], xy[1][2]) > 10 and not IsInArea(i, powellBase) then
-                 ComAgressiveMove(i, xy[1][1], xy[1][2])
-              else
-                 ComAttackUnit(i, NearestUnitToUnit(FilterUnitsInArea(powellBase, [f_enemy, 6]), i));
-           end
-         else
-              ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 6]), i));
-         end;
-    until not FilterAllUnits([f_side, 6]);
+     for i in UnitFilter(tmp, [f_ok]) do
+         AgressiveMove(i, [ [112, 187], [114, 164], [105, 149], [85, 131], [64, 105] ]);
+
+    until not UnitFilter(tmp, [f_ok]);
     end;
 until russianDestroyed;
 End;
