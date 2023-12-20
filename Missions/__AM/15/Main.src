@@ -89,7 +89,7 @@ Export missionStart, missionTime, missionStage, activeAttacks, powellAnger,
        russianDestroyed, legionDestroyed, allianceDestroyed, vsevolodFirstAttack,
        allowBehemothConstruct, behemothUnderConstruct, behemothDestroyedBeforeFinish,
        behemothDone, seeBehemoth, platonovHasBomb, allianceActive, lostCounter, rothCaptured,
-       capturedUnit, trueAmericans, powellAngerQuery, bombExploded, legionEscapeUnits;
+       capturedUnit, trueAmericans, powellAngerQuery, bombExploded, legionEscapeUnits, amConstructCounter;
 Export Function InitVariables;
 begin
 debug := false;
@@ -130,6 +130,7 @@ capturedUnit := [];
 trueAmericans := [];
 bombExploded := false;
 legionEscapeUnits := [];
+amConstructCounter := 0;
 End;
 
 Export Function CustomInitMacro();
@@ -137,7 +138,7 @@ begin
 mc_parking := [ allianceParkingArea, russianParkingArea, legionParkingArea, powellParking ];
 mc_scan_area := [ allianceBaseArea, russianBaseArea, legionBaseArea, powellBase ];
 
-MC_SetLabKind(1, [b_lab_weapon, b_lab_siberium, b_lab_computer]);
+MC_SetLabKind(1, [b_lab_weapon, b_lab_siberium, b_lab_computer, b_lab_opto]);
 MC_SetCratesArea(1, [allianceCratesArea]);
 MC_SetDefenderLimit(1, 5);
 MC_SetProduceList(1, [
@@ -202,12 +203,17 @@ MC_SetProduceList(4, [
    [us_heavy_tracked, engine_combustion, control_manual, us_rocket_launcher],
    [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
 ]);
-MC_SetTame(4, powellApe);
+MC_SetTame(4, powellApe); 
 End;
 
-Every 0$1 trigger powellAngerQuery and powellAnger >= 2 do
+Every 0$3 trigger powellAngerQuery and powellAnger >= 2 do
 SetAchievement('ACH_POWELL');
 
+Every 0$3 trigger amConstructCounter >= 30 do
+SetAchievement('ACH_PROD');
+
+Every 0$3 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_or, [f_minskill, 1, 10], [f_minskill, 2, 10], [f_minskill, 3, 10], [f_minskill, 4, 10]]]) >= 10 do
+SetAchievement('ACH_EXP');
 
 // debug only
 Every 0$1 trigger debug do

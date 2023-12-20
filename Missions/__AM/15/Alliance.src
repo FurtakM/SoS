@@ -124,7 +124,7 @@ End;
 
 
 // Artifact #1
-Every 4$00 trigger allianceActive and not allianceDestroyed do
+Every 5$00 trigger allianceActive and not allianceDestroyed do
 var i, tmp, target;
 begin
 enable;
@@ -140,7 +140,10 @@ tmp := FilterAllUnits([[f_enemy, 7], [f_or, [f_engine, engine_siberite],
 if not tmp then
    exit;
 
-target := tmp[rand(1, tmp)];
+if UnitFilter(tmp, [f_weapon, us_siberium_rocket]) then
+   target := UnitFilter(tmp, [f_weapon, us_siberium_rocket])[1]
+else
+   target := tmp[rand(1, tmp)];
 
 if GetSide(target) = 1 then
    CenterNowOnUnits(target);
@@ -199,7 +202,7 @@ until allianceDestroyed or not allianceSpecialForce;
 End;
 
 // Roth attacks
-Every 12$30 trigger not allianceDestroyed and allianceActive do
+Every 12$20 trigger not allianceDestroyed and allianceActive do
 var i, tmp, target, teleport;
 begin
 enable;
@@ -215,6 +218,7 @@ if Prob(40) then
       [us_morphling, engine_siberite, control_remote, us_heavy_gun],
       [us_morphling, engine_siberite, control_remote, us_heavy_gun],
       [us_morphling, engine_siberite, control_remote, us_heavy_gun],
+      [us_morphling, engine_siberite, control_remote, us_laser],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket_launcher],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket_launcher]
@@ -227,19 +231,17 @@ else
       [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
       [us_morphling, engine_siberite, control_remote, us_laser],
       [us_morphling, engine_siberite, control_remote, us_laser],
+      [us_morphling, engine_siberite, control_remote, us_laser],
       [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket_launcher],
       [ru_heavy_tracked, engine_combustion, control_computer, ru_rocket_launcher],
    ]);
    end;
 
-if Difficulty > 1 then
-   MC_InsertProduceList(1, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
-
 repeat
  wait(0$1);
-until MC_GetVehicles(1, true) >= [6, 7, 7, 7][Difficulty];
+until MC_GetVehicles(1, true) >= 7;
 
-wait(0$40);
+wait(0$10);
 
 tmp := MC_GetVehicles(1, true);
 mc_vehicles := Replace(mc_vehicles, 1, mc_vehicles[1] diff tmp);

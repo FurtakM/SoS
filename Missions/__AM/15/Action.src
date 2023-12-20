@@ -269,8 +269,6 @@ tmp := FilterAllUnits([[f_side, 4], [f_type, unit_human]]) diff Powell;
 if not tmp then
    tmp := [Powell];
 
-mc_bases := Replace(mc_bases, 4, FilterAllUnits([[f_side, 4], [f_nation, 1], [f_not, [f_type, unit_vehicle]]]) diff Powell);
-
 // cargo
 cargo := FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]])[1];
 
@@ -328,6 +326,8 @@ repeat
  wait(0$1);
  t := t + 0$1;
 until HexInfo(59, 112) or t > 1$00;
+
+mc_bases := Replace(mc_bases, 4, FilterAllUnits([[f_side, 4], [f_nation, 1], [f_not, [f_type, unit_vehicle]]]) diff Powell);
 
 activeAttacks := true;
 End;
@@ -451,7 +451,14 @@ repeat
  wait(0$1);
 until mc_vehicles[4] >= 4;
 
-tmp := FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff (Powell ^ vip);
+tmp := [];
+
+for i in FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff (Powell ^ vip) do
+    if GetTag(i) = 1 then
+       tmp := Join(tmp, i)
+    else
+       tmp := Insert(tmp, 1, i);
+
 tmp2 := UnitFilter(tmp, [f_sex, sex_male]);
 
 tmp := tmp diff tmp2;
@@ -459,13 +466,13 @@ tmp := tmp diff tmp2;
 tmp := SortBySkill(tmp, 3);
 tmp2 := SortBySkill(tmp2, 3);
 
-for i = 1 to 4 do
+for i := 1 to 4 do
     begin
     if tmp2 then
        begin
        powellSquadAttack := Replace(powellSquadAttack, 1, powellSquadAttack[1] ^ tmp2[tmp2]);
        SetTag(tmp2[tmp2], 1);
-       tmp2 := Delete(tmp2, tmp2);
+       tmp2 := [];
        end
     else
        begin
@@ -623,7 +630,7 @@ ru := [];
 
 for i = 1 to 5 do
     begin
-    PrepareVehicle(ru_medium_tracked, engine_combustion, control_computer, [ru_gatling_gun, ru_gun][rand(1,2)], 89);
+    PrepareVehicle([ru_medium_tracked, ru_heavy_wheeled][rand(1,2)], engine_combustion, control_computer, [ru_gatling_gun, ru_gun][rand(1,2)], 89);
     un := CreateVehicle;
     SetDir(un, 4);
     PlaceUnitXYR(un, 136, 90, 8, false);
@@ -633,7 +640,7 @@ for i = 1 to 5 do
 if ru then
    ComAgressiveMove(ru, 57, 94);
 
-wait(4$00);
+wait(3$00);
 
 MC_SetProduceList(4, [
    [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
@@ -745,7 +752,7 @@ CenterNowOnUnits(Powell);
 tmp := UnitFilter(forces, [f_not, [f_class, 1]]);
 emp_towers := FilterAllUnits([[f_side, 4], [f_btype, b_bunker], [f_empty]]);
 
-for i = 1 to 6 do
+for i := 1 to 4 do
     begin
     if IsInUnit(tmp[i]) then
        ComExitBuilding(tmp[i]);
@@ -803,6 +810,8 @@ wait(0$0.3);
 
 Say(Powell, 'D5a-Pow-1c');
 
+ComMoveXY(tmp, 68, 63);
+
 wait(0$0.5);
 
 Say(Powell, 'D5a-Pow-1d');
@@ -811,7 +820,7 @@ repeat
  wait(0$1);
 
  if not HasTask(tmp) then
-    ComAgressiveMove(tmp, 80, 67); 
+    ComAgressiveMove(tmp, 68, 63);
 until not UnitFilter(tmp, [f_lives, 1]);
 
 tmp := FilterAllUnits([[f_side, 4], [f_distxy, 60, 93, 10], [f_not, [f_inside]]]) diff Powell;
@@ -993,7 +1002,7 @@ async;
 
 Say(Powell, 'D6b-Pow-2');
 
-wait(0$1);
+wait(0$0.5);
 
 if tmp2 > 1 then
    Say(tmp2[2], 'D6b-ArSol2-1');
@@ -1037,8 +1046,6 @@ Say(speaker, 'D6c-Sol3-1');
 
 dwait(0$0.3);
 
-CenterNowOnUnits(JMM);
-
 Say(JMM, 'D6c-JMM-1');
 
 if Cyrus then
@@ -1050,7 +1057,7 @@ if Bobby then
 if Cornel then
    Say(Cornel, 'D6c-Corn-1');
 
-tmp2 := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_sex, sex_male], [f_not, [f_class, class_apeman_engineer], [f_class, class_apeman]]]) diff (speaker union JMM union vip);
+tmp2 := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_sex, sex_male], [f_nation, 1]]) diff (speaker union JMM union vip);
 
 if tmp2 then
    Say(tmp2[1], 'D6c-Sol1-1');
@@ -1067,9 +1074,12 @@ if Donaldson then
 if tmp2 > 1 then
    Say(tmp2[2], 'D6c-Sol2-1');
 
-CenterNowOnUnits(JMM);
-
 Say(speaker, 'D6c-Sol3-2');
+
+if IsInUnit(JMM) then
+   CenterNowOnUnits(IsInUnit(JMM))
+else
+   CenterNowOnUnits(JMM);
 
 dwait(0$2);
 
@@ -1159,7 +1169,7 @@ AddComRecycle(bomb, FilterAllUnits([[f_side, 8], [f_nation, 2], [f_btype, b_fact
 End;
 
 // Legion surrender
-Every 0$1 trigger (GetLives(Kurt) < 999 or FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) <= [9, 8, 7, 6][Difficulty]) and not FilterAllUnits([[f_side, 8], [f_weapon, ru_siberium_rocket]]) and IsOk(Kurt) and FilterUnitsInArea(legionBaseArea, [f_side, 1]) do
+Every 0$3 trigger (GetLives(Kurt) < 999 or FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) <= [9, 8, 7, 6][Difficulty]) and not FilterAllUnits([[f_side, 8], [f_weapon, ru_siberium_rocket]]) and IsOk(Kurt) and FilterUnitsInArea(legionBaseArea, [f_side, 1]) do
 var i, tmp, x;
 begin
 legionDestroyed := true;
@@ -1210,10 +1220,7 @@ if tmp >= [6, 5, 4, 3][Difficulty] then
        legionEscapeUnits := legionEscapeUnits ^ tmp[i];
 
        if IsInUnit(tmp[i]) then
-          ComExitBuilding(tmp[i]);
-
-       if IsInUnit(i) then
-          ComExitVehicle(tmp[i]);
+          ComExit(tmp[i]);
 
        AddComMoveXY(tmp[i], 34 + rand(0, 6), 1);
        end;
@@ -1224,13 +1231,13 @@ else
 for i := tmp downto tmp - x do
     begin
     if IsInUnit(tmp[i]) then
-       ComExitVehicle(tmp[i]);
+       ComExit(tmp[i]);
 
     SetSide(tmp[i], 1);
     end;
 
 SetSide(Kurt, 1);
-SetSide(FilterAllUnits([[f_side, 8], [f_type, unit_building]]), 1); 
+SetSide(FilterAllUnits([[f_side, 8], [f_or, [f_type, unit_building], [f_type, unit_vehicle]]]), 1);
 SetAttitude(8, 1, att_friend, true);
 
 wait(1$20);
@@ -1709,7 +1716,7 @@ else
    else
       begin
       DialogueOn;
-      SayRadio(Platonov, 'D16c-Pla-');
+      SayRadio(Platonov, 'D16c-Pla-1');
       DialogueOff;
       end;
    end;
@@ -1811,7 +1818,7 @@ ComExitBuilding(FilterAllUnits([[f_side, 3], [f_type, unit_human]]));
 wait(0$1);
 AddComMoveToArea(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), russianEscapeArea);
 
-wait(0$15);
+wait(0$35);
 
 PrepareOmarInvasion;
 
@@ -2090,6 +2097,12 @@ m3 := false;
 
 if not bombExploded then
    SetAchievement('ACH_SIBROCKET');
+
+if GetSide(Friend) = 1 and IsOk(Friend) then
+   begin
+   wait(3);
+   SetAchievement('ACH_OPO');
+   end;
 
 if tick <= 120$00 then
    begin
