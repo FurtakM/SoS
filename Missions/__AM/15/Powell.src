@@ -1,7 +1,7 @@
 Export Powell;
 Export vip;
 Export Function PreparePowell;
-var i, b, veh, cl, tmp, depot, lab, armoury, workshop, un;
+var i, b, veh, tmp, depot, lab, armoury, workshop, un;
 begin
 uc_side := 4;
 uc_nation := 1;
@@ -96,22 +96,20 @@ if tmp < 18 then
        SetTag(un, 1);
        end;
 
-depot := FilterAllUnits([[f_side, 4], [f_btype, b_depot]])[1];
-lab := FilterAllUnits([[f_side, 4], [f_btype, b_lab]])[1];
-armoury := FilterAllUnits([[f_side, 4], [f_btype, b_armoury]])[1];
-workshop := FilterAllUnits([[f_side, 4], [f_btype, b_workshop]])[1];
+depot := HexInfo(53, 94);
+lab := HexInfo(56, 101);
+armoury := HexInfo(67, 101);
+workshop := HexInfo(54, 85);
+
+b := [armoury, depot, workshop, lab];
 
 for i in tmp do
     begin
-    cl := GetClass(i);
+    if UnitsInside(b[1]) = 6 then
+       b := Delete(b, 1);
 
-    if cl > 4 then
-       cl := 1;
-
-    b := [armoury, depot, workshop, lab][cl];
-
-    if UnitsInside(b) < 6 then
-       PlaceHumanInUnit(i, b)
+    if b then
+       PlaceHumanInUnit(i, b[1])
     else
        PlaceUnitXYR(i, 61, 89, 8, false);
     end;

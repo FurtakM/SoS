@@ -1,0 +1,36 @@
+Every 0$1 trigger not isAlarm marked gameStartEvent do
+var i, j, points, tag, tmp;
+begin
+enable;
+
+points := [ [g11, g12, g13, g14],
+            [g21, g22, g23, g24, g25, g26, g27, g28, g29],
+            [g31, g32, g33, g34],
+            [g41, g42, g43, g44, g45] ];
+
+for i in ruPatrol do
+    begin
+    tmp := UnitFilter(heikeSquad, [[f_side, 2], [f_dist, i, 7]]);
+
+    if See(2, i) and tmp then
+       begin
+       ComTurnUnit(i, NearestUnitToUnit(tmp, i));
+       CaughtByPatrol(i, tmp);
+       ComFree(i);
+       end;  
+
+    if HasTask(i) then
+       continue;
+
+    tag := GetTag(i);
+
+    if not tag then
+       continue;
+
+    for j := 1 to points[tag] do
+        begin
+        AddComMoveToArea(i, points[tag][j]);
+        AddComWait(i, 0$2);
+        end;
+    end;
+End;
