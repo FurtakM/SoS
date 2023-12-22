@@ -32,28 +32,28 @@ if KhatamStatus then
    SetClass(Khatam, class_scientistic);
    end;
 
-for i = 1 to Difficulty do
+for i = 1 to [2, 2, 3, 3][Difficulty] do
     begin
-    PrepareScientist(false, 7+Difficulty);
+    PrepareScientist(false, 6 + Difficulty);
     un := CreateHuman;
     PlaceUnitArea(un, [arabianAttackArea, arabianAttackArea2][i mod 2 + 1], false);
     end;
 
 for i = 1 to 6 do
     begin
-    PrepareSoldier(false, 7+Difficulty);
+    PrepareSoldier(false, 6 + Difficulty);
     un := CreateHuman;
-    PlaceUnitArea(un, arabianAttackArea, false);
+    PlaceUnitArea(un, arabianAttackArea3, false);
     end;
 
 for i = 1 to 3 do
     begin
-    PrepareHuman(false, class_mortar, 7+Difficulty);
+    PrepareHuman(false, class_mortar, 6 + Difficulty);
     un := CreateHuman;
-    PlaceUnitArea(un, arabianAttackArea, false);
+    PlaceUnitArea(un, arabianAttackArea3, false);
     end;
 
-for i = 1 to 3 do
+for i = 1 to [2, 3, 4, 4][Difficulty] do
     begin
     PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_rocket_launcher, 80);
     veh := CreateVehicle;
@@ -61,11 +61,11 @@ for i = 1 to 3 do
     SetDir(veh, 3);
     PlaceUnitArea(veh, arabianAttackArea2, false);
 
-    PrepareMechanic(false, 7+Difficulty);
+    PrepareMechanic(false,  6 + Difficulty);
     PlaceHumanInUnit(CreateHuman, veh);
     end;
 
-for i = 1 to 5+Difficulty do
+for i = 1 to 5 + Difficulty do
     begin
     PrepareVehicle(ar_half_tracked, rand(1,3), control_manual, [ar_rocket_launcher, ar_flame_thrower, ar_gun, ar_gatling_gun][i mod 4 + 1], 80);
     veh := CreateVehicle;
@@ -73,11 +73,11 @@ for i = 1 to 5+Difficulty do
     SetDir(veh, 4);
     PlaceUnitArea(veh, arabianAttackArea, false);
 
-    PrepareMechanic(false, 7+Difficulty);
+    PrepareMechanic(false, 6 + Difficulty);
     PlaceHumanInUnit(CreateHuman, veh);
     end;
 
-for i = 1 to 3 do
+for i = 1 to Difficulty do
     begin
     PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, ar_selfpropelled_bomb, 80);
     veh := CreateVehicle;
@@ -88,7 +88,7 @@ for i = 1 to 3 do
 End;
 
 Every 0$1 trigger FilterAllUnits([f_side, 2]) do
-var i, tmp, sci;
+var i, tmp, sci, enemy;
 begin
 sci := FilterAllUnits([[f_side, 2], [f_class, 4]]) diff Khatam;
 tmp := FilterAllUnits([f_side, 2]) diff (Khatam union sci);
@@ -109,10 +109,20 @@ if sci > 1 then
 if sci > 2 then
    ComContaminate(sci[3], 215, 129);
 
+ComAgressiveMove(tmp, 195, 102);
+
+wait(0$5);
+
 repeat
  wait(0$2);
 
+ enemy := FilterAllUnits([[f_distxy, 195, 102, 36], [f_side, 1]]);
+
  for i in tmp do
-     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 2]), i));
-until not FilterAllUnits([f_side, 2]);
+     if enemy then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     else
+        ComAgressiveMove(i, 195, 102);
+
+until not UnitFilter(tmp, [f_ok]);
 End;

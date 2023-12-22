@@ -288,11 +288,12 @@ CenterNowOnUnits(ruOutpost2);
 
 dialogue_skipped := false;
 
+InitRuPatrols;
+
 Say(Heike, 'DH-Escape-1');
 Say(Heike, 'DH-Escape-2');
 
-if not debug then
-   StartLockerMinigame;
+StartLockerMinigame;
 
 wait(0$1);
 
@@ -1112,6 +1113,8 @@ if explosivePlantedList then
        end;
    
    Say(Heike, 'DH-End-2');
+
+   wait(0$5);
    end;
 
 if not isAlarm then
@@ -1539,5 +1542,115 @@ SetSide(Heike, 2);
 SetSide(building, 3);
 
 InGameOff;
+End;
+
+Export function CaughtByPatrol(guard, units);
+var i, alone;
+begin
+if UnitFilter(units, [f_nation, nation_russian]) then
+   exit;
+
+DialogueOn;
+
+CenterNowOnUnits(guard);
+
+if not Heike in units then
+   begin
+   case GetSex(guard) of
+        sex_male: Say(guard, 'DRum-Guard-1');
+        sex_female: Say(guard, 'DRuf-guard-1');
+        end;
+
+   Query('CaughtSquadInfo');
+
+   for i in units do
+       begin
+       SetSide(i, 5);
+       ComMoveXY(i, 113, 17);
+       end;
+
+   ComMoveXY(guard, 113, 17);
+       
+   DialogueOff;
+   exit;
+   end;
+
+case GetSex(guard) of
+     sex_male: Say(guard, 'DRum-Seen-1');
+     sex_female: Say(guard, 'DRuf-Seen-1');
+     end;
+
+alone := (units = 1);
+
+case Query('SurrenderInfo') of
+     1: begin  // yes
+        if alone then
+           Query('CaughtInfoAlone')
+        else
+           Query('CaughtInfo');
+
+        CenterNowOnUnits(ruOutpost2);
+
+        RemoveUnit(Heike);
+        PlaceHumanInUnit(Heike, ruOutpost2);
+
+        if not alone then
+           for i in units diff Heike do
+               begin
+               RemoveUnit(i);
+               PlaceUnitXYR(i, 114, 17, 10, false);
+               end;
+                   
+        StartLockerMinigame;
+               
+        Say(Heike, 'DH-Reset');
+
+        DialogueOff;
+
+        ComExitBuilding(Heike);
+        end;
+     2: begin  // no
+        Say(Heike, 'DH-Guard-2'); 
+        DialogueOff;
+
+        wait(0$2);
+
+        SetAttitude(6, 2, att_enemy, true);
+
+        case GetSex(guard) of
+             sex_male: Say(guard, 'DRum-Fail-3');
+             sex_female: Say(guard, 'DRum-Fail-3');
+             end;
+
+        wait(0$5);
+
+        if IsOk(guard) then
+           isAlarm := true
+        else
+           SetAttitude(6, 2, att_neutral, true);
+        end;
+     end;
+End;
+
+// rejoin
+Every 0$3 trigger UnitFilter(heikeSecondSquad, [[f_side, 5], [f_dist, Heike, 6]]) and not UnitFilter(ruPatrol, [f_see, 5]) marked gameStartEvent do
+var i;
+begin
+enable;
+
+DialogueOn;
+
+Say(Heike, 'DH-Join-' & rand(1, 3));
+
+for i in UnitFilter(heikeSecondSquad, [[f_side, 5], [f_dist, Heike, 10]]) do
+    SetSide(i, 2);
+
+DialogueOff;
+End;
+
+// disturber
+Every 0$10 trigger UnitFilter(heikeSquad, [f_side, 2]) > 3 and not isAlarm marked gameStartEvent do
+begin
+PlaceUnitXY(ruDisturb, 155, 68, false);
 End;
 

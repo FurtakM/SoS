@@ -79,6 +79,9 @@ j := 1;
 
 for i in behemothBuilders do
     begin
+    if GetClass(i) <> class_mechanic then
+       SetClass(i, class_mechanic);
+
     if IsInUnit(i) then
        ComExitBuilding(i);
 
@@ -138,20 +141,20 @@ case strength of
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_gatling_gun, ru_gun, ru_rocket_launcher,
-                       ru_gun, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_gun, ru_heavy_gun, ru_heavy_gun, ru_time_lapser, ru_time_lapser][i mod 8 + 1],
                       80
                      );
        result := result union CreateVehicle;
        end;
    end;
 3: begin
-   for i = 1 to [5, 7, 8, 9][Difficulty] do
+   for i = 1 to [6, 7, 8, 9][Difficulty] do
        begin
        PrepareVehicle([ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][i mod 3 + 1],
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_gatling_gun, ru_rocket, ru_rocket_launcher,
-                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun, ru_time_lapser, ru_time_lapser, ru_time_lapser][i mod 9 + 1],
                       80
                      );
        result := result union CreateVehicle;
@@ -166,7 +169,7 @@ case strength of
                       [engine_combustion, engine_siberite][rand(1,2)],
                       control_computer,
                       [ru_rocket_launcher, ru_rocket, ru_rocket,
-                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun][i mod 6 + 1],
+                       ru_rocket_launcher, ru_heavy_gun, ru_heavy_gun, ru_time_lapser, ru_time_lapser, ru_time_lapser][i mod 9 + 1],
                       80
                      );
        result := result union CreateVehicle;
@@ -242,7 +245,7 @@ repeat
  else
     wait(time);
 
- if missionStage = 6 then
+ if missionStage = 6 or Difficulty > 2 then
     begin
     SetTech(tech_weap1, 6, state_researched);
     SetTech(tech_comp1, 6, state_researched);
@@ -300,28 +303,21 @@ repeat
               wait(0$0.3);
               end;
 
-        ComMoveXY(i, 111, 197);
+        if Prob(50) then
+           ComMoveXY(i, 111, 197)
+        else
+           ComMoveXY(i, 91, 165);
+
         wait(0$2);
         end;
 
     repeat
      wait(0$1);
 
-     for i in tmp do
-         begin
-         if FilterAllUnits([[f_enemy, 6], [f_dist, i, 12]]) then
-            ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([[f_enemy, 6], [f_dist, i, 12]]), i))
-         else if FilterUnitsInArea(powellBase, [f_enemy, 6]) then
-           begin
-              if GetDistUnitXY(i, xy[1][1], xy[1][2]) > 10 and not IsInArea(i, powellBase) then
-                 ComAgressiveMove(i, xy[1][1], xy[1][2])
-              else
-                 ComAttackUnit(i, NearestUnitToUnit(FilterUnitsInArea(powellBase, [f_enemy, 6]), i));
-           end
-         else
-              ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 6]), i));
-         end;
-    until not FilterAllUnits([f_side, 6]);
+     for i in UnitFilter(tmp, [f_ok]) do
+         AgressiveMove(i, [ [108, 153], [105, 149], [85, 131], [64, 105] ]);
+
+    until not UnitFilter(tmp, [f_ok]);
     end;
 until russianDestroyed;
 End;
@@ -345,6 +341,7 @@ if Prob(40) then
       [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
    ]);
    end
@@ -356,18 +353,16 @@ else
       [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
       [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
    ]);
    end;
 
-if Difficulty > 1 then
-   MC_InsertProduceList(2, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
-
 repeat
  wait(0$1);
-until MC_GetVehicles(2, true) >= [6, 7, 7, 7][Difficulty];
+until MC_GetVehicles(2, true) >= 7;
 
-wait(0$30);
+wait(0$10);
 
 tmp := MC_GetVehicles(2, true);
 mc_vehicles := Replace(mc_vehicles, 2, mc_vehicles[2] diff tmp);
@@ -418,4 +413,110 @@ repeat
          tmp := tmp diff i;
      end;
 until not tmp;
+End;
+
+Export ruMobile;
+Every 0$01 trigger missionStage >= 8 and Difficulty > 1 do
+var i, veh, un;
+begin
+ruMobile := [];
+
+for i := 1 to [3, 4, 5][Difficulty - 1] do
+    begin
+    uc_side := 3;
+    uc_nation := 3;
+
+    PrepareVehicle(ru_medium_wheeled, engine_siberite, control_manual, ru_rocket_launcher, 100);
+    veh := CreateVehicle;
+    SetDir(veh, 3);
+    PlaceUnitArea(veh, arabianAttackArea2, false);
+
+    PrepareMechanic(false, 10);
+    un := CreateHuman;
+
+    PlaceHumanInUnit(un, veh);
+
+    ruMobile := Join(ruMobile, veh);
+    end;
+End;
+
+Every 0$1 trigger ruMobile do
+var i, mech, enemy;
+begin
+enable;
+
+if not ruMobile then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in ruMobile do
+    begin
+    if not IsOk(i) or GetSide(i) <> 3 then
+       begin
+       ruMobile := ruMobile diff i;
+       continue;
+       end;
+
+    if GetTag(i) = 300 then
+       begin
+       ComMoveXY(i, 160, 81);
+
+       if GetDistUnitXY(i, 160, 81) < 8 then
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if not IsInArea(i, ruMobileParkingArea) then
+          ComMoveToArea(i, ruMobileParkingArea)
+       else
+          SetTag(i, 302);
+       end;
+
+    if GetTag(i) = 302 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) < 300 then
+       begin
+       enemy := FilterUnitsInArea(russianBaseArea, [f_enemy, 3]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else 
+          AgressiveMove(i, [ [158, 61], [98, 100], [78, 93] ]);
+       end;
+    end;
 End;

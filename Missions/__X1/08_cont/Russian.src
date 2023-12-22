@@ -1,6 +1,6 @@
-Export russianKillers, ruCommisar;
+Export russianKillers, ruCommisar, ruDisturb;
 Export function PrepareRussian;
-var i, tmp;
+var i, j, tmp;
 begin
 uc_side := 3;
 uc_nation := 3;
@@ -18,6 +18,27 @@ for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do
     begin
     PrepareSoldier(false, 5 + Difficulty);
     PlaceHumanInUnit(CreateHuman, i);
+    end;
+
+PrepareSoldier(sex_male, 8);
+hc_name := 'Pavel Muchin';
+hc_attr := [12, 12];
+ruDisturb := CreateHuman;
+
+InitHC_All();
+
+uc_side := 6;
+uc_nation := 3;
+
+tmp := [ruBarSt1, ruBarSt2, ruBarSt3, ruBarSt4, ruBarSt5];
+
+for i in tmp do
+    begin
+    for j := 1 to 2 do
+        begin
+        PrepareSoldier(false, 7);
+        PlaceHumanInUnit(CreateHuman, i);
+        end;
     end;
 End;
 
@@ -73,6 +94,41 @@ ruCommisar := CreateHuman;
 PlaceUnitXY(ruCommisar, 124, 37, false);
 SetDir(ruCommisar, 3);
 ComLookAtDir(ruCommisar, 3);
+End;
+
+Export ruPatrol;
+Export function InitRuPatrols;
+var i, un, spawn;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+ruPatrol := [];
+spawn := [g11, g21, g31, g41];
+
+for i := 1 to spawn do
+    begin
+    PrepareSoldier(false, [4, 5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    SetTag(un, i);
+    ruPatrol := Join(ruPatrol, un);
+
+    PlaceUnitArea(un, spawn[i], false);
+    ComHold(un);
+    end;
+
+spawn := [s11, s21, s31, s41, s51, s61];
+
+for i := 1 to spawn do
+    begin
+    PrepareSoldier(false, [4, 5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    SetTag(un, 0);
+    ruPatrol := Join(ruPatrol, un);
+
+    PlaceUnitArea(un, spawn[i], false);
+    ComHold(un);
+    end;
 End;
 
 Export function SpawnAdditionalRuGuards;

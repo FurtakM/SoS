@@ -231,6 +231,12 @@ TID_ACH_CRATES = 6524;
 TID_ACH_CRATES_DESC = 6525;
 TID_ACH_AMASHA = 6526;
 TID_ACH_AMASHA_DESC = 6527;
+TID_ACH_OPO = 6528;
+TID_ACH_OPO_DESC = 6529;
+TID_ACH_EXP = 6530;
+TID_ACH_EXP_DESC = 6531;
+TID_ACH_PROD = 6532;
+TID_ACH_PROD_DESC = 6533;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -660,10 +666,31 @@ achievements = {
         0,
         0
     },
-        ['ACH_AMASHA'] = {
+    ['ACH_AMASHA'] = {
         loc(TID_ACH_AMASHA), 
         loc(TID_ACH_AMASHA_DESC),
         false,
+        0,
+        0
+    },
+    ['ACH_OPO'] = {
+        loc(TID_ACH_OPO), 
+        loc(TID_ACH_OPO_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_EXP'] = {
+        loc(TID_ACH_EXP), 
+        loc(TID_ACH_EXP_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_PROD'] = {
+        loc(TID_ACH_PROD), 
+        loc(TID_ACH_PROD_DESC),
+        true,
         0,
         0
     },
@@ -1168,7 +1195,7 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_PATH', 'ACH_LASER', 'ACH_ROCKET', 'ACH_ASPEED_12'},
         {'ACH_MASHA', 'ACH_REMOTE', 'ACH_DEFMASTER', 'ACH_ASPEED_13'},
         {'ACH_DOUBLE', 'ACH_APE', 'ACH_FORT', 'ACH_AMASHA', 'ACH_ASPEED_14'},
-        {'ACH_POWELL', 'ACH_ALLIANCE', 'ACH_SIBROCKET', 'ACH_ASPEED_15'},
+        {'ACH_POWELL', 'ACH_ALLIANCE', 'ACH_SIBROCKET', 'ACH_OPO', 'ACH_PROD', 'ACH_EXP', 'ACH_ASPEED_15'},
         {'ACH_EYE', 'ACH_ALARM', 'ACH_NOINVIS', 'ACH_TEAM', 'ACH_ASPEED_16'},
         {'ACH_COMRADE', 'ACH_HACK','ACH_ASPEED_17'},
         {'ACH_PACIFIST', 'ACH_DIPLOMACY', 'ACH_ONEMANARMY', 'ACH_ASPEED_18'},
@@ -1257,6 +1284,9 @@ achievsCategory = {
         'ACH_POWELL',
         'ACH_ALLIANCE',
         'ACH_SIBROCKET',
+        'ACH_OPO',
+        'ACH_PROD',
+        'ACH_EXP',
         'ACH_ASPEED_15',
         'ACH_EYE',
         'ACH_ALARM',
