@@ -1,0 +1,96 @@
+// finish mission
+Every 0$2 trigger IsInArea(Heike, finalArea) do
+begin
+Query('FinalInfo');
+
+SetAreaMapShow(finalArea, 1);
+
+end_the_mission_allowed := true;
+
+repeat
+ wait(0$1);
+until Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_inarea, finalArea]])) = Count(FilterAllUnits([[f_side, 2], [f_type, unit_human]]));
+
+EndMission;
+End;
+
+On EndTheMissionRaised(e) do
+begin
+EndMission;
+End;
+
+Function EndMission;
+begin
+if not IsInArea(Heike, finalArea) then
+   begin
+   Query('HeikeOutOfArea');
+   exit;
+   end;
+
+if not IsOk(Heike) then
+   begin
+   Query('HeikeIsHurt');
+   exit;
+   end;
+
+if FilterAllUnits([[f_side, 5], [f_type, unit_human]]) = 0 and loseCounter = 0 then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if explosivePlantedList >= 3 then
+   AddMedal('med2', 1)
+else if explosivePlantedList < 3 then
+   AddMedal('med2', -2)
+else
+   AddMedal('med2', -1);
+
+if GetTech(tech_stimDrugs, 2) = state_researched then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+
+if Doug and GetSide(Doug) = 2 then
+   SaveCharacters(Doug, '08_UsCommander');
+
+SaveCharacters(FilterAllUnits([[f_side, 2], [f_nation, 1], [f_type, unit_human]]) diff Doug, '08_Americans');
+
+SaveCharacters(Heike, '08_Heike');
+
+if Aviradze and GetSide(Aviradze) = 2 then
+   SaveCharacters(Aviradze, '08_Aviradze');
+
+if Ibrahim and GetSide(Ibrahim) = 2 then
+   SaveCharacters(Ibrahim, '08_Ibrahim');
+
+if Kamil and GetSide(Kamil) = 2 then
+   SaveCharacters(Kamil, '08_Kamil');
+
+if Sophia and GetSide(Sophia) = 2 then
+   SaveCharacters(Sophia, '08_Sophia');
+
+if Kaia and GetSide(Aviradze) = 2 then
+   SaveCharacters(Kaia, '08_Kaia');
+
+if Givi and GetSide(Givi) = 2 then
+   SaveCharacters(Givi, '08_Givi');
+
+if Mike and GetSide(Mike) = 2 then
+   SaveCharacters(Mike, '08_Mike');
+
+if Markov and GetSide(Markov) = 2 then
+   SaveCharacters(Markov, '08_Markov');
+
+if Kurt and GetSide(Kurt) = 2 then
+   SaveCharacters(Kurt, '08_Kurt');
+
+if heikeSecondSquad then
+   SaveCharacters(heikeSecondSquad, '08_others');
+
+YouWin;
+DialogueOff;
+End;

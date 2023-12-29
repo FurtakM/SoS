@@ -1,0 +1,515 @@
+// disturber
+Every 0$10 trigger UnitFilter(heikeSquad, [f_side, 2]) > 3 and not isAlarm marked gameStartEvent do
+var i, veh, tmp, cr;
+begin
+PlaceUnitXY(ruDisturb, 155, 68, false);
+
+wait(0$1);
+
+repeat
+ wait(0$1);
+
+ if not HasTask(ruDisturb) then
+    ComMoveUnit(ruDisturb, Heike);
+until GetDistUnits(Heike, ruDisturb) < 6 and IsOk(ruDisturb);
+
+if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+   isAlarm := true;
+
+if isAlarm then
+   exit;
+
+DialogueOn;
+
+Say(ruDisturb, 'DMcn-Interrupt-1');
+Say(ruDisturb, 'DMcn-Interrupt-2');
+Say(ruDisturb, 'DMcn-Interrupt-3');
+Say(Heike, 'DH-Interrupt-a-4');
+Say(ruDisturb, 'DMcn-Interrupt-a-5');
+Say(Heike, 'DH-Interrupt-a-6');
+Say(ruDisturb, 'DMcn-Interrupt-a-7');
+
+DialogueOff;
+
+hasMuchin := true;
+
+Query('MuchinInfo');
+
+ChangeMissionObjectives('M2a');
+
+SetSide(HexInfo(105, 55), 2);
+SetSide(HexInfo(115, 65), 2);
+
+PlaceSeeing(109, 59, 2, -10);
+CenterOnXY(109, 59);
+
+wait(0$2);
+
+RemoveSeeing(109, 59, 2);
+
+repeat
+ wait(0$1);
+
+ if GetDistUnits(ruDisturb, Heike) > 6 then
+    ComMoveUnit(ruDisturb, Heike);
+
+ if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+    begin
+    isAlarm := true;
+    exit;
+    end;
+
+ if not HexInfo(105, 55) or not HexInfo(115, 65) then
+    begin
+    isAlarm := true;
+    exit;
+    end;
+
+until not BuildingsInProgress(2);
+
+SetSide(HexInfo(105, 55), 3);
+SetSide(HexInfo(115, 65), 3);
+
+ChangeMissionObjectives('M2a-out');
+
+ComEnterUnit(ruDisturb, ruMainBase);
+
+wait(0$3);
+
+hasMuchin := false;
+
+wait(2$00);
+
+repeat
+ wait(0$1);
+
+ if not HasTask(ruDisturb) then
+    ComMoveUnit(ruDisturb, Heike);
+until GetDistUnits(Heike, ruDisturb) < 6 and IsOk(ruDisturb);
+
+if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+   isAlarm := true;
+
+if isAlarm then
+   exit;
+
+DialogueOn;
+
+Say(ruDisturb, 'DMcn-Interrupt-1');
+Say(ruDisturb, 'DMcn-Interrupt-2');
+
+CenterNowOnXY(176, 54);
+PlaceSeeing(176, 54, 2, -6);
+
+dwait(0$0.3);
+
+Say(ruDisturb, 'DMcn-Interrupt-b-3');
+Say(Heike, 'DH-Interrupt-b-4');
+Say(ruDisturb, 'DMcn-Interrupt-b-5');
+
+CenterNowOnUnits(Heike);
+
+RemoveSeeing(176, 54, 2);
+
+Say(ruDisturb, 'DMcn-Interrupt-b-6');
+Say(Heike, 'DH-Interrupt-b-7');
+Say(ruDisturb, 'DMcn-Interrupt-b-8');
+
+DialogueOff;
+
+Query('MuchinInfo');
+
+ChangeMissionObjectives('M2b');
+
+hasMuchin := true;
+
+repeat
+ wait(0$1);
+
+ if GetDistUnits(ruDisturb, Heike) > 6 then
+    ComMoveUnit(ruDisturb, Heike);
+
+ if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+    begin
+    isAlarm := true;
+    exit;
+    end;
+
+until GetDistUnits(Heike, ruFac) < 4;
+
+InGameOn;
+
+PlaceSeeing(173, 54, 2, -8);
+
+SetSide(Heike, 3);
+
+ComEnterUnit(Heike, ruFac);
+ComEnterUnit(ruDisturb, ruFac);
+
+if Markov in heikeSquad and GetDistUnits(Markov, ruFac) < 12 then
+   begin
+   SetSide(Markov, 3);
+   ComEnterUnit(Markov, ruFac);
+
+   repeat
+    wait(0$1);
+   until IsInUnit(Markov);
+   end;
+
+repeat
+ wait(0$1);
+until IsInUnit(Heike);
+
+SetClass(Heike, class_mechanic);
+
+ComConstruct(ruFac, ru_medium_wheeled, engine_siberite, control_computer, ru_gatling_gun);
+
+if hasVirus and (Markov in heikeSquad or IsInUnit(Markov) = ruFac) then
+   begin
+   wait(0$5);
+
+   SetSide(Heike, 2);
+   SetSide(Markov, 2);
+
+   if not Markov in heikeSquad then
+      heikeSquad := Join(heikeSquad, Markov);
+
+   Say(Markov, 'DMar-Factory-1');
+
+   SetWorkingProgress(ruFac, 99);
+
+   ComExitBuilding(ruDisturb);
+   ComExitBuilding(Markov);
+
+   AddComMoveXY(ruDisturb, 171, 51);
+   AddComMoveXY(Markov, 167, 50);
+
+   AddComTurnUnit(Markov, ruDisturb);
+
+   wait(0$5);
+
+   Say(Markov, 'DMar-Factory-2');
+
+   veh := FilterAllUnits([[f_side, 3], [f_control, control_computer]])[1];
+
+   ComTurnUnit(ruDisturb, veh);
+
+   async;
+   Say(ruDisturb, 'DMcn-Factory-3');
+   ComAttackUnit(veh, ruDisturb);
+   sync;
+
+   wait(0$1);
+
+   KillUnit(ruDisturb);
+
+   SetSide(veh, 7);
+
+   ComMoveXY(veh, 84, 38);
+
+   if GetSex(ruMechanics[1]) = sex_male then
+      Say(ruMechanics[1], 'DRum-Factory-4')
+   else
+      Say(ruMechanics[1], 'DRuf-Factory-4');
+
+   wait(0$1);
+
+   Say(UnitFilter(ruMechanics, [f_sex, sex_male])[1], 'DRum-Factory-6');
+
+   wait(0$2);
+
+   SetClass(Heike, class_prison);
+
+   ComExitBuilding(Heike);
+   AddComMoveXY(Heike, 168, 54);
+
+   RemoveSeeing(173, 54, 2);
+
+   InGameOff;
+
+   ChangeMissionObjectives('M2b-out');
+
+   // SetAchievement('ACH_TOY'); // dangerous toy
+
+   hasMuchin := false;
+   exit;
+   end;
+
+wait(0$5);
+
+SetWorkingProgress(ruFac, 99);
+
+if Markov in heikeSquad and GetSide(Markov) = 3 then
+   begin
+   SetSide(Markov, 2);
+   ComExitBuilding(Markov);
+   end;
+
+SetSide(Heike, 2);
+
+SetClass(Heike, class_prison);
+
+ComExitBuilding(ruDisturb);
+ComExitBuilding(Heike); 
+AddComMoveXY(Heike, 168, 54);
+
+RemoveSeeing(173, 54, 2);
+
+InGameOff;
+
+wait(3);
+
+ComEnterUnit(ruDisturb, ruMainBase);
+
+wait(0$3);
+
+ChangeMissionObjectives('M2b-out');
+
+hasMuchin := false;
+
+wait(2$00);
+
+repeat
+ wait(0$1);
+
+ if not HasTask(ruDisturb) then
+    ComMoveUnit(ruDisturb, Heike);
+until GetDistUnits(Heike, ruDisturb) < 2 and IsOk(ruDisturb);
+
+if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+   isAlarm := true;
+
+if isAlarm then
+   exit;
+
+ComTurnUnit(Heike, ruDisturb);
+ComTurnUnit(ruDisturb, Heike);
+
+wait(3);
+
+for i := 1 to 3 do
+    CreateCratesArea(5, cratesArea, false);
+
+uc_side := 3;
+uc_nation := nation_russian;
+
+PrepareVehicle(ru_medium_wheeled, engine_siberite, control_manual, ru_cargo_bay, 100);
+veh := CreateVehicle;
+
+PlaceUnitXYD(veh, 104, 41, 3, false);
+
+SetCargo(veh, mat_cans, 100);
+
+PlaceHumanInUnit(CreateHuman, veh);
+
+DialogueOn;
+
+Say(ruDisturb, 'DMcn-Interrupt-1');
+Say(ruDisturb, 'DMcn-Interrupt-2');
+Say(ruDisturb, 'DMcn-Interrupt-c-3');
+
+PlaceSeeing(101, 38, 2, -10);
+CenterOnXY(101, 38);
+
+wait(0$2);
+
+RemoveSeeing(101, 38, 2);
+RemoveUnit(veh);
+
+Say(ruDisturb, 'DMcn-Interrupt-c-4');
+Say(Heike, 'DH-Interrupt-c-5');
+Say(ruDisturb, 'DMcn-Interrupt-c-6');
+Say(Heike, 'DH-Interrupt-c-7');
+Say(ruDisturb, 'DMcn-Interrupt-c-8');
+
+DialogueOff;
+
+hasMuchin := true;
+
+Query('MuchinInfo');
+
+ChangeMissionObjectives('M2c');
+
+repeat
+ wait(0$1);
+
+ if GetDistUnits(ruDisturb, Heike) > 6 then
+    ComMoveUnit(ruDisturb, Heike);
+
+ if UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+    begin
+    isAlarm := true;
+    exit;
+    end;
+
+until UnitFilter(heikeSquad, [f_dist, ruOutpost0, 6]) and GetDistUnits(Heike, ruOutpost0) < 6;
+
+tmp := UnitFilter(heikeSquad union Heike, [[f_class, class_prison], [f_dist, ruOutpost0, 12]]);
+
+for i in tmp do
+    begin
+    SetSide(i, 3);
+    ComMoveXY(i, 101, 38);
+    end;
+
+ComMoveXY(ruDisturb, 104, 37);
+AddComTurnUnit(ruDisturb, Heike);
+
+repeat
+ wait(0$1);
+
+ cr := GetListOfCratesInArea(cratesArea);
+
+ for i in tmp do
+     if not HasTask(i) then
+        ComCollect(i, cr[1], cr[2]);
+
+until not cr;
+
+wait(0$2);
+
+for i in tmp do
+    SetSide(i, 2);
+
+if Kaia in tmp then
+   begin
+   InGameOn;
+
+   ComMoveUnit(Kaia, ruDisturb);
+   ComTurnUnit(ruDisturb, Kaia);
+   AddComTurnUnit(Kaia, ruDisturb);
+
+   Say(Kaia, 'DK-Assassin-1');
+   Say(ruDisturb, 'DMcn-Assassin-2');
+   Say(Kaia, 'DK-Assassin-3');
+   Say(ruDisturb, 'DMcn-Assassin-4');
+   Say(Kaia, 'DK-Assassin-5');
+   Say(ruDisturb, 'DMcn-Assassin-6');
+
+   ComEnterUnit([Kaia, ruDisturb], ruOutpost0);
+
+   wait(0$5);
+
+   Say(Kaia, 'DK-Assassin-7');
+   Say(ruDisturb, 'DMcn-Assassin-8');
+
+   wait(0$0.3);
+
+   Say(Kaia, 'DK-Assassin-9');
+
+   wait(0$2);
+
+   ComExitBuilding(Kaia);
+   RemoveUnit(ruDisturb);
+
+   AddComMoveUnit(Kaia, Heike);
+
+   Say(Kaia, 'DK-Assasin-10');
+
+   InGameOff;
+
+   // SetAchievement('ACH_POKER');
+
+   ChangeMissionObjectives('M2c-out');
+
+   wait(0$3);
+
+   hasMuchin := false;
+   exit;
+   end;
+
+
+ChangeMissionObjectives('M2c-out');
+
+InGameOn;
+
+Say(ruDisturb, 'DMcn-Fail-1');
+
+ComMoveXY(tmp, 114, 17);
+
+wait(0$1);
+
+async;
+ComMoveUnit(ruDisturb, Heike);
+
+Say(ruDisturb, 'DMcn-Fail-2');
+
+ComStop(Heike);
+AddComTurnUnit(Heike, ruDisturb);
+sync;
+
+Say(Heike, 'DH-Fail-3');
+Say(ruDisturb, 'DMcn-Fail-4');
+
+ComMoveXY([Heike, ruDisturb], 41, 19);
+
+wait(0$2);
+
+ComMoveXY(ruDisturb, 40, 19);
+ComMoveXY(Heike, 43, 21);
+AddComTurnUnit(ruDisturb, Heike);
+AddComTurnUnit(Heike, ruDisturb);
+
+RaiseSailEvent(centerCamEvent);
+
+wait(0$2);
+
+Say(ruDisturb, 'DMcn-Fail-5');
+
+wait(0$2);
+
+Say(ruDisturb, 'DMcn-Fail-6');
+
+repeat
+ wait(0$1);
+until IsAt(Heike, 43, 21);
+
+case Query('MuchinQuestion') of
+1: begin
+   Say(ruDisturb, 'DMcn-Fail-7');
+   Say(Heike, 'DH-Fail-8');
+
+   wait(0$0.3);
+
+   Say(Heike, 'DH-Fail-9');
+   Say(Heike, 'DH-Fail-10');
+   Say(ruDisturb, 'DMcn-Fail-11');
+
+   ComAttackUnit(ruDisturb, Heike);
+
+   wait(0$2);
+
+   KillUnit(Heike);
+   end;
+2: begin
+   Say(Heike, 'DH-Fail-a-8');
+   Say(Heike, 'DH-Fail-a-9');
+   Say(ruDisturb, 'DH-Fail-10');
+   Say(Heike, 'DH-Fail-a-11');
+
+   async;
+   ComMoveUnit(ruDisturb, Heike);
+   AddComTurnUnit(ruDisturb, Heike);
+
+   Say(ruDisturb, 'DH-Fail-12');
+   sync;
+
+   wait(0$1);
+
+   Say(Heike, 'DH-Fail-a-13');
+
+   SetLives(ruDisturb, 100);
+   ForceSay(ruDisturb, 'DMcn-Fail-a-14');
+   KillUnit(ruDisturb);
+
+   wait(0$1);
+
+   Say(Heike, 'DH-Fail-a-15');
+
+   YouLost('FailMuchin');
+   end;
+end;
+
+
+InGameOff;
+End;

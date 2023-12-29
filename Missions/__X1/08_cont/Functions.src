@@ -32,12 +32,12 @@ entrance := [ShiftX(x, d, 3), ShiftY(y, d, 3)];
 if not ValidHex(entrance[1], entrance[2]) then
    exit;
 
-result := GetDistUnitXY(unit, entrance[1], entrance[2]) < 5;
+result := GetDistUnitXY(unit, entrance[1], entrance[2]) < 4;
 End;
 
 Export function PlaceExplosives(building);
 begin
-explosivePlantedList := Join(explosivePlantedList, drugsLab);
+explosivePlantedList := Join(explosivePlantedList, building);
 PlaySoundXY(GetX(building), GetY(building), 'PlantBomb');
 End;
 
@@ -50,3 +50,17 @@ for i := 1 to 3 do
     PlaceUnitArea(CreateHuman, swampArea, false);
 End;
 
+
+Export function MarkBuilding(building, marker);
+begin
+if marker then
+   begin
+   PlaceSeeing(GetX(building), GetY(building), 2, -3);
+   SetBName(building, 'target');
+   end
+else
+   begin
+   RemoveSeeing(GetX(building), GetY(building), 2);
+   SetBName(building, '');
+   end;
+End;
