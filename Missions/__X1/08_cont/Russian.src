@@ -1,9 +1,13 @@
-Export russianKillers, ruCommisar, ruDisturb;
+Export russianKillers, ruCommisar, ruDisturb, ruMechanics, ruMechanics2, Stiopa, Laura;
 Export function PrepareRussian;
 var i, j, tmp;
 begin
 uc_side := 3;
 uc_nation := 3;
+
+SetBName(ruKitchen, 'kitchen');
+SetBName(laundry, 'laundry');
+SetBName(ruOutpost3, 'adminSection');
 
 for i in FilterAllUnits([f_type, unit_building]) do
     SetBLevel(i, 7);
@@ -11,7 +15,8 @@ for i in FilterAllUnits([f_type, unit_building]) do
 for i in FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
     begin
     SetResourceType(GetBase(i), mat_cans, 1000);
-    SetResourceType(GetBase(i), mat_oil, 1000); 
+    SetResourceType(GetBase(i), mat_oil, 1000);
+    SetResourceType(GetBase(i), mat_siberit, 100);
     end;
 
 for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do
@@ -19,6 +24,30 @@ for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do
     PrepareSoldier(false, 5 + Difficulty);
     PlaceHumanInUnit(CreateHuman, i);
     end;
+
+for i := 1 to 2 do
+    begin
+    PrepareMechanic(false, 8);
+    ruMechanics := Join(ruMechanics, CreateHuman);
+    PlaceHumanInUnit(ruMechanics[ruMechanics], ruFac);
+    end;
+
+PrepareMechanic(sex_male, 8);
+ruMechanics2 := Join(ruMechanics2, CreateHuman);
+PlaceHumanInUnit(ruMechanics2[ruMechanics2], ruWorkshop);
+
+PrepareMechanic(sex_male, 8);
+hc_name := 'Stiepan Simonov';
+Stiopa := CreateHuman;
+
+PrepareMechanic(sex_female, 8);
+hc_name := 'Laura Dragunov';
+Laura := CreateHuman;
+PlaceHumanInUnit(Laura, ruWorkshop);
+
+PrepareMechanic(sex_male, 8);
+ruMechanics := Insert(ruMechanics, 1, CreateHuman);
+PlaceHumanInUnit(ruMechanics[1], ruFac);
 
 PrepareSoldier(sex_male, 8);
 hc_name := 'Pavel Muchin';
@@ -132,6 +161,21 @@ for i := 1 to spawn do
 End;
 
 Export function SpawnAdditionalRuGuards;
+var i, un, spawn;
 begin
-// todo, spawn dodatkowych strazników
+uc_side := 6;
+uc_nation := nation_russian;
+
+spawn := [s71, s81, s91, s101];
+
+for i := 1 to spawn do
+    begin
+    PrepareSoldier(false, [4, 5, 6, 7][Difficulty]);
+    un := CreateHuman;
+    SetTag(un, 0);
+    ruPatrol := Join(ruPatrol, un);
+
+    PlaceUnitArea(un, spawn[i], false);
+    ComHold(un);
+    end;
 End;
