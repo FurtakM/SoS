@@ -1,4 +1,4 @@
-Every 0$2 trigger not isAlarm marked gameStartEvent do
+Every 0$2 trigger not isAlarm and ruPatrol do
 var i, j, points, tag, tmp;
 begin
 enable;
@@ -10,7 +10,7 @@ points := [ [g11, g12, g13, g14],
 
 for i in ruPatrol do
     begin
-    tmp := UnitFilter(Heike union heikeSquad, [[f_side, 2], [f_dist, i, 7]]);
+    tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_dist, i, 7]]);
 
     if See(2, i) and tmp then
        begin
@@ -19,7 +19,7 @@ for i in ruPatrol do
 
        ComTurnUnit(i, NearestUnitToUnit(tmp, i));
        CaughtByPatrol(i, tmp);
-       break;
+       continue;
        end;  
 
     if HasTask(i) then
@@ -44,8 +44,24 @@ End;
 Function CaughtByPatrol(guard, units);
 var i, alone;
 begin
-if UnitFilter(units, [f_nation, nation_russian]) then
+if UnitFilter(units, [f_nation, nation_russian]) or UnitFilter(units, [f_inarea, prisonArea]) then
    exit;
+
+if UnitFilter(units, [[f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_revolver], [f_class, class_hunter]]]) then
+   begin
+   DialogueOn;
+
+   case GetSex(guard) of
+        sex_male: Say(guard, 'DRum-Fail-3');
+        sex_female: Say(guard, 'DRum-Fail-3');
+        end;
+
+   DialogueOff;
+
+   wait(0$5);
+   isAlarm := true;
+   exit;
+   end;
 
 DialogueOn;
 
@@ -59,23 +75,49 @@ if not Heike in units then
         sex_female: Say(guard, 'DRuf-Guard-1');
         end;
 
-   Query('CaughtSquadInfo');
+   case Query('SurrenderInfoPeople') of
+        1: begin
+           Query('CaughtSquadInfo');
 
-   for i in units do
-       begin
-       if Carry(i) then
-          SetCargo(i, mat_cans, 0);
+           for i in units do
+               begin
+               if Carry(i) then
+                  SetCargo(i, mat_cans, 0);
 
-       SetSide(i, 5);
-       ComMoveXY(i, 113, 17);
-       end;
+               SetSide(i, 5);
+               ComMoveXY(i, 113, 17);
+               end;
 
-   ComMoveXY(guard, 113, 17);
+           ComMoveXY(guard, 113, 17);
 
-   DialogueOff;
-   exit;
+           DialogueOff;
+           exit;
+           end;
+        2: begin
+           DialogueOff;
+
+           wait(0$2);
+
+           SetAttitude(6, 2, att_enemy, true);
+           ComAttackUnit(guard, units[1]);
+
+           case GetSex(guard) of
+                sex_male: Say(guard, 'DRum-Fail-3');
+                sex_female: Say(guard, 'DRum-Fail-3');
+                end;
+
+           wait(0$5);
+
+           if IsOk(guard) then
+              isAlarm := true
+           else
+              begin
+              SetAttitude(6, 2, att_neutral, true);
+              SetAttitude(3, 2, att_neutral, true);
+              end;
+           end; 
+        end;
    end;
-
 
 if Carry(Heike) then
    begin
