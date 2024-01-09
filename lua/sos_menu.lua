@@ -564,6 +564,7 @@ function backToMenu_lite()
     -- loadMenuThings();
     OW_menumusic(false);  
 
+    killGameMusic();
     playMenuMusic(0);
 
     if getVisible(Multi_Debrief) then
@@ -572,6 +573,7 @@ function backToMenu_lite()
 end;
 
 function backToMenu()
+    killGameMusic();
     playMenuMusic(1);
 
     setVisible(game, false);
