@@ -165,6 +165,29 @@ ChangeMissionObjectives('BuildBase');
 SaveForQuickRestart;
 End;
 
+Every 0$3+0$2 trigger americanContact and not americanBaseCaptured do
+begin
+Say(usCommander, 'DUsm-4-assault');
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_ok], [f_inarea, americanBaseArea]]);
+
+if not IsOk(usCommander) or americanBaseCaptured then
+   exit;
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_ok], [f_inarea, americanBaseArea]]);
+
+wait(0$3);
+
+if not IsOk(usCommander) or americanBaseCaptured then
+   exit;
+
+Say(usCommander, 'DUsm-3-assault');
+End;
+
 // see hill
 Every 0$1 trigger not americanBaseSpoted and not americanBaseCaptured and FilterUnitsInArea(hillArea, [f_side, 2]) and not americanBaseCaptured do
 begin
@@ -237,7 +260,7 @@ End;
 // american base captured
 Every 0$1 trigger GetSide(usDepot) = 2 or
                   FilterUnitsInArea(americanBaseArea, [[f_side, 1], [f_not, [f_ok]], [f_btype, b_breastwork]]) or
-                  FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 1 or
+                  FilterUnitsInArea(americanBaseArea, [f_side, 2]) > 2 or
                   usForces <= 4 do
 var i, p;
 begin

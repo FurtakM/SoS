@@ -389,6 +389,8 @@ function showSkirmishWindow(MODE)
 		end;
 
 		SKIRMISH_INIT = true;
+
+		showChangeSkirmishPanel(1);
 	else
 		setVisible(menu.window_skirmish, false);
 		showMenuButton(2);

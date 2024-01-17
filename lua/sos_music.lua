@@ -22,7 +22,27 @@ function sound.finish(ID)
     end;
 end;
 
+function killGameMusic()
+    local music = sound:getLast();
+
+    if music then
+        OW_OAL_STOP(music.ID);
+    end;
+end
+
+function playMusic(TRACK, CALLBACK)
+    if (strlen(CALLBACK) == 0) then
+        CALLBACK = 'OW_FORCEMUSICDISABLE(false);';
+    end;
+
+    sound.play('Hudba/' .. TRACK, CALLBACK, VOLUME_MUSIC);
+end;
+
 function playMenuMusic(MODE)
+    if (getvalue(OWV_ISEDITOR)) then
+        return;
+    end;
+
     if (MODE == 0) then
         if (SOS_MUSIC_MENU_ID > 0) then
             sound.finish(SOS_MUSIC_MENU_ID);

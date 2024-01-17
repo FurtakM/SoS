@@ -21,3 +21,4 @@ include('sos_waypoint');
 include('sos_ingame');
 include('sos_locker');
 include('sos_change_interface');
+include('sos_map_end');

@@ -199,7 +199,7 @@ End;
 
 Export mines, miners, hovers, hovers_driver, tanks;
 Every 0$01 do
-var un, p, i;
+var un, p, i, tmp;
 begin
 enable;
 
@@ -243,14 +243,16 @@ enable;
 
        for i = 1 to (mines/2) do
            begin
-           if GetSide(HexInfo(mines[p], mines[p+1])) in [3,6] then
-              if MineAtPos(mines[p], mines[p+1]) then
-                 if GetDistUnitXY(NearestUnitToXY(miners, mines[p], mines[p+1]), mines[p], mines[p+1]) < 30 then
-                    begin
-                    LaunchMineAtPos(mines[p], mines[p+1], 2);
-                    if not mines_trigger then
-                       mines_trigger := true;
-                    end;
+           tmp := HexInfo(mines[p], mines[p+1]);
+
+           if tmp and MineAtPos(mines[p], mines[p+1]) then
+             if GetSide(HexInfo(mines[p], mines[p+1])) in [3,6] and GetDistUnitXY(NearestUnitToXY(miners, mines[p], mines[p+1]), mines[p], mines[p+1]) < 30 then
+                begin
+                LaunchMineAtPos(mines[p], mines[p+1], 2);
+
+                if not mines_trigger then
+                   mines_trigger := true;
+                end;
 
            p := p + 2;
            end;
