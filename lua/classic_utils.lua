@@ -49,6 +49,10 @@ TID_Main_Menu_Options_Objectives_Desc = 5036;
 TID_Main_Menu_SteamOverlay_Desc = 5037;
 TID_Main_Menu_ChangeAvatar = 5038;
 
+TID_Main_Menu_Options_Monitors_All = 5043;
+TID_Main_Menu_Options_Audio_Desc = 5044;
+TID_Main_Menu_Options_Audio_Hint = 5045;
+
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
 TID_Main_Menu_Campaign_X2_Hint = 5104;

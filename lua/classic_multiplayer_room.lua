@@ -1475,7 +1475,7 @@ function refreshPlayerView()
 			    posY, 
 			    150,
 			    18, 
-			    loc(839), -- join
+			    loc(824), -- join
 			    'joinToTeam(' .. i .. ', -1);',
 			    {
 			    	texture = 'classic/edit/menu_button_small_l.png',

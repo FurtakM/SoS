@@ -293,3 +293,9 @@ setVisible(menu.side, false);
 setVisible(menu.window, true);
 setVisible(classic_logo, true);
 setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));
+
+SGUI_INIT_CLASSIC_OLD = Init;
+function Init()
+    setText(menu.window.user, loc(TID_Main_Menu_User) .. ': ' .. getvalue(OWV_PROFILENAME));
+    SGUI_INIT_CLASSIC_OLD();
+end;

@@ -38,6 +38,7 @@ OPTION_GRAPHICS_MONITOR = 22;
 OPTION_CONTROLS_PING = 23;
 OPTION_GAME_LOCKSPEED = 24;
 OPTION_INTERFACE_FACTORY = 25;
+OPTION_SOUND_AUDIO = 26;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -117,6 +118,30 @@ function getWindowedList()
     };
 end;
 
+function getAudioDeviceList() 
+    local deviceList = OW_GET_AUDIO_INFO();
+    local list = {};
+
+    for i = 1, #deviceList.DEVICES do
+        list[i] = deviceList.DEVICES[i].NAME;
+    end;
+
+    return list;
+end;
+
+function getMonitorsList()
+    local monitorsList = OW_GET_DISPLAY_INFO();
+    local list = {
+        loc(TID_Main_Menu_Options_Monitors_All)
+    };
+
+    for i = 1, #monitorsList.MONITORS do
+        list[i+1] = monitorsList.MONITORS[i].FULLNAME;
+    end;
+
+    return list;
+end
+
 function getSetting(setting)
     if setting == OPTION_STEAMOVERLAY then
         return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_STEAMOVERLAY', true);
@@ -143,7 +168,7 @@ function getSetting(setting)
     end;
 
     if setting == OPTION_GRAPHICS_GRAPH_TRANS then
-        return OW_SETTING_READ_NUMBER('DEBRIEF', 'TRANS_FILL', 0);
+        return OW_SETTING_READ_NUMBER('DEBRIEF', 'TRANS_FILL', 1);
     end;
 
     if setting == OPTION_SOUND_MUSIC then
@@ -163,6 +188,36 @@ function getSetting(setting)
     end;
 
     if setting == OPTION_GRAPHICS_MONITOR then
+        local monitor = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_MONITOR);    
+
+        if (monitor == nil) then
+            monitor = 0;
+        else
+            local monitors = getMonitorsList();
+
+            if (monitor > #monitors) then
+                monitor = 0;
+            end;
+        end;
+
+        return monitor + 1;
+    end;
+
+    if setting == OPTION_SOUND_AUDIO then
+        local deviceGuid = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_AUDIO_DEVICE);
+        
+        if (deviceGuid == nil) then
+            return 1;
+        else
+            local list = OW_GET_AUDIO_INFO();
+
+            for i = 1, #list.DEVICES do
+                if list.DEVICES[i].GUID == deviceGuid then
+                    return i;
+                end;
+            end;
+        end;
+
         return 1;
     end;
 
@@ -197,7 +252,7 @@ function getSetting(setting)
     end;
 
     if setting == OPTION_GAME_SUBTITLES then
-       return OW_SETTING_READ_NUMBER('OPTIONS', 'SUBTITLES', 0);
+       return OW_SETTING_READ_NUMBER('OPTIONS', 'SUBTITLES', 4);
     end;
 
     if setting == OPTION_GRAPHICS_RESOLUTION then
@@ -425,6 +480,29 @@ function saveComboBoxSetting(setting, value)
         for i = 1, table.getn(windowed) do
             if (value == windowed[i]) then
                 OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_WINDOWED, (i >= 2) and true or false);
+                break;
+            end;
+        end;
+    end;
+
+    if setting == OPTION_GRAPHICS_MONITOR then
+        local monitors = getMonitorsList();
+
+        for i = 1, #monitors do
+            if (value == monitors[i]) then
+                OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_MONITOR, i - 1);
+                break;
+            end;
+        end;
+    end;
+
+    if setting == OPTION_SOUND_AUDIO then
+        local list = OW_GET_AUDIO_INFO();
+
+        for i = 1, #list.DEVICES do
+            if (value == list.DEVICES[i].NAME) then
+                OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_AUDIO_DEVICE, list.DEVICES[i].GUID);
+                break;
             end;
         end;
     end;
@@ -445,7 +523,7 @@ menu.window_options = getElementEX(
 menu.window_options.panel = getElementEX(
     menu.window_options, 
     anchorL, 
-    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 240, 753, 480), 
+    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 300, 753, 600), 
     true,
     {
         texture = 'classic/edit/background_options_2.png'
@@ -455,7 +533,7 @@ menu.window_options.panel = getElementEX(
 menu.window_options.panel.cancel = clButton(
     menu.window_options.panel, 
     12, 
-    440,
+    560,
     236, 
     30,
     loc(TID_msg_Cancel), 
@@ -466,7 +544,7 @@ menu.window_options.panel.cancel = clButton(
 menu.window_options.panel.shortcuts = clButton(
     menu.window_options.panel, 
     255, 
-    440,
+    560,
     244, 
     30,
     loc(TID_msg_Shortcuts), 
@@ -477,7 +555,7 @@ menu.window_options.panel.shortcuts = clButton(
 menu.window_options.panel.accept = clButton(
     menu.window_options.panel, 
     505, 
-    440,
+    560,
     236, 
     30,
     loc(TID_msg_Ok), 
@@ -635,10 +713,42 @@ menu.window_options.panel.sound.video_slider = clSliderElement(
     }
 );
 
+menu.window_options.panel.sound.audio_listbox = clComboBox(
+    menu.window_options.panel.sound,
+    5,
+    165,
+    getAudioDeviceList(),
+    getSetting(OPTION_SOUND_AUDIO),
+    'saveComboBoxSetting(' .. OPTION_SOUND_AUDIO .. ', "VALUE")',
+    {
+        texture = 'classic/edit/combobox-small-opt.png',
+        textureButton = 'classic/edit/combobox-small-button-opt.png',
+        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+        hint = loc(TID_Main_Menu_Options_Audio_Hint)
+    }
+);
+
+menu.window_options.panel.sound.audio_label = getLabelEX(
+    menu.window_options.panel.sound,
+    anchorLT,
+    XYWH(9, 151, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Audio_Desc),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
 menu.window_options.panel.sound.desc = getLabelEX(
     menu.window_options.panel.sound,
     anchorLT,
-    XYWH(6, 184, 230, 32),
+    XYWH(6, 244, 230, 32),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Sound_Label),
     {
@@ -810,7 +920,7 @@ menu.window_options.panel.language.subtitles_background_slider = clSliderElement
 menu.window_options.panel.language.desc = getLabelEX(
     menu.window_options.panel.language,
     anchorLT,
-    XYWH(6, 184, 230, 32),
+    XYWH(6, 244, 230, 32),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Lang_Label),
     {
@@ -948,15 +1058,14 @@ menu.window_options.panel.graphics.monitor_listbox = clComboBox(
     menu.window_options.panel.graphics,
     5,
     132,
-    {loc(TID_Main_Menu_Options_Main_Screen)},
+    getMonitorsList(),
     getSetting(OPTION_GRAPHICS_MONITOR),
     'saveComboBoxSetting(' .. OPTION_GRAPHICS_MONITOR .. ', "VALUE")',
     {
         texture = 'classic/edit/combobox-small-opt.png',
         textureButton = 'classic/edit/combobox-small-button-opt.png',
         textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
-        hint = loc(TID_Options_Amonitor_Desc),
-        disabled = true
+        hint = loc(TID_Options_Amonitor_Desc)
     }
 );
 
@@ -980,7 +1089,7 @@ menu.window_options.panel.graphics.monitor_label = getLabelEX(
 menu.window_options.panel.graphics.desc = getLabelEX(
     menu.window_options.panel.graphics,
     anchorLT,
-    XYWH(6, 184, 230, 32),
+    XYWH(6, 244, 230, 32),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Graphics_Label),
     {
@@ -999,7 +1108,7 @@ menu.window_options.panel.graphics.desc = getLabelEX(
 menu.window_options.panel.controls = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(8, 240, 242, 192), 
+    XYWH(8, 300, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
@@ -1100,7 +1209,7 @@ menu.window_options.panel.controls.ping_label = getLabelEX(
 menu.window_options.panel.game = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(256, 240, 242, 192), 
+    XYWH(256, 300, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
@@ -1285,7 +1394,7 @@ menu.window_options.panel.game.lock_speed_label = getLabelEX(
 menu.window_options.panel.interface = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(503, 240, 242, 192), 
+    XYWH(503, 300, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
