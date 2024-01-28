@@ -50,7 +50,7 @@ for i in FilterAllUnits([[f_side, 3], [f_btype, b_bunker]]) do
 
 for i in FilterAllUnits([[f_side, 3], [f_btype, b_barracks]]) do
     begin
-    for j := 1 to [2, 2, 3, 3][Difficulty] do
+    for j := 1 to [2, 3, 4, 5][Difficulty] do
         begin
         PrepareSoldier(false, [5, 6, 7, 8][Difficulty]);
         PlaceHumanInUnit(CreateHuman, i);
@@ -228,7 +228,7 @@ weapon := [ru_heavy_machine_gun, ru_gun, ru_gatling_gun, ru_heavy_gun, ru_rocket
 if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
    weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
 
-if tick < [15$00, 13$00, 11$00, 10$00][Difficulty] then
+if tick < [12$00, 11$00, 10$00, 9$00][Difficulty] then
    weapon := [ru_gun, ru_gatling_gun][rand(1,2)];
 
 AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
@@ -260,43 +260,60 @@ if eng then
        begin
        tag := GetTag(i);
 
-       if not b and not ruBuildList and tag = 1 then
-          begin
-          SetTag(i, 0);
-          ComEnterUnit(i, ruDep);
-          end;
+       case tag of
+            0: begin
+               if b then
+                  begin
+                  SetTag(i, 1);
+                  continue;
+                  end;
 
-       if (b or ruBuildList) and tag = 0 then
-          SetTag(i, 1);
+               if not ruBuildList then
+                  ComEnterUnit(i, ruDep)
+               else if FilterUnitsInArea(ruDefendArea, [f_enemy, 3]) = 0 and CanBeBuilt(ruDep, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]) then
+                  begin
+                  if IsInUnit(i) then
+                     ComExitBuilding(i)
+                  else
+                     ComBuild(i, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]);
+                  end;
+               end;
+            1: begin
+               if not b then
+                  begin
+                  SetTag(i, 0);
+                  continue;
+                  end;
 
-       if IsInUnit(i) and tag = 1 then
-          ComExit(i);
+               if IsInUnit(i) then
+                  ComExitBuilding(i);
 
-       if GetLives(i) < 500 and tag = 1 then
-          SetTag(i, 2); // need heal
+               if GetLives(i) < 650 then
+                  begin
+                  SetTag(i, 2);
+                  continue;
+                  end;
 
-       if GetLives(i) = 1000 and tag = 2 then
-          SetTag(i, 1); // ok
+               if b then
+                  ComRepairBuilding(i, NearestUnitToUnit(b, i)); 
+               end;
+            2: begin
+               if GetLives(i) = 1000 then
+                  begin
+                  SetTag(i, 1);
+                  continue;
+                  end;
+               
+               if GetDistUnitXY(i, 84, 93) > 6 then
+                  begin
+                  ComMoveXY(i, 84, 93);
+                  AddComHold(i);
+                  end;  
+               end;
+            end;
 
-       if tag = 2 then
-          begin
-          if GetDistUnitXY(i, 84, 93) > 6 then
-             begin
-             ComMoveXY(i, 84, 93);
-             AddComHold(i);
-             end;
-          end;
-
-       if IsInArea(i, ruDefendArea) then
-          ComMoveToArea(i, ruBaseArea);
-
-       if tag = 1 then // can work
-          begin
-          if b then
-             ComRepairBuilding(i, NearestUnitToUnit(b, i))
-          else if ruBuildList and FilterUnitsInArea(ruDefendArea, [f_enemy, 3]) = 0 and CanBeBuilt(ruDep, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]) then
-             ComBuild(i, ruBuildList[1][1], ruBuildList[1][2], ruBuildList[1][3], ruBuildList[1][4]);
-          end;
+       if not IsInArea(i, ruBaseArea) and not IsInUnit(i) then
+          ComMoveXY(i, 91, 95);
        end;
    end;
 End;
@@ -316,7 +333,7 @@ for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
     if chassis in [ru_medium_wheeled, ru_medium_tracked] and weapon = ru_heavy_gun then
        weapon := [ru_gun, ru_rocket_launcher][rand(1,2)];
 
-    if tick < [17$00, 15$00, 13$00, 11$00][Difficulty] then
+    if tick < [15$00, 13$00, 11$00, 9$00][Difficulty] then
        weapon := [ru_gun, ru_gatling_gun, ru_heavy_machine_gun][rand(1,3)];
 
     PrepareVehicle(chassis, engine_combustion, control_computer, weapon, 90);
@@ -338,3 +355,4 @@ begin
 enable; 
 AgressiveMove(russianAttackers, [ [126,108], [107,85], [82,62], [73,46], [62,31], [52,17] ]);
 End;
+

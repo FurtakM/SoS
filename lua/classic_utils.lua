@@ -52,6 +52,11 @@ TID_Main_Menu_ChangeAvatar = 5038;
 TID_Main_Menu_Options_Monitors_All = 5043;
 TID_Main_Menu_Options_Audio_Desc = 5044;
 TID_Main_Menu_Options_Audio_Hint = 5045;
+TID_msg_Reset = 5046;
+TID_Main_Menu_Shortcuts_Files_Hint = 5047;
+TID_msg_SaveAs = 5048;
+TID_msg_Default = 5049;
+TID_msg_Search = 5050;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
