@@ -2,6 +2,7 @@ Export function Action;
 var i, tmp, un, inUnit;
 begin
 Video(true);
+invincibleMode := true;
 
 RevealMapOnXY(50, 12, 1, -56);
 
@@ -65,6 +66,7 @@ case gammaCommander of
 
 SayRadio(Harisson, 'D1-Har-2');
 
+invincibleMode := false;
 Video(false);
 
 ChangeMissionObjectives('M1');
@@ -76,17 +78,17 @@ PrepareRussianAttack(1);
 
 wait(4$30);
 
-if Difficulty > 2 then
+if Difficulty > 1 then
    PrepareRussianAttack(2);
 
-if Difficulty > 3 then
+if Difficulty > 2 then
    begin
    for i := 1 to 4 do
        begin
        uc_side := 6;
        uc_nation := 3;
 
-       PrepareSoldier(false, 6);
+       PrepareSoldier(false, 7);
        un := CreateHuman;
        PlaceUnitXYR(un, 122, 89, 3, false);
 
@@ -102,8 +104,16 @@ if Difficulty > 3 then
    end;
 End;
 
+// invincible mode for cutscene
+Every 0$1 trigger invincibleMode do
+var i;
+begin
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_not, [f_lives, 1000]]]) do
+    SetLives(i, 1000);
+End;
+
 // support from delta
-Every 0$45 trigger FilterAllUnits([[f_side, 1], [f_see, 3]]) = 0 and tick > 5$00 do
+Every 0$25 trigger tick > 7$00 do
 var dialog, p;
 begin
 PrepareSupportFromDelta;
@@ -137,7 +147,12 @@ if GetTech(tech_advmet, 1) = state_researched then
 
 PrepareMacmillanSquad;
 
+wait(0$1);
+
+DialogueOn;
 CenterNowOnUnits(JMM);
+dwait(0$2);
+DialogueOff;
 
 wait(0$10);
 
@@ -149,7 +164,7 @@ repeat
  wait(0$1);
  p := Inc(p);
 
- if p > 100 then
+ if p > 120 then
     exit;
 
 until IsInArea(JMM, gammaBaseArea) or IsInArea(IsInUnit(JMM), gammaBaseArea) or GetDistUnits(JMM, Joan) < 10 or FilterAllUnits([[f_side, 1], [f_or, [f_tag, 106], [f_tag, 107]], [f_dist, JMM, 12]]);
@@ -187,7 +202,7 @@ else
    if gammaCommander = 3 then
       begin
       if SayRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, 1], [f_tag, 106], [f_sex, sex_male]]), 'D3-Sol1-1b', '') then
-          Say(JMM, 'D3-JMM-2');
+         Say(JMM, 'D3-JMM-2');
       end;
    end;
 
@@ -280,6 +295,8 @@ DialogueOn;
 SayRadio(Powell, 'D4a-Pow-1');
 DialogueOff;
 
+RaiseSailEvent(1);
+
 SikorskiCounter;
 
 PrepareSikorsky;
@@ -289,7 +306,24 @@ CenterNowOnUnits(Sikorski);
 DialogueOn;
 
 Say(Sikorski, 'D5-Sik-1');
-Say(JMM, 'D5-JMM-1a');
+
+if FilterUnitsInArea(ruDefendArea, [f_side, 1]) > 1 then
+   begin
+   Say(JMM, 'D5-JMM-1');
+   Say(Sikorski, 'D7a-Sik-1');
+   DialogueOff;
+
+   ChangeMissionObjectives('M2');
+
+   RaiseSailEvent(1);
+   SikorskiAttack;
+   exit;
+   end
+else if FilterUnitsInArea(gammaBaseArea, [f_enemy, 1]) then
+   Say(JMM, 'D5-JMM-1b')
+else
+   Say(JMM, 'D5-JMM-1a');
+
 Say(Sikorski, 'D5-Sik-2');
 
 case Query('QSikorski') of
@@ -372,7 +406,7 @@ DialogueOff;
 End;
 
 // end mission
-Every 0$2 trigger jmmArrival and IsDead(ruDep) and IsDead(ruCommander) and FilterAllUnits([[f_side, 3], [f_btype, b_barracks]]) = 0 do
+Every 0$2 trigger jmmArrival and IsDead(ruDep) and IsDead(ruCommander) and FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_barracks]]) = 0 do
 var i, tmp, prefix;
 begin
 Video(true);
@@ -405,7 +439,7 @@ if sikorskiStatus = 1 and IsOk(Sikorski) then
 if FilterAllUnits([f_side, 4]) = 0 and sikorskiArriveCounter then
    SetAchievement('ACH_BLITZKRIEG');
 
-if tick <= 25$08 then
+if tick <= 45$10 then
    begin
    wait(3);
    SetAchievement('ACH_ASPEED_8');
@@ -468,7 +502,7 @@ if IsLive(Houten) then
 
 SaveCharacters(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, 1]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Denis, Joan, Houten, Khatam], '08_other_survivors');
 SaveBase(gammaBaseArea);
-SaveVariable(sikorskiIsKilled, '08_SikorskiStatus');
+SaveVariable((not sikorskiIsKilled), '08_SikorskiStatus');
 
 YouWin;
 End;

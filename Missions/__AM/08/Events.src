@@ -5,7 +5,7 @@ if event = 1 then
 End;
 
 On UnitDestroyed(un) do
-var tmp, chassis, weapon, btype;
+var i, tmp, chassis, weapon, btype;
 begin
 SOS_UnitDestroyed(un);
 
@@ -20,6 +20,20 @@ if un = Sikorski then
 
 if GetSide(un) = 1 and GetBType(un) in [b_depot, b_warehouse] then
    YouLost('Destroyed');
+
+if un = ruDep then
+   begin
+   for i in FilterAllUnits([[f_side, 3], [f_class, class_soldier]]) do
+       begin
+       tmp := NearestUnitToUnit(FilterUnitsInArea(ruDefendArea, [f_enemy, 3]), i);
+
+       if GetBType(IsInUnit(i)) = b_bunker then
+          begin
+          ComExitBuilding(i);
+          AddComAgressiveMove(i, GetX(tmp), GetY(tmp));
+          end;
+       end;
+   end;
 
 if un in ruMobile then
    ruMobile := ruMobile diff un;
@@ -65,6 +79,8 @@ if GetSide(un) = 3 then
 
    if GetClass(un) = class_mechanic then
       begin
+      killMechCounter := Inc(killMechCounter);
+
       if ruMechCounter = 0 or not IsOk(ruFac) then
          exit;
 
@@ -78,6 +94,13 @@ if GetSide(un) = 3 then
       PlaceUnitXY(tmp, 145, 133, false);
 
       ComEnterUnit(tmp, ruFac);
+
+      repeat
+       wait(0$1);
+
+       if not HasTask(tmp) then
+          ComEnterUnit(tmp, ruFac);
+      until IsInUnit(tmp);
       end;
    end;
 End;
@@ -105,7 +128,7 @@ if GetSide(driver) = 3 then
 
        if not HasTask(driver) and UnitsInside(ruFac) < 6 then
           ComEnterUnit(driver, ruFac);
-      until not IsOk(ruFac) or IsDead(driver) or IsInUnit(driver);
+      until IsDead(driver) or IsInUnit(driver);
       end
    else
       begin
@@ -200,12 +223,21 @@ if InArea(x, y, ruCrates) then
    end;
 End;
 
+On VehicleCaptured(new, old, side, unit) do
+begin
+if GetWeapon(new) = ru_rocket_launcher then
+   captureRocketCounter := Inc(captureRocketCounter);
+End;
+
 On BuildingComplete(b) do
 var i, tmp;
 begin
 if GetSide(b) = 3 then
    begin
    ruBuildList := Delete(ruBuildList, 1);
+
+   if GetBType(b) = b_armoury then
+      ComUpgrade(b);
 
    if GetBType(b) in [b_bunker, b_turret] then
       begin

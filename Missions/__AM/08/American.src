@@ -655,6 +655,9 @@ End;
 Export function PrepareSikorsky;
 var i, un, veh, tmp;
 begin
+EraseResourceArea(mat_cans, sikorskiOuterArea);
+EraseResourceArea(mat_oil, sikorskiOuterArea);
+
 tmp := FilterUnitsInArea(northGammaSupportArea, [f_not, [f_type, unit_building]]);
 
 if tmp then
@@ -772,10 +775,55 @@ End;
 Export Function SikorskiAttack;
 var i, tmp, enemy, points, point, filter;
 begin
+tmp := FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_not, [f_type, unit_building]], [f_not, [f_control, control_remote]]]);
+
+if tmp then
+   begin
+   for i in tmp do
+       begin
+       SetSide(i, 4);
+       ComMoveXY(i, 42, 22);
+       end;
+
+   repeat
+    wait(0$3);
+    ComMoveXY(tmp, 51, 16);
+   until not UnitFilter(tmp, [f_inarea, sikorskiOuterArea]);
+
+   for i in tmp do
+       SetSide(i, 1);
+   end;
+
+tmp := FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_control, control_remote]]);
+
+if tmp then
+   begin
+   ComMoveXY(tmp, 40, 32);
+   wait(0$3);
+   end;
+
+tmp := FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]);
+
+if tmp then
+   begin
+   repeat
+    wait(0$1);
+
+    tmp := FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]);
+
+    for i in FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_type, unit_vehicle]]]) do
+        ComAttackUnit(i, tmp[1]);
+   until not tmp;
+   end;
+
+wait(0$2);
+
 tmp := FilterAllUnits([f_side, 4]);
 
-ComAgressiveMove(tmp, 55, 62);
+AgressiveMove(tmp, [ [55, 62] ]);
 AddComWait(tmp, 0$05);
+
+wait(0$5);
 
 AddComAgressiveMove(UnitFilter(tmp, [f_tag, 101]), 58, 96);
 AddComHold(UnitFilter(tmp, [f_tag, 101]));

@@ -237,6 +237,10 @@ TID_ACH_EXP = 6530;
 TID_ACH_EXP_DESC = 6531;
 TID_ACH_PROD = 6532;
 TID_ACH_PROD_DESC = 6533;
+TID_ACH_TOOL = 6534;
+TID_ACH_TOOL_DESC = 6535;
+TID_ACH_MECH = 6536;
+TID_ACH_MECH_DESC = 6537;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -488,6 +492,20 @@ achievements = {
         loc(TID_ACH_ARMOR), 
         loc(TID_ACH_ARMOR_DESC),
         true,
+        0,
+        0
+    },
+    ['ACH_TOOL'] = {
+        loc(TID_ACH_TOOL), 
+        loc(TID_ACH_TOOL_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_MECH'] = {
+        loc(TID_ACH_MECH), 
+        loc(TID_ACH_MECH_DESC),
+        false,
         0,
         0
     },
@@ -1253,6 +1271,8 @@ achievsCategory = {
         'ACH_HEAVYGUN',
         'ACH_BLITZKRIEG',
         'ACH_ARMOR',
+        'ACH_TOOL',
+        'ACH_MECH',
         'ACH_ASPEED_8',
         'ACH_BULLDOZER',
         'ACH_COUNTERSTRIKE',
