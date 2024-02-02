@@ -154,12 +154,31 @@ Say(Yakotich, 'D1a-Rus1-2');
 
 wait(0$1);
 
-SaveCharacters(tmp diff [Gary, Bobby, Cyrus], '09_prev_squad');
+ContiuneMission;
+End;
+
+On DialogueSkipped(d) do
+begin
+ContiuneMission;
+End;
+
+Export function ContiuneMission;
+var i, tmp, lives;
+begin
+tmp := FilterAllUnits([[f_side, 4], [f_type, unit_human]]);
+SaveCharacters(tmp diff [Sikorski, Truman, Gary, Bobby, Cyrus], '09_prev_squad');
 
 tmp := [];
 
-for i in FilterUnitsInArea(ovsyenko_base, [f_type, unit_building]) do
-    tmp := Replace(tmp, tmp + 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
+for i in FilterUnitsInArea(ovsyenko_base, [f_or, [f_btype, b_depot], [f_btype, b_breastwork]]) do
+    begin
+    lives := GetLives(i);
+
+    if lives = 1000 then
+       lives := rand(500, 950);
+
+    tmp := Replace(tmp, tmp + 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), lives]);
+    end;
 
 if not FilterUnitsInArea(ovsyenko_base, [f_btype, b_depot]) then
    tmp := Replace(tmp, tmp + 1, [b_depot, 102, 118, 5, 350]);
