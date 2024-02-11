@@ -282,22 +282,26 @@ begin
 end;
 
 // Also lost
-Every 0$10 trigger (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend do
-begin
-enable;
-
-wait(0$10);
-
+Every 0$5 trigger (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend do
+begin 
 if (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend then
-   begin
-   disable;
-   InGameOn;
-   CenterNowOnXY(73,18);
-   SayRadio(Powell, 'D6b-Pow-1');
-   YouLost('Powell');
-   InGameOff;
-   end;
+   Query('QAttack');
 
+wait(0$20);
+
+repeat
+ wait(0$10);
+
+ if arabianTrait = 1 then
+    exit;
+
+until (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend;
+
+InGameOn;
+CenterNowOnXY(73,18);
+SayRadio(Powell, 'D6b-Pow-1');
+YouLost('Powell');
+InGameOff;
 End;
 
 On UnitDestroyed(unit) do 

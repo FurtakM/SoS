@@ -1,13 +1,13 @@
-if (parseInt(MOD_DATA.Static_Menu) == 0) then
+function DynamicMenuBackgroundInit()
     include('Extensions/transition');
 
-    TEXTURE1 = loadOGLTexture('mainbackground1.png', true);
-    TEXTURE2 = loadOGLTextureBG('mainbackground2.png', true, false, true);
-    TEXTURE3 = loadOGLTextureBG('mainbackground3.png', true, false, true);
-    TEXTURE4 = loadOGLTextureBG('mainbackground4.png', true, false, true);
-    TEXTURE5 = loadOGLTextureBG('mainbackground5.png', true, false, true);
-    TEXTURE6 = loadOGLTextureBG('mainbackground6.png', true, false, true);
-    TEXTURE7 = loadOGLTextureBG('mainbackground7.png', true, false, true);
+    TEXTURE1 = loadOGLTexture('mainbackground1.simg', true);
+    TEXTURE2 = loadOGLTextureBG('mainbackground2.simg', true, false, true);
+    TEXTURE3 = loadOGLTextureBG('mainbackground3.simg', true, false, true);
+    TEXTURE4 = loadOGLTextureBG('mainbackground4.simg', true, false, true);
+    TEXTURE5 = loadOGLTextureBG('mainbackground5.simg', true, false, true);
+    TEXTURE6 = loadOGLTextureBG('mainbackground6.simg', true, false, true);
+    TEXTURE7 = loadOGLTextureBG('mainbackground7.simg', true, false, true);
 
 
     LAST_USED_TEXTURE = 1;
@@ -31,8 +31,20 @@ if (parseInt(MOD_DATA.Static_Menu) == 0) then
     end;
 
     animateMenu();
+    setVisible(menu, true);
+end;
+
+setVisible(menu, false);
+
+if (parseInt(MOD_DATA.Static_Menu) == 0) then
+    timer:single(0.0001, 'DynamicMenuBackgroundInit()');
+    
+    function changeBackgroundMenuImage();
+        -- not support
+    end;
 else
     setTexture(menu, 'mainbackground1.png');
+    setVisible(menu, true);
 
     function changeBackgroundMenuImage();
         -- not support
