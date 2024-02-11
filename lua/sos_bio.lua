@@ -2,91 +2,122 @@ BIO_HEIKE = 1;
 BIO_KAIA = 2;
 BIO_GIVI = 3;
 BIO_MIKE = 4;
-BIO_KRAY = 5;
-BIO_AVIR = 6;
-BIO_SOPH = 7;
-BIO_KAMI = 8;
-BIO_OLAF = 9;
-BIO_KURT = 10;
+BIO_KAMI = 5;
+BIO_OLAF = 6;
+BIO_KRAY = 7;
+BIO_AVIR = 8;
+BIO_SOPH = 9;
+BIO_FARM = 10;
 BIO_OMAR = 11;
 BIO_IBRA = 12;
-BIO_SHUL = 13;
-BIO_JENN = 14;
-BIO_FARM = 15;
-BIO_KARL = 16;
-BIO_GENS = 17;
-BIO_SHAR = 20;
-BIO_ROLF = 22;
+BIO_KURT = 13;
+BIO_ROLF = 24;
+BIO_SHUL = 15;
+BIO_JENN = 16;
+BIO_KARL = 17;
+BIO_GENS = 18;
+BIO_JOACH = 19;
+BIO_GALI = 20;
+BIO_SHAR = 21;
+BIO_MARK = 22;
+BIO_MARIA = 23;
+BIO_RICK = 24;
+BIO_ERWIN = 25;
+BIO_KOL  = 26;
+BIO_RONN = 27;
 BIO_NIA  = 28;
+BIO_JMM  = 29;
+BIO_JOAN = 30;
+BIO_BARN = 31;
+BIO_BOBBY = 32;
+BIO_CYRUS = 33;
+BIO_LISA = 34;
+BIO_KHAT = 35;
+BIO_MICH = 36;
+BIO_ANDY = 37;
+BIO_FRANK = 38;
+BIO_JEFF = 39;
+BIO_LUCY = 40;
+BIO_TIM  = 41;
+BIO_DENIS = 42;
+BIO_ADAM = 43;
+BIO_HARR = 44;
+BIO_YAMO = 45;
+BIO_HOUT = 46;
+BIO_SIK  = 47;
+BIO_GARY = 48;
+BIO_POW  = 49;
+BIO_CATH = 50;
+BIO_HUGH = 51;
+BIO_ROTH = 52;
+BIO_GORKI = 53;
+BIO_GNYE = 54;
+BIO_BELK = 55;
+BIO_JELE = 56;
+BIO_KOVA = 57;
+BIO_BELK2 = 58;
+BIO_PLAT = 59;
+BIO_POPO = 60;
+BIO_SCHO = 61;
+BIO_KUZM = 62;
+BIO_TIT  = 63;
+BIO_PETRO = 64;
+BIO_DOLG = 65;
+BIO_PETRS = 66;
+BIO_GLEB = 67;
+BIO_KARAM = 68;
+BIO_SEVI = 69;
+BIO_XAVI = 70;
+BIO_YASH = 71;
+BIO_KOZL = 72;
+BIO_GOSS = 73;
+BIO_YAKOT = 74;
+BIO_GLAD = 75;
+BIO_BYST = 76;
+
+ACTIVE_BIO = 0;
 
 avatarPath = 'SGUI/Bio/avatars/';
 biographics = {
-	{
-    	loc(8001),        -- NAME 
-    	loc(8002),        -- DESC
-    	'Heike',          -- ID / IMG
-    	2,                -- SIDE
-    	1,         	      -- CLASS
-    	'24.01.1983',  	  -- BIRTH
-    	loc(TID_Chechen), -- NATIONALTY
+    {
+        loc(8001),        -- NAME
+        loc(8002),        -- DESC
+        'Heike',          -- ID / IMG
+        2,                -- SIDE
+        1,                -- CLASS
+        '24.01.1983',     -- BIRTH
+        loc(TID_Chechen), -- NATIONALTY
     },
     {
-    	loc(8003),
-    	loc(8004),
-    	'Kaia',
-    	2,
-    	1,
-    	'23.03.1983',
-    	loc(TID_Croatia),
+        loc(8003),
+        loc(8004),
+        'Kaia',
+        2,
+        1,
+        '23.03.1983',
+        loc(TID_Croatia),
     },
     {
-    	loc(8005),
-    	loc(8006),
-    	'Givi',
-    	2,
-    	1,
-    	'26.11.1960',
-    	loc(TID_Georgia),
+        loc(8005),
+        loc(8006),
+        'Givi',
+        2,
+        1,
+        '26.11.1960',
+        loc(TID_Georgia),
     },
     {
-    	loc(8007),
-    	loc(8008),
-    	'Mike',
-    	2,
-    	1,
-    	'7.7.1969',
-    	loc(TID_Germany),
+        loc(8007),
+        loc(8008),
+        'Mike',
+        2,
+        1,
+        '7.7.1969',
+        loc(TID_Germany),
     },
     {
         loc(8009),
         loc(8010),
-        'Kraysto',
-        2,
-        3,
-        '28.2.1972',
-        loc(TID_Bulgaria),
-    },
-    {
-        loc(8011),
-        loc(8012),
-        'Aviradze',
-        2,
-        4,
-        '26.7.1966',
-        loc(TID_Georgia),
-    },
-    {
-        loc(8013),
-        loc(8014),
-        'Sophia',
-        2,
-        2,
-        '12.5.1975',
-        loc(TID_Greece),
-    },
-    {
-        loc(8015),
-        loc(8016),
         'Kamil',
         2,
         2,
@@ -94,8 +125,8 @@ biographics = {
         loc(TID_Britain),
     },
     {
-        loc(8017),
-        loc(8018),
+        loc(8011),
+        loc(8012),
         'OlafL',
         2,
         3,
@@ -103,13 +134,40 @@ biographics = {
         loc(TID_Norway),
     },
     {
+        loc(8013),
+        loc(8014),
+        'Kraysto',
+        2,
+        3,
+        '28.2.1972',
+        loc(TID_Bulgaria),
+    },
+    {
+        loc(8015),
+        loc(8016),
+        'Aviradze',
+        2,
+        4,
+        '26.7.1966',
+        loc(TID_Georgia),
+    },
+    {
+        loc(8017),
+        loc(8018),
+        'Sophia',
+        2,
+        2,
+        '12.5.1975',
+        loc(TID_Greece),
+    },
+    {
         loc(8019),
         loc(8020),
-        'Kurt',
+        'Robert',
         2,
         1,
-        '8.06.1969',
-        loc(TID_Switzerland),
+        '04.12.1963',
+        loc(TID_Rhodesia),
     },
     {
         loc(8021),
@@ -132,6 +190,24 @@ biographics = {
     {
         loc(8025),
         loc(8026),
+        'Kurt',
+        2,
+        1,
+        '8.06.1969',
+        loc(TID_Switzerland),
+    },
+    {
+        loc(8027),
+        loc(8028),
+        'Rolf',
+        2,
+        1,
+        '17.11.1962',
+        loc(TID_Belgium),
+    },
+    {
+        loc(8029),
+        loc(8030),
         'Louis',
         2,
         1,
@@ -139,8 +215,8 @@ biographics = {
         loc(TID_Austria),
     },
     {
-        loc(8027),
-        loc(8028),
+        loc(8031),
+        loc(8032),
         'Jenna',
         2,
         4,
@@ -148,17 +224,8 @@ biographics = {
         loc(TID_Ireland),
     },
     {
-        loc(8029),
-        loc(8030),
-        'Robert',
-        2,
-        1,
-        '04.12.1963',
-        loc(TID_Rhodesia),
-    },
-    {
-        loc(8031),
-        loc(8032),
+        loc(8033),
+        loc(8034),
         'Karla',
         2,
         1,
@@ -166,8 +233,8 @@ biographics = {
         loc(TID_Belgium),
     },
     {
-        loc(8033),
-        loc(8034),
+        loc(8035),
+        loc(8036),
         'Dietrich',
         2,
         1,
@@ -175,8 +242,8 @@ biographics = {
         loc(TID_Turkey),
     },
     {
-        loc(8035),
-        loc(8036),
+        loc(8037),
+        loc(8038),
         'Joachim2',
         2,
         1,
@@ -184,8 +251,8 @@ biographics = {
         loc(TID_Germany),
     },
     {
-        loc(8037),
-        loc(8038),
+        loc(8039),
+        loc(8040),
         'Gali',
         2,
         2,
@@ -193,8 +260,8 @@ biographics = {
         loc(TID_Algeria),
     },
     {
-        loc(8039),
-        loc(8040),
+        loc(8041),
+        loc(8042),
         'Shariff',
         2,
         1,
@@ -202,22 +269,13 @@ biographics = {
         loc(TID_Arabia),
     },
     {
-        loc(8041),
-        loc(8042),
+        loc(8043),
+        loc(8044),
         'Mark',
         2,
         3,
         '19.03.1983',
         loc(TID_Sweden),
-    },
-    {
-        loc(8043),
-        loc(8044),
-        'Rolf',
-        2,
-        1,
-        '17.11.1962',
-        loc(TID_Belgium),
     },
     {
         loc(8045),
@@ -272,7 +330,232 @@ biographics = {
         1,
         '18.11.1978',
         loc(TID_Georgia),
-    }
+    },
+    {
+        loc(8057),
+        loc(8058),
+        'JMM',
+        1,
+        1,
+        '04.02.1968',
+        loc(TID_USA),
+    },
+    {
+        loc(8059),
+        loc(8060),
+        'Joan',
+        1,
+        4,
+        '17.03.1972',
+        loc(TID_USA),
+    },
+    {
+        loc(8061),
+        loc(8062),
+        'Barnes',
+        1,
+        1,
+        '14.08.1930',
+        loc(TID_USA),
+    },
+    {
+        loc(8063),
+        loc(8064),
+        'Bobby',
+        1,
+        3,
+        '23.06.1947',
+        loc(TID_USA),
+    },
+    {
+        loc(8065),
+        loc(8066),
+        'Cyrus',
+        1,
+        1,
+        '17.08.1971',
+        loc(TID_Wales),
+    },
+    {
+        loc(8067),
+        loc(8068),
+        'Lawson',
+        1,
+        1,
+        '05.05.1976',
+        loc(TID_England),
+    },
+    {
+        loc(8069),
+        loc(8070),
+        'Mikhail',
+        3,
+        2,
+        '08.01.1977',
+        loc(TID_USRR),
+    },
+    {
+        loc(8071),
+        loc(8072),
+        'Khattam',
+        1,
+        4,
+        '30.05.1969',
+        loc(TID_Iran),
+    },
+    {
+        loc(8073),
+        loc(8074),
+        'Cornell',
+        1,
+        1,
+        '03.11.1969',
+        loc(TID_Ethiopia),
+    },
+    {
+        loc(8075),
+        loc(8076),
+        'Frank',
+        1,
+        1,
+        '15.07.1966',
+        loc(TID_USA),
+    },
+    {
+        loc(8077),
+        loc(8078),
+        'Brown',
+        1,
+        2,
+        '19.11.1967',
+        loc(TID_USA),
+    },
+    {
+        loc(8079),
+        loc(8080),
+        'Donaldson',
+        1,
+        1,
+        '10.03.1978',
+        loc(TID_Scotland),
+    },
+    {
+        loc(8081),
+        loc(8082),
+        'Gladstone',
+        1,
+        4,
+        '28.02.1946',
+        loc(TID_Wales),
+    },
+    {
+        loc(8083),
+        loc(8084),
+        'Denis',
+        1,
+        4,
+        '14.03.1959',
+        loc(TID_England),
+    },
+    {
+        loc(8085),
+        loc(8086),
+        'Dawkins',
+        1,
+        4,
+        '18.05.1962',
+        loc(TID_Wales),
+    },
+    {
+        loc(8087),
+        loc(8088),
+        'Harrison',
+        1,
+        1,
+        '04.23.1950',
+        loc(TID_USA),
+    },
+    {
+        loc(8089),
+        loc(8090),
+        'Yamoko',
+        1,
+        1,
+        '21.04.1973',
+        loc(TID_Japan),
+    },
+    {
+        loc(8091),
+        loc(8092),
+        'Van Houten',
+        1,
+        1,
+        '11.10.1963',
+        loc(TID_Scotland),
+    },
+    {
+        loc(8093),
+        loc(8094),
+        'Sikorski',
+        1,
+        1,
+        '19.06.1960',
+        loc(TID_Poland),
+    },
+    {
+        loc(8095),
+        loc(8096),
+        'Gary',
+        1,
+        1,
+        '02.09.1959',
+        loc(TID_England),
+    },
+    {
+        loc(8097),
+        loc(8098),
+        'Powell',
+        1,
+        1,
+        '29.08.1954',
+        loc(TID_USA),
+    },
+    {
+        loc(8099),
+        loc(8100),
+        'Cathy',
+        1,
+        4,
+        '01.02.1975',
+        loc(TID_Canada),
+    },
+    {
+        loc(8101),
+        loc(8102),
+        'Stevens',
+        1,
+        4,
+        '21.09.1957',
+        loc(TID_Canada),
+    },
+    {
+        loc(8103),
+        loc(8104),
+        'Roth',
+        1,
+        4,
+        '09.08.1961',
+        loc(TID_USA),
+    },
+    {
+        loc(8105),
+        loc(8106),
+        'Burlak',
+        3,
+        3,
+        '04.07.1980',
+        loc(TID_USRR),
+    },
 };
 
 function loadBioCharactersStatus()
@@ -310,96 +593,201 @@ function enableBioCharacter(ID)
 end;
 
 function hoverOnBiographic(ID)
-	setTextureID(ID, 'SGUI/Bio/placeholder-active.PNG');
+    setTextureID(ID, 'SGUI/Bio/placeholder-active.PNG');
 end;
 
 function unHoverOnBiographic(ID)
-	setTextureID(ID, 'SGUI/Bio/placeholder.PNG');
+    setTextureID(ID, 'SGUI/Bio/placeholder.PNG');
 end;
 
 function loadBiographic()
-	local rowIndex = 0;
-	local isActive = true;
+    local rowIndex = 0;
+    local isActive = true;
     local status = loadBioCharactersStatus();
 
-	for i = 1, #biographics do
-		local placeholder = getElementEX(
-			menu.window_bio.panel.scroll,
-	        anchorLTRB,
-	        XYWH(((i - 1) % 8) * 120 + 30, 10 + (112 * rowIndex), 88, 108),
-	        true,
-	        {
-	            texture = 'SGUI/Bio/placeholder.PNG'
-	        }
-		);
+    for i = 1, #biographics do
+        local placeholder = getElementEX(
+            menu.window_bio.panel.scroll,
+            anchorLTRB,
+            XYWH(((i - 1) % 8) * 120 + 30, 10 + (112 * rowIndex), 88, 108),
+            true,
+            {
+                texture = 'SGUI/Bio/placeholder.PNG'
+            }
+        );
 
         isActive = status[i];
 
-		if isActive then
-			local avatar = getElementEX(
-		        placeholder,
-		        anchorLTRB,
-		        XYWH(4, 4, 80, 100),
-		        true,
-		        {
-		            texture = avatarPath .. biographics[i][3] .. '.png',
-		            hint = biographics[i][1],
-		            callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
-		            callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
-		            callback_mousedown = 'openBioPopup(' .. i .. ')'
-		        }
-		    );
-		else
-			local avatar = getElementEX(
-		        placeholder,
-		        anchorLTRB,
-		        XYWH(4, 4, 80, 100),
-		        true,
-		        {
-		            texture = avatarPath .. biographics[i][3] .. '.png',
+        biographics[i][7] = isActive;
+
+        if isActive then
+            local avatar = getElementEX(
+                placeholder,
+                anchorLTRB,
+                XYWH(4, 4, 80, 100),
+                true,
+                {
+                    texture = avatarPath .. biographics[i][3] .. '.png',
+                    hint = biographics[i][1],
+                    callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
+                    callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
+                    callback_mousedown = 'openBioPopup(' .. i .. ')'
+                }
+            );
+        else
+            local avatar = getElementEX(
+                placeholder,
+                anchorLTRB,
+                XYWH(4, 4, 80, 100),
+                true,
+                {
+                    texture = avatarPath .. biographics[i][3] .. '.png',
+                    hint = biographics[i][1],
                     callback_mousedown = 'isBioDisabledInfo();'
-		        }
-		    );
+                }
+            );
 
-			sgui_set(avatar.ID, PROP_GRAYSCALE, true);
-		end;
+            sgui_set(avatar.ID, PROP_GRAYSCALE, true);
+        end;
 
-	    if (i % 8 == 0) then
-	    	rowIndex = rowIndex + 1;
-	    end;
-	end;
+        if (i % 8 == 0) then
+            rowIndex = rowIndex + 1;
+        end;
+    end;
 end;
 
+function bioFilter(VALUE)
+    VALUE = parseInt(VALUE);
+
+    if VALUE == 0 then
+        setTexture(menu.window_bio.filter_all, 'SGUI/Bio/all-active.png');
+        setTexture(menu.window_bio.filter_am, 'SGUI/Bio/am-unactive.png');
+        setTexture(menu.window_bio.filter_ar, 'SGUI/Bio/ar-unactive.png');
+        setTexture(menu.window_bio.filter_ru, 'SGUI/Bio/ru-unactive.png');
+    elseif VALUE == 1 then
+        setTexture(menu.window_bio.filter_all, 'SGUI/Bio/all-unactive.png');
+        setTexture(menu.window_bio.filter_am, 'SGUI/Bio/am-active.png');
+        setTexture(menu.window_bio.filter_ar, 'SGUI/Bio/ar-unactive.png');
+        setTexture(menu.window_bio.filter_ru, 'SGUI/Bio/ru-unactive.png');
+    elseif VALUE == 2 then
+        setTexture(menu.window_bio.filter_all, 'SGUI/Bio/all-unactive.png');
+        setTexture(menu.window_bio.filter_am, 'SGUI/Bio/am-unactive.png');
+        setTexture(menu.window_bio.filter_ar, 'SGUI/Bio/ar-active.png');
+        setTexture(menu.window_bio.filter_ru, 'SGUI/Bio/ru-unactive.png');
+    else
+        setTexture(menu.window_bio.filter_all, 'SGUI/Bio/all-unactive.png');
+        setTexture(menu.window_bio.filter_am, 'SGUI/Bio/am-unactive.png');
+        setTexture(menu.window_bio.filter_ar, 'SGUI/Bio/ar-unactive.png');
+        setTexture(menu.window_bio.filter_ru, 'SGUI/Bio/ru-active.png');
+    end;
+
+    deleteBiographic();
+
+    local j = 0;
+    local rowIndex = 0;
+    local isActive = true;
+
+    for i = 1, #biographics do
+        if (inArray({biographics[i][4], 0}, VALUE)) then
+            j = j + 1;
+
+            local placeholder = getElementEX(
+                menu.window_bio.panel.scroll,
+                anchorLTRB,
+                XYWH(((j - 1) % 8) * 120 + 30, 10 + (112 * rowIndex), 88, 108),
+                true,
+                {
+                    texture = 'SGUI/Bio/placeholder.PNG'
+                }
+            );
+
+            isActive = biographics[i][7];
+
+            if isActive then
+                local avatar = getElementEX(
+                    placeholder,
+                    anchorLTRB,
+                    XYWH(4, 4, 80, 100),
+                    true,
+                    {
+                        texture = avatarPath .. biographics[i][3] .. '.png',
+                        hint = biographics[i][1],
+                        callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
+                        callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
+                        callback_mousedown = 'openBioPopup(' .. i .. ')'
+                    }
+                );
+            else
+                local avatar = getElementEX(
+                    placeholder,
+                    anchorLTRB,
+                    XYWH(4, 4, 80, 100),
+                    true,
+                    {
+                        texture = avatarPath .. biographics[i][3] .. '.png',
+                        hint = biographics[i][1],
+                        callback_mousedown = 'isBioDisabledInfo();'
+                    }
+                );
+
+                sgui_set(avatar.ID, PROP_GRAYSCALE, true);
+            end;
+
+            if (j % 8 == 0) then
+                rowIndex = rowIndex + 1;
+            end;
+        end;
+    end;
+end
+
 function deleteBiographic()
-	sgui_deletechildren(menu.window_bio.panel.scroll.ID);
+    sgui_deletechildren(menu.window_bio.panel.scroll.ID);
 end;
 
 function showBiographic(mode)
-	if (mode == 1) then
-		loadBiographic();
-		showMenuButton(0);
-		setVisible(menu.window_bio, true);
+    if (mode == 1) then
+        loadBiographic();
+        showMenuButton(0);
+        setVisible(menu.window_bio, true);
         displayDialogMessage(SOS_DIALOG_BIO_FIRST, true);
-	else
-		setVisible(menu.window_bio, false);
-		deleteBiographic();
-		showMenuButton(3);
-	end;
+
+        setTexture(menu.window_bio.filter_all, 'SGUI/Bio/all-active.png');
+        setTexture(menu.window_bio.filter_am, 'SGUI/Bio/am-unactive.png');
+        setTexture(menu.window_bio.filter_ar, 'SGUI/Bio/ar-unactive.png');
+        setTexture(menu.window_bio.filter_ru, 'SGUI/Bio/ru-unactive.png');
+    else
+        setVisible(menu.window_bio, false);
+        deleteBiographic();
+        showMenuButton(3);
+    end;
 end;
 
 function openBioPopup(ID)
-	local nat = {'am', 'ar', 'ru'};
-	local info = loc(9200) .. ': ' .. loc(1162 + biographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. biographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. biographics[ID][7];
+    local nat = {'am', 'ar', 'ru'};
+    local info = loc(9200) .. ': ' .. loc(1162 + biographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. biographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. biographics[ID][7];
 
-	setVisible(menu.window_bio.popup, true);
-	setText(menu.window_bio.popup.panel.name, biographics[ID][1]);
-	setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
-	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. biographics[ID][3] .. '.png');
-	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
+    setVisible(menu.window_bio.popup, true);
+    setText(menu.window_bio.popup.panel.name, biographics[ID][1]);
+    setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
+    setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. biographics[ID][3] .. '.png');
+    setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
+
+    setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
+    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and not biographics[ID+1][7])));
+
+    ACTIVE_BIO = ID;
 end;
 
+function showPrevBio()
+    openBioPopup(ACTIVE_BIO - 1);
+end
+
+function showNextBio()
+    openBioPopup(ACTIVE_BIO + 1);
+end
+
 function closeBioPopup()
-	setVisible(menu.window_bio.popup, false);
+    setVisible(menu.window_bio.popup, false);
 end;
 
 function isBioDisabledInfo()
@@ -421,7 +809,7 @@ menu.window_bio.panel = getElementEX(
     anchorL, 
     XYWH(LayoutWidth / 2 - 512, LayoutHeight / 2 - 384, 1024, 768), 
     true,
-	{
+    {
         texture = 'SGUI/Bio/panel.png'
     }
 );
@@ -452,6 +840,16 @@ menu.window_bio.panel.scroll.scrollV = clScrollBarEX2(
     {}
 );
 
+menu.window_bio.border = getElementEX(
+    menu.window_bio,
+    anchorLTRB,
+    XYWH(0, 48, 966, 2),
+    true,
+    {
+        colour1 = BLACK(100),
+    }
+);
+
 menu.window_bio.panel.button_quit = clButton(
     menu.window_bio, 
     14, 
@@ -461,6 +859,58 @@ menu.window_bio.panel.button_quit = clButton(
     loc(TID_Main_Menu_Campaign_Back), 
     'showBiographic(0);', 
     {}
+);
+
+menu.window_bio.filter_all = getImageButtonEX(
+    menu.window_bio,
+    anchorLTRB,
+    XYWH(748, 2, 44, 44),
+    '',
+    '',
+    'bioFilter(0)',
+    SKINTYPE_NONE,
+    {
+        texture = 'SGUI/Bio/all-active.png'
+    }
+);
+
+menu.window_bio.filter_am = getImageButtonEX(
+    menu.window_bio,
+    anchorLTRB,
+    XYWH(800, 2, 44, 44),
+    '',
+    '',
+    'bioFilter(1)',
+    SKINTYPE_NONE,
+    {
+        texture = 'SGUI/Bio/am-active.png'
+    }
+);
+
+menu.window_bio.filter_ar = getImageButtonEX(
+    menu.window_bio,
+    anchorLTRB,
+    XYWH(852, 2, 44, 44),
+    '',
+    '',
+    'bioFilter(2)',
+    SKINTYPE_NONE,
+    {
+        texture = 'SGUI/Bio/ar-active.png'
+    }
+);
+
+menu.window_bio.filter_ru = getImageButtonEX(
+    menu.window_bio,
+    anchorLTRB,
+    XYWH(904, 2, 44, 44),
+    '',
+    '',
+    'bioFilter(3)',
+    SKINTYPE_NONE,
+    {
+        texture = 'SGUI/Bio/ru-active.png'
+    }
 );
 
 menu.window_bio.popup = getElementEX(
@@ -474,7 +924,7 @@ menu.window_bio.popup = getElementEX(
 );
 
 menu.window_bio.popup.panel = getElementEX(
-	menu.window_bio.popup,
+    menu.window_bio.popup,
     anchorNone,
     XYWH(menu.window_bio.popup.width / 2 - 400, menu.window_bio.popup.height / 2 - 300, 800, 600),
     true,
@@ -484,7 +934,7 @@ menu.window_bio.popup.panel = getElementEX(
 );
 
 menu.window_bio.popup.panel.avatar = getElementEX(
-	menu.window_bio.popup.panel,
+    menu.window_bio.popup.panel,
     anchorNone,
     XYWH(54, 28, 320, 400),
     true,
@@ -492,12 +942,12 @@ menu.window_bio.popup.panel.avatar = getElementEX(
 );
 
 menu.window_bio.popup.panel.avatar.nation = getElementEX(
-	menu.window_bio.popup.panel.avatar,
+    menu.window_bio.popup.panel.avatar,
     anchorNone,
     XYWH(265, 350, 51, 48),
     true,
     {
-    	texture = 'SGUI/Bio/ar.png'
+        texture = 'SGUI/Bio/ar.png'
     }
 );
 
@@ -539,5 +989,27 @@ menu.window_bio.popup.panel.button_quit = clButton(
     18, 
     loc(1135), 
     'closeBioPopup();', 
+    {}
+);
+
+menu.window_bio.popup.panel.button_prev = clButton(
+    menu.window_bio.popup.panel, 
+    40, 
+    560, 
+    230, 
+    18, 
+    '<<', 
+    'showPrevBio();', 
+    {}
+);
+
+menu.window_bio.popup.panel.button_next = clButton(
+    menu.window_bio.popup.panel, 
+    530, 
+    560, 
+    230, 
+    18, 
+    '>>', 
+    'showNextBio();', 
     {}
 );
