@@ -2,12 +2,12 @@ function DynamicMenuBackgroundInit()
     include('Extensions/transition');
 
     TEXTURE1 = loadOGLTexture('mainbackground1.simg', true);
-    TEXTURE2 = loadOGLTextureBG('mainbackground2.simg', true, false, true);
-    TEXTURE3 = loadOGLTextureBG('mainbackground3.simg', true, false, true);
-    TEXTURE4 = loadOGLTextureBG('mainbackground4.simg', true, false, true);
-    TEXTURE5 = loadOGLTextureBG('mainbackground5.simg', true, false, true);
-    TEXTURE6 = loadOGLTextureBG('mainbackground6.simg', true, false, true);
-    TEXTURE7 = loadOGLTextureBG('mainbackground7.simg', true, false, true);
+    TEXTURE2 = loadOGLTexture('mainbackground2.simg', true, false, true);
+    TEXTURE3 = loadOGLTexture('mainbackground3.simg', true, false, true);
+    TEXTURE4 = loadOGLTexture('mainbackground4.simg', true, false, true);
+    TEXTURE5 = loadOGLTexture('mainbackground5.simg', true, false, true);
+    TEXTURE6 = loadOGLTexture('mainbackground6.simg', true, false, true);
+    TEXTURE7 = loadOGLTexture('mainbackground7.simg', true, false, true);
 
 
     LAST_USED_TEXTURE = 1;
@@ -37,6 +37,12 @@ end;
 setVisible(menu, false);
 
 if (parseInt(MOD_DATA.Static_Menu) == 0) then
+    menuBackgrounds = {};
+
+    for i = 1, 7 do
+        menuBackgrounds[i] = getElementEX(menu, anchorNone, XYWH(0,0,0,0), false, {texture='mainbackground' .. (i) ..'.simg'});
+    end;
+
     timer:single(0.0001, 'DynamicMenuBackgroundInit()');
     
     function changeBackgroundMenuImage();
