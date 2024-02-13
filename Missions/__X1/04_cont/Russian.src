@@ -378,3 +378,55 @@ for i in FilterAllUnits([[f_side, 3], [f_engine, engine_combustion]]) do
     if GetFuel(i) < 1 then
        ComExitVehicle(IsDrivenBy(i));
 End;
+
+Every 0$2 trigger IsDying(Kurin) or IsDead(Kurin) or IsDying(Kirov) or IsDead(Kirov) do
+var i, tmp, enemy, barracks;
+begin
+tmp := UnitFilter(kirovBaseSquad, [f_class, 1]);
+
+if not tmp then
+   exit;
+
+barracks := HexInfo(166, 116);
+
+for i in tmp do
+    ComExitBuilding(i);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(kirovBaseSquad, [[f_class, 1], [f_ok]]);
+ enemy := FilterUnitsInArea(kirovBaseArea, [f_enemy, 6]);
+
+ if enemy then
+    begin
+    for i in tmp do
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+    end
+ else
+    begin
+    for i in tmp do
+        if HasTask(i) or not IsInArea(i, kirovBaseArea) then
+           if GetLives(i) < 600 and IsOk(barracks) and UnitsInside(barracks) < 6 then
+              ComEnterUnit(i, barracks)
+           else
+              ComMoveXY(i, 162, 109);
+    end;
+until not tmp;
+End;
+
+Every 0$2 trigger IsDying(Beria) or IsDead(Beria) do
+var i, tmp;
+begin
+tmp := UnitFilter(beriaBaseSquad, [f_class, 1]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveXY(i, 66, 128);
+    end;
+End;

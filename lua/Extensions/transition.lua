@@ -1,5 +1,5 @@
-include('Extensions/Utils/fbo', 'Extensions/Utils/glsl', 'Extensions/Utils/ogltexture', 'Extensions/Utils/3dsprite');
-include('Extensions/Utils/fast2D', 'Extensions/Utils/OpenGL', 'Extensions/Utils/stream', 'Extensions/Utils/grid2D');
+include('Utils/fbo', 'Utils/glsl', 'Utils/ogltexture', 'Utils/3dsprite');
+include('Utils/fast2D', 'Utils/OpenGL');
 
 transition = {
 	TIME = 0,

@@ -32,14 +32,41 @@ function loadShortcutsButtonsList()
             goto continue;
         end;
 
-        local shortcut = SGUI_widesub(langText, 3, 3);
+        local shortcut = SGUI_widesub(langText, 3, 3);    
 
-        list = addToArray(list, text(('[' .. shortcut .. '] ' .. SGUI_widesub(langText, 6)), 24, '..'));
+        langText = OW_REMOVE_KEYBOARD_SHORTCUT_FROM_STRING(langText);
+        langText = string.gsub(langText, "~", "");
+
+        list = addToArray(list, string.gsub(text(('[' .. shortcut .. '] ' .. langText), 24, '..'), CHAR13, ""));
         ::continue::
     end;
 
     return list;
 end;
+
+function createShortcutIcon(PARENT, BTNINDEX, X, Y)
+    local COL = 1;
+
+    if (BTNINDEX > 85) then
+        COL = 2;
+        BTNINDEX = BTNINDEX - 85;
+    end;
+
+    local ELEMENT = getElementEX(
+        PARENT,
+        anchorNone,
+        XYWH(X, Y, 41, 41),
+        true,
+        {
+            texture = 'classic/edit/shortcuts/buttons.png',
+            subtexture = true,
+            subcoords = SUBCOORD(COL * 41, BTNINDEX * 41, 41, 41)
+        }
+    );
+
+    return ELEMENT;
+end;
+
 
 menu.window_shortcuts = getElementEX(
     menu, 
@@ -90,7 +117,7 @@ menu.window_shortcuts.panel.accept = clButton(
     140, 
     30,
     loc(TID_msg_Ok), 
-    '',
+    'showShortcuts(0);',
     {}
 );
 
@@ -157,28 +184,27 @@ menu.window_shortcuts.panel.filesList = clComboBox(
     }
 );
 
-function createShortcutIcon(PARENT, BTNINDEX, X, Y)
-    local COL = 1;
+menu.window_shortcuts.panel.buttonsPanel = getElementEX(
+    menu.window_shortcuts.panel, 
+    anchorNone, 
+    XYWH(400, 70, 130, 140), 
+    true, 
+    {
+        colour1 = WHITEA()
+    }
+);
 
-    if (BTNINDEX > 85) then
-        COL = 2;
-        BTNINDEX = BTNINDEX - 85;
-    end;
 
-    local ELEMENT = getElementEX(
-        PARENT,
-        anchorNone,
-        XYWH(X, Y, 41, 41),
-        true,
-        {
-            texture = 'classic/edit/shortcuts/buttons.png',
-            subtexture = true,
-            subcoords = SUBCOORD(COL * 41, BTNINDEX * 41, 41, 41)
-        }
-    );
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 1, 1, 13);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 2, 43, 13);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 3, 85, 13);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 11, 1, 54);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 12, 43, 54);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 13, 85, 54);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 21, 1, 95);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 22, 43, 95);
+createShortcutIcon(menu.window_shortcuts.panel.buttonsPanel, 33, 85, 95);
 
-    return ELEMENT;
-end;
 
 function showShortcuts(MODE)
     if MODE > 0 then
