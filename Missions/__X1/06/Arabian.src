@@ -602,3 +602,72 @@ repeat
 
 until not omarSquad;
 End;
+
+Export Function GoForOil;
+var i, tmp, data, chance, vehicle;
+begin
+repeat
+ wait(0$1);
+ tmp := FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual]]);
+
+ if UnitFilter(tmp, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]) then
+    if Query('QConvoy') = 1 then
+       break;
+
+until false;
+
+SetAreaMapShow(oilArea, 0);
+
+data := [];
+chance := [60, 50, 40, 30][Difficulty];
+
+for i in tmp do
+    begin
+    data := Join(data, [
+        i,             // vehicle
+        IsDrivenBy(i), // driver
+        GetLives(i),   // hp
+    ]);
+
+    RemoveUnit(IsDrivenBy(i));
+    RemoveUnit(i);
+
+    chance := chance + 20;
+    end;
+
+wait(rand(4$30, 5$30));
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 3], [f_distxy, 261, 71, 12]]) and not HexInfo(277, 80);
+
+for i in data do
+    begin
+    uc_nation := GetNation(i[1]);
+    uc_side := 2;
+
+    PrepareVehicle(GetChassis(i[1]), GetEngine(i[1]), GetControl(i[1]), GetWeapon(i[1]), 66);
+    vehicle := CreateVehicle;
+    PlaceUnitXYD(vehicle, 277, 80, 4, false);
+    PlaceHumanInUnit(i[2], vehicle);
+    SetLives(vehicle, i[3]);
+
+    if Prob(chance) then
+       begin
+       if GetWeapon(vehicle) in [ar_cargo_bay, ru_cargo_bay] then
+          SetCargo(vehicle, mat_oil, 100);
+       end
+    else if i[3] > 333 then
+       SetLives(vehicle, 333);
+
+    ComMoveXY(vehicle, 250, 119);
+
+    repeat
+     wait(0$5);
+    until not FilterUnitsInArea(oilArea, [f_placed]);
+    end;
+
+wait(0$30);
+
+GoForOil;
+End;

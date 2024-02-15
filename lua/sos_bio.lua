@@ -618,7 +618,7 @@ function loadBiographic()
 
         isActive = status[i];
 
-        biographics[i][7] = isActive;
+        biographics[i][8] = isActive;
 
         if isActive then
             local avatar = getElementEX(
@@ -701,7 +701,7 @@ function bioFilter(VALUE)
                 }
             );
 
-            isActive = biographics[i][7];
+            isActive = biographics[i][8];
 
             if isActive then
                 local avatar = getElementEX(
@@ -773,7 +773,7 @@ function openBioPopup(ID)
     setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
 
     setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
-    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and not biographics[ID+1][7])));
+    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and not biographics[ID+1][8])));
 
     ACTIVE_BIO = ID;
 end;

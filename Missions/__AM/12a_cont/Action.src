@@ -4,7 +4,6 @@ InGameOn;
 
 CenterNowOnUnits(JMM);
 
-
 Say(JMM, 'D1-JMM-1');
 Say(Roth, 'D1-Roth-1');
 Say(JMM, 'D1-JMM-2');
@@ -230,7 +229,7 @@ else if unit = Brown then
    if Brown in selected or gamma_commander = 2 then
       begin
       Say(Brown, 'D3-Soldier1-Sol1-1');
-      Say(JMM, 'D3-Soldier1-JMM-1');
+      Say(JMM, 'D6-JMM-Brown-1');
       joined := true;
       end
    else
@@ -448,6 +447,16 @@ else
 
 End;
 
+Every 0$1 trigger GetDistUnits(JMM, Mike) < 6 and See(1, Mike) do
+begin
+DialogueOn;
+CenterNowOnUnits(Mike);
+Say(JMM, 'D6-JMM-Mike-1');
+Say(Mike, 'D6-Mike-1');
+SetSide(Mike, 7);
+DialogueOff;
+End;
+
 // JMM reached Roth's lab
 Every 0$01 trigger IsInUnit(JMM) = amlab do
 begin
@@ -510,7 +519,7 @@ m3 := false;
 all_taken := (UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0);
 
 if not all_taken then
-   case query('Q1') of
+   case Query('Q1') of
    1: begin
       repeat
        wait(0$1);
@@ -521,7 +530,7 @@ if not all_taken then
    2:;
    end;
 
-if team_kill_counter = 0 then
+if team_kill_counter < 3 then
    Say(JMM, 'D5-JMM-1')
 else
    Say(JMM, 'D5-JMM-1a');
@@ -575,9 +584,9 @@ if m1 and m2 and m3 and Difficulty >= 3 then
    SetAchievementEX('ACH_AMER', 16);
 
 GiveMedals('MAIN');
-tmp := FilterAllUnits([[[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9]]]]);
+tmp := FilterAllUnits([[[f_side, 7], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8], [f_class, 9], [f_class, class_apeman_engineer]]]]);
 
-RewardPeople(tmp ^ Roth);
+RewardPeople(tmp union Roth diff Mike);
 
 // Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
 // Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
@@ -591,6 +600,9 @@ if Lisa in tmp then
    SaveCharacters(Lisa, '12a_Lisa')
 else if Lisa then
    SaveCharacters(Lisa, '12p_Lisa');
+
+if Mike in tmp then
+   SaveCharacters(Mike, '12a_Mike');
 
 if Donaldson in tmp then
    SaveCharacters(Donaldson, '12a_Donaldson')
@@ -654,7 +666,7 @@ if DeltaDoctor in tmp then
 
 tmp := tmp diff [JMM, Roth, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
                  Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
-                 Simms, Joan, DeltaDoctor];
+                 Simms, Joan, DeltaDoctor, Mike];
 
 if tmp then
    SaveCharacters(tmp, '12a_others');
@@ -662,7 +674,7 @@ if tmp then
 tmp := FilterAllUnits([[f_type, unit_human], [f_nation, 1], [f_or, [f_side, 1], [f_side, 4]]]) diff [
            JMM, Roth, Lisa, Donaldson, Bobby, Cyrus, Denis, Brown,
            Gladstone, Houten, Cornel, Gary, Frank, Kikuchi,
-           Simms, Joan, DeltaDoctor, Powell
+           Simms, Joan, DeltaDoctor, Powell, Mike
        ];
 
 if tmp then

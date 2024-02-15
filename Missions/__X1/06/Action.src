@@ -461,14 +461,34 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger (bergkampfArrived and tick > 17$00) or FilterAllUnits([[f_side, 2], [f_distxy, 322, 215, 20]]) do
-var i;
+Every 0$1 trigger bergkampfArrived and tick > [21$00, 20$00, 19$00, 18$00][Difficulty] do
+var i, tmp, inOmarBase;
 begin
 PrepareOmarSquad;
 
 repeat
  wait(0$1);
 until not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_or, [f_type, unit_human], [f_occupied]]]);
+
+tmp := FilterUnitsInArea(ruOmarBase, [f_side, 2]);  
+inOmarBase := tmp > 0;
+
+if UnitFilter(tmp, [f_type, unit_building]) then
+   begin
+   Say(Omar, 'DOm-Base-1b');
+
+   for i in UnitFilter(tmp, [f_type, unit_building]) do
+       begin
+       if UnitsInside(i) then
+          ComExitBuilding(UnitsInside(i));
+
+       SetSide(i, 5);
+       end;
+   end 
+else if UnitFilter(tmp, [f_type, unit_vehicle]) then
+   Say(Omar, 'DOm-Base-1v')
+else
+   Say(Omar, 'DOm-Base-1h');
 
 for i in omarSquad do
     if GetLives(i) < 750 then
@@ -485,12 +505,24 @@ CenterNowOnUnits(Omar);
 
 DialogueOn;
 
-SayRadio(Omar, 'DOm-Veh-1');
-SayRadio(Omar, 'DOm-Veh-2');
-SayRadio(Omar, 'DOm-Veh-3');
+if inOmarBase then
+   begin
+   Say(Omar, 'DOm-Veh-1a');
+   Say(Omar, 'DOm-Veh-2a');
+   Say(Omar, 'DOm-Veh-3a');
 
-if mortarConstructed then
-   SayRadio(Omar, 'DOm-Veh-4');
+   if mortarConstructed then
+      Say(Omar, 'DOm-Veh-4a');
+   end
+else
+   begin
+   SayRadio(Omar, 'DOm-Veh-1');
+   SayRadio(Omar, 'DOm-Veh-2');
+   SayRadio(Omar, 'DOm-Veh-3');
+
+   if mortarConstructed then
+      SayRadio(Omar, 'DOm-Veh-4');
+   end;
 
 Say(Heike, 'DH-Veh-5');
 
@@ -512,6 +544,9 @@ omarArrived := true;
 omarScriptBase := true;
 omarWantVehicles := true;
 End;
+
+Every 0$1 trigger FilterUnitsInArea(ruMainBase, [f_side, 2]) and omarArrived and IsOk(Omar) and not omarAttack do
+SayRadio(Omar, 'DOm-Lenin');
 
 Every 0$3 trigger IsOk(Rolf) and linkedWithRolf and omarArrived do
 begin
@@ -673,7 +708,7 @@ repeat
     exit;
     end;
 
-until UnitFilter(rolfSquad, [f_driving]) + 0 = rolfSquad + 0;
+until Count(UnitFilter(rolfSquad, [f_driving])) = Count(rolfSquad);
 
 rolfWaitingForVehiclesTimer := 0$00;
 display_strings := [];
@@ -741,60 +776,26 @@ End;
 
 // non-oil
 Every 0$1 trigger GetResourceType(GetBase(arDepot), mat_oil) < 31 and IsOk(Givi) do
-var vehicle, driver, live;
 begin
 DialogueOn;
 
 Say(Heike, 'DH-Fuel-1');
 Say(Givi, 'DG-Fuel-2');
 Say(Givi, 'DG-Fuel-3');
-// Say(Givi, 'DG-Fuel-4');
+Say(Givi, 'DG-Fuel-4');
 
 DialogueOff;
 
-Query('Oil');
+Query('QOil');
 SetAreaMapShow(oilArea, 1);
 
-repeat
- wait(0$1);
-until FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]]);
-
-SetAreaMapShow(oilArea, 0);
-
-vehicle := FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]])[1];
-driver := IsDrivenBy(vehicle);
-live := GetLives(vehicle);
-
-RemoveUnit(driver);
-RemoveUnit(vehicle);
-
-wait(rand(4$30, 5$30));
-
-repeat
- wait(0$1);
-until not FilterAllUnits([[f_side, 3], [f_distxy, 261, 71, 12]]) and not HexInfo(277, 80);
-
-uc_nation := GetNation(vehicle);
-uc_side := 2;
-
-PrepareVehicle(GetChassis(vehicle), GetEngine(vehicle), GetControl(vehicle), GetWeapon(vehicle), 66);
-vehicle := CreateVehicle;
-PlaceUnitXYD(vehicle, 277, 80, 4, false);
-PlaceHumanInUnit(driver, vehicle);
-SetLives(vehicle, live);
-
-if Prob([70, 60, 50, 40][Difficulty]) then
-   SetCargo(vehicle, mat_oil, 100)
-else if live > 333 then
-   SetLives(vehicle, 333);
-
-ComMoveXY(vehicle, 250, 119);
+GoForOil();
 End;
 
 // Shariff calls
-Every 0$1 trigger leninSpotted and omarAttack do
+Every 0$1 trigger leninSpotted and omarAttack or IsDead(Morozov) do
 begin
-wait(0$45);
+wait(1$45);
 
 DialogueOn;
 
