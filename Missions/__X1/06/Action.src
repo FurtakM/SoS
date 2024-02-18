@@ -8,7 +8,7 @@ music_class := music_recon;
 
 CenterNowOnXY(213, 89);
 
-if not debug then
+if debug then
    begin
    if Kaia and Olaf then
       SceneKaiaWithOlaf;
@@ -17,6 +17,7 @@ if not debug then
       SceneWithGiviAndKamil;
    end;
 
+tick := 0;
 Video(false);
 
 ChangeMissionObjectives('M1');
@@ -25,6 +26,8 @@ music_nat := music_auto;
 music_class := music_auto;
 
 SaveForQuickRestart;
+
+gameActive := true;
 End;
 
 Export Function SceneKaiaWithOlaf;
@@ -105,7 +108,14 @@ if Markov then
    if IsInUnit(Markov) then
       ComExit(Markov);
 
-   AddComMoveXY(Markov, 212, 88);
+   wait(3);
+
+   ComMoveXY(Markov, 212, 88);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Markov, Heike) < 6;
+
    AddComTurnUnit(Markov, Heike);
    end;
 
@@ -242,7 +252,7 @@ KillUnit(Kaia);
 End;
 
 // Spawn Rolf
-Every 0$1 trigger tick >= 10$20 or ruLoseCounter > 5 or FilterAllUnits([[f_side, 2], [f_distxy, 103, 81, 20]]) do
+Every 0$1 trigger tick >= 15$00 or ruLoseCounter > 5 or FilterAllUnits([[f_side, 2], [f_distxy, 103, 81, 20]]) do
 var i, tmp, dep;
 begin
 PrepareRolfSquad;
@@ -449,7 +459,7 @@ DialogueOff;
 End;
 
 // lenin spotted
-Every 0$1 trigger SeeArea(2, ruMainBase) do
+Every 0$1 trigger gameActive and SeeArea(2, ruMainBase) do
 begin
 Say(Givi, 'DG-Len-1');
 Say(Kurt, 'DKs-Len-2');
@@ -461,8 +471,8 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger bergkampfArrived and tick > [21$00, 20$00, 19$00, 18$00][Difficulty] do
-var i, tmp, inOmarBase;
+Every 0$1 trigger bergkampfArrived and tick > [32$00, 30$00, 25$00, 22$00][Difficulty] do
+var i, tmp, inOmarBase, heikeNearbyOmar;
 begin
 PrepareOmarSquad;
 
@@ -472,10 +482,14 @@ until not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_or, [f_type, unit_human
 
 tmp := FilterUnitsInArea(ruOmarBase, [f_side, 2]);  
 inOmarBase := tmp > 0;
+heikeNearbyOmar := IsInArea(Heike, ruOmarBase);
 
 if UnitFilter(tmp, [f_type, unit_building]) then
    begin
-   Say(Omar, 'DOm-Base-1b');
+   if heikeNearbyOmar then
+      Say(Omar, 'DOm-Base-1b')
+   else
+      SayRadio(Omar, 'DOm-Base-1br');
 
    for i in UnitFilter(tmp, [f_type, unit_building]) do
        begin
@@ -486,9 +500,19 @@ if UnitFilter(tmp, [f_type, unit_building]) then
        end;
    end 
 else if UnitFilter(tmp, [f_type, unit_vehicle]) then
-   Say(Omar, 'DOm-Base-1v')
+   begin
+   if heikeNearbyOmar then
+      Say(Omar, 'DOm-Base-1v')
+   else
+      SayRadio(Omar, 'DOm-Base-1vr')
+   end
 else
-   Say(Omar, 'DOm-Base-1h');
+   begin
+   if heikeNearbyOmar then
+      Say(Omar, 'DOm-Base-1h')
+   else
+      SayRadio(Omar, 'DOm-Base-1hr')
+   end;
 
 for i in omarSquad do
     if GetLives(i) < 750 then
@@ -505,7 +529,7 @@ CenterNowOnUnits(Omar);
 
 DialogueOn;
 
-if inOmarBase then
+if heikeNearbyOmar then
    begin
    Say(Omar, 'DOm-Veh-1a');
    Say(Omar, 'DOm-Veh-2a');
@@ -774,8 +798,11 @@ CenterOnUnits(FilterUnitsInArea(attackIncoming, [f_side, 3]));
 Say(Heike, 'DH-Ruattnext-1');
 End;
 
+Every 0$3 trigger IsDead(Morozov) and IsOk(Omar) do
+SayRadio(Omar, 'DOm-Morozov');
+
 // non-oil
-Every 0$1 trigger GetResourceType(GetBase(arDepot), mat_oil) < 31 and IsOk(Givi) do
+Every 0$1 trigger gameActive and GetResourceType(GetBase(arDepot), mat_oil) < 31 and IsOk(Givi) do
 begin
 DialogueOn;
 

@@ -71,7 +71,7 @@ End;
 
 // Apeman Psych researched
 Every 0$1 trigger GetTech(tech_ApePsych, 1) = state_researched and (IsOk(Frank) or (IsOk(Denis) and GetSide(Denis) = 1) or UnitFilter(others, [f_sex, sex_male])) do
-var sol, ape, b;
+var i, sol, ape, b;
 begin
 InGameOn;
 DialogueOn;
@@ -90,11 +90,22 @@ if sol or Denis or Frank then
    Say(JMM, 'D8a-JMM-1');
    end;
 
-ape := FilterAllUnits([[f_side, 1], [f_class, class_apeman], [f_inside]])[1];
-b := IsInUnit(ape);
+ape := FilterAllUnits([[f_side, 1], [f_class, class_apeman], [f_inside]]);
+b := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])[1];
 
-if not b then
-   b := FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])[1];
+for i in ape do
+    if ape in UnitsInside(b) then
+       begin
+       ape := i;
+       break;
+       end;
+
+if not ape then
+   begin
+   DialogueOff;
+   InGameOff;   
+   exit;
+   end;
 
 RemoveUnit(ape);
 

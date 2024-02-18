@@ -46,34 +46,60 @@ for i := 1 to tmp[1] do
     if IsEnvironment(tmp[1][i], tmp[2][i]) then
        HiddenCamera(tmp[1][i], tmp[2][i], 2);
 
+base := [];
+
+if debug then
+   begin
+   base := [
+        [b_warehouse, 51, 77, 1, nation_russian, 3, 0, 0, 0],
+        // [b_oil_power, 64, 80, 1, nation_russian, 3, 0, 0, 0],
+        // [b_oil_power, 61, 73, 2, nation_russian, 3, 0, 0, 0],
+        // [b_oil_power, 41, 76, 4, nation_russian, 3, 0, 0, 0],
+        // [b_bunker, 52, 67, 3, nation_russian, 3, 0, 0, ru_gatling_gun]
+   ];
+   end
+else if buildingsFromPrev then
+   base := buildingsFromPrev;
+
+if base then
+   for i := 1 to base do                
+       base := Replace(base, i, [base[i][1], base[i][2] + 155, base[i][3] + 3, base[i][4], base[i][5], base[i][6], base[i][7], base[i][8], base[i][9]]);
+
 // prepare base
-base := [ [b_depot, 206, 80, 1],
-          [b_bunker, 221, 95, 5, ar_light_gun],
-          [b_bunker, 223, 88, 5, ar_double_machine_gun],
-          [b_bunker, 202, 64, 2, ar_gatling_gun],
-          [b_factory, 203, 91, 1],
-          [b_lab_full, 217, 78, 4],
-          [b_solar_power, 220, 99, 1],
-          [b_solar_power, 220, 103, 1],
-          [b_solar_power, 216, 102, 1],
-          [b_ext_gun, 203, 94, 0],
-          [b_ext_stitch, 200, 88, 2],
-          [b_ext_track, 199, 91, 1],
-          [b_oil_power, 197, 81, 1],
-          [b_oil_power, 197, 78, 3] ];
+base := base ^ [
+          [b_depot, 206, 80, 1, nation_arabian, 3, 0, 0, 0],
+          [b_bunker, 221, 95, 5, nation_arabian, 3, 0, 0, ar_light_gun],
+          [b_bunker, 223, 88, 5, nation_arabian, 3, 0, 0, ar_double_machine_gun],
+          [b_bunker, 202, 64, 2, nation_arabian, 3, 0, 0, ar_gatling_gun],
+          [b_factory, 203, 91, 1, nation_arabian, 3, 0, 0, 0],
+          [b_lab_full, 217, 78, 4, nation_arabian, 3, 0, 0, 0],
+          [b_solar_power, 220, 99, 1, nation_arabian, 3, 0, 0, 0],
+          [b_solar_power, 220, 103, 1, nation_arabian, 3, 0, 0, 0],
+          [b_solar_power, 216, 102, 1, nation_arabian, 3, 0, 0, 0],
+          [b_ext_gun, 203, 94, 0, nation_arabian, 3, 0, 0, 0],
+          [b_ext_stitch, 200, 88, 2, nation_arabian, 3, 0, 0, 0],
+          [b_ext_track, 199, 91, 1, nation_arabian, 3, 0, 0, 0],
+          [b_oil_power, 197, 81, 1, nation_arabian, 3, 0, 0, 0],
+          [b_oil_power, 197, 78, 3, nation_arabian, 3, 0, 0, 0]
+        ];
 
 if hasRadar then
-   base := Replace(base, base + 1, [b_ext_radar, 203, 87, 3]);
+   base := Replace(base, base + 1, [b_ext_radar, 203, 87, 3, nation_arabian, 3, 0, 0, 0]);
 
 if hasRemote then
-   base := Replace(base, base + 1, [b_ext_radio, 207, 95, 5]);
+   base := Replace(base, base + 1, [b_ext_radio, 207, 95, 5, nation_arabian, 3, 0, 0, 0]);
 
 for i in base do
     begin
-    bc_type := i[1];
-    bc_level := 3;
+    if HexInfo(i[2], i[3]) then
+       continue;
 
-    if i[1] = b_lab_full then
+    uc_nation := i[5];
+
+    bc_type := i[1];
+    bc_level := i[6];
+
+    if i[1] = b_lab_full and i[5] = nation_arabian and not i[7] and not i[8] then
        begin
        bc_kind1 := b_lab_weapon;
 
@@ -83,18 +109,28 @@ for i in base do
           bc_kind2 := -1;
        end;
 
+    if i[7] then
+       bc_kind1 := i[7]
+    else
+       bc_kind1 := -1;
+
+    if i[8] then
+       bc_kind1 := i[8]
+    else
+       bc_kind1 := -1;
+
     b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
 
-    if i > 4 then
-       PlaceWeaponTurret(b, i[5]);
+    if i[9] then
+       PlaceWeaponTurret(b, i[9]);
 
     if i[1] = b_bunker then
        bunkers := Replace(bunkers, bunkers + 1, b);
     end;
 
 depot := HexInfo(206, 80);
-factory := HexInfo(203, 91);
-lab := HexInfo(217, 78);
+factory := FilterAllUnits([[f_side, 2], [f_btype, b_factory]]);
+lab := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
 arDepot := depot;
 
 SetResourceType(GetBase(depot), mat_cans, [360, 260, 160, 120][Difficulty]);
@@ -170,13 +206,22 @@ if Sophia then
    PlaceHumanInUnit(Sophia, depot);
 
 if Aviradze then
-   PlaceHumanInUnit(Aviradze, lab);
+   if lab then
+      PlaceHumanInUnit(Aviradze, lab[1])
+   else
+      PlaceUnitXYR(Aviradze, 210, 87, 3, false);
 
 if Ibrahim then
-   PlaceHumanInUnit(Ibrahim, lab);
+   if lab then
+      PlaceHumanInUnit(Ibrahim, lab[1])
+   else
+      PlaceUnitXYR(Ibrahim, 210, 87, 3, false);
 
 if Markov then
-   PlaceHumanInUnit(Markov, factory);
+   if factory then
+      PlaceHumanInUnit(Markov, factory[1])
+   else
+      PlaceUnitXYR(Markov, 210, 87, 3, false);
 
 if heikeSecondSquad then
    for i in heikeSecondSquad do
@@ -604,13 +649,24 @@ until not omarSquad;
 End;
 
 Export Function GoForOil;
-var i, tmp, data, chance, vehicle;
+var i, tmp, data, chance, vehicle, heikeInConvoy;
 begin
-repeat
- wait(0$1);
- tmp := FilterUnitsInArea(oilArea, [[f_side, 2], [f_control, control_manual]]);
+SetAreaMapShow(oilArea, 1);
 
- if UnitFilter(tmp, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]) then
+repeat
+ wait(0$5);
+ heikeInConvoy := false;
+ tmp := FilterUnitsInArea(oilArea, [[f_side, 2], [f_not, [f_weapon, ar_crane], [f_weapon, ar_control_tower]], [f_control, control_manual]]);
+
+ for i in tmp do
+     if IsDrivenBy(i) = Heike then
+        begin
+        heikeInConvoy := true;
+        Query('QHeikeConvoy');
+        break;
+        end;
+
+ if not heikeInConvoy and UnitFilter(tmp, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]) then
     if Query('QConvoy') = 1 then
        break;
 
@@ -661,10 +717,11 @@ for i in data do
        SetLives(vehicle, 333);
 
     ComMoveXY(vehicle, 250, 119);
+    AddComMoveXY(vehicle, 211, 80);
 
     repeat
      wait(0$5);
-    until not FilterUnitsInArea(oilArea, [f_placed]);
+    until not FilterUnitsInArea(oilArea, [[f_side, 2], [f_placed]]);
     end;
 
 wait(0$30);
