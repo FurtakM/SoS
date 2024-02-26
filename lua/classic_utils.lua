@@ -165,6 +165,10 @@ function split(source, delimiters)
     return elements;
 end;
 
+function round(num)
+    return num >= 0 and math.floor(num + 0.5) or math.ceil(num - 0.5);
+end
+
 function setVisibleAll(ARRAY, MODE)
     local result = false;
 

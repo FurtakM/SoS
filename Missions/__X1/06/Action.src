@@ -8,7 +8,7 @@ music_class := music_recon;
 
 CenterNowOnXY(213, 89);
 
-if debug then
+if not debug then
    begin
    if Kaia and Olaf then
       SceneKaiaWithOlaf;
@@ -18,6 +18,9 @@ if debug then
    end;
 
 tick := 0;
+
+wait(3);
+
 Video(false);
 
 ChangeMissionObjectives('M1');
@@ -471,7 +474,7 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger bergkampfArrived and tick > [32$00, 30$00, 25$00, 22$00][Difficulty] do
+Every 0$1 trigger bergkampfArrived and tick > [32$00, 30$00, 28$00, 26$00][Difficulty] do
 var i, tmp, inOmarBase, heikeNearbyOmar;
 begin
 PrepareOmarSquad;
@@ -506,7 +509,7 @@ else if UnitFilter(tmp, [f_type, unit_vehicle]) then
    else
       SayRadio(Omar, 'DOm-Base-1vr')
    end
-else
+else if inOmarBase then
    begin
    if heikeNearbyOmar then
       Say(Omar, 'DOm-Base-1h')
@@ -624,7 +627,7 @@ repeat
     exit;
     end;
 
-until omarVehiclesCounter <= FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_empty]]);
+until omarVehiclesCounter <= FilterUnitsInArea(omarVehiclesArea, [[f_side, 2], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane], [f_weapon, ar_control_tower]]], [f_control, control_manual], [f_empty]]);
 
 omarWaitingForVehiclesTimer := 0$00;
 display_strings := [];
@@ -639,6 +642,10 @@ DialogueOff;
 ChangeMissionObjectives('M4a');
 SetAreaMapShow(omarVehiclesArea, 0);
 omarHasVehicles := true;
+
+repeat
+ wait(0$1);
+until rolfWaitingForVehiclesTimer = 0$00;
 
 wait(1$00);
 
@@ -689,7 +696,7 @@ repeat
  wait(0$1);
  rolfWaitingForVehiclesTimer := rolfWaitingForVehiclesTimer - 0$1;
 
- if rolfWaitingForVehiclesTimer <= 0$00 or omarAttack then
+ if rolfWaitingForVehiclesTimer <= 0$00 then
     begin
     rolfWaitingForVehiclesTimer := 0$00;
     display_strings := [];
@@ -802,19 +809,24 @@ Every 0$3 trigger IsDead(Morozov) and IsOk(Omar) do
 SayRadio(Omar, 'DOm-Morozov');
 
 // non-oil
-Every 0$1 trigger gameActive and GetResourceType(GetBase(arDepot), mat_oil) < 31 and IsOk(Givi) do
+Every 0$1 trigger gameActive and GetResourceType(GetBase(arDepot), mat_oil) < 31 do
 begin
+wait(0$10);
+
 DialogueOn;
 
 Say(Heike, 'DH-Fuel-1');
-Say(Givi, 'DG-Fuel-2');
-Say(Givi, 'DG-Fuel-3');
-Say(Givi, 'DG-Fuel-4');
+
+if IsOk(Givi) then
+   begin
+   Say(Givi, 'DG-Fuel-2');
+   Say(Givi, 'DG-Fuel-3');
+   Say(Givi, 'DG-Fuel-4');
+   end;
 
 DialogueOff;
 
 Query('QOil');
-SetAreaMapShow(oilArea, 1);
 
 GoForOil();
 End;

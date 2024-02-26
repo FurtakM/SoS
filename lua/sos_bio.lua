@@ -182,7 +182,7 @@ biographics = {
         loc(8023),
         loc(8024),
         'Ibrahim',
-        3,
+        2,
         4,
         '6.11.1964',
         loc(TID_Azerbaijan),
@@ -600,6 +600,65 @@ function unHoverOnBiographic(ID)
     setTextureID(ID, 'SGUI/Bio/placeholder.PNG');
 end;
 
+function clAvatar(PLACEHOLDER, INDEX, BIO)
+    local nat = {'am', 'ar', 'ru'};
+    local background = getElementEX(
+        {ID=PLACEHOLDER},
+        anchorLTRB,
+        XYWH(4, 4, 80, 100),
+        true,
+        {
+            texture = avatarPath .. nat[BIO[INDEX][4]] .. '.png',
+        }
+    );
+
+    local avatar = getElementEX(
+        background,
+        anchorLTRB,
+        XYWH(0, 0, 80, 100),
+        true,
+        {
+            texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. biographics[INDEX][3] .. '.png',
+            hint = BIO[INDEX][1],
+            callback_mouseleave = 'unHoverOnBiographic(' .. PLACEHOLDER .. ')',
+            callback_mouseover = 'hoverOnBiographic(' .. PLACEHOLDER .. ')',
+            callback_mousedown = 'openBioPopup(' .. INDEX .. ')'
+        }
+    );
+
+    return avatar;
+end
+
+function clAvatarDisabled(PLACEHOLDER, INDEX, BIO)
+    local nat = {'am', 'ar', 'ru'};
+    local background = getElementEX(
+        {ID=PLACEHOLDER},
+        anchorLTRB,
+        XYWH(4, 4, 80, 100),
+        true,
+        {
+            texture = avatarPath .. nat[BIO[INDEX][4]] .. '.png',
+        }
+    );
+
+    local avatar = getElementEX(
+        background,
+        anchorLTRB,
+        XYWH(0, 0, 80, 100),
+        true,
+        {
+            texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. biographics[INDEX][3] .. '.png',
+            hint =BIO[INDEX][1],
+            callback_mousedown = 'isBioDisabledInfo();'
+        }
+    );
+
+    sgui_set(background.ID, PROP_GRAYSCALE, true);
+    sgui_set(avatar.ID, PROP_GRAYSCALE, true);
+
+    return avatar;
+end
+
 function loadBiographic()
     local rowIndex = 0;
     local isActive = true;
@@ -619,35 +678,12 @@ function loadBiographic()
         isActive = status[i];
 
         biographics[i][8] = isActive;
+        biographics[i][9] = true;
 
         if isActive then
-            local avatar = getElementEX(
-                placeholder,
-                anchorLTRB,
-                XYWH(4, 4, 80, 100),
-                true,
-                {
-                    texture = avatarPath .. biographics[i][3] .. '.png',
-                    hint = biographics[i][1],
-                    callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
-                    callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
-                    callback_mousedown = 'openBioPopup(' .. i .. ')'
-                }
-            );
+            clAvatar(placeholder.ID, i, biographics);
         else
-            local avatar = getElementEX(
-                placeholder,
-                anchorLTRB,
-                XYWH(4, 4, 80, 100),
-                true,
-                {
-                    texture = avatarPath .. biographics[i][3] .. '.png',
-                    hint = biographics[i][1],
-                    callback_mousedown = 'isBioDisabledInfo();'
-                }
-            );
-
-            sgui_set(avatar.ID, PROP_GRAYSCALE, true);
+            clAvatarDisabled(placeholder.ID, i, biographics);
         end;
 
         if (i % 8 == 0) then
@@ -688,7 +724,11 @@ function bioFilter(VALUE)
     local isActive = true;
 
     for i = 1, #biographics do
-        if (inArray({biographics[i][4], 0}, VALUE)) then
+        local isVisible = inArray({biographics[i][4], 0}, VALUE);
+
+        biographics[i][9] = isVisible;
+
+        if isVisible then
             j = j + 1;
 
             local placeholder = getElementEX(
@@ -704,33 +744,9 @@ function bioFilter(VALUE)
             isActive = biographics[i][8];
 
             if isActive then
-                local avatar = getElementEX(
-                    placeholder,
-                    anchorLTRB,
-                    XYWH(4, 4, 80, 100),
-                    true,
-                    {
-                        texture = avatarPath .. biographics[i][3] .. '.png',
-                        hint = biographics[i][1],
-                        callback_mouseleave = 'unHoverOnBiographic(' .. placeholder.ID .. ')',
-                        callback_mouseover = 'hoverOnBiographic(' .. placeholder.ID .. ')',
-                        callback_mousedown = 'openBioPopup(' .. i .. ')'
-                    }
-                );
+                clAvatar(placeholder.ID, i, biographics);
             else
-                local avatar = getElementEX(
-                    placeholder,
-                    anchorLTRB,
-                    XYWH(4, 4, 80, 100),
-                    true,
-                    {
-                        texture = avatarPath .. biographics[i][3] .. '.png',
-                        hint = biographics[i][1],
-                        callback_mousedown = 'isBioDisabledInfo();'
-                    }
-                );
-
-                sgui_set(avatar.ID, PROP_GRAYSCALE, true);
+                clAvatarDisabled(placeholder.ID, i, biographics);
             end;
 
             if (j % 8 == 0) then
@@ -763,27 +779,50 @@ function showBiographic(mode)
 end;
 
 function openBioPopup(ID)
+    ACTIVE_BIO = ID;
+
     local nat = {'am', 'ar', 'ru'};
     local info = loc(9200) .. ': ' .. loc(1162 + biographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. biographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. biographics[ID][7];
 
     setVisible(menu.window_bio.popup, true);
     setText(menu.window_bio.popup.panel.name, biographics[ID][1]);
     setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
-    setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. biographics[ID][3] .. '.png');
+    setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. nat[biographics[ID][4]] .. '.png');
+    setTexture(menu.window_bio.popup.panel.avatar.face, avatarPath .. nat[biographics[ID][4]] .. '/' .. biographics[ID][3] .. '.png');
     setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
 
     setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
-    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and not biographics[ID+1][8])));
-
-    ACTIVE_BIO = ID;
+    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and (not biographics[ID+1][8]))));
 end;
 
 function showPrevBio()
-    openBioPopup(ACTIVE_BIO - 1);
+    local ID = nil;
+
+    for i = ACTIVE_BIO - 1, 1, -1 do
+        if biographics[i][9] then
+            ID = i;
+            break;
+        end;
+    end;
+
+    if ID ~= nil then
+        openBioPopup(ID);
+    end;
 end
 
 function showNextBio()
-    openBioPopup(ACTIVE_BIO + 1);
+    local ID = nil;
+
+    for i = ACTIVE_BIO + 1, #biographics do
+        if biographics[i][9] then
+            ID = i;
+            break;
+        end;
+    end;
+
+    if ID ~= nil then
+        openBioPopup(ID);
+    end;
 end
 
 function closeBioPopup()
@@ -941,8 +980,16 @@ menu.window_bio.popup.panel.avatar = getElementEX(
     {}
 );
 
-menu.window_bio.popup.panel.avatar.nation = getElementEX(
+menu.window_bio.popup.panel.avatar.face = getElementEX(
     menu.window_bio.popup.panel.avatar,
+    anchorNone,
+    XYWH(0, 0, 320, 400),
+    true,
+    {}
+);
+
+menu.window_bio.popup.panel.avatar.nation = getElementEX(
+    menu.window_bio.popup.panel.avatar.face,
     anchorNone,
     XYWH(265, 350, 51, 48),
     true,

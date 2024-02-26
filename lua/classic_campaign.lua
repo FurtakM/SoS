@@ -357,7 +357,7 @@ menu.window_campaign_tree = getElementEX(
 
 menu.window_campaign_tree.panel = getElementEX(
 	menu.window_campaign_tree,
-	anchorNone,
+	anchorLTRB,
 	XYWH(LayoutWidth / 2 - 400, LayoutHeight / 2 - 300, 800, 600),
 	true,
 	{}
@@ -429,7 +429,7 @@ menu.window_campaign_tree.panel.sidebar.text = getLabelEX(
 	anchorLTR,
 	XYWH(
 		20,
-		40,
+		0,
 		menu.window_campaign_tree.panel.sidebar.width - 20,
 		300
 	),
@@ -439,6 +439,7 @@ menu.window_campaign_tree.panel.sidebar.text = getLabelEX(
    		wordwrap = true,
 		font_colour = WHITE(),
 		text_valign = ALIGN_TOP,
+		scissor = true
 	}
 );
 
@@ -731,49 +732,97 @@ function runCampaign(ID)
 	setVisible(menu.window_campaign, false);
 	setVisible(menu.window_campaign_tree, true);
 
-	local camp, lowerCamp, interface, backgroundImage, scrollboxPos;
+	local camp, lowerCamp, interface, backgroundImage, scrollboxPos, sidebarPos, campText;
+
+	local campContainerWidth = 1920;
+	local campContainerHeight = 1080;
+	local campContainerX = 0;
+	local campContainerY = 0;
+
+	if (ScrWidth <= campContainerWidth) then
+		campContainerWidth = ScrWidth;
+	else
+		campContainerX = campContainerWidth / 2 - (ScrWidth / 2);
+	end;
+
+	if (ScrHeight <= campContainerHeight) then
+		campContainerHeight = ScrHeight;
+	else
+		campContainerY = campContainerHeight / 2 - (ScrHeight / 2);
+	end;
 
 	if (ID == 0) then
 		backgroundImage = 'classic/edit/campaign/window/am-campaign.png';
 		interface = 'Amer';
 		camp = 'Am';
 		lowerCamp = 'am';
-		scrollboxPos = XYWH(10, 40, menu.window_campaign_tree.panel.width - 262, menu.window_campaign_tree.panel.height - 72);
+		scrollboxPos = XYWH(20, round(campContainerHeight * 0.07), round(campContainerWidth * 0.7) - 30, campContainerHeight - round(campContainerHeight * 0.07) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.98) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);
+		campText = loc(9990);
 	elseif (ID == 1) then
 		backgroundImage = 'classic/edit/campaign/window/ar-campaign.png';
 		interface = 'Arab';
 		camp = 'Ar';
 		lowerCamp = 'ar';
-		scrollboxPos = XYWH(56, 78, menu.window_campaign_tree.panel.width - 322, menu.window_campaign_tree.panel.height - 112);
+		scrollboxPos = XYWH(round(campContainerHeight * 0.12), round(campContainerHeight * 0.13), round(campContainerWidth * 0.63) - 30, campContainerHeight - round(campContainerHeight * 0.14) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.99) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);campText = loc(9993);		
+		campText = loc(9991);
 	elseif (ID == 2) then
 		backgroundImage = 'classic/edit/campaign/window/ru-campaign.png';
 		interface = 'Rus';
 		camp = 'Ru';
 		lowerCamp = 'ru';
-		scrollboxPos = XYWH(52, 64, menu.window_campaign_tree.panel.width - 312, menu.window_campaign_tree.panel.height - 92);
+		scrollboxPos = XYWH(round(campContainerHeight * 0.11), round(campContainerHeight * 0.11), round(campContainerWidth * 0.64) - 30, campContainerHeight - round(campContainerHeight * 0.11) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.98) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);
+		campText = loc(9992);
 	elseif (ID == 3) then
 		backgroundImage = 'classic/edit/campaign/window/ap-campaign.png';
 		interface = 'Ape';
 		camp = 'Ap';
 		lowerCamp = 'ap';
-		scrollboxPos = XYWH(10, 40, menu.window_campaign_tree.panel.width - 262, menu.window_campaign_tree.panel.height - 72);
+		scrollboxPos = XYWH(round(campContainerHeight * 0.12), round(campContainerHeight * 0.13), round(campContainerWidth * 0.63) - 30, campContainerHeight - round(campContainerHeight * 0.14) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.99) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);campText = loc(9993);		
+		campText = loc(9993);
 	elseif (ID == 4) then
 		backgroundImage = 'classic/edit/campaign/window/ar-campaign.png';
 		interface = 'Arab';
 		camp = 'X1';
 		lowerCamp = 'ar';
-		scrollboxPos = XYWH(56, 78, menu.window_campaign_tree.panel.width - 322, menu.window_campaign_tree.panel.height - 112);
+		scrollboxPos = XYWH(round(campContainerHeight * 0.12), round(campContainerHeight * 0.13), round(campContainerWidth * 0.63) - 30, campContainerHeight - round(campContainerHeight * 0.14) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.99) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);
+		campText = loc(9994);
 	else
 		backgroundImage = 'classic/edit/campaign/window/ar-campaign.png';
 		interface = 'Arab';
 		camp = 'X2';
 		lowerCamp = 'x2';
-		scrollboxPos = XYWH(56, 78, menu.window_campaign_tree.panel.width - 322, menu.window_campaign_tree.panel.height - 112);
+		scrollboxPos = XYWH(round(campContainerHeight * 0.12), round(campContainerHeight * 0.13), round(campContainerWidth * 0.63) - 30, campContainerHeight - round(campContainerHeight * 0.14) - 30);
+		sidebarPos = XYWH(round(campContainerWidth * 0.73), round(campContainerHeight * 0.07), round(campContainerWidth * 0.99) - round(campContainerWidth * 0.73), campContainerHeight - round(campContainerHeight * 0.07) - 30);campText = loc(9995);
+		campText = loc(9995);
 	end;
+
+	setXYWH(menu.window_campaign_tree, {
+		X = 0, 
+		Y = 0, 
+		W = campContainerWidth, 
+		H = campContainerHeight
+	});
+	
+	setXYWH(menu.window_campaign_tree.panel, {
+		X = campContainerX, 
+		Y = campContainerY, 
+		W = campContainerWidth, 
+		H = campContainerHeight
+	});
 
 	setTexture(menu.window_campaign_tree.panel, backgroundImage);
 
-	setXYWH({ID = menu.window_campaign_tree.panel.scrollbox.ID}, scrollboxPos);
+	setXYWH(menu.window_campaign_tree.panel.scrollbox, scrollboxPos);
+
+	--setColour1(menu.window_campaign_tree.panel.scrollbox, RGBA(255, 0, 0, 50));
+	--setColour1({ID = menu.window_campaign_tree.panel.scrollV.id}, RGBA(128, 0, 128, 50));
+	--setColour1({ID = menu.window_campaign_tree.panel.scrollH.id}, RGBA(0, 128, 128, 50));
+	--setColour1(menu.window_campaign_tree.panel.sidebar, RGBA(0, 255, 0, 50));
 
 	setXYWH({ID = menu.window_campaign_tree.panel.scrollH.id}, {
 		X = scrollboxPos.X,
@@ -787,6 +836,56 @@ function runCampaign(ID)
 		Y = scrollboxPos.Y,
 		W = 12,
 		H = scrollboxPos.H
+	});
+
+	setXYWH(menu.window_campaign_tree.panel.sidebar, sidebarPos);
+
+	setText(menu.window_campaign_tree.panel.sidebar.text, loc(TID_Main_Menu_Campaign_Hint1) 
+		.. '\n\n' 
+		.. loc(TID_Main_Menu_Campaign_Hint2) 
+		.. '\n\n'
+		.. campText
+		.. '\n\n'
+		.. loc(TID_Main_Menu_Campaign_Hint3)
+	);
+
+	local sidebarWidth = getWidth(menu.window_campaign_tree.panel.sidebar);
+	local sidebarHeight = getHeight(menu.window_campaign_tree.panel.sidebar);
+	local sidebarHeightP = round(sidebarHeight * 0.7);
+
+	setXY(menu.window_campaign_tree.panel.sidebar.checkboxEasy, 20, sidebarHeightP);
+	setXY(menu.window_campaign_tree.panel.sidebar.labelEasy, 40, sidebarHeightP);
+
+	setXY(menu.window_campaign_tree.panel.sidebar.checkboxMedium, 20, sidebarHeightP + 20);
+	setXY(menu.window_campaign_tree.panel.sidebar.labelMedium, 40, sidebarHeightP + 20);
+
+	setXY(menu.window_campaign_tree.panel.sidebar.checkboxHard, 20, sidebarHeightP + 40);
+	setXY(menu.window_campaign_tree.panel.sidebar.labelHard, 40, sidebarHeightP + 40);
+
+	setXY(menu.window_campaign_tree.panel.sidebar.checkboxVHard, 20, sidebarHeightP + 60);
+	setXY(menu.window_campaign_tree.panel.sidebar.labelVHard, 40, sidebarHeightP + 60);
+
+	setHeight(menu.window_campaign_tree.panel.sidebar.text, sidebarHeightP - 30);
+
+	setXYWH(menu.window_campaign_tree.panel.sidebar.run, {
+		X = 20,
+		Y = sidebarHeightP + 100,
+		W = sidebarWidth - 20,
+		H = 20
+	});
+	
+	setXYWH(menu.window_campaign_tree.panel.sidebar.delete, {
+		X = 20,
+		Y = sidebarHeightP + 125,
+		W = sidebarWidth - 20,
+		H = 20
+	});
+
+	setXYWH(menu.window_campaign_tree.panel.sidebar.back, {
+		X = 20,
+		Y = sidebarHeightP + 150,
+		W = sidebarWidth - 20,
+		H = 20
 	});
 
 	local texture, texture2, texture3;
