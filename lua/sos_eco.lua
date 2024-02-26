@@ -184,7 +184,7 @@ game.ecoPanel.callBtn = getImageButtonEX(
     '',
     nil,
     {
-        texture = 'SGUI/Amer/button-call.png',
+        texture = 'SGUI/Amer/button-call.png', -- todo dorobić warianty dla 3 interfejsów, setTexture w displayEcoPanel
         callback_mousedown = 'displayEcoPanel();'
     }
 );

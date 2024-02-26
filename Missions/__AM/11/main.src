@@ -1,125 +1,202 @@
-VAR konec;
-VAR J,P;
-VAR You;
-VAR testslez;
-
 Export debug;
+Export JMM, Powell;
+Export cars, people;
 
-starting
+Starting
 begin
-  debug := false;
+debug := false;
 
-  if debug then
-     ChangeMap(1, '%_cont');
+AnimateTrees(true);
 
-  AnimateTrees(true);
+RevealFogArea(1, fogArea);
 
-  RevealFogArea(You,FOGAR);
-  You=1;
-  konec=false;
-  testslez=false;
-// nacteni JMM a Powella
-  J=nacti_osobu('JMM');
-  P=NewCharacter('Powell');
+Video(true);
 
-  InGameOn;
-  PlaceHumanInUnit(J,auto4);
-  PlaceHumanInUnit(P,auto2);
-  wait(0$1);
-  CenterOnXY(42,40);
-  wait(0$1);
-  ComMoveXY(auto3,33,31);
-  ComMoveXY(auto1,35,33);
-  ComMoveXY(auto2,36,35);
-  ComMoveXY(auto4,39,40);
-  ComMoveXY(auto5,42,43);
-  AddComExitVehicle(auto4);
-  AddComExitVehicle(auto2);
-end;
+CenterNowOnXY(42, 40);
 
-EVERY 0$1 TRIGGER FilterUnitsInArea(STOP,[[f_side,You]])>0 DO
+PrepareUnits;
+Action;
+End;
+
+Function PrepareUnits;
+var i, un, veh, coords;
 begin
-  CenterOnXY(38,37);
-end;
+JMM := PrepareUnit('JMM', (not debug), '10c_');
+Powell := NewCharacter('Powell');
 
+SetClass(JMM, class_soldier);
 
-EVERY 0$1 TRIGGER FilterUnitsInArea(STOP,[[f_side,You]])=7 DO
-begin
-  ComMoveXY(J,67,55);
-  ComMoveXY(P,67,56);
-  AddComTurnUnit(J,P);
-  AddComTurnUnit(P,J);
-  testslez=true;
-end;
+cars := [];
+people := [];
+coords := [ [31,28], [36,35], [39,38], [41,41], [44,47] ];
 
-EVERY 0$0.5 TRIGGER FilterUnitsInArea(kecy,[[f_side,You]])=2 DO
-begin
-  CenterNowOnUnits(J);
-  Say(P,'D1-Pow-1');
-  Say(J,'D1-JMM-1');
-  Say(P,'D1-Pow-2');
-  Say(J,'D1-JMM-2');
-  Say(P,'D1-Pow-3');
-  Say(J,'D1-JMM-3');
-  Say(P,'D1-Pow-4');
-  Say(J,'D1-JMM-4');
-  Say(P,'D1-Pow-5');
-  Say(J,'D1-JMM-5');
-  Say(P,'D1-Pow-6');
-  Say(J,'D1-JMM-6');
-  Say(P,'D1-Pow-7');
-  Say(J,'D1-JMM-7');
-  Say(P,'D1-Pow-8');
-  wait(0$0.5);
-  Query('QLetter');
-  Say(P,'D1aa-Pow-1');
-  Say(J,'D1aa-JMM-1');
-  Say(P,'D1aa-Pow-2');
-  Say(J,'D1aa-JMM-2');
-  Say(P,'D1aa-Pow-3');
-  Say(J,'D1aa-JMM-3');
-  Say(P,'D1aa-Pow-4');
-  Say(J,'D1aa-JMM-4');
-  Say(P,'D1aa-Pow-5');
-  Say(J,'D1aa-JMM-5');
-  Say(P,'D1aa-Pow-6');
-  wait(0$1);
-  ComFree([P,J]);
-  ComEnterUnit(J,auto4);
-  ComEnterUnit(P,auto2);
-  testslez=true;
-  konec=true;
-end;
-
-EVERY 0$1 TRIGGER konec and IsDrivenBy(auto4)=J and IsDrivenBy(auto2)=P DO
-VAR i;
-begin
-  CenterOnUnits(auto2);
-  for i in [auto3,auto1,auto2,auto4,auto5] do
+for i := 1 to 3 do
     begin
-      ComMoveXY([auto1,auto3,auto5,auto2,auto4],31,27);
-      AddComMoveXY([auto1,auto3,auto5,auto2,auto4],26,21);
-      AddComMoveXY([auto1,auto3,auto5,auto2,auto4],12,18);
-      wait(0$0.3);
+    PrepareSoldier(false, 7);
+    un := CreateHuman;
+    people := Join(people, un);
     end;
-  wait(0$2);
-  ChangeMap('1','%_cont');
-end;
 
-// nacteni osoby ze savu z predesle mise
-function nacti_osobu(ident);
-begin
-  if CheckCharacterSet(ident) then result:=CreateCharacter(ident)
-                              else result:=0;
-end;
-                                                                 
-EVERY 0$0.1 TRIGGER testslez and FilterUnitsInArea(slez,[[f_side,You]])>1 DO
-begin
-  CenterOnXY(54,44);
-  testslez=false;
-  enable;
-end;
+people := Insert(people, 2, Powell);
+people := Insert(people, 3, JMM);
 
+for i := 1 to 5 do
+    begin
+    PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, [us_gatling_gun, us_double_gun, us_double_gun, us_radar, us_rocket_launcher][i mod 5 + 1], 100);
+    veh := CreateVehicle;
+    cars := Join(cars, veh);
+    SetDir(veh, 0);
+    PlaceUnitXY(veh, 56, 77, false);
+    PlaceHumanInUnit(people[i], veh);
+
+    ComMoveXY(veh, 48, 61);
+    AddComMoveXY(veh, coords[i][1], coords[i][2]);
+
+    wait(0$3);
+    end;
+End;
+
+Function Action;
+var i;
+begin
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 1], [f_inarea, stopConvoyArea], [f_not, [f_hastask]]]) >= 5;
+
+wait(0$1);
+
+ComExitVehicle(JMM);
+ComExitVehicle(Powell);
+
+wait(0$0.3);
+
+AddComMoveXY(Powell, 52, 42);
+AddComMoveXY(JMM, 52, 42);
+
+AddComMoveXY(Powell, 68, 55);
+AddComMoveXY(JMM, 68, 58);
+
+AddComTurnXY(Powell, 73, 54);
+AddComTurnXY(JMM, 74, 58);
+
+ComExitVehicle(people[4]);
+ComExitVehicle(people[5]);
+
+wait(0$02);
+
+ComMoveXY(people[4], 50, 40);
+ComMoveXY(people[5], 49, 59);
+
+repeat
+ wait(0$1);
+until IsAt(Powell, 68, 55) and IsAt(JMM, 68, 58);
+
+CenterNowOnUnits(JMM);
+
+Say(Powell, 'D1-Pow-1');
+Say(JMM, 'D1-JMM-1');
+Say(Powell, 'D1-Pow-2');
+
+ComTurnUnit(JMM, Powell);
+
+Say(JMM, 'D1-JMM-2'); 
+
+wait(0$01);
+
+ComTurnUnit(Powell, JMM);
+
+Say(Powell, 'D1-Pow-3');
+Say(JMM, 'D1-JMM-3');
+Say(Powell, 'D1-Pow-4');
+Say(JMM, 'D1-JMM-4');
+Say(Powell, 'D1-Pow-5');
+Say(JMM, 'D1-JMM-5');
+Say(Powell, 'D1-Pow-6');
+Say(JMM, 'D1-JMM-6');
+Say(Powell, 'D1-Pow-7');
+Say(JMM, 'D1-JMM-7');
+
+ComMoveXY(Powell, 68, 57);
+
+repeat
+ wait(0$0.3);
+until IsAt(Powell, 68, 57);
+
+ComTurnUnit(Powell, JMM);
+
+Say(Powell, 'D1-Pow-8');
+
+wait(0$0.5);
+
+Query('QLetter');
+
+Say(Powell, 'D1aa-Pow-1');
+Say(JMM, 'D1aa-JMM-1');
+Say(Powell, 'D1aa-Pow-2');
+Say(JMM, 'D1aa-JMM-2');
+Say(Powell, 'D1aa-Pow-3');
+Say(JMM, 'D1aa-JMM-3');
+
+ComMoveXY(Powell, 69, 55);
+
+repeat
+ wait(0$1);
+until IsAt(Powell, 69, 55);
+
+ComTurnXY(Powell, 71, 55);
+
+wait(0$2);
+
+Say(Powell, 'D1aa-Pow-4');
+Say(JMM, 'D1aa-JMM-4');
+
+ComTurnUnit(Powell, JMM);
+
+wait(0$0.3);
+
+Say(Powell, 'D1aa-Pow-5');
+Say(JMM, 'D1aa-JMM-5');
+Say(Powell, 'D1aa-Pow-6');
+
+wait(0$1);
+
+ComEnterUnit(JMM, cars[3]);
+
+wait(0$0.5);
+
+ComEnterUnit(Powell, cars[2]);
+
+repeat
+ wait(0$1);
+until IsInArea(Powell, hillDownArea);
+
+CenterOnXY(42, 40);
+
+ComEnterUnit(people[4], cars[4]);
+ComEnterUnit(people[5], cars[5]);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 1], [f_outside], [f_type, unit_human]]) = 0;
+
+CenterOnXY(36, 35);
+
+for i := 1 to 5 do
+    begin
+    ComMoveXY(cars[i], 11, 18);
+    wait(0$0.3);
+    end;
+
+wait(0$2);
+
+ChangeMap('1','%_cont');
+End;
+
+Every 0$1 trigger IsAt(people[4], 50, 40) do
+ComTurnXY(people[4], 51, 40);
+
+Every 0$1 trigger IsAt(people[5], 49, 59) do
+ComTurnXY(people[5], 51, 67);
 
 On DialogueSkipped(d) do
 begin
