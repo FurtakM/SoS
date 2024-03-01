@@ -442,6 +442,8 @@ Say(Kaia, 'DK-1-apesol');
 AddComMoveXY(ape[1], 35, 28);
 AddComMoveXY(ape[1], 36, 17);
 
+wait(0$2);
+
 DialogueOn;
 
 Say(Aviradze, 'DA-1-apesol');
@@ -458,6 +460,7 @@ Every 0$1 trigger IsOk(Sophia) and FilterAllUnits([[f_side, 2], [f_class, class_
 var ape;
 begin
 ape := FilterAllUnits([[f_side, 2], [f_class, class_apeman_engineer]]);
+blockAttack := true;
 
 InGameOn;
 
@@ -482,6 +485,7 @@ if IsOk(Kamil) then
    if not IsOK(Kaia) then
       begin
       InGameOff;
+      blockAttack := false;
       exit;
       end;
 
@@ -489,7 +493,8 @@ if IsOk(Kamil) then
 
    if not IsOk(Givi) then
       begin
-      Video(false);
+      InGameOff;
+      blockAttack := false;
       exit;
       end;
 
@@ -499,11 +504,14 @@ if IsOk(Kamil) then
    end;
 
 InGameOff;
+blockAttack := false;
 End;
 
 // farmer is ready
 Every 0$10 trigger farmerBaseReady and FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) do
 begin
+blockAttack := true;
+
 wait(0$10);
 
 DialogueOn;
@@ -532,6 +540,8 @@ farmerRequestedCrates := 300;
 
 Query('FarmerCrates');
 SetAreaMapShow(collectFarmerArea, 1);
+
+blockAttack := false;
 
 CenterNowOnXY(108, 61);
 End;
@@ -926,6 +936,7 @@ if not IsPlaced(Ibrahim) then
    exit;
 
 allowConvoys := false;
+blockAttack := true;
 
 InGameOn;
 
@@ -977,6 +988,7 @@ repeat
 until IsInUnit(Ibrahim) or not IsOk(Ibrahim) or not IsOk(depot);
 
 InGameOff;
+blockAttack := false;
 
 if not IsOk(Ibrahim) then
    exit;
@@ -1061,6 +1073,7 @@ case Query('IbrahimQuery') of
 end;
 
 allowConvoys := true;
+blockAttack := false;
 
 wait(2$30);
 
@@ -1078,6 +1091,7 @@ begin
 wait(0$10);
 
 allowConvoys := false;
+blockAttack := true;
 
 depot := usDepot;
 
@@ -1109,6 +1123,8 @@ case Query('IbrahimJoinQuery') of
    Say(Heike, 'DH-1-decline');
    Say(Ibrahim, 'DI-1-decline');
    InGameOff;
+
+   blockAttack := false;
 
    ComMoveXY(Ibrahim, 30, 1);
 
@@ -1176,6 +1192,7 @@ if changeClass then
 
    InGameOff;
    allowConvoys := true;
+   blockAttack := false;
    SetAchievement('ACH_IBRAHIM');
    end;
 End;

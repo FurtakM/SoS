@@ -1,11 +1,11 @@
 Export russian_troops_1, russian_troops_2, russian_patrol_tanks, russian_meta_guards,
-       russian_patrol_forest;
+       russian_patrol_forest, russian_patrol_hidden;
 Export Pokryshkin;
 
 Export Function InitRussian;
 var skill, i, un;
 begin
-skill := [1, 2, 3, 3][Difficulty];
+skill := [1, 2, 3, 4][Difficulty];
 
 uc_side := 3;
 uc_nation := 3;
@@ -62,13 +62,13 @@ for i = 1 to 7 do
 for i in FilterAllUnits([[f_side, 3], [f_btype, b_breastwork]]) do
     PrepareSolBun(skill, i);
 
-for i = 1 to 2 do
+for i = 1 to 3 do
     begin
     un := PrepareTank(3, 3, ru_medium_tracked, engine_combustion, control_manual, ru_heavy_machine_gun, 100);
     PrepareHuman(false, 3, skill);
     PlaceHumanInUnit(CreateHuman, un);
-    PlaceUnitXY(un, [23, 131][i], [14, 87][i], false);
-    russian_patrol_tanks := Insert(russian_patrol_tanks, 1, un);
+    PlaceUnitXY(un, [131, 23, 167][i], [87, 14, 95][i], false);
+    russian_patrol_tanks := Join(russian_patrol_tanks, un);
     end;
 
 for i = 1 to 2 do
@@ -86,6 +86,9 @@ if Difficulty < 3 then
 PrepareHuman(false, 1, skill);
 russian_patrol_forest := CreateHuman;
 PlaceUnitXY(russian_patrol_forest, 82, 2, false);
+
+russian_patrol_hidden := CreateHuman;
+PlaceUnitXY(russian_patrol_hidden, 136, 30, false);
 End;
 
 
@@ -95,8 +98,15 @@ ComPatrol(russian_patrol_tanks[1], 'road', 0$02, [131, 87, 107, 75, 107, 66, 114
 Every 0$01 trigger active_road_patrol do
 ComPatrol(russian_patrol_tanks[2], 'road', 0$02, [21, 12, 37, 30, 65, 62, 107, 76]);
 
+Every 0$01 trigger active_road_patrol do
+ComPatrol(russian_patrol_tanks[3], 'road', 0$02, [167, 95, 147,81, 144, 66, 149, 55]);
+                        
 Every 0$01 trigger IsOk(russian_patrol_forest) do
 ComPatrol(russian_patrol_forest, 'forest', 0$01, [52, 15, 81, 9, 120, 52, 135, 80, 122, 95]);
+
+Every 0$01 trigger IsOk(russian_patrol_hidden) do
+ComPatrol(russian_patrol_hidden, 'forest', 0$02, [137, 30, 127, 23, 122, 16, 114, 3]);
+
 
 Every 0$01 trigger macmilan_use_radio do
 begin
