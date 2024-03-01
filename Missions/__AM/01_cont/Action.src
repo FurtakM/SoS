@@ -32,11 +32,11 @@ Say(JMM, 'D1-JMM-1c');
 
 Wait(0$0.2);
 
-SayRadioNoFace(Powell, 'D1-Pow-1');
+SayRadioNoFaceNoName(Powell, 'D1-Pow-1');
 Say(JMM, 'D1-JMM-2');
-SayRadioNoFace(Powell, 'D1-Pow-2');
+SayRadioNoFaceNoName(Powell, 'D1-Pow-2');
 Say(JMM, 'D1-JMM-3');
-SayRadioNoFace(Powell, 'D1-Pow-3');
+SayRadioNoFaceNoName(Powell, 'D1-Pow-3');
 Say(JMM, 'D1-JMM-4');
 
 ComFree(JMM);
@@ -65,8 +65,16 @@ else
    AddComHold(Bobby);
    end;
 
-PlaceUnitXY(Cyrus, 90, 42, false);
-ComMoveXY(Cyrus, 79, 34);
+if Difficulty < 3 then
+   begin
+   PlaceUnitXY(Cyrus, 90, 42, false);
+   ComMoveXY(Cyrus, 79, 34);
+   end
+else
+   begin
+   PlaceUnitXY(Cyrus, 125, 42, false);
+   end;
+
 AddComCrawl(Cyrus);
 End;
 
@@ -255,11 +263,11 @@ wait(0$5);
 
 InGameOn;
 DialogueOn;
-SayRadioNoFace(Powell, 'D3-Pow-1');
+SayRadioNoFaceNoName(Powell, 'D3-Pow-1');
 Say(JMM, 'D3-JMM-1');
-SayRadioNoFace(Powell ,'D3-Pow-2');
+SayRadioNoFaceNoName(Powell ,'D3-Pow-2');
 Say(JMM, 'D3-JMM-2');
-SayRadioNoFace(Powell ,'D3-Pow-3');
+SayRadioNoFaceNoName(Powell ,'D3-Pow-3');
 DialogueOff;
 InGameOff;
 
@@ -282,7 +290,7 @@ End;
 Every 0$01 trigger IsInArea(JMM, fakeArea) do
 begin
 DialogueOn;
-SayRadioNoFace(fakePokryshkin, 'D4-Rus3-1');
+SayRadioNoFaceNoName(fakePokryshkin, 'D4-Rus3-1');
 DialogueOff;
 
 ChangeMissionObjectives('M3a');
@@ -367,7 +375,7 @@ Say(JMM, 'D4b-JMM-1');
 End;
 
 // Macmilan see meta guards
-Every 0$01 trigger GetDistUnits(JMM, russian_meta_guards[russian_meta_guards]) < 12 or UnitFilter(russian_meta_guards, [f_not, [f_lives, 990]]) do
+Every 0$01 trigger (IsInArea(JMM, endRoadArea) and GetDistUnits(JMM, russian_meta_guards[russian_meta_guards]) < 12) or UnitFilter(russian_meta_guards, [f_not, [f_lives, 990]]) do
 var i, hp;
 begin
 
@@ -395,10 +403,13 @@ meta_action := true;
 ComAgressiveMove(russian_meta_guards, 94, 8);
 End;
 
+Every 0$1 trigger IsInArea(JMM, secretPassage) do
+SetAchievement('ACH_SECRET');
+
 Every 0$01 trigger GetDistUnitXY(JMM, 93, 1) < 5 and FilterAllUnits([f_side, 1]) > 1 do
 Say(JMM, 'D6a-JMM-1');
 
-Every 0$01 trigger IsInArea(Bobby, exitArea) do
+Every 0$01 trigger IsInArea(Bobby, exitArea) or IsInArea(Bobby, hiddenEnd) do
 begin
 bobby_saved := true;
 SaveVariable(GetLives(Bobby), '01_BobbyLifePoints_1');
@@ -407,7 +418,7 @@ RemoveUnit(Bobby);
 AddMedal('Bobby', 1);
 End;
 
-Every 0$01 trigger IsInArea(Cyrus, exitArea) do
+Every 0$01 trigger IsInArea(Cyrus, exitArea) or IsInArea(Cyrus, hiddenEnd) do
 begin
 cyrus_saved := true;
 SaveVariable(GetLives(Cyrus), '01_CyrusLifePoints_1');
@@ -417,72 +428,72 @@ AddMedal('Cyrus', 1);
 End;
 
 // Save JMM and end mission
-Every 0$01 trigger IsInArea(JMM, exitArea) do
+Every 0$01 trigger IsInArea(JMM, exitArea) or IsInArea(JMM, hiddenEnd) do
 var i, to_reward, wait_for_them, m1, m2, m3;
 begin
-     if macmilan_use_radio then
-        SetAchievement('ACH_RADIO');
+if macmilan_use_radio then
+   SetAchievement('ACH_RADIO');
 
-     if (not cyrus_saved and cyrus_in_squad and IsOk(Cyrus))
-     or (not bobby_saved and bobby_in_squad and IsOk(Bobby)) then
-     case Query('Q2') of
-     1: wait_for_them := true;
-     2: ;
-     end;
+if (not cyrus_saved and cyrus_in_squad and IsOk(Cyrus))
+or (not bobby_saved and bobby_in_squad and IsOk(Bobby)) then
+   case Query('Q2') of
+        1: wait_for_them := true;
+        2: ;
+        end;
 
-     if wait_for_them then
-        repeat
-         wait(0$01);
-        until (cyrus_saved and bobby_saved)
-        or (cyrus_saved and (not bobby_in_squad or IsDying(Bobby) or IsDead(Bobby)))
-        or (bobby_saved and (not cyrus_in_squad or IsDying(Cyrus) or IsDead(Cyrus)))
-        or (IsDead(Bobby) and IsDead(Cyrus));
+if wait_for_them then
+   repeat
+    wait(0$01);
+   until (cyrus_saved and bobby_saved)
+   or (cyrus_saved and (not bobby_in_squad or IsDying(Bobby) or IsDead(Bobby)))
+   or (bobby_saved and (not cyrus_in_squad or IsDying(Cyrus) or IsDead(Cyrus)))
+   or (IsDead(Bobby) and IsDead(Cyrus));
 
-     SaveVariable(GetLives(JMM), '01_JMMLifePoints_1');
-     RemoveUnit(JMM);
+SaveVariable(GetLives(JMM), '01_JMMLifePoints_1');
+RemoveUnit(JMM);
 
-     to_reward := [JMM];
+to_reward := [JMM];
 
-     if bobby_saved then
-        to_reward := to_reward ^ Bobby;
+if bobby_saved then
+   to_reward := to_reward ^ Bobby;
 
-     if cyrus_saved then
-        to_reward := to_reward ^ Cyrus;
+if cyrus_saved then
+   to_reward := to_reward ^ Cyrus;
 
      m1 := true;
      m2 := bobby_saved;
      m3 := cyrus_saved;
 
-     AddMedal('JMM', 1);
+AddMedal('JMM', 1);
 
-     if not bobby_in_squad then
-        AddMedal('Bobby', -1);
+if not bobby_in_squad then
+   AddMedal('Bobby', -1);
 
-     if not bobby_saved and (IsDying(Bobby) or IsDead(Bobby)) then
-        AddMedal('Bobby', -2);
+if not bobby_saved and (IsDying(Bobby) or IsDead(Bobby)) then
+   AddMedal('Bobby', -2);
 
-     if not cyrus_in_squad then
-        AddMedal('Cyrus', -1);
+if not cyrus_in_squad then
+   AddMedal('Cyrus', -1);
 
-     if not cyrus_saved and (IsDying(Cyrus) or IsDead(Cyrus)) then
-        AddMedal('Cyrus', -2);
+if not cyrus_saved and (IsDying(Cyrus) or IsDead(Cyrus)) then
+   AddMedal('Cyrus', -2);
 
-     if Difficulty >= 3 and m1 and m2 and m3 then
-        SetAchievementEX('ACH_AMER', 1);
+if Difficulty >= 3 and m1 and m2 and m3 then
+   SetAchievementEX('ACH_AMER', 1);
 
-     GiveMedals('MAIN');
-     RewardPeople(to_reward);
+GiveMedals('MAIN');
+RewardPeople(to_reward);
 
-     if bobby_saved then
-        SaveCharacters(Bobby, mission_prefix&'Bobby');
+if bobby_saved then
+   SaveCharacters(Bobby, mission_prefix&'Bobby');
 
-     if cyrus_saved then
-        SaveCharacters(Cyrus, mission_prefix&'Cyrus');
+if cyrus_saved then
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
 
-     SaveCharacters(JMM, mission_prefix&'JMM');
+SaveCharacters(JMM, mission_prefix&'JMM');
 
-     if tick <= 3$00 then
-        SetAchievement('ACH_ASPEED_1');
+if tick <= 3$00 then
+   SetAchievement('ACH_ASPEED_1');
 
-     YouWin;
+YouWin;
 End;

@@ -241,6 +241,8 @@ TID_ACH_TOOL = 6534;
 TID_ACH_TOOL_DESC = 6535;
 TID_ACH_MECH = 6536;
 TID_ACH_MECH_DESC = 6537;
+TID_ACH_SECRET = 6538;
+TID_ACH_SECRET_DESC = 6539;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -289,6 +291,13 @@ achievements = {
         loc(TID_ACH_RADIO), 
         loc(TID_ACH_RADIO_DESC),
         true,
+        0,
+        0
+    },
+    ['ACH_SECRET'] = {
+        loc(TID_ACH_SECRET), 
+        loc(TID_ACH_SECRET_DESC),
+        false,
         0,
         0
     },
@@ -1199,14 +1208,14 @@ achievements = {
 
 ACHIV_FILTER_MISSION_LIST = {
     {
-        {'ACH_TROLL','ACH_RADIO', 'ACH_CYRUS', 'ACH_ASPEED_1'},
+        {'ACH_TROLL','ACH_RADIO', 'ACH_CYRUS', 'ACH_SECRET', 'ACH_ASPEED_1'},
         {'ACH_CARGO', 'ACH_JERRY', 'ACH_TIGER', 'ACH_ASPEED_2'},
         {'ACH_FAUST', 'ACH_POKR', 'ACH_NOSCI', 'ACH_ASPEED_3'},
         {'ACH_GUN', 'ACH_BASE', 'ACH_INFANTRY', 'ACH_ASPEED_4'},
         {'ACH_TAME', 'ACH_RADAR', 'ACH_APEKILLER', 'ACH_ASPEED_5'},
         {'ACH_BASEDESTROYER', 'ACH_SURV', 'ACH_FULLCARGO', 'ACH_ASPEED_6'},
         {'ACH_COMMANDO', 'ACH_TANKACE', 'ACH_HITMAN', 'ACH_ASPEED_7'},
-        {'ACH_HEAVYGUN', 'ACH_BLITZKRIEG', 'ACH_ARMOR', 'ACH_ASPEED_8'},
+        {'ACH_HEAVYGUN', 'ACH_BLITZKRIEG', 'ACH_ARMOR', 'ACH_MECH', 'ACH_TOOL', 'ACH_ASPEED_8'},
         {'ACH_BULLDOZER', 'ACH_COUNTERSTRIKE', 'ACH_SIBMINE', 'ACH_ASPEED_9'},
         {'ACH_POWER', 'ACH_SNIPER', 'ACH_ARCH', 'ACH_TACT', 'ACH_ASPEED_10'},
         {'ACH_ARABTECH', 'ACH_FRIEND', 'ACH_EAST', 'ACH_GENERAL', 'ACH_ASPEED_11'},
@@ -1243,6 +1252,7 @@ achievsCategory = {
         'ACH_TROLL', 
         'ACH_CYRUS', 
         'ACH_RADIO', 
+        'ACH_SECRET',
         'ACH_ASPEED_1',
         'ACH_TIGER',
         'ACH_JERRY',

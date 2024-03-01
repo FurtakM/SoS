@@ -14,7 +14,7 @@ for i in ruPatrol do
 
     if See(2, i) and tmp then
        begin
-       if hasMuchin and GetDistUnits(i, ruDisturb) < 16 then
+       if (hasMuchin and GetDistUnits(i, ruDisturb) < 16) or blockPatrolThread then
           continue;
 
        ComTurnUnit(i, NearestUnitToUnit(tmp, i));
@@ -49,6 +49,8 @@ if UnitFilter(units, [f_nation, nation_russian]) or UnitFilter(units, [f_inarea,
 
 if UnitFilter(units, [[f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_revolver], [f_class, class_hunter]]]) then
    begin
+   blockPatrolThread := true;
+
    DialogueOn;
 
    case GetSex(guard) of
@@ -64,6 +66,7 @@ if UnitFilter(units, [[f_or, [f_class, class_soldier], [f_class, class_desert_wa
    end;
 
 DialogueOn;
+blockPatrolThread := true;
 
 CenterNowOnUnits(guard);
 
@@ -196,6 +199,8 @@ case Query('SurrenderInfo') of
            end;
         end;
      end;
+
+blockPatrolThread := false;
 End;
 
 // rejoin
