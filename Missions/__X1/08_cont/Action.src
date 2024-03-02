@@ -612,7 +612,7 @@ heikeSquad := Join(heikeSquad, Mike);
 End;
 
 // gave revolver to kaia
-Every 0$1 trigger GetDistUnits(Heike, Kaia) < 6 and GetClass(Kaia) = 33 and not isAlarm and IsOk(Kaia) and heikeHasRevolver and Kaia in heikeSquad and GetSide(Kaia) = 2 marked gameStartEvent do
+Every 0$1 trigger GetDistUnits(Heike, Kaia) < 6 and GetClass(Kaia) = 33 and not isAlarm and not hasMuchin and IsOk(Kaia) and heikeHasRevolver and Kaia in heikeSquad and GetSide(Kaia) = 2 marked gameStartEvent do
 begin
 DialogueOn;
 
@@ -623,7 +623,7 @@ DialogueOff;
 End;
 
 // ask about Ibrahim/Aviradze
-Every 0$3 trigger Ibrahim and Aviradze and GetSide(Aviradze) <> 2 and GetSide(Ibrahim) <> 2 and UnitFilter(heikeSquad, [f_side, 2]) > 5 and not isAlarm and not hasMuchin marked gameStartEvent do
+Every 0$3 trigger not Ibrahim and Aviradze and GetSide(Aviradze) <> 2 and GetSide(Ibrahim) <> 2 and UnitFilter(heikeSquad, [f_side, 2]) > 5 and not isAlarm and not hasMuchin marked gameStartEvent do
 var hasKaia, hasGivi;
 begin
 DialogueOn;
@@ -1176,6 +1176,9 @@ foodDelivered := false;
 repeat
  wait(0$1);
 
+ if hasMuchin then
+    continue;
+
  for i in UnitFilter(heikeSquad union Heike, [[f_dist, Jerry, 6], [f_class, class_prison]]) do
      if Carry(i) then
         begin
@@ -1238,7 +1241,7 @@ for i in FilterAllUnits([[f_side, 4], [f_nation, nation_american]]) do
 End;
 
 // explosive
-Every 0$2 trigger hasExplosions marked gameStartEvent do
+Every 0$2 trigger not hasMuchin and hasExplosions marked gameStartEvent do
 var un, tmp;
 begin
 tmp := [];
@@ -1465,7 +1468,7 @@ for i in entranceAllowedList do
 End;
 
 Function HeikeEnterBuilding(building);
-var tmp;
+var i, tmp, tmp2;
 begin
 if not building then
    exit;
@@ -1754,13 +1757,45 @@ else
                          if not heikeSquad or not tmp then
                             Say(Heike, 'DH-Weapons-Alone')
                          else
-                            begin
-                            entranceVisitedList := Join(entranceVisitedList, ruWeaponsBar);
+                            begin                           
 
-                            Say(Heike, 'DH-Weapons-1');
-                            Say(Heike, 'DH-Weapons-2');
+                            if not firstArmouryDialog then
+                               begin
+                               Say(Heike, 'DH-Weapons-1');
+                               Say(Heike, 'DH-Weapons-2');
 
-                            if hasRevolver and Kaia in tmp then
+                               Query('Weapons');
+                               end;
+
+                            tmp2 := UnitFilter(tmp, [f_class, class_prison]) diff [Heike, Kaia, Kamil, Mike, Givi];
+
+                            if tmp2 and weaponsAmount then
+                               begin
+                               if Query('QWeapons') = 1 then
+                                  begin
+                                  for i in tmp2 do
+                                      begin
+                                      SetSide(i, 3);
+                                      ComEnterUnit(i, ruWeaponsBar);
+                                      weaponsAmount := Dec(weaponsAmount);
+
+                                      repeat
+                                       wait(0$0.3);
+                                      until IsInUnit(i);
+
+                                      SetClass(i, class_soldier);
+                                      SetSide(i, 2);
+
+                                      ComExitBuilding(i);
+                                      AddComMoveXY(i, 191, 126);
+
+                                      if weaponsAmount = 0 then
+                                         break;
+                                      end;
+                                  end;
+                               end;
+
+                            if hasRevolver and Kaia in tmp and GetClass(Kaia) <> class_revolver then
                                begin
                                SetSide(Kaia, 5);
                                ComEnterUnit(Kaia, ruWeaponsBar);
@@ -1777,9 +1812,12 @@ else
 
                                SetSide(Kaia, 2);
                                ComExitBuilding(Kaia);
+
+                               if Mike in heikeSquad and GetSide(Mike) = 2 then
+                                  SetClass(Mike, class_hunter);
                                end;
 
-                            if Givi in tmp then
+                            if Givi in tmp and GetClass(Givi) = class_prison then
                                begin
                                SetSide(Givi, 5);
                                ComEnterUnit(Givi, ruWeaponsBar);
@@ -1803,7 +1841,7 @@ else
                                   heikeHasRevolver := true;
                                   end;
                                end
-                            else if Kamil in tmp then
+                            else if Kamil in tmp and GetClass(Kamil) = class_prison then
                                begin
                                SetSide(Kamil, 5);
                                ComEnterUnit(Kamil, ruWeaponsBar);

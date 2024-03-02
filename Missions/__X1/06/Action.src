@@ -8,14 +8,11 @@ music_class := music_recon;
 
 CenterNowOnXY(213, 89);
 
-if not debug then
-   begin
-   if Kaia and Olaf then
-      SceneKaiaWithOlaf;
+if Kaia and Olaf then
+   SceneKaiaWithOlaf;
 
-   if Givi and Kamil then
-      SceneWithGiviAndKamil;
-   end;
+if Givi and Kamil then
+   SceneWithGiviAndKamil;
 
 tick := 0;
 
@@ -105,19 +102,23 @@ wait(0$2);
 End;
 
 Export function SceneWithGiviAndKamil;
+var p;
 begin
 if Markov then
    begin
+   p := 0;
+
    if IsInUnit(Markov) then
       ComExit(Markov);
 
-   wait(3);
+   wait(0$1);
 
    ComMoveXY(Markov, 212, 88);
 
    repeat
     wait(0$1);
-   until GetDistUnits(Markov, Heike) < 6;
+    p := Inc(p);
+   until GetDistUnits(Markov, Heike) < 6 or p > 12;
 
    AddComTurnUnit(Markov, Heike);
    end;
@@ -577,7 +578,7 @@ SayRadio(Omar, 'DOm-Lenin');
 
 Every 0$3 trigger IsOk(Rolf) and linkedWithRolf and omarArrived do
 begin
-wait(0$20);
+wait(1$00);
 
 CenterNowOnUnits(Rolf);
 
@@ -729,7 +730,11 @@ repeat
 
     wait(0$1);
 
-    ComAgressiveMove(rolfSquad, 229, 154);
+    ComAgressiveMove(rolfSquad, 127, 106);
+
+    wait(0$30);
+
+    rolfAttack := true;
     exit;
     end;
 
@@ -763,7 +768,11 @@ for i in rolfSquad do
     SetSide(i, 8);
     end;
 
-ComAgressiveMove(rolfSquad, 229, 154);
+ComAgressiveMove(rolfSquad, 127, 106);
+
+wait(0$30);
+
+rolfAttack := true;
 End;
 
 // Morozov call
@@ -809,7 +818,7 @@ Every 0$3 trigger IsDead(Morozov) and IsOk(Omar) do
 SayRadio(Omar, 'DOm-Morozov');
 
 // non-oil
-Every 0$1 trigger gameActive and GetResourceType(GetBase(arDepot), mat_oil) < 31 do
+Every 0$1 trigger gameActive and GetResourceType(GetBase(arDepot), mat_oil) <= 30 do
 begin
 wait(0$10);
 
@@ -832,9 +841,12 @@ GoForOil();
 End;
 
 // Shariff calls
-Every 0$1 trigger leninSpotted and omarAttack or IsDead(Morozov) do
+Every 0$1 trigger (leninSpotted and omarAttack) or IsDead(Morozov) do
 begin
-wait(1$45);
+if IsDead(Morozov) then
+   wait(1$45)
+else
+   wait([9$30, 8$00, 7$40, 6$30][Difficulty]);
 
 DialogueOn;
 

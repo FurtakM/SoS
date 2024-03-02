@@ -57,6 +57,8 @@ TID_Main_Menu_Shortcuts_Files_Hint = 5047;
 TID_msg_SaveAs = 5048;
 TID_msg_Default = 5049;
 TID_msg_Search = 5050;
+TID_Main_Menu_Options_Exclamations_Volume = 5061;
+TID_Main_Menu_Options_Exclamations_Volume_Desc = 5062;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
