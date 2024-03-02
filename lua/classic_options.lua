@@ -39,6 +39,7 @@ OPTION_CONTROLS_PING = 23;
 OPTION_GAME_LOCKSPEED = 24;
 OPTION_INTERFACE_FACTORY = 25;
 OPTION_SOUND_AUDIO = 26;
+OPTION_SOUND_EXCLAMATIONS = 27;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -182,6 +183,11 @@ function getSetting(setting)
     if setting == OPTION_SOUND_EFFECTS then
         return OW_settings_getvolume(VOLUME_EFFECTS);
     end;
+
+    if setting == OPTION_SOUND_EXCLAMATIONS then
+        return OW_settings_getvolume(VOLUME_EXCLAMATIONS);
+    end;
+
 
     if setting == OPTION_SOUND_VIDEO then
         return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_VOLUME_VIDEO', 5000);
@@ -397,6 +403,12 @@ function saveSliderSetting(setting, value)
         OW_settings_setvolume(VOLUME_SPEECH, value);
         OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_SPEECH', value);
         sound.playOptions('Dialogs/Am/Exclamations/EX_CA-ARM-2.wav', VOLUME_SPEECH);
+    end;
+
+    if setting == OPTION_SOUND_EXCLAMATIONS then
+        OW_settings_setvolume(VOLUME_EXCLAMATIONS, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_EXCLAMATIONS', value);
+        sound.playOptions('Dialogs/Am/Exclamations/EX_CA-ARM-2.wav', VOLUME_EXCLAMATIONS);
     end;
 
     if setting == OPTION_SOUND_VIDEO then
@@ -709,14 +721,45 @@ menu.window_options.panel.sound.video_slider = clSliderElement(
     getSetting(OPTION_SOUND_VIDEO), 
     'saveSliderSetting(' .. OPTION_SOUND_VIDEO .. ', menu.window_options.panel.sound.video_slider.POS);',
     {        
-        hint = loc(TID_Options_Video_Volume_Desc)
+        hint = loc(TID_Main_Menu_Options_Video_Volume_Desc)
     }
 );
+
+menu.window_options.panel.sound.exclamations_label = getLabelEX(
+    menu.window_options.panel.sound,
+    anchorLT,
+    XYWH(6, 152, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Exclamations_Volume),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.sound.exclamations_slider = clSliderElement(
+    menu.window_options.panel.sound, 
+    anchorNone, 
+    XYWH(6, 168, 230, 15),
+    0,
+    5000, 
+    getSetting(OPTION_SOUND_EXCLAMATIONS), 
+    'saveSliderSetting(' .. OPTION_SOUND_EXCLAMATIONS .. ', menu.window_options.panel.sound.exclamations_slider.POS);',
+    {        
+        hint = loc(TID_Main_Menu_Options_Exclamations_Volume_Desc)
+    }
+);
+
 
 menu.window_options.panel.sound.audio_listbox = clComboBox(
     menu.window_options.panel.sound,
     5,
-    165,
+    200,
     getAudioDeviceList(),
     getSetting(OPTION_SOUND_AUDIO),
     'saveComboBoxSetting(' .. OPTION_SOUND_AUDIO .. ', "VALUE")',
@@ -731,7 +774,7 @@ menu.window_options.panel.sound.audio_listbox = clComboBox(
 menu.window_options.panel.sound.audio_label = getLabelEX(
     menu.window_options.panel.sound,
     anchorLT,
-    XYWH(9, 151, 200, 15),
+    XYWH(9, 185, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Audio_Desc),
     {

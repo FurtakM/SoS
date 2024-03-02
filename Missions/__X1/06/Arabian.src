@@ -574,6 +574,91 @@ enable;
 SetLives(Omar, 1000);
 End;
 
+Every 0$1 trigger GetLives(Rolf) < 1000 and rolfAttack do
+begin
+enable;
+SetLives(Rolf, 1000);
+End;
+
+Every 0$1 trigger rolfAttack do
+var i, tmp, un, path, ignore, tag, hasVeh;
+begin
+path := [ [114,105], [98,106], [67,102], [60,88] ];
+tmp := Rolf union rolfSquad;
+ignore := [];
+
+for i in tmp do
+    begin
+    if GetClass(i) = 2 then
+       ignore := Join(ignore, i);
+
+    if GetClass(i) = 3 and not IsInUnit(i) then
+       ignore := Join(ignore, i);
+
+    if GetClass(i)= 4 then
+       ignore := Join(ignore, i);
+    end;
+
+tmp := tmp diff ignore;
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if IsDead(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     tag := GetTag(i);
+     hasVeh := IsInUnit(i);
+
+     if hasVeh then
+        un := hasVeh
+     else
+        un := i;
+
+     if hasVeh then
+        if IsEmpty(hasVeh) then
+           continue;
+
+     if tag < 100 then
+        begin
+        if GetLives(un) > 600 then
+           AgressiveMove(un, path)
+        else
+           begin
+           SetTag(un, 101);
+           ComMoveXY(un, 122, 102);
+           end;
+        end
+     else if tag = 101 then
+          begin
+          if GetDistUnitXY(un, 122, 102) > 6 then
+             begin
+             ComMoveXY(un, 122, 102);
+
+             if hasVeh then
+                AddComRepairVehicleAndReturn(i);
+             end
+          else
+             SetTag(un, 102);
+          end
+     else if tag = 102 then
+          begin
+          if GetLives(un) = 1000 then
+             SetTag(un, 0);
+          end;
+     end;
+until not tmp;
+
+End;
+
 Every 0$1 trigger omarAttack do
 var i, nearestPoint;
 begin

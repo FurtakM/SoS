@@ -1,5 +1,5 @@
 Export Function Action;
-var i, un, veh, tmp, rutmp;
+var i, j, un, veh, tmp, rutmp;
 begin
 InGameOn;
 
@@ -79,8 +79,22 @@ for i in heikeVehicles do
 
     SetDir(veh, 3);
     PlaceUnitArea(veh, spawnArea, false);
-    PlaceHumanInUnit(tmp[1], veh);
-    tmp := Delete(tmp, 1);
+
+    for j := 1 to tmp do
+        begin
+        if i[8] = GetClass(tmp[j]) then
+           begin
+           PlaceHumanInUnit(tmp[j], veh);
+           tmp := Delete(tmp, j);
+           break;
+           end;
+        end;
+
+    if IsEmpty(veh) then
+       begin
+       PlaceHumanInUnit(tmp[1], veh);
+       tmp := Delete(tmp, 1);
+       end;
 
     ComAgressiveMove(veh, 133, 7);
     wait(0$1);
