@@ -581,167 +581,213 @@ SetLives(Rolf, 1000);
 End;
 
 Every 0$1 trigger rolfAttack do
-var i, tmp, un, path, ignore, tag, hasVeh;
+var i, tmp, mech, path, tag, rolfCoords;
 begin
-path := [ [114,105], [98,106], [67,102], [60,88] ];
+path := [ [215,162], [195,163], [174,162], [145,163], [127,163] ];
+rolfCoords := [221, 161];
 tmp := Rolf union rolfSquad;
-ignore := [];
-
-for i in tmp do
-    begin
-    if GetClass(i) = 2 then
-       ignore := Join(ignore, i);
-
-    if GetClass(i) = 3 and not IsInUnit(i) then
-       ignore := Join(ignore, i);
-
-    if GetClass(i)= 4 then
-       ignore := Join(ignore, i);
-    end;
-
-tmp := tmp diff ignore;
 
 if not tmp then
    exit;
 
+ComMoveXY(tmp, rolfCoords[1], rolfCoords[2]);
+
 repeat
  wait(0$1);
 
- for i in tmp do
+  tmp := UnitFilter(rolfSquad, [f_or, [f_class, 1], [f_class, 8]]);
+
+  if tmp then
      begin
-     if IsDead(i) then
-        begin
-        tmp := tmp diff i;
-        continue;
-        end;
+     for i in tmp do
+         begin
+         tag := GetTag(i);
 
-     tag := GetTag(i);
-     hasVeh := IsInUnit(i);
-
-     if hasVeh then
-        un := hasVeh
-     else
-        un := i;
-
-     if hasVeh then
-        if IsEmpty(hasVeh) then
-           continue;
-
-     if tag < 100 then
-        begin
-        if GetLives(un) > 600 then
-           AgressiveMove(un, path)
-        else
-           begin
-           SetTag(un, 101);
-           ComMoveXY(un, 122, 102);
-           end;
-        end
-     else if tag = 101 then
-          begin
-          if GetDistUnitXY(un, 122, 102) > 6 then
-             begin
-             ComMoveXY(un, 122, 102);
-
-             if hasVeh then
-                AddComRepairVehicleAndReturn(i);
-             end
-          else
-             SetTag(un, 102);
-          end
-     else if tag = 102 then
-          begin
-          if GetLives(un) = 1000 then
-             SetTag(un, 0);
-          end;
+         if GetLives(i) < 800 and tag < 101 then
+            begin
+            SetTag(i, 101);
+            ComMoveXY(i, rolfCoords[1], rolfCoords[2]);
+            end
+         else if tag = 101 then
+            begin
+            if GetLives(i) = 1000 then
+               SetTag(i, 0);
+            end
+         else
+            AgressiveMove(i, path);
+         end;
      end;
+
+  tmp := FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [f_not, [f_weapon, ar_cargo_bay]]]);
+
+  if not tmp then
+     continue;
+
+  for i in tmp do
+      begin
+      mech := IsDrivenBy(i);
+
+      if not mech then
+         continue;
+
+      tag := GetTag(i);
+
+      if GetLives(i) >= 600 and tag < 101 then
+         AgressiveMove(i, path);
+
+      if GetLives(i) < 600 and tag < 101 then
+         begin
+         SetTag(i, 101);
+
+         ComMoveXY(i, rolfCoords[1], rolfCoords[2]);
+         end;
+
+      if tag = 101 and GetDistUnitXY(i, rolfCoords[1], rolfCoords[2]) < 9 and mech then
+         begin
+         if GetLives(i) < 1000 then
+            AddComRepairVehicleAndReturn(mech)
+         else
+            SetTag(i, 0);
+         end;
+      end;
 until not tmp;
 
 End;
 
 Every 0$1 trigger omarAttack do
-var i, nearestPoint;
+var i, cargo, tmp, tag, mech, x, path, omarAttackCoords;
 begin
+path := [ [209,221], [190,220], [177,220], [168,223], [150,206] ];
+omarAttackCoords := [219, 225, 0];
+
+for i := 1 to 2 do
+    begin
+    uc_side := 5;
+    uc_nation := 2;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_cargo_bay, 80);
+    cargo := Join(cargo, CreateVehicle);
+    SetDir(cargo[i], 4);
+    PlaceUnitArea(cargo[i], omarVehiclesArea, false);
+
+    PrepareMechanic(false, 4);
+    PlaceHumanInUnit(CreateHuman, cargo[i]);
+
+    ComMoveXY(cargo[i], 337, 232);
+    end;
+
 wait(0$25);
+
+for i := 1 to 2 do
+    SetCargo(cargo[i], mat_oil, 100);
 
 ComExitBuilding(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]));
 
 wait(0$3);
 
-AddComAgressiveMove(omarSquad union Omar, 225, 223);
-AddComAgressiveMove(FilterAllUnits([[f_side, 5], [f_or, [f_class, 1], [f_class, 8], [f_type, unit_vehicle]]]), 167, 231);
-AddComMoveXY(UnitFilter(omarSquad, [f_class, 4]), 222, 229);
+AddComAgressiveMove(omarSquad union Omar, omarAttackCoords[1], omarAttackCoords[2]);
+
+wait(0$3);
+
+AddComMoveXY(cargo, 218, 217);
+
+wait(1$00);
 
 repeat
  wait(0$1);
 
- for i in omarSquad union FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]) do
+ if omarAttackCoords[3] = 0 then
+    if FilterAllUnits([[f_side, 3], [f_distxy, 168, 229, 12]]) = 0 then
+       begin
+       omarAttackCoords := [167, 222, 1];
+       AddComMoveXY(Omar ^ cargo ^ UnitFilter(omarSquad, [f_class, 4]), 167, 222);
+       end;
+
+  tmp := UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]);
+
+  if tmp then
      begin
-     if IsDead(i) then
-        begin
-        omarSquad := omarSquad diff i;
-        continue;
-        end;
+     for i in tmp do
+         begin
+         tag := GetTag(i);
 
-     if GetClass(i) in [1, 8] then
-        begin
-        if GetLives(i) < 700 and GetTag(i) = 0 then
-           begin
-           SetTag(i, 1);
-           ComMoveXY(i, 222, 229);
-           end;
-
-        if GetLives(i) = 1000 and GetTag(i) = 1 then
-           SetTag(i, 0);
-
-        if GetTag(i) = 0 and GetLives(i) >= 700 and not HasTask(i) then
-           if FilterUnitsInArea(helperBaseDef, [f_side, 3]) then
-              ComAgressiveMove(i, 167, 231)
-           else
-              ComAgressiveMove(i, 106, 153);
-        end;
-
-     if GetType(i) = unit_vehicle then
-        begin
-        nearestPoint := [219, 219];
-
-        if GetDistUnitXY(i, 156, 202) < GetDistUnitXY(i, 219, 219) then
-           nearestPoint := [156, 202];
-
-        if GetLives(i) < 700 and GetTag(i) = 0 then
-           begin
-           SetTag(i, 1);
-           ComMoveXY(i, nearestPoint[1], nearestPoint[2]);
-           end;
-
-        if GetLives(i) < 700 and GetTag(i) = 1 and IsDrivenBy(i) and GetDistUnitXY(i, nearestPoint[1], nearestPoint[2]) < 10 then
-           ComRepairVehicleAndReturn(i);
-
-        if GetLives(i) = 1000 and GetTag(i) = 1 and IsDrivenBy(i) then
-           SetTag(i, 0);
-
-        if GetTag(i) = 0 and GetLives(i) >= 700 and IsDrivenBy(i) and not HasTask(i) then
-           if FilterUnitsInArea(helperBaseDef, [f_side, 3]) then
-              ComAgressiveMove(i, 167, 231)
-           else
-              ComAgressiveMove(i, 106, 153);
-        end;
+         if GetLives(i) < 800 and tag < 101 then
+            begin
+            SetTag(i, 101);    
+            ComMoveXY(i, omarAttackCoords[1], omarAttackCoords[2]);
+            end
+         else if tag = 101 then
+            begin
+            if GetLives(i) = 1000 then
+               SetTag(i, 0);
+            end
+         else
+            AgressiveMove(i, path);
+         end;
      end;
 
-until not omarSquad;
+  tmp := FilterAllUnits([[f_side, 5], [f_type, unit_vehicle], [f_not, [f_weapon, ar_cargo_bay]]]);
+
+  if not tmp then
+     continue;
+
+  for i in tmp do
+      begin
+      mech := IsDrivenBy(i);
+
+      if not mech then
+         continue;
+
+      tag := GetTag(i);
+
+      if GetFuel(i) > 90 and tag = 102 then
+         SetTag(i, 0)
+      else if GetTag(i) = 102 then
+         begin
+         x := rand(1, 2);
+         AddComMoveUnit(i, cargo[x]);
+
+         if GetCargo(cargo[x], mat_oil) < 20 then
+            SetCargo(cargo[x], mat_oil, 100);
+         end;
+
+       if GetLives(i) >= 600 and tag < 101 then
+          AgressiveMove(i, path);
+
+       if GetLives(i) < 600 and tag < 101 then
+          begin
+          SetTag(i, 101);
+
+          ComMoveXY(i, omarAttackCoords[1], omarAttackCoords[2]);
+          end;
+
+       if tag = 101 and GetDistUnitXY(i, omarAttackCoords[1], omarAttackCoords[2]) < 9 and mech then
+          begin
+          if GetLives(i) < 1000 then
+             AddComRepairVehicleAndReturn(mech)
+          else
+             if GetFuel(i) <= 90 and cargo then
+                SetTag(i, 102)
+             else
+                SetTag(i, 0);
+          end;
+       end;
+until not tmp;
 End;
 
 Export Function GoForOil;
-var i, tmp, data, chance, vehicle, heikeInConvoy;
+var i, tmp, data, chance, vehicle, needOil, heikeInConvoy, success;
 begin
 SetAreaMapShow(oilArea, 1);
 
 repeat
  wait(0$5);
  heikeInConvoy := false;
+ needOil := false;
  tmp := FilterUnitsInArea(oilArea, [[f_side, 2], [f_not, [f_or, [f_weapon, ar_crane], [f_weapon, ar_control_tower]]], [f_control, control_manual]]);
 
  for i in tmp do
+     begin
      if IsDrivenBy(i) = Heike then
         begin
         heikeInConvoy := true;
@@ -749,7 +795,15 @@ repeat
         break;
         end;
 
- if not heikeInConvoy and UnitFilter(tmp, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]) then
+     if GetEngine(i) = engine_combustion and GetFuel(i) < 10 then
+        begin
+        needOil := true;
+        Query('QNeedOil');
+        break;
+        end;
+     end;
+
+ if not needOil and not heikeInConvoy and UnitFilter(tmp, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ru_cargo_bay]]) then
     if Query('QConvoy') = 1 then
        break;
 
@@ -766,6 +820,7 @@ for i in tmp do
         i,             // vehicle
         IsDrivenBy(i), // driver
         GetLives(i),   // hp
+        GetFuel(i),    // fuel
     ]);
 
     RemoveUnit(IsDrivenBy(i));
@@ -774,7 +829,7 @@ for i in tmp do
     chance := chance + 20;
     end;
 
-wait(rand(2$30, 3$30));
+wait(rand(0$45, 2$30));
 
 repeat
  wait(0$1);
@@ -791,13 +846,26 @@ for i in data do
     PlaceHumanInUnit(i[2], vehicle);
     SetLives(vehicle, i[3]);
 
-    if Prob(chance) then
+    success := Prob(chance);
+
+    if success then
        begin
+       if GetEngine(vehicle) = engine_combustion then
+          SetFuel(vehicle, 90);
+
        if GetWeapon(vehicle) in [ar_cargo_bay, ru_cargo_bay] then
           SetCargo(vehicle, mat_oil, 100);
        end
-    else if i[3] > 333 then
-       SetLives(vehicle, 333);
+    else 
+       begin
+       if i[3] > 333 then
+          SetLives(vehicle, 333);
+
+       if i[4] > 20 then
+          SetFuel(vehicle, 20)
+       else
+          SetFuel(vehicle, i[4]);
+       end;
 
     ComMoveXY(vehicle, 250, 119);
     AddComMoveXY(vehicle, 211, 80);
@@ -807,7 +875,16 @@ for i in data do
     until not FilterUnitsInArea(oilArea, [[f_side, 2], [f_placed]]);
     end;
 
-wait(0$30);
+wait(0$10);
 
 GoForOil;
+End;
+
+Every 0$2 trigger FilterUnitsInArea(southPassageArea, [[f_type, unit_vehicle], [f_side, 5], [f_empty]]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(southPassageArea, [[f_type, unit_vehicle], [f_side, 5], [f_empty]]) do
+    KillUnit(i);
 End;

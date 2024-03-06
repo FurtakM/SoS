@@ -269,6 +269,7 @@ ComAgressiveMove(rolfSquad, 79, 52);
 
 repeat
  wait(0$1);
+ ComAgressiveMove(UnitFilter(rolfSquad, [f_not, [f_hastask]]), 79, 52);
 until not FilterUnitsInArea(ruRolfBase, [[f_side, 3], [f_type, unit_human]]);
 
 tmp := FilterUnitsInArea(ruRolfBase, [f_type, unit_building]);
@@ -475,7 +476,7 @@ leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger bergkampfArrived and tick > [32$00, 30$00, 28$00, 26$00][Difficulty] do
+Every 0$1 trigger debug or (bergkampfArrived and tick > [32$00, 30$00, 28$00, 26$00][Difficulty]) do
 var i, tmp, inOmarBase, heikeNearbyOmar;
 begin
 PrepareOmarSquad;
@@ -571,6 +572,14 @@ ComEnterUnit(Omar, HexInfo(341, 232));
 omarArrived := true;
 omarScriptBase := true;
 omarWantVehicles := true;
+
+if debug then
+   begin
+   wait(0$25);
+   omarScriptBase := false;
+   omarWantVehicles := false;
+   omarAttack := true;
+   end;
 End;
 
 Every 0$1 trigger FilterUnitsInArea(ruMainBase, [f_side, 2]) and omarArrived and IsOk(Omar) and not omarAttack do
@@ -691,10 +700,12 @@ for i := 1 to tmp do
 End;
 
 Every 0$1 trigger IsOk(Rolf) and rolfWantVehicles do
-var i;
+var i, hasBadWeapons;
 begin
 repeat
  wait(0$1);
+
+ hasBadWeapons := false;
  rolfWaitingForVehiclesTimer := rolfWaitingForVehiclesTimer - 0$1;
 
  if rolfWaitingForVehiclesTimer <= 0$00 then
@@ -723,16 +734,17 @@ repeat
         SetSide(i, 8);
 
         if IsDriver(i) then
-           SetSide(IsInUnit(i), 8)
+           begin
+           if not GetWeapon(IsInUnit(i)) in [ru_cargo_bay, ru_crane, ar_cargo_bay, ar_crane, ar_control_tower] then
+              SetSide(IsInUnit(i), 8)
+           else
+              ComExitVehicle(i);
+           end
         else if IsInUnit(i) then
            ComExitBuilding(i);
         end;
 
-    wait(0$1);
-
-    ComAgressiveMove(rolfSquad, 127, 106);
-
-    wait(0$30);
+    wait(0$10);
 
     rolfAttack := true;
     exit;
@@ -744,7 +756,24 @@ repeat
     exit;
     end;
 
-until Count(UnitFilter(rolfSquad, [f_driving])) = Count(rolfSquad);
+ if Count(UnitFilter(rolfSquad, [f_driving])) = Count(rolfSquad) then
+    begin
+    for i in UnitFilter(rolfSquad, [f_driving]) do
+        if GetWeapon(IsInUnit(i)) in [ru_cargo_bay, ru_crane, ar_cargo_bay, ar_crane, ar_control_tower] then
+           begin
+           hasBadWeapons := true;
+           Query('QBadWeapon');
+           break;
+           end;
+
+    if not hasBadWeapons then
+       if Query('QRolf') = 1 then
+          break
+       else
+          wait(0$15);
+    end;
+
+until false;
 
 rolfWaitingForVehiclesTimer := 0$00;
 display_strings := [];
@@ -768,9 +797,7 @@ for i in rolfSquad do
     SetSide(i, 8);
     end;
 
-ComAgressiveMove(rolfSquad, 127, 106);
-
-wait(0$30);
+wait(0$10);
 
 rolfAttack := true;
 End;
@@ -935,7 +962,7 @@ else if rolfHasVehicles then
 else
    AddMedal('med2', -3);
 
-if ruLoseCounter >= [30, 45, 50, 62][Difficulty] and heikeLoseCounter = 0 then
+if ruLoseCounter >= [30, 45, 50, 60][Difficulty] and heikeLoseCounter = 0 then
    AddMedal('med3', 1)
 else if heikeLoseCounter then
    AddMedal('med3', -2)
@@ -965,6 +992,9 @@ if Kaia then
 
 if Givi then
    SaveCharacters(Givi, '06_Givi');
+
+if Olaf then
+   SaveCharacters(Olaf, '06_Olaf');
 
 if Mike then
    SaveCharacters(Mike, '06_Mike');

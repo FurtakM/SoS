@@ -1,18 +1,18 @@
 // End mission if you destroy all cargos
-Every 0$01 trigger GetSide(dep1) = 1 AND GetSide(dep2) = 1 AND cargoEscape = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, 51], [f_not, [f_empty]]]) = 0  do
+Every 0$01 trigger GetSide(dep1) = 1 and GetSide(dep2) = 1 and cargoEscape = 1 and FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_weapon, 51], [f_not, [f_empty]]]) = 0  do
 begin
-    wait([4$30, 4$0, 3$0, 3$0][Difficulty]);
+wait([4$30, 4$0, 3$0, 3$0][Difficulty]);
 
-    IF cargoEscape = 1 then
-    begin
-        SayRadio(Powell, 'D6-Pow-1');
-        Say(JMM, 'D6-JMM-1');
-        SayRadio(Powell, 'D6-Pow-2');
-        Say(JMM, 'D6-JMM-2');
+if cargoEscape then
+   begin
+   SayRadioNoFace(Powell, 'D6-Pow-1');
+   Say(JMM, 'D6-JMM-1');
+   SayRadioNoFace(Powell, 'D6-Pow-2');
+   Say(JMM, 'D6-JMM-2');
 
-        FinishMission;
-    end;
-end;
+   FinishMission;
+   end;
+End;
 
 // End mission if one cargo escape - spawn attack
 Every 0$1 trigger GetSide(dep1) = 1 and GetSide(dep2) = 1 and cargoEscape > 1 do
@@ -26,13 +26,13 @@ End;
 // End mission after battle
 Every 0$7 trigger LastBattle = 1 AND FilterUnitsInArea(Battlefield, [[f_side, 3], [f_type, unit_human]]) = 0 do
 begin
-    SayRadio(Powell, 'D6-Pow-1');
-    Say(JMM, 'D6-JMM-1');
-    SayRadio(Powell, 'D6-Pow-2');
-    Say(JMM, 'D6-JMM-2');
+SayRadioNoFace(Powell, 'D6-Pow-1');
+Say(JMM, 'D6-JMM-1');
+SayRadioNoFace(Powell, 'D6-Pow-2');
+Say(JMM, 'D6-JMM-2');
 
-    FinishMission;
-end;
+FinishMission;
+End;
 
 
 // Finish mission
@@ -40,80 +40,91 @@ end;
 Export function FinishMission;
 var tmp, m1, m2, m3;
 begin
+if tick <= 18$00 then
+   SetAchievement('ACH_ASPEED_2');
 
-    if tick <= 18$00 then
-       SetAchievement('ACH_ASPEED_2');
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_lives, 251]]);
 
-    tmp = FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_lives, 251]]);
+if tmp then
+   SaveVehicles(tmp, '02_tanks_1');
 
-    if tmp then
-       SaveVehicles(tmp, '02_tanks_1');
+if mikhailStatus = 1 and IsLive(Mikhail) then
+   SaveVariable(mikhailStatus, '02_mikhailStatus_1');
 
-    if mikhailStatus = 1 and IsLive(Mikhail) then
-       SaveVariable(mikhailStatus, '02_mikhailStatus_1');
+SaveVariable(GetResourceType(GetBase(dep1), 1), '02_resources_4');
 
-    SaveVariable(GetResourceType(GetBase(dep1), 1), '02_resources_4');
+m1 := false;
+m2 := false;
+m3 := false;
 
-    m1 := false;
-    m2 := false;
-    m3 := false;
+if GetResourceType(GetBase(dep1), 1) >= 200 then
+   begin
+   AddMedal('Cans', 1);
+   m1 := true;
+   end
+else
+   begin
+   AddMedal('Cans', -1);
+   end;
 
-    if GetResourceType(GetBase(dep1), 1) >= 200 then
-    begin
-        AddMedal('Cans', 1);
-        m1 := true;
-    end
-    else
-    begin
-        AddMedal('Cans', -1);
-    end;
+if deadsCounter < 2  then
+   begin
+   AddMedal('Deaths', 1);
+   m2 := true;
+   end
+else
+   begin
+   AddMedal('Deaths', -1);
+   end;
 
-    if deadsCounter < 2  then
-    begin
-        AddMedal('Deaths', 1);
-        m2 := true;
-    end
-    else
-    begin
-        AddMedal('Deaths', -1);
-    end;
+if mikhailStatus = 0 then
+   AddMedal('Prisoner', -1);
 
-    if mikhailStatus = 0 then
-       AddMedal('Prisoner', -1);
+if mikhailStatus = 1 then
+   begin
+   AddMedal('Prisoner',  1);
+   m3 := true;
+   end;
 
-    if mikhailStatus = 1 then
-       begin
-       AddMedal('Prisoner',  1);
-       m3 := true;
-       end;
+if mikhailStatus = 2 then
+   begin
+   AddMedal('Prisoner',  2);
+   m3 := true;
+   end;
 
-    if mikhailStatus = 2 then
-       begin
-       AddMedal('Prisoner',  2);
-       m3 := true;
-       end;
+if mikhailStatus = 3 then
+   AddMedal('Prisoner', -2);
 
-    if mikhailStatus = 3 then
-       AddMedal('Prisoner', -2);
+if Difficulty >= 3 and m1 and m2 and m3 then
+   SetAchievementEX('ACH_AMER', 2);
 
-    if Difficulty >= 3 and m1 and m2 and m3 then
-       SetAchievementEX('ACH_AMER', 2);
+GiveMedals('MAIN');
 
-    GiveMedals('MAIN');
+RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]));
 
-    RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]));
+SaveCharacters(JMM, mission_prefix & 'JMM');
 
-    SaveCharacters(JMM, mission_prefix&'JMM');
-    if IsOK(Bobby) then SaveCharacters(Bobby, mission_prefix&'Bobby');
-    if IsOK(Cyrus) then SaveCharacters(Cyrus, mission_prefix&'Cyrus');
-    if IsOK(Lisa) then SaveCharacters(Lisa, mission_prefix&'Lisa');
-    if IsOK(Khatam) then SaveCharacters(Khatam, mission_prefix&'Khatam');
-    if IsOK(Brian) then SaveCharacters(Brian, mission_prefix&'Brian');
-    if IsOk(Jerry) then SaveCharacters(Jerry, mission_prefix&'Jerry');
-    If mikhailStatus = 1 and GetSide(Mikhail) = 1 and IsOk(Mikhail) then SaveCharacters(Mikhail, mission_prefix&'Mikhail');
+if IsOK(Bobby) then
+   SaveCharacters(Bobby, mission_prefix & 'Bobby');
 
-    SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Khatam, Brian, Jerry, Mikhail],'02_other_survivors');
+if IsOK(Cyrus) then
+   SaveCharacters(Cyrus, mission_prefix&'Cyrus');
 
-    YouWin;
+if IsOK(Lisa) then
+   SaveCharacters(Lisa, mission_prefix & 'Lisa');
 
-end;
+if IsOK(Khatam) then
+   SaveCharacters(Khatam, mission_prefix & 'Khatam');
+
+if IsOK(Brian) then
+   SaveCharacters(Brian, mission_prefix&'Brian');
+
+if IsOk(Jerry) then SaveCharacters(Jerry, mission_prefix & 'Jerry');
+
+if mikhailStatus = 1 and GetSide(Mikhail) = 1 and IsOk(Mikhail) then
+   SaveCharacters(Mikhail, mission_prefix & 'Mikhail');
+
+SaveCharacters(FilterAllUnits([[f_ok],[f_side, 1],[f_type,unit_human]]) diff [JMM, Bobby, Cyrus, Lisa, Khatam, Brian, Jerry, Mikhail],'02_other_survivors');
+
+YouWin;
+End;

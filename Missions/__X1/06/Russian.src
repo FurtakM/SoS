@@ -59,7 +59,7 @@ tmp := [GetBase(HexInfo(172, 198)), GetBase(HexInfo(189, 156)), GetBase(HexInfo(
 for i in tmp do
     begin
     SetResourceType(i, mat_cans, 200);
-    SetResourceType(i, mat_oil, 200);
+    SetResourceType(i, mat_oil, 300);
     end;
 
 tmp := [ [177, 114], [138, 96] ];
@@ -99,7 +99,7 @@ uc_nation := 3;
 
 PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_gun, 10);
 un := CreateVehicle;
-PlaceUnitXYD(un, 199, 162, 1, false);
+PlaceUnitXYD(un, 199, 166, 1, false);
 ComHold(un);
 
 PrepareHuman(false, 3, 4);
@@ -112,14 +112,6 @@ ComHold(un);
 
 if Difficulty > 1 then
    begin
-   PrepareHuman(false, 3, 4);
-   PlaceHumanInUnit(CreateHuman, un);
-
-   PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_rocket_launcher, 10);
-   un := CreateVehicle;
-   PlaceUnitXYD(un, 134, 92, 2, false);
-   ComHold(un);
-
    PrepareHuman(false, 3, 4);
    PlaceHumanInUnit(CreateHuman, un);
 
@@ -178,7 +170,7 @@ ComHold(ruBlockadeTank);
 
 ruBlockadeSquad := [];
 
-for i := 1 to [3, 4, 6, 6][Difficulty] do
+for i := 1 to [2, 2, 3, 3][Difficulty] do
     begin
     PrepareHuman(false, 1, [4, 5, 6, 7][Difficulty]);
     un := CreateHuman;
@@ -261,14 +253,14 @@ for i := 1 to tmp do
            PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
            un := CreateHuman;
            PlaceHumanInUnit(un, b);
+           SetClass(un, class_bazooker);
            end;
        end
     else
        begin
        PrepareHuman(false, 1, [4, 5, 5, 6][Difficulty]);
        un := CreateHuman;
-       PlaceHumanInUnit(un, b);
-       SetClass(un, class_bazooker);
+       PlaceHumanInUnit(un, b);        
        end;
 
     ruMainBaseSquad := Replace(ruMainBaseSquad, ruMainBaseSquad + 1, un);
@@ -334,7 +326,7 @@ for i := 1 to [2, 3, 3, 3][Difficulty] do
 // others
 InitHc;
 
-for i := 1 to [4, 6, 8, 12][Difficulty] do
+for i := 1 to [3, 5, 6, 8][Difficulty] do
     begin
     uc_nation := 0;
     hc_class := class_apeman_soldier;
@@ -414,13 +406,13 @@ for i in tmp do
     end;
 End;
 
-Every 0$1 trigger leninSpotted do
+Every 0$10 trigger leninSpotted do
 var i, tmp, weapon;
 begin
 tmp := [ruFac1, ruFac2];
 weapon := [ [ru_gun, ru_gatling_gun], [ru_rocket_launcher, ru_gun], [ru_rocket_launcher, ru_heavy_gun], [ru_rocket_launcher, ru_heavy_gun] ][Difficulty];
 
-for i := 1 to 6 do
+for i := 1 to [1, 2, 2, 3][Difficulty] do
     AddComConstruct(tmp, [ru_medium_tracked, ru_heavy_wheeled][i mod 2 + 1], engine_combustion, control_manual, weapon[i mod 2 + 1]);
 End;
 
@@ -529,45 +521,46 @@ End;
 
 // Attacks
 // on heike's base
-Every 8$00 + 2$00 trigger not omarAttack and not disableAttackOnHeike do
-var i, un, veh, tmp;
+Every 10$00 + 2$00 trigger not omarAttack and not disableAttackOnHeike do
+var i, un, veh, tmp, tmp2;
 begin
 enable;
 
 if Prob([35, 45, 55, 60][Difficulty]) then
    waveStrength := waveStrength + 1;
 
-if waveStrength > [4, 5, 6, 7][Difficulty] then
+if waveStrength > [2, 3, 4, 4][Difficulty] then
    begin
-   waveStrength := waveStrength + Difficulty;
+   waveStrength := waveStrength + 2;
    disableAttackOnHeike := true;
+   disable;
    wait(3$00);
    end;
 
-if disableAttackOnHeike and Difficulty > 1 then
-   begin
-   for i := 1 to [3, 3, 4, 4][Difficulty] do
-       begin
-       InitHc;
-       InitVc;
+for i := 1 to [2, 2, 3, 4][Difficulty] do
+    begin
+    InitHc;
+    InitVc;
 
-       uc_side := 3;
-       uc_nation := 3;
+    uc_side := 3;
+    uc_nation := 3;
 
-       PrepareHuman(false, 1, Difficulty + 2);
-       un := CreateHuman;
-       PlaceUnitXYD(un, 160, 3, 2, false);
-       SetClass(un, class_bazooker);
-       ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
+    PrepareHuman(false, 1, Difficulty + 2);
+    un := CreateHuman;
+    PlaceUnitXYD(un, 160, 3, 2, false);
+    SetClass(un, class_bazooker);
+    ruAttackers := Replace(ruAttackers, ruAttackers + 1, un);
 
-       ComMoveXY(un, 177, 17);
-       wait(0$2);
-
-       tmp := Replace(tmp, tmp + 1, un);
-       end;
+    ComMoveXY(un, 177, 17);
+    wait(0$2);
+    tmp2 := Join(tmp2, un);
     end;
 
-for i := 1 to [2, 3, 4, 5][Difficulty] + waveStrength do
+AddComAgressiveMove(tmp2, 196, 53);
+AddComAgressiveMove(tmp2, 199, 62);
+AddComAgressiveMove(tmp2, 205, 75);
+
+for i := 1 to [2, 3, 3, 4][Difficulty] + waveStrength do
     begin
     InitHc;
     InitVc;
@@ -593,15 +586,10 @@ for i := 1 to [2, 3, 4, 5][Difficulty] + waveStrength do
     end;
 
 for i in tmp do
-    begin
-    if Prob(50) then
-       AgressiveMove(i, [ [192, 34], [198, 56] ])
-    else
-       AgressiveMove(i, [ [206, 37], [239, 53], [257, 105], [227, 97] ]);
-    end;
+    AgressiveMove(i, [ [206, 37], [239, 53], [260, 67], [263, 79], [257, 105], [227, 97] ]);
 
 repeat
- wait(0$1);
+ wait(0$2);
 
  for i in tmp do
      if IsDead(i) then
@@ -616,7 +604,7 @@ if firstAttack then
 End;
 
 // on rolf's base
-Every 8$00 trigger not omarAttack and bergkampfArrived and not rolfHasVehicles do
+Every 12$00 + 3$00 trigger not omarAttack and not rolfAttack and bergkampfArrived and not disableAttackOnHeike do
 var i, un, veh, tmp;
 begin
 enable;
@@ -646,7 +634,7 @@ for i := 1 to [1, 2, 2, 3][Difficulty] do
     tmp := Replace(tmp, tmp + 1, un);
     end;
 
-for i := 1 to [3, 4, 4, 5][Difficulty] + waveStrength do
+for i := 1 to [2, 3, 3, 4][Difficulty] do
     begin
     InitHc;
     InitVc;
@@ -672,10 +660,10 @@ for i := 1 to [3, 4, 4, 5][Difficulty] + waveStrength do
     end;
 
 for i in tmp do
-    AgressiveMove(i, [ [76, 49] ]);
+    AgressiveMove(i, [ [130,229], [137,216], [142,194], [140,169], [146,162], [174,161], [158,134], [136,107], [115,89] ]);
 
 repeat
- wait(0$1);
+ wait(0$2);
 
  for i in tmp do
      if IsDead(i) then
@@ -721,7 +709,7 @@ for i in tmp do
     ComAgressiveMove(i, 330, 231);
 
 repeat
- wait(0$1);
+ wait(0$2);
 
  for i in tmp do
      if IsDead(i) then
