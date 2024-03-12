@@ -61,37 +61,37 @@ Powell := PrepareUnit('Powell', false, '');
 // - not in 7th mission
 tmp := [];
 
-if TestCharacters(['04_Lisa']) and not LoadVariable('LisaInDelta', 0) and not TestCharacters(['07_Lisa']) then
+if TestCharacters(['04_Lisa']) then
    begin
-   Lisa := PrepareUnit('Lisa', true, '04_');
-   tmp2 := Join(tmp2, Lisa);
-   end
-else if not Lisa and not LoadVariable('LisaIn07', false) then
-   begin
-   Lisa := PrepareUnit('Lisa', true, '07_');
-   tmp2 := Join(tmp2, Lisa);
+   if not LoadVariable('LisaInDelta', 0) and not TestCharacters(['07_Lisa']) then
+      Lisa := PrepareUnit('Lisa', true, '04_')
+   else if not LoadVariable('LisaIn07', false) then
+      Lisa := PrepareUnit('Lisa', true, '07_');
+
+   if Lisa then
+      tmp2 := Join(tmp2, Lisa);
    end;
 
-if TestCharacters(['04_Bobby']) and not LoadVariable('BobbyInDelta', 0) and not TestCharacters(['07_Bobby']) then
+if TestCharacters(['04_Bobby']) then
    begin
-   Bobby := PrepareUnit('Bobby', true, '04_');
-   tmp2 := Join(tmp2, Bobby);
-   end
-else if not Bobby and not LoadVariable('BobbyIn07', false) then
-   begin
-   Bobby := PrepareUnit('Bobby', true, '07_');
-   tmp2 := Join(tmp2, Bobby);
+   if not LoadVariable('BobbyInDelta', 0) and not TestCharacters(['07_Bobby']) then
+      Bobby := PrepareUnit('Bobby', true, '04_')
+   else if not LoadVariable('BobbyIn07', false) then
+      Bobby := PrepareUnit('Bobby', true, '07_');
+
+   if Bobby then
+      tmp2 := Join(tmp2, Bobby);
    end;
 
-if TestCharacters(['04_Cyrus']) and not LoadVariable('CyrusInDelta', 0) and not TestCharacters(['07_Cyrus']) then
+if TestCharacters(['04_Cyrus']) then
    begin
-   Cyrus := PrepareUnit('Cyrus', true, '04_');
-   tmp2 := Join(tmp2, Cyrus);
-   end
-else if not Cyrus and not LoadVariable('CyrusIn07', false) then
-   begin
-   Cyrus := PrepareUnit('Cyrus', true, '07_');
-   tmp2 := Join(tmp2, Cyrus);
+   if not LoadVariable('CyrusInDelta', 0) and not TestCharacters(['07_Cyrus']) then
+      Cyrus := PrepareUnit('Cyrus', true, '04_')
+   else if not LoadVariable('CyrusIn07', false) then
+      Cyrus := PrepareUnit('Cyrus', true, '07_');
+
+   if Cyrus then
+      tmp2 := Join(tmp2, Cyrus);
    end;
 
 if TestCharacters(['04_Brown']) and not LoadVariable('BrownInDelta', 0) and not TestCharacters(['07_Brown']) and gammaCommander <> 2 {not Brown} then
@@ -99,7 +99,7 @@ if TestCharacters(['04_Brown']) and not LoadVariable('BrownInDelta', 0) and not 
    Brown := PrepareUnit('Brown', true, '04_');
    tmp2 := Join(tmp2, Brown);
    end
-else if not Brown and not LoadVariable('BrownIn07', false) and gammaCommander <> 2 then
+else if not LoadVariable('BrownIn07', false) and gammaCommander <> 2 then
    begin
    Brown := PrepareUnit('Brown', true, '07_');
    tmp2 := Join(tmp2, Brown);
@@ -110,7 +110,7 @@ if TestCharacters(['04_Donaldson']) and not LoadVariable('DonaldsonInDelta', 0) 
    Donaldson := PrepareUnit('Donaldson', true, '04_');
    tmp2 := Join(tmp2, Donaldson);
    end
-else if not Donaldson and not LoadVariable('DonaldsonIn07', false) and gammaCommander <> 1 then
+else if not LoadVariable('DonaldsonIn07', false) and gammaCommander <> 1 then
    begin
    Donaldson := PrepareUnit('Donaldson', true, '07_');
    tmp2 := Join(tmp2, Donaldson);
@@ -488,13 +488,13 @@ ComMoveXY(FilterUnitsInArea(gammaSupportArea,[[f_side, 1], [f_type, unit_human]]
 End;
 
 Export Function PrepareMacmillanSquad;
-var i, k, un, others, squad, tmp, tmpVehs, vehicles, veh, prefix, area, dir, point2, point;
+var i, un, others, squad, tmp, tmpVehs, vehicles, veh, prefix, area, dir, point2, point;
 begin
 prefix := '07c_';
 vehicles := LoadVariable('07_vehicles', []);
 
 if not vehicles and debug then
-   vehicles := [ us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun ];
+   vehicles := [ [us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun] ];
 
 if not vehicles then
    begin
@@ -522,15 +522,12 @@ uc_nation := 1;
 
 if vehicles then
    begin
-   k := 1;
-
-   for i := 1 to vehicles div 4 do
+   for i := 1 to vehicles do
        begin
-       vc_chassis := vehicles[k];
-       vc_engine := vehicles[k+1];
-       vc_control := vehicles[k+2];
-       vc_weapon := vehicles[k+3];
-       k := k + 4;
+       vc_chassis := vehicles[i][1];
+       vc_engine := vehicles[i][2];
+       vc_control := vehicles[i][3];
+       vc_weapon := vehicles[i][4];
 
        veh := CreateVehicle;
        tmpVehs := Join(tmpVehs, veh);
@@ -618,11 +615,7 @@ if others then
    for i in others do
        begin
        SetTag(i, 108);
-
-       if GetClass(i) = class_mechanic then
-          tmp := Insert(tmp, 1, i)
-       else
-          tmp := Replace(tmp, tmp + 1, i);
+       tmp := Join(tmp, i);
        end;
 
 if tmp then
@@ -631,7 +624,7 @@ if tmp then
        begin
        SetDir(i, dir);
 
-       if tmpVehs then
+       if GetClass(i) = class_mechanic and tmpVehs then
           begin
           SetDir(tmpVehs[1], 0);
           PlaceUnitXY(tmpVehs[1], point[1], point[2], false);

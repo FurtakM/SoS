@@ -823,22 +823,30 @@ End;
 // see bazooka
 Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]]) and IsOk(Heike) do
 begin
+wait(0$3);
+
+DialogueOn;
 CenterOnUnits(FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]])[1]);
 Say(Heike, 'DH-Rubazooka-1');
+DialogueOff;
 End;
 
 // see attack
 Every 0$1 trigger FilterUnitsInArea(attackIncoming, [f_side, 3]) and firstAttack do
 begin
+DialogueOn;
 CenterOnUnits(FilterUnitsInArea(attackIncoming, [f_side, 3]));
 Say(Heike, 'DH-Ruattfirst-1');
 Say(Heike, 'DH-Ruattfirst-2');
+DialogueOff;
 End;
 
 Every 0$1 trigger FilterUnitsInArea(attackIncoming, [f_side, 3]) and not firstAttack do
 begin
+DialogueOn;
 CenterOnUnits(FilterUnitsInArea(attackIncoming, [f_side, 3]));
 Say(Heike, 'DH-Ruattnext-1');
+DialogueOff;
 End;
 
 Every 0$3 trigger IsDead(Morozov) and IsOk(Omar) do
@@ -920,24 +928,28 @@ End;
 
 Every 0$1 trigger escapeAllowed do
 var tmp, outsiders;
-begin
-enable;
+begin           
+repeat
+ wait(0$1);
+ display_strings := ['#X106-2', escapeTimer];
+ escapeTimer := escapeTimer - 0$1;
 
-display_strings := ['#X106-2', escapeTimer];
-escapeTimer := escapeTimer - 0$1;
+ outsiders := FilterUnitsExceptArea(escapeArea, [[f_side, 2], [f_type, unit_human], [f_nation, 2]]);
 
-outsiders := FilterUnitsExceptArea(escapeArea, [[f_side, 2], [f_type, unit_human], [f_nation, 2]]);
+ if not outsiders then
+    begin
+    escapeAllowed := false;
+    MissionWin;
+    exit;
+    end;
 
-if not outsiders then
-   begin
-   escapeAllowed := false;
-   disable;
-   MissionWin;
-   exit;
-   end;
+ if escapeTimer <= 0$00 then
+    begin
+    YouLost('TimeOut');
+    exit;
+    end;
 
-if escapeTimer <= 0$00 then
-   YouLost('TimeOut');
+until false;
 End;
       
 // win

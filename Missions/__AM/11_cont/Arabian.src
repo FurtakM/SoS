@@ -231,7 +231,7 @@ End;
 // First attempt
 // Attacks from 3 side's
 Every 5$00 trigger base_captured do
-var i, un, tmp, skill, coords, flags, w, list;
+var i, un, tmp, skill, coords, flags, list;
 begin
 skill := [5, 6, 7, 8][Difficulty];
 coords := [];
@@ -392,88 +392,84 @@ if gensher_active then
 
    MC_PrepareAttack(1, tmp[5], coords, flags);
    end;
+End;
 
-
-Wait(13$00);
+Every 10$0 + 20$0 do
+var i, tmp, tmp2, coords, w, list;
+begin
+enable;
 
 tmp := [];
-w := 1;
+w := rand(1, 3);
+
+if w = 3 then
+   list := [
+              [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
+              [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
+              [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
+              [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun]
+           ]
+else
+   list := [
+              [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+              [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
+              [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+              [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb]
+           ];
+
+if w < 3 then
+   list := ReplaceIn(list, [1, list[i]+1], [ar_half_tracked, engine_combustion, control_remote, [ar_gatling_gun, ar_rocket_launcher][rand(1,2)]]);
+
+MC_SetProduceList(1, list);
+
+if GetSide(ar_dep_w) = 2 then
+   begin
+   list := [
+              [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+              [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+              [ar_half_tracked, engine_combustion, control_remote, ar_gun]
+           ];
+
+   MC_SetProduceList(2, list);
+
+   wait(0$20);
+   end;
 
 repeat
-  tmp := [];
+ wait(0$1);
+until UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]) >= 4;
 
-  if w mod 4 = 0 then
-     list := [
-               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun],
-               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun]
-             ]
-  else
-     list := [
-               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-               [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
-               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-               [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
-               [ar_hovercraft, engine_combustion, control_remote, ar_double_machine_gun]
-             ];
+wait(0$10);
 
-  if w mod 3 = 0 then
-     list := ReplaceIn(list, [1, list[i]+1], [ar_half_tracked, engine_combustion, control_remote, [ar_gatling_gun, ar_rocket_launcher][rand(1,2)]]);
+tmp := UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]);
+tmp2 := UnitFilter(mc_vehicles[2], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]);
 
-  MC_SetProduceList(1, list);
+if tmp2 then
+   tmp := tmp union tmp2;
 
-  if GetSide(ar_dep_w) = 2 then
-     begin
-     list := [
-               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-               [ar_half_tracked, engine_combustion, control_remote, ar_gun],
-               [ar_half_tracked, engine_combustion, control_remote, ar_gun]
-             ];
+if Count(tmp2) or Prob(50) then
+   coords := [ [48,33], [71,88] ]
+else
+   coords := [ [128,94], [180,135] ];
 
-     MC_SetProduceList(2, list);
+if w = 3 then
+   coords := [ [91,58], [117,107] ];
 
-     wait(0$50);
-     end;
+ComAgressiveMove(tmp, coords[1], coords[2]);
 
-  repeat
-   wait(0$1);
-  until UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]) >= 4;
+repeat
+ wait(0$1);
+until UnitFilter(tmp, [f_hastask]) = 0;
 
-  wait(0$10);
+repeat
+ wait(0$2);
 
-  tmp := UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]);
-
-  if Prob(100) < 50 then
-     coords := [ [55,7], [75,90] ]
-  else
-     coords := [ [128,94], [180,135] ];
-
-  if w mod 4 = 0 then
-     coords := [ [91,58], [117,107] ];
-
-  ComAgressiveMove(tmp, coords[1], coords[2]);
-
-  repeat
-   wait(0$1);
-  until UnitFilter(tmp, [f_hastask]) = 0;
-
-  repeat
-   wait(0$2);
-
-   for i in tmp do
-       if GetChassis(i) = ar_hovercraft then
-          AttackHovercraft(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i))
-       else
-          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
-
-  until not tmp;
-
-  wait(rand(10$30, 13$30));
-  w := w + 1;
-
-until IsDead(ar_dep_n) or not UnitFilter(mc_bases[1], [f_btype, b_factory]);
-
+ for i in tmp do
+     if GetChassis(i) = ar_hovercraft then
+        AttackHovercraft(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i))
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+until not tmp;
 End;
 
 // Run

@@ -62,6 +62,8 @@ TID_CratesDrop = 6065;
 
 TID_Website = 6090;
 TID_Contact = 6091;
+TID_InGame_Save_Game_Limit = 6092;
+TID_InGame_Save_Game_Limit_Desc = 6093;
 
 TID_Credits_Mod = 6100;
 TID_Credits_Maps = 6101;
@@ -133,3 +135,10 @@ TID_Main_Menu_Support = 9996;
 TID_Main_Menu_Contact = 9997;
 TID_Main_Menu_Changelog = 9998;
 TID_Changelog = 9999;
+
+-- variables for lua
+SOS_GAME_DIFFICULTY = 1;
+
+function setGameDifficulty(DIFFICULTY)
+	SOS_GAME_DIFFICULTY = parseInt(DIFFICULTY);
+end;

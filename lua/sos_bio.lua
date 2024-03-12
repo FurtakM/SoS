@@ -154,7 +154,7 @@ biographics = {
     {
         loc(8017),
         loc(8018),
-        'Spyros',
+        'Sophia',
         2,
         2,
         '12.5.1975',

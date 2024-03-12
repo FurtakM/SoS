@@ -276,16 +276,13 @@ var wait_on, i, tmp, m1, m2, m3;
 begin
 wait_on := false;
 
-if FilterPeople(1)+0 > (FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea))+0 then
-   Case Query('Q1') of
-   1: wait_on := true;
-   2: wait_on := false;
-   end;
+if Count(FilterPeople(1)) > Count(FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea)) then
+   if Query('Q1') = 1 then
+      wait_on := true;
 
 repeat
  wait(0$01);
-until (not wait_on) or (FilterPeople(1)+0) = (FilterPeopleArea(1, endArea) ^ FilterDriversArea(1, endArea))+0;
-
+until Count(FilterPeople(1)) = Count(FilterPeopleArea(1, endArea) union FilterDriversArea(1, endArea));
 
 DialogueOn;
 
@@ -348,7 +345,7 @@ if m1 and m2 and m3 and Difficulty >= 3 then
 
 GiveMedals('MAIN');
 
-tmp := FilterPeopleArea(1, endArea) union FilterDriversArea(1, endArea);
+tmp := FilterAllUnits([[f_side, 1], [f_nation, 1]]);
 
 RewardPeople(tmp);
 
@@ -381,7 +378,7 @@ SaveVariable(tick, '07_time');
 tmp := [];
 
 for i in FilterUnitsInArea(endArea, [[[f_side, 1], [f_nation, 1], [f_type, unit_vehicle]]]) do
-    tmp := tmp ^ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)];
+    tmp := Join(tmp, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i)]);
 
 SaveVariable(tmp, '07_vehicles');
 

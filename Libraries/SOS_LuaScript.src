@@ -12,9 +12,24 @@ begin
 if streamModeActive then
    DefineStreamItems(true);
 
+UpdateLuaVariables();
 UpdateFactoryWaypoints();
 UpdateWarehouseGatheringPoints();
-End;                   
+End;
+
+Export globalGameSaveCounter;
+Function UpdateLuaVariables();
+begin
+if not globalGameSaveCounter then
+   ToLua('setGameSaveCounter(0)')
+else
+   begin
+   globalGameSaveCounter := Inc(globalGameSaveCounter);
+   ToLua('setGameSaveCounter(' & globalGameSaveCounter & ')');
+   end;
+
+ToLua('setGameDifficulty(' & Difficulty & ')');
+End;
 
 // SoS Stream Mode by Serpent
 // SoS Hack Mode by Serpent
@@ -22,7 +37,7 @@ End;
 Export Function SOS_CustomCommand(p1, p2, p3, p4, p5, p6);
 begin
 
-if p2 = hack_mode then // stream mode
+if p2 = stream_mode then
    begin
    if not StreamModeActive then
       StreamModeActive := true;
@@ -193,7 +208,7 @@ if p2 = hack_mode then // stream mode
       s60 := true;
    end;
 
-if p2 = stream_mode then // hack mod
+if p2 = hack_mode then
    begin
    case p3 of
         1: hHackUnlimitedResources;
@@ -205,6 +220,17 @@ if p2 = stream_mode then // hack mod
         7: hHackChangeUnitSide;
         8: hHackFog;
         end;
+   end;
+
+if p2 = game_save_mode then
+   begin
+   if p3 = 1 then
+      globalGameSaveCounter := p4;
+
+   if p3 = 2 and globalGameSaveCounter then
+      ToLua('setGameSaveCounter(' & globalGameSaveCounter & ')');
+
+   display_strings := globalGameSaveCounter;
    end;
 End;
 
