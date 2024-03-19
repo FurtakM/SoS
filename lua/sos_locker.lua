@@ -1,3 +1,5 @@
+SOS_LOCKER_ID = nil;
+
 function lockerChangeCypher(ID)
     local n = parseInt(sgui_get(ID, PROP_TAG)) + 1;
 
@@ -23,6 +25,15 @@ function lockerCheckCode(validCode, e1, e2, e3, e4, e)
     end;
 
     sgui_delete(e);
+    SOS_LOCKER_ID = nil;
+end
+
+function destroyLocker()
+    if (SOS_LOCKER_ID ~= nil) then
+        OW_CUSTOM_COMMAND(102, 0);
+        sgui_delete(SOS_LOCKER_ID);
+        SOS_LOCKER_ID = nil;
+    end;
 end
 
 function initLockerMinigame(validCodeNumber)
@@ -46,7 +57,7 @@ function initLockerMinigame(validCodeNumber)
     end;
 
     local ELEMENT = getElementEX(
-        nil, 
+        game, 
         anchorNone, 
         XYWH(0, 0, ScrWidth, ScrHeight), 
         true, 
@@ -167,4 +178,6 @@ function initLockerMinigame(validCodeNumber)
                 .. '); '
         }
     );
+
+    SOS_LOCKER_ID = ELEMENT.ID;
 end;

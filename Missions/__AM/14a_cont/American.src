@@ -7,7 +7,7 @@ uc_nation := 1;
 
 InitHc;
 
-SetResourceType(GetBase(us_depot2), mat_cans, 500);
+SetResourceType(GetBase(us_depot2), mat_cans, 750);
 SetResourceType(GetBase(us_depot2), mat_siberit, 20);
 
 Stevens := NewCharacter('Stevens');
@@ -110,14 +110,16 @@ begin
 enable;
 
 for i in vehGuard do
-    if IsOk(vehGuard) then
+    if IsOk(i) and IsControledBy(i) then
        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 7]), i));
 End;
 
-Every 9$00 trigger bombExploded and IsOk(us_fac) and not planCaptured do
+Every 1$00 + 3$00 trigger bombExploded and IsOk(us_fac) and not planCaptured and Difficulty > 1 do
 begin
 enable;
-ComConstruct(us_fac, us_morphling, engine_siberite, control_remote, [us_rocket_launcher, us_rocket_launcher, us_laser][rand(1,3)]);
+
+if Count(vehGuard) < Difficulty then
+   ComConstruct(us_fac, us_morphling, engine_siberite, control_remote, [us_rocket_launcher, us_rocket_launcher, us_laser][rand(1,3)]);
 End;
 
 Every 1$45 trigger FilterAllUnits([[f_side, 1], [f_class, class_sniper], [f_ok]]) and not planCaptured do

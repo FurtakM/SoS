@@ -138,7 +138,7 @@ Say(Aviradze, 'DA-Arrive-3');
 End;
 
 Every 0$2 trigger baseConstructed do
-var i, un, veh;
+var i, un, veh, p;
 begin
 DialogueOn;
 
@@ -210,8 +210,10 @@ Say(Kurt, 'DKs-scout-3');
 
 if Kaia and GetDistUnits(Kaia, Kurt) < 15 then
    begin
+   p := 1;
+
    if IsInUnit(Kaia) then
-      ComExitBuilding(Kaia);
+      ComExit(Kaia);
 
    wait(0$1);
 
@@ -219,7 +221,8 @@ if Kaia and GetDistUnits(Kaia, Kurt) < 15 then
 
    repeat
     wait(0$1);
-   until GetDistUnits(Kaia, Kurt) < 6;
+    p := Inc(p);
+   until GetDistUnits(Kaia, Kurt) < 6 or p > 12;
 
    ComTurnUnit(Kaia, Kurt);
 
@@ -476,15 +479,21 @@ ComMoveXY(UnitFilter(omarSquad, [f_class, 4]), 214, 124);
 
 ComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 214, 114, 0);
 
-SayRadio(Grishko, 'D9-Gri-1');
-SayRadio(Kurin, 'D9-Kur-1');
+if IsOk(Grishko) then
+   begin
+   SayRadio(Grishko, 'D9-Gri-1');
+   SayRadio(Kurin, 'D9-Kur-1');
+   end;
 
 wait(0$1);
 
 ComAgressiveMove(Omar, 233, 130);
 
-SayRadio(Grishko, 'D9-Gri-2');
-SayRadio(Kurin, 'D9-Kur-2');
+if IsOk(Grishko) then
+   begin
+   SayRadio(Grishko, 'D9-Gri-2');
+   SayRadio(Kurin, 'D9-Kur-2');
+   end;
 
 ComExitBuilding(Grishko);
 AddComMoveXY(Grishko, 211, 104);
@@ -504,8 +513,11 @@ until GetLives(Grishko) < 1000;
 NormalAttack(5, Grishko);
 NormalAttack(6, UnitFilter(omarSquad, [f_class, 1])[4]);
 
-SayRadio(Grishko, 'D9-Gri-3');
-SayRadio(Kurin, 'D9-Kur-3');
+if IsOk(Grishko) then
+   begin
+   SayRadio(Grishko, 'D9-Gri-3');
+   SayRadio(Kurin, 'D9-Kur-3');
+   end;
 
 music_class := music_auto;
 music_nat := music_auto;
@@ -715,7 +727,7 @@ case q of
    Say(Aviradze, 'DA-Cap-a-2');
 
    settings := [Aviradze, sel_changeable] ^
-               [sel_not_hired, sel_not_changeable, Heike] ^
+               [sel_not_hired, sel_not_changeable, Heike, Givi, Kurt, Markov] ^
                [sel_changeable] ^ tmp;
    tmp2 := CharacterSelection('Select two characters to go with Aviradze', 2, 2, settings, []);
 

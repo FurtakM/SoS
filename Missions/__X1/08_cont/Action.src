@@ -294,7 +294,7 @@ InitRuPatrols;
 Say(Heike, 'DH-Escape-1');
 Say(Heike, 'DH-Escape-2');
 
-if not debug then
+//if not debug then
    StartLockerMinigame;
 
 wait(0$1);
@@ -623,7 +623,7 @@ DialogueOff;
 End;
 
 // ask about Ibrahim/Aviradze
-Every 0$3 trigger not Ibrahim and Aviradze and GetSide(Aviradze) <> 2 and GetSide(Ibrahim) <> 2 and UnitFilter(heikeSquad, [f_side, 2]) > 5 and not isAlarm and not hasMuchin marked gameStartEvent do
+Every 0$3 trigger Ibrahim and Aviradze and GetSide(Aviradze) <> 2 and GetSide(Ibrahim) <> 2 and UnitFilter(heikeSquad, [f_side, 2]) > 5 and not isAlarm and not hasMuchin marked gameStartEvent do
 var hasKaia, hasGivi;
 begin
 DialogueOn;
@@ -1359,6 +1359,8 @@ Say(Kaia, 'DK-Plastic-17');
 
 wait(0$0.3);
 
+UnitsBlockingEntrance(ruWorkshop);
+
 SetSide(Kaia, 2);
 ComExitBuilding(Kaia);
 
@@ -1385,6 +1387,8 @@ wait(0$1);
 Say(Kaia, 'DK-Plastic-18');
 
 Query('ExplosivesInfoUsage');
+
+UnitsBlockingEntrance(ruExpDep);
 
 SetSide(Kaia, 2);
 ComExitBuilding(Kaia);
@@ -1551,6 +1555,7 @@ else
                     Say(Heike, 'DH-Deal-a-14');
 
                     contactWithAmerican := true;
+                    SaveVariable(1, '08_DealWithDoug');
 
                     ChangeMissionObjectives_Silent('M1-american-out');
                     end;
@@ -1583,7 +1588,9 @@ else
                         if GetClass(Kaia) = class_revolver and Mike in heikeSquad and IsOk(Mike) then
                            begin
                            Say(Kaia, 'DK-Sniper-a-2');
-                           SetClass(Mike, class_hunter);
+                           giveSniperRifleToMike := true;
+                           Query('QSniperMike');
+                           // SetClass(Mike, class_hunter);
                            end
                         else
                            begin
@@ -1757,17 +1764,19 @@ else
                          if not heikeSquad or not tmp then
                             Say(Heike, 'DH-Weapons-Alone')
                          else
-                            begin                           
-
+                            begin
                             if not firstArmouryDialog then
                                begin
                                Say(Heike, 'DH-Weapons-1');
                                Say(Heike, 'DH-Weapons-2');
 
                                Query('Weapons');
+                               SetAreaMapShow(weaponariesArea, 1);
+                               canEquipWeapons := true;
+                               firstArmouryDialog := true;
                                end;
 
-                            tmp2 := UnitFilter(tmp, [f_class, class_prison]) diff [Heike, Kaia, Kamil, Mike, Givi];
+                            {tmp2 := UnitFilter(tmp, [f_class, class_prison]) diff [Heike, Kaia, Kamil, Mike, Givi];
 
                             if tmp2 and weaponsAmount then
                                begin
@@ -1793,7 +1802,7 @@ else
                                          break;
                                       end;
                                   end;
-                               end;
+                               end; }
 
                             if hasRevolver and Kaia in tmp and GetClass(Kaia) <> class_revolver then
                                begin
@@ -1813,8 +1822,12 @@ else
                                SetSide(Kaia, 2);
                                ComExitBuilding(Kaia);
 
-                               if Mike in heikeSquad and GetSide(Mike) = 2 then
-                                  SetClass(Mike, class_hunter);
+                               if GetClass(Kaia) = class_hunter and Mike in heikeSquad and GetSide(Mike) = 2 then
+                                  begin
+                                  giveSniperRifleToMike := true;
+                                  Query('QSniperMike');
+                                  // SetClass(Mike, class_hunter);
+                                  end;
                                end;
 
                             if Givi in tmp and GetClass(Givi) = class_prison then
@@ -1882,10 +1895,13 @@ else
 
         end;
 
-ComExitBuilding(Heike);
-
-SetSide(Heike, 2);
 SetSide(building, 3);
+UnitsBlockingEntrance(building);
+
+wait(0$0.3);
+
+ComExitBuilding(Heike);  
+SetSide(Heike, 2);
 
 InGameOff;
 End;
@@ -1899,6 +1915,52 @@ Say(Heike, 'DH-Alarm-2');
 DialogueOff;
 
 ChangeMissionObjectives('M1-people-out');
+End;
+
+Every 0$2 trigger GetSide(Mike) = 2 and Mike in heikeSquad and GetDistUnits(Heike, Mike) < 6 and not hasMuchin and giveSniperRifleToMike marked gameStartEvent do
+SetClass(Mike, class_hunter);
+
+// weaponaries
+Every 0$5 trigger canEquipWeapons and weaponsAmount and GetSide(ruWeaponsBar) = 3 and UnitFilter(heikeSquad, [[f_inarea, weaponariesArea], [f_side, 2], [f_class, class_prison]]) and not GetAttitude(2, 3) = att_enemy and not GetDistUnits(ruDisturb, ruWeaponsBar) < 12 marked gameStartEvent do
+var i, tmp;
+begin
+enable;
+
+tmp := UnitFilter(heikeSquad, [[f_inarea, weaponariesArea], [f_side, 2], [f_class, class_prison]]);
+
+if Query('QWeapons') = 1 then
+   begin
+   for i in tmp do
+       begin
+       if UnitsInside(ruWeaponsBar) = 6 then
+          continue;
+
+       SetSide(i, 3);
+       ComEnterUnit(i, ruWeaponsBar);
+       weaponsAmount := Dec(weaponsAmount);
+
+       repeat
+        wait(0$0.3);
+       until IsInUnit(i);
+
+       SetClass(i, class_soldier);          
+
+       repeat
+        ComExitBuilding(i);
+        wait(0$1);
+       until not IsInUnit(i);
+
+       SetSide(i, 2);
+       AddComMoveXY(i, 191, 126);
+
+       if weaponsAmount = 0 then
+          begin
+          SetAreaMapShow(weaponariesArea, 0);
+          disable;
+          exit;
+          end;
+       end;
+   end;
 End;
 
 

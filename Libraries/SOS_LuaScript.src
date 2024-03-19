@@ -1,9 +1,20 @@
 // SoS Lua Script module
+Export globalGameSaveCounter;
+
 // SoS Timer
 Every 0$1 do
 begin
 enable;   
 ToLua('updateTimer(' & tick & ');');
+End;
+
+Every 0$1 do
+begin
+globalGameSaveCounter := 0;
+ToLua('setGameSaveCounter(0)');
+ToLua('initStreamRollete();');
+InitStreamMode;
+DefineStreamItems(false);
 End;
 
 // On map start/load
@@ -17,12 +28,9 @@ UpdateFactoryWaypoints();
 UpdateWarehouseGatheringPoints();
 End;
 
-Export globalGameSaveCounter;
 Function UpdateLuaVariables();
 begin
-if not globalGameSaveCounter then
-   ToLua('setGameSaveCounter(0)')
-else
+if globalGameSaveCounter then
    begin
    globalGameSaveCounter := Inc(globalGameSaveCounter);
    ToLua('setGameSaveCounter(' & globalGameSaveCounter & ')');
@@ -229,8 +237,6 @@ if p2 = game_save_mode then
 
    if p3 = 2 and globalGameSaveCounter then
       ToLua('setGameSaveCounter(' & globalGameSaveCounter & ')');
-
-   display_strings := globalGameSaveCounter;
    end;
 End;
 
@@ -244,13 +250,6 @@ Export StreamModeActive, normalCounter, hardcoreCounter,
        sTeleport, sOil, sOilTower, sShovel, sSheik, sStu, sEarthquake,
        sAI, sBazooka, sMortar, sCargo, sDLaser, sExchange, sFac, sPower, sRandom,
        sShield, sTime, sTools, sRanger, sComputer, s30, s60;
-
-Every 0$1 do
-begin
-ToLua('initStreamRollete();');
-InitStreamMode;
-DefineStreamItems(false);
-End;
 
 Function InitStreamMode;
 begin
