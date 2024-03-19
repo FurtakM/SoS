@@ -12,6 +12,30 @@ begin
 RaiseSailEventCustom(showPlaceEvent, x, y, time, 0, 0, 0);
 End;
 
+Export function UnitsBlockingEntrance(building);
+var i, x, y, d, entrance;
+begin
+if not IsOk(building) then
+   exit;
+
+x := GetX(building);
+y := GetY(building);
+d := GetDir(building);
+
+entrance := [ShiftX(x, d, 3), ShiftY(y, d, 3)];
+
+if not ValidHex(entrance[1], entrance[2]) then
+   exit;
+
+result := FilterAllUnits([[f_distxy, x, y, 4], [f_not, [f_inside]]]);
+
+if not result then
+   exit;
+
+for i in result do
+    ComMoveXY(i, ShiftX(GetX(i), d, 3), ShiftY(GetY(i), d, 3));
+End;
+
 Export function InEntrance(unit, building);
 var x, y, d, entrance, btype;
 begin

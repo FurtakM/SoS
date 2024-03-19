@@ -48,7 +48,7 @@ dialog.gameSaveLimit.content.panel = getElementEX(
 dialog.gameSaveLimit.content.panel.description = getLabelEX(
     dialog.gameSaveLimit.content.panel, 
     anchorNone, 
-    XYWH(20, 20, dialog.gameSaveLimit.content.width, dialog.gameSaveLimit.content.height),
+    XYWH(20, 20, dialog.gameSaveLimit.content.width - 20, dialog.gameSaveLimit.content.height - 20),
     nil, 
     loc(TID_InGame_Save_Game_Limit_Desc),
     {

@@ -1403,9 +1403,9 @@ end;
 function refreshPlayerView()
 	deleteSlots();
 
-	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
-	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
-	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
+	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
+	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
+	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
 	local teamCounter  = 0;
 
 	if (#MULTIPLAYER_ROOM_DATA.Players > 0) then
@@ -1414,7 +1414,10 @@ function refreshPlayerView()
 
 		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
 			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
-			playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
+			
+			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS ~= nil and MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1 > 0) then
+				playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
+			end;
 
 			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
 				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);

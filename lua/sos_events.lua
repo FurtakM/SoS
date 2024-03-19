@@ -140,6 +140,8 @@ function FROMSGUI_KEYDOWN(KEY)
                 HideDialog(dialog.achievs);
             elseif getVisible(dialog.customDialog) then
                 HideDialog(dialog.customDialog);
+            elseif SOS_LOCKER_ID ~= nil and getVisible({ID=SOS_LOCKER_ID}) then
+                destroyLocker();
             else
                 OW_TOOLBARBUTTON(1);
             end;

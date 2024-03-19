@@ -595,7 +595,7 @@ ComMoveXY(tmp, rolfCoords[1], rolfCoords[2]);
 repeat
  wait(0$1);
 
-  tmp := UnitFilter(rolfSquad, [f_or, [f_class, 1], [f_class, 8]]);
+  tmp := UnitFilter(rolfSquad, [[f_not, [f_driving]], [f_or, [f_class, 1], [f_class, 8]]]);
 
   if tmp then
      begin
@@ -703,7 +703,7 @@ repeat
        AddComMoveXY(Omar ^ cargo ^ UnitFilter(omarSquad, [f_class, 4]), 167, 222);
        end;
 
-  tmp := UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]);
+  tmp := UnitFilter(omarSquad, [[f_not, [f_driving]], [f_or, [f_class, 1], [f_class, 8]]]);
 
   if tmp then
      begin
@@ -718,6 +718,9 @@ repeat
             end
          else if tag = 101 then
             begin
+            if GetDistUnitXY(i, omarAttackCoords[1], omarAttackCoords[2]) > 10 then
+               ComMoveXY(i, omarAttackCoords[1], omarAttackCoords[2]);
+
             if GetLives(i) = 1000 then
                SetTag(i, 0);
             end
@@ -766,7 +769,7 @@ repeat
           if GetLives(i) < 1000 then
              AddComRepairVehicleAndReturn(mech)
           else
-             if GetFuel(i) <= 90 and cargo then
+             if GetFuel(i) <= 50 and cargo then
                 SetTag(i, 102)
              else
                 SetTag(i, 0);
