@@ -48,6 +48,40 @@ if (s1 = 1 and s2 = 4) or (s1 = 4 and s2 = 1) then
    YouLost('Traitor');
 End;
 
+On EvacuateVehicle(driver, veh, p1, p2) do
+var i, _dist, dist, points, x, y;
+begin
+if GetSide(driver) = 3 and GetClass(driver) = class_mechanic then
+   begin
+   dist := 9999;
+   points := [ [51, 98], [140, 116], [135, 236] ];
+
+   for i := 1 to points do
+       begin
+       _dist := GetDistUnitXY(i, points[i][1], points[i][2]);
+
+       if _dist < dist then
+          begin
+          dist := _dist;
+          x := points[i][1];
+          y := points[i][2];
+          end;
+       end;
+
+   if not ValidHex(x, y) then
+      exit;
+
+   repeat
+    ComMoveXY(driver, x, y);
+    wait(0$1);
+
+    if IsDead(driver) then
+       exit;
+   until IsAt(driver, x, y);
+
+   RemoveUnit(driver);
+   end;
+End;
 
 On UnitDestroyed(un) do
 begin

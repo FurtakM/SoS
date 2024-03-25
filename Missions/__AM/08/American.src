@@ -191,9 +191,8 @@ for i in others union tmp2 do
     if GetClass(i) = class_mechanic then
        begin
        if fac then
-          begin
-
-          if ct then
+          begin  
+          if ct and UnitsInside(ct[1]) < 3 then
              begin
              PlaceHumanInUnit(i, ct[1]);
              placed := true;
@@ -224,21 +223,22 @@ for i in others union tmp2 do
                  break;
                  end;
           end;
-
-       if not placed then
-          begin
-          PlaceUnitArea(i, gammaSpawnArea, false);
-          ComHold(i);
-          end; 
        end;
 
-    if ct then
-       if UnitsInside(ct[1]) then
-          begin
-          for i in FilterAllUnits([[f_side, 1], [f_control, control_remote]]) do
-              Connect(i);
-          end;
+    
+    if not placed then
+       begin
+       PlaceUnitArea(i, gammaSpawnArea, false);
+       ComHold(i);
+       end;
     end;
+
+if ct then
+   if UnitsInside(ct[1]) then
+      begin
+      for i in FilterAllUnits([[f_side, 1], [f_control, control_remote]]) do
+          Connect(i);
+      end;
 End;
 
 Function PrepareGammaBase;
@@ -254,11 +254,10 @@ if not blist then
 uc_side := 1;
 uc_nation := 1;
 
-bc_kind1 := -1;
-bc_kind2 := -1;
-
 for i in blist do
     begin
+    InitBc;
+
     bc_type := i[1];
     bc_level := i[5];
 
@@ -274,7 +273,7 @@ for i in blist do
           begin
           bc_type := b_lab_half;
           bc_kind1 := b_lab_weapon;
-          bc_kind2 := -1;
+          bc_kind2 := b_lab_basic;
           end;
        end;
 
@@ -620,6 +619,8 @@ if others then
 
 if tmp then
    begin
+   tmp := Join(tmp, JMM);
+
    for i in tmp do
        begin
        SetDir(i, dir);
@@ -642,7 +643,9 @@ if tmp then
        end;
    end;
 
-PlaceUnitXY(JMM, point[1], point[2], false);
+if not IsPlaced(JMM) or not IsInUnit(JMM) then
+   PlaceUnitXY(JMM, point[1], point[2], false);
+
 ComMoveXY(JMM, point2[1], point2[2]);
 
 jmmArrival := true;

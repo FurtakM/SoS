@@ -92,23 +92,23 @@ sgui_deletechildren(menu.window.ID);
 menu.window2 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 92, 194, 184),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 92, 270, 184),
     true,
     {}
 );
 
-setTexture(menu.window2, 'classic/edit/mainmenu2.png');
+setTexture(menu.window2, 'classic/edit/mainmenu-4.png');
 setVisible(menu.window2, false);
 
 menu.window3 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 134, 194, 268),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 134, 270, 268),
     true,
     {}
 );
 
-setTexture(menu.window3, 'classic/edit/mainmenu4.png');
+setTexture(menu.window3, 'classic/edit/mainmenu-6.png');
 setVisible(menu.window3, false);
 
 -- buttons
@@ -116,7 +116,7 @@ menu.window.user = clButton(
     menu.window, 
     12, 
     19, 
-    170,
+    248,
     30,
     loc(TID_Main_Menu_User) .. ': ' .. PROFILE_NAME,
     'showProfile(1);',
@@ -127,7 +127,7 @@ menu.window.play = clButton(
     menu.window, 
     12, 
     61, 
-    170,
+    248,
     30,
     loc(TID_Main_Menu_Play), 
     'showMenuButton(2);',
@@ -138,7 +138,7 @@ menu.window.options = clButton(
     menu.window, 
     12, 
     145, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Options), 
     'showOptions(1);',
@@ -149,7 +149,7 @@ menu.window.mods = clButton(
     menu.window, 
     12, 
     187,
-    170,
+    248,
     30, 
     loc(TID_MODS), 
     'showMods(1);',
@@ -160,7 +160,7 @@ menu.window.sospedia = clButton(
     menu.window, 
     12, 
     103, 
-    170,
+    248,
     30, 
     'Sospedia', 
     'showMenuButton(3);',
@@ -171,7 +171,7 @@ menu.window.credits = clButton(
     menu.window, 
     12, 
     229, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Extras_Credits), 
     'showCredits();',
@@ -182,7 +182,7 @@ menu.window.quit = clButton(
     menu.window, 
     12, 
     271,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Quit), 
     'exit();',
@@ -193,7 +193,7 @@ menu.window2.campaign = clButton(
     menu.window2, 
     12, 
     19,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Campaign), 
     'showCampaign(1)',
@@ -204,7 +204,7 @@ menu.window2.multiplayer = clButton(
     menu.window2, 
     12, 
     61, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
     'showMultiplayerWindow(1);',
@@ -215,7 +215,7 @@ menu.window2.skirmish = clButton(
     menu.window2, 
     12, 
     103,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Skirmish), 
     'showSkirmishWindow(1);',
@@ -226,7 +226,7 @@ menu.window2.back = clButton(
     menu.window2, 
     12, 
     145,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
     'showMenuButton(1);',
@@ -237,7 +237,7 @@ menu.window3.web = clButton(
     menu.window3, 
     12, 
     19, 
-    170,
+    248,
     30, 
     loc(TID_Website), 
     'OW_SOS_CLICKED("");',
@@ -248,7 +248,7 @@ menu.window3.biographies = clButton(
     menu.window3, 
     12, 
     61, 
-    170,
+    248,
     30, 
     loc(TID_Biographies), 
     'showBiographic(1);',
@@ -259,7 +259,7 @@ menu.window3.achivs = clButton(
     menu.window3, 
     12, 
     103, 
-    170,
+    248,
     30, 
     loc(TID_ACHIEVEMENTS), 
     'showAchivs(1);',
@@ -270,7 +270,7 @@ menu.window3.changelog = clButton(
     menu.window3, 
     12, 
     145,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Changelog), 
     'displayChangeLogMessage(true);',
@@ -281,7 +281,7 @@ menu.window3.contact = clButton(
     menu.window3, 
     12, 
     187,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Contact), 
     'OW_SOS_CLICKED("contact");',
@@ -292,7 +292,7 @@ menu.window3.back = clButton(
     menu.window3, 
     12, 
     229,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
     'showMenuButton(1);',
@@ -350,7 +350,7 @@ footer.modVer = getLabelEX(
 footer.support = getElementEX(
     footer,
     anchorL,
-    XYWH(0, 0, 200, footer.height),
+    XYWH(0, 0, 180, footer.height),
     true,
     {
         colour1 = WHITEA()
@@ -375,13 +375,13 @@ footer.support.label = getLabelEX(
 	}
 );
 
-footer.support.paypal = getElementEX(
+footer.support.logo = getElementEX(
     footer.support,
     anchorR,
     XYWH(150, 2, 24, 24),
     true,
     {
-        texture = 'SGUI/paypal.png'
+        texture = 'SGUI/support.png'
     }
 );
 
@@ -395,6 +395,57 @@ footer.support.hover = getElementEX(
         callback_mouseleave = 'setFontColourID(' .. footer.support.label.ID .. ', RGB(222, 222, 222));',
         callback_mouseover = 'setFontColourID(' .. footer.support.label.ID .. ', RGB(254, 235, 89));',
         callback_mousedown = 'OW_SOS_CLICKED("support");'
+    }
+);
+
+footer.discord = getElementEX(
+    footer,
+    anchorL,
+    XYWH(210, 0, 104, footer.height),
+    true,
+    {
+        colour1 = WHITEA()
+    }
+);
+
+footer.discord.label = getLabelEX(
+    footer.discord,
+    anchorNone,
+    XYWH(10, 4, 80, 10),
+    Tahoma_16B,
+    'Discord',
+    {
+        font_colour = RGB(222, 222, 222),
+        shadowtext = true,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true,
+        font_size = 16
+    }
+);
+
+footer.discord.logo = getElementEX(
+    footer.discord,
+    anchorR,
+    XYWH(80, 2, 24, 24),
+    true,
+    {
+        texture = 'SGUI/discord.png'
+    }
+);
+
+footer.discord.hover = getElementEX(
+    footer.discord,
+    anchorLTRB,
+    XYWH(0, 0, footer.discord.width, footer.discord.height),
+    true,
+    {
+        colour1 = WHITEA(),
+        callback_mouseleave = 'setFontColourID(' .. footer.discord.label.ID .. ', RGB(222, 222, 222));',
+        callback_mouseover = 'setFontColourID(' .. footer.discord.label.ID .. ', RGB(254, 235, 89));',
+        callback_mousedown = 'OW_SOS_CLICKED("discord");'
     }
 );
 
