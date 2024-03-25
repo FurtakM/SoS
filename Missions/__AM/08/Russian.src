@@ -235,7 +235,7 @@ AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
 End;
 
 Every 0$1 trigger IsOk(ruDep) do
-var i, tmp, b, eng, crane, tag, sci, lab;
+var i, j, tmp, b, eng, crane, tag, sci, lab, emptyTowers, sol;
 begin
 enable;
 
@@ -244,6 +244,33 @@ eng := FilterAllUnits([[f_side, 3], [f_class, 2]]);
 crane := FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]);
 sci := FilterAllUnits([[f_side, 3], [f_class, 4]]);
 lab := HexInfo(81, 93);
+emptyTowers := FilterAllUnits([[f_side, 3], [f_btype, b_bunker], [f_ok], [f_empty], [f_not, [f_tag, 701]]]);
+
+if emptyTowers then
+   begin
+   for i in emptyTowers do
+       begin
+       sol := FilterAllUnits([[f_side, 3], [f_class, 1], [f_ok], [f_not, [f_tag, 701]]]);
+
+       if not sol then
+          break;
+
+       for j in sol do
+           if IsInUnit(j) and GetBType(IsInUnit(j)) = b_bunker then
+              sol := sol diff j;
+
+       if not sol then
+          break;
+
+       if IsInUnit(sol[1]) then
+          ComExit(sol[1]);
+
+       SetTag(sol[1], 701);
+       SetTag(i, 701);
+
+       AddComEnterUnit(sol[1], i);
+       end;
+   end;
 
 if sci and UnitFilter(eng, [f_tag, 2]) then
    ComExitAll(sci)

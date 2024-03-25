@@ -321,33 +321,30 @@ If GetTech(i, side) = state_enabled and TechNationAvailable(i, nation) = true th
 end;
 
 Export function EnterBunkerOrBarrack(side, area);
-var i,j, soldiers_list, turretList, temp, barrackList, insideUnits;
+var i, j, soldiers_list, turretList, temp, barrackList, insideUnits;
 begin
-
-
 soldiers_list = FilterAllUnits([[f_side, side], [f_outside], [f_lives, 700],  [f_not, [f_hastask]], [f_or, [f_class, 1], [f_class, 9]]]);
 turretList = FilterAllUnits([[f_side, side], [f_btype, b_bunker], [f_empty], [f_lives, 251]]);
-barrackList = FilterAllUnits([[f_side, side], [f_or, [f_btype, 4], [f_btype, 5]], [f_lives, 251]]);
+barrackList = FilterAllUnits([[f_side, side], [f_not, [f_full]], [f_or, [f_btype, 4], [f_btype, 5]], [f_lives, 251]]);
 
-if barrackList > 0 then
-begin
+if not barrackList then
+   exit;
 
-    if turretList = 0 then
-    begin
-        for i in soldiers_list do ComEnterUnit(i, barrackList[Rand(1, barrackList)]);
-    end else
-    begin
-        for i in barrackList do 
-        begin
-            insideUnits = UnitsInside(i);
-            ComEnterUnit(insideUnits[1], turretList[1]);
-            ComEnterUnit(soldiers_list[1], turretList[1]);
-        end;
-    end;
-
-end;
-
-end;
+if turretList = 0 then
+   begin
+   for i in soldiers_list do
+       ComEnterUnit(i, barrackList[Rand(1, barrackList)]);
+   end
+else
+   begin
+   for i in barrackList do 
+       begin
+       insideUnits = UnitsInside(i);
+       ComEnterUnit(insideUnits[1], turretList[1]);
+       ComEnterUnit(soldiers_list[1], turretList[1]);
+       end;
+   end;
+End;
 
 
 Export function RepairBuilding(side, building);

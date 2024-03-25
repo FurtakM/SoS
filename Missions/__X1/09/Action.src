@@ -1,6 +1,9 @@
 Export function Action;
+var i, un;
 begin
-InGameOn;
+music_nat := 2;
+
+Video(true);
 
 ComMoveXY(Heike, 51, 23);
 ComMoveXY(all_units diff Heike, 53, 27);
@@ -24,7 +27,17 @@ AddComTurnUnit(all_units diff Heike, Heike);
 
 if Doug and LoadVariable('08_DealWithDoug', false) then
    begin
+   ComTurnUnit(Heike, Doug);
 
+   Say(Doug, 'DCa-Intro-a-2');
+   Say(Heike, 'DH-Intro-a-3');
+   Say(Doug, 'DCa-Intro-a-4');
+   Say(Heike, 'DH-Intro-a-5');
+   Say(Doug, 'DCa-Intro-a-6');
+
+   ComMoveXY(Harris ^ Doug ^ americanSquad, 5, 7);
+
+   wait(0$01);
    end
 else if Harris then
    begin
@@ -32,16 +45,85 @@ else if Harris then
 
    Say(Harris, 'DJ-Intro-2');
    Say(Heike, 'DH-Intro-3');
-
-   wait(0$0.3);
-
    Say(Heike, 'DH-Intro-4');
    Say(Harris, 'DJ-Intro-5');
 
-   ComMoveXY(Harris ^ americanSquad, 5, 7);
+   ComMoveXY(Harris ^ Doug ^ americanSquad, 5, 7);
 
    wait(0$01);
    end;
 
-InGameOff;
+if Givi then
+   begin
+   ComMoveUnit(Givi, Heike);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Heike, Givi) < 4;
+
+   ComTurnUnit(Givi, Heike);
+   ComTurnUnit(Heike, Givi);
+
+   Say(Givi, 'DG-Intro-7');
+   end;
+
+if not Givi then
+   ComTurnXY(Heike, 52, 25);
+
+Say(Heike, 'DH-Intro-7');
+
+ComMoveXY(FilterAllUnits([f_side, 2]), 48, 4);
+
+wait(0$3);
+
+
+PlaceSeeing(74, 79, 2, -16);
+CenterOnXY(74, 79);
+
+uc_side := 3;
+uc_nation := nation_russian;
+
+PrepareVehicle(ru_medium_tracked, engine_siberite, control_manual, ru_gatling_gun, 100);
+un := CreateVehicle;
+PlaceUnitXY(un, 76, 87, false);
+
+PrepareMechanic(false, 8);
+PlaceHumanInUnit(CreateHuman, un);
+
+ComMoveXY(un, 67, 56);
+
+wait(0$1);
+
+for i := 1 to 3 do
+    begin
+    PrepareSoldier(false, 8);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 76, 87, 2, false);
+
+    ComMoveXY(un, 67, 56);
+    end;
+
+wait(0$2);
+
+ChangeMap(1, '%_cont');
+
+Video(false);
+End;
+
+Every 0$1 trigger FilterUnitsInArea(deleteAmericanArea, [f_side, 4]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(deleteAmericanArea, [f_side, 4]) do
+    RemoveUnit(i);
+End;
+
+Every 0$1 trigger FilterUnitsInArea(deleteArabianArea, [f_side, 2]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(deleteArabianArea, [f_side, 2]) do
+    RemoveUnit(i);
 End;
