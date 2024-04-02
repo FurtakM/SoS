@@ -675,7 +675,7 @@ Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 
 ChangeMissionObjectives('RemoteControlDone');
 
 Every 0$1 trigger (convoyCounter < 1 and not UnitFilter(ruConvoySquad, [[f_placed], [f_type, unit_human]])) or tick >= 60$00 do
-var i, tmp, tmp2;
+var i, tmp, tmp2, vehs;
 begin
 ChangeMissionObjectives('ReinforcementsDone');
 music_class := music_victory;
@@ -741,6 +741,18 @@ SaveVariable(convoySavedCounter, '05_ConvoySavedCounter');
 SaveVariable(radarConstructed, '05_Radar');
 SaveVariable(drugsTested, '05_DrugsTested');
 SaveVariable(FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 3 and FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) >= 2, '05_RemoteControl');
+
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]);
+
+if tmp then
+   begin
+   vehs := [];
+
+   for i in tmp do
+       vehs := Replace(vehs, vehs + 1, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i)]);
+
+   SaveVariable(vehs, '05_Vehicles');
+   end;
 
 tmp := FilterUnitsInArea(saveBuildingsArea, [f_type, unit_building]);
 tmp2 := [];

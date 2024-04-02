@@ -1,3 +1,3 @@
 function FROMOW_MAP_START(MAPPATH)
-   -- registryAchievs({'ACH_REDARMY', 'ACH_CRATES', 'ACH_HOVER'});
+   registryAchievs({'ACH_REVOLVER', 'ACH_HEIKERU', 'ACH_GIVIRU', 'ACH_TOY', 'ACH_POKER', 'ACH_HSPEED_8'});
 end;

@@ -249,31 +249,28 @@ TID_ACH_ROLF = 6542;
 TID_ACH_ROLF_DESC = 6543;
 TID_ACH_OIL = 6544;
 TID_ACH_OIL_DESC = 6545;
--- 6546
--- 6547
--- 6548
--- 6549
--- 6550
--- 6551
-
--- 6552
--- 6553
--- 6554
--- 6555
--- 6556
--- 6557
--- 6558
--- 6559
--- 6560
--- 6561
-
--- 6562
--- 6563
--- 6564
--- 6565
--- 6566
--- 6567
-
+TID_ACH_ANTSNIPER = 6546;
+TID_ACH_ANTSNIPER_DESC = 6547;
+TID_ACH_WEST = 6548;
+TID_ACH_WEST_DESC = 6549;
+TID_ACH_UNTOUCH = 6550;
+TID_ACH_UNTOUCH_DESC = 6551;
+TID_ACH_TOY = 6552;
+TID_ACH_TOY_DESC = 6553;
+TID_ACH_POKER = 6554;
+TID_ACH_POKER_DESC = 6555;
+TID_ACH_HEIKERU = 6556;
+TID_ACH_HEIKERU_DESC = 6557;
+TID_ACH_GIVIRU = 6558;
+TID_ACH_GIVIRU_DESC = 6559;
+TID_ACH_REVOLVER = 6560;
+TID_ACH_REVOLVER_DESC = 6561;
+TID_ACH_BOB = 6562;
+TID_ACH_BOB_DESC = 6563;
+TID_ACH_KNIGHT = 6564;
+TID_ACH_KNIGHT_DESC = 6565;
+TID_ACH_GREEN = 6566;
+TID_ACH_GREEN_DESC = 6567;
 TID_ACH_HSPEED_1 = 6568;
 TID_ACH_HSPEED_1_DESC = 6569;
 TID_ACH_HSPEED_2 = 6570;
@@ -1315,6 +1312,104 @@ achievements = {
         true,
         0,
         0
+    },
+    ['ACH_WEST'] = {
+        loc(TID_ACH_WEST), 
+        loc(TID_ACH_WEST_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ANTSNIPER'] = {
+        loc(TID_ACH_ANTSNIPER), 
+        loc(TID_ACH_ANTSNIPER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_UNTOUCH'] = {
+        loc(TID_ACH_UNTOUCH), 
+        loc(TID_ACH_UNTOUCH_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_HSPEED_7'] = {
+        loc(TID_ACH_HSPEED_7), 
+        loc(TID_ACH_HSPEED_7_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_TOY'] = {
+        loc(TID_ACH_TOY), 
+        loc(TID_ACH_TOY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_POKER'] = {
+        loc(TID_ACH_POKER), 
+        loc(TID_ACH_POKER_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_HEIKERU'] = {
+        loc(TID_ACH_HEIKERU), 
+        loc(TID_ACH_HEIKERU_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_GIVIRU'] = {
+        loc(TID_ACH_GIVIRU), 
+        loc(TID_ACH_GIVIRU_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_REVOLVER'] = {
+        loc(TID_ACH_REVOLVER), 
+        loc(TID_ACH_REVOLVER_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_HSPEED_8'] = {
+        loc(TID_ACH_HSPEED_8), 
+        loc(TID_ACH_HSPEED_8_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BOB'] = {
+        loc(TID_ACH_BOB), 
+        loc(TID_ACH_BOB_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_GREEN'] = {
+        loc(TID_ACH_GREEN), 
+        loc(TID_ACH_GREEN_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_KNIGHT'] = {
+        loc(TID_ACH_KNIGHT), 
+        loc(TID_ACH_KNIGHT_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_HSPEED_9'] = {
+        loc(TID_ACH_HSPEED_9), 
+        loc(TID_ACH_HSPEED_9_DESC),
+        true,
+        0,
+        0
     }
 };
 
@@ -1347,7 +1442,10 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_ENG', 'ACH_BABY', 'ACH_CLEAN', 'ACH_APEGEN', 'ACH_IBRAHIM', 'ACH_HSPEED_3'},
         {'ACH_FIST', 'ACH_LAB', 'ACH_COMMISAR', 'ACH_KING', 'ACH_CAMERA', 'ACH_HSPEED_4'},
         {'ACH_FIRE', 'ACH_CHEM', 'ACH_KEY', 'ACH_EXT', 'ACH_HSPEED_5'},
-        {'ACH_ROLF', 'ACH_OIL', 'ACH_LENIN', 'ACH_HSPEED_6'}
+        {'ACH_ROLF', 'ACH_OIL', 'ACH_LENIN', 'ACH_HSPEED_6'},
+        {'ACH_ANTSNIPER', 'ACH_WEST', 'ACH_UNTOUCH', 'ACH_HSPEED_7'},
+        {'ACH_REVOLVER', 'ACH_HEIKERU', 'ACH_GIVIRU', 'ACH_TOY', 'ACH_POKER', 'ACH_HSPEED_8'},
+        {'ACH_BOB', 'ACH_KNIGHT', 'ACH_GREEN', 'ACH_HSPEED_9'}
     },
     {
         {'ACH_NATURE', 'ACH_YELENA'},
@@ -1477,7 +1575,21 @@ achievsCategory = {
         'ACH_ROLF',
         'ACH_OIL',
         'ACH_LENIN',
-        'ACH_HSPEED_6'
+        'ACH_HSPEED_6',
+        'ACH_ANTSNIPER', 
+        'ACH_WEST', 
+        'ACH_UNTOUCH', 
+        'ACH_HSPEED_7',
+        'ACH_REVOLVER', 
+        'ACH_HEIKERU', 
+        'ACH_GIVIRU', 
+        'ACH_TOY', 
+        'ACH_POKER', 
+        'ACH_HSPEED_8',
+        'ACH_BOB', 
+        'ACH_KNIGHT',
+        'ACH_GREEN', 
+        'ACH_HSPEED_9'
     },
     [3] = {
         'ACH_YELENA',
