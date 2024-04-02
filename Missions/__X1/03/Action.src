@@ -1020,6 +1020,7 @@ case Query('IbrahimQuery') of
    ibrahimInDepot := false;
 
    InGameOn;
+   DialogueOn;
 
    CenterNowOnUnits(Heike);
 
@@ -1049,6 +1050,8 @@ case Query('IbrahimQuery') of
    Say(Ibrahim, 'DI-8-interrogation');
 
    wait(0$1);
+
+   DialogueOff;
 
    case Query('IbrahimDecisionQuery') of
    1: begin // kill
@@ -1102,14 +1105,14 @@ InGameOn;
 
 CenterNowOnUnits(Ibrahim);
 
-Say(Ibrahim, 'DI-1-free');
-
 ComTurnUnit(Heike, Ibrahim);
-
-Say(Heike, 'DH-1-free');    
-
 ComTurnUnit(Ibrahim, Heike);
 
+DialogueOn;
+
+Say(Ibrahim, 'DI-1-free');
+
+Say(Heike, 'DH-1-free');    
 Say(Ibrahim, 'DI-2-free');
 
 changeClass := 0;
@@ -1122,6 +1125,7 @@ case Query('IbrahimJoinQuery') of
 2: begin // decline
    Say(Heike, 'DH-1-decline');
    Say(Ibrahim, 'DI-1-decline');
+   DialogueOff;
    InGameOff;
 
    blockAttack := false;
@@ -1160,6 +1164,9 @@ if changeClass then
       Say(Heike, 'DH-2-agree');
       Say(Givi, 'DG-2-agree');
       end;
+
+   CenterNowOnUnits(Ibrahim);
+   DialogueOff;
 
    if UnitsInside(depot) = 6 then
       ComExitBuilding(UnitsInside(depot)[1]);
@@ -1223,6 +1230,9 @@ if FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 3]]]) then
     wait(0$1);
    until FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 3]]]) = 0;
    end;
+
+if tick <= 45$00 then
+   SetAchievement('ACH_HSPEED_3');
 
 DialogueOn;
 

@@ -1,0 +1,163 @@
+{
+    Map scripts : Nefarem
+    Status: 100%
+
+    Global Variables:
+    10_GensherEscape_1 = 0 - won't arrive with support in next mission
+    10_GensherEscape_1 = 1 - will arrive with support in next mission
+
+    10_ScientistsEscape_1 = 0 - without new technologies for enemy in next mission
+    10_ScientistsEscape_1 = 1 - new technologies for enemy in next mission
+
+    10_KhatamStatus_1 = 0 - Killed
+    10_KhatamStatus_1 = 1 - Survive
+}
+
+Export JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary; // Heroes with JMM
+Export Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, AmScout, Mike; // Heroes from ALpha
+Export Cornell; // Other Am heroes
+Export Truman;
+Export JMMSquad;
+Export others10, others09, ape09; // Others characters
+Export Powell; // Am commander
+Export Tsaritsyn; // Ru commander
+Export Dietrich; // Ar commander
+Export Ahmed;
+Export playerVehs;
+Export joinEpsilon;
+
+Export ruDepot, ruLab1, ruLab2, ruArm1, ruArm2, ruFab;
+Export ruSolMinLevel, ruSolMaxLevel;
+Export ruBaseReady, russianAI;
+Export activateRUAI;
+Export ruPossition;
+Export ruDestroyedBuildings;
+
+Export arDepot, arLab, arArm;
+Export arabianAttackersAI;
+Export arabianEscape;
+Export arabianDefeated;
+Export arabianTrait;
+Export arabianMines;
+Export ruMech;
+
+Export GensherStatus;
+Export KhatamStatus;
+
+Export mission_prefix, mission_prefix_prev;
+
+Export cratesSpawned, ruDepotConstructed, spawnRussians;
+
+Export ru_vehs_counter, ru_sold_counter;
+Export telep_ru_dialog, snipersTrained;
+
+Export fastEnd;
+
+Export attackAvalaible;
+
+Export eventVar1, eventVar2;
+Export debugMode;
+
+Starting
+begin
+    Resetfog;
+    AnimateTrees(true);
+    RandomizeAll;
+
+    playerVehs = [];
+    JMMSquad = [];
+    joinEpsilon = 0; // 0 - player didin't join to Epsilon, 1 - ok
+
+    ruBaseReady = 0;
+    russianAI = 0;
+    activateRUAI = 0;
+    ruPossition = 0; // 1 - west 2 - middle 3 - east
+    ruDestroyedBuildings = [];
+
+    arabianMines = [];
+    arabianEscape = 0; // 0 - killed, 1 - escaped
+    arabianAttackersAI = 0; // 0 - off, 1 - on
+    arabianDefeated = 0; 
+    arabianTrait = 0;
+    telep_ru_dialog := false;
+    ruMech := [4, 5, 6, 6][Difficulty];
+
+    eventVar1 = 0; // block event
+    eventVar2 = 0;
+
+    fastEnd = 0;
+
+    KhatamStatus = 0;
+    GensherStatus = 0; // 0 - dead or move, 1 - escape
+
+    cratesSpawned = 0;
+
+    ru_vehs_counter := [1, 2, 2, 2][Difficulty];
+    ru_sold_counter := [2, 4, 4, 4][Difficulty];
+    snipersTrained := false;
+    ruDepotConstructed := false;
+    spawnRussians := false;
+
+    attackAvalaible = 1;
+    
+    mission_prefix := '10c_';
+    mission_prefix_prev := '10_';
+
+    debugMode = 0; // 0 - players, 1 - developers
+
+    Video(true);
+
+    CreateNature;
+
+    PrepareDifficulty;
+    PrepareJMMTeam;
+    PrepareCathyTeam;
+
+    PlaceMines(MineField1, 1 + Difficulty);
+
+    if Difficulty > 1 then PlaceMines(MineField2, Difficulty);
+    if Difficulty > 2 then PlaceMines(MineField3, Difficulty);
+
+    PrepareArabianCommander;
+    PrepareArabian;
+    BuildArabianBase;
+
+    TameApemans;
+End;
+
+Every 0$1 trigger debugMode = 1 do
+var i;
+begin
+    enable;
+    fogoff(true);
+    for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do SetLives(i, 1000);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 1, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 2, 9999);
+    for i in FilterAllUnits([[f_side, 1], [f_or, [f_btype, 0], [f_btype, 1]]]) do SetResourceType(GetBase(i), 3, 9999);
+end;
+
+Every 0$1 trigger FilterAllUnits([f_class, class_sniper]) do
+snipersTrained := true;
+
+Every 0$3 trigger GetAttitude(1, 2) = att_friend and spawnRussians and FilterAllUnits([f_side, 3]) = 0 do
+SetAchievement('ACH_POWER');
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_warehouse]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_turret]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radio]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radar]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_noncombat]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_track]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_gun]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_siberium]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_solar_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_power]]) do
+SetAchievement('ACH_ARCH');

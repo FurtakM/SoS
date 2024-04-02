@@ -235,7 +235,7 @@ AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
 End;
 
 Every 0$1 trigger IsOk(ruDep) do
-var i, j, tmp, b, eng, crane, tag, sci, lab, emptyTowers, sol;
+var i, j, tmp, b, eng, crane, tag, sci, lab, emptyTowers, sol, barracks, e;
 begin
 enable;
 
@@ -245,12 +245,13 @@ crane := FilterAllUnits([[f_side, 3], [f_weapon, ru_crane]]);
 sci := FilterAllUnits([[f_side, 3], [f_class, 4]]);
 lab := HexInfo(81, 93);
 emptyTowers := FilterAllUnits([[f_side, 3], [f_btype, b_bunker], [f_ok], [f_empty], [f_not, [f_tag, 701]]]);
+barracks := FilterAllUnits([[f_side, 3], [f_btype, b_barracks], [f_ok], [f_not, [f_full]]]);
 
 if emptyTowers then
    begin
    for i in emptyTowers do
        begin
-       sol := FilterAllUnits([[f_side, 3], [f_class, 1], [f_ok], [f_not, [f_tag, 701]]]);
+       sol := FilterAllUnits([[f_side, 3], [f_or, [f_inside], [f_inarea, ruBaseArea]], [f_class, 1], [f_ok], [f_not, [f_tag, 701]]]);
 
        if not sol then
           break;
@@ -270,7 +271,33 @@ if emptyTowers then
 
        AddComEnterUnit(sol[1], i);
        end;
+   end
+else if UnitFilter(sol, [f_not, [f_inside], [f_inarea, ruBaseArea]]) then
+   begin
+   if barracks then
+      begin
+      for i in UnitFilter(sol, [f_not, [f_inside], [f_inarea, ruBaseArea]]) do
+          ComEnterUnit(i, barracks[1]);
+      end
+   else if FilterUnitsInArea(ruBaseArea, [f_enemy, 3]) then
+      begin
+      for i in UnitFilter(sol, [f_not, [f_inside], [f_inarea, ruBaseArea]]) do
+          begin
+          SetTag(i, 702);
+          e := NearestUnitToUnit(FilterUnitsInArea(ruBaseArea, [f_enemy, 3]), i);
+          ComAgressiveMove(i, GetX(e), GetY(e));
+          end;
+      end;
    end;
+
+tmp := FilterAllUnits([[f_side, 3], [f_inarea, ruDefendArea], [f_ok], [f_class, class_soldier], [f_tag, 702]]);
+
+if tmp then
+   for i in tmp do
+       begin
+       ComMoveXY(i, 90, 94);
+       SetTag(i, 0);
+       end;
 
 if sci and UnitFilter(eng, [f_tag, 2]) then
    ComExitAll(sci)

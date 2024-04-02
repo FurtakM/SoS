@@ -1,5 +1,5 @@
 Export function PrepareKurt; // team #Kurt ; )
-var i, depot, tmp, rnd, dec, dec2;
+var i, depot, tmp, rnd, dec, dec2, forceJMM;
 begin
 // spawn Kurt nearby main depot
 repeat
@@ -7,12 +7,23 @@ repeat
  wait(0$1);
 until depot;
 
+forceJMM := false;
+
 repeat
  wait(0$1);
- tmp := FilterAllUnits([ [f_side, 1], [f_dist, depot[1], 15], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], [f_not, [f_inside]], [f_not, [f_driving]] ]) diff ([Lisa, Bobby, Cyrus, Frank, Donaldson, Gladstone, Denis] ^ arrivals);
+ tmp := FilterAllUnits([[f_side, 1], [f_dist, depot[1], 15], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4]], [f_not, [f_inside]], [f_not, [f_driving]]]) diff ([Lisa, Bobby, Cyrus, Frank, Donaldson, Gladstone, Denis]);
+
+ if timeToEnd < 10$00 then
+    begin
+    forceJMM := true;
+    break;
+    end;
 until tmp and not InBattle(1);
 
-tmp := tmp[rand(1, tmp)];
+if not forceJMM then
+   tmp := tmp[rand(1, tmp)]
+else
+   tmp := JMM;
 
 blockSpawn := 1;
 

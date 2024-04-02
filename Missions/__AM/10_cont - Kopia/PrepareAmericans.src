@@ -1,0 +1,250 @@
+Export function PrepareJMMTeam; // DO POPRAWY! , poprawilem ladnie ;)
+var i, j, veh, rnd, count;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    count = 0;
+
+    JMM = PrepareUnit('JMM', true, '10_');
+    JMMSquad = JMMSquad ^ JMM;
+
+    Gary = PrepareUnit('Gary', true, '10_');
+    if Gary then JMMSquad = JMMSquad ^ Gary;
+
+    Cyrus = PrepareUnit('Cyrus', true, '10_');
+    if Cyrus then JMMSquad = JMMSquad ^ Cyrus;
+
+    Bobby = PrepareUnit('Bobby', true, '10_');
+    if Bobby then JMMSquad = JMMSquad ^ Bobby;
+
+    Lisa = PrepareUnit('Lisa', true, '10_');
+    if Lisa then JMMSquad = JMMSquad ^ Lisa;
+
+    Brown = PrepareUnit('Brown', true, '10_');
+    if Brown then JMMSquad = JMMSquad ^ Brown;
+    
+    Donaldson = PrepareUnit('Donaldson', true, '10_');
+    if Donaldson then JMMSquad = JMMSquad ^ Donaldson;
+
+    Frank = PrepareUnit('Frank', true, '10_');
+    if Frank then JMMSquad = JMMSquad ^ Frank;
+
+    Houten = PrepareUnit('Houten', true, '10_');
+    if Houten then JMMSquad = JMMSquad ^ Houten;
+
+    others10 = CreateCharacterSet('OthersIn10');
+    Powell = PrepareUnit('Powell', false, '');
+
+    for i in JMMSquad do
+    begin
+
+        if count < 3 then
+        begin
+            vc_engine = 1;
+            vc_control = 1;
+            vc_weapon = 12;
+            vc_chassis = 3;
+
+            veh = CreateVehicle;
+            SetDir(veh, 1);
+            PlaceUnitArea(veh, PlayerSpawn, false);
+
+            if count mod 2 = 0 then AddCargo(veh, 1, 100)
+            else AddCargo(veh, 3, 100)
+        end;
+
+        if count >= 3 then
+        begin
+            vc_engine = 1;
+            vc_control = 1;
+            vc_weapon = [3, 4, 5][Rand(1, 3)];
+            vc_chassis = [us_medium_wheeled, us_medium_tracked][i mod 2 + 1];
+
+            veh = CreateVehicle;
+            SetDir(veh, 1);
+            PlaceUnitArea(veh, PlayerSpawn, false);
+        end;
+
+        count = count + 1;
+        
+        PlaceHumanInUnit(i, veh);
+    end;
+
+    for i := 1 to others10 do
+        begin
+        if i < [5, 4, 3, 3][Difficulty] then
+           begin
+           vc_engine = 1;
+           vc_control = 1;
+           vc_weapon = [3, 4, 5][Rand(1, 3)];
+           vc_chassis = [us_medium_wheeled, us_medium_tracked][i mod 2 + 1];
+
+           veh = CreateVehicle;
+           SetDir(veh, 1);
+           PlaceUnitArea(veh, PlayerSpawn, false);
+           playerVehs = playerVehs ^ veh;
+
+           PlaceHumanInUnit(others10[i], veh);
+           end
+        else
+           begin
+           PlaceUnitXYR(others10[i], 106, 33, 6, false);
+           SetSide(others10[i], 4);
+           end;
+        end;
+
+    SetClass(FilterAllUnits([[f_side, 1], [f_type, unit_human]]), 1);
+end;
+
+Export function PrepareVehicles;
+var i, veh, rnd, cargoAmmount;
+begin
+    uc_side = 1;
+    uc_nation = 1;
+
+    for i := 1 to 10 do
+    begin
+        vc_engine = 1;
+        vc_control = 1;
+        vc_weapon = [3, 4, 5, 12][Rand(1, 4)];
+        vc_chassis = 3;
+
+        veh = CreateVehicle;
+        SetDir(veh, 1);
+        PlaceUnitArea(veh, PlayerSpawn, false);
+        playerVehs = playerVehs ^ veh;
+
+        if vc_weapon = 12 then
+        begin
+            rnd = Rand(5, 10) * 10;
+            AddCargo(veh, [1, 3][Rand(1,2)], rnd);
+        end; 
+            
+    end;
+
+end;
+
+Export function PrepareCathyTeam;
+var i, tmp;
+begin
+    uc_side = 4;
+    uc_nation = 1;
+
+    if LoadVariable('08_SikorskiStatus', false) then
+       Truman := PrepareUnit('Truman', false, '');
+
+    Simms = PrepareUnit('Simms', false, '');
+    Denis = PrepareUnit('Denis', true, '08_');
+    Joan = PrepareUnit('Joan', true, '08_');
+
+    Mike := PrepareUnit('Mike', true, '08_');
+
+    if TestCharacters('08_Khatam') then Khatam = PrepareUnit('Khatam', true, '08_')
+    else if TestCharacters('03_Khatam') then Khatam = PrepareUnit('Khatam', true, '03_');
+    Gladstone = PrepareUnit('Gladstone', true, '08_');
+    DeltaDoctor = PrepareUnit('DeltaDoctor', true, '');
+
+    Frank := PrepareUnit('Frank', true, '08_');
+
+    if Frank then
+       Kikuchi = PrepareUnit('Yamoko', false, '')
+    else
+       Kikuchi = PrepareUnit('Kikuchi', true, '08_');
+
+    others09 = CreateCharacterSet('09_others');
+    ape09 = CreateCharacterSet('09_apes');
+
+
+    if Truman then
+       PlaceUnitArea(Truman, CathyTeamSpawn, false);
+
+    PlaceUnitArea(Mike, CathyTeamSpawn, false);
+    PlaceUnitArea(Simms, CathyTeamSpawn, false);
+    PlaceUnitArea(Denis, CathyTeamSpawn, false);
+    PlaceUnitArea(Joan, CathyTeamSpawn, false);
+    PlaceUnitArea(Khatam, CathyTeamSpawn, false);
+    PlaceUnitArea(Gladstone, CathyTeamSpawn, false);
+    PlaceUnitArea(DeltaDoctor, CathyTeamSpawn, false);
+
+    if Kikuchi then
+       PlaceUnitArea(Kikuchi, CathyTeamSpawn, false);
+
+    SetClass([Simms, Khatam, Denis, Gladstone, DeltaDoctor, Joan], 4);
+
+    if others09 > 2 then
+    begin
+        for i := 1 to 3 do
+        begin
+            PlaceUnitArea(others09[i], CathyTeamSpawn,  false);
+            others09 = Delete(others09, 1);
+            SetClass(others09[i], 2);
+        end;
+    end else
+    begin
+        for i in others09 do
+        begin
+            PlaceUnitArea(i, CathyTeamSpawn, false);
+            others09 = others09 diff i;
+            SetClass(i, 2);
+        end; 
+    end;
+
+    if FilterAllUnits([[f_side, 4], [f_class, 2]]) = 0 then
+    begin
+        tmp = FilterAllUnits([[f_side, 4], [f_class, 2]]) diff [Simms, Khatam, Denis, Gladstone, DeltaDoctor, Joan];
+
+        if not tmp then
+        begin
+             if Denis then SetClass(Denis, 2)
+             else SetClass(DeltaDoctor, 2);
+        end else
+        begin
+             SetClass(tmp[1], 2);
+        end;
+
+    end;
+
+    for i in ape09 do PlaceUnitArea(i, CathyTeamSpawn, false);
+
+    uc_side = 4;
+
+    hc_class := 1;
+    hc_sex := sex_female;
+    hc_gallery := '';
+    hc_name := '';
+    hc_skills := [1, 7, 1, 0];
+
+    AmScout = CreateHuman;
+
+end;
+
+Export function PrepareCornell;
+begin
+
+    ChangeSideFog(4, 4);
+
+    uc_side = 4;
+    uc_nation = 1;
+
+    Cornell = PrepareUnit('Cornel', true, '03_');
+
+    if not Cornell then
+       exit;
+
+    PlaceUnitArea(Cornell, CornellSpawn, false);
+
+    SetLives(Cornell, 350);
+
+    If IsInUnit(JMM) then ComMoveXY(Cornell, GetX(IsInUnit(JMM)), GetY(IsInUnit(JMM)))
+    else ComMoveXY(Cornell, GetX(JMM), GetY(JMM));
+end;
+
+Every 0$1 trigger IsAt(Truman, 17, 31) do
+RemoveUnit(Truman);
+
+Every 0$2 trigger joinEpsilon = 1 and IsOk(Truman) and not HasTask(Truman) do
+begin
+enable;
+ComMoveXY(Truman, 17, 31);
+End;

@@ -1,10 +1,10 @@
 Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze,
-       Schulz, Basim, Lemmy, Mia, Nia, Jenna,
+       Schulz, Basim, Lemmy, Mia, Nia, Jenna, Omar,
        heikeSecondSquad, schulzSecondSquad;
 Export function PrepareArabian;
-var i;
+var i, un, tmp;
 begin
-uc_side := 5;
+{uc_side := 5;
 uc_nation := nation_arabian;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
@@ -19,12 +19,17 @@ Kurt := PrepareUnit('Kurt', (not debug), prefix);
 Mike := PrepareUnit('Mike', (not debug), prefix);
 Olaf := PrepareUnit('Olaf', (not debug), prefix);
 
-heikeSecondSquad := CreateCharacterSet('08_others');
+heikeSecondSquad := CreateCharacterSet('08_others');}
+
+uc_side := 5;
+uc_nation := nation_arabian;
+Omar := NewCharacter('Omar');
 
 uc_side := 2;
+uc_nation := nation_arabian;
 
 Schulz := NewCharacter('Schulz');
-Basim := NewCharacter('Basim');
+// Basim := NewCharacter('Basim');
 Lemmy := NewCharacter('Lemmy');
 Mia := NewCharacter('Mia');
 Nia := NewCharacter('Nia');
@@ -32,9 +37,28 @@ Jenna := NewCharacter('Jenna');
 
 schulzSecondSquad := [];
 
-for i := 1 to 4 do
+for i := 1 to 3 do
     begin
     PrepareHuman(false, i, 6);
     schulzSecondSquad := Join(schulzSecondSquad, CreateHuman);
     end;
+
+tmp := [Lemmy, Mia, Nia, Jenna] union schulzSecondSquad;
+
+for i := 1 to 6 do
+    begin
+    PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, [ar_gatling_gun, ar_gun, ar_flame_thrower, ar_radar][i mod 4 + 1], 20);
+    un := CreateVehicle;
+    SetDir(un, 2);
+    PlaceUnitArea(un, startArea, false);
+    PlaceHumanInUnit(tmp[1], un);
+    tmp := Delete(tmp, 1);
+    end;
+
+PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_gun, 30);
+un := CreateVehicle;
+SetDir(un, 2);
+PlaceUnitArea(un, schulzStartArea, false);
+SetMark(un, -2);
+PlaceHumanInUnit(Schulz, un);
 End;

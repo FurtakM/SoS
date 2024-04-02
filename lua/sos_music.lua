@@ -1,4 +1,4 @@
-SOS_MUSIC_LIST = {'Hudba/Menu/MenuMain2.wav', 'Hudba/Menu/MenuArab.wav', 'Hudba/Menu/MenuOriginal.wav', 'Hudba/Menu/MenuLeg.wav', 'Hudba/Menu/MenuAmer.wav', 'Hudba/Menu/MenuRus.wav', 'Hudba/Menu/MenuMain.wav', 'Hudba/Menu/MenuRus2.wav'};
+SOS_MUSIC_LIST = {'Hudba/Menu/MenuMain2.wav', 'Hudba/Menu/MenuAmer.wav', 'Hudba/Menu/MenuArab.wav', 'Hudba/Menu/MenuOriginal.wav', 'Hudba/Menu/MenuLeg.wav', 'Hudba/Menu/MenuRus.wav', 'Hudba/Menu/MenuMain.wav', 'Hudba/Menu/MenuRus2.wav'};
 SOS_MUSIC_TRACK = -1;
 SOS_MUSIC_CREDITS = 'Hudba/Menu/Credits.wav';
 SOS_MUSIC_MENU_ID = 0;

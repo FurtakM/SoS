@@ -1,1 +1,55 @@
-//
+On UnitDestroyed(un) do
+begin
+if un = Schulz then
+   YouLost('Schulz');
+
+if GetBType(un) in [b_depot, b_warehouse] then
+   YouLost('Depot');
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if un in FilterAllUnits([[f_side, 2], [f_nation, nation_arabian]]) diff Schulz then
+   if killerSide = 2 then
+      YouLost('TeamKiller')
+   else
+      YouLost('SoldierKilled');
+End;
+
+On HiddenCameraPlaced(side, eng, x, y) do
+begin
+hiddenCameras := Join(hiddenCameras, [x, y]);
+End;
+
+On SailEvent(event) do
+var i, eng;
+begin
+if event = 1 then
+   begin
+   ComExitVehicle(Lemmy);
+   wait(1);
+   AddComBuild(Lemmy, b_depot, 69, 14, 2);
+
+   wait(0$2);
+
+   for i in UnitFilter(schulzSecondSquad, [f_not, [f_class, 2]]) union Mia union Jenna union Nia do
+       begin
+       ComExitVehicle(i);
+       wait(0$0.3);
+       AddComMoveXY(i, 69, 14);
+       end;
+
+   eng := UnitFilter(schulzSecondSquad, [f_class, 2]);
+
+   if not eng then
+      exit;
+
+   ComExitVehicle(eng);
+
+   wait(0$0.3);
+
+   ComHiddenCamera(eng, 55, 42);
+   AddComHiddenCamera(eng, 84, 47);
+   AddComMoveXY(eng, 70, 19);
+   end;
+End;
