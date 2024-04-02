@@ -8,8 +8,14 @@ if un = Heike then
 if un = usCommander then
    YouLost('Commander');
 
+if GetSide(un) = 2 and GetType(un) = unit_vehicle then
+   vehLossCounter := Inc(vehLossCounter);
+
 if GetSide(un) = 1 then
    begin
+   if GetClass(un) = class_sniper then
+      sniperKillCounter := Inc(sniperKillCounter);
+
    if GetWeapon(un) = us_crane and IsOk(amFac) then
       AddComConstruct(amFac, us_medium_wheeled, engine_solar, control_remote, us_crane);
 
@@ -44,6 +50,12 @@ End;
 On BuildingComplete(b) do
 var i, barracks;
 begin
+if GetSide(b) = 2 then
+   begin
+   if GetBType(b) = b_depot and IsInArea(b, westBankArea) then
+      SetAchievement('ACH_WEST');
+   end;
+
 if GetSide(b) = 1 then
    begin
    usToBuild := Delete(usToBuild, 1);

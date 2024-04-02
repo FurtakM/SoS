@@ -3,7 +3,7 @@ Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Shariff, Olaf, O
        heikeSecondSquad, heikeApes;
 Export rolfSquad, omarSquad;
 Export Function PrepareArabian;
-var i, b, base, hasRadar, hasRemote, hasDrugs, factory, depot, lab, bunkers, tmp;
+var i, b, base, hasRadar, hasRemote, hasDrugs, factory, depot, lab, bunkers, veh, tmp, limiter;
 begin
 uc_nation := 2;
 uc_side := 5;
@@ -108,7 +108,7 @@ for i in base do
        if hasRadar then
           bc_kind2 := b_lab_opto
        else
-          bc_kind2 := -1;
+          bc_kind2 := b_lab_basic;
        end;
 
     if i[1] in [b_lab_half, b_lab_full] and i[7] then
@@ -143,14 +143,14 @@ PlaceUnitXYD(CreateVehicle, 190, 64, 5, false);
 PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, ar_gatling_gun, 22);
 PlaceUnitXYD(CreateVehicle, 188, 67, 5, false);
 
-if hasRemote then
+{if hasRemote then
    begin
    PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, ar_control_tower, 35);
    PlaceUnitXYD(CreateVehicle, 191, 71, 5, false);
 
    PrepareVehicle(ar_half_tracked, engine_combustion, control_remote, ar_gun, 55);
    PlaceUnitXYD(CreateVehicle, 199, 67, 0, false);
-   end;
+   end; }
 
 PlaceUnitXY(Heike, 213, 87, false);
 ComTurnXY(Heike, 214, 87);
@@ -228,6 +228,29 @@ if heikeSecondSquad then
 if heikeApes then
    for i in heikeApes do
        PlaceUnitXYR(i, 190, 70, 5, false);
+
+tmp := LoadVariable('05_Vehicles', []);
+
+if tmp then  // GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i)
+   begin
+   limiter := 10;
+
+   for i in tmp do
+       begin
+       limiter := Dec(limiter);
+
+       if limiter = 0 then
+          break;
+
+       uc_side := 2;
+       uc_nation := i[5];
+
+       PrepareVehicle(i[1], i[2], i[3], i[4], 20);
+       veh := CreateVehicle;
+       SetDir(veh, rand(0, 5));
+       PlaceUnitXYR(veh, 252, 111, 8, false);
+       end;
+   end;
 End;
 
 Export Function PrepareRolfSquad;
