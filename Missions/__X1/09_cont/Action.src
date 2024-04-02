@@ -1,4 +1,165 @@
 Export function Action;
+var i;
 begin
+Video(true);
+
+CenterNowOnXY(18, 15);
+
+ComMoveXY(Schulz, 80, 28);
+ComMoveXY(Lemmy, 61, 17);
+ComMoveXY(Nia, 72, 28);
+ComMoveXY(Jenna, 74, 22);
+ComMoveXY(Mia, 68, 22);
+ComMoveXY(schulzSecondSquad, 83, 37);
+
+Say(Schulz, 'DL-Intro-8');
+
+CenterOnUnits(Schulz);
+
+Say(Schulz, 'DL-Intro-9');
+
+CenterOnUnits(Schulz);
+
+Say(Schulz, 'DL-Intro-10');
+
+CenterOnXY(80, 28);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_distxy, 80, 28, 6]]);
+
+RaiseSailEvent(1);
+
+wait(0$0.3);
+
+Say(Schulz, 'DL-Intro-11');
+SayRadio(Omar, 'DOm-Intro-12');
+SayRadio(Omar, 'DOm-Intro-13');
+Say(Schulz, 'DL-Intro-14');
+
+ComExitVehicle(Schulz);
+wait(0$0.3);
+ComMoveXY(Schulz, 73, 17);
+
+wait(0$2);
+
+Say(Schulz, 'DL-Intro-15');
+Say(Lemmy, 'DLt-Intro-16');
+Say(Lemmy, 'DLt-Intro-17');
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_btype, b_depot]]);
+
+Video(false);
+
+tick := 0;
+ChangeMissionObjectives('M1');
+
+SetRestrict(b_depot, 2, state_disabled);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_btype, b_depot], [f_constructed]]);
+
+DialogueOn;
+
+Say(Schulz, 'DL-Intro-18');
+Say(Schulz, 'DL-Intro-19');
+Say(Schulz, 'DL-Intro-20');
+Say(Lemmy, 'DLt-Intro-21');
+Say(Lemmy, 'DLt-Intro-22');
+Say(Lemmy, 'DLt-Intro-23');
+Say(Schulz, 'DL-Intro-24');
+Say(Lemmy, 'DLt-Intro-25');
+
+DialogueOff;
+
+ChangeMissionObjectives('M2');
+
+Query('Prepare');
+End;
+
+// camera
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_lab_opto]]) do
+Say(Schulz, 'DL-Cam-1');
+
+// faster #1
+Every 0$1 trigger tick >= timeToHeikeDead div 2 do
+begin
+DialogueOn;
+Say(Schulz, 'DL-Faster-1');
+DialogueOff;
+End;
+
+// faster #2
+Every 0$1 trigger tick >= (timeToHeikeDead div 2) + 5$00 do
+begin
+DialogueOn;
+Say(Schulz, 'DL-Faster-2');
+DialogueOff;
+End;
+
+// base constructed
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
+                  FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 2], [f_btype, b_bunker]]) >= 3 and
+                  FilterAllUnits([[f_side, 2], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]) do
+begin
+baseDone := true;
+ChangeMissionObjectives('M1out');
+End;
+
+Every 0$1 trigger baseDone and FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]]) >= Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]])) do
+begin
+DialogueOn;
+Say(Schulz, 'DL-Ready-1');
+
+if FilterAllUnits([[f_side, 2], [f_nation, nation_nature]]) then
+   Say(Schulz, 'DL-Ready-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('M3');
+
+SetAreaMapShow(endArea, 1);
+canGo := true;
+End;
+
+Every 0$3 trigger canGo and Count(FilterUnitsInArea(endArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_not, [f_empty]]])) >= Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]))
+                        and Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_not, [f_driving]], [f_nation, nation_arabian]])) = 0 do
+var i, tmp, saveVehicles;
+begin
+enable;
+
+tmp := FilterUnitsInArea(endArea, [[f_side, 2], [f_type, unit_vehicle]]);
+
+if UnitFilter(tmp, [f_or, [f_weapon, ar_crane], [f_weapon, ar_cargo_bay]]) then
+   begin
+   Query('InvalidWeapon');
+   exit;
+   end;
+
+if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
+   begin
+   Query('HealthLevel');
+   exit;
+   end;
+
+for i in tmp do
+    if GetEngine(i) = engine_combustion and GetFuel(i) < 80 then
+       begin
+       Query('FuelLevel');
+       exit;
+       end;
+
+saveVehicles := [];
+
+for i in tmp do
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i)]);
+
+
+// todo
 
 End;

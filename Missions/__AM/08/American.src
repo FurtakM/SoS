@@ -223,8 +223,7 @@ for i in others union tmp2 do
                  break;
                  end;
           end;
-       end;
-
+       end;  
     
     if not placed then
        begin
@@ -263,7 +262,7 @@ for i in blist do
 
     if bc_type in [b_lab, b_lab_half] then
        begin
-       if not LoadVariable('06_remoteVehs_1', 0) then
+       if LoadVariable('06_remoteVehs_1', 0) then
           begin
           bc_type := b_lab_full;
           bc_kind1 := b_lab_weapon;
@@ -657,6 +656,12 @@ begin
 EraseResourceArea(mat_cans, sikorskiOuterArea);
 EraseResourceArea(mat_oil, sikorskiOuterArea);
 
+tmp := FilterUnitsInArea(northGammaSupportArea, [f_empty]);
+
+if tmp then
+   for i in tmp do
+       RemoveUnit(i);
+
 tmp := FilterUnitsInArea(northGammaSupportArea, [f_not, [f_type, unit_building]]);
 
 if tmp then
@@ -664,6 +669,10 @@ if tmp then
    ComMoveXY(tmp, 33, 39);
    wait(0$3);
    end;
+
+repeat
+ wait(0$2);
+until not FilterUnitsInArea(northGammaSupportArea, [f_ok]);
 
 uc_side := 4;
 uc_nation := 1;
@@ -690,6 +699,10 @@ InitHc_All();
 
 for i := 1 to [3, 2, 2, 2][Difficulty] do
     begin
+    repeat
+     wait(0$2);
+    until not FilterUnitsInArea(northGammaSupportArea, [f_ok]);
+
     uc_side := 4;
     uc_nation := 1;
 
@@ -703,6 +716,14 @@ for i := 1 to [3, 2, 2, 2][Difficulty] do
 
     wait(0$1);
     end;
+
+repeat
+ wait(0$2);
+
+ for i in FilterAllUnits([[f_side, 4], [f_class, class_soldier]]) do
+     ComAttackUnit(i, FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_or, [f_empty], [f_control, control_remote]]])[1]);
+
+until not FilterUnitsInArea(sikorskiOuterArea, [[f_side, 1], [f_or, [f_empty], [f_control, control_remote]]]);
 
 for i := 1 to 2 do
     begin
@@ -722,6 +743,10 @@ for i := 1 to 2 do
 
 for i := 1 to [5, 4, 3, 3][Difficulty] do
     begin
+    repeat
+     wait(0$2);
+    until not FilterUnitsInArea(northGammaSupportArea, [f_ok]);
+
     uc_side := 4;
     uc_nation := 1;
 
@@ -819,15 +844,15 @@ wait(0$2);
 
 tmp := FilterAllUnits([f_side, 4]);
 
-AgressiveMove(tmp, [ [55, 62] ]);
+ComAgressiveMove(tmp, 52, 54);
 AddComWait(tmp, 0$05);
 
 wait(0$5);
 
-AddComAgressiveMove(UnitFilter(tmp, [f_tag, 101]), 58, 96);
+ComAgressiveMove(UnitFilter(tmp, [f_tag, 101]), 42, 66);
 AddComHold(UnitFilter(tmp, [f_tag, 101]));
 
-AddComAgressiveMove(UnitFilter(tmp, [[f_tag, 101], [f_class, 4]]), 52, 93);
+ComAgressiveMove(UnitFilter(tmp, [[f_tag, 101], [f_class, 4]]), 52, 93);
 AddComFree(UnitFilter(tmp, [[f_tag, 101], [f_class, 4]]));
 
 filter := UnitFilter(tmp, [f_type, unit_vehicle]);
