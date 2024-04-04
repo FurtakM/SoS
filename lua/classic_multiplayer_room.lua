@@ -17,6 +17,7 @@ MULTIPLAYER_ROOM_MY_AVATAR_ID = 0;
 MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_MY_AVATAR_SEX = 0;
+MULTIPLAYER_ROOM_SPECTATORS = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -781,6 +782,7 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.TEAMDEF = DATA.TEAMDEF;
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
+	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
@@ -814,6 +816,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	MULTIPLAYER_ROOM_DATA.PlayerCount = DATA.PLAYERCOUNT;
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
+	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	updateHostVisibilitySettings(canModifyServerSettings());
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
@@ -827,6 +830,7 @@ end;
 -- trigger each when map is changed
 function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	MULTIPLAYER_ROOM_MAP_DATA = DATA;
+	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	setText(menu.window_multiplayer_room.panel.mapName, trim(MULTIPLAYER_ROOM_MAP_DATA.MAPLOC) .. ' - ' .. trim(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPELOC));
 
@@ -893,6 +897,7 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
   	MULTIPLAYER_ROOM_IS_DEDI = false;
   	MULTIPLAYER_ROOM_DATA = {};
   	MULTIPLAYER_ROOM_MAP_DATA = {};
+  	MULTIPLAYER_ROOM_SPECTATORS = {};
 
   	setVisible(menu.window_multiplayer_room, false);
 
@@ -925,10 +930,14 @@ function startMultiplayerGame()
     end;
 end;
 
-function setReadyMultiplayerGame()
-	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, MULTIPLAYER_ROOM_IM_READY);
+function switchCheckboxReady()
+	setChecked(menu.window_multiplayer_room.panel.ready, not MULTIPLAYER_ROOM_IM_READY);
+	setReadyMultiplayerGame();
+end
 
-	local ready = (not MULTIPLAYER_ROOM_IM_READY);	
+function setReadyMultiplayerGame()
+	local ready = not MULTIPLAYER_ROOM_IM_READY;
+	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, ready);	
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
 
@@ -1045,14 +1054,14 @@ function generateGlobalSettings()
 		        scissor = true
 		    }
 		);
-  	else
+  	--[[else
 		menu.window_multiplayer_room.panel.ready = clCheckbox(
 		    menu.window_multiplayer_room.panel.globalSettings,
 		    1,
 		    0,
 		    'setReadyMultiplayerGame();',
 		    {
-		        checked = MULTIPLAYER_ROOM_IM_READY
+		        checked = (not MULTIPLAYER_ROOM_IM_READY)
 		    }
 		);
 
@@ -1071,7 +1080,7 @@ function generateGlobalSettings()
 		        wordwrap = false,
 		        scissor = true
 		    }
-		);
+		);--]]
 	end;
 
 	--[[
@@ -1397,19 +1406,29 @@ function refreshPlayerView()
 	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
 	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
 	local teamCounter  = 0;
+	local isSpec = false;
+
+	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	if (#MULTIPLAYER_ROOM_DATA.Players > 0) then
 		-- get my plid
 		MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
 
 		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+			isSpec = false;
+
 			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
 			
 			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS ~= nil and MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1 > 0) then
-				playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
+				if MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS < 99 then
+					playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
+				else
+					isSpec = true;
+					MULTIPLAYER_ROOM_SPECTATORS = addToArray(MULTIPLAYER_ROOM_SPECTATORS, i);
+				end;
 			end;
 
-			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
+			if (not isSpec and MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
 				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
 			end;
 		end;
@@ -1426,7 +1445,7 @@ function refreshPlayerView()
 	local posY = 0;
 
 	if MULTIPLAYER_ROOM_DATA.TeamGame then
-		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + 1;
+		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX;
 
 		if (teamCounter < 5) then
 			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
@@ -1435,12 +1454,12 @@ function refreshPlayerView()
 		end;
 
 		-- generate team names
-		for i = 2, MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + 1 do
+		for i = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX do
 			-- get team allowed positions
 			local allowedPositions = {};
 
-			for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i].ASSIGNED_POSITIONS_COUNT do
-				if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].ASSIGNED_POSITIONS[c]) then
+			for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS_COUNT do
+				if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS[c]) then
 					allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
 				end;
 			end;
@@ -1450,7 +1469,7 @@ function refreshPlayerView()
 			    anchorT, 
 			    XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
 			    Tahoma_18B, 
-			    MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME,
+			    MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].NAME,
 			    {
 			        wordwrap = true,
 			        text_halign = ALIGN_MIDDLE,
@@ -1871,7 +1890,7 @@ function refreshPlayerView()
 		    150,
 		    18, 
 		    loc(839), -- join
-		    'joinToTeam(10, -1);',
+		    'joinAsSpectator();',
 		    {
 		    	texture = 'classic/edit/menu_button_small_l.png',
 		    	texture2 = 'classic/edit/menu_button_small_c.png',
@@ -1881,9 +1900,9 @@ function refreshPlayerView()
 
 		posY = 50;
 
-		if (#teamPlayers[10] > 0) then
-			for p = 1, #teamPlayers[10] do
-				local playerData = MULTIPLAYER_ROOM_DATA.Players[teamPlayers[10][p]];
+		if (#MULTIPLAYER_ROOM_SPECTATORS > 0) then
+			for p = 1, #MULTIPLAYER_ROOM_SPECTATORS do
+				local playerData = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_SPECTATORS[p]];
 				local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
 
 				if (isMySlot) then
@@ -2089,6 +2108,16 @@ function joinToTeam(teamID, teamPos)
 	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, teamPos);
 	OW_MULTIROOM_SET_MYISSPEC(false);
 end;
+
+function joinAsSpectator() -- 99
+	if MULTIPLAYER_ROOM_DATA.TeamGame then
+		OW_MULTIROOM_SET_MYTEAMANDPOS(1, 99);
+	else
+		OW_MULTIROOM_SET_MYTEAMANDPOS(0, 99);
+	end;
+
+	OW_MULTIROOM_SET_MYISSPEC(true);
+end
 
 function leaveTeam()
 	OW_MULTIROOM_SET_MYTEAMANDPOS(0, -1);

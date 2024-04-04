@@ -5,17 +5,7 @@ Export Saliba, Gensher;
 Export Function PrepareArabian(side);
 var i, d, xy, un, un2, skill, tmp, techs;
 begin
-tmp := FilterAllUnits([f_side, 2]);
-
 side_bot := side;
- 
-if tmp and side <> 2 then
-   begin
-   for i in tmp do
-       SetSide(i, side);
-
-   ResetFog;
-   end;
 
 techs := [tech_ApeAgres, tech_ApeBrain, tech_ApeNeural,
           tech_StimDrugs, tech_Bio1, tech_Bio2,
@@ -28,7 +18,7 @@ for i in techs do
 skill := [6, 7, 8][Difficulty];
 
 ComLinkToBase([ar_dep_e], 141); 
-Wait(1);
+wait(1);
 
 uc_side := side;
 uc_nation := 2;
@@ -47,7 +37,7 @@ vc_engine := engine_siberite;
 vc_control := control_manual;
 vc_weapon := ar_control_tower;
 
-for i = 1 to 5 do
+for i = 1 to 4 do
     begin
     xy := [[156, 15], [12,7]][i mod 2 + 1];
     PrepareHuman(false, class_mechanic, skill);
@@ -72,7 +62,7 @@ for i in FilterAllUnits([[f_side, side_bot], [f_btype, b_breastwork], [f_empty]]
 
     if d < 3 then
        d := d + 3
-      else
+    else
        d := d - 3;
 
     PrepareHuman(false, class_mortar, skill);
@@ -125,20 +115,28 @@ InitHc;
 ar_defenders_tmp := [ [], [], [], [] ];
 
 for d = 1 to [3, 3, 4][Difficulty] do
-for i = 1 to 4 do
-    begin
-    PrepareVehicle(ar_half_tracked,
-                   [engine_siberite, engine_solar][rand(1,2)],
-                   [control_manual, control_apeman][rand(1,2)],
-                   [ar_gatling_gun, ar_gun, ar_flame_thrower, ar_rocket_launcher][rand(1,4)],
-                   100);
-    un := CreateVehicle;
-    ar_defenders_tmp := ReplaceIn(ar_defenders_tmp, [i, ar_defenders_tmp[i]+1], un);
-    SetDir(un, rand(0,5));
-    PlaceUnitArea(un, [parking_north, parking_west, parking_east, parking_south][i], false);
-    end;
+    for i = 1 to 3 do
+        begin
+        PrepareVehicle(ar_half_tracked,
+                      [engine_siberite, engine_solar][rand(1,2)],
+                      [control_manual, control_apeman][rand(1,2)],
+                      [ar_gatling_gun, ar_gun, ar_flame_thrower, ar_rocket_launcher][rand(1,4)],
+                      100);
+        un := CreateVehicle;
+        ar_defenders_tmp := ReplaceIn(ar_defenders_tmp, [i, ar_defenders_tmp[i]+1], un);
+        SetDir(un, rand(0,5));
+        PlaceUnitArea(un, [parking_north, parking_west, parking_east, parking_south][i], false);
+        end;
 
 InitHc;
+
+tmp := FilterAllUnits([f_side, 2]);
+
+if tmp and side <> 2 then
+   begin
+   for i in tmp do
+       SetSide(i, side);
+   end;
 End;
 
 
