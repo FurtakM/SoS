@@ -18,6 +18,7 @@ MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_MY_AVATAR_SEX = 0;
 MULTIPLAYER_ROOM_SPECTATORS = {};
+MULTIPLAYER_ROOM_MAP_EXTRA_DATA = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -919,6 +920,19 @@ end;
 
 -- main functions
 function startMultiplayerGame()
+	-- check settings before start
+	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
+		if MULTIPLAYER_ROOM_MAP_EXTRA_DATA.forceToPickColours then
+			for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+				if MULTIPLAYER_ROOM_DATA.Players[i].COLOUR == 0 then
+					setText(menu.window_multiplayer_room.panel.status, loc(5063));
+					return;
+				end;
+			end;
+		end;
+	end;
+
+
     if OW_ROOM_LAUNCH_GAME() then
         IN_LOBBY = false;
 		OW_IRC_DESTROY();
@@ -1027,6 +1041,12 @@ function generateGlobalSettings()
   	-- delete global settings panel to prevent duplicates
   	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
 
+  	local banRandomColours = false;
+
+  	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
+  		banRandomColours = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banRandomColours;
+  	end;
+
   	if (canModifyServerSettings()) then
 		menu.window_multiplayer_room.panel.gameLock = clCheckbox(
 		    menu.window_multiplayer_room.panel.globalSettings,
@@ -1129,7 +1149,7 @@ function generateGlobalSettings()
 	    'setMultiplayerRandomColours();',
 	    {
 	        checked = MULTIPLAYER_ROOM_RANDOM_COLOURS,
-	        disabled = not canModifyServerSettings(),
+	        disabled = not canModifyServerSettings() or banRandomColours,
 	        hint = loc(836)
 	    }
 	);
@@ -1442,6 +1462,14 @@ function refreshPlayerView()
 		return;
 	end;
 
+	local bannedColours = {};
+
+	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
+		if MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banColour then
+			bannedColours = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banColour;
+		end;
+	end;
+
 	local posY = 0;
 
 	if MULTIPLAYER_ROOM_DATA.TeamGame then
@@ -1616,7 +1644,7 @@ function refreshPlayerView()
 
 						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
 
-						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5);
+						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
 
 						local slotPosition = clComboBox(
 						    slot,
@@ -1828,7 +1856,7 @@ function refreshPlayerView()
 			 	}
 			);
 
-			local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5);
+			local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
 
 			local slotPosition = clComboBox(
 			    slot,
@@ -2128,7 +2156,7 @@ end;
 -- reset player data
 -- resetColour : bool
 function resetPlayerData(resetColour)
-	if resetColour == true then
+	if resetColour then
 		OW_MULTIROOM_SET_MYCOLOUR(0);
 	end;
 
@@ -2153,6 +2181,25 @@ function generateMapSettings(SETTINGS, IS_HOST)
 
 	if #SETTINGS.MAPPARAMS == 0 then
 		return;
+	end;
+
+	local mapName = string.upper(MULTIPLAYER_ROOM_MAP_DATA.MAP);
+	local gameName = string.upper(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPE);
+
+	if gameName == nil then 
+		gameName = ''; 
+	end;
+
+	if mapName == nil then 
+		mapName = '';
+	end;
+
+	local PATH = "missions/_Multiplayer/" .. mapName .. "/MultiDesc" .. gameName .. "";
+
+	MULTIPLAYER_ROOM_MAP_EXTRA_DATA = LOAD_TEXT_TO_TABLE(PATH);
+
+	if not MULTIPLAYER_ROOM_MAP_EXTRA_DATA  then
+		MULTIPLAYER_ROOM_MAP_EXTRA_DATA = {};
 	end;
 
 	for i = 1, 51 do --SETTINGS.MAPPARAMCOUNT do

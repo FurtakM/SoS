@@ -1626,7 +1626,7 @@ function clDebug(VALUE)
     LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
-function clColorPicker(PARENT, ACTIVE, COLOR, X, Y)
+function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
     if COLOR < 0 or COLOR > 8 then
         COLOR = 0;
     end;
@@ -1696,17 +1696,26 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y)
         );
 
         for i = 1, 9 do
+            local isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            local colourTexture = WHITEA();
+
+            if isBannedColour then
+                colourTexture = BLACKA(120);
+            end;
+
             local color = getElementEX(
                 ELEMENT.combo,
                 anchorNone,
-                XYWH(0, 4 + (i - 1) * 14, 36, 13),
+                XYWH(3, 3 + (i - 1) * 14, 30, 14),
                 true,
                 {
-                    colour1 = WHITEA()
+                    colour1 = colourTexture
                 }
             );
 
-            set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+            if not isBannedColour then
+                set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+            end;
         end;
 
         set_Callback(ELEMENT.comboBox.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
