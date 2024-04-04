@@ -615,7 +615,8 @@ function clCheckbox(PARENT, X, Y, EVENT, PROPERTIES)
         PROPERTIES
     );
 
-    set_Callback(ELEMENT.ID, CALLBACK_MOUSEDOWN, EVENT);
+    set_Callback(ELEMENT.ID, CALLBACK_CHECKED, EVENT);
+    --set_Callback(ELEMENT.ID, CALLBACK_MOUSEDOWN, EVENT);
 
     return ELEMENT;
 end;

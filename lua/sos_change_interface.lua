@@ -1,5 +1,24 @@
 -- override function from game_main.lua 
 -- ver. 322
+interfaceSide = -1; -- 0 = Alien, 1 = Amer, 3 = Arab, 2 = Rus
+
+function ChangeInterface(ID)
+    if (ID ~= interfaceSide) then
+        interfaceSide = ID;
+
+        if interfaceSide == inID_Spec then -- spectator 
+        	DoInterfaceChange(interfaces[inID_Amer]);
+        	return;
+        end;
+
+        if interfaces[interfaceSide] then
+            DoInterfaceChange(interfaces[interfaceSide]);
+        else
+            DoInterfaceChange(interface.alien);
+        end;
+    end
+end;
+
 function DoInterfaceChange_Game()
 	uisettings = interface.current.game.ui;
 	UpdateToolBtns(game.ui.toolbtns,uisettings.toolBtns);
