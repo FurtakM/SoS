@@ -87,6 +87,9 @@ On UnitDestroyed(un) do
 begin
 SOS_UnitDestroyed(un);
 
+if GetChassis(un) = class_mastodont then
+   BurlakOnMastodont;
+
 if un = JMM then
    YouLost('JMM');
 
@@ -120,4 +123,11 @@ End;
 On Command(cmd) do
 begin
 SOS_Command(cmd);
+End;
+
+Every 0$2 trigger FilterAllUnits([[f_side, 0], [f_chassis, class_mastodont], [f_not, [f_lives, 1000]]]) do
+var m;
+begin
+m := FilterAllUnits([[f_side, 0], [f_chassis, class_mastodont], [f_not, [f_lives, 1000]]])[1];
+ComAttackUnit(m, NearestUnitToUnit(FilterAllUnits([f_side, 1]), m));
 End;

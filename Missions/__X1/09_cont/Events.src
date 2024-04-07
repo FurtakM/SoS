@@ -9,12 +9,17 @@ End;
 
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do
 begin
+SOS_UnitDestroyed(un);
+
 if un in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]) diff Schulz then
    if killerSide = 2 then
       YouLost('TeamKiller')
    else
       YouLost('SoldierKilled');
 End;
+
+On VehicleConstructed(vehicle, factory) do
+SOS_VehicleConstructed(vehicle, factory);
 
 On HiddenCameraPlaced(side, eng, x, y) do
 begin
@@ -26,9 +31,19 @@ var i, eng;
 begin
 if event = 1 then
    begin
-   ComExitVehicle(Lemmy);
-   wait(1);
-   AddComBuild(Lemmy, b_depot, 69, 14, 2);
+   repeat
+    ComExitVehicle(Lemmy);
+    wait(0$1);
+   until not IsInUnit(Lemmy);
+
+   wait(3);
+
+   repeat
+    if not HasTask(Lemmy) then
+       ComBuild(Lemmy, b_depot, 69, 14, 2);
+
+    wait(0$1);
+   until HasTask(Lemmy);
 
    wait(0$2);
 

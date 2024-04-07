@@ -72,7 +72,7 @@ begin
      end;
 
      // mastodonts
-     vc_chassis := 31;
+     vc_chassis := class_mastodont;
      vc_control := control_rider;
      animal := CreateVehicle;
      PlaceUnitXY(animal, 21, 22, false);
@@ -108,4 +108,62 @@ if bulldozer > 0 then
        if IsEnvironment(area[i][1], area[i][2]) then
           if not HasTask(bulldozer) then
              AddComMoveXY(bulldozer, area[i][1], area[i][2]);
+End;
+
+Export function BurlakOnMastodont;
+var i, un, tmp, Burlak;
+begin
+if FilterUnitsInArea(burlakArea, [f_side, 1]) then
+   exit;
+
+tmp := FilterUnitsInArea(burlakArea, [f_side, 0]);
+
+if tmp then
+   for i in tmp do
+       RemoveUnit(i);
+
+uc_side := 3;
+
+Burlak := NewCharacter('BurlakA');
+SetClass(Burlak, class_desert_warior);
+
+PrepareMastodont;
+uc_side := 3;
+
+un := CreateVehicle;
+SetDir(un, 1);
+PlaceUnitXY(un, 107, 207, false);
+PlaceHumanInUnit(Burlak, un);
+
+ComHold(un);
+
+InGameOn;
+
+PlaceSeeing(107, 207, 1, -10);
+CenterNowOnXY(107, 207);
+
+wait(0$3);
+
+SayRadio(Platonov, 'DMas-Plat-1');
+Say(Burlak, 'DMas-Bur-1');
+Say(Burlak, 'DMas-Bur-2');
+
+wait(0$0.6);
+
+ComMoveXY(Burlak, 116, 208);
+
+wait(0$2);
+
+RemoveSeeing(107, 207, 1);
+RemoveUnit(un);
+RemoveUnit(Burlak);
+
+if IsInUnit(JMM) then
+   CenterNowOnUnits(IsInUnit(JMM))
+else
+   CenterNowOnUnits(JMM);
+
+wait(0$0.3);
+
+InGameOff;
 End;

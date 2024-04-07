@@ -51,6 +51,8 @@ repeat
  wait(0$1);
 until FilterAllUnits([[f_side, 2], [f_btype, b_depot]]);
 
+wait(0$2);
+
 Video(false);
 
 tick := 0;
@@ -101,12 +103,15 @@ DialogueOff;
 End;
 
 // base constructed
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
-                  FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) and
-                  FilterAllUnits([[f_side, 2], [f_btype, b_bunker]]) >= 3 and
-                  FilterAllUnits([[f_side, 2], [f_btype, b_barracks]]) and
-                  FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_constructed], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
+                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_bunker]]) >= 3 and
+                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 2], [f_constructed], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]) do
 begin
+if tick <= 8$00 then
+   SetAchievement('ACH_BOB');
+
 baseDone := true;
 ChangeMissionObjectives('M1out');
 End;
@@ -129,7 +134,7 @@ End;
 
 Every 0$3 trigger canGo and Count(FilterUnitsInArea(endArea, [[f_side, 2], [f_type, unit_vehicle], [f_control, control_manual], [f_not, [f_empty]]])) >= Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, nation_arabian]]))
                         and Count(FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_not, [f_driving]], [f_nation, nation_arabian]])) = 0 do
-var i, tmp, saveVehicles;
+var i, tmp, saveVehicles, otherVehicles, animals;
 begin
 enable;
 
@@ -161,6 +166,21 @@ saveVehicles := [];
 for i in tmp do
     saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i), IsDrivenBy(i)]);
 
+otherVehicles := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_ok]]) diff tmp;
+
+if otherVehicles then
+   begin
+   tmp := [];
+
+   for i in otherVehicles do
+       tmp := Join(tmp, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
+
+   SaveVariable(tmp, '09_otherVehicles');
+   end;
+
+if not UnitFilter(saveVehicles, [f_engine, engine_combustion]) then
+   SetAchievement('ACH_GREEN');
+
 SaveCharacters(Schulz, '09_Schulz');
 SaveVariable(Schulz, '09_Schulz_ID'); 
 SaveCharacters(Lemmy, '09_Lemmy');
@@ -177,6 +197,30 @@ for i := 1 to schulzSecondSquad do
     SaveVariable(schulzSecondSquad[i], '09_random_ID_' & i);
 
 SaveVariable(saveVehicles, '09_vehicles');
+SaveVariable(tick, '09_tick');
+
+SaveEnvironment(mapArea, '09_env');
+SaveTech(2, '09_tech');
+SaveMaterials(2, '09_materials'); 
+SaveBase(2, '09_buildings');
+SaveCharacters(FilterAllUnits([[f_side, 2], [f_nation, 0]]), '09_apes');
+SaveVariable(timeToHeikeDead, '09_timeToHeikeDead');
+SaveVariable(hiddenCameras, '09_cameras');
+
+tmp := FilterAllUnits([[f_side, 0], [f_nation, nation_nature], [f_ok]]);
+
+if tmp then
+   begin
+   animals := [];
+
+   for i in tmp do
+       animals := Join(animals, [GetClass(i), GetX(i), GetY(i), GetDir(i), GetLives(i)]);
+
+   SaveVariable(animals, '09_animals');
+   end;
+
+wait(3);
 
 ChangeMap(1, '%2');
 End;
+
