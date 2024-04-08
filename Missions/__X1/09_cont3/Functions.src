@@ -1,4 +1,137 @@
 Export function LoadEnv;
+var tmp, i, j, un, exist, list;
 begin
+tmp := LoadVariable('09_env', []);
 
+if not tmp then
+   exit;
+
+list := ListEnvironmentArea(mapArea);
+
+if not list then
+   exit;
+
+for i in list do
+    begin
+    exist := false;
+
+    for j in tmp do
+        if i[1] = j[1] and i[2] = j[2] then
+           begin
+           exist := true;
+           break;
+           end;
+
+    if not exist then
+       RemoveEnvironment(i[1], i[2]);
+    end;
+
+tmp := LoadVariable('09_animals', []);
+
+if not tmp then
+   exit;
+
+// GetClass(i), GetX(i), GetY(i), GetDir(i), GetLives(i)
+
+InitHc_All();
+
+for i in tmp do
+    begin
+    uc_side := 0;
+    uc_nation := nation_nature;
+
+    hc_gallery := '';
+    hc_name := '';
+    hc_class := i[1];
+
+    un := CreateHuman;
+
+    PlaceUnitXYD(un, i[2], i[3], i[4], false);
+    SetLives(un, i[5]);
+    end;
+
+for i := 1 to [6, 5, 4, 3][Difficulty] do
+    begin
+    PrepareApeman(5);
+    PlaceUnitArea(CreateHuman, natureArea, false);
+    end;
+End;
+
+Export function CreateDeposits;
+var i, oil, sib;
+begin
+oil := [ [91, 13], [52, 23], [115, 150] ];
+sib := [ [82, 42], [128, 132] ];
+
+for i in oil do
+    begin
+    CreateDepositXY(i[1], i[2], mat_oil);
+    SetResourceVisibility(i[1], i[2], 2);
+    end;
+
+for i in sib do
+    begin
+    CreateDepositXY(i[1], i[2], mat_siberit);
+    SetResourceVisibility(i[1], i[2], 2);
+    end;
+End;
+
+Export function LoadCam;
+var i, tmp;
+begin
+tmp := LoadVariable('09_cameras', []);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    HiddenCamera(i[1], i[2], 2);
+End;
+
+Export function LoadTech;
+var i, tmp;
+begin
+tmp := LoadVariable('09_tech', []);
+
+for i := 1 to Count(tmp) do
+    SetTech(i, 2, tmp[i]);
+End;
+
+Export function LoadBase;
+var i, tmp, b, j, mat;
+begin
+tmp := LoadVariable('09_buildings', []);
+
+for i in tmp do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    bc_type := i[1];
+    bc_level := i[5];
+
+    bc_kind1 := b_lab_basic;
+    bc_kind2 := b_lab_basic;
+
+    if i[6] then
+       begin
+       bc_kind1 := i[6];
+
+       if i[7] then
+          bc_kind2 := i[7];
+       end;
+    
+    b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
+
+    if i[8] then
+       PlaceWeaponTurret(b, i[8]);
+
+    if i[1] in [b_depot, b_warehouse] then
+       begin
+       mat := LoadVariable('09_materials', [ [100, 50, 30] ]);
+
+       for j := 1 to 3 do
+           SetResourceType(GetBase(b), j, mat[1][j]);
+       end;
+    end;
 End;

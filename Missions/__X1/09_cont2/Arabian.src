@@ -1,0 +1,231 @@
+Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze,
+       Schulz, Basim, Lemmy, Mia, Nia, Jenna,
+       heikeSecondSquad, schulzSecondSquad;
+Export function PrepareArabian;
+var i, un, tmp, vehicles, veh, p;
+begin
+uc_side := 5;
+uc_nation := nation_arabian;
+
+Heike := PrepareUnit('Heike', (not debug), prefix);
+Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);
+Givi := PrepareUnit('Givi', (not debug), prefix);
+Kamil := PrepareUnit('Kamil', (not debug), prefix);
+Kaia := PrepareUnit('Kaia', (not debug), prefix);
+Sophia := PrepareUnit('Sophia', (not debug), prefix);
+Markov := PrepareUnit('Markov', (not debug), prefix);
+Aviradze := PrepareUnit('Aviradze', (not debug), prefix);
+Kurt := PrepareUnit('Kurt', (not debug), prefix);
+Mike := PrepareUnit('Mike', (not debug), prefix);
+Olaf := PrepareUnit('Olaf', (not debug), prefix);
+
+heikeSecondSquad := CreateCharacterSet('08_others');
+
+uc_side := 8;
+Basim := NewCharacter('Basim');
+SetClass(Basim, 4);
+
+uc_side := 2;
+uc_nation := nation_arabian;
+
+Schulz := PrepareUnit('Schulz', (not debug), prefix9);
+Lemmy := PrepareUnit('Lemmy', (not debug), prefix9);
+Mia := PrepareUnit('Mia', (not debug), prefix9);
+Nia := PrepareUnit('Nia', (not debug), prefix9);
+Jenna := PrepareUnit('Jenna', (not debug), prefix9);
+
+schulzSecondSquad := CreateCharacterSet('09_schulzSecondSquad');
+
+if debug then
+   begin
+   schulzSecondSquad := [];
+
+   for i := 1 to 3 do
+       begin
+       PrepareHuman(false, i, 6);
+       schulzSecondSquad := Join(schulzSecondSquad, CreateHuman);
+       end;
+   end;
+
+//    1            2               3               4            5             6            7           8
+// GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i), IsDrivenBy(i)
+vehicles := LoadVariable('09_vehicles', [
+               [ar_half_tracked, engine_combustion, control_manual, ar_gun, 2, 90, -2, 1],
+               [ar_half_tracked, engine_combustion, control_manual, ar_radar, 2, 90, 0, 2],
+               [ar_half_tracked, engine_combustion, control_remote, ar_gun, 2, 90, 0, 0],
+               [ar_half_tracked, engine_combustion, control_manual, ar_control_tower, 2, 90, 0, 3],
+               [ar_half_tracked, engine_combustion, control_manual, ar_gun, 2, 90, 0, 4],
+               [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher, 2, 90, 0, 5],
+               [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher, 2, 90, 0, 6],
+               [ru_medium_tracked, engine_combustion, control_manual, ru_rocket_launcher, 3, 90, 0, 7],
+               [ar_medium_trike, engine_combustion, control_manual, ar_radar, 2, 90, 0, 8],
+            ]);
+
+SpawnInto(Schulz, LoadVariable('09_Schulz_ID', 1), vehicles, 0);
+SpawnInto(Lemmy, LoadVariable('09_Lemmy_ID', 2), vehicles, 1);
+SpawnInto(Mia, LoadVariable('09_Mia_ID', 3), vehicles, 2);
+SpawnInto(Nia, LoadVariable('09_Nia_ID', 4), vehicles, 3);
+SpawnInto(Jenna, LoadVariable('09_Jenna_ID', 5), vehicles, 4);
+
+for i := 1 to schulzSecondSquad do
+    SpawnInto(schulzSecondSquad[i], LoadVariable('09_random_ID_' & i, 5 + i), vehicles, 4 + i);
+
+if FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) then
+   begin
+   for i in vehicles do
+       begin
+       p := 0;
+
+       if i[3] = control_remote then
+          begin
+          uc_side := 2;
+          uc_nation := i[5];
+          PrepareVehicle(i[1], i[2], i[3], i[4], i[6]);
+          veh := CreateVehicle;
+          SetDir(veh, 2);
+
+          repeat
+           wait(0$2);
+           p := p + 2;
+
+           if p > 8 then
+              break;   
+          until not FilterUnitsInArea(startBlockArea, [f_ok]);
+
+          PlaceUnitArea(veh, startArea, false);
+
+          repeat
+           Connect(veh);
+           wait(0$1);
+          until IsControledBy(veh);
+
+          ComMoveXY(veh, 26, 23);
+          end;
+       end;
+   end;
+
+gameIsReady := true;
+End;
+
+Function SpawnInto(unit, number, vehicles, step);
+var i, veh;
+begin
+for i in vehicles do
+    if i[8] = number then
+       begin
+       uc_side := 2;
+       uc_nation := i[5];
+       PrepareVehicle(i[1], i[2], i[3], i[4], i[6]);
+       veh := CreateVehicle;
+       SetDir(veh, 2);
+
+       if i[7] < 0 then
+          SetMark(veh, i[7]);
+
+       repeat
+        wait(0$2);
+       until not FilterUnitsInArea(startBlockArea, [f_ok]);
+
+       PlaceUnitArea(veh, startArea, false);
+       PlaceHumanInUnit(unit, veh);
+
+       ComMoveXY(unit, 26 - (step * 2), 30 - (step * 2));
+       break;
+       end;
+End;
+
+Export Function PrepareHeikeCamp;
+var i, tmp, b;
+begin
+tmp := [Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze] union heikeSecondSquad;
+
+if heikeIsDead then
+   begin
+   PlaceUnitXY(Heike, 117, 57, false);
+   SetLives(Heike, 1);
+
+   for i in tmp do
+       begin
+       PlaceUnitArea(i, failHeikeArea, false);
+       SetLives(i, 1);
+       end;
+
+   for i in FilterAllUnits([[f_side, 5], [f_type, unit_building]]) do
+       SetLives(i, 190);
+   end
+else
+   begin
+   for i in FilterAllUnits([[f_side, 5], [f_type, unit_building]]) do
+       begin
+       SetBLevel(i, 6);
+       SetLives(i, rand(500, 800));
+       end;
+
+   PlaceHumanInUnit(Heike, arDep);
+
+   SetLives(Heike, 500);
+
+   if GetClass(Heike) = class_prison then
+      SetClass(Heike, class_soldier);
+
+   for i in tmp do
+       begin
+       if GetClass(i) = class_prison then
+          if GetSkill(i, 2) > GetSkill(i, 1) then
+             SetClass(i, class_engineer)
+          else
+             SetClass(i, class_soldier);
+
+       if GetClass(i) in [class_mechanic, class_desert_warior, class_revolver] then
+          SetClass(i, class_soldier);
+
+       if GetClass(i) = class_engineer then
+          begin
+          if not PlaceUnitInArea(i, engArea, false) then
+             PlaceUnitXYR(i, 117, 62, 4, false);
+          end
+       else if GetClass(i) in [class_soldier, class_hunter] then
+          begin
+          b := FilterAllUnits([[f_side, 5], [f_type, unit_building], [f_not, [f_btype, b_depot]], [f_not, [f_full]]]);
+
+          if b then
+             begin
+             SetDir(i, GetDir(b[b]) - 3);
+             PlaceHumanInUnit(i, b[b]);
+             end
+          else
+             PlaceUnitXYR(i, 117, 62, 4, false);
+          end
+       else
+          PlaceUnitXYR(i, 117, 62, 4, false);
+       end;
+   end;
+End;
+
+Export function PrepareBasim;
+var i, un;
+begin
+PlaceUnitArea(Basim, northStartArea, false);
+
+for i := 1 to 3 do
+    begin
+    uc_side := 8;
+    uc_nation := nation_nature;
+
+    hc_class := class_apeman_kamikaze;
+    hc_skills := [0, 0, 0, 0];
+    hc_attr := [10, 10];
+    hc_name := '';
+    hc_gallery := '';
+
+    un := CreateHuman;
+    PlaceUnitArea(un, northStartArea, false);
+
+    ComAgressiveMove(un, 114, 34);
+    end;
+
+wait(0$2);
+
+ComMoveXY(Basim, 100, 25);
+AddComMoveXY(Basim, 107, 52);
+End;

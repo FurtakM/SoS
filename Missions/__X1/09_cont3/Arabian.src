@@ -1,11 +1,57 @@
 Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze,
        Schulz, Basim, Lemmy, Mia, Nia, Jenna,
-       heikeSecondSquad, schulzSecondSquad;
+       heikeSecondSquad, schulzSecondSquad, rolfSquad,
+       Rolf;
 Export function PrepareArabian;
-var i;
+var i, apes, tmp, un, b, j, veh, vehicles;
 begin
-uc_side := 5;
+if LoadVariable('05_DrugsTested', debug) then
+   SetTech(tech_StimDrugs, 2, state_researched);
+         
+uc_side := 2;
+uc_nation := nation_nature;
+
+apes := CreateCharacterSet('09_apes');
+b := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+if apes then
+   for i in apes do
+       if UnitsInside(b[1]) < 6 then
+          PlaceHumanInUnit(i, b[1])
+       else
+          PlaceUnitXYR(i, 82, 27, 6, false);
+
+InitHC_All();
+
 uc_nation := nation_arabian;
+
+b := FilterAllUnits([[f_side, 2], [f_type, unit_building], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+Rolf := PrepareUnit('Rolf', (not debug), '06_');
+
+if Rolf then
+   begin
+   rolfSquad := CreateCharacterSet('06_RolfSquad');
+
+   if rolfSquad < 3 then
+      for i := 1 to 3 - Count(rolfSquad) do
+          begin
+          PrepareSoldier(false, 4);
+          rolfSquad := Join(rolfSquad, CreateHuman);
+          end;
+
+   if b then
+      begin
+      for i in rolfSquad union Rolf do
+          begin
+          SetClass(i, 1);
+          PlaceHumanInUnit(i, UnitFilter(b, [f_not, [f_full]])[1]);
+          end;
+      end
+   else
+      for i in rolfSquad union Rolf do
+          PlaceUnitXYR(i, 82, 27, 6, false);
+   end;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
 Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);
@@ -19,16 +65,107 @@ Kurt := PrepareUnit('Kurt', (not debug), prefix);
 Mike := PrepareUnit('Mike', (not debug), prefix);
 Olaf := PrepareUnit('Olaf', (not debug), prefix);
 
-heikeSecondSquad := CreateCharacterSet('08_others');
+heikeSecondSquad := CreateCharacterSet('09c_heikeSecondSquad');
 
-uc_side := 2;
+Schulz := PrepareUnit('Schulz', (not debug), prefix);
+Basim := PrepareUnit('Basim', (not debug), prefix);
+Lemmy := PrepareUnit('Lemmy', (not debug), prefix);
+Mia := PrepareUnit('Mia', (not debug), prefix);
+Nia := PrepareUnit('Nia', (not debug), prefix);
+Jenna := PrepareUnit('Jenna', (not debug), prefix);
 
-Schulz := PrepareUnit('Schulz', (not debug), '09_');
-Basim := PrepareUnit('Basim', (not debug), '09_');
-Lemmy := PrepareUnit('Lemmy', (not debug), '09_');
-Mia := PrepareUnit('Mia', (not debug), '09_');
-Nia := PrepareUnit('Nia', (not debug), '09_');
-Jenna := PrepareUnit('Jenna', (not debug), '09_');
+schulzSecondSquad := CreateCharacterSet('09c_schulzSecondSquad');
 
-schulzSecondSquad := CreateCharacterSet('09_others');
+//    1            2               3               4            5             6            7           8
+// GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i), IsDrivenBy(i)
+vehicles := LoadVariable('09_vehicles', [
+               [ar_half_tracked, engine_combustion, control_manual, ar_gun, 2, 90, -2, 1],
+               [ar_half_tracked, engine_combustion, control_manual, ar_radar, 2, 90, 0, 2],
+               [ar_half_tracked, engine_combustion, control_remote, ar_gun, 2, 90, 0, 0],
+               [ar_half_tracked, engine_combustion, control_manual, ar_control_tower, 2, 90, 0, 3],
+               [ar_half_tracked, engine_combustion, control_manual, ar_gun, 2, 90, 0, 4],
+               [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher, 2, 90, 0, 5],
+               [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher, 2, 90, 0, 6],
+               [ru_medium_tracked, engine_combustion, control_manual, ru_rocket_launcher, 3, 90, 0, 7],
+               [ar_medium_trike, engine_combustion, control_manual, ar_radar, 2, 90, 0, 8],
+            ]);
+
+// Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze
+SpawnInto(Heike, LoadVariable('09_Heike_ID', -1), vehicles);
+SpawnInto(Givi, LoadVariable('09_Givi_ID', -1), vehicles);
+SpawnInto(Mike, LoadVariable('09_Mike_ID', -1), vehicles);
+SpawnInto(Ibrahim, LoadVariable('09_Ibrahim_ID', -1), vehicles);
+SpawnInto(Kamil, LoadVariable('09_Kamil_ID', -1), vehicles);
+SpawnInto(Kaia, LoadVariable('09_Kaia_ID', -1), vehicles);
+SpawnInto(Sophia, LoadVariable('09_Sophia_ID', -1), vehicles);
+SpawnInto(Markov, LoadVariable('09_Markov_ID', -1), vehicles);
+SpawnInto(Olaf, LoadVariable('09_Olaf_ID', -1), vehicles);
+SpawnInto(Kurt, LoadVariable('09_Kurt_ID', -1), vehicles);
+SpawnInto(Aviradze, LoadVariable('09_Aviradze_ID', -1), vehicles);
+
+SpawnInto(Schulz, LoadVariable('09_Schulz_ID', 1), vehicles);
+SpawnInto(Lemmy, LoadVariable('09_Lemmy_ID', 2), vehicles);
+SpawnInto(Mia, LoadVariable('09_Mia_ID', 3), vehicles);
+SpawnInto(Nia, LoadVariable('09_Nia_ID', 4), vehicles);
+SpawnInto(Jenna, LoadVariable('09_Jenna_ID', 5), vehicles);
+SpawnInto(Basim, LoadVariable('09_Basim_ID', 0), vehicles);
+
+for i := 1 to schulzSecondSquad do
+    SpawnInto(schulzSecondSquad[i], LoadVariable('09c_random_ID_' & i, 5 + i), vehicles);
+
+for i := 1 to heikeSecondSquad do
+    SpawnInto(heikeSecondSquad[i], LoadVariable('09c_random_ID_' & i, 5 + i), vehicles);
+
+if FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) then
+   begin
+   for j := Count(vehicles) downto 1 do
+       begin
+       i := vehicles[j];
+
+       if i[3] = control_remote then
+          begin
+          uc_side := 2;
+          uc_nation := i[5];
+          PrepareVehicle(i[1], i[2], i[3], i[4], i[6]);
+          veh := CreateVehicle;
+          SetDir(veh, 5);
+          PlaceUnitArea(veh, startArea, false);
+
+          vehicles := Delete(vehicles, j);
+
+          Connect(veh);
+          wait(0$0.3);
+          end;
+       end;
+   end;
+End;
+
+Function SpawnInto(unit, number, vehicles);
+var i, veh;
+begin
+for i in vehicles do
+    if i[8] = number and i[3] = control_manual then
+       begin
+       uc_side := 2;
+       uc_nation := i[5];
+       PrepareVehicle(i[1], i[2], i[3], i[4], i[6]);
+       veh := CreateVehicle;
+       SetDir(veh, 5);
+
+       if i[7] < 0 then
+          SetMark(veh, i[7]);
+
+       if not PlaceUnitInArea(veh, startArea, false) then
+          begin
+          SetDir(unit, 5);
+          PlaceUnitArea(unit, startInfArea, false);
+          exit;
+          end;
+
+       PlaceHumanInUnit(unit, veh);
+       exit;
+       end;
+
+SetDir(unit, 5);
+PlaceUnitArea(unit, startInfArea, false);
 End;

@@ -394,8 +394,8 @@ if gensher_active then
    end;
 End;
 
-Every 10$0 + 20$0 do
-var i, tmp, tmp2, coords, w, list;
+Every 9$0 + 15$0 do
+var i, tmp, tmp2, coords, w, list, p;
 begin
 enable;
 
@@ -414,15 +414,16 @@ else
               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
               [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+              [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb],
               [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb]
            ];
 
 if w < 3 then
-   list := ReplaceIn(list, [1, list[i]+1], [ar_half_tracked, engine_combustion, control_remote, [ar_gatling_gun, ar_rocket_launcher][rand(1,2)]]);
+   list := ReplaceIn(list, [1, list[i]+1], [ar_half_tracked, engine_combustion, control_remote, [ar_gatling_gun, ar_rocket_launcher, ar_selfpropelled_bomb][rand(1,3)]]);
 
 MC_SetProduceList(1, list);
 
-if GetSide(ar_dep_w) = 2 then
+if GetSide(ar_dep_w) = 2 and IsOk(ar_dep_w) and w < 3 then
    begin
    list := [
               [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
@@ -435,9 +436,12 @@ if GetSide(ar_dep_w) = 2 then
    wait(0$20);
    end;
 
+p := 60;
+
 repeat
  wait(0$1);
-until UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]) >= 4;
+ p := Dec(p);
+until UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]) >= 4 or p <= 0;
 
 wait(0$10);
 
@@ -447,6 +451,9 @@ tmp2 := UnitFilter(mc_vehicles[2], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_w
 if tmp2 then
    tmp := tmp union tmp2;
 
+if not tmp then
+   exit;
+
 if Count(tmp2) or Prob(50) then
    coords := [ [48,33], [71,88] ]
 else
@@ -455,11 +462,17 @@ else
 if w = 3 then
    coords := [ [91,58], [117,107] ];
 
+if FilterUnitsInArea(base_north, [f_side, 1]) then
+   coords := [ [163, 41] ];
+
 ComAgressiveMove(tmp, coords[1], coords[2]);
+
+p := 90;
 
 repeat
  wait(0$1);
-until UnitFilter(tmp, [f_hastask]) = 0;
+ p := Dec(p);
+until UnitFilter(tmp, [f_hastask]) = 0 or p <= 0;
 
 repeat
  wait(0$2);
@@ -473,8 +486,8 @@ until not tmp;
 End;
 
 // Run
-Every 28$00 trigger ar_dep_e do
-var i, tmp, un, x;
+Every 28$00 do
+var i, tmp, un, x, p;
 begin
 enable;
 
@@ -482,14 +495,14 @@ wait(rand(0$1, 0$34));
 
 tmp := [];
 
-uc_side := 8;
-uc_nation := 2;
-
 InitHc;
 
 // first spawn on east
 for i = 1 to 3 do
     begin
+    uc_side := 8;
+    uc_nation := 2;
+
     PrepareVehicle([ar_medium_trike, ar_half_tracked][rand(1,2)], engine_siberite, control_apeman, [ar_gun, ar_rocket_launcher][rand(1,2)], 100);
     un := CreateVehicle;
     SetDir(un, 4);
@@ -497,19 +510,32 @@ for i = 1 to 3 do
     tmp := Replace(tmp, tmp+1, un);
     end;
 
-for i = 1 to 4 do
+for i = 1 to 3 do
     begin
+    uc_side := 8;
+    uc_nation := 2;
+
     PrepareHuman(false, 1, 6);
     un := CreateHuman;
+
+    if Prob(50) then
+       SetClass(un, class_mortar);
+
     PlaceUnitArea(un, east_attack_spawn, false);
     tmp := Replace(tmp, tmp+1, un);
     end;
 
 wait(0$3);
 
-for i in tmp do
-    if GetClass(i) = 1 or GetType(i) = unit_vehicle then
-       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i));
+p := 0;
+
+repeat
+ wait(0$3);
+ p := p + 3;
+
+ for i in UnitFilter(tmp, [f_ok]) do
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i));
+until p >= 120;
 
 repeat
  AddComAgressiveMove(tmp, 210, 178);

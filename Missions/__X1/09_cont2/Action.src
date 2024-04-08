@@ -1,0 +1,323 @@
+Export function Action;
+var p, i, tmp;
+begin
+PlaceSeeing(12, 12, 2, 10);
+RemoveSeeing(12, 12, 2);
+
+CenterNowOnXY(12, 12);
+
+InGameOn;
+
+PrepareArabian;
+
+InGameOff;
+
+ChangeMissionObjectives('M4');
+
+repeat
+ wait(0$1);
+until FilterUnitsInArea(borderArea, [f_side, 2]);
+
+PrepareHeikeCamp;
+
+wait(0$2);
+
+if heikeIsDead then
+   begin
+   PlaceSeeing(116, 58, 2, -26);
+   CenterOnXY(116, 58);
+
+   Say(Schulz, 'DL-Obj-a-1');
+
+   InGameOn;
+
+   CenterOnXY(116, 58);
+
+   ComMoveXY(FilterAllUnits([f_side, 2]) diff [Schulz, Nia], 96, 65);
+
+   if IsInUnit(Schulz) then
+      ComMoveXY(IsInUnit(Schulz), 115, 61)
+   else
+      ComMoveXY(Schulz, 115, 61);
+
+   if IsInUnit(Nia) then
+      ComMoveXY(IsInUnit(Nia), 115, 61)
+   else
+      ComMoveXY(Nia, 115, 61);
+
+   p := 0;
+
+   repeat
+    wait(0$1);
+    p := Inc(p);
+   until HexInfo(115, 61) or p > 20;
+
+   if Givi and IsOk(Nia) then
+      begin
+      Say(Nia, 'DN-Obj-a-2');
+      Say(Schulz, 'DL-Obj-a-3');
+      Say(Nia, 'DN-Obj-a-4');
+      Say(Schulz, 'DL-Obj-a-5');
+      end;
+
+   wait(0$1);
+
+   Say(Schulz, 'DL-Fail-1');
+
+   YouLost('Fail');
+   exit;
+   end;
+
+PrepareRussianBaseAttackers;
+
+wait(0$1);
+
+PlaceSeeing(116, 58, 2, -26);
+RemoveSeeing(116, 58, 2);
+
+CenterOnXY(116, 58);
+ChangeSideFog(5, 2);
+
+Say(Schulz, 'DL-Obj-1');
+
+PrepareBasim;
+
+wait(0$0.3);
+
+ChangeSideFog(8, 2);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_distxy, 117, 58, 10]]);
+
+for i in FilterAllUnits([f_side, 5]) do
+    SetSide(i, 2);
+
+repeat
+ wait(0$1);
+
+ tmp := FilterAllUnits([f_class, class_apeman_kamikaze]);
+
+ for i in tmp do
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 3]), i));
+
+until See(2, Basim) and kamikazed;
+
+Say(Basim, 'DBs-Obj-2');
+
+repeat
+ wait(0$1);
+until not FilterAllUnits([[f_side, 3], [f_ok]]);
+
+ComExit(Heike);
+
+DialogueOn;
+
+if IsOk(Kaia) then
+   begin
+   CenterNowOnUnits(Kaia);
+
+   Say(Kaia, 'DK-Obj-3');
+   Say(Givi, 'DG-Obj-4');
+   Say(Kaia, 'DK-Obj-5');
+   Say(Kaia, 'DK-Obj-6');
+   Say(Kaia, 'DK-Obj-7');
+   Say(Kaia, 'DK-Obj-8');
+
+   Say(Schulz, 'DL-Obj-9');
+   Say(Schulz, 'DL-Obj-10');
+   Say(Schulz, 'DL-Obj-11');
+   Say(Schulz, 'DL-Obj-12');
+   Say(Schulz, 'DL-Obj-13');
+   end;
+
+
+if IsOk(Kurt) then
+   begin
+   Say(Kurt, 'DKs-Obj-14');
+   Say(Kurt, 'DKs-Obj-15');
+   Say(Givi, 'DG-Obj-16');
+   end;
+
+DialogueOff;
+
+for i in FilterAllUnits([f_side, 8]) do
+    SetSide(i, 2);
+
+wait(0$3);
+
+ComExit(Givi);
+ComExit(Nia);
+
+AddComMoveUnit(Nia, Givi);
+
+wait(0$1);
+
+if IsOk(Givi) and IsOk(Nia) then
+   begin
+   DialogueOn;
+
+   Say(Givi, 'DG-Nia-1');
+   Say(Heike, 'DH-Nia-2');
+   Say(Givi, 'DG-Nia-3');
+   Say(Nia, 'DN-Nia-4');
+   Say(Heike, 'DH-Nia-5');
+   Say(Givi, 'DG-Nia-6');
+   Say(Nia, 'DN-Nia-7');
+   Say(Nia, 'DN-Nia-8');
+   Say(Nia, 'DN-Nia-9');
+   Say(Nia, 'DN-Nia-10');
+   Say(Givi, 'DG-Nia-11');
+   Say(Nia, 'DN-Nia-12');
+   Say(Heike, 'DH-Nia-13');
+   Say(Nia, 'DN-Nia-14');
+   Say(Heike, 'DH-Nia-15');
+   Say(Schulz, 'DL-Nia-16');
+   Say(Heike, 'DH-Nia-17');
+   Say(Heike, 'DH-Nia-18');
+   Say(Ibrahim, 'DI-Nia-19');
+   Say(Schulz, 'DL-Nia-20');
+   Say(Schulz, 'DL-Nia-21');
+   Say(Schulz, 'DL-Nia-22');
+
+   DialogueOff;
+   end;
+
+DialogueOn;
+Say(Schulz, 'DL-Retreat-1');
+DialogueOff;
+
+ChangeMissionObjectives('M5');
+
+SetAreaMapShow(endArea, 1);
+startRussianAttacks := true;
+End;
+
+Every 0$1 trigger startRussianAttacks and not FilterUnitsExceptArea(endArea, [[f_side, 2], [f_ok], [f_type, unit_human]]) do
+EndMission;
+
+
+Function EndMission;
+var i, tmp, saveVehicles;
+begin
+tmp := FilterUnitsInArea(endArea, [[f_side, 2], [f_type, unit_vehicle]]);
+
+saveVehicles := [];
+
+for i in tmp do
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetFuel(i), GetMark(i), IsDrivenBy(i)]);
+
+SaveCharacters(Schulz, '09c_Schulz');
+SaveVariable(Schulz, '09c_Schulz_ID');
+
+if IsOk(Lemmy) then
+   begin
+   SaveCharacters(Lemmy, '09c_Lemmy');
+   SaveVariable(Lemmy, '09c_Lemmy_ID');
+   end;
+
+if IsOk(Nia) then
+   begin
+   SaveCharacters(Nia, '09c_Nia');
+   SaveVariable(Nia, '09c_Nia_ID');
+   end;
+
+if IsOk(Mia) then
+   begin
+   SaveCharacters(Mia, '09c_Mia');
+   SaveVariable(Mia, '09c_Mia_ID');
+   end;
+
+if IsOk(Jenna) then
+   begin
+   SaveCharacters(Jenna, '09c_Jenna');
+   SaveVariable(Jenna, '09c_Jenna_ID');
+   end;
+
+if IsOk(Basim) then
+   begin
+   SaveCharacters(Basim, '09c_Basim');
+   SaveVariable(Basim, '09c_Basim_ID');
+   end;
+
+SaveCharacters(Heike, '09c_Heike');
+SaveVariable(Heike, '09c_Heike_ID');
+
+if IsOk(Givi) then
+   begin
+   SaveCharacters(Givi, '09c_Givi');
+   SaveVariable(Givi, '09c_Givi_ID');
+   end;
+
+if IsOk(Mike) then
+   begin
+   SaveCharacters(Mike, '09c_Mike');
+   SaveVariable(Mike, '09c_Mike_ID');
+   end;
+
+if IsOk(Ibrahim) then
+   begin
+   SaveCharacters(Ibrahim, '09c_Ibrahim');
+   SaveVariable(Ibrahim, '09c_Ibrahim_ID');
+   end;
+
+if IsOk(Kamil) then
+   begin
+   SaveCharacters(Kamil, '09c_Kamil');
+   SaveVariable(Kamil, '09c_Kamil_ID');
+   end;
+
+if IsOk(Kaia) then
+   begin
+   SaveCharacters(Kaia, '09c_Kaia');
+   SaveVariable(Kaia, '09c_Kaia_ID');
+   end;
+
+if IsOk(Sophia) then
+   begin
+   SaveCharacters(Basim, '09c_Sophia');
+   SaveVariable(Basim, '09c_Sophia_ID');
+   end;
+
+if IsOk(Markov) then
+   begin
+   SaveCharacters(Markov, '09c_Markov');
+   SaveVariable(Markov, '09c_Markov_ID');
+   end;
+
+if IsOk(Olaf) then
+   begin
+   SaveCharacters(Olaf, '09c_Olaf');
+   SaveVariable(Olaf, '09c_Olaf_ID');
+   end;
+
+if IsOk(Kurt) then
+   begin
+   SaveCharacters(Kurt, '09c_Kurt');
+   SaveVariable(Kurt, '09c_Kurt_ID');
+   end;
+
+if IsOk(Aviradze) then
+   begin
+   SaveCharacters(Aviradze, '09c_Aviradze');
+   SaveVariable(Aviradze, '09c_Aviradze_ID');
+   end;
+
+SaveCharacters(UnitFilter(schulzSecondSquad, [f_ok]), '09c_schulzSecondSquad');
+SaveCharacters(UnitFilter(heikeSecondSquad, [f_ok]), '09c_heikeSecondSquad');
+
+for i := 1 to UnitFilter(schulzSecondSquad, [f_ok]) do
+    SaveVariable(schulzSecondSquad[i], '09c_random_ID_' & i);
+
+for i := 1 to UnitFilter(heikeSecondSquad, [f_ok]) do
+    SaveVariable(heikeSecondSquad[i], '09c_hrandom_ID_' & i);
+
+SaveVariable(saveVehicles, '09c_vehicles');
+SaveVariable(tick, '09c_tick');
+
+SaveCharacters(FilterAllUnits([[f_side, 2], [f_nation, 0]]), '09c_apes');
+
+wait(3);
+
+ChangeMap(1, '__x1/09_cont3');
+End;

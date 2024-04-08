@@ -1,0 +1,106 @@
+Export function PrepareRussianBaseAttackers;
+var i, un, tmp;
+begin
+for i := 1 to 12 do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, 3);
+    un := CreateHuman;
+
+    if Prob(50) then
+       SetClass(un, class_bazooker);
+
+    SetDir(un, 2);
+    PlaceUnitArea(un, russianNorthEastAttackersArea, false);
+
+    ComAgressiveMove(un, 116, 51);
+    end;
+
+for i := 1 to 3 do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, [ru_gun, ru_rocket_launcher, ru_rocket_launcher][i], 100);
+    un := CreateVehicle;
+    SetDir(un, 4);
+
+    PlaceUnitArea(un, russianEastAttackersArea, false);
+
+    ComAgressiveMove(un, 116, 51);
+    end;
+End;
+
+Every 0$30 trigger startRussianAttacks do
+var i, un, tmp;
+begin
+tmp := [];
+
+for i := 1 to [4, 5, 6, 7][Difficulty] do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
+    un := CreateHuman;
+
+    if Prob(50) then
+       SetClass(un, class_bazooker);
+
+    PlaceUnitArea(un, russianNorthAttackersArea, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 2]), i));
+until not UnitFilter(tmp, [f_ok]);
+End;
+
+Every 0$10 trigger startRussianAttacks and FilterUnitsInArea(endArea, [f_side, 2]) do
+var i, un, tmp;
+begin
+tmp := [];
+
+for i := 1 to 3 do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
+    un := CreateHuman;
+    SetClass(un, class_bazooker);
+
+    PlaceUnitArea(un, russianNorthAttackersArea, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+for i := 1 to 4 do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareMechanic(false, [6, 7, 8, 9][Difficulty]);
+    PrepareVehicle(ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_gun, ru_gun, ru_rocket_launcher][i mod 4 + 1], 100);
+    un := CreateVehicle;
+    SetDir(un, 4);
+
+    PlaceUnitArea(un, eastStartArea, false);
+    PlaceHumanInUnit(CreateHuman, un);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 2]), i));
+until not UnitFilter(tmp, [f_ok]);
+End;

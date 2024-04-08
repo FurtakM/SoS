@@ -1,1 +1,131 @@
-//
+Export function PrepareRussianAttack(spot, strength);
+var i, tmp, un, veh, skill, area, parking, dir, control;
+begin
+result := [];
+
+skill := [6, 7, 8, 9][Difficulty];
+area := [ruSpawn1Area, ruSpawn2Area, ruSpawn3Area][spot];
+parking := [ruSpawn1Area, ruSpawn2Area, ruSpawn3Area][spot];
+dir := [5, 0, 2][spot];
+
+if FilterUnitsInArea(area, [f_side, 0]) then
+   for i in FilterUnitsInArea(area, [f_side, 0]) do
+       RemoveUnit(i);
+
+if FilterUnitsInArea(area, [[f_not, [f_type, unit_human]], [f_side, 2]]) then
+   for i in FilterUnitsInArea(area, [[f_not, [f_type, unit_human]], [f_side, 2]]) do
+       KillUnit(i);
+
+if FilterUnitsInArea(area, [[f_type, unit_human], [f_side, 2]]) then
+   for i in FilterUnitsInArea(area, [[f_type, unit_human], [f_side, 2]]) do
+       ComMoveXY(i, 91, 56);
+
+repeat
+ wait(0$1);
+until not FilterUnitsInArea(area, [f_ok]);
+
+// tanks
+for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    control := [control_manual, control_computer, control_computer][rand(1,3)];
+
+    PrepareVehicle(
+       [ru_medium_tracked, ru_heavy_tracked, ru_heavy_wheeled][i mod 3 + 1],
+       [engine_siberite, engine_combustion][rand(1,2)],
+       control,
+       [ru_rocket_launcher, ru_heavy_gun, ru_gatling_gun][i mod 3 + 1],
+       100
+    );
+
+    veh := CreateVehicle;
+    SetDir(veh, dir);
+
+    PlaceUnitInArea(veh, area, false);
+
+    if control = control_manual then
+       begin
+       uc_side := 3;
+       uc_nation := nation_russian;
+
+       PrepareMechanic(false, skill);
+       PlaceHumanInUnit(un, veh);
+       SetTag(un, spot);
+       end;                   
+
+    ComMoveToArea(veh, area);
+
+    wait(0$3);
+
+    result := Join(result, veh);
+    end;
+
+// infantry
+for i := 1 to [1, 2, 2, 3][Difficulty] + strength do
+    begin
+    uc_side := 3;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if Prob([30, 40, 50, 50][Difficulty]) then
+       SetClass(un, class_bazooker);
+
+    SetDir(un, dir);
+    SetTag(un, spot);
+
+    PlaceUnitInArea(un, area, false);
+    ComMoveToArea(un, parking);
+
+    wait(0$1);
+
+    result := Join(result, un);
+    end;
+End;
+
+Every 0$10 do
+var i, attackers, timeToAttack, wave, strength, spot;
+begin
+timeToAttack := [9$00, 8$30, 8$20, 8$10][Difficulty];
+attackers := [];
+wave := 0;
+strength := [0, 1, 1, 1][Difficulty]; 
+
+repeat
+ wait(timeToAttack);
+ wave := Inc(wave);
+ spot := rand(1,3);
+
+ if wave mod 3 = 0 then
+    strength := Inc(strength);
+
+ attackers := PrepareRussianAttack(spot, strength);
+ timeToAttack := timeToAttack - 0$20;
+
+ if timeToAttack < 4$00 then
+    timeToAttack := 4$00;
+
+ repeat
+  wait(0$1);
+
+  for i in attackers do
+      begin
+      if not IsOk(i) then
+         attackers := attackers diff i;
+
+      if GetType(i) = unit_vehicle then
+         AgressiveMove(i, []) // todo
+      else
+         begin
+   
+         end;
+      end;
+ until not attackers;
+
+until wave <= [6, 7, 7, 8][Difficulty];
+
+ruDefeated := true;
+End;

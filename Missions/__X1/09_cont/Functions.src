@@ -34,3 +34,63 @@ for i in oil do
 for i in sib do
     CreateDepositXY(i[1], i[2], mat_siberit);
 End;
+
+Export function SaveEnvironment(area, saveId);
+begin
+result := ListEnvironmentArea(area);
+SaveVariable(result, saveId);
+End;
+
+Export function SaveMaterials(side, saveId);
+var i, base;
+begin
+result := [];
+
+for i in FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    begin
+    base := GetBase(i);
+    result := Join(result, GetResources(base));
+    end;
+
+if not result then
+   exit;
+
+SaveVariable(result, saveId);
+End;
+
+Export function SaveBase(side, saveId);
+var i;
+begin
+result := [];
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_building], [f_ok]]) do
+    begin
+    result := Join(result, [
+                  GetBType(i),
+                  GetX(i),
+                  GetY(i),
+                  GetDir(i),
+                  GetBLevel(i),
+                  GetLives(i),
+                  GetLabKind(i, 1),
+                  GetLabKind(i, 2),
+                  GetBWeapon(i)
+              ]);
+    end;
+
+if not result then
+   exit;
+
+SaveVariable(result, saveId);
+End;
+
+Export function SaveTech(side, saveId);
+var i;
+begin
+result := [];
+
+for i := 1 to 100 do
+    result := Join(result, GetTech(i, side));
+
+SaveVariable(result, saveId);
+End;

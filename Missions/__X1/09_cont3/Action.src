@@ -1,4 +1,309 @@
 Export function Action;
 begin
+InGameOn;
+PlaceSeeing(1, 1, 2, -32963);
+RemoveSeeing(1, 1, 2);
 
+CenterNowOnXY(173, 149);
+
+wait(0$2);
+
+InGameOff;
+
+ChangeMissionObjectives('M6');
+
+SaveForQuickRestart;
 End;
+
+// spot Rolf
+Every 0$5 + 0$3 trigger playerInBase and IsOK(Rolf) and IsOk(Heike) and (GetDistUnits(Heike, Rolf) < 9 or FilterAllUnits([[f_side, 2], [f_dist, Heike, 7], [f_type, unit_building]])) do
+begin
+ComExit(Rolf);
+AddComMoveUnit(Rolf, Heike);
+
+InGameOn;
+
+CenterNowOnUnits(Heike);
+
+Say(Rolf, 'DRf-Reunion-1');
+
+CenterNowOnUnits(Rolf);
+
+ComTurnUnit(Heike, Rolf);
+ComTurnUnit(Rolf, Heike);
+
+Say(Heike, 'DH-Reunion-2');
+Say(Rolf, 'DRf-Reunion-3');
+Say(Heike, 'DH-Reunion-4');
+Say(Rolf, 'DRf-Reunion-5');
+Say(Heike, 'DH-Reunion-6');
+
+InGameOff;
+End;
+
+// player in base
+Every 0$2 trigger not playerInBase and FilterAllUnits([[f_side, 2], [f_dist, Schulz, 10], [f_type, unit_building]]) do
+begin
+InGameOn;
+
+ComExit(Schulz);
+
+CenterNowOnUnits(Schulz);
+
+wait(0$0.3); 
+
+DialogueOn;
+Say(Schulz, 'DL-Def-1');
+Say(Schulz, 'DL-Def-2');
+Say(Schulz, 'DL-Def-3');
+
+if IsOk(Basim) and IsOk(Aviradze) then
+   begin
+   Say(Basim, 'DBs-Def-4');
+   Say(Basim, 'DBs-Def-5');
+   Say(Aviradze, 'DA-Def-6');
+   Say(Basim, 'DBs-Def-7');
+   Say(Aviradze, 'DA-Def-8');
+   Say(Aviradze, 'DA-Def-9');
+   Say(Basim, 'DBs-Def-10');
+   Say(Aviradze, 'DA-Def-11');
+
+   if Query('QTech') = 1 then // ape driver
+      begin
+      Say(Schulz, 'DL-Tech-1');
+      Say(Schulz, 'DL-Tech-2');
+      Say(Aviradze, 'DA-Tech-3');
+      Say(Kaia, 'DK-Tech-4');
+      Say(Kaia, 'DK-Tech-5');
+      Say(Basim, 'DBs-Tech-6');
+      Say(Kaia, 'DK-Tech-7');
+
+      SetTech(tech_apeNeural, 2, state_enabled);
+
+      ChangeMissionObjectives_Silent('M7a');
+      end
+   else // ape kamikadze
+      begin
+      Say(Schulz, 'DL-Tech-a-1');
+      Say(Schulz, 'DL-Tech-a-2');
+      Say(Basim, 'DBs-Tech-a-3');
+      Say(Kaia, 'DK-Tech-a-4');
+      Say(Kaia, 'DK-Tech-a-5');
+      Say(Aviradze, 'DA-Tech-a-6');
+      Say(Aviradze, 'DA-Tech-a-7');
+      Say(Schulz, 'DL-Tech-a-8');
+      Say(Aviradze, 'DA-Tech-a-9');
+
+      SetTech(tech_apeBrain, 2, state_enabled);
+
+      ChangeMissionObjectives_Silent('M7b');
+      end;
+   end
+else if IsOk(Basim) then
+   begin
+   Say(Basim, 'DBs-Def-4');
+   Say(Basim, 'DBs-Def-5');
+
+   SetTech(tech_apeBrain, 2, state_enabled);
+   end;
+
+DialogueOff;
+InGameOff;
+
+ChangeMissionObjectives('M7');
+playerInBase := true;
+
+wait(0$30);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 2], [f_ok], [f_constructed], [f_btype, b_siberite_mine]]);
+
+if IsOk(Kurt) then
+   begin
+   CenterNowOnUnits(FilterAllUnits([[f_side, 2], [f_ok], [f_constructed], [f_btype, b_siberite_mine]])[1]);
+
+   DialogueOn;
+   Say(Kurt, 'DKs-Med-1');
+   Say(Kurt, 'DKs-Med-2');
+   Say(Schulz, 'DL-Med-3');
+   Say(Schulz, 'DL-Med-4');
+   Say(Kurt, 'DKs-Med-5');
+   Say(Kurt, 'DKs-Med-6');
+   Say(Kurt, 'DKs-Med-7');
+   Say(Kurt, 'DKs-Med-8');
+   Say(Schulz, 'DL-Med-9');
+   Say(Schulz, 'DL-Med-10');
+               
+   DialogueOff;    
+   end;
+
+ChangeMissionObjectives('M8-' & Difficulty);
+End;
+
+// mission timer
+Every 0$1 trigger playerInBase do
+begin
+enable;
+missionTime := missionTime + 0$1;
+End;
+
+// ape veh
+Every 0$2 trigger playerInBase and apeDriver do
+begin
+ChangeMissionObjectives('M7a_out');
+
+wait(0$2);
+
+DialogueOn;
+
+CenterNowOnUnits(FilterAllUnits([[f_side, 2], [f_control, control_apeman]])[1]);
+
+if IsOk(Mia) then
+   begin
+   Say(Mia, 'DMm-Apedrive-1');
+   Say(Mia, 'DMm-Apedrive-2');
+   end;
+
+if IsOk(Jenna) then
+   begin  
+   Say(Jenna, 'DJm-Apedrive-3');
+   Say(Jenna, 'DJm-Apedrive-4');
+
+   if IsOk(Basim) then
+      begin
+      Say(Basim, 'DBs-Apedrive-5');
+      Say(Basim, 'DBs-Apedrive-6');
+      Say(Jenna, 'DJm-Apedrive-7');
+      Say(Basim, 'DBs-Apedrive-8');
+      Say(Jenna, 'DJm-Apedrive-9');
+      Say(Basim, 'DBs-Apedrive-10');
+      Say(Jenna, 'DJm-Apedrive-11');
+      Say(Kaia, 'DK-Apedrive-12');
+      Say(Jenna, 'DJm-Apedrive-13');
+      Say(Jenna, 'DJm-Apedrive-14');
+      Say(Jenna, 'DJm-Apedrive-15');
+      Say(Jenna, 'DJm-Apedrive-16');
+      Say(Mia, 'DMm-Apedrive-17');
+      Say(Mia, 'DMm-Apedrive-18');
+      Say(Mia, 'DMm-Apedrive-19');
+      Say(Mia, 'DMm-Apedrive-20');
+      Say(Kaia, 'DK-Apedrive-21');
+      Say(Kaia, 'DK-Apedrive-22');
+      Say(Heike, 'DH-Apedrive-23');
+      Say(Lemmy, 'DLt-Apedrive-24');
+      Say(Lemmy, 'DLt-Apedrive-25');
+      end;
+   end;
+
+DialogueOff;
+End;
+
+// kamikadze trained
+Every 0$2 trigger playerInBase and kamikazeTrained do
+ChangeMissionObjectives('M7b_out');
+
+// see factory
+Every 0$2 trigger playerInBase and FilterAllUnits([[f_side, 2], [f_btype, b_factory], [f_not, [f_empty]]]) and IsOk(Heike) and IsOk(Schulz) do
+begin
+DialogueOn;
+
+Say(Schulz, 'DL-Mort-1');
+
+if IsOk(Markov) then
+   begin
+   Say(Heike, 'DH-Mort-2');
+   Say(Markov, 'DMar-Mort-3');
+   Say(Markov, 'DMar-Mort-4');
+
+   SetTech(tech_mortar, 2, state_enabled);
+   end
+else if IsOk(Olaf) then
+   begin
+   Say(Heike, 'DH-Mort-a-2');
+   Say(Olaf, 'DO-Mort-a-3');
+   Say(Olaf, 'DO-Mort-a-4');
+
+   SetTech(tech_mortar, 2, state_enabled);
+   end
+else
+   begin
+   Say(Heike, 'DH-Mort-a-5');
+   Say(Heike, 'DH-Mort-a-6');
+   end;
+
+DialogueOff;
+End;
+
+// Kaia die
+Every 0$1 trigger GetLives(Kaia) < 10 do
+begin
+DialogueOn;
+
+CenterNowOnUnits(Kaia);
+
+ForceSay(Kaia, 'DK-Death-1');
+ForceSay(Kaia, 'DK-Death-2');
+ForceSay(Kaia, 'DK-Death-3');
+
+Say(Heike, 'DH-Death-4');
+
+if IsOk(Markov) then
+   Say(Markov, 'DMar-Death-5');
+
+DialogueOff;
+
+KillUnit(Kaia);
+End;
+
+Every 0$1 trigger ruDefeated and not FilterAllUnits([[f_enemy, 2], [f_ok]]) do
+var i, sib;
+begin
+DialogueOn;
+
+if time09 + time09c + tick < 60$00 then
+   SetAchievement('ACH_HSPEED_9');
+
+CenterOnNow(Schulz);
+
+dwait(0$0.3);
+
+Say(Schulz, 'DL-End-1');
+Say(Heike, 'DH-End-2');
+
+if IsOk(Kaia) then
+   begin
+   Say(Kaia, 'DK-End-a-3');
+   Say(Kaia, 'DK-End-a-4');
+   Say(Schulz, 'DL-End-a-5');
+   Say(Schulz, 'DL-End-a-6');
+   end;
+
+sib := 0;
+
+for i in FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    sib := sib + GetResourceType(GetBase(i), mat_siberit);
+
+if sib >= sibToCollect then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if apeDriver or kamikazeTrained then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if not UnitFilter([Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze], [f_ok]) then
+   AddMedal('med3', -1)
+else
+   AddMedal('med3', 1);
+
+GiveMedals('MAIN');
+
+YouWin;
+DialogueOff;
+
+// Finito HS, ide spaæ ;)
+End;
+
