@@ -43,7 +43,7 @@ for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
     veh := CreateVehicle;
     SetDir(veh, dir);
 
-    PlaceUnitInArea(veh, area, false);
+    PlaceUnitArea(veh, area, false);
 
     if control = control_manual then
        begin
@@ -57,7 +57,9 @@ for i := 1 to [3, 4, 5, 6][Difficulty] + strength do
 
     ComMoveToArea(veh, area);
 
-    wait(0$3);
+    repeat
+     wait(0$3);
+    until not FilterUnitsInArea(area, [f_ok]);
 
     result := Join(result, veh);
     end;
@@ -77,7 +79,7 @@ for i := 1 to [1, 2, 2, 3][Difficulty] + strength do
     SetDir(un, dir);
     SetTag(un, spot);
 
-    PlaceUnitInArea(un, area, false);
+    PlaceUnitArea(un, area, false);
     ComMoveToArea(un, parking);
 
     wait(0$1);
@@ -87,12 +89,18 @@ for i := 1 to [1, 2, 2, 3][Difficulty] + strength do
 End;
 
 Every 0$10 do
-var i, attackers, timeToAttack, wave, strength, spot;
+var i, e, attackers, extraAttackers, timeToAttack, wave, strength, spot, extraSpot, paths, enemy;
 begin
-timeToAttack := [9$00, 8$30, 8$20, 8$10][Difficulty];
+timeToAttack := [8$00, 7$30, 7$20, 7$10][Difficulty];
 attackers := [];
+extraAttackers := [];
 wave := 0;
-strength := [0, 1, 1, 1][Difficulty]; 
+strength := [0, 1, 1, 1][Difficulty];
+paths := [
+   [ [176,152], [157,122], [146,89], [125,46] ],
+   [ [86,133], [76,111], [61,85], [38,44], [48,31] ],
+   [ [25,21], [47,30] ]
+];
 
 repeat
  wait(timeToAttack);
@@ -103,6 +111,17 @@ repeat
     strength := Inc(strength);
 
  attackers := PrepareRussianAttack(spot, strength);
+
+ if wave = [5, 6, 6, 7][Difficulty] then
+    begin
+    extraSpot := spot - 1;
+
+    if extraSpot < 1 then
+       extraSpot := 3;
+
+    extraAttackers := PrepareRussianAttack(extraSpot, 0);
+    end;
+
  timeToAttack := timeToAttack - 0$20;
 
  if timeToAttack < 4$00 then
@@ -110,6 +129,7 @@ repeat
 
  repeat
   wait(0$1);
+  enemy := FilterAllUnits([f_side, 2]);
 
   for i in attackers do
       begin
@@ -117,15 +137,63 @@ repeat
          attackers := attackers diff i;
 
       if GetType(i) = unit_vehicle then
-         AgressiveMove(i, []) // todo
+         AgressiveMove(i, paths[spot])
       else
          begin
-   
+         if GetClass(i) = class_bazooker then
+            begin
+            if GetDistUnits(i, NearestUnitToUnit(enemy, i)) > 12 then
+               ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+             else
+               begin
+               e := NearestUnitToUnit(enemy, i);
+
+               case rand(1,3) of
+                    1: ComAttackUnit(i, e);
+                    2: ComSpaceShift(i, GetX(e) + rand(-1, 1), GetY(e) + rand(-1, 1));
+                    3: ComTimeShift(i, GetX(e), GetY(e));
+                    end;
+               end;
+            end
+         else
+            ComAttackUnit(i, NearestUnitToUnit(enemy, i));
          end;
       end;
- until not attackers;
 
-until wave <= [6, 7, 7, 8][Difficulty];
+  if extraAttackers then
+     begin
+     for i in extraAttackers do
+         begin
+         if not IsOk(i) then
+            extraAttackers := extraAttackers diff i;
+
+         if GetType(i) = unit_vehicle then
+            AgressiveMove(i, paths[spot])
+         else
+            begin
+            if GetClass(i) = class_bazooker then
+               begin
+               if GetDistUnits(i, NearestUnitToUnit(enemy, i)) > 12 then
+                  ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+               else
+                  begin
+                  e := NearestUnitToUnit(enemy, i);
+
+                  case rand(1,3) of
+                       1: ComAttackUnit(i, e);
+                       2: ComSpaceShift(i, GetX(e) + rand(-1, 1), GetY(e) + rand(-1, 1));
+                       3: ComTimeShift(i, GetX(e), GetY(e));
+                       end;
+                  end;
+               end
+            else
+               ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+            end;
+         end;
+     end;
+ until not attackers and not extraAttackers;
+
+until wave >= [6, 7, 7, 8][Difficulty];
 
 ruDefeated := true;
 End;
