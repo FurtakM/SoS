@@ -5,6 +5,9 @@ Export Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Avir
 Export function PrepareArabian;
 var i, apes, tmp, un, b, j, veh, vehicles;
 begin
+if LoadVariable('05_DrugsTested', debug) then
+   SetTech(tech_StimDrugs, 2, state_researched);
+         
 uc_side := 2;
 uc_nation := nation_nature;
 
@@ -26,26 +29,29 @@ b := FilterAllUnits([[f_side, 2], [f_type, unit_building], [f_or, [f_btype, b_bu
 
 Rolf := PrepareUnit('Rolf', (not debug), '06_');
 
-rolfSquad := CreateCharacterSet('06_RolfSquad');
-
-if rolfSquad < 3 then
-   for i := 1 to 3 - Count(rolfSquad) do
-       begin
-       PrepareSoldier(false, 4);
-       rolfSquad := Join(rolfSquad, CreateHuman);
-       end;
-
-if b then
+if Rolf then
    begin
-   for i in rolfSquad union Rolf do
-       begin
-       SetClass(i, 1);
-       PlaceHumanInUnit(i, UnitFilter(b, [f_not, [f_full]])[1]);
-       end;
-   end
-else
-   for i in rolfSquad union Rolf do
-       PlaceUnitXYR(i, 82, 27, 6, false);
+   rolfSquad := CreateCharacterSet('06_RolfSquad');
+
+   if rolfSquad < 3 then
+      for i := 1 to 3 - Count(rolfSquad) do
+          begin
+          PrepareSoldier(false, 4);
+          rolfSquad := Join(rolfSquad, CreateHuman);
+          end;
+
+   if b then
+      begin
+      for i in rolfSquad union Rolf do
+          begin
+          SetClass(i, 1);
+          PlaceHumanInUnit(i, UnitFilter(b, [f_not, [f_full]])[1]);
+          end;
+      end
+   else
+      for i in rolfSquad union Rolf do
+          PlaceUnitXYR(i, 82, 27, 6, false);
+   end;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
 Ibrahim := PrepareUnit('Ibrahim', (not debug), prefix);

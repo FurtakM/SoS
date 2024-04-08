@@ -1,13 +1,30 @@
 Export function LoadEnv;
-var tmp, i, un;
+var tmp, i, j, un, exist, list;
 begin
 tmp := LoadVariable('09_env', []);
 
 if not tmp then
    exit;
 
-for i in tmp do
-    PlaceEnvironment(i[1], i[2], i[3], i[4]);
+list := ListEnvironmentArea(mapArea);
+
+if not list then
+   exit;
+
+for i in list do
+    begin
+    exist := false;
+
+    for j in tmp do
+        if i[1] = j[1] and i[2] = j[2] then
+           begin
+           exist := true;
+           break;
+           end;
+
+    if not exist then
+       RemoveEnvironment(i[1], i[2]);
+    end;
 
 tmp := LoadVariable('09_animals', []);
 
@@ -32,6 +49,12 @@ for i in tmp do
     PlaceUnitXYD(un, i[2], i[3], i[4], false);
     SetLives(un, i[5]);
     end;
+
+for i := 1 to [6, 5, 4, 3][Difficulty] do
+    begin
+    PrepareApeman(5);
+    PlaceUnitArea(CreateHuman, natureArea, false);
+    end;
 End;
 
 Export function CreateDeposits;
@@ -41,10 +64,16 @@ oil := [ [91, 13], [52, 23], [115, 150] ];
 sib := [ [82, 42], [128, 132] ];
 
 for i in oil do
+    begin
     CreateDepositXY(i[1], i[2], mat_oil);
+    SetResourceVisibility(i[1], i[2], 2);
+    end;
 
 for i in sib do
+    begin
     CreateDepositXY(i[1], i[2], mat_siberit);
+    SetResourceVisibility(i[1], i[2], 2);
+    end;
 End;
 
 Export function LoadCam;
@@ -81,11 +110,18 @@ for i in tmp do
     bc_type := i[1];
     bc_level := i[5];
 
-    bc_kind1 := i[6];
-    bc_kind2 := i[7];
+    bc_kind1 := b_lab_basic;
+    bc_kind2 := b_lab_basic;
+
+    if i[6] then
+       begin
+       bc_kind1 := i[6];
+
+       if i[7] then
+          bc_kind2 := i[7];
+       end;
     
     b := CreateAndPlaceBuildingXYD(i[2], i[3], i[4]);
-    SetLives(b, i[5]);
 
     if i[8] then
        PlaceWeaponTurret(b, i[8]);
