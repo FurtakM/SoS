@@ -80,6 +80,8 @@ DialogueOff;
 ChangeMissionObjectives('M2');
 
 Query('Prepare');
+
+SaveForQuickRestart;
 End;
 
 // camera
@@ -102,13 +104,26 @@ Say(Schulz, 'DL-Faster-2');
 DialogueOff;
 End;
 
+{Every 0$1 do
+begin
+enable;
+display_strings := [
+  'Lab: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]])),
+  'Fac: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_factory]])),
+  'Bun: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_bunker]])),
+  'Bar: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_barracks]])),
+  'Sib: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_siberite_mine]])),
+  'Pow: ' & Count(FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]))
+];
+End;}
+
 // base constructed
-Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_constructed], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
-                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_factory]]) and
-                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_bunker]]) >= 3 and
-                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_barracks]]) and
-                  FilterAllUnits([[f_side, 2], [f_constructed], [f_btype, b_siberite_mine]]) and
-                  FilterAllUnits([[f_side, 2], [f_constructed], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
+                  FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_bunker]]) >= 3 and
+                  FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_btype, b_siberite_mine]]) and
+                  FilterAllUnits([[f_side, 2], [f_not, [f_constructed]], [f_or, [f_btype, b_oil_power], [f_btype, b_siberite_power]]]) do
 begin
 if tick <= 10$00 then
    SetAchievement('ACH_BOB');
@@ -154,7 +169,7 @@ if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
    end;
 
 for i in tmp do
-    if GetEngine(i) = engine_combustion and GetFuel(i) < 80 then
+    if GetEngine(i) = engine_combustion and GetFuel(i) < 60 then
        begin
        Query('FuelLevel');
        exit;

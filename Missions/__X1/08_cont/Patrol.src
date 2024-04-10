@@ -10,12 +10,27 @@ points := [ [g11, g12, g13, g14],
 
 for i in ruPatrol do
     begin
+    if not IsOk(i) then
+       continue;
+
+    if Count(ruKilledHex) then
+       for j in ruKilledHex do
+           if GetDistUnitXY(i, j[1], j[2]) < 6 then
+              begin
+              Query('QBody');
+              isAlarm := true;
+              exit;
+              end;
+
     tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_dist, i, 7]]);
 
     if See(2, i) and tmp then
        begin
        if (hasMuchin and GetDistUnits(i, ruDisturb) < 16) or blockPatrolThread then
           continue;
+
+       for j in tmp do
+           tmp := tmp union FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_dist, j, 4]]);
 
        ComTurnUnit(i, NearestUnitToUnit(tmp, i));
        CaughtByPatrol(i, tmp);
@@ -44,9 +59,6 @@ End;
 Function CaughtByPatrol(guard, units);
 var i, alone;
 begin
-if UnitFilter(units, [f_nation, nation_russian]) or UnitFilter(units, [f_inarea, prisonArea]) then
-   exit;
-
 if UnitFilter(units, [[f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_revolver], [f_class, class_hunter]]]) then
    begin
    blockPatrolThread := true;
@@ -69,6 +81,9 @@ if UnitFilter(units, [[f_or, [f_class, class_soldier], [f_class, class_desert_wa
 
    exit;
    end;
+
+if UnitFilter(units, [f_nation, nation_russian]) or UnitFilter(units, [f_inarea, prisonArea]) then
+   exit;
 
 DialogueOn;
 blockPatrolThread := true;
@@ -96,9 +111,10 @@ if not Heike in units then
                ComMoveXY(i, 113, 17);
                end;
 
-           ComMoveXY(guard, 113, 17);
+           ComMoveXY(guard, 117, 25);
 
            DialogueOff;
+           blockPatrolThread := false;
            exit;
            end;
         2: begin
@@ -123,7 +139,9 @@ if not Heike in units then
               SetAttitude(6, 2, att_neutral, true);
               SetAttitude(3, 2, att_neutral, true);
               end;
-           end; 
+
+           blockPatrolThread := false;
+           end;
         end;
    end;
 
@@ -158,6 +176,7 @@ case Query('SurrenderInfo') of
                begin
                RemoveUnit(i);
                PlaceUnitXYR(i, 114, 17, 10, false);
+               SetSide(i, 5);
                end;
 
         wait(0$0.3);
@@ -167,7 +186,7 @@ case Query('SurrenderInfo') of
         else
            Query('CaughtInfo');
 
-        wait(0$1);
+        wait(0$2);
 
         StartLockerMinigame;
 
@@ -175,6 +194,8 @@ case Query('SurrenderInfo') of
 
         DialogueOff;
         InGameOff;
+
+        blockPatrolThread := false;
 
         ComExitBuilding(Heike);
         ComFree(guard);
@@ -202,6 +223,8 @@ case Query('SurrenderInfo') of
            SetAttitude(6, 2, att_neutral, true);
            SetAttitude(3, 2, att_neutral, true);
            end;
+
+        blockPatrolThread := false;
         end;
      end;
 

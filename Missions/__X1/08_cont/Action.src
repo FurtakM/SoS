@@ -122,7 +122,7 @@ if IsOk(Sophia) then
       begin
       Say(Sophia, 'DS-Conspiracy-a-13');
       Say(Heike, 'DH-Conspiracy-a-14');
-      Say(Sophia, 'DH-Conspiracy-a-15');
+      Say(Heike, 'DH-Conspiracy-a-15');
       end;
 
    if IsOk(Givi) then
@@ -963,10 +963,11 @@ if GetDistUnits(un, Heike) < 6 then
 
    Say(Heike, 'DH-USsol-1');
 
-   if GetSex(un) = sex_male then
-      Say(un, 'DUSM-USsol-2')
-   else
-      Say(un, 'DUSF-USsol-2');
+   if un <> Jerry then
+      if GetSex(un) = sex_male then
+         Say(un, 'DUSM-USsol-2')
+      else
+          Say(un, 'DUSF-USsol-2');
 
    DialogueOff;                        
    
@@ -1143,9 +1144,26 @@ Every 0$1 trigger FilterAllUnits([f_or, [f_class, class_hunter], [f_class, class
 ChangeMissionObjectives_Silent('M1-weapons-out');
 
 // spot jerry
-Every 0$2 trigger See(2, Jerry) and GetDistUnits(Heike, Jerry) and not contactWithAmerican and not isAlarm and not hasMuchin marked gameStartEvent do
+Every 0$2 trigger See(2, Jerry) and GetDistUnits(Heike, Jerry) and not isAlarm and not hasMuchin marked gameStartEvent do
 var i, foodDelivered;
 begin
+if contactWithAmerican then
+   begin
+   DialogueOn;
+
+   CenterNowOnUnits(Jerry);
+
+   Say(Heike, 'DH-USsol-1');
+
+   SetSide(Jerry, 2);
+   americanSquad := Join(americanSquad, Jerry);
+   heikeSquad := Join(heikeSquad, Mike);
+   SetTag(Jerry, tagCaptured);
+
+   DialogueOff;
+   exit;
+   end;
+
 DialogueOn;
 
 CenterNowOnUnits(Jerry);

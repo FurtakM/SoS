@@ -89,9 +89,12 @@ for i in tmp do
 End;
 
 Export function LoadTech;
-var i, tmp;
+var i, tmp, default;
 begin
-tmp := LoadVariable('09_tech', []);
+default := [2,2,0,0,0,2,2,0,1,0,2,0,0,0,2,0,2,1,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1,1,1,1,0,0,2,2,2,2,
+            2,2,1,1,0,1,0,0,0,0,0,2,1,0,0,0,0,1,0,0,2,2,0,0,1,1,1,1,1,1,1,0,0,2,2,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1];
+
+tmp := LoadVariable('09_tech', default);
 
 for i := 1 to Count(tmp) do
     SetTech(i, 2, tmp[i]);
@@ -131,7 +134,23 @@ for i in tmp do
        mat := LoadVariable('09_materials', [ [100, 50, 30] ]);
 
        for j := 1 to 3 do
-           SetResourceType(GetBase(b), j, mat[1][j]);
+           if mat[1][j] then
+              if j > 1 then
+                 SetResourceType(GetBase(b), j, mat[1][j] + [35, 25, 20, 10][Difficulty])
+              else
+                 SetResourceType(GetBase(b), j, mat[1][j] + [350, 250, 150, 100][Difficulty]);
        end;
     end;
+End;
+
+Export Function CutTreeInArea(bulldozer, area);
+var i;
+begin
+area = ListEnvironmentArea(area);
+
+if bulldozer > 0 then
+   for i = area downto 1 do
+       if IsEnvironment(area[i][1], area[i][2]) then
+          if not HasTask(bulldozer) then
+             AddComMoveXY(bulldozer, area[i][1], area[i][2]);
 End;
