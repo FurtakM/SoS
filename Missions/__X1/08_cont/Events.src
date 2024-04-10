@@ -29,6 +29,7 @@ if showPlaceEvent then
 End;
 
 On UnitDestroyed(un) do
+var x, y;
 begin
 if un = Heike and hasNormalScene then
    if loseCounter then
@@ -38,6 +39,18 @@ if un = Heike and hasNormalScene then
 
 if GetSide(un) = 2 and GetType(un) = unit_human then
    loseCounter := Inc(loseCounter);
+
+if GetSide(un) = 6 and not isAlarm and un in ruPatrol then
+   begin
+   x := GetX(un);
+   y := GetY(un);
+
+   ruKilledHex := Join(ruKilledHex, [x, y]);
+   ruPatrol := ruPatrol diff un;
+
+   if SeeXY(3, x, y) then
+      isAlarm := true;
+   end;
 End;
 
 On Contact(s1, s2) do

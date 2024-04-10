@@ -14,6 +14,8 @@ InGameOff;
 
 ChangeMissionObjectives('M4');
 
+SaveForQuickRestart;
+
 repeat
  wait(0$1);
 until FilterUnitsInArea(borderArea, [f_side, 2]);
@@ -96,10 +98,18 @@ for i in FilterAllUnits([f_side, 5]) do
 repeat
  wait(0$1);
 
- tmp := FilterAllUnits([f_class, class_apeman_kamikaze]);
+ tmp := FilterAllUnits([[f_ok], [f_class, class_apeman_kamikaze]]);
 
  for i in tmp do
      ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 3]), i));
+
+ if not FilterAllUnits([f_side, 3]) then
+    begin
+    for i in tmp do
+        KillUnit(i);
+
+    break;
+    end;
 
 until See(2, Basim) and kamikazed;
 
