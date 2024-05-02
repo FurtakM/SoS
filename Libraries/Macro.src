@@ -1239,7 +1239,7 @@ for i = 1 to mc_bases do
 
               if not HasTask(mc_miners[i][j]) then
                  begin
-                 r := rand(1, mc_mines[i]);
+                 r := (Count(mc_mines[i]) mod j) + 1;
                  AddComPlaceRemoteCharge(mc_miners[i][j], mc_mines[i][r][1], mc_mines[i][r][2], 0);
                  end;
               end;
@@ -2242,7 +2242,7 @@ if tmp > 1 then
 
 for i in tmp do
     begin
-    if (UnitsInside(i) < 6 and not GetBType(i) in [b_breastwork, b_bunker]) or UnitsInside(i) = 0 then
+    if IsNotFull(i) then
        begin
        j := i;
        break;
@@ -2291,7 +2291,7 @@ End;
 // Setter's
 // Delete previous minefield and get new mine pos
 Export Function MC_SetMinesField(base, amount, area);
-var i, tmp, list, x, j;
+var i, tmp, list, j, c;
 begin
 if not mc_bases[base] then
    exit;
@@ -2302,11 +2302,13 @@ list := AreaToList(area, 0);
 if not list then
    exit;
 
-for i = 1 to amount do
-    begin
-    x := rand(1, list[1]);
-    tmp := Replace(tmp, i, [list[1][x], list[2][x]]);
-    end;
+c := Count(list[1]);
+
+if amount > c then
+   amount := c;
+
+for i := 1 to amount do
+    tmp := Replace(tmp, i, [list[1][i], list[2][i]]);
 
 mc_mines := Replace(mc_mines, base, tmp);
 mc_minefields := Replace(mc_minefields, base, area);

@@ -768,13 +768,18 @@ for i := 1 to 4 do
     AddComEnterUnit(tmp[i], arm[1]);
     AddComChangeProfession(tmp[i], class_soldier);
 
-    if emp_towers then
+    if Count(emp_towers) then
        begin
        AddComExitBuilding(tmp[i]);
        AddComEnterUnit(tmp[i], emp_towers[1]);
        emp_towers := Delete(emp_towers, 1);
        end;
     end;
+
+wait(0$5);
+
+if UnitFilter(tmp, [f_not, [f_inside]]) then
+   ComEnterUnit(tmp, arm[1]);
 
 tmp := UnitFilter(powellSquadAttack[1] ^ powellSquadAttack[2], [f_sex, sex_male]);
 
@@ -1492,7 +1497,7 @@ DialogueOff;
 End;
 
 // Behemoths (najlepsze uzbrojenie konwencjonalne lol)
-Every 0$1 trigger missionTime >= 55$00 do
+Every 0$1 trigger missionTime >= 55$00 and IsOk(Kovalyuk) and IsOk(ru_depot2) do
 var tmp;
 begin
 missionStage := 10;
@@ -1739,10 +1744,10 @@ else
 End;
 
 // Alliance
-Every 0$1 trigger missionTime >= 60$00 and not allianceDestroyed and IsOk(Roth) do
+Every 0$10 trigger (GetTech(tech_SibFiss, 1) = state_researched or missionTime >= 60$00) and not allianceDestroyed and IsOk(Roth) do
 var dec;
 begin
-missionStage = 11;
+missionStage := 11;
 
 DialogueOn;
 SayRadio(Roth, 'D9-Roth-1');
@@ -1754,7 +1759,7 @@ SayRadio(Roth, 'D9-Roth-3');
 SayRadio(Platonov, 'D9-Pla-3');
 SayRadio(Roth, 'D9-Roth-4');
 
-dec = Query('Q9');
+dec := Query('Q9');
 
 if dec = 1 then
    SayRadio(Roth, 'D9a-Roth-1');
@@ -1797,7 +1802,7 @@ ComExitBuilding(Platonov);
 enemy := NearestUnitToUnit(FilterUnitsInArea(russianBaseArea, [f_side, 1]), Platonov);
 
 AddComAttackUnit(Platonov, enemy[1]);
-Say(Platonov, 'D18-Pla-1');
+SayRadio(Platonov, 'D18-Pla-1');
 End;
 
 // Russian defeat
@@ -2037,7 +2042,7 @@ case unit of
      Baker: ForceSay(Baker, 'DA1-Huck-1a');
      Brown: ForceSay(Brown, 'DA1-Brown-1a');
      Gary: ForceSay(Gary, 'DA1-Gary-1a');
-     Connie: ForceSay(Connie, 'DA1-Con-1a');
+     Connie: if JMMGirl = 3 then ForceSay(Connie, 'DA1-Con-1a');
      Kurt: ForceSay(Kurt, 'DA1-Kurt-1a');
      Kikuchi: ForceSay(Kikuchi, 'DA1-Yam-1a');
      Frank: ForceSay(Frank, 'DA1-Frank-1a');
@@ -2193,7 +2198,7 @@ if RothCaptured then
 else
    AddMedal('Roth', -1);
 
-if not allowBehemothConstruct or behemothDestroyedBeforeFinish then
+if not allowBehemothConstruct or behemothDestroyedBeforeFinish or not behemothDone then
    begin
    m2 := true;
    AddMedal('Project', 1);
