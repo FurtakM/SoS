@@ -3,7 +3,7 @@ Export Roth, Simms, Kirilenkova, Dolgov, Petrosyan, Petrovova, Kuzmov,
        Karamazov, Kapitsova, Scholtze, Oblukov;
 Export allianceSpecialForce;
 Export Function PrepareAlliance;
-var i, tmp, base, side, teleport;
+var i, tmp, base, side, teleport, b;
 begin
 side := 7;
 
@@ -121,6 +121,14 @@ if Simms then
    ComMoveXY(Simms, 262, 235);
    AddComTurnUnit(Simms, Roth);
    end;
+
+uc_side := 7;
+uc_nation := 1;
+bc_type := b_control_tower;
+b := CreateAndPlaceBuildingXYD(268, 251, 4);
+
+PrepareMechanic(false, 10);
+PlaceHumanInUnit(CreateHuman, b);
 End;
 
 
@@ -159,7 +167,7 @@ begin
 uc_side := 7;
 uc_nation := 1;
 
-tmp := Shuffle([ [125,163], [185,168], [111,97] ]);    
+tmp := Shuffle([ [125,163], [185,168], [111,97], [94,114] ]);
 allianceSpecialForce := [];
 
 for i = 1 to Difficulty do
@@ -200,6 +208,45 @@ repeat
      end;
 
 until allianceDestroyed or not allianceSpecialForce;
+End;
+
+Every 0$30 trigger allianceActive and FilterAllUnits([[f_side, 1], [f_or, [f_bweapon, us_siberium_rocket], [f_weapon, us_siberium_rocket]]]) do
+var i, un, tmp, e;
+begin
+for i := 1 to [6, 8, 10, 12][Difficulty] do
+    begin
+    uc_side := 7;
+    uc_nation := 1;
+
+    PrepareVehicle(us_morphling, engine_siberite, [control_remote, control_computer][rand(1,2)], [us_heavy_gun, us_laser][rand(1,2)], 100);
+    un := CreateVehicle;
+
+    SetDir(un, 4);
+    PlaceUnitXYR(un, 307, 219, 6, false);
+
+    if GetControl(un) = control_remote then
+       Connect(un);
+
+    TeleportUnit(un, 124, 92, 12, true);
+
+    tmp := Join(tmp, un);
+
+    wait(0$0.3);
+    end;
+
+repeat
+ wait(0$2);
+ e := FilterAllUnits([[f_side, 1], [f_weapon, us_siberium_rocket]]);
+
+ if not e then
+    e := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]);
+
+ for i in tmp do
+     if not IsOK(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(e, i));
+until not tmp;
 End;
 
 // Roth attacks
