@@ -25,12 +25,27 @@ PlaceUnitXY(Powell, 110, 26, false);
 
 ComHold(Powell);
 
-for i = 1 to 5 do
+for i := 1 to 5 do
     begin
     PrepareHuman(false, 1, 10);
     powell_guards := Insert(powell_guards, 1, CreateHuman);
     PlaceHumanInUnit(powell_guards[1], ambar0);
     end;
+
+if Difficulty > 1 then
+   begin
+   tmp := [[81, 33], [134,114], [193,102]];
+
+   for i := 1 to Difficulty - 1 do
+       begin
+       PrepareSoldier(false, 10);
+       un := CreateHuman;
+       SetClass(un, class_sniper);
+
+       PlaceUnitXY(un, tmp[i][1], tmp[i][2], false);
+       ComHold(un);
+       end;
+   end;
 
 if Difficulty > 2 then
    begin
@@ -40,7 +55,7 @@ if Difficulty > 2 then
    PlaceWeaponTurret(b, us_rocket_launcher);
    end;
 
-for i in FilterAllUnits([[f_side, 1], [f_btype, b_factory]])^FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) do
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) ^ FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) do
     for j = 1 to 3 do
         begin
         PrepareHuman(false, 3, 6);
@@ -72,7 +87,7 @@ PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, [us_laser
 mobile_patrol := Insert(mobile_patrol, 3, CreateVehicle);
 PlaceUnitXY(mobile_patrol[3], 200, 88, false);
 
-for i = mobile_patrol downto 1 do
+for i := mobile_patrol downto 1 do
     RaiseSailEvent(1);
 End;
 
@@ -185,11 +200,9 @@ repeat
  wait(0$1);
 
  for i in defenders do
-     begin
-
+     begin 
      if defcon and GetDistUnitXY(i, defcon[1], defcon[2]) > 10 and not HasTask(i) then
-        ComAgressiveMove(i, defcon[1], defcon[2]);
-
+        ComAgressiveMove(i, defcon[1], defcon[2]); 
      end;
 
 until not defenders;

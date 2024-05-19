@@ -281,7 +281,8 @@ ComMoveXY(Omar, 202, 115);
 End;
 
 // omar suicide attack
-Every 0$1 trigger GetDistUnitXY(Omar, 200, 98) < 40 and russianDestroyed do
+Every 0$1 trigger IsOk(Omar) and russianDestroyed do
+var i;
 begin
 SetSide(Omar, 5);
 
@@ -297,15 +298,19 @@ ComMoveXY(Omar, 203, 120);
 
 repeat
  wait(0$1);
-until IsSelected(Omar) or GetDistUnitXY(Omar, 203, 120) < 6;
-
-CenterNowOnUnits(Omar);
+until IsSelected(Omar) or GetDistUnitXY(Omar, 203, 120) < 20;
 
 DialogueOn;
+
+PlaceSeeing(GetX(Omar), GetY(Omar), 7, -6);
+
+CenterNowOnUnits(Omar);
 
 Say(JMM, 'DOmarContam-JMM-1');
 Say(Omar, 'DOmarContam-Omar-1');
 Say(JMM, 'DOmarContam-JMM-2');
+
+RemoveSeeing(GetX(Omar), GetY(Omar), 7);
 
 DialogueOff;
 
@@ -313,7 +318,32 @@ SetAttitude(5, 7, att_enemy, true);
 
 repeat
  wait(0$3);
+ ComMoveXY(Omar, 203, 120);
 until IsAt(Omar, 203, 120);
+
+ComHold(Omar);
+
+InGameOn;
+
+CenterNowOnXY(203, 120);
+PlaceSeeing(203, 120, 7, -30);
+
+for i in [ [203, 120], [202, 125], [195, 117], [216, 123], [224, 131], [212, 133] ] do
+    begin
+    wait(0$0.5);
+
+    ArtContamination(i[1], i[2], 5);
+    end;
+
+KillUnit(Omar);
+
+wait(0$3);
+
+ForceSay(JMM, 'D16b-JMM-1');
+
+wait(0$2);
+
+InGameOff;
 
 YouLost('MothContaminate');
 End;
@@ -321,7 +351,7 @@ End;
 // powell has bomb
 Every 0$2 trigger not americanDestroyed and FilterAllUnits([[f_side, 1], [f_weapon, us_siberium_rocket]]) do
 begin
-wait(0$5);
+wait(0$10);
 
 if not IsOk(Powell) or not FilterAllUnits([[f_side, 1], [f_weapon, us_siberium_rocket]]) then
    exit;
@@ -343,7 +373,7 @@ End;
 // platonov has bomb
 Every 0$2 trigger not russianDestroyed and FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) do
 begin
-wait(0$5);
+wait(0$10);
 
 if not IsOk(Platonov) or not FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) then
    exit;
@@ -385,12 +415,20 @@ SetAttitude(1, 7, att_friend, true);
 
 speaker := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_nation, 1]]) diff [Powell, Gladstone, Cyrus, Bobby, Gary, Houten];
 
-if speaker then
+if not speaker then
    begin
-   DialogueOn;
-   SayRadio(speaker[1], 'DSurrenderAmericans-Sol1-1a');
-   DialogueOff;
-   end;
+   uc_side := 1;
+   uc_nation := 1;
+
+   PrepareSoldier(sex_male, 0);
+   speaker := CreateHuman;
+   end
+else
+   speaker := speaker[1];
+
+DialogueOn;
+SayRadio(speaker, 'DSurrenderAmericans-Sol1-1a');
+DialogueOff;
 
 americanCapitulated := true;
 
@@ -423,19 +461,27 @@ until IsDead(Yakotich);
 MC_Kill(2);
 SetAttitude(3, 7, att_friend, true);
 
-speaker := FilterAllUnits([[f_side, 3], [f_sex, sex_male], [f_nation, 3]]) diff [Platonov, Yakotich];
+speaker := FilterAllUnits([[f_side, 3], [f_sex, sex_male], [f_nation, 3]]) diff Platonov;
 
-if speaker then
+if not speaker then
    begin
-   DialogueOn;
+   uc_side := 3;
+   uc_nation := 3;
 
-   if Burlak then
-      SayRadio(speaker[1], 'DSurrenderRussians-RSol1-1')
-   else
-      SayRadio(speaker[1], 'DSurrenderRussians-RSol1-1a');
+   PrepareSoldier(sex_male, 0);
+   speaker := CreateHuman;
+   end
+else
+  speaker := speaker[1];
 
-   DialogueOff;
-   end;
+DialogueOn;
+
+if IsOK(Burlak) then
+   SayRadio(speaker, 'DSurrenderRussians-RSol1-1')
+else
+   SayRadio(speaker, 'DSurrenderRussians-RSol1-1a');
+
+DialogueOff;
 
 russianCapitulated := true;
 
@@ -461,7 +507,7 @@ End;
 Every 0$3 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_nation, 2]]) < 18 or IsDead(Kozlov) or GetSide(ar_depot1) = 7 do
 legionDestroyed := true;
 
-Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, 2]]) < 9 do
+Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_nation, 2]]) < 9 or IsDead(ar_depot) or GetSide(ar_depot) = 7 do
 arabianDestroyed := true;
 
 // arab surrenders
@@ -469,9 +515,9 @@ Every 0$1 trigger arabianDestroyed do
 var i, tmp;
 begin
 MC_Kill(1);  
-// SetAttitude(2, 7, att_friend, true);
+//SetAttitude(2, 7, att_friend, true);
 
-tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 8], [f_type, unit_vehicle], [control_manual]]);
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) ^ FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [control_manual]]);
 
 if tmp then
    repeat
@@ -481,6 +527,7 @@ if tmp then
         begin
         if IsInUnit(i) and GetType(IsInUnit(i)) = unit_building then
            ComExitBuilding(i);
+
         AddComMoveXY(i, 254, 268);
 
         if IsInArea(i, arabEscape) then
@@ -523,7 +570,7 @@ if tmp then
    until not FilterAllUnits([[f_side, 8], [f_or, [f_type, unit_human], [f_control, control_manual]]]);
 End;
 
-Every 0$10 trigger not arabianDestroyed and tick >= 30$00 do
+Every 0$10 trigger not arabianDestroyed and tick >= 30$00 and Difficulty < 3 do
 AllianceSupport;
 
 // win
@@ -602,6 +649,9 @@ if Connie and GetSide(Connie) = 7 and IsPlaced(Connie) then
 if Gary and GetSide(Gary) = 7 and IsPlaced(Gary) then
    Say(Gary, 'DEnd-JMM-Gary-1');
 
+if Roth and IsPlaced(Roth) then
+   Say(Roth, 'DEnd-JMM-Roth-1');
+
 if Simms and Roth and IsPlaced(Simms) then
    Say(Simms, 'DEnd-JMM-Sim-1');
 
@@ -610,6 +660,9 @@ if Houten and GetSide(Houten) = 7 and IsPlaced(Houten) then
 
 if Dolgov and IsPlaced(Dolgov) then
    Say(Dolgov, 'DEnd-JMM-Dol-1');
+
+if Kikuchi and GetSide(Kikuchi) = 7 and IsPlaced(Kikuchi) then
+   Say(Kikuchi, 'DEnd-JMM-Yam-1');
 
 if Kapitsova and IsPlaced(Kapitsova) then
    Say(Kapitsova, 'DEnd-JMM-Kap-1');
@@ -620,7 +673,7 @@ if Kovalyuk and IsPlaced(Kovalyuk) then
 if Scholtze and IsPlaced(Scholtze) then
    Say(Scholtze, 'DEnd-JMM-Sch-1');
 
-if Titov and IsPlaced(Titov) then
+if Titov and IsPlaced(Titov) and IsOk(Burlak) then
    Say(Titov, 'DEnd-JMM-Tit-1');
 
 if Oblukov and IsPlaced(Oblukov) then
@@ -629,7 +682,7 @@ if Oblukov and IsPlaced(Oblukov) then
 if Lipshchin and IsPlaced(Lipshchin) then
    Say(Lipshchin, 'DEnd-JMM-Lip-1');
 
-if Fadeev and IsPlaced(Fadeev) and Burlak then
+if Fadeev and IsPlaced(Fadeev) and IsOk(Burlak) then
    Say(Fadeev, 'DEnd-Burlak-Fad-1');
 
 if Petrovova and IsPlaced(Petrovova) then
@@ -638,10 +691,13 @@ if Petrovova and IsPlaced(Petrovova) then
 if Kuzmov and IsPlaced(Kuzmov) then
    Say(Kuzmov, 'DEnd-Burlak-Kuz-1');
 
-if Kirilenkova and IsPlaced(Kirilenkova) and Burlak then
+if Kirilenkova and IsPlaced(Kirilenkova) and IsOk(Burlak) then
    Say(Kirilenkova, 'DEnd-Burlak-Kir-1');
 
-if Burlak then
+if Joan then
+   Say(Joan, 'DEnd-Burlak-Joan-1');
+
+if IsOk(Burlak) then
    Say(JMM, 'DEnd-Burlak-JMM-1');
 
 dwait(0$2);

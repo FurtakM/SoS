@@ -95,3 +95,51 @@ repeat
 
 until not ruAttackersInForest;
 End;
+
+Every 0$2 trigger FilterUnitsInArea(RussianBase, [f_side, 1]) do
+var i, tmp, bar, e;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 3], [f_class, class_soldier], [f_tag, 111]]);
+bar := FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+if not tmp then
+   begin    
+   if not bar then
+      begin
+      disable;
+      exit;
+      end;
+
+   tmp := [];
+
+   for i in bar do
+       tmp := tmp union UnitsInside(i);
+
+   if not tmp then
+      begin
+      disable;
+      exit;
+      end;
+
+   for i in tmp do
+       SetTag(i, 111);
+   end
+else
+   begin
+   e := FilterUnitsInArea(RussianBase, [f_side, 1]);
+
+   for i in tmp do
+       if IsOk(i) then
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i);
+
+          wait(3);
+
+          ComAttackUnit(i, NearestUnitToUnit(e, i));
+          AddComEnterUnit(i, bar[rand(1, bar)]);
+          end;
+   end;
+End;

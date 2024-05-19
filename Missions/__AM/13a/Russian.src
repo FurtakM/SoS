@@ -34,8 +34,8 @@ if Difficulty >= 3 then
 End;
 
 
-Every 8$00+2$00 trigger IsOk(ru_depot) and player_spotted do
-var i, base, tmp, flags, _target, attackers, amount;
+Every 7$00+2$00 trigger IsOk(ru_depot) and player_spotted do
+var i, p, base, tmp, flags, _target, attackers, amount;
 begin
 enable;
 
@@ -56,11 +56,14 @@ if tick > 30$00 then
 for i = 1 to amount do
     tmp := Insert(tmp, tmp+1, [[ru_heavy_wheeled, ru_heavy_tracked][rand(1,2)], engine_combustion, control_computer, [ru_heavy_gun, ru_rocket, ru_rocket_launcher][rand(1,3)]]);
 
+p := 1;
+
 MC_InsertProduceList(base, tmp);
 
 repeat
  wait(0$1);
-until MC_GetVehicles(base, true) >= amount;
+ p := Inc(p);
+until MC_GetVehicles(base, true) >= amount or p >= 100;
 
 wait(0$30);
 
@@ -82,9 +85,12 @@ for i = 1 to attackers do
          end;
     end;
 
+p := 0;
+
 repeat
  wait(0$1);
-until not UnitFilter(attackers, [f_hastask]);
+ p := Inc(p);
+until not UnitFilter(attackers, [f_hastask]) or p > 30;
 
 MC_PrepareAttack(base, attackers, _target, flags);
 

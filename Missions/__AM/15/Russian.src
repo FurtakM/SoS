@@ -438,18 +438,23 @@ var i, veh, un;
 begin
 ruMobile := [];
 
-for i := 1 to [3, 4, 5][Difficulty - 1] do
+for i := 1 to [4, 5, 6][Difficulty - 1] do
     begin
     uc_side := 3;
-    uc_nation := 3;
+    uc_nation := 1;
 
-    PrepareVehicle(ru_medium_wheeled, engine_siberite, control_manual, ru_rocket_launcher, 100);
+    PrepareVehicle(us_morphling, engine_siberite, control_manual, [us_laser, us_rocket_launcher][i mod 2 + 1], 100);
     veh := CreateVehicle;
     SetDir(veh, 3);
     PlaceUnitArea(veh, arabianAttackArea2, false);
 
+    uc_nation := 3;
     PrepareMechanic(false, 10);
     un := CreateHuman;
+    SetTag(un, 105);
+
+    if GetSkill(un, skill_mechanical) < [8, 9, 10][Difficulty] then
+       SetSkill(un, skill_mechanical, [8, 9, 10][Difficulty]);
 
     PlaceHumanInUnit(un, veh);
 
@@ -463,7 +468,10 @@ begin
 enable;
 
 if not ruMobile then
+   begin
+   disable;
    exit;
+   end;
 
 // tags:
 // 0 - idle,

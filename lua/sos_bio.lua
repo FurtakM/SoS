@@ -778,7 +778,8 @@ function loadBioCharactersStatus()
     local biographicsStatus = {};
 
     for i = 1, #biographics do
-        biographicsStatus = addToArray(biographicsStatus, parseInt(OW_CUSTOMSAVE_READ(bioSave, i)));
+        local status = (OW_CUSTOMSAVE_READ(bioSave, i) ~= nil);
+        biographicsStatus = addToArray(biographicsStatus, status);
     end;
     
     OW_CUSTOMSAVE_CLOSE(bioSave);
@@ -1000,14 +1001,14 @@ function openBioPopup(ID)
     setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
 
     setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
-    setEnabled(menu.window_bio.popup.panel.button_next, not (biographics[ID+1] == nil or (biographics[ID+1] ~= nil and (not biographics[ID+1][8]))));
+    setEnabled(menu.window_bio.popup.panel.button_next, ID < #biographics);
 end;
 
 function showPrevBio()
     local ID = nil;
 
     for i = ACTIVE_BIO - 1, 1, -1 do
-        if biographics[i][9] then
+        if biographics[i][8] then
             ID = i;
             break;
         end;
@@ -1022,7 +1023,7 @@ function showNextBio()
     local ID = nil;
 
     for i = ACTIVE_BIO + 1, #biographics do
-        if biographics[i][9] then
+        if biographics[i][8] then
             ID = i;
             break;
         end;
