@@ -207,20 +207,7 @@ begin
 if not building then
    exit;
 
-result := false;
-places := 0;
-
-case GetBType(building) of
-     b_depot, b_warehouse,
-     b_lab, b_lab_half, b_lab_full,
-     b_armoury, b_barracks,
-     b_workshop, b_factory, b_fort: places := 6;
-     b_bunker, b_breastwork: places := 1;
-     b_control_tower: places := 3;
-     end;
-
-if places then
-   result := UnitsInside(building) < places;
+result := UnitFilter(building, [f_not, [f_full]]);
 End;
 
 Export Function GetFacExt(factory);
@@ -2757,4 +2744,14 @@ if not result then
 CenterNowOnUnits(unit);
 End;
 
+Export Function ComMoveHex(unit, hex);
+begin
+if not hex then
+   exit;
+
+if HexInfo(hex[1], hex[2]) then
+   exit;
+
+ComMoveXY(unit, hex[1], hex[2]);
+End;
 

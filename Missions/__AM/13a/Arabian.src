@@ -21,7 +21,7 @@ mc_bases := Replace(mc_bases, 1, arabian_force);
 
 tmp := [];
 
-vc_chassis := ar_half_tracked;
+vc_chassis := ar_medium_trike;
 vc_engine := engine_siberite;
 vc_control := control_manual;
 vc_weapon := ar_control_tower;
@@ -46,7 +46,7 @@ for i = 1 to 3 do
 
 for i = 1 to 5 do
     begin
-    PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, [ar_gatling_gun, ar_rocket_launcher, ar_rocket_launcher, ar_flame_thrower][i mod 4 + 1], 100);
+    PrepareVehicle(ar_medium_trike, engine_siberite, control_manual, [ar_gatling_gun, ar_rocket_launcher, ar_rocket_launcher, ar_flame_thrower][i mod 4 + 1], 100);
 
     veh := CreateVehicle;
     tmp := tmp ^ veh;
@@ -170,47 +170,81 @@ else
 AddComContaminate(sci[1], 92, 40);
 End;
                      
-Every 14$00 trigger IsOk(ar_depot) and ar_active_attack do
-var i, base, tmp, flags, _target, attackers;
+Every 9$00 trigger IsOk(ar_depot) and ar_active_attack do
+var i, un, base, tmp, flags, _target, attackers, p;
 begin
 enable;
 
 base := 1;
 flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 
-tmp := [ [ar_half_tracked, engine_combustion, control_remote, ar_flame_thrower],
-         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+tmp := [ [ar_medium_trike, engine_combustion, control_remote, ar_flame_thrower],
+         [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
          [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
        ];
 
 for i = 1 to Difficulty+tick div 10$00 do
-    tmp := Insert(tmp, tmp+1, [[ar_medium_trike, ar_half_tracked][rand(1,2)], engine_combustion, control_remote, [ar_rocket_launcher, ar_selfpropelled_bomb, ar_gatling_gun, ar_flame_thrower][rand(1,4)]]);
+    tmp := Insert(tmp, tmp+1, [ar_medium_trike, engine_combustion, control_remote, [ar_rocket_launcher, ar_selfpropelled_bomb, ar_gatling_gun, ar_flame_thrower][rand(1,4)]]);
 
 MC_InsertProduceList(base, tmp);
 
-repeat
- wait(0$1);
-until mc_vehicles[base] > 6;
-
-wait(0$20);
+wait(4$20);
 
 _target := [[124,85], [90,61], [69,48], [68,48]];
 attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]);
+
+
+if rand(0, 1) then
+   begin
+   for i := 1 to [3, 4, 5, 6][Difficulty] do
+       begin
+       uc_side := 2;
+       uc_nation := 2;
+
+       InitHc;
+
+       PrepareHuman(false, [class_apeman_soldier, class_apeman_kamikaze][rand(1,2)], 8);
+       un := CreateHuman;
+
+       SetDir(un, 4);
+       PlaceUnitArea(un, east_spawn, false);
+       attackers := attackers union un;
+       end;
+   end
+else
+   begin
+   for i := 1 to [2, 3, 4, 5][Difficulty] do
+       begin
+       uc_side := 2;
+       uc_nation := 2;
+
+       InitHc;
+
+       PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, [ar_selfpropelled_bomb, ar_selfpropelled_bomb, ar_flame_thrower][i mod 3 + 1], 100);
+       un := CreateVehicle;
+
+       SetDir(un, 4);
+       PlaceUnitArea(un, east_spawn, false);
+       attackers := attackers union un;
+       end;
+   end;
 
 if not attackers then
    exit;
 
 ar_attackers := attackers;
+p := 0;
 
 repeat
  wait(0$1);
-until not UnitFilter(attackers, [f_hastask]);
+ p := Inc(p);
+until not UnitFilter(attackers, [f_hastask]) or p > 30;
 
 MC_PrepareAttack(base, attackers, _target, flags);
 End;
 
-Every 11$00 trigger IsOk(ar_depot) and ar_active_attack and IsInArea(masha, masha_area) and MC_GetProduceList(1) = 0 and not ar_attackers do
-var i, base, tmp, flags, _target, attackers, un;
+Every 5$00 trigger IsOk(ar_depot) and ar_active_attack and IsInArea(masha, masha_area) do
+var i, base, tmp, flags, _target, attackers, un, p;
 begin
 base := 1;
 flags := [0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
@@ -224,24 +258,17 @@ tmp := [ [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher
 
 MC_InsertProduceList(base, tmp);
 
-repeat
- wait(0$1);
-until mc_vehicles[base] >= 6;
-
-wait(0$20);
+wait(4$20);
 
 _target := [[119,9]];
 attackers := mc_vehicles[base] diff UnitFilter(mc_vehicles[base], [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]);
-
-if not attackers then
-   exit;
 
 uc_side := 2;
 uc_nation := 2;
 
 InitHc;
 
-for i = 1 to [4, 5, 6, 6][Difficulty] do
+for i := 1 to [4, 5, 6, 6][Difficulty] do
     begin
     PrepareHuman(false, [class_apeman_soldier, class_apeman_kamikaze][rand(1,2)], 8);
     un := CreateHuman;
@@ -249,9 +276,12 @@ for i = 1 to [4, 5, 6, 6][Difficulty] do
     attackers := attackers union un;
     end;
 
+p := 0;
+
 repeat
  wait(0$1);
-until not UnitFilter(attackers, [f_hastask]);
+ p := Inc(p);
+until not UnitFilter(attackers, [f_hastask]) or p > 30;
 
 MC_PrepareAttack(base, attackers, _target, flags);
 End;

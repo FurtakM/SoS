@@ -127,31 +127,25 @@ End;
 
 
 Export Function PlaceMines(area, n);
-var i, r, x;
+var i, tmp, r;
 begin
-r := 100;
-x := 0;
+// mines_list
+tmp := AreaToList(area, 0);
 
-while(x < n) do
-for i = 1 to AreaToList(area, 0)[1] do
+if not tmp then
+   exit;
+
+for i := 1 to n do
     begin
-    if r > 50 then
-       begin
-       if not MineAtPos(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i]) then
-          begin
-          PlaceMine(AreaToList(area, 0)[1][i], AreaToList(area, 0)[2][i], bot_side, 0);
+    r := rand(1, tmp[1]);
 
-          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[1][i]);
-          mines_list := Insert(mines_list, mines_list+1, AreaToList(area, 0)[2][i]);
+    PlaceMine(tmp[1][r], tmp[2][r], bot_side, 0);
 
-          r := 0;
-          x := x + 1;
-          end
-           else
-            r := r + 35;
-       end
-        else
-         r := r + rand(10, 25);
+    mines_list := Insert(mines_list, mines_list + 1, tmp[1][r]);
+    mines_list := Insert(mines_list, mines_list + 1, tmp[2][r]);
+
+    tmp := Replace(tmp, 1, Delete(tmp[1], r));
+    tmp := Replace(tmp, 2, Delete(tmp[2], r));
     end;
 End;
 

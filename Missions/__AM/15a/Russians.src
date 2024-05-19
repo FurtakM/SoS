@@ -1,7 +1,7 @@
 Export Platonov, Yakotich, Gleb, Bierezov;
 Export behemoths, behemothBuilders;
 Export Function PrepareRussian;
-var i, j, base, tmp, side, xy, b, teleport;
+var i, j, base, tmp, side, xy, un, b, teleport;
 begin
 side := 3;
 InitHc;
@@ -40,13 +40,30 @@ PlaceUnitXYR(Gleb, 197, 111, 9, false);
 // PrepareBase(base_dep, area, name, skill, sources, personel);
 tmp := PrepareBase(ru_depot, russianBaseArea, 'zhukov', [9, 10, 10, 10][Difficulty], [9000, 1000, 300], [21, 8, 13, 8]);
 
+mc_bases := Replace(mc_bases, 2, tmp union [Yakotich, Gleb, Bierezov]);
+
+// second base
 base := GetBase(ru_depot2);
 
 SetResourceType(base, mat_cans, 5000);
 SetResourceType(base, mat_oil, 200);
 SetResourceType(base, mat_siberit, 200);
 
-mc_bases := Replace(mc_bases, 2, tmp union FilterAllUnits([[f_side, side], [f_not, [f_type, unit_vehicle]]]) diff Platonov);
+for i := 1 to 6 do
+    begin
+    PrepareSoldier(false, [8, 9, 10, 10][Difficulty]);
+    un := CreateHuman;
+
+    if i mod 2 = 0 then
+       SetClass(un, class_bazooker);
+
+    PlaceHumanInUnit(un, ru_specBar);
+    end;
+
+
+PrepareVehicle(ru_medium_wheeled, engine_siberite, control_computer, ru_crane, 100);
+PlaceUnitXYD(CreateVehicle, 259, 145, 3, false);
+PlaceUnitXYD(CreateVehicle, 245, 139, 3, false);
 
 // behemoths
 behemoths := [];
@@ -105,8 +122,8 @@ for i in tmp do
 End;   
 
 // Platonov attacks
-Every 11$30 trigger not russianDestroyed and not MC_GetVehicles(2, true) do
-var i, tmp, target, teleport;
+Every 9$30 + 7$00 trigger not russianDestroyed do
+var i, tmp, target, teleport, p;
 begin
 enable;
 
@@ -141,9 +158,12 @@ else
 if Difficulty > 1 then
    MC_InsertProduceList(2, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
 
+p := 0;
+
 repeat
  wait(0$1);
-until MC_GetVehicles(2, true) >= [6, 7, 7, 7][Difficulty];
+ p := Inc(p);
+until MC_GetVehicles(2, true) >= [6, 7, 7, 7][Difficulty] or p > 100;
 
 wait(0$30);
 

@@ -1,5 +1,5 @@
 On UnitDestroyed(unit) do
-var i;
+var i, tmp;
 begin
 SOS_UnitDestroyed(unit);
 
@@ -29,6 +29,30 @@ if GetWeapon(unit) = ru_crane and IsOk(ruFac2) then
 
 if unit in ruMobile then
    ruMobile := ruMobile diff i;
+
+if unit = ruCommander then
+   begin
+   repeat
+    wait(0$2);
+
+    tmp := FilterAllUnits([[f_side, 3], [f_nation, 3], [f_ok], [f_type, unit_human]]);
+
+    if tmp then
+       for i in tmp do
+           begin
+           if IsInUnit(i) then
+              ComExit(i);
+
+           wait(3);
+
+           ComMoveXY(i, 147, 18);
+
+           if GetDistUnitXY(i, 147, 18) < 3 then
+              RemoveUnit(i);
+           end;
+
+   until not tmp;
+   end;
 End;
 
 On UnitTeleported(building, unit) do
@@ -73,8 +97,11 @@ End;
 
 On EvacuateVehicle(human, vehicle, p1, p2) do
 begin
-if GetSide(human) = 3 and GetClass(human) = 3 and GetSide(ruFac1) = 3 and IsOk(ruFac1) then
-   ComEnterUnit(human, ruFac1);
+if GetSide(human) = 3 and GetClass(human) = 3 then
+   if GetSide(ruFac1) = 3 and IsOk(ruFac1) and UnitsInside(ruFac1) < 6 then
+      ComEnterUnit(human, ruFac1)
+   else
+      ComEnterUnit(human, ruFac2);
 End;
 
 On Command(cmd) do
