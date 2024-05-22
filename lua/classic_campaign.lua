@@ -742,13 +742,13 @@ function runCampaign(ID)
 	if (ScrWidth <= campContainerWidth) then
 		campContainerWidth = ScrWidth;
 	else
-		campContainerX = campContainerWidth / 2 - (ScrWidth / 2);
+		campContainerX = ScrWidth / 2 - (campContainerWidth / 2);
 	end;
 
 	if (ScrHeight <= campContainerHeight) then
 		campContainerHeight = ScrHeight;
 	else
-		campContainerY = campContainerHeight / 2 - (ScrHeight / 2);
+		campContainerY = ScrHeight / 2 - (campContainerHeight / 2);
 	end;
 
 	if (ID == 0) then

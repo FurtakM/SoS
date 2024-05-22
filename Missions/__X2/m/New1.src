@@ -2,15 +2,45 @@
 Starting
 begin
 ResetFog;
+Init;
 End;
 
-Every 0$1 do
+var t;
+Function Init;
 begin
-SendCustomCommand(1, '2;3;4;', 3, 4, 5);
+t := 0$0;
+
+CreateResourcesXY(mat_cans, 5, 63, 64, false);
+
+wait(0$1);
+
+CreateResourcesXY(mat_cans, 4, 63, 64, false);
+End;
+
+Function GetAllLabKind(side, kinds);
+var i, j, tmp;
+begin
+tmp := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+if not tmp or not kinds then
+   exit;
+
+result := 0;
+
+for i in tmp do
+    for j := 1 to 2 do
+        if GetLabKind(i, j) in kinds then
+           begin
+           kinds := kinds diff GetLabKind(i, j);
+           result := result + 1;
+           continue;
+           end;  
 End;
 
 
-On CustomCommand(p1, p2, p3, p4, p5, p6) do
+
+{Every 0$7 do
 begin
-display_strings := [p1, p2, p3, p4, p5, p6];
+enable;  
+CreateCratesAnywhere(1, true);
 End;
