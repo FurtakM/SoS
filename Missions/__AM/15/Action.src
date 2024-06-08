@@ -439,7 +439,7 @@ End;
 
 // Powell first attack
 Every 0$30 trigger missionStart and FilterAllUnits([[f_side, 4], [f_type, unit_vehicle]]) >= 4 and missionStage = 2 do
-var i, tmp, tmp2, retreat, arm, bar, ru, un, emptyTowers, t;
+var i, tmp, tmp2, retreat, arm, bar, ru, un, emptyTowers, t, p;
 begin
 missionStage := 3;
 retreat := false;
@@ -460,14 +460,23 @@ repeat
 until mc_vehicles[4] >= 4;
 
 tmp := [];
+tmp2 := [];
 
-for i in FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff (Powell ^ vip) do
-    if GetTag(i) = 1 then
+for i in FilterAllUnits([[f_side, 4], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff (Powell union vip) do
+    if not i in extraSquad then
        tmp := Join(tmp, i)
     else
        tmp := Insert(tmp, 1, i);
 
-tmp2 := UnitFilter(tmp, [f_sex, sex_male]);
+for i in UnitFilter(tmp, [f_sex, sex_male]) do
+    begin
+    p := Inc(p);
+
+    tmp2 := Join(tmp2, i);
+
+    if p = 4 then
+       break;
+    end;
 
 tmp := tmp diff tmp2;
 
@@ -525,7 +534,7 @@ for i in powellSquadAttack[1] do
     AddComTurnUnit(i, Powell);
     end;
 
-wait(0$10);
+wait(0$45);
 
 Say(Powell, 'D4-Pow-1');
 

@@ -1,5 +1,5 @@
 Export Powell;
-Export vip;
+Export vip, extraSquad;
 Export Function PreparePowell;
 var i, b, veh, tmp, depot, lab, armoury, workshop, un;
 begin
@@ -17,6 +17,7 @@ PlaceUnitXY(Powell, 57, 94, false);
 ComTurnXY(Powell, 58, 94);
 
 vip := [];
+extraSquad := [];
 tmp := [];
 
 // Lisa, Donaldson, Bobby, Cyrus, Denis,
@@ -101,13 +102,17 @@ vip := tmp;
 tmp := tmp union CreateCharacterSet('13s_others');
 
 if tmp < 18 then
+   begin
+   InitHC_All();
+
    for i = 1 to 18 - tmp do
        begin
        PrepareHuman(sex_male, i mod 4 + 1, 4);
        un := CreateHuman;
        tmp := Join(tmp, un);
-       SetTag(un, 1);
+       extraSquad := Join(extraSquad, un);
        end;
+   end;
 
 depot := HexInfo(53, 94);
 lab := HexInfo(56, 101);
@@ -118,8 +123,12 @@ b := [armoury, depot, workshop, lab];
 
 for i in tmp do
     begin
-    if GetSkill(i, 2) > GetSkill(i, 1) then
-       SetClass(i, class_engineer);
+    case GetBType(b[1]) of
+         b_armoury: SetClass(i, class_soldier);
+         b_depot: SetClass(i, class_engineer);
+         b_workshop: SetClass(i, class_mechanic);
+         b_lab: SetClass(i, class_scientistic);
+         end;
 
     if UnitsInside(b[1]) = 6 then
        b := Delete(b, 1);
