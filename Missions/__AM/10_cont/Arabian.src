@@ -1,4 +1,551 @@
+Export arForces, Dietrich, Ahmed;
+Export arTech, arBuildings, arMines, arCameras, arEscapist;
 Export function PrepareArabian;
+var i, j, un, tmp, skill;
 begin
+uc_side := 2;
+uc_nation := nation_arabian;
 
+skill := [4, 5, 6, 7][Difficulty];
+arForces := [];
+arTech := [];
+arBuildings := [];
+arCameras := [ [94,19], [92,34], [109,67], [120,38], [116,30], [102,20] ];
+arMines := [ [73,36], [76,38], [79,39] ];
+arEscapist := [];
+
+SetResourceType(GetBase(arDep), mat_cans, 150);
+SetResourceType(GetBase(arDep), mat_oil, 60);
+SetResourceType(GetBase(arDep), mat_siberit, 10);
+
+HiddenCamera(36, 22, 2);
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_building]]) do
+    SetBLevel(i, 6);
+
+Dietrich := NewCharacter('Dietrich');
+PlaceHumanInUnit(Dietrich, arDep);
+
+InitHC_All();
+
+for i := 1 to 3 do
+    begin
+    PrepareEngineer(sex_male, skill);
+
+    if i = 1 then
+       hc_name := 'Ahmed Abbasid'
+    else
+       hc_name := '';
+
+    un := CreateHuman;
+
+    if i = 1 then
+       Ahmed := un;
+
+    arForces := Join(arForces, un);
+    PlaceHumanInUnit(un, arDep);
+    end;
+
+for i := 1 to [2, 3, 4, 5][Difficulty] do
+    begin
+    PrepareScientist(false, skill);
+    un := CreateHuman;
+    SetSkill(un, skill_combat, skill);
+    arForces := Join(arForces, un);
+    PlaceHumanInUnit(un, arLab);
+    end;
+
+for j in [arBar1, arBar2] do
+    for i := 1 to 3 do
+        begin
+        PrepareSoldier(false, skill);
+        un := CreateHuman;
+        arForces := Join(arForces, un);
+        PlaceHumanInUnit(un, j);
+        end;
+
+for i := 1 to 2 do
+    begin
+    un := arForces[arForces - i];
+    ComExitBuilding(un);
+    AddComEnterUnit(un, FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]])[i]);
+    end;
+
+for i := 1 to 3 do
+    begin
+    un := arForces[arForces - 2 - i];
+    SetTag(un, tMine);
+    end;
+
+for i in UnitsInside(arBar2) do
+    SetClass(i, class_mortar);
+End;
+
+Every 0$2 trigger joinedToEpsilon do
+var i, eng;
+begin
+ComUpgradeLab(arLab, b_lab_siberium);
+
+wait(0$10);
+
+arBuildings := [
+   [b_solar_power, 69, 4, 2],
+   [b_solar_power, 67, 6, 3]
+];
+
+repeat
+ wait(0$1);
+until not arBuildings;
+
+eng := UnitFilter(arForces, [f_class, 2]);
+
+if eng then
+   begin
+   eng := eng[1];
+
+   SetTag(eng, tCamera);
+
+   for i in arCameras do
+       AddComHiddenCamera(eng, i[1], i[2]);
+
+   repeat
+    wait(0$1);
+   until not HasTask(eng) or IsDead(eng);
+
+   if IsOk(eng) then
+      begin
+      SetTag(eng, 0);
+      ComEnterUnit(eng, arDep);
+      end;
+   end;
+
+repeat
+ wait(0$1);
+
+ if tick mod 4200 = 0 then
+    CreateCratesArea(rand(1,5), arCratesArea, true);
+until FilterAllUnits([[f_side, 1], [f_lab, b_lab_siberium]]);
+
+arTech := [tech_sibPow, tech_sibEng, tech_sib1];
+
+repeat
+ wait(0$1);
+until not arTech;
+
+arabianAttack := true;
+arBaseActive := false;
+End;
+
+Every 0$0.3 trigger arBaseActive and arMines do
+begin
+enable;    
+CheckMinesInArea(arMinesArea, [f_enemy, 2]);
+End;
+
+Every 0$2 trigger arBaseActive do
+var i, un, b, side, tmp, lab, eng, tag, cr, tw, sci, sol, hurtUnits, enemyInBase, empty, fac;
+begin
+enable;
+
+side := 2;
+
+// research
+if arTech then
+   begin
+   lab := FilterAllUnits([[f_side, side], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+   if lab then
+      begin
+      if BuildingStatus(lab[1]) = bs_idle then
+         begin
+         for i in arTech do
+             if CanBeResearched(lab[1], i) then
+                begin
+                ComResearch(lab[1], i);
+                break;
+                end;
+         end;
+      end;
+   end;
+
+// damaged buildings
+tmp := FilterUnitsInArea(arBaseArea, [[f_type, unit_building], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(arCratesArea);
+
+// sci logic
+sci := UnitFilter(arForces, [[f_class, 4], [f_ok]]);
+
+if sci then
+   begin
+   hurtUnits := UnitFilter(arForces, [[f_inarea, arBaseArea], [f_tag, tHeal]]);
+
+   if hurtUnits then
+      begin
+      for i in sci do
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, hurtUnits[1]);
+      end
+   else if lab then
+      begin
+      for i in sci do
+          if not IsInUnit(i) then
+             ComEnterUnit(i, lab[1]);
+      end;
+   end;
+
+// eng logic
+eng := UnitFilter(arForces, [f_class, 2]);
+
+if eng then
+   begin
+   for i in eng do
+       begin
+       tag := GetTag(i);
+
+       if tag = tCamera then
+          continue;
+
+       if GetLives(i) < 800 and tag <> tHeal then
+          begin
+          SetTag(i, tHeal);
+          ComMoveXY(i, 72, 15);
+          AddComHold(i);
+          end;
+
+       if tag = tHeal and GetLives(i) = 1000 then
+          SetTag(i, 0);
+
+       if not tag then
+          begin
+          if cr or tmp or Count(arBuildings) then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, tRepair)
+             else if cr then
+                SetTag(i, tCrates)
+             else
+                SetTag(i, tBuild);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, arDep);
+          end;
+
+       if tag = tRepair then
+          begin
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, arBaseArea) then
+             ComMoveToArea(i, arBaseArea);
+          end;
+
+       if tag = tBuild then
+          begin
+          if not Count(arBuildings) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          ComBuild(i, arBuildings[1][1], arBuildings[1][2], arBuildings[1][3], arBuildings[1][4]);
+          end;
+
+       if tag = tCrates then
+          begin
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
+       end;
+   end;
+
+// defense logic
+sol := UnitFilter(arForces, [[f_class, 1], [f_ok]]);
+enemyInBase := FilterUnitsInArea(arBaseArea, [f_enemy, side]);
+
+if sol then
+   begin
+   tmp := UnitFilter(sol, [[f_ok], [f_tag, tMine]]);
+
+   if tmp and not FilterAllUnits([[f_enemy, side], [f_distxy, 76, 38, 12]]) then
+      for i := 1 to Count(tmp) do
+          begin
+          un := tmp[i];
+          b := IsInUnit(un);
+
+          if not MineOfUnit(un) then
+             begin
+             ComExitBuilding(un);
+             AddComPlaceRemoteCharge(un, arMines[i][1], arMines[i][2], 0);
+             AddComEnterUnit(un, b);
+             end
+          else if not b and not HasTask(un) then
+             ComEnterUnit(un, arBar1);
+          end;
+
+   if enemyInBase then
+      begin
+      for i in sol do
+          begin
+          tw := IsInUnit(i);
+
+          if tw then
+             begin
+             if not tw in FilterAllUnits([[f_side, side], [f_see, 2], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) then
+                ComExitBuilding(i);
+             end
+          else
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+          end;
+      end
+   else
+      begin
+      empty := FilterUnitsInArea(arBaseArea, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+
+      if empty then
+         empty := ReverseArray(empty);
+
+      for i in sol do
+          begin
+          tag := GetTag(i);
+
+          if GetLives(i) < 1000 and tag <> tHeal then
+             begin
+             SetTag(i, tHeal);
+             ComMoveXY(i, 72, 15);
+             AddComHold(i);
+             continue;
+             end;
+
+          if GetLives(i) = 1000 and tag = tHeal then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if HasTask(i) or tag = tMine then
+             continue;
+
+          if not IsInUnit(i) and not tag and empty then
+             begin
+             ComEnterUnit(i, empty[1]);
+             empty := Delete(empty, 1);
+             end;
+          end;
+      end;
+   end;
+End;
+
+Every 0$1 trigger Count(arEscapist) do
+var i;
+begin
+enable;
+
+for i in UnitFilter(arEscapist, [f_ok]) do
+    begin
+    if not HasTask(i) then
+       ComMoveToArea(i, khatamArea);
+
+    if IsInArea(i, khatamArea) then
+       begin
+       RemoveUnit(i);
+       arEscapist := arEscapist diff i;
+
+       if i = Dietrich then
+          begin
+          gensherEscaped := true;
+          SaveVariable(1, '10_GensherEscape_1');
+          end;
+       end;
+    end;
+End;
+
+Export arAttackersInf, arAttackersVeh;
+Export function ArabAttack;
+var i, skill, un, veh;
+begin
+uc_side := 5;
+uc_nation := nation_arabian;
+
+skill := [5, 6, 7, 8][Difficulty];
+arAttackersInf := [];
+arAttackersVeh := [];
+
+InitHC_All();
+
+for i := 1 to [3, 4, 5, 6][Difficulty] do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if i mod 2 = 0 then
+       SetClass(un, class_mortar);
+
+    PlaceUnitArea(un, arAttackSpawn2Area, false);
+    arAttackersInf := Join(arAttackersInf, un);
+
+    ComAgressiveMove(un, 104, 60);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_gun, ar_gatling_gun][i mod 2 + 1], 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 129, 20);
+
+    arAttackersVeh := Join(arAttackersVeh, un);
+    end;
+
+wait(0$2);
+
+for i := 1 to [1, 2, 2, 3][Difficulty] do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 133, 40);
+
+    arAttackersVeh := Join(arAttackersVeh, un);
+    end;
+
+wait(0$2);
+
+for i := 1 to [1, 2, 3, 4][Difficulty] do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    if i mod 2 = 0 then
+       ComMoveXY(un, 136, 61)
+    else
+       ComMoveXY(un, 137, 41);
+
+    arAttackersVeh := Join(arAttackersVeh, un);
+    end;
+
+arabianAttackSpawned := true;
+End;
+
+Every 0$2 trigger arAttackersInf do
+var i, tmp, nearest;
+begin
+wait(0$10);
+
+tmp := UnitFilter(arAttackersInf, [[f_class, class_soldier], [f_ok]]);
+
+for i in tmp do
+    begin
+    nearest := NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+    if not nearest then
+       break;
+
+    SetTag(nearest, tMined);
+    ComPlaceDelayedCharge(i, 0, 0, nearest);
+    end;
+
+if hasBase and epsilon then
+   AddComPlaceDelayedCharge(tmp, 0, 0, epsilon)
+else
+   AddComMoveXY(tmp, 107, 59);
+
+repeat
+ wait(0$1);
+until IsDead(Dietrich) or gensherEscaped;
+
+if not gensherEscaped then
+   wait(1$20);
+
+tmp := UnitFilter(arAttackersInf, [f_ok]);
+
+ComMoveXY(tmp, 143, 117);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsInArea(i, arAttackSpawn2Area) then
+        begin
+        tmp := tmp diff i;
+        arAttackersInf := arAttackersInf diff i;
+        RemoveUnit(i);
+        end
+     else
+        ComMoveToArea(i, arAttackSpawn2Area);
+until not tmp;
+End;
+
+Every 0$2 trigger arAttackersVeh do
+var i, tmp;
+begin
+repeat
+ wait(0$1);
+ tmp := UnitFilter(arAttackersVeh, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [110, 40] ]);
+     
+until not arAttackersVeh or gensherEscaped or IsDead(Dietrich);
+
+if not arAttackersVeh then
+   exit;
+
+repeat
+ wait(0$1);
+
+ tmp := UnitFilter(arAttackersVeh, [f_ok]);
+
+ for i in tmp do
+     if IsInArea(i, arAttackSpawnArea) then
+        begin
+        if IsInUnit(i) then
+           RemoveUnit(IsInUnit(i));
+
+        RemoveUnit(i);
+        arAttackersVeh := arAttackersVeh diff i;
+        end
+     else
+        ComMoveToArea(i, arAttackSpawnArea);
+until not tmp;
 End;

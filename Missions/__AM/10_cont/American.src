@@ -1,4 +1,248 @@
-Export function PrepareAmerican;
-begin
+Export JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary; // Heroes with JMM
+Export Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, AmScout, Mike; // Heroes from ALpha
+Export Cornell, Truman, Powell;
+Export JMMSquad, others, others09, ape09;
 
+Export function PrepareAmerican;
+var i, j, veh, vehs, sibRes, tmp, amount;
+begin
+uc_nation := nation_american;
+uc_side := 4;
+
+Powell := PrepareUnit('Powell', false, '');
+
+uc_side := 1; 
+
+JMMSquad := [];
+
+JMM := PrepareUnit('JMM', (not debug), '10_'); 
+Gary := PrepareUnit('Gary', (not debug), '10_'); 
+Cyrus := PrepareUnit('Cyrus', (not debug), '10_');
+
+if Cyrus then
+   JMMSquad := JMMSquad ^ Cyrus;
+
+Bobby := PrepareUnit('Bobby', (not debug), '10_');
+
+if Bobby then
+   JMMSquad := JMMSquad ^ Bobby;
+
+Lisa := PrepareUnit('Lisa', (not debug), '10_');
+
+if Lisa then
+   JMMSquad := JMMSquad ^ Lisa;
+
+Brown := PrepareUnit('Brown', (not debug), '10_');
+
+if Brown then
+   JMMSquad := JMMSquad ^ Brown;
+
+Donaldson := PrepareUnit('Donaldson', (not debug), '10_');
+
+if Donaldson then
+   JMMSquad := JMMSquad ^ Donaldson;
+
+Frank := PrepareUnit('Frank', (not debug), '10_');
+
+if Frank then
+   JMMSquad := JMMSquad ^ Frank;
+
+Houten := PrepareUnit('Houten', (not debug), '10_');
+
+if Houten then
+   JMMSquad := JMMSquad ^ Houten;
+
+others := CreateCharacterSet('OthersIn10');
+
+if Count(JMMSquad) + Count(others) < 9 then
+   begin
+   InitHC_All();
+
+   for i := 9 downto Count(JMMSquad) + Count(others) do
+       begin
+       PrepareHuman(false, i mod 4 + 1, 5);
+       others := Join(others, CreateHuman);
+       end;
+   end;
+
+if debug then
+   result := [Cyrus, Bobby, Lisa, Donaldson, Brown]
+else
+   result := CharacterSelection(
+                '1',
+                [6, 5, 4, 4][Difficulty],
+                [6, 5, 4, 4][Difficulty],
+                [sel_not_changeable, sel_hired, sel_change_class] ^ JMM ^ Gary ^
+                [sel_not_hired, sel_changeable, sel_change_class] ^ JMMSquad ^ others ^
+                [sel_not_changeable, sel_not_hired] ^ Powell,
+                [class_soldier, [class_mechanic, 1], [class_engineer, 1], class_scientistic]
+             );
+
+result := JoinUnion(result, JMM);
+
+if Gary then
+   result := JoinUnion(result, Gary);
+
+if Count(others) then
+   others := others diff result;
+
+vehs := [];
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_manual, us_cargo_bay, 50);
+veh := CreateVehicle;
+vehs := Join(vehs, veh);
+
+SetDir(veh, 1);
+
+sibRes := LoadVariable('09_sibRes', 100) - 20;
+
+if sibRes >= 100 then
+   SetCargo(veh, mat_siberit, 100)
+else
+   SetCargo(veh, mat_siberit, sibRes);
+
+PrepareVehicle(us_medium_wheeled, engine_combustion, control_manual, us_cargo_bay, 50);
+veh := CreateVehicle;
+vehs := Join(vehs, veh);
+
+SetDir(veh, 1);
+SetCargo(veh, mat_cans, 100);
+
+for i := 1 to Count(result) - 2 do
+    begin
+    PrepareVehicle(us_medium_wheeled, engine_combustion, control_manual, [us_light_gun, us_gatling_gun, us_double_gun, us_radar, us_light_gun][i mod 5 + 1], rand(45, 55));
+    veh := CreateVehicle;
+    vehs := Join(vehs, veh);
+
+    SetDir(veh, 1);
+    end;
+
+for i in vehs do
+    begin
+    PlaceUnitArea(i, startArea, false);
+    PlaceHumanInUnit(result[1], i);
+
+    result := Delete(result, 1);
+    end;
+
+uc_side := 4;
+
+if LoadVariable('08_SikorskiStatus', debug) then
+   Truman := PrepareUnit('Truman', false, '');
+
+Simms := PrepareUnit('Simms', false, '');
+Denis := PrepareUnit('Denis', (not debug), '08_');
+Joan := PrepareUnit('Joan', (not debug), '08_');
+
+Mike := PrepareUnit('Mike', (not debug), '08_');
+
+if TestCharacters('08_Khatam') then
+   Khatam := PrepareUnit('Khatam', true, '08_')
+else if TestCharacters('03_Khatam') then
+   Khatam := PrepareUnit('Khatam', true, '03_');
+
+Gladstone := PrepareUnit('Gladstone', (not debug), '08_');
+DeltaDoctor := PrepareUnit('DeltaDoctor', (not debug), '');
+
+Frank := PrepareUnit('Frank', (not debug), '08_');
+
+if Frank then
+   Kikuchi := PrepareUnit('Yamoko', false, '')
+else
+   Kikuchi := PrepareUnit('Kikuchi', (not debug), '08_');
+
+others09 := CreateCharacterSet('09_others');
+ape09 := CreateCharacterSet('09_apes');
+
+if Truman then
+   PlaceUnitArea(Truman, epsilonSpawnArea, false);
+
+if Mike then
+   PlaceUnitArea(Mike, epsilonSpawnArea, false);
+
+if Simms then
+   PlaceUnitArea(Simms, epsilonSpawnArea, false);
+
+if Denis then
+   PlaceUnitArea(Denis, epsilonSpawnArea, false);
+
+if Joan then
+   PlaceUnitArea(Joan, epsilonSpawnArea, false);
+
+if Khatam then
+   PlaceUnitArea(Khatam, epsilonSpawnArea, false);
+
+if Gladstone then
+   PlaceUnitArea(Gladstone, epsilonSpawnArea, false);
+
+if DeltaDoctor then
+   PlaceUnitArea(DeltaDoctor, epsilonSpawnArea, false);
+
+if Kikuchi then
+   PlaceUnitArea(Kikuchi, epsilonSpawnArea, false);
+
+SetClass([Simms, Khatam, Denis, Gladstone, DeltaDoctor, Joan], class_scientistic);
+
+amount := Count(others09);
+
+if amount then
+   begin
+   if amount > [6, 5, 4, 4][Difficulty] then
+      amount := [6, 5, 4, 4][Difficulty];
+
+   for i := 1 to amount do
+       begin
+       PlaceUnitArea(others09[1], epsilonSpawnArea, false);
+       others09 := Delete(others09, 1);
+       end;
+
+   if Count(others09) then
+      others := others union others09;
+   end;
+
+if FilterAllUnits([[f_side, 4], [f_ok], [f_class, class_engineer]]) = 0 then
+   begin
+   tmp := FilterAllUnits([[f_side, 4], [f_ok], [f_class, class_engineer]]) diff [Simms, Khatam, Denis, Gladstone, DeltaDoctor, Joan];
+
+   if not tmp then
+      begin
+      if Denis then
+         SetClass(Denis, class_engineer)
+      else
+         SetClass(DeltaDoctor, class_engineer);
+      end
+   else
+      SetClass(tmp[1], class_engineer);
+   end;
+
+for i in ape09 do
+    PlaceUnitArea(i, epsilonSpawnArea, false);
+
+PrepareSoldier(sex_female, 6);
+AmScout := CreateHuman;
 End;
+
+Export function PrepareCornell;
+begin
+ChangeSideFog(4, 4);
+
+uc_side := 4;
+uc_nation := nation_american;
+
+Cornell := PrepareUnit('Cornel', (not debug), '03_');
+
+if not Cornell then
+   exit;
+
+PlaceUnitArea(Cornell, cornelSpawnArea, false);
+
+SetLives(Cornell, 350);
+
+if IsInUnit(JMM) then
+   ComMoveXY(Cornell, GetX(IsInUnit(JMM)), GetY(IsInUnit(JMM)))
+else
+   ComMoveXY(Cornell, GetX(JMM), GetY(JMM));
+End;
+
+
+

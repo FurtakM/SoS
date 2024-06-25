@@ -1,4 +1,1252 @@
+Export ruForces, ruForces2, ruCommander, ruCommander2, ruMech, ruMech2;
+Export ruTech, ruBaseArea, ruBaseArea2, ruBase, ruBase2, ruConstructList, ruConstructList2,
+       ruCratesArea, ruCratesArea2, ruHealPoint, ruHealPoint2, ruBuildings, ruBuildings2,
+       ruTanks, ruTanks2, ruExtraTanks, ruParkingArea, ruParkingArea2;
 Export function PrepareRussian;
+var i, j, un, skill, sources;
 begin
+uc_side := 3;
+uc_nation := nation_russian;
 
+ruForces := [];
+ruForces2 := [];
+ruMech := [];
+ruMech2 := [];
+ruTech := [
+   tech_LimTeleport,
+   tech_ST1,
+   tech_Weap2,
+   tech_Sib1
+];
+ruBaseArea := 0;
+ruBaseArea2 := 0;
+ruBase := 0;
+ruBase2 := 0;
+ruConstructList := [];
+ruConstructList2 := [
+  [ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_gun, ru_rocket_launcher][rand(1,3)]],
+  [ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_gun, ru_rocket_launcher][rand(1,3)]],
+  [ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_gun, ru_rocket_launcher][rand(1,3)]]
+];
+ruCratesArea := 0;
+ruCratesArea2 := 0;
+ruHealPoint := [];
+ruHealPoint2 := [];
+ruBuildings := [];
+ruBuildings2 := [];
+ruTanks := [];
+ruTanks2 := [];
+ruParkingArea := 0;
+ruParkingArea2 := 0;
+
+for i := 1 to [2, 3, 4, 4][Difficulty] do
+    ruConstructList := Join(ruConstructList, [ru_medium_tracked, engine_siberite, control_manual, [ru_gatling_gun, ru_gun, ru_rocket_launcher][rand(1,3)]]);
+
+sources := [ [43,68], [43,79], [99,114], [103,114], [156,92], [152,85] ];
+
+for i in sources do
+    SetResourceVisibility(i[1], i[2], 3);
+
+skill := [5, 6, 7, 8][Difficulty];
+
+ruCommander := PrepareUnit('Tsaritsyn', false, '');
+
+for j := 1 to [3, 4, 5, 6][Difficulty] do
+    for i := 1 to 4 do
+        begin
+        PrepareHuman(false, i, skill);
+        un := CreateHuman;
+        ruForces := Join(ruForces, un);
+
+        if i = 3 then
+           begin
+           ruMech := Join(ruMech, un);
+           SetClass(un, class_soldier);
+           end;
+        end;
+
+if Difficulty < 4 then
+   exit;
+
+PrepareSoldier(sex_male, skill + 1);
+hc_importance := 100;
+ruCommander2 := CreateHuman;
+
+InitHc_All();
+
+for j := 1 to [3, 4, 5, 6][Difficulty] do
+    for i := 1 to 4 do
+        begin
+        PrepareHuman(false, i, skill);
+        un := CreateHuman;
+        ruForces2 := Join(ruForces2, un);
+
+        if i = 3 then
+           begin
+           ruMech2 := Join(ruMech2, un);
+           SetClass(un, class_soldier);
+           end;
+        end;
 End;
+
+Every 3$00 trigger FilterUnitsInArea(ruBaseArea, [[f_btype, b_factory], [f_ok]]) do
+var i;
+begin
+enable;
+
+ruConstructList := ruConstructList ^ [
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, [ru_gun, ru_rocket_launcher][rand(1,2)]],
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, ru_rocket_launcher],
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, ru_rocket_launcher]
+];
+
+for i := Difficulty downto 1 do
+    ruConstructList := Join(ruConstructList, [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, [ru_gun, ru_rocket_launcher, ru_rocket_launcher, ru_gatling_gun][rand(1,4)]]);
+End;
+
+Every 3$00 trigger FilterUnitsInArea(ruBaseArea2, [[f_btype, b_factory], [f_ok]]) do
+begin
+enable;
+
+ruConstructList2 := ruConstructList2 ^ [
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][rand(1,4)], engine_combustion, control_computer, [ru_gun, ru_rocket_launcher][rand(1,2)]],
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][rand(1,4)], engine_combustion, control_computer, ru_rocket_launcher],
+  [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][rand(1,4)], engine_combustion, control_computer, ru_rocket_launcher],
+  [ru_medium_tracked, engine_combustion, control_computer, ru_gatling_gun]
+];
+End;
+
+Export function SpawnConvoy;
+var i, tmp, spawn, area, path, place, point;
+begin
+case Difficulty of
+     1: spawn := rand(1,2);
+     2: spawn := rand(1,3);
+     3: spawn := rand(2,3);
+     4: spawn := 3;
+     end;
+
+path := [centerPathArea, westPathArea, eastPathArea][spawn];
+area := [ruSpawnCenterArea, ruSpawnWestArea, ruSpawnEastArea][spawn];
+point := [ [96, 102], [54, 85], [146, 67] ][spawn];
+
+for i in ruForces union ruCommander do
+    begin
+    PlaceUnitArea(i, area, false);
+    ComMoveXY(i, point[1], point[2]);
+    wait(0$0.1);
+    end;
+
+DRussianConvoy;
+spawnedRussians := true;
+
+RevealFogArea(1, path);
+
+case spawn of
+     1: RaiseSailEvent(ERussianBaseC);
+     2: RaiseSailEvent(ERussianBaseW);
+     3: RaiseSailEvent(ERussianBaseE);
+     end;
+
+if Difficulty < 4 then
+   exit;
+
+RevealFogArea(1, ruSpawnWestArea);
+
+for i in ruForces2 union ruCommander2 do
+    begin
+    PlaceUnitArea(i, ruSpawnWestArea, false);
+    ComAgressiveMove(i, 54, 85);
+    wait(0$0.2);
+    end;
+
+RaiseSailEvent(ERussianBaseW2);
+End;
+
+Export function RussianBase(group, option);
+begin
+case option of
+     1: begin // center
+        ruBaseArea := ruBaseCenterArea;
+        ruCratesArea := ruBaseCenterArea;
+        ruBuildings := [
+            [b_depot, 104, 110, 5],
+            [b_armoury, 98, 90, 3],
+            [b_oil_mine, 103, 114, 2],
+            [b_siberite_mine, 99, 114, 3],
+            [b_siberite_power, 100, 112, 1],
+            [b_workshop, 92, 101, 0],
+            [b_oil_power, 97, 116, 5],
+            [b_ext_gun, 96, 101, 4],
+            [b_ext_rocket, 88, 97, 2],
+            [b_oil_power, 106, 92, 2],
+            [b_lab, 93, 110, 0],
+            [b_ext_siberium, 89, 101, 1],
+            [b_ext_track, 95, 104, 4],
+            [b_ext_computer, 92, 105, 0],
+            [b_turret, 88, 89, 2],
+            [b_turret, 86, 90, 2],
+            [b_turret, 85, 99, 2],
+            [b_turret, 85, 107, 1],
+            [b_turret, 105, 99, 1],
+            [b_turret, 102, 92, 3],
+            [b_turret, 105, 92, 2]
+        ];
+        ruHealPoint := [98, 107];
+        ruParkingArea := ruParkingCenterArea;
+        end;
+     2: begin // west
+        ruBaseArea := ruBaseWestArea;
+        ruCratesArea := ruBaseWestArea;
+        ruBuildings := [
+            [b_depot, 49, 74, 3],
+            [b_armoury, 73, 88, 5],
+            [b_armoury, 56, 62, 3],
+            [b_oil_mine, 43, 68, 2],
+            [b_siberite_mine, 43, 79, 5],
+            [b_siberite_power, 60, 75, 1],
+            [b_workshop, 50, 87, 1],
+            [b_oil_power, 45, 67, 2],
+            [b_ext_gun, 47, 84, 2],
+            [b_ext_rocket, 46, 87, 1],
+            [b_oil_power, 41, 64, 5],
+            [b_lab, 42, 74, 1],
+            [b_ext_siberium, 54, 91, 5],
+            [b_ext_track, 50, 83, 3],
+            [b_ext_computer, 50, 90, 0],
+            [b_turret, 51, 61, 3],
+            [b_turret, 42, 60, 3],
+            [b_turret, 36, 58, 3],
+            [b_turret, 39, 59, 3],
+            [b_turret, 61, 64, 3],
+            [b_turret, 63, 90, 5],
+            [b_turret, 64, 88, 5],
+            [b_turret, 72, 82, 5]
+        ];
+        ruHealPoint := [45, 75];
+        ruParkingArea := ruParkingWestArea;
+        end;
+     3: begin // east
+        ruBaseArea := ruBaseEastArea;
+        ruCratesArea := ruBaseEastArea;
+        ruBuildings := [
+            [b_depot, 152, 72, 4],
+            [b_armoury, 139, 69, 1],
+            [b_armoury, 142, 56, 2],
+            [b_oil_mine, 152, 85, 3],
+            [b_siberite_mine, 156, 92, 3],
+            [b_siberite_power, 157, 96, 4],
+            [b_workshop, 161, 74, 5],
+            [b_ext_siberium, 157, 74, 1],
+            [b_ext_track, 161, 77, 0],
+            [b_ext_computer, 165, 78, 5],
+            [b_ext_gun, 164, 74, 4],
+            [b_lab, 164, 95, 5],
+            [b_ext_rocket, 161, 70, 3],
+            [b_oil_power, 155, 87, 0],
+            [b_oil_power, 159, 95, 3],
+            [b_oil_power, 167, 98, 1],
+            [b_turret, 152, 89, 1],
+            [b_turret, 134, 61, 2],
+            [b_turret, 156, 62, 3],
+            [b_turret, 171, 97, 5],
+            [b_turret, 169, 103, 5]
+        ];
+        ruHealPoint := [145, 71];
+        ruParkingArea := ruParkingEastArea;
+        end;
+     end;
+
+ruScriptActive := true;
+End;
+
+Export function RussianBase2(group, option);
+begin
+case option of
+     1: begin // center
+        ruBaseArea2 := ruBaseCenterArea;
+        ruCratesArea2 := ruBaseCenterArea;
+        ruBuildings2 := [
+            [b_depot, 104, 110, 5],
+            [b_armoury, 98, 90, 3],
+            [b_oil_mine, 103, 114, 2],
+            [b_siberite_mine, 99, 114, 3],
+            [b_siberite_power, 100, 112, 1],
+            [b_workshop, 92, 101, 0],
+            [b_oil_power, 97, 116, 5],
+            [b_ext_gun, 96, 101, 4],
+            [b_ext_rocket, 88, 97, 2],
+            [b_oil_power, 106, 92, 2],
+            [b_lab, 93, 110, 0],
+            [b_ext_siberium, 89, 101, 1],
+            [b_ext_track, 95, 104, 4],
+            [b_ext_computer, 92, 105, 0],
+            [b_turret, 88, 89, 2],
+            [b_turret, 86, 90, 2],
+            [b_turret, 85, 99, 2],
+            [b_turret, 85, 107, 1],
+            [b_turret, 105, 99, 1],
+            [b_turret, 102, 92, 3],
+            [b_turret, 105, 92, 2]
+        ];
+        ruHealPoint2 := [98, 107];
+        ruParkingArea2 := ruParkingCenterArea;
+        end;
+     2: begin // west
+        ruBaseArea2 := ruBaseWestArea;
+        ruCratesArea2 := ruBaseWestArea;
+        ruBuildings2 := [
+            [b_depot, 49, 74, 3],
+            [b_armoury, 73, 88, 5],
+            [b_armoury, 56, 62, 3],
+            [b_oil_mine, 43, 68, 2],
+            [b_siberite_mine, 43, 79, 5],
+            [b_siberite_power, 60, 75, 1],
+            [b_workshop, 50, 87, 1],
+            [b_oil_power, 45, 67, 2],
+            [b_ext_gun, 47, 84, 2],
+            [b_ext_rocket, 46, 87, 1],
+            [b_oil_power, 41, 64, 5],
+            [b_lab, 42, 74, 1],
+            [b_ext_siberium, 54, 91, 5],
+            [b_ext_track, 50, 83, 3],
+            [b_ext_computer, 50, 90, 0],
+            [b_turret, 51, 61, 3],
+            [b_turret, 42, 60, 3],
+            [b_turret, 36, 58, 3],
+            [b_turret, 39, 59, 3],
+            [b_turret, 61, 64, 3],
+            [b_turret, 63, 90, 5],
+            [b_turret, 64, 88, 5],
+            [b_turret, 72, 82, 5]
+        ];
+        ruHealPoint := [45, 75];
+        ruParkingArea2 := ruParkingWestArea;
+        end;
+     3: begin // east
+        ruBaseArea2 := ruBaseEastArea;
+        ruCratesArea2 := ruBaseEastArea;
+        ruBuildings2 := [
+            [b_depot, 152, 72, 4],
+            [b_armoury, 139, 69, 1],
+            [b_armoury, 142, 56, 2],
+            [b_oil_mine, 152, 85, 3],
+            [b_siberite_mine, 156, 92, 3],
+            [b_siberite_power, 157, 96, 4],
+            [b_workshop, 161, 74, 5],
+            [b_ext_siberium, 157, 74, 1],
+            [b_ext_track, 161, 77, 0],
+            [b_ext_computer, 165, 78, 5],
+            [b_ext_gun, 164, 74, 4],
+            [b_lab, 164, 95, 5],
+            [b_ext_rocket, 161, 70, 3],
+            [b_oil_power, 155, 87, 0],
+            [b_oil_power, 159, 95, 3],
+            [b_oil_power, 167, 98, 1],
+            [b_turret, 152, 89, 1],
+            [b_turret, 134, 61, 2],
+            [b_turret, 156, 62, 3],
+            [b_turret, 171, 97, 5],
+            [b_turret, 169, 103, 5]
+        ];
+        ruHealPoint2 := [145, 71];
+        ruParkingArea2 := ruParkingEastArea;
+        end;
+     end;
+
+ruScriptActive2 := true;
+End;
+
+// ru script
+Every 0$2 trigger ruScriptActive and Count(ruForces) do
+var i, tmp, undone, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon;
+begin
+enable;
+
+// research
+if ruTech then
+   begin
+   lab := FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+   if lab then
+      begin
+      if BuildingStatus(lab[1]) = bs_idle then
+         begin
+         for i in ruTech do
+             if CanBeResearched(lab[1], i) then
+                begin
+                ComResearch(lab[1], i);
+                break;
+                end;
+         end;
+      end;
+   end;
+
+fac := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_btype, b_factory], [f_ok]]);
+
+if fac then
+   begin
+   if UnitFilter(ruMech, [[f_not, [f_hastask]], [f_not, [f_class, class_mechanic]]]) then
+      begin
+      for i in UnitFilter(ruMech, [[f_not, [f_hastask]], [f_not, [f_class, class_mechanic]]]) do
+          begin
+          SetTag(i, tMech);
+
+          if IsInUnit(i) and IsInUnit(i) <> fac[1] then
+             ComExitBuilding(i);
+
+          AddComEnterUnit(i, fac[1]);
+          AddComChangeProfession(i, class_mechanic);
+          end;
+      end;
+
+   if BuildingStatus(fac[1]) = bs_idle then
+      begin
+      emptyTowers := FilterUnitsInArea(ruBaseArea, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
+
+      if emptyTowers then
+         begin
+         weapon := GetTurretWeapon(emptyTowers[1], ruBaseArea);
+
+         if weapon then
+            ComPlaceWeapon(emptyTowers[1], weapon);
+         end;
+
+      if ruConstructList then
+         if CanBeConstructed(fac[1], ruConstructList[1][1], ruConstructList[1][2], ruConstructList[1][3], ruConstructList[1][4]) then
+            ComConstruct(fac[1], ruConstructList[1][1], ruConstructList[1][2], ruConstructList[1][3], ruConstructList[1][4]);
+      end;
+   end;
+
+// damaged buildings
+tmp := FilterUnitsInArea(ruBaseArea, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(ruCratesArea);
+
+// sci logic
+sci := UnitFilter(ruForces, [[f_class, 4], [f_ok]]);
+lab := FilterUnitsInArea(ruBaseArea, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+
+if sci then
+   begin
+   hurtUnits := UnitFilter(ruForces, [[f_inarea, ruBaseArea], [f_tag, tHeal]]);
+
+   if hurtUnits then
+      begin
+      for i in sci do
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, hurtUnits[1]);
+      end
+   else if lab then
+      begin
+      for i in sci do
+          if not IsInUnit(i) then
+             ComEnterUnit(i, lab[1]);
+      end;
+   end;
+
+// eng logic
+eng := UnitFilter(ruForces, [f_class, 2]);
+
+if eng then
+   begin
+   for i in eng do
+       begin
+       tag := GetTag(i);
+
+       if GetLives(i) < 800 and tag <> tHeal then
+          begin
+          SetTag(i, tHeal);
+          ComMoveXY(i, ruHealPoint[1], ruHealPoint[2]);
+          AddComHold(i);
+          end;
+
+       if tag = tHeal and GetLives(i) = 1000 then
+          SetTag(i, 0);
+
+       if not tag then
+          begin
+          undone := FilterUnitsInArea(ruBaseArea, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          if cr or tmp or Count(ruBuildings) then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, tRepair)
+             else if cr then
+                SetTag(i, tCrates)
+             else
+                SetTag(i, tBuild);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, ruBase);
+          end;
+
+       if tag = tRepair then
+          begin
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, ruBaseArea) then
+             ComMoveToArea(i, ruBaseArea);
+          end;
+
+       if tag = tBuild then
+          begin
+          if not Count(ruBuildings) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end
+          else if not CanBeBuiltOnlyResources(ruBase, ruBuildings[1][1]) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          undone := FilterUnitsInArea(ruBaseArea, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          ComBuild(i, ruBuildings[1][1], ruBuildings[1][2], ruBuildings[1][3], ruBuildings[1][4]);
+          end;
+
+       if tag = tCrates then
+          begin
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, 3], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
+       end;
+   end; 
+
+// defense logic
+sol := UnitFilter(ruForces, [[f_or, [f_class, class_soldier], [f_class, class_bazooker]], [f_ok]]) union ruCommander;
+enemyInBase := FilterUnitsInArea(ruBaseArea, [f_enemy, 3]);
+
+if sol then
+   begin
+   if enemyInBase then
+      begin
+      for i in sol do
+          begin
+          tw := IsInUnit(i);
+
+          if tw then
+             begin
+             if not tw in FilterAllUnits([[f_side, 3], [f_see, 1], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) then
+                ComExitBuilding(i);
+             end
+          else
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+          end;
+      end
+   else
+      begin
+      empty := FilterUnitsInArea(ruBaseArea, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
+
+      if empty then
+         empty := ReverseArray(empty);
+
+      for i in sol do
+          begin
+          tag := GetTag(i);
+
+          if tag = tMech then
+             continue;
+
+          if GetLives(i) < 1000 and tag <> tHeal then
+             begin
+             SetTag(i, tHeal);
+             ComMoveXY(i, ruHealPoint[1], ruHealPoint[2]);
+             AddComHold(i);
+             continue;
+             end;
+
+          if GetLives(i) = 1000 and tag = tHeal then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if HasTask(i) then
+             continue;
+
+          if not IsInUnit(i) and not tag and empty then
+             begin
+             ComEnterUnit(i, empty[1]);
+
+             if GetBType(empty[1]) = b_barracks and Prob(50) then
+                AddComChangeProfession(i, class_bazooker);
+
+             empty := Delete(empty, 1);
+             end;
+          end;
+      end;
+   end;
+End;
+
+// ru script #2
+Every 0$2 trigger ruScriptActive2 and Count(ruForces2) do
+var i, tmp, undone, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon;
+begin
+enable;
+
+// research
+if ruTech then
+   begin
+   lab := FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+   if lab then
+      begin
+      if BuildingStatus(lab[1]) = bs_idle then
+         begin
+         for i in ruTech do
+             if CanBeResearched(lab[1], i) then
+                begin
+                ComResearch(lab[1], i);
+                break;
+                end;
+         end;
+      end;
+   end;
+
+fac := FilterUnitsInArea(ruBaseArea2, [[f_side, 3], [f_btype, b_factory], [f_ok]]);
+
+if fac then
+   begin
+   if UnitFilter(ruMech2, [[f_not, [f_hastask]], [f_not, [f_class, class_mechanic]]]) then
+      begin
+      for i in UnitFilter(ruMech2, [[f_not, [f_hastask]], [f_not, [f_class, class_mechanic]]]) do
+          begin
+          SetTag(i, tMech);
+
+          if IsInUnit(i) and IsInUnit(i) <> fac[1] then
+             ComExitBuilding(i);
+
+          AddComEnterUnit(i, fac[1]);
+          AddComChangeProfession(i, class_mechanic);
+          end;
+      end;
+
+   if BuildingStatus(fac[1]) = bs_idle then
+      begin
+      emptyTowers := FilterUnitsInArea(ruBaseArea2, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
+
+      if emptyTowers then
+         begin
+         weapon := GetTurretWeapon(emptyTowers[1], ruBaseArea2);
+
+         if weapon then
+            ComPlaceWeapon(emptyTowers[1], weapon);
+         end;
+
+      if ruConstructList2 then
+         if CanBeConstructed(fac[1], ruConstructList2[1][1], ruConstructList2[1][2], ruConstructList2[1][3], ruConstructList2[1][4]) then
+            ComConstruct(fac[1], ruConstructList2[1][1], ruConstructList2[1][2], ruConstructList2[1][3], ruConstructList2[1][4]);
+      end;
+   end;
+
+// damaged buildings
+tmp := FilterUnitsInArea(ruBaseArea2, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(ruCratesArea2);
+
+// sci logic
+sci := UnitFilter(ruForces2, [[f_class, 4], [f_ok]]);
+lab := FilterUnitsInArea(ruBaseArea2, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+
+if sci then
+   begin
+   hurtUnits := UnitFilter(ruForces2, [[f_inarea, ruBaseArea2], [f_tag, tHeal]]);
+
+   if hurtUnits then
+      begin
+      for i in sci do
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, hurtUnits[1]);
+      end
+   else if lab then
+      begin
+      for i in sci do
+          if not IsInUnit(i) then
+             ComEnterUnit(i, lab[1]);
+      end;
+   end;
+
+// eng logic
+eng := UnitFilter(ruForces2, [f_class, 2]);
+
+if eng then
+   begin
+   for i in eng do
+       begin
+       tag := GetTag(i);
+
+       if GetLives(i) < 800 and tag <> tHeal then
+          begin
+          SetTag(i, tHeal);
+          ComMoveXY(i, ruHealPoint2[1], ruHealPoint2[2]);
+          AddComHold(i);
+          end;
+
+       if tag = tHeal and GetLives(i) = 1000 then
+          SetTag(i, 0);
+
+       if not tag then
+          begin
+          undone := FilterUnitsInArea(ruBaseArea2, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          if cr or tmp or Count(ruBuildings2) then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, tRepair)
+             else if cr then
+                SetTag(i, tCrates)
+             else
+                SetTag(i, tBuild);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, ruBase2);
+          end;
+
+       if tag = tRepair then
+          begin
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, ruBaseArea2) then
+             ComMoveToArea(i, ruBaseArea2);
+          end;
+
+       if tag = tBuild then
+          begin
+          if not Count(ruBuildings2) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end
+          else if not CanBeBuiltOnlyResources(ruBase2, ruBuildings2[1][1]) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          undone := FilterUnitsInArea(ruBaseArea2, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          ComBuild(i, ruBuildings2[1][1], ruBuildings2[1][2], ruBuildings2[1][3], ruBuildings2[1][4]);
+          end;
+
+       if tag = tCrates then
+          begin
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, 3], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
+       end;
+   end;
+
+// defense logic
+sol := UnitFilter(ruForces2, [[f_or, [f_class, class_soldier], [f_class, class_bazooker]], [f_ok]]) union ruCommander2;
+enemyInBase := FilterUnitsInArea(ruBaseArea2, [f_enemy, 3]);
+
+if sol then
+   begin
+   if enemyInBase then
+      begin
+      for i in sol do
+          begin
+          tw := IsInUnit(i);
+
+          if tw then
+             begin
+             if not tw in FilterAllUnits([[f_side, 3], [f_see, 1], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) then
+                ComExitBuilding(i);
+             end
+          else
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+          end;
+      end
+   else
+      begin
+      empty := FilterUnitsInArea(ruBaseArea2, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
+
+      if empty then
+         empty := ReverseArray(empty);
+
+      for i in sol do
+          begin
+          tag := GetTag(i);
+
+          if tag = tMech then
+             continue;
+
+          if GetLives(i) < 1000 and tag <> tHeal then
+             begin
+             SetTag(i, tHeal);
+             ComMoveXY(i, ruHealPoint2[1], ruHealPoint2[2]);
+             AddComHold(i);
+             continue;
+             end;
+
+          if GetLives(i) = 1000 and tag = tHeal then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if HasTask(i) then
+             continue;
+
+          if not IsInUnit(i) and not tag and empty then
+             begin
+             ComEnterUnit(i, empty[1]);
+
+             if GetBType(empty[1]) = b_barracks and Prob(50) then
+                AddComChangeProfession(i, class_bazooker);
+
+             empty := Delete(empty, 1);
+             end;
+          end;
+      end;
+   end;
+End;
+
+// russian mobile warfare
+Every 0$1 trigger ruTanks do
+var i, mech, enemy;
+begin
+enable;
+
+if not ruTanks then
+   exit;
+
+// tags:
+// 0 - idle,
+// 11 - go to parking, repair if needed
+// 12 - attack
+
+for i in ruTanks do
+    begin
+    if not IsOk(i) or GetSide(i) <> 3 then
+       begin
+       ruTanks := ruTanks diff i;
+       continue;
+       end;
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetEngine(i) = engine_combustion and GetFuel(i) < 50 and IsOk(ruBase) then
+          begin
+          ComMoveXY(i, GetX(ruBase), GetY(ruBase));
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, GetX(ruBase), GetY(ruBase)) < 6;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, ruParkingArea) then
+          ComMoveToArea(i, ruParkingArea)
+       else
+          SetTag(i, tParking);
+       end;
+
+    if GetTag(i) = tParking then
+       begin
+       if GetLives(i) < 650 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, tAttack);
+       end;
+
+    if GetTag(i) = tAttack then
+       begin
+       enemy := FilterUnitsInArea(ruBaseArea, [f_enemy, 3]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if ruTanks > 1 then
+          begin
+          enemy := FilterAllUnits([f_side, 1]);
+
+          if enemy then
+             AgressiveMove(i, [ [105,35] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 0$1 trigger ruTanks2 do
+var i, mech, enemy;
+begin
+enable;
+
+if not ruTanks2 then
+   exit;
+
+// tags:
+// 0 - idle,
+// 11 - go to parking, repair if needed
+// 12 - attack
+
+for i in ruTanks2 do
+    begin
+    if not IsOk(i) or GetSide(i) <> 3 then
+       begin
+       ruTanks := ruTanks diff i;
+       continue;
+       end;
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetEngine(i) = engine_combustion and GetFuel(i) < 50 and IsOk(ruBase2) then
+          begin
+          ComMoveXY(i, GetX(ruBase2), GetY(ruBase2));
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, GetX(ruBase2), GetY(ruBase2)) < 6;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, ruParkingArea2) then
+          ComMoveToArea(i, ruParkingArea2)
+       else
+          SetTag(i, tParking);
+       end;
+
+    if GetTag(i) = tParking then
+       begin
+       if GetLives(i) < 650 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, tAttack);
+       end;
+
+    if GetTag(i) = tAttack then
+       begin
+       enemy := FilterUnitsInArea(ruBaseArea2, [f_enemy, 3]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if ruTanks2 > 1 then
+          begin
+          enemy := FilterAllUnits([f_side, 1]);
+
+          if enemy then
+             AgressiveMove(i, [ [105,35] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 5$00 trigger Count(ruExtraTanks) >= [3, 4, 5, 6][Difficulty] do
+begin
+enable;  
+RaiseSailEvent(EExtraAttack);
+End;
+
+Export function RussianExtraAttack;
+var i, tmp;
+begin
+tmp := UnitFilter(ruExtraTanks, [f_ok]);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in UnitFilter(tmp, [f_ok]) do
+     AgressiveMove(i, [ [105,35] ]);
+until not tmp;
+End;
+
+Export Function PrepareRussianAttack(strength);
+var i, tmp, un, veh, skill, area, parking, dir, control;
+begin
+result := [];
+
+skill := [4, 5, 6, 7][Difficulty];
+area := arAttackSpawn2Area;
+parking := ruGatPointArea;
+dir := 5;
+
+if FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) then
+   for i in FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) do
+       RemoveUnit(i);
+
+if FilterUnitsInArea(area, [[f_not, [f_type, unit_human]], [f_side, 1]]) then
+   for i in FilterUnitsInArea(area, [[f_not, [f_type, unit_human]], [f_side, 1]]) do
+       KillUnit(i);
+
+if FilterUnitsInArea(area, [[f_type, unit_human], [f_side, 1]]) then
+   for i in FilterUnitsInArea(area, [[f_type, unit_human], [f_side, 1]]) do
+       ComMoveXY(i, 92, 92);
+
+repeat
+ wait(0$1);
+until not FilterUnitsInArea(area, [f_ok]);
+
+InitHC_All();
+InitVc;
+
+// tanks
+for i := 1 to [4, 5, 5, 6][Difficulty] + strength do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    control := [control_manual, control_computer, control_computer, control_computer][rand(1,4)];
+
+    PrepareVehicle(
+       [ru_medium_tracked, ru_heavy_tracked, ru_heavy_wheeled][i mod 3 + 1],
+       [engine_siberite, engine_combustion][rand(1,2)],
+       control,
+       [ru_rocket_launcher, ru_heavy_gun, ru_gatling_gun][i mod 3 + 1],
+       100
+    );
+
+    veh := CreateVehicle;
+    SetDir(veh, dir);
+
+    PlaceUnitArea(veh, area, false);
+
+    if control = control_manual then
+       begin
+       uc_side := 6;
+       uc_nation := nation_russian;
+
+       PrepareMechanic(false, skill);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, veh);
+       end;
+
+    repeat
+     ComMoveToArea(veh, parking);
+     wait(0$3);
+    until not FilterUnitsInArea(area, [f_ok]);
+
+    result := Join(result, veh);
+    end;
+
+// infantry
+for i := 1 to [2, 2, 3, 4][Difficulty] do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if Prob([30, 40, 50, 50][Difficulty]) then
+       SetClass(un, class_bazooker);
+
+    SetDir(un, dir);
+
+    PlaceUnitArea(un, area, false);
+    ComMoveToArea(un, parking);
+
+    wait(0$1);
+
+    result := Join(result, un);
+    end;
+End;
+
+Export function SendRussianAttack(wave);
+var path, attackers, e, i, enemy;
+begin
+russianWaveAttack := Inc(russianWaveAttack);
+path := [ [99,91], [78,50], [91,45] ]; 
+
+attackers := PrepareRussianAttack(wave);
+
+ComAgressiveMove(UnitFilter(attackers, [f_type, unit_human]), 108, 60);
+
+DRussianNextAttack;
+
+repeat
+  wait(0$2);
+  enemy := FilterAllUnits([f_enemy, 6]);
+  attackers := UnitFilter(attackers, [f_ok]);
+
+  for i in attackers do
+      begin
+      if not IsOk(i) then
+         begin
+         attackers := attackers diff i;
+         continue;
+         end;
+
+      if GetType(i) = unit_vehicle then
+         AgressiveMove(i, path)
+      else
+         begin
+         if GetClass(i) = class_bazooker then
+            begin
+            if GetDistUnits(i, NearestUnitToUnit(enemy, i)) > 9 then
+               ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i))
+            else
+               begin
+               e := NearestUnitToUnit(enemy, i);
+
+               case rand(1,3) of
+                    1: ComAttackUnit(i, e);
+                    2: begin
+                       ComSpaceShift(i, GetX(e), GetY(e));
+
+                       if GetType(e) <> unit_building and not dialogRussianSpaceAmmo then
+                          begin
+                          dialogRussianSpaceAmmo := true;
+
+                          wait(0$2);
+                          
+                          DRussianSpaceAmmo(e);
+                          end;
+                       end; 
+                    3: begin
+                       ComTimeShift(i, GetX(e), GetY(e));
+
+                       if not dialogRussianSpaceAmmo then
+                          begin                             
+                          dialogRussianSpaceAmmo := true;
+
+                          wait(0$2);
+
+                          DRussianSpaceAmmo(e);
+                          end;
+                       end;
+                    end;
+               end;
+            end
+         else
+            ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
+         end;
+      end;
+until not attackers;
+End;
+
+Every 6$30 trigger epsilon and firstAttack do
+var i, un, tmp;
+begin
+InitHC_All();
+
+for i := 1 to 3 do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    PrepareSoldier(false, 3);
+    un := CreateHuman;
+    SetDir(un, 2);
+    PlaceUnitArea(un, ruNorthSpawnArea, false);
+
+    ComAgressiveMove(un, 52, 16);
+    end;
+End;
+
+

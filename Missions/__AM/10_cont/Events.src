@@ -1,1 +1,287 @@
-//
+On UnitDestroyed(unit) do
+begin
+SOS_UnitDestroyed(unit);
+
+if unit in JMMSquad then
+   JMMSquad := JMMSquad diff unit;
+
+if unit = Truman then
+   YouLost('Powell');
+
+if unit = JMM then
+   YouLost('JMM');
+
+if unit in arEscapist then
+   arEscapist := arEscapist diff unit;
+
+if unit in arAttackersInf then
+   arAttackersInf := arAttackersInf diff unit;
+
+if unit in arAttackersVeh then
+   arAttackersVeh := arAttackersVeh diff unit;
+
+if unit = Khatam then
+   khatamStatus := false;
+
+if unit = epsilon then
+   begin
+   hasBase := false;
+   epsilon := 0;
+   SetRestrict(b_depot, 1, true);
+   end;
+
+if unit = Khatam then
+   SaveVariable(0, '10_KhatamStatus_1');
+
+if unit in ruForces then
+   ruForces := ruForces diff unit;
+
+if unit in ruForces2 then
+   ruForces2 := ruForces2 diff unit;
+
+if unit in ruTanks then
+   ruTanks := ruTanks diff unit;
+
+if unit in ruTanks2 then
+   ruTanks2 := ruTanks2 diff unit;
+
+if unit in ruExtraTanks then
+   ruExtraTanks := ruExtraTanks diff unit;
+end;
+
+On UnitGoesToRed(un) do
+var i;
+begin
+if un = Khatam and GetSide(Khatam) = 8 then
+   KillUnit(Khatam);
+End;
+
+On SpontaneousTeleported(un) do
+begin
+if not seenRussianTeleport then
+   begin
+   seenRussianTeleport := true;
+   DTankTeleport(GetX(un), GetY(un));
+   End;
+End;
+
+On VehicleConstructed(veh, fac) do
+var side;
+begin
+SOS_VehicleConstructed(veh, fac);
+
+side := GetSide(fac);
+
+if side = 3 then
+   begin
+   if IsInArea(fac, ruBaseArea) then
+      begin
+      ruConstructList := Delete(ruConstructList, 1);
+
+      if GetControl(veh) = control_manual then
+         ruTanks := Join(ruTanks, veh)
+      else
+         ruExtraTanks := Join(ruExtraTanks, veh);
+      end;
+
+   if IsInArea(fac, ruBaseArea2) then
+      begin
+      ruConstructList2 := Delete(ruConstructList2, 1);
+
+      if GetControl(veh) = control_manual then
+         ruTanks2 := Join(ruTanks2, veh)
+      else
+         ruExtraTanks := Join(ruExtraTanks, veh);
+      end;
+   end;
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+var arm, fac, side;
+begin
+side := GetSide(driver);
+
+if side = 5 then
+   begin
+   arAttackersVeh := arAttackersVeh diff driver;
+
+   ComMoveXY(driver, 189, 80);
+
+   repeat
+    wait(0$1);
+
+    if not IsOk(driver) then
+       exit;
+   until IsAt(driver, 189, 80);
+
+   RemoveUnit(driver);
+   end;
+
+if side = 6 then
+   begin
+   repeat
+    ComMoveToArea(driver, arAttackSpawn2Area);
+    wait(0$3);
+
+    if not IsOk(driver) then
+       exit;
+   until IsInArea(driver, arAttackSpawn2Area);
+
+   RemoveUnit(driver);
+   end;
+
+if side = 3 then
+   begin
+   if driver in ruMech then
+      begin
+      ComMoveToArea(driver, ruBaseArea);
+
+      if GetLives(driver) < 1000 then
+         SetTag(driver, tHeal);
+
+      repeat
+       wait(0$1);
+
+       if IsDead(driver) then
+          exit;
+
+      until GetLives(driver) = 1000;
+
+      SetTag(driver, 0);
+
+      fac := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_btype, b_factory], [f_ok]]);
+
+      if fac then
+         begin
+         ComEnterUnit(driver, fac[1]);
+         exit;
+         end;
+
+      arm := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]], [f_not, [f_full]], [f_ok]]);
+
+      if arm then
+         begin
+         ComEnterUnit(driver, arm[1]);
+         AddComChangeProfession(driver, class_soldier);
+         end;
+      end;
+   end;
+
+End;
+
+On EndTheMissionRaised(ev) do
+begin
+end_the_mission_allowed = false;
+FinishMission;
+End;
+
+On BuildingComplete(b) do
+var side, type;
+begin
+side := GetSide(b);
+type := GetBType(b);
+
+if side = 2 then
+   arBuildings := Delete(arBuildings, 1);
+
+if side = 1 then
+   if type = b_depot and not hasBase then
+      begin
+      hasBase := true;
+      epsilon := b;
+      SetBName(b, 'epsilon');
+      SetRestrict(b_depot, 1, false);
+      end;
+
+if side = 3 then
+   begin
+   if IsInArea(b, ruBaseArea) then
+      ruBuildings := Delete(ruBuildings, 1);
+
+   if IsInArea(b, ruBaseArea2) then
+      ruBuildings2 := Delete(ruBuildings2, 1);
+
+   if type in [b_depot, b_armoury, b_workshop] then
+      ComUpgrade(b);
+
+   if type = b_lab then
+      if IsInArea(b, ruBaseArea) then
+         ComUpgradeLab(b, b_lab_weapon)
+      else
+         ComUpgradeLab(b, b_lab_computer);
+
+   if type = b_depot then
+      begin
+      SetResourceType(GetBase(b), mat_cans, 750);
+      SetResourceType(GetBase(b), mat_oil, 100);
+      SetResourceType(GetBase(b), mat_siberit, 100);
+
+      if IsInArea(b, ruBaseArea) then
+         begin               
+         ruBase := b;
+         SetBName(b, 'chuikov');
+         end;
+      if IsInArea(b, ruBaseArea2) then
+         begin
+         ruBase2 := b;
+         // SetBName(b, 'chuikov');
+         end;
+      end;
+   end;
+End;
+
+On UpgradeComplete(b) do
+var side, type;
+begin
+side := GetSide(b);
+type := GetBType(b);
+
+if side = 3 then
+   if type = b_lab_half then
+      if IsInArea(b, ruBaseArea) then
+         ComUpgradeLab(b, b_lab_spacetime)
+      else
+         ComUpgradeLab(b, b_lab_siberium);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+
+if side = 2 then
+   begin
+   arTech := Delete(arTech, 1);
+
+   if tech = tech_sibPow then
+      DArabTrait1;
+
+   if tech = tech_sibEng then
+      DArabTrait2;
+   end;
+End;
+
+On Command(cmd) do
+begin
+SOS_Command(cmd);
+End;  
+
+On Contact(side1, side2) Do
+begin
+if side1 = 1 and side2 = 2 and GetAttitude(1, 2) = att_friend then
+   DAttackOnAlly;
+End;
+
+On SailEvent(event) do
+begin
+case event of
+     EArabAttack: ArabAttack; 
+     ERussianBaseC: RussianBase(ruForces union ruCommander, 1);
+     ERussianBaseW: RussianBase(ruForces union ruCommander, 2);
+     ERussianBaseE: RussianBase(ruForces union ruCommander, 3);
+     ERussianBaseW2: RussianBase2(ruForces2 union ruCommander2, 2);
+     EExtraAttack: RussianExtraAttack;
+     ESendRussianAttack: SendRussianAttack(russianWaveAttack);
+     end;
+End;
+
