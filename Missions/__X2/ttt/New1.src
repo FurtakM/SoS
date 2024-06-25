@@ -1,0 +1,62 @@
+Export Function ComAgressiveMoveToUnit(unit, enemy);
+var x, y;
+begin
+if not unit or not enemy then
+   exit;
+
+x := GetX(enemy);
+y := GetY(enemy);
+
+if ValidHex(x, y) then
+   if GetType(enemy) = unit_building and See(GetSide(unit), enemy) then
+      ComAttackUnit(unit, enemy)
+   else
+      ComAgressiveMove(unit, x, y);
+End;
+{
+Every 0$1 do
+var i;
+begin
+repeat
+ wait(0$1);
+
+ for i in FilterAllUnits([f_side, 2]) do
+     ComAgressiveMoveToUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+until not FilterAllUnits([f_side, 2]);
+End;  }
+
+Export people;
+Every 0$1 do
+var un, i;
+begin
+people := [];
+
+uc_side := 1;
+uc_nation := 1;
+
+for i := 1 to 6 do
+    begin
+    PrepareHuman(false, 1, 0);
+    un := CreateHuman;
+    PlaceUnitArea(un, Area05, false);
+    people := Replace(people, people + 1, un);
+    end;
+
+{wait(0$3);
+
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_human]]) do
+    begin
+    wait(0$1);
+    RemoveUnit(i);
+    end;  }
+End;
+
+Function Count(tmp);
+begin
+result := tmp + 0;
+End;
+
+On SpontaneousTeleported(un) do
+begin
+display_strings := un;
+End;

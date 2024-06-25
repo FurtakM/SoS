@@ -1343,6 +1343,12 @@ var i, j, side, pom, cost, hexes, height, dist, hex, tech;
 begin
 result := false;
 
+if btype = b_depot then
+   begin
+   result := true;
+   exit;
+   end;
+
 if not depot or not GetBType(depot) in [b_depot, b_warehouse] or not btype or not d in [0, 1, 2, 3, 4, 5] or not ValidHex(x, y) then
    exit;
 
@@ -1860,7 +1866,7 @@ if horses then
 if birds then
    for i = 1 to birds do
        begin
-       hc_class = 18;
+       hc_class := 18;
        hc_gallery = '';
 
        animal := CreateHuman;
@@ -2604,7 +2610,7 @@ for i in result do
           if GetWeapon(i) = ru_time_lapser then
              ComMoveUnit(i, NearestUnitToUnit(nearEnemy, i))
           else
-             ComAttackUnit(i, NearestUnitToUnit(nearEnemy, i));
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(nearEnemy, i));
           end
        else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
           ComAgressiveMove(i, path[tag][1], path[tag][2])
@@ -2617,7 +2623,7 @@ for i in result do
           if GetWeapon(i) = ru_time_lapser then
              ComMoveUnit(i, NearestUnitToUnit(enemy, i))
           else
-             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
           end;
     end;
 End;
@@ -2756,5 +2762,21 @@ if HexInfo(hex[1], hex[2]) then
    exit;
 
 ComMoveXY(unit, hex[1], hex[2]);
+End;
+
+Export Function ComAgressiveMoveToUnit(unit, enemy);
+var x, y;
+begin
+if not unit or not enemy then
+   exit;
+
+x := GetX(enemy);
+y := GetY(enemy);
+
+if ValidHex(x, y) then
+   if GetType(enemy) in [unit_building, unit_vehicle] and See(GetSide(unit), enemy) then
+      ComAttackUnit(unit, enemy)
+   else
+      ComAgressiveMove(unit, x, y);
 End;
 

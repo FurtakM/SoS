@@ -8,6 +8,10 @@ RandomizeAll;
 AnimateTrees(true);
 Init;
 
+if debug then
+   Difficulty := 4;
+
+PrepareArabian;
 PrepareAmerican;
 PrepareRussian;
 
@@ -15,15 +19,65 @@ PrepareRussian;
 PrepareNature(4, 3, [4, 5, 5, 5][Difficulty], 2, 1, 0, 2, natureArea, riverArea);
 
 Action;
+
+if debug then
+   FogOff(1);
 End;
 
 
-Export debug, mission_prefix;
+Export debug, mission_prefix, arBaseActive, arabianAttack, khatamStatus, seenRussianTeleport, joinedToEpsilon, arabianDefeated,
+       hasBase, epsilon, escapeKhatam, arabianAttackSpawned, gensherEscaped, ruScriptActive, ruScriptActive2, firstAttack, dialogRussianSpaceAmmo,
+       russianWaveAttack, spawnedRussians, hasSniper, arabianEscapedCounter;
 Function Init;
 begin
-debug := true;
+debug := false;
 mission_prefix := '08c_';
-End;
+arBaseActive := true;
+arabianAttack := false;
+khatamStatus := false;
+seenRussianTeleport := false;
+joinedToEpsilon := false;
+arabianDefeated := false;
+arabianAttackSpawned := false;
+gensherEscaped := false;
+hasBase := false;
+epsilon := 0;
+escapeKhatam := false;
+ruScriptActive := false;
+ruScriptActive2 := false;
+firstAttack := false;
+dialogRussianSpaceAmmo := false;
+russianWaveAttack := 0;
+spawnedRussians := false;
+hasSniper := false;
+arabianEscapedCounter := 0;
+End;   
+
+Every 0$3 trigger GetAttitude(1, 2) = att_friend and not arabianAttack and spawnedRussians and FilterAllUnits([f_side, 3]) = 0 do
+SetAchievement('ACH_POWER');
+
+Every 0$1 trigger spawnedRussians and not ruBase and not ruBase2 and FilterAllUnits([f_side, 3]) = 0 do
+SetAchievement('ACH_TACT');
+
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_btype, b_warehouse]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_bunker]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_turret]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_control_tower]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_breastwork]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radio]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_radar]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_noncombat]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_track]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_gun]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_ext_siberium]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_mine]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_solar_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_oil_power]]) and
+                  FilterAllUnits([[f_side, 1], [f_btype, b_siberite_power]]) do
+SetAchievement('ACH_ARCH');
 
 {
     Global Variables:

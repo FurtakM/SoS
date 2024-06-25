@@ -1,1 +1,755 @@
-//
+Export function Action;
+begin
+InGameOn;
+
+CenterNowOnXY(25, 35);
+
+RevealFogArea(1, arBaseArea);
+RevealFogArea(1, epsilonSpawnArea);
+
+wait(0$1.5);
+
+CenterNowOnUnits(Simms);
+
+wait(0$3);
+
+CenterOnUnits(IsInUnit(JMM));
+
+wait(0$1);
+
+if IsOk(Gary) then
+   begin
+   Say(Gary, 'D2-Gary-1');
+   Say(JMM, 'D2-JMM-1');
+   Say(Gary, 'D2-Gary-2');
+   end;
+
+InGameOff;
+
+ChangeMissionObjectives('M1');
+
+SaveForQuickRestart;
+End;
+
+// Meet Cathy and others
+Every 0$1 trigger GetDistUnits(JMM, Simms) < 15 do
+var i, p;
+begin
+wait(0$3);
+
+Video(true);
+
+ComExitVehicle(JMM);
+AddComMoveUnit(JMM, Simms);
+
+CenterNowOnUnits(JMM);
+
+if Truman then
+   begin
+   ComMoveUnit(Truman, JMM);
+
+   repeat
+    wait(0$1);
+   until GetDistUnits(Truman, JMM) < 6;
+
+   ComTurnUnit(Truman, JMM);
+   ComTurnUnit(JMM, Truman);
+
+   Say(Truman, 'D2-Tru-1');
+   Say(JMM, 'D2-JMM-Tru-1');
+   Say(Truman, 'D2-Tru-2');
+
+   ComMoveXY(Truman, 79, 41);
+   AddComMoveXY(Truman, 17, 31);
+   end;
+
+AddComTurnUnit(JMM, Simms);
+
+p := 15;
+
+repeat
+ wait(0$1);
+ ComMoveUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
+ p := p - 1;
+until GetDistUnits(JMM, Simms) < 5 or p <= 0;
+
+ComTurnUnit([Simms, Joan, Denis, Khatam, Kikuchi], JMM);
+
+if not IsInUnit(JMM) then
+   ComTurnUnit(JMM, Simms);
+
+ComTurnUnit([Simms, Joan, Denis, Khatam], JMM);
+
+CenterNowOnUnits([JMM, Simms]);
+
+Say(Simms, 'D2a-Sim-1');
+Say(JMM, 'D2a-JMM-1');
+
+if IsOk(Joan) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Joan);
+
+   ComTurnUnit(Joan, JMM);
+
+   Say(Joan, 'D2b-Joan-1');
+   Say(JMM, 'D2b-JMM-1');
+   Say(Joan, 'D2b-Joan-2');
+   end;
+
+if IsOk(Denis) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Denis);
+
+   ComTurnUnit(Denis, JMM);
+
+   Say(Denis, 'D2c-Den-1');
+   end;
+
+if IsOK(Kikuchi) and not TestCharacters('08_Kikuchi') then
+   begin
+   repeat
+    wait(0$1);
+    ComMoveUnit(Kikuchi, JMM);
+   until GetDistUnits(JMM, Kikuchi) < 5;
+
+   ComTurnUnit(Kikuchi, JMM);
+
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Kikuchi);
+
+   Say(Kikuchi, 'D3b-Yam-1');
+   end;
+
+if IsOk(Khatam) then
+   begin
+   if not IsInUnit(JMM) then
+      ComTurnUnit(JMM, Khatam);
+
+   ComTurnUnit(Khatam, JMM);
+
+   Say(JMM, 'D2c-JMM-1');
+   Say(Khatam, 'D2c-Khat-1');
+   end;
+
+Video(false);
+
+SetSide(FilterAllUnits([f_side, 4]) diff Truman, 1);
+
+ChangeMissionObjectives('M1a');
+
+SetRestrict(b_depot, 1, true);
+
+joinedToEpsilon := true;
+
+wait(0$30);
+
+SpawnConvoy;
+
+wait(10$00 - (1$00 * Difficulty));
+
+firstAttack := true;
+
+RaiseSailEvent(ESendRussianAttack); 
+
+for i := 1 to Difficulty do
+    begin
+    wait(12$00 - (1$00 * Difficulty));
+    RaiseSailEvent(ESendRussianAttack);
+    end;
+End;
+
+Every 0$1 trigger IsOk(Truman) and joinedToEpsilon do
+begin
+enable;
+
+if not HasTask(Truman) then
+   ComMoveToArea(Truman, removeArea);
+
+if IsAt(Truman, 17, 32) or IsInArea(Truman, removeArea) then
+   begin
+   RemoveUnit(Truman);
+   disable;
+   end;
+End;
+
+Export function DTankTeleport(x, y);
+begin
+DialogueOn;
+CenterNowOnXY(x, y);
+
+if IsOk(Cyrus) then
+   Say(Cyrus, 'D10-Cyrus-1')
+else if IsOk(JMM) then
+   Say(JMM, 'D10-JMM-1');
+
+DialogueOff;
+End;
+
+// Attack on Arabian ally
+Export function DAttackOnAlly;
+begin
+DialogueOn;
+dwait(0$0.3);
+
+SayRadio(Powell, 'D6b-Pow-1');
+YouLost('Powell');
+DialogueOff;
+End;
+
+Every 0$5 trigger (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend do
+begin
+if (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend then
+   Query('QAttack');
+
+wait(0$20);
+
+repeat
+ wait(0$10);
+
+ if arabianAttack then
+    exit;
+
+until (FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_building]]) or FilterUnitsInArea(arBaseArea, [[f_side, 1], [f_type, unit_vehicle]])) and GetAttitude(1, 2) = att_friend;
+
+InGameOn;
+CenterNowOnXY(73, 18);
+SayRadio(Powell, 'D6b-Pow-1');
+YouLost('Powell');
+InGameOff;
+End;
+
+// Delete mission objectives
+Every 0$1 trigger GetTech(tech_LasSight, 1) = state_researched do
+ChangeMissionObjectives('M2b');
+
+Every 0$1 trigger GetTech(tech_AI, 1) = state_researched do
+ChangeMissionObjectives('M2c');
+
+Every 0$1 trigger arabianAttack and arabianAttackSpawned and FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 and UnitFilter(arAttackersVeh, [f_ok]) = 0 and UnitFilter(arAttackersInf, [f_ok]) = 0 do
+begin
+arabianDefeated := true;
+ChangeMissionObjectives('M4a');
+End;
+
+Every 0$1 trigger GetTech(tech_Sib1, 1) = state_researched and GetTech(tech_Sib2, 1) = state_researched and GetTech(tech_SibPow, 1) = state_researched and GetTech(tech_SibEng, 1) = state_researched do
+ChangeMissionObjectives('M2a');
+
+// Build siberite lab
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_lab, b_lab_siberium]]) do
+var garySpeaker, deltaSpeaker, tmp1, tmp2, tmp3;
+begin
+garySpeaker := IsOk(Gary);
+deltaSpeaker := IsOk(DeltaDoctor);
+
+tmp1 := FilterAllUnits([[f_side, 1], [f_ok], [f_class, 4], [f_sex, sex_male]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary, Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, AmScout, Cornell, Powell];
+tmp2 := FilterAllUnits([[f_side, 1], [f_ok], [f_sex, sex_male], [f_or, [f_class, 1], [f_class, 2], [f_class, 3]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary, Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, AmScout, Cornell, Powell];
+
+if tmp1 then
+   tmp1 := tmp1[1];
+
+if tmp2 then
+   tmp2 := tmp2[1];
+
+if (garySpeaker or tmp2) and (deltaSpeaker or tmp1) then
+   begin
+   DialogueOn;
+
+   if deltaSpeaker then
+      Say(DeltaDoctor, 'D3-Sci1-1')
+   else
+      Say(tmp1, 'D3-Sci1-1');
+
+   If garySpeaker then
+      Say(Gary, 'D3-Gary-1')
+   else
+      Say(tmp2, 'D3-Gary-1');
+
+   if deltaSpeaker then
+      Say(DeltaDoctor, 'D3-Sci1-2')
+   else
+      Say(tmp1, 'D3-Sci1-2');
+
+   Say(JMM, 'D3-JMM-2');
+
+   if deltaSpeaker then
+      Say(DeltaDoctor, 'D3-Sci1-3')
+   else
+      Say(tmp1, 'D3-Sci1-3');
+
+   Say(JMM, 'D3-JMM-3');
+
+   if deltaSpeaker then
+      Say(DeltaDoctor, 'D3-Sci1-4')
+   else
+      Say(tmp1, 'D3-Sci1-4');
+
+   DialogueOff;
+   end;
+
+SetTech(tech_LasSight, 1, state_enabled);
+SetTech(tech_Rocket, 1, state_enabled);
+SetTech(tech_AI, 1, state_enabled);
+SetRestrict(b_turret, 1, true);
+
+ChangeMissionObjectives('M2');
+
+wait(3$0);
+
+repeat
+ wait(0$1);
+until not InBattle(1);
+
+if IsOk(Simms) and deltaSpeaker then
+   begin
+   DialogueOn;
+
+   Say(Simms, 'D3a-Sim-1');
+   Say(DeltaDoctor, 'D3a-Sci1-1');
+   Say(Simms, 'D3a-Sim-2');
+   Say(DeltaDoctor, 'D3a-Sci1-2');
+   Say(Simms, 'D3a-Sim-3');
+   Say(DeltaDoctor, 'D3a-Sci1-3');
+
+   if IsOK(Joan) then
+      Say(Simms, 'D3a-Sim-4')
+   else
+      Say(Simms, 'D3a-Sim-4a');
+
+   Say(DeltaDoctor, 'D3a-Sci1-4');
+   Say(Simms, 'D3a-Sim-5');
+   Say(DeltaDoctor, 'D3a-Sci1-5');
+   Say(Simms, 'D3a-Sim-6');
+   DialogueOff;
+   end
+else
+   begin
+   tmp3 := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_class, 4]]) diff [JMM, Frank, Lisa, Simms, Khatam];
+
+   if tmp3 then
+      begin
+      DialogueOn;
+
+      Say(Simms, 'D3a-Sim-1');
+      Say(tmp3[1], 'D3a-Sci1-1');
+      Say(Simms, 'D3a-Sim-2');
+      Say(tmp3[1], 'D3a-Sci1-2');
+      Say(Simms, 'D3a-Sim-3');
+      Say(tmp3[1], 'D3a-Sci1-3');
+
+      if IsOK(Joan) then
+         Say(Simms, 'D3a-Sim-4')
+      else
+         Say(Simms, 'D3a-Sim-4a');
+
+      Say(tmp3[1], 'D3a-Sci1-4');
+      Say(Simms, 'D3a-Sim-5');
+      Say(tmp3[1], 'D3a-Sci1-5');
+      Say(Simms, 'D3a-Sim-6');
+      DialogueOff;
+      end;
+   end;
+End;
+
+Export function DRussianNextAttack;
+begin
+SayRadio(AmScout, 'D4-FSol1-2');
+End;
+
+Export function DRussianConvoy;
+begin
+SayRadio(AmScout, 'D4-FSol1-1');
+ChangeMissionObjectives('M3');
+End;
+
+Export function DRussianSpaceAmmo(unit);
+begin
+CenterNowOnUnits(unit);
+
+DialogueOn;
+
+if IsOK(Cyrus) then
+   Say(Cyrus, 'D9a-Cyrus-1')
+else
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff [JMM, Khatam, Cyrus], 'D9a-Sol1-1', 'D9a-Sol1-1');
+
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]) diff [JMM, Khatam, Cyrus], 'D9b-Sol1-1', 'D9b-Sol1-1');
+
+if LoadVariable('09_arInfo', 0) then
+   Say(JMM, 'D9a-JMM-1');
+
+Say(JMM, 'D9c-JMM-1');
+
+if FilterAllUnits([[f_side, 1], [f_class, class_sniper]]) then
+   Say(JMM, 'D9c-JMM-1a');
+
+DialogueOff;
+End;
+
+Every 0$3 trigger FilterAllUnits([f_side, 5]) > 3 do
+SayRadio(AmScout, 'D4-FSol1-3');
+
+Export function DArabTrait1;
+var tmp;
+begin
+if IsOk(DeltaDoctor) then
+   tmp := DeltaDoctor
+else if IsOk(Denis) then
+   tmp := Denis
+else
+   tmp := FilterAllUnits([[f_side, 1], [f_ok], [f_class, 4], [f_sex, sex_male]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary, Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, AmScout, Cornell, Powell];
+
+if not tmp then
+   exit;
+
+DialogueOn;
+
+Say(JMM, 'D6-JMM-1');
+Say(tmp, 'D6-Sci1-1');
+Say(JMM, 'D6-JMM-2');
+Say(tmp, 'D6-Sci1-2');
+Say(JMM, 'D6-JMM-3');
+Say(tmp, 'D6-Sci1-3');
+Say(JMM, 'D6-JMM-4');
+
+DialogueOff;
+End;
+
+Export function DArabTrait2;
+begin
+if not IsPlaced(Khatam) or not IsOk(Ahmed) or not IsOk(Dietrich) then
+   exit;
+
+DialogueOn;
+
+Say(Ahmed, 'D5-Ar1-1');
+Say(Dietrich, 'D5-Diet-1');
+Say(Ahmed, 'D5-Ar1-2');
+Say(Dietrich, 'D5-Diet-2');
+
+DialogueOff;
+End;
+
+// arab attack
+Every 0$2 trigger arabianAttack do
+var i, tmp, un, arSoldiers, arCivilian, barracks, nearestBuilding, speaker;
+begin
+SetAttitude(2, 3, att_friend, true);
+SetAttitude(2, 6, att_friend, true);
+ 
+arCivilian := FilterAllUnits([[f_side, 2], [f_or, [f_class, 4], [f_class, 2], [f_class, 3]]]);
+arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+barracks := FilterAllUnits([[f_side, 2], [f_btype, b_barracks]]);
+
+ComExitBuilding(arCivilian);
+ComExitBuilding(arSoldiers);
+
+RaiseSailEvent(EArabAttack);
+
+wait(0$3);
+
+for i in arCivilian do
+    AddComEnterUnit(arCivilian, barracks[i mod 2 + 1]);
+
+AddComChangeProfession(arCivilian, [class_soldier, class_mortar][rand(1,2)]);
+AddComExitBuilding(arCivilian);
+
+wait(0$1);
+
+CenterOnXY(76, 19);
+
+DialogueOn;
+
+DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D8-Sol1-1', 'D8-Sol1-1');
+
+if IsOk(DeltaDoctor) then
+   Say(DeltaDoctor, 'D8-Sci1-1')
+else
+   DialogRandom(FilterAllUnits([[f_side, 1], [f_sex, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D8-Sol1-1', 'D8-Sol1-1');
+
+Say(JMM, 'D8-JMM-1');
+
+DialogueOff;
+
+ChangeSideFog(2, 2);
+
+SetAttitude(1, 2, att_enemy, true);
+SetAttitude(3, 2, att_friend, true);
+
+ChangeMissionObjectives('M4');
+
+wait(0$1);
+
+if IsLive(Khatam) then
+   DoNotAttack(2, Khatam);
+
+wait(0$1);
+
+nearestBuilding := NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_type, unit_building]]), arSoldiers[1]);
+
+AddComPlaceDelayedCharge(UnitFilter(arSoldiers, [f_class, 1])[1], GetX(nearestBuilding), GetY(nearestBuilding), nearestBuilding);
+
+AddComAgressiveMove(arSoldiers, 84, 22);
+AddComAgressiveMove(arSoldiers, 82, 5);
+AddComAgressiveMove(arSoldiers, 95, 12);
+AddComAgressiveMove(arSoldiers, 102, 11);
+AddComAgressiveMove(arSoldiers, 116, 15);
+AddComAgressiveMove(arSoldiers, 140, 25);
+
+arSoldiers := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+arCivilian := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 12], [f_class, 16]]]);
+arCivilian := arCivilian ^ Dietrich;
+
+if UnitFilter(arSoldiers, [f_class, class_apeman_soldier]) then
+   ComEnterUnit(UnitFilter(arSoldiers, [f_class, class_apeman_soldier])[1], HexInfo(84, 21));
+
+wait(0$2);
+
+AddComMoveXY(arCivilian, 88, 8);
+AddComMoveXY(arCivilian, 102, 10);
+AddComMoveXY(arCivilian, 116, 15);
+AddComMoveXY(arCivilian, 140, 25);
+
+arEscapist := arCivilian union arSoldiers;
+
+if IsOk(Gary) then
+   Say(Gary, 'D8a-Gary-1');
+
+wait(0$5);
+
+if IsOK(Khatam) then
+   begin
+   tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Kikuchi, Houten, Gary, Simms, Denis, Joan, Khatam, Gladstone, Steve, DeltaDoctor, Cornell, Powell];
+
+   SetSide(Khatam, 8);
+
+   ComExit(Khatam);
+
+   wait(0$1);
+
+   ComMoveToArea(Khatam, khatamArea);
+
+   escapeKhatam := true;
+
+   if not tmp then
+      exit;
+
+   wait(0$2);
+
+   DialogueOn;
+
+   speaker := DialogRandom(tmp, 'D8b-Sol1-1', 'D8b-FSol1-1');
+
+   Say(Khatam, 'D8b-Khat-1');
+
+   if GetSex(speaker) = sex_male then
+      Say(speaker, 'D8b-Sol1-2')
+   else
+      Say(speaker, 'D8b-FSol1-2');
+
+   Say(Khatam, 'D8b-Khat-2');
+
+   if GetSex(speaker) = sex_male then
+      Say(speaker, 'D8b-Sol1-3')
+   else
+      Say(speaker, 'D8b-FSol1-3');
+
+   Say(Khatam, 'D8b-Khat-3');
+
+   if GetSex(speaker) = sex_male then
+      Say(speaker, 'D8b-Sol1-4')
+   else
+      Say(speaker, 'D8b-FSol1-4');
+
+   DialogueOff;
+   end;
+End;
+
+Every 0$1 trigger escapeKhatam and IsOk(Khatam) do
+begin
+enable;
+
+if IsOk(Khatam) and not HasTask(Khatam) then
+   ComMoveToArea(Khatam, khatamArea);
+
+if IsInArea(Khatam, khatamArea) then
+   begin
+   SaveVariable(1, '10_KhatamStatus_1');
+   RemoveUnit(Khatam);
+   disable;
+   end;
+End;
+
+// Spawn Cornell
+Every 0$30 trigger joinedToEpsilon and hasBase and LoadVariable('02_mikhailStatus_1', 0) and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 or not arabianAttack) do
+begin
+wait(5$00);
+PrepareCornell;
+End;
+
+// Cornell dialog
+Every 0$1 trigger GetDistUnits(NearestUnitToUnit(FilterAllUnits([f_side, 1]), Cornell), Cornell) < 9 and IsOk(Cornell) do
+begin
+InGameOn;
+
+CenterNowOnUnits(Cornell);
+
+Say(Cornell, 'D7-Corn-1');
+
+DialogRandom(FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5]]]), 'D7-Sol1-1', 'D7-FSol1-1');
+
+CenterNowOnUnits(Cornell);
+
+Say(Cornell, 'D7-Corn-2');
+Say(JMM, 'D7-JMM-2');
+
+CenterNowOnUnits(Cornell);
+
+Say(Cornell, 'D7-Corn-3');
+
+SetLives(Cornell, 250);
+SetSide(Cornell, 1);
+
+wait(0$1);
+
+Say(JMM, 'D7-JMM-3');
+InGameOff;
+
+repeat
+ wait(0$1);
+
+ if IsDead(Cornell) then
+    exit;
+
+until GetLives(Cornell) > 350;
+
+DialogueOn;
+
+Say(JMM, 'D7a-JMM-1');
+Say(Cornell, 'D7a-Corn-1');
+Say(JMM, 'D7a-JMM-2');
+Say(Cornell, 'D7a-Corn-2');
+Say(JMM, 'D7a-JMM-3');
+Say(Cornell, 'D7a-Corn-3');
+Say(JMM, 'D7a-JMM-4');
+Say(Cornell, 'D7a-Corn-4');
+Say(JMM, 'D7a-JMM-5');
+Say(Cornell, 'D7a-Corn-5');
+Say(JMM, 'D7a-JMM-6');
+Say(Cornell, 'D7a-Corn-6');
+Say(JMM, 'D7a-JMM-7');
+Say(Cornell, 'D7a-Corn-7');
+Say(JMM, 'D7a-JMM-8');
+
+DialogueOff;
+End;
+
+Function EnchancedSaveCharacters(unit, id);
+begin
+if IsLive(unit) or unit in JMMSquad then
+   SaveCharacters(unit, id);
+End;
+
+// finito
+Export function FinishMission;
+var m1, m2, m3;
+begin
+if not hasSniper then
+   SetAchievement('ACH_SNIPER');
+
+m1 := false;
+m2 := false;
+m3 := false;
+
+if GetTech(tech_LasSight, 1) = state_researched then
+   begin
+   AddMedal('sights', 1);
+   m1 := true;
+   end
+else
+   AddMedal('sights', -1);
+
+if GetTech(tech_AI, 1) = state_researched then
+   begin
+   AddMedal('computers', 1);
+   m2 := true;
+   end
+else
+   AddMedal('computers', -1);
+
+if arabianEscapedCounter = 0 then
+   begin
+   AddMedal('renegades', 2);
+   m3 := true;
+   SaveVariable(0, '10_ScientistsEscape_1');
+   end
+else
+   AddMedal('renegades', -1);
+
+SaveEpsilonBase;
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_AMER', 10);
+
+if tick <= 40$00 then
+   begin
+   wait(3);
+   SetAchievement('ACH_ASPEED_10');
+   end;
+
+GiveMedals('Main');
+
+RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]));
+
+SaveCharacters(JMM, mission_prefix & 'JMM');
+
+EnchancedSaveCharacters(Brown, mission_prefix & 'Brown');
+EnchancedSaveCharacters(Donaldson, mission_prefix & 'Donaldson');
+EnchancedSaveCharacters(Bobby, mission_prefix & 'Bobby');
+EnchancedSaveCharacters(Cyrus, mission_prefix & 'Cyrus');
+EnchancedSaveCharacters(Lisa, mission_prefix & 'Lisa');
+EnchancedSaveCharacters(Frank, mission_prefix & 'Frank');
+EnchancedSaveCharacters(Kikuchi, mission_prefix & 'Kikuchi');
+EnchancedSaveCharacters(Houten, mission_prefix & 'Houten');
+EnchancedSaveCharacters(Gary, mission_prefix & 'Gary');
+EnchancedSaveCharacters(Cornell, mission_prefix & 'Cornell');
+
+EnchancedSaveCharacters(Simms, mission_prefix & 'Simms');
+EnchancedSaveCharacters(Denis, mission_prefix & 'Denis');
+EnchancedSaveCharacters(Joan, mission_prefix & 'Joan');
+EnchancedSaveCharacters(Gladstone, mission_prefix & 'Gladstone');
+EnchancedSaveCharacters(DeltaDoctor, mission_prefix & 'DeltaDoctor');
+
+if IsLive(Mike) then
+   SaveCharacters(Mike, mission_prefix & 'Mike');
+
+SaveCharacters(others, '10c_lock');
+
+SaveCharacters(FilterAllUnits([[f_ok], [f_side, 1], [f_type,unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]) diff [JMM, Brown, Donaldson, Bobby, Cyrus, Lisa, Frank, Gladstone, Kikuchi, Denis, Joan, Houten, Simms, Gary, DeltaDoctor, Cornell], '10_other_survivors');
+SaveCharacters(FilterAllUnits([[f_ok], [f_side, 1], [f_type,unit_human], [f_or, [f_class, 16], [f_class, 12]]]) diff Mike, '10_ape');
+
+YouWin;
+End;
+
+Function SaveEpsilonBase;
+var epsilonBase, buildings, i;
+begin
+epsilonBase := [];
+buildings := FilterAllUnits([[f_side, 1], [f_type, unit_building], [f_ok]]);
+
+for i in buildings do
+    begin
+    if GetBType(i) in [b_lab, b_lab_half, b_lab_full] then
+       epsilonBase := epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+    else if GetBType(i) = b_bunker or GetBType(i) = b_turret then
+       epsilonBase := epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetBWeapon(i)] ]
+    else if GetBType(i) = b_factory then
+       epsilonBase := Insert(epsilonBase, 1, [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)])
+    else
+       epsilonBase := epsilonBase ^ [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i)] ];
+    end;
+
+SaveVariable(epsilonBase, '10_EpsilonBase');
+SaveVariable(ListEnvironmentArea(epsilonBaseArea), '10_EpsilonEnv');
+End;
