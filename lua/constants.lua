@@ -60,16 +60,17 @@ bud_lab_biological			= 13;
 bud_lab_spacetime                       = 14;
 bud_lab_optoelectronics                 = 15;
 
-bud_ext_track				= 16;
+bud_ext_track			= 16;
 bud_ext_gun				= 17;
-bud_ext_rocket				= 18;
-bud_ext_noncombat			= 19;
-bud_ext_radar				= 20;
-bud_ext_siberium			= 21;
-bud_ext_radio				= 22; -- Cancelled
-bud_ext_stitch				= 23;
-bud_ext_computer			= 24;
-bud_ext_laser				= 25;
+bud_ext_rocket		= 18;
+bud_ext_noncombat	= 19;
+bud_ext_radar			= 20;
+bud_ext_siberium	= 21;
+bud_ext_radio			= 22; 
+bud_ext_stitch		= 23;
+bud_ext_computer	= 24;
+bud_ext_laser			= 25;
+bud_ext_solar     = 42;
 
 bud_power_oil				= 26;
 bud_power_solar				= 27;
@@ -602,7 +603,8 @@ _Tech2ITTable={
   IT_LR_Gatling,
   IT_LR_Flame,
   IT_LR_AdvRocket,
-  IT_LR_SibImpl};
+  IT_LR_SibImpl
+};
 
 SIDE_COLOURS = {};
 SIDE_COLOURS[1] = RGB(144,144,144);

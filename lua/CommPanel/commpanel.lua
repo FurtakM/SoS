@@ -26,14 +26,14 @@ BUILDING
 	end;
 	
 	if NEWCLASS ~= HUMAN.CLASS then
-		if isInArray(HUMAN.CLASSTYPE,{clt_soldier,clt_engineer,clt_mechanic,clt_scientist}) then
+		if isInArray(HUMAN.CLASSTYPE,{clt_soldier,clt_engineer,clt_mechanic,clt_scientist,clt_noble}) then
 		
 			local sc = SPECIAL_CLASSES[NEWCLASS];
 			if (sc ~= nil) then
 				if (BUILDING.NATION ~= sc.NAT) or not GET_TECH(sc.TECH,BUILDING.SIDE).researched then
 						return RESULT_FALSE;
 				end;
-			elseif not isInArray(NEWCLASS,{class_soldier,class_engineer,class_mechanic,class_scientist}) then
+			elseif not isInArray(NEWCLASS,{class_soldier,class_engineer,class_mechanic,class_scientist,class_noble}) then
 				return RESULT_FALSE;
 			end;
 			
@@ -66,7 +66,7 @@ BUILDING
 			return RESULT_FALSE;
 		end;
 	
-		if isInArray(NEWCLASS,{class_soldier,class_sniper,class_mortarer,class_bazooker,class_apeman_soldier,class_apeman_kamikaze}) then
+		if isInArray(NEWCLASS,{class_soldier,class_sniper,class_mortarer,class_bazooker,class_apeman_soldier,class_apeman_kamikaze,class_noble}) then
 			if not isInArray(BUILDING.KIND,{bud_armoury,bud_barracks}) then
 				return RESULT_FALSE;
 			end;
@@ -75,7 +75,7 @@ BUILDING
 				return RESULT_FALSE;
 			end;
 		elseif NEWCLASS == class_mechanic then
-			if not isInArray(BUILDING.KIND,set_factory) and not (BUILDING.KIND == bud_ct) then
+			if not isInArray(BUILDING.KIND,set_factory) and not (BUILDING.KIND == bud_control_tower) then
 				return RESULT_FALSE;
 			end;
 		elseif NEWCLASS == class_scientist then
