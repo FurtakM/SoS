@@ -147,15 +147,19 @@ wait(0$30);
 
 SpawnConvoy;
 
-wait(10$00 - (1$00 * Difficulty));
+wait(12$00 - (1$00 * Difficulty));
 
 firstAttack := true;
 
-RaiseSailEvent(ESendRussianAttack); 
+RaiseSailEvent(ESendRussianAttack);
 
 for i := 1 to Difficulty do
     begin
     wait(12$00 - (1$00 * Difficulty));
+
+    if not ruActiveAttacks then
+       ruActiveAttacks := true;
+
     RaiseSailEvent(ESendRussianAttack);
     end;
 End;
@@ -237,7 +241,7 @@ Every 0$1 trigger GetTech(tech_Sib1, 1) = state_researched and GetTech(tech_Sib2
 ChangeMissionObjectives('M2a');
 
 // Build siberite lab
-Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_lab, b_lab_siberium]]) do
+Every 0$1 trigger FilterAllUnits([[f_side, 1], [f_not, [f_constructed]], [f_lab, b_lab_siberium]]) do
 var garySpeaker, deltaSpeaker, tmp1, tmp2, tmp3;
 begin
 garySpeaker := IsOk(Gary);
@@ -292,6 +296,7 @@ SetTech(tech_LasSight, 1, state_enabled);
 SetTech(tech_Rocket, 1, state_enabled);
 SetTech(tech_AI, 1, state_enabled);
 SetRestrict(b_turret, 1, true);
+SetRestrict(b_lab_computer, 1, true);
 
 ChangeMissionObjectives('M2');
 
@@ -387,8 +392,6 @@ if FilterAllUnits([[f_side, 1], [f_class, class_sniper]]) then
 DialogueOff;
 End;
 
-Every 0$3 trigger FilterAllUnits([f_side, 5]) > 3 do
-SayRadio(AmScout, 'D4-FSol1-3');
 
 Export function DArabTrait1;
 var tmp;
@@ -447,6 +450,8 @@ ComExitBuilding(arSoldiers);
 
 RaiseSailEvent(EArabAttack);
 
+SayRadio(AmScout, 'D4-FSol1-3');
+
 wait(0$3);
 
 for i in arCivilian do
@@ -490,21 +495,16 @@ nearestBuilding := NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_type, unit_
 
 AddComPlaceDelayedCharge(UnitFilter(arSoldiers, [f_class, 1])[1], GetX(nearestBuilding), GetY(nearestBuilding), nearestBuilding);
 
-AddComAgressiveMove(arSoldiers, 84, 22);
-AddComAgressiveMove(arSoldiers, 82, 5);
-AddComAgressiveMove(arSoldiers, 95, 12);
-AddComAgressiveMove(arSoldiers, 102, 11);
-AddComAgressiveMove(arSoldiers, 116, 15);
-AddComAgressiveMove(arSoldiers, 140, 25);
+AddComMoveXY(arSoldiers, 84, 22);
+AddComMoveXY(arSoldiers, 82, 5);
+AddComMoveXY(arSoldiers, 95, 12);
+AddComMoveXY(arSoldiers, 102, 11);
+AddComMoveXY(arSoldiers, 116, 15);
+AddComMoveXY(arSoldiers, 140, 25);
 
 arSoldiers := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
 arCivilian := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 12], [f_class, 16]]]);
 arCivilian := arCivilian ^ Dietrich;
-
-if UnitFilter(arSoldiers, [f_class, class_apeman_soldier]) then
-   ComEnterUnit(UnitFilter(arSoldiers, [f_class, class_apeman_soldier])[1], HexInfo(84, 21));
-
-wait(0$2);
 
 AddComMoveXY(arCivilian, 88, 8);
 AddComMoveXY(arCivilian, 102, 10);
@@ -582,9 +582,9 @@ if IsInArea(Khatam, khatamArea) then
 End;
 
 // Spawn Cornell
-Every 0$30 trigger joinedToEpsilon and hasBase and LoadVariable('02_mikhailStatus_1', 0) and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 or not arabianAttack) do
+Every 0$30 trigger joinedToEpsilon and not InBattle(1) and hasBase and LoadVariable('02_mikhailStatus_1', 0) and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 or not arabianAttack) do
 begin
-wait(5$00);
+wait(5$00 * Difficulty);
 PrepareCornell;
 End;
 
@@ -645,6 +645,14 @@ Say(JMM, 'D7a-JMM-8');
 DialogueOff;
 End;
 
+Every 0$1 trigger GetTech(54, 1) = state_researched and GetTech(55, 1) = state_researched and GetTech(21, 1) = state_researched and GetTech(22, 1) = state_researched and [GetTech(tech_LasSight, 1) = state_enabled or GetTech(tech_AI, 1) = state_enabled] and arabianDefeated and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 do
+begin
+case Query('QEndMission') of
+     1: end_the_mission_allowed = true;
+     2: FinishMission;
+     end;
+End;
+
 Function EnchancedSaveCharacters(unit, id);
 begin
 if IsLive(unit) or unit in JMMSquad then
@@ -653,7 +661,7 @@ End;
 
 // finito
 Export function FinishMission;
-var m1, m2, m3;
+var m1, m2, m3, prefix;
 begin
 if not hasSniper then
    SetAchievement('ACH_SNIPER');
@@ -702,27 +710,29 @@ GiveMedals('Main');
 
 RewardPeople(FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 5], [f_class, 8]]]));
 
-SaveCharacters(JMM, mission_prefix & 'JMM');
+prefix := '10c_';
 
-EnchancedSaveCharacters(Brown, mission_prefix & 'Brown');
-EnchancedSaveCharacters(Donaldson, mission_prefix & 'Donaldson');
-EnchancedSaveCharacters(Bobby, mission_prefix & 'Bobby');
-EnchancedSaveCharacters(Cyrus, mission_prefix & 'Cyrus');
-EnchancedSaveCharacters(Lisa, mission_prefix & 'Lisa');
-EnchancedSaveCharacters(Frank, mission_prefix & 'Frank');
-EnchancedSaveCharacters(Kikuchi, mission_prefix & 'Kikuchi');
-EnchancedSaveCharacters(Houten, mission_prefix & 'Houten');
-EnchancedSaveCharacters(Gary, mission_prefix & 'Gary');
-EnchancedSaveCharacters(Cornell, mission_prefix & 'Cornell');
+SaveCharacters(JMM, prefix & 'JMM');
 
-EnchancedSaveCharacters(Simms, mission_prefix & 'Simms');
-EnchancedSaveCharacters(Denis, mission_prefix & 'Denis');
-EnchancedSaveCharacters(Joan, mission_prefix & 'Joan');
-EnchancedSaveCharacters(Gladstone, mission_prefix & 'Gladstone');
-EnchancedSaveCharacters(DeltaDoctor, mission_prefix & 'DeltaDoctor');
+EnchancedSaveCharacters(Brown, prefix & 'Brown');
+EnchancedSaveCharacters(Donaldson, prefix & 'Donaldson');
+EnchancedSaveCharacters(Bobby, prefix & 'Bobby');
+EnchancedSaveCharacters(Cyrus, prefix & 'Cyrus');
+EnchancedSaveCharacters(Lisa, prefix & 'Lisa');
+EnchancedSaveCharacters(Frank, prefix & 'Frank');
+EnchancedSaveCharacters(Kikuchi, prefix & 'Kikuchi');
+EnchancedSaveCharacters(Houten, prefix & 'Houten');
+EnchancedSaveCharacters(Gary, prefix & 'Gary');
+EnchancedSaveCharacters(Cornell, prefix & 'Cornell');
+
+EnchancedSaveCharacters(Simms, prefix & 'Simms');
+EnchancedSaveCharacters(Denis, prefix & 'Denis');
+EnchancedSaveCharacters(Joan, prefix & 'Joan');
+EnchancedSaveCharacters(Gladstone, prefix & 'Gladstone');
+EnchancedSaveCharacters(DeltaDoctor, prefix & 'DeltaDoctor');
 
 if IsLive(Mike) then
-   SaveCharacters(Mike, mission_prefix & 'Mike');
+   SaveCharacters(Mike, prefix & 'Mike');
 
 SaveCharacters(others, '10c_lock');
 

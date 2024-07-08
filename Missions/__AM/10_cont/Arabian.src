@@ -56,7 +56,7 @@ for i := 1 to [2, 3, 4, 5][Difficulty] do
     end;
 
 for j in [arBar1, arBar2] do
-    for i := 1 to 3 do
+    for i := 1 to 4 do
         begin
         PrepareSoldier(false, skill);
         un := CreateHuman;
@@ -64,7 +64,7 @@ for j in [arBar1, arBar2] do
         PlaceHumanInUnit(un, j);
         end;
 
-for i := 1 to 2 do
+for i := 1 to 3 do
     begin
     un := arForces[arForces - i];
     ComExitBuilding(un);
@@ -73,7 +73,12 @@ for i := 1 to 2 do
 
 for i := 1 to 3 do
     begin
-    un := arForces[arForces - 2 - i];
+    tmp := UnitFilter(arForces, [[f_class, class_soldier], [f_not, [f_tag, tMine]]]);
+
+    if not tmp then
+       continue;
+
+    un := tmp[1];
     SetTag(un, tMine);
     end;
 
@@ -122,9 +127,11 @@ if eng then
 repeat
  wait(0$1);
 
- if tick mod 4200 = 0 then
+ if tick mod 4200 = 0 and GetListOfCratesInArea(arCratesArea) < 3 then
     CreateCratesArea(rand(1,5), arCratesArea, true);
-until FilterAllUnits([[f_side, 1], [f_lab, b_lab_siberium]]);
+until FilterAllUnits([[f_side, 1], [f_not, [f_constructed]], [f_lab, b_lab_siberium]]);
+
+wait(0$10);
 
 arTech := [tech_sibPow, tech_sibEng, tech_sib1];
 
@@ -132,14 +139,27 @@ repeat
  wait(0$1);
 until not arTech;
 
+wait(0$30);
+
 arabianAttack := true;
 arBaseActive := false;
 End;
 
-Every 0$0.3 trigger arBaseActive and arMines do
+Every 3 trigger arBaseActive and arMines and FilterUnitsInArea(arMinesArea, [f_enemy, 2]) do
+var i, e;
 begin
-enable;    
-CheckMinesInArea(arMinesArea, [f_enemy, 2]);
+enable;
+
+for i in arMines do
+    begin
+    e := HexInfo(i[1], i[2]);
+
+    if not e then
+       continue;
+
+    if GetSide(e) in [3,6] then
+       LaunchMineAtPos(i[1], i[2], 2);
+    end;
 End;
 
 Every 0$2 trigger arBaseActive do
@@ -179,7 +199,20 @@ sci := UnitFilter(arForces, [[f_class, 4], [f_ok]]);
 
 if sci then
    begin
-   hurtUnits := UnitFilter(arForces, [[f_inarea, arBaseArea], [f_tag, tHeal]]);
+   hurtUnits := UnitFilter(arForces, [[f_inarea, arBaseArea], [f_not, [f_inside]], [f_tag, tHeal]]);
+   lab := FilterAllUnits([[f_side, side], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+   tag := GetTag(i);
+
+   if GetLives(i) < 800 and tag <> tHeal then
+      begin
+      ComMoveXY(i, 72, 15);
+      SetTag(i, tHeal);
+      end;
+
+   if GetLives(i) = 1000 and tag = tHeal then
+      begin
+      SetTag(i, 0);
+      end;
 
    if hurtUnits then
       begin
@@ -192,7 +225,7 @@ if sci then
    else if lab then
       begin
       for i in sci do
-          if not IsInUnit(i) then
+          if not IsInUnit(i) and GetTag(i) <> tHeal then
              ComEnterUnit(i, lab[1]);
       end;
    end;
@@ -209,7 +242,7 @@ if eng then
        if tag = tCamera then
           continue;
 
-       if GetLives(i) < 800 and tag <> tHeal then
+       if GetLives(i) < 600 and tag <> tHeal then
           begin
           SetTag(i, tHeal);
           ComMoveXY(i, 72, 15);
@@ -230,16 +263,25 @@ if eng then
                 SetTag(i, tRepair)
              else if cr then
                 SetTag(i, tCrates)
-             else
+             else if Count(arBuildings) then
                 SetTag(i, tBuild);
              end
           else
              if not IsInUnit(i) then
+                begin
+                SetTag(i, 0);
                 ComEnterUnit(i, arDep);
+                end;
           end;
 
        if tag = tRepair then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not tmp then
              begin
              SetTag(i, 0);
@@ -255,6 +297,12 @@ if eng then
 
        if tag = tBuild then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not Count(arBuildings) then
              begin
              SetTag(i, 0);
@@ -266,6 +314,12 @@ if eng then
 
        if tag = tCrates then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not cr then
              begin
              SetTag(i, 0);
@@ -319,7 +373,7 @@ if sol then
       end
    else
       begin
-      empty := FilterUnitsInArea(arBaseArea, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+      empty := FilterUnitsInArea(arBaseArea, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
 
       if empty then
          empty := ReverseArray(empty);
@@ -338,11 +392,15 @@ if sol then
 
           if GetLives(i) = 1000 and tag = tHeal then
              begin
-             SetTag(i, 0);
+             if MineOfUnit(i) or Count(UnitFilter(sol, [[f_ok], [f_tag, tMine]])) < 3 then
+                SetTag(i, tMine)
+             else
+                SetTag(i, 0);
+
              continue;
              end;
 
-          if HasTask(i) or tag = tMine then
+          if tag = tMine then
              continue;
 
           if not IsInUnit(i) and not tag and empty then
@@ -369,6 +427,7 @@ for i in UnitFilter(arEscapist, [f_ok]) do
        begin
        RemoveUnit(i);
        arEscapist := arEscapist diff i;
+       arabianEscapedCounter := Inc(arabianEscapedCounter);
 
        if i = Dietrich then
           begin

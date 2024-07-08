@@ -1,7 +1,7 @@
 Export ruForces, ruForces2, ruCommander, ruCommander2, ruMech, ruMech2;
 Export ruTech, ruBaseArea, ruBaseArea2, ruBase, ruBase2, ruConstructList, ruConstructList2,
-       ruCratesArea, ruCratesArea2, ruHealPoint, ruHealPoint2, ruBuildings, ruBuildings2,
-       ruTanks, ruTanks2, ruExtraTanks, ruParkingArea, ruParkingArea2;
+       ruCratesArea, ruCratesArea2, ruHealPoint, ruHealPoint2, ruBuildings, ruBuildings2, ruTransportDestroyed,
+       ruTanks, ruTanks2, ruExtraTanks, ruParkingArea, ruParkingArea2, ruCratesSpawnArea, ruCratesSpawnArea2;
 Export function PrepareRussian;
 var i, j, un, skill, sources;
 begin
@@ -47,12 +47,18 @@ sources := [ [43,68], [43,79], [99,114], [103,114], [156,92], [152,85] ];
 for i in sources do
     SetResourceVisibility(i[1], i[2], 3);
 
+if Difficulty > 2 then
+   begin
+   SetTech(tech_weap2, 6, state_researched);
+   SetTech(tech_comp2, 6, state_researched);
+   end;
+
 skill := [5, 6, 7, 8][Difficulty];
 
 ruCommander := PrepareUnit('Tsaritsyn', false, '');
 
-for j := 1 to [3, 4, 5, 6][Difficulty] do
-    for i := 1 to 4 do
+for i := 1 to 4 do
+    for j := 1 to [[5, 6, 8, 9][Difficulty], [3, 4, 5, 6][Difficulty], [3, 4, 5, 6][Difficulty], [2, 3, 3, 3][Difficulty]][i] do
         begin
         PrepareHuman(false, i, skill);
         un := CreateHuman;
@@ -74,8 +80,8 @@ ruCommander2 := CreateHuman;
 
 InitHc_All();
 
-for j := 1 to [3, 4, 5, 6][Difficulty] do
-    for i := 1 to 4 do
+for i := 1 to 4 do
+    for j := 1 to [[5, 6, 8, 9][Difficulty], [3, 4, 5, 6][Difficulty], [3, 4, 5, 6][Difficulty], [2, 3, 3, 3][Difficulty]][i] do
         begin
         PrepareHuman(false, i, skill);
         un := CreateHuman;
@@ -89,7 +95,7 @@ for j := 1 to [3, 4, 5, 6][Difficulty] do
         end;
 End;
 
-Every 3$00 trigger FilterUnitsInArea(ruBaseArea, [[f_btype, b_factory], [f_ok]]) do
+Every 3$00 trigger FilterUnitsInArea(ruBaseArea, [[f_btype, b_factory], [f_ok]]) and Count(ruBuildings) < 3 do
 var i;
 begin
 enable;
@@ -104,7 +110,7 @@ for i := Difficulty downto 1 do
     ruConstructList := Join(ruConstructList, [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, [ru_gun, ru_rocket_launcher, ru_rocket_launcher, ru_gatling_gun][rand(1,4)]]);
 End;
 
-Every 3$00 trigger FilterUnitsInArea(ruBaseArea2, [[f_btype, b_factory], [f_ok]]) do
+Every 3$00 trigger FilterUnitsInArea(ruBaseArea2, [[f_btype, b_factory], [f_ok]]) and Count(ruBuildings2) < 3 do
 begin
 enable;
 
@@ -134,7 +140,7 @@ for i in ruForces union ruCommander do
     begin
     PlaceUnitArea(i, area, false);
     ComMoveXY(i, point[1], point[2]);
-    wait(0$0.1);
+    wait(0$0.4);
     end;
 
 DRussianConvoy;
@@ -157,7 +163,7 @@ for i in ruForces2 union ruCommander2 do
     begin
     PlaceUnitArea(i, ruSpawnWestArea, false);
     ComAgressiveMove(i, 54, 85);
-    wait(0$0.2);
+    wait(0$0.8);
     end;
 
 RaiseSailEvent(ERussianBaseW2);
@@ -194,6 +200,7 @@ case option of
         ];
         ruHealPoint := [98, 107];
         ruParkingArea := ruParkingCenterArea;
+        ruCratesSpawnArea := ruCratesSpawnCenterArea;
         end;
      2: begin // west
         ruBaseArea := ruBaseWestArea;
@@ -225,6 +232,7 @@ case option of
         ];
         ruHealPoint := [45, 75];
         ruParkingArea := ruParkingWestArea;
+        ruCratesSpawnArea := ruCratesSpawnWestArea;
         end;
      3: begin // east
         ruBaseArea := ruBaseEastArea;
@@ -250,10 +258,14 @@ case option of
             [b_turret, 134, 61, 2],
             [b_turret, 156, 62, 3],
             [b_turret, 171, 97, 5],
-            [b_turret, 169, 103, 5]
+            [b_turret, 169, 103, 5],
+            [b_turret, 158, 65, 3],
+            [b_turret, 144, 53, 2],
+            [b_turret, 150, 81, 1]
         ];
         ruHealPoint := [145, 71];
         ruParkingArea := ruParkingEastArea;
+        ruCratesSpawnArea := ruCratesSpawnEastArea;
         end;
      end;
 
@@ -291,6 +303,7 @@ case option of
         ];
         ruHealPoint2 := [98, 107];
         ruParkingArea2 := ruParkingCenterArea;
+        ruCratesSpawnArea2 := ruCratesSpawnCenterArea;
         end;
      2: begin // west
         ruBaseArea2 := ruBaseWestArea;
@@ -322,6 +335,7 @@ case option of
         ];
         ruHealPoint := [45, 75];
         ruParkingArea2 := ruParkingWestArea;
+        ruCratesSpawnArea2 := ruCratesSpawnWestArea;
         end;
      3: begin // east
         ruBaseArea2 := ruBaseEastArea;
@@ -351,6 +365,7 @@ case option of
         ];
         ruHealPoint2 := [145, 71];
         ruParkingArea2 := ruParkingEastArea;
+        ruCratesSpawnArea2 := ruCratesSpawnEastArea;
         end;
      end;
 
@@ -399,6 +414,12 @@ if fac then
           AddComChangeProfession(i, class_mechanic);
           end;
       end;
+
+   if UnitFilter(ruMech, [[f_class, class_mechanic], [f_not, [f_inside]], [f_tag, tMech], [f_ok]]) then
+      begin
+      for i in UnitFilter(ruMech, [[f_class, class_mechanic], [f_not, [f_inside]], [f_tag, tMech], [f_ok]]) do
+          ComEnterUnit(i, fac[1]);
+      end; 
 
    if BuildingStatus(fac[1]) = bs_idle then
       begin
@@ -496,6 +517,12 @@ if eng then
 
        if tag = tRepair then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not tmp then
              begin
              SetTag(i, 0);
@@ -511,6 +538,12 @@ if eng then
 
        if tag = tBuild then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not Count(ruBuildings) then
              begin
              SetTag(i, 0);
@@ -535,6 +568,12 @@ if eng then
 
        if tag = tCrates then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not cr then
              begin
              SetTag(i, 0);
@@ -656,6 +695,12 @@ if fac then
           end;
       end;
 
+   if UnitFilter(ruMech2, [[f_class, class_mechanic], [f_not, [f_inside]], [f_tag, tMech], [f_ok]]) then
+      begin
+      for i in UnitFilter(ruMech2, [[f_class, class_mechanic], [f_not, [f_inside]], [f_tag, tMech], [f_ok]]) do
+          ComEnterUnit(i, fac[1]);
+      end;
+
    if BuildingStatus(fac[1]) = bs_idle then
       begin
       emptyTowers := FilterUnitsInArea(ruBaseArea2, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
@@ -687,6 +732,7 @@ lab := FilterUnitsInArea(ruBaseArea2, [f_or, [f_btype, b_lab], [f_btype, b_lab_h
 if sci then
    begin
    hurtUnits := UnitFilter(ruForces2, [[f_inarea, ruBaseArea2], [f_tag, tHeal]]);
+   lab := FilterAllUnits([[f_side, 3], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
 
    if hurtUnits then
       begin
@@ -752,6 +798,12 @@ if eng then
 
        if tag = tRepair then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not tmp then
              begin
              SetTag(i, 0);
@@ -767,6 +819,12 @@ if eng then
 
        if tag = tBuild then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not Count(ruBuildings2) then
              begin
              SetTag(i, 0);
@@ -791,6 +849,12 @@ if eng then
 
        if tag = tCrates then
           begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
           if not cr then
              begin
              SetTag(i, 0);
@@ -870,7 +934,7 @@ if sol then
 End;
 
 // russian mobile warfare
-Every 0$1 trigger ruTanks do
+Every 0$1 trigger ruTanks and ruActiveAttacks do
 var i, mech, enemy;
 begin
 enable;
@@ -947,18 +1011,13 @@ for i in ruTanks do
           if not HasTask(i) then
              ComAttackUnit(i, NearestUnitToUnit(enemy, i));
           end
-       else if ruTanks > 1 then
-          begin
-          enemy := FilterAllUnits([f_side, 1]);
-
-          if enemy then
-             AgressiveMove(i, [ [105,35] ]);
-          end;
+       else
+          AgressiveMove(i, [ [105,35] ]);
        end;
     end;
 End;
 
-Every 0$1 trigger ruTanks2 do
+Every 0$1 trigger ruTanks2 and ruActiveAttacks do
 var i, mech, enemy;
 begin
 enable;
@@ -1035,18 +1094,13 @@ for i in ruTanks2 do
           if not HasTask(i) then
              ComAttackUnit(i, NearestUnitToUnit(enemy, i));
           end
-       else if ruTanks2 > 1 then
-          begin
-          enemy := FilterAllUnits([f_side, 1]);
-
-          if enemy then
-             AgressiveMove(i, [ [105,35] ]);
-          end;
+       else
+          AgressiveMove(i, [ [105,35] ]);
        end;
     end;
 End;
 
-Every 5$00 trigger Count(ruExtraTanks) >= [3, 4, 5, 6][Difficulty] do
+Every 5$00 trigger Count(ruExtraTanks) do
 begin
 enable;  
 RaiseSailEvent(EExtraAttack);
@@ -1056,12 +1110,17 @@ Export function RussianExtraAttack;
 var i, tmp;
 begin
 tmp := UnitFilter(ruExtraTanks, [f_ok]);
+ruExtraTanks := ruExtraTanks diff tmp;
+
+ComAgressiveMove(tmp, 105, 35);
+
+wait(0$5);
 
 repeat
  wait(0$1);
  tmp := UnitFilter(tmp, [f_ok]);
 
- for i in UnitFilter(tmp, [f_ok]) do
+ for i in tmp do
      AgressiveMove(i, [ [105,35] ]);
 until not tmp;
 End;
@@ -1096,7 +1155,7 @@ InitHC_All();
 InitVc;
 
 // tanks
-for i := 1 to [4, 5, 5, 6][Difficulty] + strength do
+for i := 1 to [3, 4, 4, 5][Difficulty] + strength do
     begin
     uc_side := 6;
     uc_nation := nation_russian;
@@ -1143,7 +1202,7 @@ for i := 1 to [2, 2, 3, 4][Difficulty] do
     PrepareSoldier(false, skill);
     un := CreateHuman;
 
-    if Prob([30, 40, 50, 50][Difficulty]) then
+    if Prob([35, 60, 70, 80][Difficulty]) then
        SetClass(un, class_bazooker);
 
     SetDir(un, dir);
@@ -1188,7 +1247,7 @@ repeat
          begin
          if GetClass(i) = class_bazooker then
             begin
-            if GetDistUnits(i, NearestUnitToUnit(enemy, i)) > 9 then
+            if GetDistUnits(i, NearestUnitToUnit(enemy, i)) > 12 then
                ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i))
             else
                begin
@@ -1203,7 +1262,7 @@ repeat
                           begin
                           dialogRussianSpaceAmmo := true;
 
-                          wait(0$2);
+                          wait(0$6);
                           
                           DRussianSpaceAmmo(e);
                           end;
@@ -1215,7 +1274,7 @@ repeat
                           begin                             
                           dialogRussianSpaceAmmo := true;
 
-                          wait(0$2);
+                          wait(0$6);
 
                           DRussianSpaceAmmo(e);
                           end;
@@ -1247,6 +1306,37 @@ for i := 1 to 3 do
 
     ComAgressiveMove(un, 52, 16);
     end;
+End;
+
+Every 5$00 trigger IsOk(ruBase) and not ruTransportDestroyed do
+var cargo;
+begin
+enable;
+
+uc_side := 3;
+uc_nation := nation_russian;
+
+PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_cargo_bay, 100);
+cargo := CreateVehicle;
+SetDir(cargo, 5);
+PlaceUnitXY(cargo, 187, 117, false);
+SetCargo(cargo, mat_cans, 100);
+
+ComMoveUnit(cargo, ruBase);
+AddComGive(cargo, ruBase);
+AddComMoveXY(cargo, 187, 117);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ if not HasTask(cargo) then
+    ComMoveXY(cargo, 187, 117);
+until IsDead(cargo) or IsAt(cargo, 187, 117);
+
+if IsAt(cargo, 187, 117) then
+   RemoveUnit(cargo);
 End;
 
 
