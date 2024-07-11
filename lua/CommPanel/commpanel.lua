@@ -110,7 +110,8 @@ end;
 
 function getButtons(BUTTONS,STATE,PAGEID)
 	return RESULT_IGNORE, BUTTONS;
---[[
+
+	--[[
 	local BUT,BUT_OR,BUT_ID;
 
 	for b=1,9 do
@@ -134,14 +135,14 @@ function getButtons(BUTTONS,STATE,PAGEID)
 		end;
 	end;
 
-	return RESULT_IGNORE, BUTTONS;
---]]
+	return RESULT_TRUE_MIXED, BUTTONS;--]]
 end;
 
 -- [Result Types] --
-RESULT_FALSE  = -1;
-RESULT_TRUE   = -2;
-RESULT_IGNORE = -3;
+RESULT_FALSE      = -1;
+RESULT_TRUE       = -2;
+RESULT_IGNORE     = -3;
+RESULT_TRUE_MIXED = -4;
 
 -- [Button States] --
 BUTTONSTATE_HIDDEN   = 0;
@@ -396,7 +397,10 @@ BUTTON_UNUSED2              = 238; -- Not Used
 BUTTON_WALL                 = 239;
 BUTTON_ARAB_SIBFUSION       = 240;
 BUTTON_HOLDFIRE             = 241;
-BUTTON_UNUSED3              = 242; -- Not Used
+BUTTON_ATTACK2              = 242; -- Not Used
+BUTTON_SWITCH_AMMO          = 263;
+BUTTON_COLLECT_CRATES       = 264;
+BUTTON_CP_SHEIK             = 265;
 
 -- [[BUTTON COMMANDS]] --
 COMMAND_ICONGROUPCANCEL      = 0;
@@ -643,6 +647,7 @@ COMMAND_PROF_CUSTOM          = 240; -- Custom Profession Change
 COMMAND_LUA_CUSTOM           = 241; -- Custom LUA (Runs lua when button pressed)
 COMMAND_RESEARCH_CUSTOM      = 242; -- Custom Research
 COMMAND_HOLDFIRE             = 243;
+COMMAND_CP_SHEIK             = 244;
 
 -- [[OVERRIDES]] --
 
@@ -752,6 +757,10 @@ BUTTON_OVERRIDES[COMMAND_FIREEXP] = {
 										
 										return BUTTONID;
 									end;
+									};
+
+BUTTON_OVERRIDES[COMMAND_CP_SHEIK] = {
+									func=BUTTON_OVERRIDES[COMMAND_CP_AMERICANSNIPER].func
 									};
 									
 			
@@ -943,7 +952,7 @@ SPECIAL_APE_CLASSES = {[class_apeman_soldier]={NAT={nation_am},TECH=tech_ApeAgre
 controller_human			= 1;
 controller_remote			= 2;
 controller_computer			= 3;
-controller_desertrider		        = 4;
+controller_desertrider		= 4;
 controller_apeman			= 5;
 
 -- [Activities] --
