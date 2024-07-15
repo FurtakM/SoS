@@ -109,9 +109,8 @@ function canChangeProfessions(HUMAN,BUILDING,MAXCLASS) -- Only Called by Vanilla
 end;
 
 function getButtons(BUTTONS,STATE,PAGEID)
-	return RESULT_IGNORE, BUTTONS;
+	--return RESULT_IGNORE, BUTTONS;
 
-	--[[
 	local BUT,BUT_OR,BUT_ID;
 
 	for b=1,9 do
@@ -135,7 +134,7 @@ function getButtons(BUTTONS,STATE,PAGEID)
 		end;
 	end;
 
-	return RESULT_TRUE_MIXED, BUTTONS;--]]
+	return RESULT_TRUE_MIXED, BUTTONS;
 end;
 
 -- [Result Types] --
@@ -649,10 +648,16 @@ COMMAND_RESEARCH_CUSTOM      = 242; -- Custom Research
 COMMAND_HOLDFIRE             = 243;
 COMMAND_CP_SHEIK             = 244;
 
+TAG_SHEIK = 500;
+
 -- [[OVERRIDES]] --
 
 function getCP(STATE,CLASS)
 	return canChangeProfession(STATE.CURHUMAN,STATE.CURUNIT) == RESULT_TRUE;
+end;
+
+function canChangeToSheik(STATE)
+	return (STATE.CURHUMAN ~= nil) and (STATE.CURHUMAN.CLASS ~= class_noble) and (GET_TAG(STATE.CURHUMAN.ID) == TAG_SHEIK) and STATE.CURHUMAN.ACTIVITY ~= act_change_class;
 end;
 
 BUTTON_OVERRIDES = {};
@@ -696,8 +701,14 @@ BUTTON_OVERRIDES[COMMAND_CP_AMERICANSNIPER] = {
 											if (STATE.CURUNIT.NATION == nation_am) then
 												return BUTTON_CP_AMERICANSNIPER;
 											elseif (STATE.CURUNIT.NATION == nation_ar) then
-												if isInArray(STATE.CURHUMAN.CLASS,class_apes) and getCP(STATE,class_apeman_kamikaze) and not getCP(STATE,class_mortarer) then
+												if (STATE.CURHUMAN ~= nil) and STATE.CURHUMAN.ACTIVITY == act_change_class then
+													return BUTTONID;
+												end;
+												
+												if (STATE.CURHUMAN ~= nil) and isInArray(STATE.CURHUMAN.CLASS, class_apes) and getCP(STATE, class_apeman_kamikaze) and not getCP(STATE, class_mortarer) then
 													return BUTTON_CP_KAMIKAZE;
+												elseif canChangeToSheik(STATE) then
+													return BUTTON_CP_SHEIK;
 												else
 													return BUTTON_CP_ARABMORTAR;
 												end;
@@ -757,10 +768,6 @@ BUTTON_OVERRIDES[COMMAND_FIREEXP] = {
 										
 										return BUTTONID;
 									end;
-									};
-
-BUTTON_OVERRIDES[COMMAND_CP_SHEIK] = {
-									func=BUTTON_OVERRIDES[COMMAND_CP_AMERICANSNIPER].func
 									};
 									
 			
@@ -1028,4 +1035,44 @@ function isInArray(value, thearray)
 	end;
 
 	return false;
+end;
+
+function dump(o)
+    return vardump(o, 0);
+end;
+
+function vardump(o, level)
+    local s = '';
+    local space = '';
+    local space2 = '';
+
+    if (level > 0) then
+        for i = 1, level do
+            space = space .. '  ';
+
+            if (level > 1) then
+                space2 = space2 .. ' ';
+            end;
+        end;
+    end;
+
+    if type(o) == 'table' then
+        s = '{ ';
+
+        for k, v in pairs(o) do
+            if type(k) ~= 'number' then 
+                k = '"' .. k .. '"';
+            end;
+
+        s = s .. '\n' .. space .. '[' .. k .. '] = ' .. vardump(v, level + 1);
+        end;
+
+        return s .. '\n' .. space2 .. '} ';
+    else
+        return tostring(o);
+    end;
+end;
+
+function dd(var)
+    LUA_TO_DEBUGLOG(dump(var)); 
 end;

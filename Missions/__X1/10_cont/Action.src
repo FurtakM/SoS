@@ -1,1 +1,280 @@
-//
+Export function Action;
+var i, mech, veh, amTroops;
+begin
+InGameOn;
+CenterNowOnXY(84, 28);
+RevealFogArea(2, heikeVisibleRoadArea); 
+
+ComMoveXY(Heike, 90, 30);
+
+uc_side := 1;
+uc_nation := nation_american;
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_laser, 66);
+veh := CreateVehicle;
+SetDir(veh, 1);
+PlaceUnitXY(veh, 80, 27, false);
+
+PrepareMechanic(sex_male, 8);
+mech := CreateHuman;
+PlaceHumanInUnit(mech, veh);
+
+repeat
+ wait(0$1);
+until HexInfo(90, 30);
+
+PlaceSeeing(80, 27, 2, -6);
+
+CenterNowOnXY(80, 27);
+
+DialogueOn;
+
+Say(Heike, 'DH-Start-1');
+
+DialogueOff;
+
+ComAttackUnit(Heike, veh);
+
+wait(0$1);
+
+SetLives(IsInUnit(Heike), 200);
+
+wait(0$0.3);
+
+DialogueOn;
+
+Say(Heike, 'DH-Start-2');
+
+DialogueOff;
+
+ComAttackUnit(Heike, veh);
+
+wait(0$0.2);
+
+ComCrawl(Heike);
+
+wait(0$3);
+
+PlaceUnitXY(omarVehicle, 82, 43, false);
+PlaceHumanInUnit(Omar, omarVehicle);
+
+ComMoveXY(Omar, 79, 32);
+
+wait(0$1);
+
+ChangeSideFog(5, 2);
+
+wait(0$3);
+
+SetLives(veh, 200);
+
+wait(0$1);
+
+SetLives(mech, 10);
+
+wait(0$2);
+
+ComWalk(Heike);
+
+wait(1);
+
+ComMoveXY(Heike, 81, 25);
+AddComMoveXY(Heike, 72, 25);
+
+wait(0$3);
+
+ComExitVehicle(Omar);
+
+wait(1);
+
+ComMoveXY(Omar, 77, 28);
+AddComTurnUnit(Omar, Heike);
+
+Say(Omar, 'DO-Start-3');
+
+repeat
+ wait(3);
+until IsAt(Heike, 72, 25);
+
+ComHold(Heike);
+ComTurnUnit(Omar, Heike);
+
+ComMoveUnit(Heike, Omar);
+
+wait(0$1);
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Start-4');
+Say(Omar, 'DO-Start-5');
+Say(Heike, 'DH-Start-6');
+Say(Omar, 'DO-Start-7');
+
+if Query('QOmar') = 2 then
+   begin
+   Say(Heike, 'DH-QuestionN-1');
+
+   ComMoveXY(Heike, 58, 27);
+
+   wait(0$2);
+
+   ChangeSideFog(5, 5);
+   RemoveSeeing(80, 27, 2);
+
+   CenterOnXY(58, 27);
+
+   repeat
+    wait(3);
+   until GetDistUnitXY(Heike, 88, 27);
+
+   uc_side := 1;
+   uc_nation := nation_american;
+
+   amTroops := [];
+
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, 10);
+       amTroops := Join(amTroops, CreateHuman);
+       SetDir(amTroops[i], 2);
+       PlaceUnitArea(amTroops[i], heikeTrapArea, false);
+
+       ComAttackUnit(amTroops[i], Heike);
+       end;
+
+   ComAttackUnit(Heike, amTroops[1]);
+
+   repeat
+    wait(0$1);
+   until IsDead(Heike) or IsDying(Heike);
+
+   wait(0$2);
+
+   YouLost('Heike');
+   exit;
+   end;
+
+Say(Heike, 'DH-QuestionY-1');
+
+wait(0$0.3);
+
+Say(Omar, 'DO-Story-1');
+Say(Omar, 'DO-Story-2');
+Say(Omar, 'DO-Story-3');
+Say(Omar, 'DO-Story-4');
+Say(Heike, 'DH-Story-5');
+Say(Omar, 'DO-Story-6');
+Say(Omar, 'DO-Story-7');
+
+ComMoveXY(Heike, 82, 44);
+AddComHold(Heike);
+
+wait(0$4);
+
+ComMoveXY(Omar, 82, 41);
+AddComTurnUnit(Omar, Heike);
+
+repeat
+ wait(0$1);
+until IsAt(Heike, 82, 44);
+
+ComTurnXY(Heike, 81, 47);
+
+Say(Heike, 'DH-Story-8');
+Say(Omar, 'DO-Story-9');
+Say(Omar, 'DO-Story-10');
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Story-11');
+
+ComMoveUnit(Omar, Heike);
+
+wait(0$0.3);
+
+ComTurnUnit(Omar, Heike);
+
+Say(Omar, 'DO-Story-12');
+Say(Heike, 'DH-Story-13');
+Say(Omar, 'DO-Story-14');
+Say(Omar, 'DO-Story-15');
+
+CenterOnXY(84, 48);
+
+ComMoveXY(Heike, 84, 48);
+AddComTurnXY(Heike, 84, 49);
+
+wait(0$1);
+
+ComMoveUnit(Omar, Heike);
+
+wait(0$1);
+
+ComTurnUnit(Omar, Heike);
+
+wait(0$0.3);
+
+Say(Omar, 'DO-Story-16');
+
+if Query('QOmar2') = 2 then
+   begin
+   ComMoveXY(Heike, 79, 57);
+   AddComMoveXY(Heike, 68, 53);
+
+   wait(0$2);
+
+   ChangeSideFog(5, 5);
+   RemoveSeeing(80, 27, 2);
+
+   CenterOnXY(68, 53);
+
+   repeat
+    wait(3);
+   until GetDistUnitXY(Heike, 68, 53) < 6;
+
+   uc_side := 1;
+   uc_nation := nation_american;
+
+   amTroops := [];
+
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, 10);
+       amTroops := Join(amTroops, CreateHuman);
+       SetDir(amTroops[i], 2);
+       PlaceUnitArea(amTroops[i], heikeTrap2Area, false);
+
+       ComAttackUnit(amTroops[i], Heike);
+       end;
+
+   ComAttackUnit(Heike, amTroops[1]);
+
+   repeat
+    wait(0$1);
+   until IsDead(Heike) or IsDying(Heike);
+
+   wait(0$2);
+
+   YouLost('Heike');
+   exit;
+   end;
+
+Say(Omar, 'DO-Objective-1');
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Objective-2');
+Say(Omar, 'DO-Objective-3');
+
+ChangeSideFog(5, 5);
+RemoveSeeing(80, 27, 2);
+
+SetSide(Omar, 2);
+SetSide(omarVehicle, 2);
+
+ChangeMissionObjectives('O1');
+
+InGameOff;
+
+SaveForQuickRestart;
+End;
