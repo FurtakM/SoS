@@ -62,7 +62,8 @@ ComMoveXY(Omar, 79, 32);
 
 wait(0$1);
 
-ChangeSideFog(5, 2);
+PlaceSeeing(79, 32, 2, -8);
+//ChangeSideFog(5, 2);
 
 wait(0$3);
 
@@ -118,7 +119,8 @@ if Query('QOmar') = 2 then
 
    wait(0$2);
 
-   ChangeSideFog(5, 5);
+   //ChangeSideFog(5, 5);
+   RemoveSeeing(79, 32, 2);
    RemoveSeeing(80, 27, 2);
 
    CenterOnXY(58, 27);
@@ -223,7 +225,8 @@ if Query('QOmar2') = 2 then
 
    wait(0$2);
 
-   ChangeSideFog(5, 5);
+   //ChangeSideFog(5, 5);
+   RemoveSeeing(79, 32, 2);
    RemoveSeeing(80, 27, 2);
 
    CenterOnXY(68, 53);
@@ -266,7 +269,8 @@ ComTurnUnit(Heike, Omar);
 Say(Heike, 'DH-Objective-2');
 Say(Omar, 'DO-Objective-3');
 
-ChangeSideFog(5, 5);
+//ChangeSideFog(5, 5);
+RemoveSeeing(79, 32, 2);
 RemoveSeeing(80, 27, 2);
 
 SetSide(Omar, 2);
@@ -315,9 +319,19 @@ Say(Heike, 'DH-Fac-1');
 Say(Omar, 'DOm-Fac-2');
 
 if TestCharacters('09_Markov') then
-   Say(Heike, 'DH-Fac-3a')
+   begin
+   Say(Heike, 'DH-Fac-3a');
+
+   if GetSkill(Heike, 3) < 10 then
+      SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
+   end
 else if TestCharacters('09_Olaf') then
-   Say(Heike, 'DH-Fac-3b')
+   begin
+   Say(Heike, 'DH-Fac-3b');
+
+   if GetSkill(Heike, 3) < 10 then
+      SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
+   end
 else if GetSkill(Heike, skill_mechanical) > 5 then
    Say(Heike, 'DH-Fac-3c')
 else
@@ -422,10 +436,10 @@ InGameOff;
 SetAchievement('ACH_MASTODONTTAME');
 End;
 
-Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_class, class_tiger]]) do
+Every 0$1 trigger gameActive and tigerCounter do
 SetAchievement('ACH_TIGERTAME');
 
-Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_class, class_tiger]]) > 1 do
+Every 0$1 trigger gameActive and tigerCounter > 1 do
 begin
 hasTigers := true;
 
@@ -660,6 +674,10 @@ ChangeMissionObjectives('O3');
 Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_ok]]) = 0 do
 begin
 legScriptActive := false;
+
+if not americanDestroyed then
+   SetAchievement('ACH_REVANGE');
+
 legionDestroyed := true;
 
 DialogueOn;
