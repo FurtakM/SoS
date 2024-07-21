@@ -530,6 +530,62 @@ result := SortByDistanceXY(GetX(unit), GetY(unit), list, asc, mode);
 End;
 
 {
+SortHexesByDistanceFromUnit(unit, list, asc, mode)
+- Sortuje hexy zadane tablic¹ wg. dystansu od zadanego koordynatu
+* unit - jednostka
+* list - tablica hexów [ [x1, y1], [x2, y2] ..]
+* asc - true -> rosn¹co | false -> malej¹co
+* mode - true -> zwraca tylko liste hexów | false -> zwraca liste i odleglosci
+= array
+}
+Export Function SortHexesByDistanceFromUnit(unit, list, asc, mode);
+var i, j, tmp;
+begin
+if not list or not unit then
+   exit;
+
+result := [];
+
+for i in list do
+    begin
+    tmp := GetDistUnitXY(unit, i[1], i[2]);
+
+    if not Count(result) then
+       begin
+       result := Join(result, [i, tmp]);
+       continue;
+       end;
+
+    if result[result][2] <= tmp then
+       result := Join(result, [i, tmp])
+    else
+       begin
+       for j := 1 to Count(result) do
+           begin
+           if tmp < result[j][2] then
+              begin
+              result := Insert(result, j, [i, tmp]);
+              break;
+              end;
+           end;
+       end;
+    end;
+
+if result and not asc then
+   result := ReverseArray(result);
+
+tmp := [];
+
+if mode then
+   begin    
+   for i := 1 to result do
+       tmp := Join(tmp, result[i][1]);
+
+   result := tmp;
+   end;    
+End;
+
+{
 SortByDistanceXY(x, y, list, asc)
 - Sortuje jednostki zadane tablic¹ wg. dystansu od zadanego koordynatu
 * x, y - koordynaty

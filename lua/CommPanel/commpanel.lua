@@ -128,7 +128,9 @@ function getButtons(BUTTONS,STATE,PAGEID)
 				end;
 			
 				if BUT.ID >= 0 then
-					-- Handle State HERE!
+					if isInArray(BUT.ID,{BUTTON_UPGRADELAB1,BUTTON_UPGRADELAB2}) then
+                        BUT.ID = -BUT.ID;
+                    end;
 				end;			
 			end;
 		end;

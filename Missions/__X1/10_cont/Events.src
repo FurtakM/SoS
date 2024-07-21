@@ -1,0 +1,178 @@
+On UnitDestroyed(unit) do
+begin
+SOS_UnitDestroyed(unit);
+
+if unit = Heike then
+   YouLost('Heike');
+
+if unit = Omar then
+   YouLost('Omar');
+
+if unit in amForces then
+   amForces := amForces diff unit;
+
+if unit in amTanks then
+   amTanks := amTanks diff unit;
+
+if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 1 then
+   amBuildings := Join(amBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+
+if unit in legForces then
+   legForces := legForces diff unit;
+
+if unit in legTanks then
+   legTanks := legTanks diff unit;
+
+if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 8 then
+   legBuildings := Join(legBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+
+if unit = amCargo then
+   amCargo := 0;
+
+if unit = legCargo then
+   legCargo := 0;
+End;
+
+On EnterBuilding(b, un) do
+begin
+if un in FilterAllUnits([[f_not, [f_side, 2]], [f_class, class_mechanic]]) and GetBType(b) = b_factory and GetLives(un) < 1000 then
+   begin
+   SetTag(un, 0);
+   SetLives(un, 1000);
+   end;
+End;
+
+On VehicleConstructed(veh, fac) do
+var side, weapon;
+begin
+SOS_VehicleConstructed(veh, fac);
+
+side := GetSide(fac);
+weapon := GetWeapon(fac);
+
+if side = 1 then
+   begin
+   amConstructList := Delete(amConstructList, 1);
+
+   if weapon = us_cargo_bay and not amCargo then
+      amCargo := veh;
+
+   if weapon in [us_cargo_bay, us_crane, us_bulldozer] then
+      exit;
+
+   amTanks := Join(amTanks, veh);
+   end;
+
+if side = 8 then
+   begin
+   legConstructList := Delete(legConstructList, 1);
+
+   if weapon = ar_cargo_bay and not legCargo then
+      legCargo := veh;
+
+   if weapon in [ar_cargo_bay, ar_crane] then
+      exit;
+
+   legTanks := Join(legTanks, veh);
+   end;
+End;
+
+On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+var arm, fac, side;
+begin
+side := GetSide(driver);
+
+if side = 1 and driver in amForces then
+   begin
+   ComMoveToArea(driver, amBaseArea);
+
+   SetTag(driver, tMech);
+
+   fac := FilterUnitsInArea(amBaseArea, [[f_side, side], [f_btype, b_factory], [f_ok]]);
+
+   if fac then
+      begin
+      AddComEnterUnit(driver, fac[1]);
+      exit;
+      end;
+
+   arm := FilterUnitsInArea(amBaseArea, [[f_side, side], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]], [f_not, [f_full]], [f_ok]]);
+
+   if arm then
+      begin
+      ComEnterUnit(driver, arm[1]);
+      AddComChangeProfession(driver, class_soldier);
+      end;
+   end;
+
+if side = 8 then
+   begin
+   ComMoveToArea(driver, legBaseArea);
+
+   SetTag(driver, tMech);
+
+   fac := FilterUnitsInArea(legBaseArea, [[f_side, side], [f_btype, b_factory], [f_ok]]);
+
+   if fac then
+      begin
+      AddComEnterUnit(driver, fac[1]);
+      exit;
+      end;
+
+   arm := FilterUnitsInArea(legBaseArea, [[f_side, side], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]], [f_not, [f_full]], [f_ok]]);
+
+   if arm then
+      begin
+      ComEnterUnit(driver, arm[1]);
+      AddComChangeProfession(driver, class_soldier);
+      end;
+   end;
+End;
+
+On BuildingComplete(b) do
+var side, type;
+begin
+side := GetSide(b);
+type := GetBType(b);
+
+if side = 1 then
+   begin
+   amBuildings := Delete(amBuildings, 1);
+
+   if type in [b_depot, b_armoury, b_workshop] then
+      ComUpgrade(b);
+   end;
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+
+if side = 1 then
+   amTech := amTech diff tech;
+End;
+
+On Command(cmd) do
+begin
+SOS_Command(cmd);
+End;
+
+On SailEvent(event) do
+begin
+case event of
+
+     end;
+End;
+
+On Contact(s1, s2) do
+begin
+if not gameActive then
+   exit;
+
+if not spotByAmerican and s1 in [2, 1] and s2 in [1, 2] then
+   spotByAmerican := true;
+
+if not spotByLegion and s1 in [2, 8] and s2 in [8, 2] then
+   spotByLegion := true;
+End;
