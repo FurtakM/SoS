@@ -109,8 +109,9 @@ function canChangeProfessions(HUMAN,BUILDING,MAXCLASS) -- Only Called by Vanilla
 end;
 
 function getButtons(BUTTONS,STATE,PAGEID)
-	--return RESULT_IGNORE, BUTTONS;
+	return RESULT_IGNORE, BUTTONS;
 
+--[[
 	local BUT,BUT_OR,BUT_ID;
 
 	for b=1,9 do
@@ -136,7 +137,7 @@ function getButtons(BUTTONS,STATE,PAGEID)
 		end;
 	end;
 
-	return RESULT_TRUE_MIXED, BUTTONS;
+	return RESULT_TRUE_MIXED, BUTTONS;--]]
 end;
 
 -- [Result Types] --

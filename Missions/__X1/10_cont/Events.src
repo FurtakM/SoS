@@ -2,6 +2,18 @@ On UnitDestroyed(unit) do
 begin
 SOS_UnitDestroyed(unit);
 
+if apeAmount and GetSide(unit) = 2 and (GetControl(unit) = control_apeman or GetClass(unit) in [class_apeman, class_apeman_soldier, class_apeman_engineer, class_apeman_kamikaze]) then
+   begin
+   apeAmount := Dec(apeAmount);
+   wait(rand(0$1, 1$00));
+
+   uc_side := 0;
+   uc_nation := nation_nature;
+
+   PrepareApeman(0);
+   PlaceUnitArea(CreateHuman, apeArea, false);
+   end;
+
 if unit = Heike then
    YouLost('Heike');
 
@@ -13,6 +25,9 @@ if unit in amForces then
 
 if unit in amTanks then
    amTanks := amTanks diff unit;
+
+if unit in amPatrol then
+   amPatrol := amPatrol diff unit;
 
 if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 1 then
    amBuildings := Join(amBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
@@ -26,11 +41,23 @@ if unit in legTanks then
 if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 8 then
    legBuildings := Join(legBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
 
+if GetWeapon(unit) = us_crane and GetSide(unit) = 1 then
+   amConstructList := Join(amConstructList, [us_medium_wheeled, engine_combustion, control_remote, us_crane]);
+
+if GetWeapon(unit) = ar_crane and GetSide(unit) = 8 then
+   legConstructList := Join(legConstructList, [ar_medium_trike, engine_combustion, control_remote, ar_crane]);
+
 if unit = amCargo then
+   begin
    amCargo := 0;
+   amConstructList := Join(amConstructList, [us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay]);
+   end;
 
 if unit = legCargo then
+   begin
    legCargo := 0;
+   legConstructList := Join(legConstructList, [ar_medium_trike, engine_combustion, control_remote, ar_cargo_bay]);
+   end;
 End;
 
 On EnterBuilding(b, un) do
@@ -48,7 +75,7 @@ begin
 SOS_VehicleConstructed(veh, fac);
 
 side := GetSide(fac);
-weapon := GetWeapon(fac);
+weapon := GetWeapon(veh);
 
 if side = 1 then
    begin
@@ -61,6 +88,8 @@ if side = 1 then
       exit;
 
    amTanks := Join(amTanks, veh);
+   wait(0$01);
+   AddComMoveToArea(veh, amParkingArea);
    end;
 
 if side = 8 then
@@ -74,6 +103,8 @@ if side = 8 then
       exit;
 
    legTanks := Join(legTanks, veh);
+   wait(0$01);
+   AddComMoveToArea(veh, legParkingArea);
    end;
 End;
 

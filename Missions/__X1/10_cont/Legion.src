@@ -10,7 +10,7 @@ legForces := [];
 legEForces := [];
 legTech := GetTechNation(8, nation_arabian, state_enabled);
 
-legConstructList := [];
+legConstructList := [ [ar_medium_trike, engine_combustion, control_remote, ar_cargo_bay] ];
 legHealPoint := [195, 15];
 legBuildings := [];
 legTanks := [];
@@ -73,10 +73,12 @@ if b then
 
 for i := 1 to 2 do
     begin
+    uc_nation := nation_arabian;
     PrepareVehicle(ar_medium_trike, engine_solar, control_manual, ar_control_tower, 100);
     un := CreateVehicle;
     SetDir(un, rand(0, 5));
     PlaceUnitXYR(un, 199, 24, 4, false);
+
     PrepareMechanic(false, [8, 9, 10, 10][Difficulty]);
     PlaceHumanInUnit(CreateHuman, un);
     end;
@@ -370,6 +372,120 @@ if not HasTask(legCargo) and GetCargo(legCargo, mat_cans) < 100 and not enemyInA
 
 if enemyInArea and not IsInArea(legCargo, legBaseArea) then
    ComMoveXY(legCargo, 194, 17)
-else if GetCargo(legCargo, mat_cans) then
+else if GetCargo(legCargo, mat_cans) = 100 then
    ComGive(legCargo, legBase);
+End;
+
+Every 8$00 trigger Count(legTanks) < 5 and legScriptActive and spotByLegion do
+var i, parts, part;
+begin
+enable;
+
+parts := [
+  [ar_medium_trike, ar_rocket_launcher],
+  [ar_medium_trike, ar_gun],
+  [ar_medium_trike, ar_flame_thrower],
+  [ar_half_tracked, ar_flame_thrower],
+  [ar_half_tracked, ar_rocket_launcher],
+  [ar_half_tracked, ar_gatling_gun]
+];
+
+for i := 1 to [4, 5, 6, 6][Difficulty] do
+    begin
+    part := parts[rand(1, parts)];
+    legConstructList := Join(legConstructList, [part[1], engine_combustion, control_remote, part[2]])
+    end;
+End;
+
+Every 20$00 trigger not legionDestroyed and tick <= 60$00 do
+begin
+enable;
+legConstructList := Join(legConstructList, [ar_half_tracked, engine_combustion, control_manual, ar_gun]);
+End;
+
+// mobile warfare
+Every 0$1 trigger legTanks do
+var i, mech, enemy;
+begin
+enable;
+
+if not legTanks then
+   exit;
+
+// tags:
+// 0 - idle,
+// 11 - go to parking, repair if needed
+// 12 - attack
+
+for i in legTanks do
+    begin
+    if not IsOk(i) or GetSide(i) <> 8 then
+       begin
+       legTanks := legTanks diff i;
+       continue;
+       end;
+
+    if not GetTag(i) and GetControl(i) = control_remote then
+       SetTag(i, tAttack);
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetFuel(i) < 50 and GetEngine(i) = engine_combustion then
+          begin
+          ComMoveXY(i, 189, 19);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 189, 19) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, legParkingArea) then
+          ComMoveToArea(i, legParkingArea)
+       else
+          SetTag(i, tParking);
+       end;
+
+    if GetTag(i) = tParking then
+       begin
+       if GetLives(i) < 650 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, tAttack);
+       end;
+
+    if GetTag(i) = tAttack then
+       begin
+       enemy := FilterUnitsInArea(legBaseArea, [f_enemy, 8]);
+
+       if GetLives(i) < 650 and GetControl(i) = control_manual then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if legTanks >= 4 then
+          AgressiveMove(i, [ [200,48], [210,74] ]);
+       end;
+    end;
 End;

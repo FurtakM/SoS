@@ -289,6 +289,15 @@ TID_ACH_HSPEED_8 = 6582;
 TID_ACH_HSPEED_8_DESC = 6583;
 TID_ACH_HSPEED_9 = 6584;
 TID_ACH_HSPEED_9_DESC = 6585;
+TID_ACH_HSPEED_10 = 6586;
+TID_ACH_HSPEED_10_DESC = 6587;
+TID_ACH_MASTODONTTAME = 6588;
+TID_ACH_MASTODONTTAME_DESC = 6589;
+TID_ACH_TIGERTAME = 6590;
+TID_ACH_TIGERTAME_DESC = 6591;
+TID_ACH_REVANGE = 6592;
+TID_ACH_REVANGE_DESC = 6593;
+
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -1410,6 +1419,34 @@ achievements = {
         true,
         0,
         0
+    },
+    ['ACH_HSPEED_10'] = {
+        loc(TID_ACH_HSPEED_10), 
+        loc(TID_ACH_HSPEED_10_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_MASTODONTTAME'] = {
+        loc(TID_ACH_MASTODONTTAME), 
+        loc(TID_ACH_MASTODONTTAME_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_TIGERTAME'] = {
+        loc(TID_ACH_TIGERTAME), 
+        loc(TID_ACH_TIGERTAME_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_REVANGE'] = {
+        loc(TID_ACH_REVANGE), 
+        loc(TID_ACH_REVANGE_DESC),
+        false,
+        0,
+        0
     }
 };
 
@@ -1445,7 +1482,8 @@ ACHIV_FILTER_MISSION_LIST = {
         {'ACH_ROLF', 'ACH_OIL', 'ACH_LENIN', 'ACH_HSPEED_6'},
         {'ACH_ANTSNIPER', 'ACH_WEST', 'ACH_UNTOUCH', 'ACH_HSPEED_7'},
         {'ACH_REVOLVER', 'ACH_HEIKERU', 'ACH_GIVIRU', 'ACH_TOY', 'ACH_POKER', 'ACH_HSPEED_8'},
-        {'ACH_BOB', 'ACH_KNIGHT', 'ACH_GREEN', 'ACH_HSPEED_9'}
+        {'ACH_BOB', 'ACH_KNIGHT', 'ACH_GREEN', 'ACH_HSPEED_9'},
+        {'ACH_TIGERTAME', 'ACH_MASTODONTTAME', 'ACH_REVANGE', 'ACH_HSPEED_10'}
     },
     {
         {'ACH_NATURE', 'ACH_YELENA'},
@@ -1589,7 +1627,11 @@ achievsCategory = {
         'ACH_BOB', 
         'ACH_KNIGHT',
         'ACH_GREEN', 
-        'ACH_HSPEED_9'
+        'ACH_HSPEED_9',
+        'ACH_TIGERTAME',
+        'ACH_MASTODONTTAME',
+        'ACH_REVANGE',
+        'ACH_HSPEED_10'
     },
     [3] = {
         'ACH_YELENA',
