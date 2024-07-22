@@ -2,6 +2,12 @@ On UnitDestroyed(unit) do
 begin
 SOS_UnitDestroyed(unit);
 
+if unit = Dietrich and not arabianAttack then
+   YouLost('ArabDefeated');
+
+if unit in FilterAllUnits([[f_side, 2], [f_class, 4]]) and not arabianAttack then
+   YouLost('ArabDefeated');
+
 if unit in JMMSquad then
    JMMSquad := JMMSquad diff unit;
 
@@ -47,7 +53,39 @@ if unit in ruTanks2 then
 
 if unit in ruExtraTanks then
    ruExtraTanks := ruExtraTanks diff unit;
-end;
+
+if unit in ruMech then
+   ruMech := ruMech diff unit;
+
+if unit in ruMech2 then
+   ruMech2 := ruMech2 diff unit;
+
+if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 3 then
+   begin
+   if IsInArea(unit, ruBaseArea) then
+      ruBuildings := Join(ruBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+   if IsInArea(unit, ruBaseArea2) then
+      ruBuildings2 := Join(ruBuildings2, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+   end;
+
+if unit in FilterAllUnits([[f_side, 6], [f_weapon, ru_cargo_bay]]) then
+   ruTransportDestroyed := true;
+End;
+
+On ClassChanged(un, oldClass, newClass) do
+begin
+if GetTag(un) = tMech then
+   SetTag(un, 0);
+End;
+
+On EnterBuilding(b, un) do
+begin
+if un in FilterAllUnits([[f_side, 3], [f_class, class_mechanic]]) and GetBType(b) = b_factory and GetLives(un) < 1000 then
+   begin
+   SetTag(un, 0);
+   SetLives(un, 1000);
+   end;
+End;
 
 On UnitGoesToRed(un) do
 var i;
@@ -63,6 +101,22 @@ if not seenRussianTeleport then
    seenRussianTeleport := true;
    DTankTeleport(GetX(un), GetY(un));
    End;
+End;
+
+On BuildingCaptured(captured, oldSide, unit) do
+var i, x, y;
+begin
+if oldSide = 2 and GetBType(captured) in [b_lab_half, b_lab, b_depot, b_barracks] then
+   begin
+   for i := 1 to rand(2, 4) do
+       begin
+       x := GetX(captured) - rand(-2, 2);
+       y := GetY(captured) + rand(-2, 2);
+
+       if ValidHex(x, y) then
+          MineExplosion(x, y, 10);
+       end;
+   end;
 End;
 
 On VehicleConstructed(veh, fac) do
@@ -136,28 +190,40 @@ if side = 3 then
       begin
       ComMoveToArea(driver, ruBaseArea);
 
-      if GetLives(driver) < 1000 then
-         SetTag(driver, tHeal);
-
-      repeat
-       wait(0$1);
-
-       if IsDead(driver) then
-          exit;
-
-      until GetLives(driver) = 1000;
-
-      SetTag(driver, 0);
+      SetTag(driver, tMech);
 
       fac := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_btype, b_factory], [f_ok]]);
 
       if fac then
          begin
-         ComEnterUnit(driver, fac[1]);
+         AddComEnterUnit(driver, fac[1]);
          exit;
          end;
 
       arm := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]], [f_not, [f_full]], [f_ok]]);
+
+      if arm then
+         begin
+         ComEnterUnit(driver, arm[1]);
+         AddComChangeProfession(driver, class_soldier);
+         end;
+      end;
+
+   if driver in ruMech2 then
+      begin
+      ComMoveToArea(driver, ruBaseArea2);
+
+      SetTag(driver, tMech);
+
+      fac := FilterUnitsInArea(ruBaseArea2, [[f_side, 3], [f_btype, b_factory], [f_ok]]);
+
+      if fac then
+         begin
+         AddComEnterUnit(driver, fac[1]);
+         exit;
+         end;
+
+      arm := FilterUnitsInArea(ruBaseArea2, [[f_side, 3], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]], [f_not, [f_full]], [f_ok]]);
 
       if arm then
          begin
@@ -212,9 +278,9 @@ if side = 3 then
 
    if type = b_depot then
       begin
-      SetResourceType(GetBase(b), mat_cans, 750);
-      SetResourceType(GetBase(b), mat_oil, 100);
-      SetResourceType(GetBase(b), mat_siberit, 100);
+      SetResourceType(GetBase(b), mat_cans, 2550);
+      SetResourceType(GetBase(b), mat_oil, 250);
+      SetResourceType(GetBase(b), mat_siberit, 200);
 
       if IsInArea(b, ruBaseArea) then
          begin               

@@ -1,0 +1,548 @@
+Export Farmer;
+Export legForces, legEForces, legTech, legConstructList, legHealPoint, legBuildings, legTanks, legRTanks, legCargo;
+Export function PrepareLegion;
+var i, j, b, un, skill, sources;
+begin
+uc_side := 8;
+uc_nation := nation_arabian;
+
+legForces := [];
+legEForces := [];
+legTech := GetTechNation(8, nation_arabian, state_enabled);
+
+legConstructList := [ [ar_medium_trike, engine_combustion, control_remote, ar_cargo_bay] ];
+legHealPoint := [195, 15];
+legBuildings := [];
+legTanks := [];
+legRTanks := [];
+legCargo := 0;
+
+sources := [ [219, 31], [166, 31] ];
+
+for i in sources do
+    SetResourceVisibility(i[1], i[2], 1);
+
+SetResourceType(GetBase(legBase), mat_cans, 650);
+SetResourceType(GetBase(legBase), mat_oil, 120);
+SetResourceType(GetBase(legBase), mat_siberit, 50);
+
+skill := [6, 7, 8, 9][Difficulty];
+
+Farmer := PrepareUnit('Farmer', false, '');
+
+for i := 1 to 4 do
+    for j := 1 to [[7, 8, 9, 11][Difficulty], [3, 4, 5, 5][Difficulty], 3, [2, 3, 3, 3][Difficulty]][i] do
+        begin
+        PrepareHuman(false, i, skill);
+        un := CreateHuman;
+        legForces := Join(legForces, un);
+
+        case i of
+             1: b := FilterAllUnits([[f_side, 8], [f_or, [f_btype, b_bunker], [f_btype, b_barracks]], [f_not, [f_full]]]);
+             2: b := UnitFilter(legBase, [f_not, [f_full]]);
+             3: b := ReverseArray(FilterAllUnits([[f_side, 8], [f_or, [f_btype, b_factory], [f_btype, b_control_tower]], [f_not, [f_full]]]));
+             4: b := FilterAllUnits([[f_side, 8], [f_btype, b_lab_full], [f_not, [f_full]]]);
+             end;
+
+        if b then
+           begin
+           if GetBType(b[1]) = b_barracks then
+              if Prob(50) then
+                 SetClass(un, class_mortar)
+              else
+                 SetClass(un, class_sniper);
+
+           PlaceHumanInUnit(un, b[1]);
+           end
+        else
+           PlaceUnitXYR(un, 188, 21, 4, false);
+        end;
+
+b := FilterAllUnits([[f_side, 8], [f_or, [f_btype, b_bunker], [f_btype, b_barracks]], [f_not, [f_full]]]);
+
+if b then
+   begin
+   for i in b do
+       begin
+       PrepareApemanSoldier();
+       un := CreateHuman;
+       legForces := Join(legForces, un);
+
+       PlaceHumanInUnit(un, i);
+       end;
+   end;
+
+for i := 1 to 2 do
+    begin
+    uc_nation := nation_arabian;
+    PrepareVehicle(ar_medium_trike, engine_solar, control_manual, ar_control_tower, 100);
+    un := CreateVehicle;
+    SetDir(un, rand(0, 5));
+    PlaceUnitXYR(un, 199, 24, 4, false);
+
+    PrepareMechanic(false, [8, 9, 10, 10][Difficulty]);
+    PlaceHumanInUnit(CreateHuman, un);
+    end;
+End;
+
+// leg script
+Every 0$2 trigger legScriptActive and Count(legForces) do
+var i, tmp, remote, undone, side, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon;
+begin
+enable;
+
+side := 8;
+
+remote := FilterAllUnits([[f_side, side], [f_control, control_remote], [f_ok], [f_not, [f_linked]]]);
+
+if remote and Count(FilterAllUnits([[f_side, side], [f_ok], [f_weapon, ar_control_tower]])) then
+   for i in remote do
+       Connect(i);
+
+// research
+if legTech then
+   begin
+   lab := FilterAllUnits([[f_side, side], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+   if lab then
+      begin
+      if BuildingStatus(lab[1]) = bs_idle then
+         begin
+         for i in legTech do
+             if CanBeResearched(lab[1], i) then
+                begin
+                ComResearch(lab[1], i);
+                break;
+                end;
+         end;
+      end;
+   end;
+
+fac := FilterUnitsInArea(legBaseArea, [[f_side, side], [f_btype, b_factory], [f_ok]]);
+
+if fac then
+   begin
+   if BuildingStatus(fac[1]) = bs_idle then
+      begin
+      emptyTowers := FilterUnitsInArea(legBaseArea, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
+
+      if emptyTowers then
+         begin
+         weapon := GetTurretWeapon(emptyTowers[1], legBaseArea);
+
+         if weapon then
+            ComPlaceWeapon(emptyTowers[1], weapon);
+         end;
+
+      if legConstructList then
+         if CanBeConstructed(fac[1], legConstructList[1][1], legConstructList[1][2], legConstructList[1][3], legConstructList[1][4]) then
+            ComConstruct(fac[1], legConstructList[1][1], legConstructList[1][2], legConstructList[1][3], legConstructList[1][4]);
+      end;
+   end;
+
+// damaged buildings
+tmp := FilterUnitsInArea(legBaseArea, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(legCratesArea);
+
+// sci logic
+sci := UnitFilter(legForces, [[f_class, 4], [f_ok]]);
+lab := FilterUnitsInArea(legBaseArea, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+
+if sci then
+   begin
+   hurtUnits := UnitFilter(legForces, [[f_inarea, legBaseArea], [f_tag, tHeal]]);
+
+   if hurtUnits then
+      begin
+      for i in sci do
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, hurtUnits[1]);
+      end
+   else if lab then
+      begin
+      for i in sci do
+          if not IsInUnit(i) then
+             ComEnterUnit(i, lab[1]);
+      end;
+   end;
+
+// eng logic
+eng := UnitFilter(legForces, [f_class, 2]);
+
+if eng then
+   begin
+   for i in eng do
+       begin
+       tag := GetTag(i);
+
+       if GetLives(i) < 800 and tag <> tHeal then
+          begin
+          SetTag(i, tHeal);
+          ComMoveXY(i, legHealPoint[1], legHealPoint[2]);
+          AddComHold(i);
+          end;
+
+       if tag = tHeal and GetLives(i) = 1000 then
+          SetTag(i, 0);
+
+       if not tag then
+          begin
+          undone := FilterUnitsInArea(legBaseArea, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          if cr or tmp or Count(legBuildings) then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, tRepair)
+             else if cr then
+                SetTag(i, tCrates)
+             else
+                SetTag(i, tBuild);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, legBase);
+          end;
+
+       if tag = tRepair then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, legBaseArea) then
+             ComMoveToArea(i, legBaseArea);
+          end;
+
+       if tag = tBuild then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not Count(legBuildings) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end
+          else if not CanBeBuiltOnlyResources(legBase, legBuildings[1][1]) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          undone := FilterUnitsInArea(legBaseArea, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          ComBuild(i, legBuildings[1][1], legBuildings[1][2], legBuildings[1][3], legBuildings[1][4]);
+          end;
+
+       if tag = tCrates then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
+       end;
+   end;
+
+// defense logic
+sol := UnitFilter(legForces, [[f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_mortar]], [f_ok]]);
+enemyInBase := FilterUnitsInArea(legBaseArea, [f_enemy, side]);
+
+if sol then
+   begin
+   if enemyInBase then
+      begin
+      for i in sol do
+          begin
+          tw := IsInUnit(i);
+
+          if tw then
+             begin
+             if not tw in FilterAllUnits([[f_side, side], [f_see, 2], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) then
+                ComExitBuilding(i);
+             end
+          else
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+          end;
+      end
+   else
+      begin
+      empty := FilterUnitsInArea(legBaseArea, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
+
+      if empty then
+         empty := ReverseArray(empty);
+
+      for i in sol do
+          begin
+          tag := GetTag(i);
+
+          if GetLives(i) < 1000 and tag <> tHeal then
+             begin
+             SetTag(i, tHeal);
+             ComMoveXY(i, legHealPoint[1], legHealPoint[2]);
+             AddComHold(i);
+             continue;
+             end;
+
+          if GetLives(i) = 1000 and tag = tHeal then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if HasTask(i) then
+             continue;
+
+          if not IsInUnit(i) and not tag and empty then
+             begin
+             ComEnterUnit(i, empty[1]);
+
+             if GetBType(empty[1]) = b_barracks and Prob(50) then
+                AddComChangeProfession(i, class_mortar);
+
+             empty := Delete(empty, 1);
+             end;
+          end;
+      end;
+   end;
+End;
+
+Every 0$2 trigger IsOk(legCargo) and legScriptActive do
+var cr, enemyInArea;
+begin
+enable;
+
+enemyInArea := FilterUnitsInArea(legBaseArea, [[f_enemy, 8], [f_ok]]);
+cr := GetListOfCratesInArea(cratesNorthArea);
+
+if GetFuel(legCargo) < 10 and not See(2, legCargo) and GetEngine(legCargo) = engine_combustion then
+   SetFuel(legCargo, 100);
+
+if not HasTask(legCargo) and GetCargo(legCargo, mat_cans) < 100 and not enemyInArea then
+   begin
+   if cr then
+      ComCollect(legCargo, cr[1], cr[2])
+   else if not IsInArea(legCargo, cratesNorthArea) then
+      ComMoveToArea(legCargo, cratesNorthArea);
+
+   exit;
+   end;
+
+if enemyInArea and not IsInArea(legCargo, legBaseArea) then
+   ComMoveXY(legCargo, 194, 17)
+else if GetCargo(legCargo, mat_cans) = 100 then
+   ComGive(legCargo, legBase);
+End;
+
+Every 12$00 trigger Count(legTanks) < 5 and legScriptActive and spotByLegion do
+var i, parts, part;
+begin
+enable;
+
+parts := [
+  [ar_medium_trike, ar_rocket_launcher],
+  [ar_medium_trike, ar_gun],
+  [ar_medium_trike, ar_flame_thrower],
+  [ar_half_tracked, ar_flame_thrower],
+  [ar_half_tracked, ar_rocket_launcher],
+  [ar_half_tracked, ar_gatling_gun]
+];
+
+for i := 1 to [4, 5, 6, 6][Difficulty] do
+    begin
+    part := parts[rand(1, parts)];
+    legConstructList := Join(legConstructList, [part[1], engine_combustion, control_remote, part[2]])
+    end;
+End;
+
+Every 20$00 trigger not legionDestroyed and tick <= 60$00 do
+begin
+enable;
+legConstructList := Join(legConstructList, [ar_half_tracked, engine_combustion, control_manual, ar_gun]);
+End;
+
+// mobile warfare
+Every 0$1 trigger legTanks and spotByLegion do
+var i, mech, enemy;
+begin
+enable;
+
+if not legTanks then
+   exit;
+
+// tags:
+// 0 - idle,
+// 11 - go to parking, repair if needed
+// 12 - attack
+
+for i in legTanks do
+    begin
+    if not IsOk(i) or GetSide(i) <> 8 then
+       begin
+       legTanks := legTanks diff i;
+       continue;
+       end;
+
+    if not GetTag(i) and GetControl(i) = control_remote then
+       SetTag(i, tAttack);
+
+    if not GetTag(i) or GetTag(i) = 0 then
+       begin
+       if GetFuel(i) < 50 and GetEngine(i) = engine_combustion then
+          begin
+          ComMoveXY(i, 189, 19);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 189, 19) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, legParkingArea) then
+          ComMoveToArea(i, legParkingArea)
+       else
+          SetTag(i, tParking);
+       end;
+
+    if GetTag(i) = tParking then
+       begin
+       if GetLives(i) < 650 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, tAttack);
+       end;
+
+    if GetTag(i) = tAttack then
+       begin
+       enemy := FilterUnitsInArea(legBaseArea, [f_enemy, 8]);
+
+       if GetLives(i) < 650 and GetControl(i) = control_manual then
+          begin
+          ComStop(i);
+          SetTag(i, 0);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if legTanks then
+          AgressiveMove(i, [ [200,48], [210,74] ]);
+       end;
+    end;
+End;
+
+Every 3$00 trigger not legionDestroyed and Count(legRTanks) and spotByLegion do
+var i, tmp, tmp2;
+begin
+enable;
+
+tmp := UnitFilter(legRTanks, [[f_linked], [f_ok]]);
+legRTanks := legRTanks diff tmp;
+
+if not tmp then
+   exit;
+
+tmp2 := UnitFilter(tmp, [f_weapon, ar_double_machine_gun]);
+
+if tmp2 then
+   ComMoveXY(tmp2, 241, 99);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [200,48], [210,74] ]);
+
+until not tmp;
+End;
+
+Every 35$0 trigger not spotByLegion do
+var i, un, veh, tmp;
+begin
+uc_side := 8;
+uc_nation := nation_arabian;
+
+for i := 1 to 3 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, [ar_gun, ar_gatling_gun][i mod 2 + 1], 100);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, southSpawnArea, false);
+
+    PrepareMechanic(false, 6);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    tmp := Join(tmp, veh);
+    end;
+
+ComMoveXY(tmp, 219, 110);
+AddComMoveXY(tmp, 220, 94);
+AddComMoveXY(tmp, 209, 66);
+AddComMoveXY(tmp, 189, 22);
+
+wait(0$10);
+
+legTanks := legTanks union tmp;
+End;

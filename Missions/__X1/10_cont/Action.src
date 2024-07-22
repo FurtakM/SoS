@@ -1,0 +1,817 @@
+Export function Action;
+var i, mech, veh, amTroops;
+begin
+InGameOn;
+CenterNowOnXY(84, 28);
+RevealFogArea(2, heikeVisibleRoadArea); 
+
+ComMoveXY(Heike, 90, 30);
+
+uc_side := 1;
+uc_nation := nation_american;
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_laser, 66);
+veh := CreateVehicle;
+SetDir(veh, 1);
+PlaceUnitXY(veh, 80, 27, false);
+
+PrepareMechanic(sex_male, 8);
+mech := CreateHuman;
+PlaceHumanInUnit(mech, veh);
+
+repeat
+ wait(0$1);
+until HexInfo(90, 30);
+
+PlaceSeeing(80, 27, 2, -6);
+
+CenterNowOnXY(80, 27);
+
+DialogueOn;
+
+Say(Heike, 'DH-Start-1');
+
+DialogueOff;
+
+ComAttackUnit(Heike, veh);
+
+wait(0$1);
+
+SetLives(IsInUnit(Heike), 200);
+
+wait(0$0.3);
+
+DialogueOn;
+
+Say(Heike, 'DH-Start-2');
+
+DialogueOff;
+
+ComAttackUnit(Heike, veh);
+
+wait(0$0.2);
+
+ComCrawl(Heike);
+
+wait(0$3);
+
+PlaceUnitXY(omarVehicle, 82, 43, false);
+PlaceHumanInUnit(Omar, omarVehicle);
+
+ComMoveXY(Omar, 79, 32);
+
+wait(0$1);
+
+PlaceSeeing(79, 32, 2, -8);
+//ChangeSideFog(5, 2);
+
+wait(0$3);
+
+SetLives(veh, 200);
+
+wait(0$1);
+
+SetLives(mech, 10);
+
+wait(0$2);
+
+ComWalk(Heike);
+
+wait(1);
+
+ComMoveXY(Heike, 81, 25);
+AddComMoveXY(Heike, 72, 25);
+
+wait(0$3);
+
+ComExitVehicle(Omar);
+
+wait(1);
+
+ComMoveXY(Omar, 77, 28);
+AddComTurnUnit(Omar, Heike);
+
+Say(Omar, 'DO-Start-3');
+
+repeat
+ wait(3);
+until IsAt(Heike, 72, 25);
+
+ComHold(Heike);
+ComTurnUnit(Omar, Heike);
+
+ComMoveUnit(Heike, Omar);
+
+wait(0$1);
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Start-4');
+Say(Omar, 'DO-Start-5');
+Say(Heike, 'DH-Start-6');
+Say(Omar, 'DO-Start-7');
+
+if Query('QOmar') = 2 then
+   begin
+   Say(Heike, 'DH-QuestionN-1');
+
+   ComMoveXY(Heike, 58, 27);
+
+   wait(0$2);
+
+   //ChangeSideFog(5, 5);
+   RemoveSeeing(79, 32, 2);
+   RemoveSeeing(80, 27, 2);
+
+   CenterOnXY(58, 27);
+
+   repeat
+    wait(3);
+   until GetDistUnitXY(Heike, 88, 27);
+
+   uc_side := 1;
+   uc_nation := nation_american;
+
+   amTroops := [];
+
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, 10);
+       amTroops := Join(amTroops, CreateHuman);
+       SetDir(amTroops[i], 2);
+       PlaceUnitArea(amTroops[i], heikeTrapArea, false);
+
+       ComAttackUnit(amTroops[i], Heike);
+       end;
+
+   ComAttackUnit(Heike, amTroops[1]);
+
+   repeat
+    wait(0$1);
+   until IsDead(Heike) or IsDying(Heike);
+
+   wait(0$2);
+
+   YouLost('Heike');
+   exit;
+   end;
+
+Say(Heike, 'DH-QuestionY-1');
+
+wait(0$0.3);
+
+Say(Omar, 'DO-Story-1');
+Say(Omar, 'DO-Story-2');
+Say(Omar, 'DO-Story-3');
+Say(Omar, 'DO-Story-4');
+Say(Heike, 'DH-Story-5');
+Say(Omar, 'DO-Story-6');
+Say(Omar, 'DO-Story-7');
+
+ComMoveXY(Heike, 82, 44);
+AddComHold(Heike);
+
+wait(0$4);
+
+ComMoveXY(Omar, 82, 41);
+AddComTurnUnit(Omar, Heike);
+
+repeat
+ wait(0$1);
+until IsAt(Heike, 82, 44);
+
+ComTurnXY(Heike, 81, 47);
+
+Say(Heike, 'DH-Story-8');
+Say(Omar, 'DO-Story-9');
+Say(Omar, 'DO-Story-10');
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Story-11');
+
+ComMoveUnit(Omar, Heike);
+
+wait(0$0.3);
+
+ComTurnUnit(Omar, Heike);
+
+Say(Omar, 'DO-Story-12');
+Say(Heike, 'DH-Story-13');
+Say(Omar, 'DO-Story-14');
+Say(Omar, 'DO-Story-15');
+
+CenterOnXY(84, 48);
+
+ComMoveXY(Heike, 84, 48);
+AddComTurnXY(Heike, 84, 49);
+
+wait(0$1);
+
+ComMoveUnit(Omar, Heike);
+
+wait(0$1);
+
+ComTurnUnit(Omar, Heike);
+
+wait(0$0.3);
+
+Say(Omar, 'DO-Story-16');
+
+if Query('QOmar2') = 2 then
+   begin
+   ComMoveXY(Heike, 79, 57);
+   AddComMoveXY(Heike, 68, 53);
+
+   wait(0$2);
+
+   //ChangeSideFog(5, 5);
+   RemoveSeeing(79, 32, 2);
+   RemoveSeeing(80, 27, 2);
+
+   CenterOnXY(68, 53);
+
+   repeat
+    wait(3);
+   until GetDistUnitXY(Heike, 68, 53) < 6;
+
+   uc_side := 1;
+   uc_nation := nation_american;
+
+   amTroops := [];
+
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, 10);
+       amTroops := Join(amTroops, CreateHuman);
+       SetDir(amTroops[i], 2);
+       PlaceUnitArea(amTroops[i], heikeTrap2Area, false);
+
+       ComAttackUnit(amTroops[i], Heike);
+       end;
+
+   ComAttackUnit(Heike, amTroops[1]);
+
+   repeat
+    wait(0$1);
+   until IsDead(Heike) or IsDying(Heike);
+
+   wait(0$2);
+
+   YouLost('Heike');
+   exit;
+   end;
+
+Say(Omar, 'DO-Objective-1');
+
+ComTurnUnit(Heike, Omar);
+
+Say(Heike, 'DH-Objective-2');
+Say(Omar, 'DO-Objective-3');
+
+//ChangeSideFog(5, 5);
+RemoveSeeing(79, 32, 2);
+RemoveSeeing(80, 27, 2);
+
+SetSide(Omar, 2);
+SetSide(omarVehicle, 2);
+
+ChangeMissionObjectives('O1');
+
+InGameOff;
+
+gameActive := true;
+
+SaveForQuickRestart;
+End;
+
+// spot arabian base
+Every 0$2 trigger gameActive and not spotArabianBase and FilterUnitsInArea(arBaseArea, [f_side, 2]) do
+var i;
+begin
+spotArabianBase := true;
+
+DialogueOn;
+
+PlaceSeeing(232, 101, 2, -22);
+RemoveSeeing(232, 101, 2);
+
+CenterNowOnXY(232, 101);
+
+for i in FilterUnitsInArea(arBaseArea, [f_side, 5]) do
+    SetSide(i, 2);
+
+if not spotAmericanBase then
+   Say(Omar, 'DO-ArBase-1a')
+else
+   Say(Omar, 'DO-ArBase-1b');
+
+Say(Heike, 'DH-ArBase-2');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger gameActive and (IsSelected(arFac) or UnitsInside(arFac)) and IsOk(Heike) and IsOk(Omar) do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Fac-1');
+Say(Omar, 'DOm-Fac-2');
+
+if LoadVariable('03_CargoRecycled', false) then
+   SetTech(tech_cargo, 2, state_researched);
+
+if TestCharacters('09_Markov') then
+   begin
+   Say(Heike, 'DH-Fac-3a');
+
+   SetTech(tech_gatling, 2, state_researched);
+   SetTech(tech_gun, 2, state_researched);
+   SetTech(tech_radar, 2, state_researched);
+   SetTech(tech_remCont, 2, state_researched);
+
+   if GetSkill(Heike, 3) < 10 then
+      SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
+   end
+else if TestCharacters('09_Olaf') then
+   begin
+   Say(Heike, 'DH-Fac-3b');
+
+   SetTech(tech_radar, 2, state_researched);
+   SetTech(tech_remCont, 2, state_researched);
+
+   if GetSkill(Heike, 3) < 10 then
+      SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
+   end
+else if GetSkill(Heike, skill_mechanical) > 5 then
+   begin
+   Say(Heike, 'DH-Fac-3c');
+
+   SetTech(tech_radar, 2, state_researched);
+   end
+else
+   Say(Heike, 'DH-Fac-3d');
+
+ChangeMissionObjectives('ARemote');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger gameActive and (IsSelected(arLab) or UnitsInside(arLab)) and IsOk(Heike) and IsOk(Omar) do
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Lab-1');
+Say(Omar, 'DOm-Lab-2');
+
+if TestCharacters('09_Aviradze') then
+   begin
+   SetTech(tech_apelang, 2, state_researched);
+   SetTech(tech_apepsych, 2, state_researched);
+   SetTech(tech_apeagres, 2, state_researched);
+
+   Say(Heike, 'DH-Lab-4a');
+   end
+else
+   Say(Heike, 'DH-Lab-4b');
+
+if LoadVariable('05_DrugsTested', debug) then
+   begin
+   Say(Heike, 'DH-Lab-5a');
+   SetTech(tech_stimdrugs, 2, state_enabled);
+   end;
+
+if LoadVariable('09_ApeBrain', debug) then
+   begin
+   Say(Heike, 'DH-Lab-6a');
+   Say(Omar, 'DOm-Lab-7a');
+   SetTech(tech_apeBrain, 2, state_enabled);
+   end;
+
+if LoadVariable('09_ApeNeural', debug) then
+   begin
+   SetTech(tech_apeNeural, 2, state_enabled);
+   end;
+
+DialogueOff;
+End;
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_class, class_apeman]]) do
+begin
+if IsOk(Heike) then
+   Say(Heike, 'DH-Ape-1');
+
+ChangeMissionObjectives('AApes');
+End;
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_class, class_apeman_soldier]]) >= 5 do
+begin
+hasApes := true;
+ChangeMissionObjectives('AApesOut');
+
+if not IsOk(Heike) or not IsOk(Omar) then
+   exit;
+
+DialogueOn;
+
+Say(Heike, 'DH-ApeArmy-1');
+Say(Omar, 'DOm-ApeArmy-2');
+Say(Heike, 'DH-ApeArmy-3');
+Say(Omar, 'DOm-ApeArmy-4');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger gameActive and GetTech(tech_stimdrugs, 2) = state_researched do
+begin
+hasDrugs := true;
+
+if IsOk(Heike) then
+   Say(Heike, 'DH-Stim-1');
+End;
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_class, class_apeman_kamikaze]]) do
+Say(Heike, 'DH-Kamikadze-1');
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_chassis, class_mastodont]]) and IsOk(Omar) and IsOk(Heike) do
+begin
+InGameOn;
+
+CenterNowOnUnits(Omar);
+
+Say(Heike, 'DH-Mastodont-1');
+Say(Omar, 'DOm-Mastodont-2');
+Say(Heike, 'DH-Mastodont-3');
+Say(Omar, 'DOm-Mastodont-4');
+
+hasMastodont := true;
+
+InGameOff;
+
+SetAchievement('ACH_MASTODONTTAME');
+End;
+
+Every 0$1 trigger gameActive and tigerCounter do
+SetAchievement('ACH_TIGERTAME');
+
+Every 0$1 trigger gameActive and tigerCounter > 1 do
+begin
+hasTigers := true;
+
+if not IsOk(Omar) or not IsOk(Heike) then
+   exit;
+
+CenterNowOnUnits(Omar);
+
+DialogueOn;
+Say(Omar, 'DOm-Tiger-1');
+Say(Heike, 'DH-Tiger-2');
+Say(Omar, 'DOm-Tiger-3');
+Say(Heike, 'DH-Tiger-4');
+DialogueOff;
+End;
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 2], [f_ok], [f_control, control_remote]]) >= 3 do
+begin
+ChangeMissionObjectives('ARemoteOut');
+hasVehicles := true;
+
+if IsOk(Heike) then
+   Say(Heike, 'DH-Mechanic-1');
+End;
+
+
+Every 0$1 trigger gameActive and FilterUnitsInArea(amBaseOuterArea, [f_side, 2]) do
+spotAmericanBase := true;
+
+// spot american base
+Every 0$2 trigger gameActive and spotAmericanBase and IsOk(Omar) and IsOk(Heike) do
+begin
+DialogueOn;
+
+PlaceSeeing(92, 129, 2, -22);
+RemoveSeeing(92, 129, 2);
+
+CenterNowOnXY(92, 129);
+
+dwait(0$0.3);
+
+Say(Omar, 'DO-AmBase-1');
+Say(Heike, 'DH-AmBase-2');
+Say(Omar, 'DO-AmBase-3');
+Say(Heike, 'DH-AmBase-4');
+Say(Omar, 'DO-AmBase-5');
+Say(Heike, 'DH-AmBase-6');
+Say(Omar, 'DO-AmBase-7');
+
+if not spotArabianBase then
+   begin
+   Say(Omar, 'DO-AmBase-8a'); 
+   end
+else
+   begin
+   Say(Omar, 'DO-AmBase-8b');
+   end;
+
+if IsInUnit(Heike) then
+   CenterNowOnUnits(IsInUnit(Heike))
+else
+   CenterNowOnUnits(Heike);
+
+Say(Heike, 'DH-AmBase-9'); 
+
+DialogueOff;
+
+spotByAmerican := true;
+
+ChangeMissionObjectives('O2');
+End;
+
+Function TalkAboutLegion;
+begin
+Say(Heike, 'DH-Legion-1');
+Say(Omar, 'DOm-Legion-2');
+Say(Heike, 'DH-Legion-3');
+Say(Omar, 'DOm-Legion-4');
+Say(Heike, 'DH-Legion-5');
+Say(Omar, 'DOm-Legion-6');
+Say(Heike, 'DH-Legion-7');
+End;
+
+// spot legion forces north
+Every 0$2 trigger gameActive and AreInArea([Heike, Omar], legSpotNorthArea) and not spotByLegion and not spotLegion do
+var i, un, veh;
+begin
+uc_side := 8;
+uc_nation := nation_american;
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_laser, 90);
+veh := CreateVehicle;
+legTanks := Join(legTanks, veh);
+SetDir(veh, 2);
+PlaceUnitXY(veh, 126, 18, false);
+
+uc_nation := nation_arabian;
+
+PrepareMechanic(false, [6, 7, 8, 9][Difficulty]);
+un := CreateHuman;
+legEForces := Join(legEForces, un);
+PlaceHumanInUnit(un, veh);
+
+PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
+
+for i := 1 to 3 do
+    begin
+    un := CreateHuman;
+    legEForces := Join(legEForces, un);
+    SetDir(un, 2);
+    PlaceUnitXYR(un, 126, 18, 4, false);
+    end;
+
+wait(0$01);
+
+DialogueOn;
+PlaceSeeing(126, 18, 2, -16);
+
+CenterNowOnXY(126, 18);
+
+TalkAboutLegion;
+
+RemoveSeeing(126, 18, 2);
+DialogueOff;
+
+spotLegion := true;
+
+ComAgressiveMove(legEForces, 164, 47);
+AddComAgressiveMove(legEForces, 179, 20);
+
+repeat
+ wait(0$1);
+until not UnitFilter(legEForces, [f_hastask]) or not UnitFilter(legEForces, [f_ok]);
+
+if not UnitFilter(legEForces, [f_ok]) then
+   exit;
+
+legForces := legForces union legEForces;
+legEForces := [];
+End;
+
+// spot legion forces south
+Every 0$2 trigger gameActive and AreInArea([Heike, Omar], legSpotSouthArea) and not spotByLegion and not spotLegion do
+var i, un, veh;
+begin
+uc_side := 8;
+uc_nation := nation_american;
+
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_laser, 90);
+veh := CreateVehicle;
+legTanks := Join(legTanks, veh);
+SetDir(veh, 3);
+PlaceUnitXY(veh, 224, 57, false);
+
+uc_nation := nation_arabian;
+
+PrepareMechanic(false, [6, 7, 8, 9][Difficulty]);
+un := CreateHuman;
+legEForces := Join(legEForces, un);
+PlaceHumanInUnit(un, veh);
+
+PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
+
+for i := 1 to 3 do
+    begin
+    un := CreateHuman;
+    legEForces := Join(legEForces, un);
+    SetDir(un, 3);
+    PlaceUnitXYR(un, 224, 57, 4, false);
+    end;
+
+wait(0$01);
+
+DialogueOn; 
+PlaceSeeing(224, 57, 2, -16);
+
+CenterNowOnXY(224, 57);
+
+TalkAboutLegion;
+
+RemoveSeeing(224, 57, 2);
+DialogueOff;
+
+spotLegion := true;
+
+ComAgressiveMove(legEForces, 164, 47);
+AddComAgressiveMove(legEForces, 179, 20);
+
+repeat
+ wait(0$1);
+until not UnitFilter(legEForces, [f_hastask]) or not UnitFilter(legEForces, [f_ok]);
+
+if not UnitFilter(legEForces, [f_ok]) then
+   exit;
+
+legForces := legForces union legEForces;
+legEForces := [];
+End;
+
+// spotted by legion
+Every 0$1 trigger gameActive and (See(8, Omar) or See(8, Heike)) and IsOk(Heike) and IsOk(Omar) and not spotByLegion do
+begin
+DialogueOn;
+
+SayRadio(Farmer, 'DF-Spot-1');
+Say(Heike, 'DH-Spot-2');
+SayRadio(Farmer, 'DF-Spot-3');
+Say(Heike, 'DH-Spot-4');
+Say(Omar, 'DOm-Spot-5');
+SayRadio(Farmer, 'DF-Spot-6');
+SayRadio(Farmer, 'DF-Spot-7');
+SayRadio(Farmer, 'DF-Spot-8');
+Say(Heike, 'DH-Spot-9');
+SayRadio(Farmer, 'DF-Spot-10');
+
+DialogueOff;
+
+spotByLegion := true;
+End;
+
+Every 0$1 trigger gameActive and (spotByLegion or spotLegion) do
+ChangeMissionObjectives('O3');
+
+Every 0$1 trigger gameActive and FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_ok]]) = 0 do
+begin
+legScriptActive := false;
+
+if not americanDestroyed then
+   SetAchievement('ACH_REVANGE');
+
+legionDestroyed := true;
+
+DialogueOn;
+
+SayRadio(Farmer, 'DF-LegDes-1');
+Say(Heike, 'DH-LegDes-2');
+SayRadio(Farmer, 'DF-LegDes-3');
+Say(Heike, 'DH-LegDes-4');
+
+DialogueOff;
+
+ChangeMissionObjectives('O5');
+End;
+
+Every 0$1 trigger gameActive and UnitFilter(amForces, [[f_type, unit_human], [f_ok]]) < 6 do
+var i, tmp;
+begin
+amScriptActive := false;
+
+tmp := UnitFilter(amForces, [[f_type, unit_human], [f_ok]]);
+
+for i in tmp do
+    begin
+    ComExit(i);
+    AddComMoveXY(i, 63, 124);
+    end;
+
+wait(0$2);
+
+americanDestroyed := true;
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(amForces, [[f_type, unit_human], [f_ok]]) union UnitFilter(amPatrol, [f_ok]);
+
+ for i in tmp do
+     begin
+     if IsAt(i, 63, 124) or IsInArea(i, amEscapeArea) then
+        RemoveUnit(i)
+     else
+        ComMoveXY(i, 63, 124);
+     end;
+until not tmp;
+End;
+
+Every 0$1 trigger gameActive and americanDestroyed and IsOk(Heike) and IsOk(Omar) do
+var i, un, veh;
+begin
+DialogueOn;
+
+Say(Heike, 'DH-Victory-1');
+Say(Omar, 'DOm-Victory-2');
+Say(Omar, 'DOm-Victory-3');
+Say(Heike, 'DH-Victory-4');
+Say(Omar, 'DOm-Victory-5');
+Say(Omar, 'DOm-Victory-6');
+
+DialogueOff;
+
+ChangeMissionObjectives('O4');
+
+canFinish := true;
+SetAreaMapShow(finalArea, 1);
+
+if not legionDestroyed then
+   begin
+   uc_nation := nation_arabian;
+   uc_side := 8;
+
+   for i := 1 to 4 do
+       begin
+       PrepareSoldier(false, [8, 9, 10, 10][Difficulty]);
+       un := CreateHuman;
+       SetDir(un, 3);
+       PlaceUnitArea(un, legDefArea, false);
+       ComCrawl(un);
+       end;
+
+   for i := 1 to 3 do
+       begin
+       PrepareSoldier(false, [8, 9, 10, 10][Difficulty]);
+       un := CreateHuman;
+       SetClass(un, class_mortar);
+       SetDir(un, 3);
+       PlaceUnitArea(un, legDefArea, false);
+       end;
+
+   for i := 1 to 2 do
+       begin
+       uc_side := 8;
+       uc_nation := nation_american;
+
+       PrepareVehicle(us_heavy_tracked, engine_combustion, control_manual, us_laser, 90);
+       veh := CreateVehicle;
+       SetDir(veh, 3);
+       PlaceUnitArea(veh, legVDefArea, false);
+
+       uc_nation := nation_arabian;
+
+       PrepareMechanic(false, [8, 9, 10, 10][Difficulty]);
+       un := CreateHuman;
+       PlaceHumanInUnit(un, veh);
+       end;
+   end;
+End;
+
+Every 0$1 trigger gameActive and canFinish and AreInArea([Omar], finalArea) and AreInArea([Heike], finalArea) do
+begin
+if tick <= 50$00 then
+   SetAchievement('ACH_HSPEED_10');
+
+if legionDestroyed then
+   AddMedal('med1', 1)
+else
+   AddMedal('med1', -1);
+
+if tick <= [70$00, 60$00, 50$00, 45$00][Difficulty] then
+   AddMedal('med2', 1)
+else
+   AddMedal('med2', -1);
+
+if hasApes + hasVehicles + hasTigers + hasMastodont + hasApes + hasDrugs >= 3 then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+YouWin;
+End;

@@ -26,14 +26,14 @@ BUILDING
 	end;
 	
 	if NEWCLASS ~= HUMAN.CLASS then
-		if isInArray(HUMAN.CLASSTYPE,{clt_soldier,clt_engineer,clt_mechanic,clt_scientist}) then
+		if isInArray(HUMAN.CLASSTYPE,{clt_soldier,clt_engineer,clt_mechanic,clt_scientist,clt_noble}) then
 		
 			local sc = SPECIAL_CLASSES[NEWCLASS];
 			if (sc ~= nil) then
 				if (BUILDING.NATION ~= sc.NAT) or not GET_TECH(sc.TECH,BUILDING.SIDE).researched then
 						return RESULT_FALSE;
 				end;
-			elseif not isInArray(NEWCLASS,{class_soldier,class_engineer,class_mechanic,class_scientist}) then
+			elseif not isInArray(NEWCLASS,{class_soldier,class_engineer,class_mechanic,class_scientist,class_noble}) then
 				return RESULT_FALSE;
 			end;
 			
@@ -66,7 +66,7 @@ BUILDING
 			return RESULT_FALSE;
 		end;
 	
-		if isInArray(NEWCLASS,{class_soldier,class_sniper,class_mortarer,class_bazooker,class_apeman_soldier,class_apeman_kamikaze}) then
+		if isInArray(NEWCLASS,{class_soldier,class_sniper,class_mortarer,class_bazooker,class_apeman_soldier,class_apeman_kamikaze,class_noble}) then
 			if not isInArray(BUILDING.KIND,{bud_armoury,bud_barracks}) then
 				return RESULT_FALSE;
 			end;
@@ -75,7 +75,7 @@ BUILDING
 				return RESULT_FALSE;
 			end;
 		elseif NEWCLASS == class_mechanic then
-			if not isInArray(BUILDING.KIND,set_factory) and not (BUILDING.KIND == bud_ct) then
+			if not isInArray(BUILDING.KIND,set_factory) and not (BUILDING.KIND == bud_control_tower) then
 				return RESULT_FALSE;
 			end;
 		elseif NEWCLASS == class_scientist then
@@ -110,6 +110,7 @@ end;
 
 function getButtons(BUTTONS,STATE,PAGEID)
 	return RESULT_IGNORE, BUTTONS;
+
 --[[
 	local BUT,BUT_OR,BUT_ID;
 
@@ -128,20 +129,22 @@ function getButtons(BUTTONS,STATE,PAGEID)
 				end;
 			
 				if BUT.ID >= 0 then
-					-- Handle State HERE!
+					if isInArray(BUT.ID,{BUTTON_UPGRADELAB1,BUTTON_UPGRADELAB2}) then
+                        BUT.ID = -BUT.ID;
+                    end;
 				end;			
 			end;
 		end;
 	end;
 
-	return RESULT_IGNORE, BUTTONS;
---]]
+	return RESULT_TRUE_MIXED, BUTTONS;--]]
 end;
 
 -- [Result Types] --
-RESULT_FALSE  = -1;
-RESULT_TRUE   = -2;
-RESULT_IGNORE = -3;
+RESULT_FALSE      = -1;
+RESULT_TRUE       = -2;
+RESULT_IGNORE     = -3;
+RESULT_TRUE_MIXED = -4;
 
 -- [Button States] --
 BUTTONSTATE_HIDDEN   = 0;
@@ -396,7 +399,10 @@ BUTTON_UNUSED2              = 238; -- Not Used
 BUTTON_WALL                 = 239;
 BUTTON_ARAB_SIBFUSION       = 240;
 BUTTON_HOLDFIRE             = 241;
-BUTTON_UNUSED3              = 242; -- Not Used
+BUTTON_ATTACK2              = 242; -- Not Used
+BUTTON_SWITCH_AMMO          = 263;
+BUTTON_COLLECT_CRATES       = 264;
+BUTTON_CP_SHEIK             = 265;
 
 -- [[BUTTON COMMANDS]] --
 COMMAND_ICONGROUPCANCEL      = 0;
@@ -643,11 +649,18 @@ COMMAND_PROF_CUSTOM          = 240; -- Custom Profession Change
 COMMAND_LUA_CUSTOM           = 241; -- Custom LUA (Runs lua when button pressed)
 COMMAND_RESEARCH_CUSTOM      = 242; -- Custom Research
 COMMAND_HOLDFIRE             = 243;
+COMMAND_CP_SHEIK             = 244;
+
+TAG_SHEIK = 500;
 
 -- [[OVERRIDES]] --
 
 function getCP(STATE,CLASS)
 	return canChangeProfession(STATE.CURHUMAN,STATE.CURUNIT) == RESULT_TRUE;
+end;
+
+function canChangeToSheik(STATE)
+	return (STATE.CURHUMAN ~= nil) and (STATE.CURHUMAN.CLASS ~= class_noble) and (GET_TAG(STATE.CURHUMAN.ID) == TAG_SHEIK) and STATE.CURHUMAN.ACTIVITY ~= act_change_class;
 end;
 
 BUTTON_OVERRIDES = {};
@@ -691,8 +704,14 @@ BUTTON_OVERRIDES[COMMAND_CP_AMERICANSNIPER] = {
 											if (STATE.CURUNIT.NATION == nation_am) then
 												return BUTTON_CP_AMERICANSNIPER;
 											elseif (STATE.CURUNIT.NATION == nation_ar) then
-												if isInArray(STATE.CURHUMAN.CLASS,class_apes) and getCP(STATE,class_apeman_kamikaze) and not getCP(STATE,class_mortarer) then
+												if (STATE.CURHUMAN ~= nil) and STATE.CURHUMAN.ACTIVITY == act_change_class then
+													return BUTTONID;
+												end;
+												
+												if (STATE.CURHUMAN ~= nil) and isInArray(STATE.CURHUMAN.CLASS, class_apes) and getCP(STATE, class_apeman_kamikaze) and not getCP(STATE, class_mortarer) then
 													return BUTTON_CP_KAMIKAZE;
+												elseif canChangeToSheik(STATE) then
+													return BUTTON_CP_SHEIK;
 												else
 													return BUTTON_CP_ARABMORTAR;
 												end;
@@ -943,7 +962,7 @@ SPECIAL_APE_CLASSES = {[class_apeman_soldier]={NAT={nation_am},TECH=tech_ApeAgre
 controller_human			= 1;
 controller_remote			= 2;
 controller_computer			= 3;
-controller_desertrider		        = 4;
+controller_desertrider		= 4;
 controller_apeman			= 5;
 
 -- [Activities] --
@@ -1019,4 +1038,44 @@ function isInArray(value, thearray)
 	end;
 
 	return false;
+end;
+
+function dump(o)
+    return vardump(o, 0);
+end;
+
+function vardump(o, level)
+    local s = '';
+    local space = '';
+    local space2 = '';
+
+    if (level > 0) then
+        for i = 1, level do
+            space = space .. '  ';
+
+            if (level > 1) then
+                space2 = space2 .. ' ';
+            end;
+        end;
+    end;
+
+    if type(o) == 'table' then
+        s = '{ ';
+
+        for k, v in pairs(o) do
+            if type(k) ~= 'number' then 
+                k = '"' .. k .. '"';
+            end;
+
+        s = s .. '\n' .. space .. '[' .. k .. '] = ' .. vardump(v, level + 1);
+        end;
+
+        return s .. '\n' .. space2 .. '} ';
+    else
+        return tostring(o);
+    end;
+end;
+
+function dd(var)
+    LUA_TO_DEBUGLOG(dump(var)); 
 end;

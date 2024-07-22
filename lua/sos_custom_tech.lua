@@ -49,17 +49,42 @@ SOS_TECH = {
     }
 }
 
+SOS_BUD = {
+    [500] = {
+        ID = bud_ext_solar,
+        BUTTON = 65
+    }
+}
+
+function getIconTypeIndex(IT)
+    if (IT == nil) or (IT <= -1) then
+        return -1;
+    elseif IT >= 500 then
+        return getCustomIconTypeBudIndex(IT);
+    else
+        return OW_GETICONTYPEINDEX(IT);
+    end;
+end;
+
 function GetLabQueueIcon(ID)
     if (ID <= -1) then
         return getIconTypeIndex(BudLab2IT(-ID));
     elseif (ID >= 80) then
-    	return getCustomIconTypeIndex(ID);
+    	return getCustomIconTypeTechIndex(ID);
     else
         return getIconTypeIndex(_Tech2ITTable[ID]);
     end;
 end;
 
-function getCustomIconTypeIndex(TECH)
+function getCustomIconTypeBudIndex(BUD)
+    if (SOS_BUD[BUD] ~= nil) then
+        return SOS_BUD[BUD].BUTTON;
+    end;
+
+    return -1;
+end;
+
+function getCustomIconTypeTechIndex(TECH)
     for i = 1, #SOS_TECH do
     	if (SOS_TECH[i].TECH == TECH) then
     		return SOS_TECH[i].BUTTON;
@@ -67,4 +92,28 @@ function getCustomIconTypeIndex(TECH)
     end;
 
     return -1;
+end;
+
+function GetExtensionIcon(KIND)
+    if (KIND <= -1) then
+        return -1;
+    end;
+
+    BTID = -1;
+
+    switch(KIND) : caseof {
+        [bud_ext_track]             = function (x) BTID = IT_FE_Track; end,
+        [bud_ext_gun]               = function (x) BTID = IT_FE_Gun; end,
+        [bud_ext_rocket]            = function (x) BTID = IT_FE_Rocket; end,
+        [bud_ext_noncombat]         = function (x) BTID = IT_FE_NonCombat; end,
+        [bud_ext_radar]             = function (x) BTID = IT_FE_Radar; end,
+        [bud_ext_siberium]          = function (x) BTID = IT_FE_Siberium; end,
+        [bud_ext_radio]             = function (x) BTID = IT_FE_Radio; end,
+        [bud_ext_stitch]            = function (x) BTID = IT_FE_Stitching; end,
+        [bud_ext_computer]          = function (x) BTID = IT_FE_Computer; end,
+        [bud_ext_laser]             = function (x) BTID = IT_FE_Laser; end,
+        [bud_ext_solar]             = function (x) BTID = 500; end,
+    };
+
+    return BTID;
 end;

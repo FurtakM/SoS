@@ -1,0 +1,78 @@
+Export function CanBeBuiltOnlyResources(depot, btype);
+var pom, cost;
+begin
+if btype = b_depot then
+   begin
+   result := true;
+   exit;
+   end;
+
+pom := GetBase(depot);
+cost := CostOfBuilding(btype, GetNation(depot));
+
+result := (
+   GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3]
+);
+End;
+
+Export function CreateNature;
+var i, areas, amount;
+begin
+PrepareTiger(0);
+
+for i := 1 to [10, 8, 5, 5][Difficulty] do
+    PlaceUnitArea(CreateHuman, natureArea, false);
+
+PrepareBird;
+
+for i := 1 to 3 do
+    PlaceUnitArea(CreateHuman, natureArea, false);
+
+PrepareHorse;
+
+for i := 1 to 3 do
+    PlaceUnitArea(CreateHuman, natureArea, false);
+
+PrepareFrog;
+
+for i := 1 to 3 do
+    PlaceUnitArea(CreateHuman, frogArea, false);
+
+
+amount := [3, 2, 2, 1][Difficulty];
+areas := [mastodont1Area, mastodont2Area, mastodont3Area, mastodont4Area];
+
+PrepareMastodont;
+
+for i := 1 to amount do
+    PlaceUnitArea(CreateVehicle, areas[(i - 1) + Difficulty], false);
+
+PrepareApeman(0);
+
+for i := 1 to [9, 7, 6, 5][Difficulty] do
+    PlaceUnitArea(CreateHuman, apeArea, false);
+
+for i := 1 to [7, 6, 5, 4][Difficulty] do
+    PlaceUnitXYR(CreateHuman, 274, 133, 6, false);
+
+for i := 1 to [4, 4, 3, 3][Difficulty] do
+    PlaceUnitXYR(CreateHuman, 208, 142, 6, false);
+End;
+
+Export function AreInArea(units, area);
+var i;
+begin
+result := false;
+
+if not units then
+   exit;
+
+for i in units do
+    if IsInArea(i, area) or IsInArea(IsInUnit(i), area) then
+       begin
+       result := true;
+       exit;
+       end;
+End;

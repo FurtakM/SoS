@@ -1,12 +1,71 @@
 Export Heike, Omar, Kaia;
+Export heikeVehicle, omarVehicle, omarSol;
 Export function PrepareArabian;
-begin       
+var i, un, fac, j;
+begin
 uc_side := 2;
 uc_nation := nation_arabian;
+
+SetBName(ar_depot, 'kaba');
+
+InitHC_All();
+
+for i in FilterAllUnits([[f_side, 2], [f_btype, b_bunker]]) do
+    begin
+    PrepareSoldier(false, 6);
+    PlaceHumanInUnit(CreateHuman, i);
+    PlaceWeaponTurret(i, [ar_gatling_gun, ar_gun, ar_rocket_launcher][i mod 3 + 1]);
+    end;
+
+PlaceWeaponTurret(HexInfo(129, 61), ar_radar);
+
+PrepareSoldier(sex_male, 3);
+omarSol := CreateHuman;
+PlaceHumanInUnit(omarSol, ar_depot);
+
+fac := HexInfo(143, 51);
+
+for i := 1 to 2 do
+    begin
+    PrepareMechanic(false, 3);
+    PlaceHumanInUnit(CreateHuman, fac);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareEngineer(false, 2);
+    PlaceHumanInUnit(CreateHuman, ar_depot);
+    end;
+
+PlaceUnitXY(CreateHuman, 164, 80, false);
+PlaceUnitXY(CreateHuman, 166, 84, false);
+
+for i in FilterAllUnits([[f_side, 2], [f_btype, b_lab_full]]) do
+    for j := 1 to 3 do
+        begin
+        PrepareScientist(false, 3);
+        PlaceHumanInUnit(CreateHuman, i);
+        end;
 
 Heike := PrepareUnit('Heike', (not debug), prefix);
 Kaia := PrepareUnit('Kaia', (not debug), prefix);
 
+PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_gun, 100);
+heikeVehicle := CreateVehicle;
+SetDir(heikeVehicle, 1);
+PlaceUnitXY(heikeVehicle, 149, 59, false);
+
+SetClass(Heike, class_soldier);
+
+PlaceHumanInUnit(Heike, ar_depot);
+
 uc_side := 5;
 Omar := NewCharacter('Omar');
+
+PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_gun, 100);
+omarVehicle := CreateVehicle;
+SetClass(Omar, class_soldier);
+SetDir(omarVehicle, 1);
+PlaceUnitXY(omarVehicle, 132, 83, false);
+PlaceHumanInUnit(Omar, omarVehicle);
 End;

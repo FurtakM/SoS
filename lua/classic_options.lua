@@ -561,7 +561,9 @@ menu.window_options.panel.shortcuts = clButton(
     30,
     loc(TID_msg_Shortcuts), 
     'showShortcuts(1);',
-    {}
+    {
+        disabled = true
+    }
 );
 
 menu.window_options.panel.accept = clButton(
