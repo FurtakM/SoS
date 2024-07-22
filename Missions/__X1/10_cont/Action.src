@@ -318,9 +318,17 @@ DialogueOn;
 Say(Heike, 'DH-Fac-1');
 Say(Omar, 'DOm-Fac-2');
 
+if LoadVariable('03_CargoRecycled', false) then
+   SetTech(tech_cargo, 2, state_researched);
+
 if TestCharacters('09_Markov') then
    begin
    Say(Heike, 'DH-Fac-3a');
+
+   SetTech(tech_gatling, 2, state_researched);
+   SetTech(tech_gun, 2, state_researched);
+   SetTech(tech_radar, 2, state_researched);
+   SetTech(tech_remCont, 2, state_researched);
 
    if GetSkill(Heike, 3) < 10 then
       SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
@@ -329,11 +337,18 @@ else if TestCharacters('09_Olaf') then
    begin
    Say(Heike, 'DH-Fac-3b');
 
+   SetTech(tech_radar, 2, state_researched);
+   SetTech(tech_remCont, 2, state_researched);
+
    if GetSkill(Heike, 3) < 10 then
       SetSkill(Heike, 3, GetSkill(Heike, 3) + 1);
    end
 else if GetSkill(Heike, skill_mechanical) > 5 then
-   Say(Heike, 'DH-Fac-3c')
+   begin
+   Say(Heike, 'DH-Fac-3c');
+
+   SetTech(tech_radar, 2, state_researched);
+   end
 else
    Say(Heike, 'DH-Fac-3d');
 
@@ -548,10 +563,6 @@ PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
 for i := 1 to 3 do
     begin
     un := CreateHuman;
-
-    if i = 1 then
-       SetClass(un, class_sniper);
-
     legEForces := Join(legEForces, un);
     SetDir(un, 2);
     PlaceUnitXYR(un, 126, 18, 4, false);
@@ -610,10 +621,6 @@ PrepareSoldier(false, [6, 7, 8, 9][Difficulty]);
 for i := 1 to 3 do
     begin
     un := CreateHuman;
-
-    if i = 1 then
-       SetClass(un, class_sniper);
-
     legEForces := Join(legEForces, un);
     SetDir(un, 3);
     PlaceUnitXYR(un, 224, 57, 4, false);
@@ -711,7 +718,7 @@ americanDestroyed := true;
 
 repeat
  wait(0$1);
- tmp := UnitFilter(amForces, [[f_type, unit_human], [f_ok]]);
+ tmp := UnitFilter(amForces, [[f_type, unit_human], [f_ok]]) union UnitFilter(amPatrol, [f_ok]);
 
  for i in tmp do
      begin

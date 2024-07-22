@@ -38,6 +38,9 @@ if unit in legForces then
 if unit in legTanks then
    legTanks := legTanks diff unit;
 
+if unit in legRTanks then
+   legRTanks := legRTanks diff unit;
+
 if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 8 then
    legBuildings := Join(legBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
 
@@ -107,7 +110,11 @@ if side = 8 then
    if weapon in [ar_cargo_bay, ar_crane] then
       exit;
 
-   legTanks := Join(legTanks, veh);
+   if GetControl(veh) = control_manual then
+      legTanks := Join(legTanks, veh)
+   else
+      legRTanks := Join(legRTanks, veh);
+
    wait(0$01);
    AddComMoveToArea(veh, legParkingArea);
    end;

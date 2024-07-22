@@ -1,5 +1,5 @@
 Export Farmer;
-Export legForces, legEForces, legTech, legConstructList, legHealPoint, legBuildings, legTanks, legCargo;
+Export legForces, legEForces, legTech, legConstructList, legHealPoint, legBuildings, legTanks, legRTanks, legCargo;
 Export function PrepareLegion;
 var i, j, b, un, skill, sources;
 begin
@@ -14,6 +14,7 @@ legConstructList := [ [ar_medium_trike, engine_combustion, control_remote, ar_ca
 legHealPoint := [195, 15];
 legBuildings := [];
 legTanks := [];
+legRTanks := [];
 legCargo := 0;
 
 sources := [ [219, 31], [166, 31] ];
@@ -404,7 +405,7 @@ legConstructList := Join(legConstructList, [ar_half_tracked, engine_combustion, 
 End;
 
 // mobile warfare
-Every 0$1 trigger legTanks do
+Every 0$1 trigger legTanks and spotByLegion do
 var i, mech, enemy;
 begin
 enable;
@@ -484,8 +485,64 @@ for i in legTanks do
           if not HasTask(i) then
              ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
           end
-       else if legTanks >= 4 then
+       else if legTanks then
           AgressiveMove(i, [ [200,48], [210,74] ]);
        end;
     end;
+End;
+
+Every 3$00 trigger not legionDestroyed and Count(legRTanks) and spotByLegion do
+var i, tmp, tmp2;
+begin
+enable;
+
+tmp := UnitFilter(legRTanks, [[f_linked], [f_ok]]);
+legRTanks := legRTanks diff tmp;
+
+if not tmp then
+   exit;
+
+tmp2 := UnitFilter(tmp, [f_weapon, ar_double_machine_gun]);
+
+if tmp2 then
+   ComMoveXY(tmp2, 241, 99);
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [200,48], [210,74] ]);
+
+until not tmp;
+End;
+
+Every 35$0 trigger not spotByLegion do
+var i, un, veh, tmp;
+begin
+uc_side := 8;
+uc_nation := nation_arabian;
+
+for i := 1 to 3 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, [ar_gun, ar_gatling_gun][i mod 2 + 1], 100);
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, southSpawnArea, false);
+
+    PrepareMechanic(false, 6);
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    tmp := Join(tmp, veh);
+    end;
+
+ComMoveXY(tmp, 219, 110);
+AddComMoveXY(tmp, 220, 94);
+AddComMoveXY(tmp, 209, 66);
+AddComMoveXY(tmp, 189, 22);
+
+wait(0$10);
+
+legTanks := legTanks union tmp;
 End;
