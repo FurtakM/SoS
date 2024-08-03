@@ -1319,6 +1319,11 @@ function kickPlayer()
 	end;
 
 	local index = clGetListSelectedIndex(menu.window_multiplayer_room.panel.page1.playerList.ID);
+
+	if (index == nil) then
+		return;
+	end;
+
 	local player = MULTIPLAYER_ROOM_DATA.Players[index].PLID;
 
 	if (index == 1 or player == nil or player == 0) then
@@ -2395,7 +2400,7 @@ function setMapList(mapList, selectedMap, isHost)
 	    	width = 447,
 	    	widthList = 447,
 	    	trimLength = 66,
-	    	trimFrom = 3,
+	    	trimFrom = 1,
 	    	disabled = (not isHost)
 	    }
 	);
@@ -2429,7 +2434,7 @@ function setGameTypeList(INDEX, selectedGameType, isHost)
 	    	width = 447,
 	    	widthList = 447,
 	    	trimLength = 66,
-	    	trimFrom = 3,
+	    	trimFrom = 1,
 	    	disabled = (not isHost)
 	    }
 	);

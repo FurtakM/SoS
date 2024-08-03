@@ -32,3 +32,105 @@ function gamewindow.overlay.onTick(FRAMETIME)
         end;
     end;
 end;
+
+MENU_OPTIONS_FORM = nil;
+
+function showGameOptionsForm()
+    MENU_OPTIONS_FORM = OW_FORM_CREATE(false);
+    OW_FORM_SHOWMODAL(MENU_OPTIONS_FORM);
+end;
+
+function hideGameOptions()
+    if (MENU_OPTIONS_FORM ~= nil) then
+        OW_FORM_CLOSE(MENU_OPTIONS_FORM, 1);
+        MENU_OPTIONS_FORM = nil;
+    end;
+
+    HideDialog(dialog.options);
+end
+
+function showGameOptions();
+    ShowDialog(dialog.options);
+
+    options_loading = true;
+
+    set_Callback(dialog.options.ok.ID, CALLBACK_MOUSECLICK, 'hideGameOptions()');
+
+    setChecked(dialog.options.subtitles, OW_get(SETTING_SUBTITLES));
+    setChecked(dialog.options.showobjectives, OW_get(SETTING_AUTOMISSION));
+    setChecked(dialog.options.rawound, OW_get(SETTING_RAWOUNDED));
+    setChecked(dialog.options.ranoncombat, OW_get(SETTING_RANONCOMBAT));
+    setChecked(dialog.options.ravehicles, OW_get(SETTING_RAVEHICLES));
+    setChecked(dialog.options.altFact, altFact.inUse);
+    
+    dialog.options.musicvolume:setPos(OW_settings_getvolume(VOLUME_MUSIC));
+    dialog.options.soundvolume:setPos(OW_settings_getvolume(VOLUME_SPEECH));
+    dialog.options.effectsvolume:setPos(OW_settings_getvolume(VOLUME_EFFECTS));
+    dialog.options.exclamationsvolume:setPos(OW_settings_getvolume(VOLUME_EXCLAMATIONS));
+
+    options_loading = false;
+
+    showGameOptionsForm();
+end;
+
+function dialog.options.Show()
+    showGameOptions();
+end
+
+function FROMOW_SHOW_INGAME_MENU(DATA)
+    dialog.menu.FORMID = DATA.FORMID;
+
+    sgui_deletechildren(dialog.menu.panel.ID);
+
+    local h = 0;
+    local b = nil;
+    local mh = getHeight(dialog.menu) - getHeight(dialog.menu.panel);
+
+    b = getImageButtonEX(
+        dialog.menu.panel,
+        anchorLTR,
+        XYWH(
+            0,
+            h,
+            getWidth(dialog.menu.panel),
+            24
+        ),
+        loc(TID_Main_Menu_Options),
+        '',
+        'HideDialog(dialog.menu);OW_FORM_CLOSE(dialog.menu.FORMID,597);AddSingleUseTimer(0.1,showGameOptions());',
+        SKINTYPE_BUTTON,
+        {}
+    );
+    
+    UpdateDialogButton(b, interface.current.dialog.button);
+    
+    h = h + getHeight(b) + 4; -- In future this will be useful when buttons can do auto width word wrap
+
+    for i = 1, DATA.COUNT do
+        b = getImageButtonEX(
+            dialog.menu.panel,
+            anchorLTR,
+            XYWH(
+                0,
+                h,
+                getWidth(dialog.menu.panel),
+                24
+            ),
+            loc(DATA.BUTTONS[i]),
+            '',
+            'HideDialog(dialog.menu);OW_FORM_CLOSE(dialog.menu.FORMID,'..(DATA.BUTTONS[i])..');',
+            SKINTYPE_BUTTON,
+            {}
+        );
+        
+        UpdateDialogButton(b, interface.current.dialog.button);
+        
+        h = h + getHeight(b) + 4; -- In future this will be useful when buttons can do auto width word wrap
+    end;
+
+    setHeight(dialog.menu, mh + h);
+    ShowDialog(dialog.menu);
+    OF_HideDialog(dialog.menu.FORMID, 'dialog.menu');
+
+    -- dialog.options.Show()
+end;

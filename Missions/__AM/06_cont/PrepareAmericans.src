@@ -283,7 +283,7 @@ until not FilterAllUnits([[f_enemy, 1], [f_dist, tmp, 15]]) or timeToEnd < 3$00;
 blockSpawn := 1;
 uc_side := 4;
 
-Joan = PrepareUnit('Joan', false, mission_prefix_prev);
+Joan := PrepareUnit('Joan', false, mission_prefix_prev);
 PlaceUnitXYR(Joan, GetX(tmp), GetY(tmp), 5, true);
 SetLives(Joan, 250);
 
@@ -344,6 +344,25 @@ else
    Say(Joan, 'D5a-Joan-3');
    Say(tmp, 'D5a-Sol1-4');
    DialogueOff;
+
+   if GetDistUnits(JMM, Joan) > 10 then
+      begin
+      InGameOff;
+
+      ComMoveUnit(Joan, tmp);
+
+      repeat
+       wait(0$1);
+      until GetDistUnits(JMM, Joan) < 8 or IsDead(Joan);
+
+      if IsDead(Joan) then
+         begin
+         blockSpawn := false;
+         exit;
+         end;
+
+      InGameOn;
+      end;
 
    if JMM in FilterAllUnits([f_driving]) then
       begin
