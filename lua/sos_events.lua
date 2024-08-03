@@ -133,6 +133,10 @@ end;
 
 function FROMSGUI_KEYDOWN(KEY)
     if (KEY == VK_ESC) and (getVisible(game)) then
+        if getVisible(dialog.options) then
+            hideGameOptions();
+        end;
+
         if not OW_FORM_CLOSE_TOP((KEY == VK_ESC)) then
             if getVisible(dialog.options) then --In-Game Options doesn't use the forms to pause the game. So we need to handle it.
                 dialog.options.Hide();
