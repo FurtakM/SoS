@@ -1,0 +1,174 @@
+// Multiplayer map module
+// Each map has his own
+// SOS_Multiplayer required
+Export function InitMultiplayerSettings;
+begin
+{
+  mpBaseLevel,            // (0)  
+  mpAmountOfPeople,       // (1)  
+  mpSkillLevel,           // (2)  
+  mpStartingResources,    // (3)  
+  mpShipments,            // (4)  
+  mpOilSources,           // (5) 
+  mpSibSources,           // (6)  
+  mpSharedVision,         // (10) 
+  mpFlags,                // (11) 
+  mpSibDetection,         // (12) 
+  mpPeopleRespawn,        // (13) 
+  mpApemans,              // (14) 
+  mpSibBomb,              // (17) 
+  mpBuildUpTime,          // (20) 
+}
+
+mpGameSettingsKeys := [
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  0,
+  0,
+  0,
+  1,
+  1,
+  1,
+  1,
+  1,
+  0,
+  0,
+  1,
+  0,
+  0,
+  1
+];
+
+mpGameSettingsValues := [
+  [0, 1, 2], // base level (only depot, breastworks, breastworks + armoury)
+  [9, 12, 15, 24], // amount of people
+  [1, 3, 5, 7], // people skill
+  [[0,0,0], [100,30,0], [200,75,10], [500,150,30]], // resources
+  [0, 1, 2, 3, 4], // shipments
+  [0, 1, 2], // oil sources
+  [0, 1, 2], // sib sources
+  [], // empty
+  [],
+  [],
+  [0, 1], // shared vision
+  [-1, 0$10, 0$20, 0$40, 0$0], // flag (morale time)
+  [0, 1], // sib detection
+  [0, 1, 2], // people respawn
+  [0, 1, 2], // apemans
+  [0, 1, 15$0, 25$0, 30$0, 45$0, 60$0, 90$0, 100$0, 120$0, 180$0], // sib bomb
+  [],
+  [],
+  [0, 3$0, 5$0, 8$0, 10$0, 12$0, 15$0, 20$0, 30$0] // bt
+];
+
+// default settings
+mpGameSettings := [
+  1,   // base
+  15,  // people
+  3,   // skill
+  [100,30,0], // resources
+  3,   // shipments
+  1,   // oil
+  2,   // sib
+  0,   // -
+  0,   // -
+  0,   // -
+  1,   // vision
+  0$20, // morale
+  1,   // detection
+  1,   // respawn
+  1,   // apemans
+  15$0, // sib bomb
+  0,   // -
+  0,   // -
+  3$0  // bt
+];
+
+mpGameType := 1;
+your_side  := 1;
+
+mpSidePositions := [8,2,3,4,5,6,7,1];
+mpSideTeams     := [8,2,3,4,5,6,7,1];
+mpSideNations   := [1,2,3,1,2,3,1,2];
+mpTeams         := [[1],[2],[3],[4],[5],[6],[7],[8]];
+mpTeamGame      := false;
+End;
+
+Export function GetMultiplayerMapData;
+var all, hasOil, hasSib;
+begin
+mpBuildUpAreas := [
+  buildUpTime1,
+  buildUpTime2,
+  buildUpTime3,
+  buildUpTime4,
+  buildUpTime5,
+  buildUpTime6,
+  buildUpTime7,
+  buildUpTime8
+];
+
+mpMarkedAreas := [
+  Between1,
+  Between2,
+  Between3,
+  Between4,
+  Center1,
+  Center2
+] union mpBuildUpAreas;
+
+hasOil := mpGameSettings[6] > 0;
+hasSib := mpGameSettings[7] > 0;
+
+if hasOil then
+   begin
+   all := (mpGameSettings[6] = 2);
+
+   mpOilDeposits := [
+      GetSourcesFromArea(oilArea1, all),
+      GetSourcesFromArea(oilArea2, all),
+      GetSourcesFromArea(oilArea3, all),
+      GetSourcesFromArea(oilArea4, all),
+      GetSourcesFromArea(oilArea5, all),
+      GetSourcesFromArea(oilArea6, all),
+      GetSourcesFromArea(oilArea7, all),
+      GetSourcesFromArea(oilArea8, all)
+   ];
+   end;
+
+if hasSib then
+   begin
+   all := (mpGameSettings[7] = 2);
+
+   mpSibDeposits := [
+     GetSourcesFromArea(sibArea1, all),
+     GetSourcesFromArea(sibArea2, all),
+     GetSourcesFromArea(sibArea3, all),
+     GetSourcesFromArea(sibArea4, all),
+     GetSourcesFromArea(sibArea5, all),
+     GetSourcesFromArea(sibArea6, all),
+     GetSourcesFromArea(sibArea7, all),
+     GetSourcesFromArea(sibArea8, all)
+   ];
+   end;
+
+mpDepots := [
+   GetBuildingFromArea(depotArea1, 5),
+   GetBuildingFromArea(depotArea2, 2),
+   GetBuildingFromArea(depotArea3, 0),
+   GetBuildingFromArea(depotArea4, 1),
+   GetBuildingFromArea(depotArea5, 2),
+   GetBuildingFromArea(depotArea6, 5),
+   GetBuildingFromArea(depotArea7, 3),
+   GetBuildingFromArea(depotArea8, 4)
+];
+
+mpBuildings := [
+   
+];
+End;

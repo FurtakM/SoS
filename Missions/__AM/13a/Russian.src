@@ -34,7 +34,7 @@ if Difficulty >= 3 then
 End;
 
 
-Every 7$00+2$00 trigger IsOk(ru_depot) and player_spotted do
+Every 5$00+2$00 trigger IsOk(ru_depot) and player_spotted do
 var i, p, base, tmp, flags, _target, attackers, amount;
 begin
 enable;
@@ -63,7 +63,7 @@ MC_InsertProduceList(base, tmp);
 repeat
  wait(0$1);
  p := Inc(p);
-until MC_GetVehicles(base, true) >= amount or p >= 100;
+until MC_GetVehicles(base, true) >= amount or p >= 80;
 
 wait(0$30);
 
@@ -96,4 +96,55 @@ MC_PrepareAttack(base, attackers, _target, flags);
 
 if not first_attack then
    first_attack := true;
+End;
+
+Export function PrepareRussianAttack;
+var i, tmp, veh, chassis, weapon;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+InitHc;
+InitVc;
+
+tmp := [];
+
+for i := 1 to [4, 5, 6, 7][Difficulty] do
+    begin
+    chassis := [ru_medium_wheeled, ru_medium_tracked, ru_heavy_tracked][rand(1,3)];
+
+    case chassis of
+         ru_medium_wheeled, ru_medium_tracked: weapon := [ru_rocket_launcher, ru_gun, ru_gatling_gun][rand(1, 3)];
+         ru_heavy_tracked: weapon := [ru_heavy_gun, ru_rocket, ru_rocket_launcher, ru_heavy_gun][rand(1, 4)];
+    end;
+
+    uc_side := 6;
+    uc_nation := 3;
+
+    PrepareVehicle(chassis, [engine_combustion, engine_siberite][rand(1,2)], control_computer, weapon, rand(70, 90));
+    veh := CreateVehicle;
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, south_spawn, false);
+
+    tmp := tmp ^ veh;
+    end;
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$2);
+
+ for i in tmp do
+     if IsOk(i) then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i))
+     else
+        tmp := tmp diff i;
+until not tmp;
+End;
+
+Every 10$00 + 3$00 trigger first_attack and IsOk(ru_depot) and GetSide(ru_depot) = 3 do
+begin
+enable;
+PrepareRussianAttack;
 End;

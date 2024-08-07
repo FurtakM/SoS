@@ -1,0 +1,128 @@
+// SoS Multiplayer module by Serpent
+// 2024
+
+Export
+  mpGameType,  // gameTypeNormal(1), gameTypeSurvival(2), gameTypeKing(3)
+  mpGameSettingsKeys, // [1, 0, 0, 1 ...]  -- settings keys available for current map
+  mpGameSettingsValues, // [ [0, 1, 2], [] ...] -- settings values available for current map
+  mpGameSettings, // [ [1], [] ...]  -- final selected settings values by host
+  mpSidePositions,
+  mpSideTeams,
+  mpSideNations,
+  mpTeams,
+  mpTeamGame,
+  mpOilDeposits,
+  mpSibDeposits,
+  mpDepots,
+  mpBuildings,
+  mpMarkedAreas,
+  mpBuildUpAreas;
+
+{
+  mpBaseLevel,            // (0)  No Base, Depot Only, Fortified, Extra Fortified
+  mpAmountOfPeople,       // (1)  9, 12, 15, 24
+  mpSkillLevel,           // (2)  Unexperienced, Little Experienced, Experienced, More Experienced
+  mpStartingResources,    // (3)  None, Few, Medium, Lots
+  mpShipments,            // (4)  Low, Medium, High, Very High
+  mpOilSources,           // (5)  Normal, Extra / *Bool
+  mpSibSources,           // (6)  None, Normal, Extra / *-
+  mpSharedVision,         // (10) True, False
+  mpFlags,                // (11) None, Fast Decreasing, Decreasing, Slowly Decreasing, Not Decreasing
+  mpSibDetection,         // (12) True, False
+  mpPeopleRespawn,        // (13) None, Rare, Common
+  mpApemans,              // (14) None, Few, Medium, Lots
+  mpSibBomb,              // (17) Off, On
+  mpBuildUpTime,          // (20) BT
+}
+
+Export function InitMultiplayer;
+var i;
+begin
+// init arrays
+mpGameType := 0;
+mpGameSettings := [];
+mpGameSettingsKeys := [];
+mpGameSettingsValues := [];
+
+mpOilDeposits := [];
+mpSibDeposits := [];
+
+mpDepots := [];
+mpBuildings := [];
+mpMarkedAreas := [];
+mpBuildUpAreas := [];
+
+for i := 1 to 32 do
+    mpGameSettings := Replace(mpGameSettings, i, 0);
+
+// load arrays from the map code
+End;
+
+Export function StartMultiplayer;
+var i, j, side, pos, nation, setting;
+begin
+if Multiplayer then
+   begin
+   mpGameType := mp_game_type;
+   your_side  := mp_player_side;
+
+   mpSidePositions := mp_sides_positions;
+   mpSideTeams     := mp_sides_teams;
+   mpSideNations   := mp_sides_nations;
+   mpTeams         := mp_teams;
+
+   for i := 1 to Count(mpGameSettingsKeys) do
+       begin
+       setting := mpGameSettingsKeys[i - 1];
+
+       if setting then
+          mpGameSettings := Replace(mpGameSettings, i, mpGameSettingsValues[GetMultiplayerSetting(i - 1)]);
+       end;
+
+   mpTeamGame := (mpSideTeams diff [0]) > 1;
+   end
+else // default
+   begin
+   
+   end;
+
+GetMultiplayerMapData; // custom function
+
+// unmark areas
+if Count(mpMarkedAreas) then
+   begin
+   for i in mpMarkedAreas do
+       SetAreaMapShow(i, 0);
+   end;
+
+// place everything on map..
+for i := 1 to 8 {max amount} do
+    begin
+    if not mpSidePositions[i] then
+         continue;
+
+    side := i;
+    nation := mpSideNations[i];
+    pos := mpSidePositions[i];
+
+    // oil
+    if Count(mpOilDeposits) then
+       begin
+       for j in mpOilDeposits[pos] do
+           begin
+           CreateDepositXY(j[1], j[2], mat_oil);
+           SetResourceVisibility(j[1], j[2], side);
+           end;
+       end;
+
+    // sib
+    if Count(mpSibDeposits) then
+       begin
+       for j in mpSibDeposits[pos] do
+           begin
+           CreateDepositXY(j[1], j[2], mat_siberit);
+           SetResourceVisibility(j[1], j[2], side);
+           end;
+       end;
+    end;
+End;
