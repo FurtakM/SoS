@@ -421,7 +421,7 @@ enable;
 for i in UnitFilter(arEscapist, [f_ok]) do
     begin
     if not HasTask(i) then
-       ComMoveToArea(i, khatamArea);
+       AddComMoveToArea(i, khatamArea);
 
     if IsInArea(i, khatamArea) then
        begin
@@ -479,7 +479,7 @@ for i := 1 to 3 do
 
     ComMoveXY(un, 129, 20);
 
-    arAttackersVeh := Join(arAttackersVeh, un);
+    arAttackersVeh := Join(arAttackersVeh, veh);
     end;
 
 wait(0$2);
@@ -498,7 +498,7 @@ for i := 1 to [1, 2, 2, 3][Difficulty] do
 
     ComMoveXY(un, 133, 40);
 
-    arAttackersVeh := Join(arAttackersVeh, un);
+    arAttackersVeh := Join(arAttackersVeh, veh);
     end;
 
 wait(0$2);
@@ -520,7 +520,7 @@ for i := 1 to [1, 2, 3, 4][Difficulty] do
     else
        ComMoveXY(un, 137, 41);
 
-    arAttackersVeh := Join(arAttackersVeh, un);
+    arAttackersVeh := Join(arAttackersVeh, veh);
     end;
 
 arabianAttackSpawned := true;
@@ -576,16 +576,21 @@ until not tmp;
 End;
 
 Every 0$2 trigger arAttackersVeh do
-var i, tmp;
+var i, tmp, p;
 begin
+p := 0;
+
 repeat
  wait(0$1);
  tmp := UnitFilter(arAttackersVeh, [f_ok]);
 
  for i in tmp do
-     AgressiveMove(i, [ [110, 40] ]);
+     AgressiveMove(i, [ [143,38], [111,31] ]);
+
+ if IsDead(Dietrich) then
+    p := Inc(p);
      
-until not arAttackersVeh or gensherEscaped or IsDead(Dietrich);
+until not tmp or gensherEscaped or p > 40;
 
 if not arAttackersVeh then
    exit;

@@ -163,14 +163,15 @@ p := 0;
 repeat
  wait(0$1);
  p := Inc(p);
-until MC_GetVehicles(2, true) >= [6, 7, 7, 7][Difficulty] or p > 100;
+until MC_GetVehicles(2, true) >= [6, 7, 7, 7][Difficulty] or p > 120;
 
 wait(0$30);
 
-tmp := MC_GetVehicles(2, true);
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_siberium_rocket], [f_weapon, ru_cargo_bay], [f_weapon, ru_crane]]]) diff mc_defender[2];
 mc_vehicles := Replace(mc_vehicles, 2, mc_vehicles[2] diff tmp);
 
 target := rand(0, 1);
+p := 0;
 
 if target then
    begin
@@ -182,7 +183,8 @@ if target then
            ComMoveXY(i, 139, 89);
 
     wait(0$1);
-   until UnitFilter(tmp, [f_distxy, 139, 89, 9]) >= (tmp-1);
+    p := Inc(p);
+   until UnitFilter(tmp, [f_distxy, 139, 89, 9]) >= (tmp-1) or p > 30;
    end
 else
    begin
@@ -196,24 +198,20 @@ else
            ComMoveXY(i, 124, 139);
 
     wait(0$1);
-   until UnitFilter(tmp, [f_distxy, 124, 139, 9]) >= (tmp-1);
+    p := Inc(p);
+   until UnitFilter(tmp, [f_distxy, 124, 139, 9]) >= (tmp-1) or p > 30;
    end;
 
 repeat
  wait(0$1);
+ tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
      begin
-     if GetLives(i) > 251 then
-        begin
-        if GetWeapon(i) = ru_time_lapser then
-           ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
-        else
-           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
-        end
+     if GetWeapon(i) = ru_time_lapser then
+        ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
      else
-      if IsDead(i) then
-         tmp := tmp diff i;
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
      end;
 until not tmp;
 End;

@@ -1,0 +1,159 @@
+// GameTypeKing = 3
+Export mpKingPoints;
+Every 0$1 trigger mpGameActive marked GameTypeKing do
+var i, tmp;
+begin
+mpKingPoints := [];
+
+if mpTeamGame then
+   begin
+   for i := 1 to Count(mpTeams) do
+       mpKingPoints := Replace(mpKingPoints, i, 0);
+   end
+else // per player
+   begin
+   for i := 1 to 8 do
+       mpKingPoints := Replace(mpKingPoints, i, 0);
+   end;
+
+SetAreaMapShow(mpKingArea, 1);
+
+UpdateCounter;
+
+repeat
+ wait(0$3);
+ tmp := FilterUnitsInArea(mpKingArea, [[f_not, [f_constructed]], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+ if not tmp then
+    continue;
+
+ AddPoints(tmp);
+ UpdateCounter;
+
+until false;
+End;
+
+Function AddPoints(depots);
+var i, first, team, side;
+begin
+if mpTeamGame then
+   begin
+   first := depots[1];
+   side := GetSide(first);
+
+   for i := 1 to mpTeams do
+       if side in mpTeams[i] then
+          begin
+          team := i;
+          break;
+          end;
+
+   if not team then
+      exit;
+
+   if UnitFilter(depots, [f_enemy, side]) then
+      exit;
+
+   mpKingPoints := Replace(mpKingPoints, team, mpKingPoints[team] + 3);
+
+   for i in mpTeams[team] do
+       SetMultiScore(i, mpKingPoints[team]);
+   end
+else
+   begin
+   first := depots[1];
+   side := GetSide(first);
+
+   if UnitFilter(depots, [f_not, [f_side, side]]) then
+      exit;
+
+   mpKingPoints := Replace(mpKingPoints, side, mpKingPoints[side] + 3);
+   SetMultiScore(side, mpKingPoints[side]);
+   end;
+End;
+
+Function UpdateCounter;
+var i;
+begin
+result := [];
+
+if mpTeamGame then
+   begin
+   for i := 1 to mpTeams do
+       result := result ^ ['#KingoftheHill-Team', i, mpKingPoints[i], mpPoints];
+   end
+else
+   begin
+   for i := 1 to 8 do
+       if mpSidePositions[i] then
+          result := result ^ ['#KingoftheHill-Player', i, mpKingPoints[i], mpPoints];
+   end;
+
+mpDisplayStrings := result;
+End;
+
+Function HowMuchPoints(side);
+var i;
+begin
+// [[1,8],[2,3],[4,5],[6,7]];
+if mpTeamGame then
+   begin
+   for i := 1 to Count(mpTeams) do
+       begin
+       if side in mpTeams[i] then
+          begin
+          result := mpKingPoints[i];
+          exit;
+          end;
+       end;
+   end
+else
+   result := mpKingPoints[side];
+End;
+
+// Conditions: destroy all enemies by killing all of his human and computer units or get points from captured depot on the hill
+Every 0$3 trigger mpGameActive and CanWinLoose and Multiplayer marked GameTypeKing do
+var i, canWin;
+begin
+canWin := false;
+
+if not HasPower(your_side) then
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end
+else
+   begin
+   canWin := HowMuchPoints(your_side) >= mpPoints;   
+
+   for i := 1 to 8 do
+       if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+          if not mpSideTeams[i] or (mpSideTeams[i] <> mpSideTeams[your_side]) then
+             if HowMuchPoints(i) >= mpPoints then
+                begin
+                enable(mpLose);
+                exit;
+                end;
+
+   if canWin then
+      enable(mpWin)
+   else
+      enable;
+   end;
+End;
+
+Function CanWinLoose;
+begin
+result := true;
+
+if IAmServer and PlayerCount > 0 then
+   result := false;
+
+if IAmSpec and PlayerCount > 1 then
+   result := false;
+End;
+
+Function HasPower(i);
+begin
+result := FilterAllUnits([[f_side, i], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]);
+End;

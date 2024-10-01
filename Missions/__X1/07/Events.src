@@ -26,7 +26,7 @@ if GetSide(un) = 1 then
       AddComConstruct(amFac, us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay);
 
    if GetBType(un) = b_bunker then
-      usToBuild := Replace(usToBuild, usToBuild + 1, [b_bunker, GetX(un), GetY(un), GetDir(un)]);
+      usToBuild := Replace(usToBuild, usToBuild + 1, [[b_bunker, b_turret][rand(1,2)], GetX(un), GetY(un), GetDir(un)]);
 
    if GetBType(un) in [b_barracks, b_armoury] then
       usToBuild := Replace(usToBuild, usToBuild + 1, [b_armoury, GetX(un), GetY(un), GetDir(un)]);
@@ -66,9 +66,13 @@ if GetSide(b) = 1 then
    if GetBType(b) = b_armoury then
       ComUpgrade(b);
 
-   if GetBType(b) = b_bunker then
+   if GetBType(b) in [b_bunker, b_turret] then
       begin
       AddComPlaceWeapon(b, [us_heavy_gun, us_rocket_launcher][rand(1, 2)]);
+
+      if GetBType(b) = b_turret then
+         exit;
+
       barracks := FilterAllUnits([[f_side, 1], [f_btype, b_barracks]]);
 
       if barracks then

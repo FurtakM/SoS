@@ -326,13 +326,13 @@ if sciCounterKill < 3 then
    end
 else
    begin
+   for i in FilterAllUnits([f_side, 5]) do
+       SetSide(i, 2);
+
    aviradzeQuestDone := true;
    attackDeltaAllowed := true;
 
    ChangeMissionObjectives('ODelta2');
-
-   for i in FilterAllUnits([f_side, 5]) do
-       SetSide(i, 2);
    end;
 End;
 
@@ -408,14 +408,18 @@ SaveVariable(true, '02_GladstoneEscaped');
 End;
 
 // quest done
-Every 0$1 trigger aviradzeSpotted and (sciCounterKill >= 3 or not usSci) and not aviradzeQuestDone do
+Every 0$1 trigger aviradzeSpotted and (sciCounterKill >= 3 or not usSci) and not aviradzeQuestDone and GetSide(Aviradze) = 5 do
 begin
-aviradzeQuestDone := true;
+DialogueOn;
 
 Say(Heike, 'DH-1-quest-done');
 
 if Givi then
    Say(Givi, 'DG-1-quest-done');
+
+DialogueOff;
+
+aviradzeQuestDone := true;
 End;
 
 Every 0$1 trigger FilterUnitsInArea(frontlineAttack, [f_side, 2]) > 1 and not aviradzeQuestDone and GetSide(Delta) <> 2 and IsOk(Mike) and IsOk(Heike) do
@@ -729,6 +733,8 @@ End;
 // too many lost
 Every 0$5 trigger lostCounter >= [3, 2, 2, 2][Difficulty] do
 begin
+wait(0$5);
+
 DialogueOn;
 Say(Aviradze, 'DA-1-failure');
 Say(Aviradze, 'DA-2-failure');
@@ -763,11 +769,16 @@ End;
 
 // win
 Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_nation, 0]]) and IsOk(Aviradze) and GetSide(Aviradze) = 2 do
-var tmp;
+var i, tmp;
 begin
 if FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_weapon, us_gatling_gun]]]) then
    begin
    Query('QEnemyInSight');
+
+   tmp := FilterAllUnits([[f_side, 1], [f_or, [f_class, 1], [f_weapon, us_gatling_gun]]]);
+
+   for i in tmp do
+       ComAgressiveMove(i, 36, 22);
 
    repeat
     wait(0$1);

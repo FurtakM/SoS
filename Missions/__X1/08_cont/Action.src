@@ -1300,7 +1300,7 @@ repeat
  if isAlarm then
     exit;
 
-until GetSide(Kaia) = 2 and GetDistUnits(Kaia, barExplosion) < 8 and UnitFilter(tmp, [f_see, 2]);
+until GetSide(Kaia) = 2 and GetDistUnits(Kaia, barExplosion) < 12;
 
 InGameOn;
 
@@ -1321,7 +1321,7 @@ repeat
  if isAlarm then
     exit;
 
-until GetDistUnits(Kaia, barExplosion) < 6;
+until GetDistUnits(Kaia, barExplosion) < 8;
 
 ComHold(Kaia);
 
@@ -1342,8 +1342,35 @@ Query('ExplosivesInfo');
 End;
 
 // Exp #2
-Every 0$1 trigger explosionsTakenByRussians and GetSide(Kaia) = 2 and GetClass(Kaia) = class_prison and InEntrance(Kaia, ruFac) and not isAlarm and not hasMuchin do
+Every 0$1 trigger explosionsTakenByRussians and GetSide(Kaia) = 2 and InEntrance(Kaia, ruFac) and not isAlarm and not hasMuchin do
+var class;
 begin
+class := GetClass(Kaia);
+
+if class <> class_prison then
+   begin
+   Query('QKaiaWeapon');
+
+   SetAreaMapShow(hideWeaponArea, 1);
+   CenterNowOnXY(192, 71);
+
+   kaiaWeaponHidden := class;
+
+   repeat
+    wait(0$1);
+   until IsInArea(Kaia, hideWeaponArea);
+
+   SetClass(Kaia, class_prison);
+   // SetAreaMapShow(hideWeaponArea, 0);
+
+   repeat
+    wait(0$1);
+   until InEntrance(Kaia, ruFac);
+   end;
+
+if knowWhereExplosivesAre then
+   exit;
+
 InGameOn;
 
 CenterNowOnUnits(ruFac);
@@ -1367,8 +1394,32 @@ InGameOff;
 End;
 
 // Exp #3 
-Every 0$1 trigger explosionsTakenByRussians and GetSide(Kaia) = 2 and GetClass(Kaia) = class_prison and InEntrance(Kaia, ruWorkshop) and not isAlarm and not hasMuchin do
+Every 0$1 trigger explosionsTakenByRussians and GetSide(Kaia) = 2 and InEntrance(Kaia, ruWorkshop) and not isAlarm and not hasMuchin do
+var class;
 begin
+class := GetClass(Kaia);
+
+if class <> class_prison then
+   begin
+   Query('QKaiaWeapon');
+
+   SetAreaMapShow(hideWeaponArea, 1);
+   CenterNowOnXY(192, 71);
+
+   kaiaWeaponHidden := class;
+
+   repeat
+    wait(0$1);
+   until IsInArea(Kaia, hideWeaponArea);
+
+   SetClass(Kaia, class_prison);
+   // SetAreaMapShow(hideWeaponArea, 0);
+
+   repeat
+    wait(0$1);
+   until InEntrance(Kaia, ruWorkshop);
+   end;
+
 InGameOn;
 
 CenterNowOnUnits(ruWorkshop);
@@ -1440,6 +1491,18 @@ InGameOff;
 
 hasExplosionCollected := true;
 ChangeMissionObjectives('M1-explosive-out');
+End;
+
+Every 0$2 trigger kaiaWeaponHidden marked gameStartEvent do
+begin
+enable;
+
+if not kaiaWeaponHidden then
+   exit;
+
+SetClass(Kaia, kaiaWeaponHidden);
+
+kaiaWeaponHidden := 0;
 End;
 
 // plant mine

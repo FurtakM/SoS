@@ -285,8 +285,10 @@ SetAchievement('ACH_DOGTAG');
 
 if mercenariesQuestReady then
    Say(Heike, 'DH-dogtag-found-quest')
+else if meetJohnny then
+   Say(Heike, 'DH-dogtag-found')
 else
-   Say(Heike, 'DH-dogtag-found');
+   Say(Heike, 'DH-dogtag-found-no-american');
 End;
 
 // Olaf spotted
@@ -767,6 +769,9 @@ SetSide(Kamil, 2);
 prisonFound := true;
 
 ChangeMissionObjectives('O6_prison_out');
+
+ComAgressiveMove(russianForces, GetX(Heike), GetY(Heike));
+ComAgressiveMove(russianTank, GetX(Heike), GetY(Heike));
 End;
 
 // heike get hurt
@@ -799,7 +804,7 @@ repeat
 
  for i in tmp do
      begin
-     un := NearestUnitToUnit(FilterAllUnits([f_side, 3]), i);
+     un := NearestUnitToUnit(FilterAllUnits([f_side, 2]), i);
 
      if HexInfo(GetX(un[1]), GetY(un[1])) then
         ComAgressiveMove(i, GetX(un[1]), GetY(un[1]))
@@ -830,7 +835,12 @@ if Kamil in tmp then
    ToLua('enableBioCharacter(BIO_KAMI)');
 
 if prisonFound then
-   AddMedal('med1', 1)
+   begin
+   if not IsOk(Kamil) then
+      AddMedal('med1', -2)
+   else
+      AddMedal('med1', 1);
+   end
 else
    AddMedal('med1', -1);
 

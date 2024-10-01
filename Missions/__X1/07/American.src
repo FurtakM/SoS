@@ -1,4 +1,4 @@
-Export usCommander, usForces, usCargo, usToBuild, usAdditionalForces;
+Export usCommander, usForces, usCargo, usToBuild, usAdditionalForces, usCratesCollector;
 Export Function PrepareAmerican;
 var i, b, veh;
 begin
@@ -11,6 +11,16 @@ SetResourceType(GetBase(usDepot), mat_oil, 800);
 usForces := [];
 usToBuild := [];
 usAdditionalForces := [];
+usCratesCollector := [];
+
+for i := 1 to 3 do
+    begin
+    PrepareApemanEngineer();
+    usCratesCollector := Join(usCratesCollector, CreateHuman);
+    PlaceUnitXYR(Last(usCratesCollector), 81, 142, 4, false);
+    end;
+
+InitHc;
 
 for i in FilterAllUnits([f_type, unit_building]) do
     SetBLevel(i, [6, 7, 8, 8][Difficulty]);
@@ -94,7 +104,7 @@ Connect(usCargo);
 DoNotAttack(5, usCargo);
 End;
 
-Every 6$00 trigger not usForces and usAttacksAllowed and IsOk(amFac) and BuildingStatus(amFac) = bs_idle do
+Every 6$00 trigger usAttacksAllowed and IsOk(amFac) and BuildingStatus(amFac) = bs_idle do
 var i, chassis, weapon;
 begin
 enable;
@@ -112,6 +122,48 @@ for i := 1 to [4, 5, 6, 6][Difficulty] do
     end;
 End;
 
+Every 0$01 do
+var i, un, tmp;
+begin
+if Difficulty < 2 then
+   exit;
+
+tmp := [];
+
+for i := 1 to Difficulty do
+    begin
+    uc_side := 4;
+    uc_nation := nation_american;
+
+    PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
+    un := CreateHuman;
+    tmp := Join(tmp, un);
+    PlaceUnitArea(un, westSpawnArea, false);
+    end;
+
+for i in tmp do
+    begin
+    ComAgressiveMove(i, 54, 51);
+    AddComWait(i, 0$20);
+    AddComAgressiveMove(i, 35, 6);
+    end;
+
+repeat
+ wait(7$00);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ if not tmp then
+    exit;
+
+ for i in tmp do
+     begin
+     ComAgressiveMove(i, 54, 51);
+     AddComWait(i, 0$20);
+     AddComAgressiveMove(i, 35, 6);
+     end;
+until not tmp;
+End;
+
 Every 0$10 trigger usForces >= [4, 5, 6, 6][Difficulty] do
 var i, tmp;
 begin
@@ -123,9 +175,15 @@ usForces := [];
 if not tmp then
    exit;
 
+if FilterAllUnits([[f_side, 2], [f_distxy, 123, 141, 20]]) then
+   begin
+   ComAgressiveMove(tmp, 126, 143);
+   wait(0$30);
+   end;
+
 repeat
  wait(0$1);
- tmp := AgressiveMove(tmp, [ [98,50], [114,50], [127,51], [131,35] ]);
+ tmp := AgressiveMove(tmp, [ [51,50], [98,50], [114,50], [127,51], [131,35] ]);
 until not tmp;
 End;
 
@@ -165,6 +223,30 @@ for i := 1 to 2 do
     SetClass(un, class_sniper);
 
     AddComAgressiveMove(un, 72, 92);
+    end;
+End;
+
+Every 0$2 trigger not usSurrender do
+var i, tmp, cr, enemyInArea;
+begin
+enable;
+
+enemyInArea := FilterAllUnits([[f_enemy, 1], [f_distxy, 113, 139, 15]]);
+cr := GetListOfCratesInArea(americanCratesArea);
+tmp := UnitFilter(usCratesCollector, [f_ok]);
+
+if not tmp then
+   begin
+   disable;
+   exit;
+   end;
+
+for i in tmp do
+    begin
+    if enemyInArea and GetDistUnits(i, usDepot) > 12 then
+       ComMoveXY(i, 83, 147)
+    else if not HasTask(i) and cr then
+       ComCollect(i, cr[1], cr[2]);
     end;
 End;
 

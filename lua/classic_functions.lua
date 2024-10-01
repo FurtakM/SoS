@@ -993,7 +993,7 @@ function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.list.scroll = getScrollboxEX(
         ELEMENT, 
         anchorNone, 
-        XYWH(0, 0, ELEMENT.list.width, ELEMENT.list.height - 6),
+        XYWH(0, 3, ELEMENT.list.width, ELEMENT.list.height - 7),
         {
             colour1 = WHITEA()
         }

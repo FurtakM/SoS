@@ -20,6 +20,7 @@ EndMission;
 End;
 
 Function EndMission;
+var tmp;
 begin
 PlayOriginalMusic;
 
@@ -60,15 +61,17 @@ else
 
 GiveMedals('MAIN');
 
-RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
+tmp := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_ok], [f_inarea, finalArea]]);
 
-if Doug and GetSide(Doug) = 2 then
+RewardPeople(UnitFilter(tmp, [f_nation, 2]));
+
+if Doug and Doug in tmp then
    SaveCharacters(Doug, '08_UsCommander');
 
-if Harris and GetSide(Harris) = 2 then
+if Harris and Harris in tmp then
    SaveCharacters(Harris, '08_Harris');
 
-SaveCharacters(FilterAllUnits([[f_side, 2], [f_nation, 1], [f_type, unit_human]]) diff [Doug, Harris], '08_Americans');
+SaveCharacters(UnitFilter(tmp, [f_nation, 1]) diff [Doug, Harris], '08_Americans');
 
 if GetNation(Heike) = nation_russian then
    begin
@@ -78,22 +81,22 @@ if GetNation(Heike) = nation_russian then
 else
    SaveCharacters(Heike, '08_Heike');
 
-if Aviradze and GetSide(Aviradze) = 2 then
+if Aviradze and Aviradze in tmp then
    SaveCharacters(Aviradze, '08_Aviradze');
 
-if Ibrahim and GetSide(Ibrahim) = 2 then
+if Ibrahim and Ibrahim in tmp then
    SaveCharacters(Ibrahim, '08_Ibrahim');
 
-if Kamil and GetSide(Kamil) = 2 then
+if Kamil and Kamil in tmp then
    SaveCharacters(Kamil, '08_Kamil');
 
-if Sophia and GetSide(Sophia) = 2 then
+if Sophia and Sophia in tmp then
    SaveCharacters(Sophia, '08_Sophia');
 
-if Kaia and GetSide(Kaia) = 2 then
+if Kaia and Kaia in tmp then
    SaveCharacters(Kaia, '08_Kaia');
 
-if Givi and GetSide(Givi) = 2 then
+if Givi and Givi in tmp then
    if GetNation(Givi) = nation_russian then
       begin
       CopySkills(Givi, GiviTmp);
@@ -102,20 +105,20 @@ if Givi and GetSide(Givi) = 2 then
    else
       SaveCharacters(Givi, '08_Givi');
 
-if Mike and GetSide(Mike) = 2 then
+if Mike and Mike in tmp then
    SaveCharacters(Mike, '08_Mike');
 
-if Markov and GetSide(Markov) = 2 then
+if Markov and Markov in tmp then
    SaveCharacters(Markov, '08_Markov');
 
-if Kurt and GetSide(Kurt) = 2 then
+if Kurt and Kurt in tmp then
    SaveCharacters(Kurt, '08_Kurt');
 
-if Olaf and GetSide(Olaf) = 2 then
+if Olaf and Olaf in tmp then
    SaveCharacters(Olaf, '08_Olaf');
 
-if heikeSecondSquad then
-   SaveCharacters(heikeSecondSquad, '08_others');
+if UnitFilter(heikeSecondSquad, [[f_inarea, finalArea], [f_ok]]) then
+   SaveCharacters(UnitFilter(heikeSecondSquad, [[f_inarea, finalArea], [f_ok]]), '08_others');
 
 YouWin;
 DialogueOff;

@@ -189,7 +189,7 @@ Say(usCommander, 'DUsm-3-assault');
 End;
 
 // see hill
-Every 0$1 trigger not americanBaseSpoted and not americanBaseCaptured and FilterUnitsInArea(hillArea, [f_side, 2]) and not americanBaseCaptured do
+Every 0$1 trigger not americanBaseSpoted and not americanBaseCaptured and FilterUnitsInArea(hillArea, [[f_side, 2], [f_type, unit_human]]) and not americanBaseCaptured do
 begin
 if Mike then
    Say(Mike, 'DM-1-scout')
@@ -201,7 +201,7 @@ RemoveSeeing(54, 35, 2);
 End;
 
 // on hill
-Every 0$1 trigger FilterUnitsInArea(upHillArea, [f_side, 2]) and not americanBaseCaptured do
+Every 0$1 trigger FilterUnitsInArea(upHillArea, [[f_side, 2], [f_type, unit_human]]) and not americanBaseSpoted and not americanBaseCaptured do
 var randomMen, randomWomen, speakerOk;
 begin
 randomMen := UnitFilter(heikeSecondSquad, [f_sex, sex_male]);
@@ -336,6 +336,8 @@ if Sophia then
    Say(Sophia, 'DS-1-capture');
    end;
 
+americanBaseCaptured := true;
+
 InGameOff;
 
 music_nat := music_auto;
@@ -345,10 +347,6 @@ ChangeMissionObjectives('ConstructBase');
 
 for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do
     SetSide(i, 2);
-
-wait(0$3);
-
-americanBaseCaptured := true;
 End;
 
 Every 0$1 trigger capturedCargoCounter >= 3 do

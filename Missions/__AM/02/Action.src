@@ -950,6 +950,38 @@ End;
 Every 0$1 trigger LastBattle = 1 and FilterUnitsInArea(NorthBase, [[f_side, 3], [f_type, unit_human]]) > 2 and FilterUnitsInArea(NorthBase, [[f_side, 1], [f_or, [f_type, unit_human], [f_occupied]]]) = 0 do 
 SetSide(dep1, 3);
 
+Export Function JMMTraitor;
+var i;
+begin
+if traitor then
+   exit;
+
+traitor := true;
+
+if IsOk(Lisa) then
+   begin
+   DialogueOn;
+
+   Say(Lisa, 'D10-Lisa-Traitor');
+   
+   DialogueOff;
+   end;
+
+ComExit(JMM);
+
+SetAttitude(1, 4, att_enemy, true);
+
+for i in FilterAllUnits([f_side, 1]) diff JMM do
+    begin
+    SetSide(i, 4);
+    ComAttackUnit(i, JMM);
+    end;
+
+wait(0$30);
+
+YouLost('Traitor');
+End;
+
 Every 0$1 trigger tigersRespawn = 1 and FilterAllUnits([[f_side, 0], [f_class, 14]]) = 0 do
 var i, tmp;
 begin
