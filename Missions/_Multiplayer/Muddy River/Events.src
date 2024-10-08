@@ -1,3 +1,4 @@
+
 On ArtifactLoaded(cargo, artifact) do
 var i, j;
 begin
@@ -8,20 +9,81 @@ MultiplayerEvent_ArtifactCaptured(GetSide(cargo));
 artifact_get := true;
 End;
 
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if GetSide(un) <> side_bot then
+   exit;
+
+if not un in [Saliba, Gensher, Shariff] then
+   MultiplayerEvent_UnitKilled(un, killerSide, false)
+else
+   MultiplayerEvent_UnitKilled(un, killerSide, Multiplayer_GetCondition(5));
+End;
+
 On UnitDestroyed(un) do
-var i, side;
+var i, side, base, chassis, engine, control, weapon, tmp, factory, btype;
 begin
 side := GetSide(un);
 
-if not side in mc_sides and multi_sides[side] then
+if multi_sides[side] then
    if GetType(un) = unit_human then
       MultiplayerEvent_HumanLost(side);
 
-if side in mc_sides then
-   if un <> Gensher then
-      MultiplayerEvent_UnitKilled(un, false)
-   else
-      MultiplayerEvent_UnitKilled(un, Multiplayer_GetCondition(5));
+if side = side_bot then
+   begin
+   if GetType(un) = unit_building then
+      begin
+      base := 0;
+
+      for i := 1 to Count(arAreas) do
+          if IsInArea(un, arAreas[i]) then
+             begin
+             base := i;
+             break;
+             end;
+
+      if not base then
+         exit;
+
+      btype := GetBType(un);
+
+      if btype = b_barracks then
+         btype := b_armoury;
+
+      if btype = b_factory then
+         btype := b_workshop;
+
+      if btype in [b_lab_full, b_lab_half] then
+         btype := b_lab;
+
+      arBuildings := Replace(arBuildings, arBuildings + 1, [base, [btype, GetX(un), GetY(un), GetDir(un)]]);
+      end;
+
+   if GetType(un) = unit_vehicle then
+      begin
+      // CheckByIndex(array, index, value, indexColumn);
+      base := CheckByIndex(arVehicles, 2, un, 1);
+
+      if not base then
+         exit;
+
+      factory := arFactories[base];
+
+      if not factory then
+         exit;
+
+      chassis := GetChassis(un);
+      engine := GetEngine(un);
+      //control := GetControl(un);
+      weapon := GetWeapon(un);
+
+      control := control_remote;
+
+      tmp := Produce(factory, chassis, engine, control, weapon);
+
+      arConstructList := Replace(arConstructList, arConstructList + 1, [base, tmp]);
+      end;
+   end;
 
 if multi_commanders and multi_custom_commanders then
    if un in multi_commanders then
@@ -30,79 +92,88 @@ if multi_commanders and multi_custom_commanders then
       multi_commanders := multi_commanders diff un;
       Multiplayer_Reside(side);
       end;
-
-MCE_UnitDestroyed(un);
-End;
-
-On BuildingStarted(building, builder) do
-begin
-MCE_BuildingStarted(building, builder);
 End;
 
 On BuildingComplete(building) do
-var i, j;
+var i, j, side, base, btype;
 begin
+side := GetSide(building);
 
-if GetSide(building) in mc_sides then
-   MultiplayerEvent_BuildingCompleted(GetSide(building), GetBType(building));
+if multi_sides[side] then
+   MultiplayerEvent_BuildingCompleted(side, GetBType(building));
 
-if GetBType(building) = b_depot and not GetSide(building) in mc_sides and base_names then
+if GetBType(building) = b_depot and not multi_sides[side] and base_names then
    begin
    SetBName(building, base_names[1]);
    base_names := Delete(base_names, 1);
    end;
 
-MCE_BuildingComplete(building);
+if side = side_bot then
+   begin
+   base := 0;
+
+   for i := 1 to Count(arAreas) do
+       if IsInArea(building, arAreas[i]) then
+          begin
+          base := i;
+          break;
+          end;
+
+   if not base then
+      exit;
+
+   for i := 1 to Count(arBuildings) do
+       if arBuildings[i][1][1] = base then
+          begin
+          arBuildings := Delete(arBuildings, i);
+          break;
+          end;
+
+   btype := GetBType(building);
+
+   case btype of
+        b_armoury: ComUpgrade(building);
+        b_workshop: ComUpgrade(building);
+        b_lab: begin
+               AddComUpgradeLab(building, b_lab_weapon);
+               AddComUpgradeLab(building, b_lab_opto);
+               end;
+        end;
+   end;
 End;
 
-On ResearchComplete(tech, lab) do
-begin
-MCE_ResearchComplete(tech, lab);
-End;
-
-On CrateSpawn(id, x, y, amount, mode) do
-begin
-MCE_CrateSpawn(id, x, y, amount, mode);
-End;
 
 On VehicleConstructed(vehicle, factory) do
-var i, side, tmp;
+var i, side, tmp, base, amount;
 begin
 side := GetSide(vehicle);
 
-if not side in mc_sides and multi_sides[side] then
+if multi_sides[side] then
    MultiplayerEvent_Produced(side);
 
-MCE_VehicleConstructed(vehicle, factory);
+if side_bot = side then
+   begin
+   base := 0;
+
+   for i := 1 to Count(arFactories) do
+       if arFactories[i] = factory then
+          begin
+          base := i;
+          break;
+          end;
+
+   if not base then
+      exit;
+
+   if arVehiclesCounter[base] > CheckByIndex(arVehicles, 1, base, 2) or GetBType(vehicle) in [ar_cargo_bay, ar_crane] then
+      arVehicles := Join(arVehicles, [base, vehicle])
+   else
+      arVehiclesAtttackers := Join(arVehiclesAtttackers, [base, vehicle]);
+   end;
 End;
 
-On VehicleCaptured(new, old, side, capturing_unit) do
+On EvacuateVehicle(driver, veh, p1, p2) do
 begin
-MCE_VehicleCaptured(new, old, side, capturing_unit);
-End;
-
-On BuildingCaptured(building, side, capturning_unit) do
-begin
-MCE_BuildingCaptured(building, side, capturning_unit);
-End;
-
-On EnterBuilding(building, unit) do
-begin
-MCE_EnterBuilding(building, unit);
-End;
-
-On LeaveBuilding(building, unit) do
-begin
-// code here
-
-// MC_Event
-MCE_LeaveBuilding(building, unit);
-End;
-
-On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
-begin
-// code here
-
-// MC_Event
-MCE_EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2);
+if GetTag(driver) = tMech then
+   SetTag(driver, 0);
 End;

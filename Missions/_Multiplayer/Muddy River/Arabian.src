@@ -1,35 +1,33 @@
 Export ar_force_west, ar_force_south, ar_force_north, ar_force_north2, ar_force_east;
-Export ar_force_tmp, ar_vehicles_tmp, ar_defenders_tmp;
-Export Saliba, Gensher;
+Export ar_force_tmp, ar_vehicles_tmp;
+Export Saliba, Gensher, Shariff;
 
 Export Function PrepareArabian(side);
-var i, d, xy, un, un2, skill, tmp, techs;
+var i, d, xy, un, un2, skill, tmp, techs, fac;
 begin
 side_bot := side;
 
 techs := [tech_ApeAgres, tech_ApeBrain, tech_ApeNeural,
           tech_StimDrugs, tech_Bio1, tech_Bio2,
-          tech_Weap3, tech_RemCharge, tech_rocket,
-          tech_SibEng, 72, tech_Sib2];
+          tech_Weap3, tech_RemCharge, tech_Rocket,
+          tech_SibEng, tech_SibImplosion, tech_Sib2];
 
 for i in techs do
     SetTech(i, side, state_researched);
 
-skill := [6, 7, 8][Difficulty];
+InitScriptBases;
 
-ComLinkToBase([ar_dep_e], 141); 
-wait(1);
+skill := [5, 7, 10][Difficulty];
 
 uc_side := side;
 uc_nation := 2;
 
-ar_force_north := PrepareBase(ar_dep_n, area_base_north, 'dammam', skill, [10000, 1000, 300], [12, 4, -1, 4]);
-ar_force_north2 := PrepareBase(ar_dep_n2, area_base_north2, '', skill, [1000, 100, 0], [12, 4, 2, 0]);
-ar_force_west := PrepareBase(ar_dep_w, area_base_west, 'jeddah', skill, [700, 300, 10], [12, 4, 3, 2]);
-ar_force_south := PrepareBase(ar_dep_s, area_base_south, 'riyadh', skill, [500, 60, 0], [4, 2, 3, 1]);
+ar_force_north := PrepareBase(ar_dep_n, area_base_north, 'dammam', skill, [10000, 1000, 900], [12, 4, -1, 4]);
+ar_force_north2 := PrepareBase(ar_dep_n2, area_base_north2, '', skill, [500, 130, 0], [16, 4, 3, 1]);
+ar_force_west := PrepareBase(ar_dep_w, area_base_west, 'jeddah', skill, [2100, 300, 10], [12, 4, 3, 2]);
+ar_force_south := PrepareBase(ar_dep_s, area_base_south, 'riyadh', skill, [500, 60, 0], [8, 2, 3, 1]);
 ar_force_east := PrepareBase(ar_dep_e, area_base_east, '', skill, [500, 50, 0], [11, 2, 3, 1]);
 
-mc_bases := [ar_force_north, ar_force_west, ar_force_east, ar_force_south, ar_force_north2];
 
 // control_towers
 vc_chassis := ar_half_tracked;
@@ -48,16 +46,10 @@ for i = 1 to 4 do
 
     un2 := CreateHuman;
     PlaceHumanInUnit(un2, un);
-
-    mc_bases := ReplaceIn(mc_bases, [i mod 2 + 1, mc_bases[i mod 2 + 1]+1], un);
-    mc_bases := ReplaceIn(mc_bases, [i mod 2 + 1, mc_bases[i mod 2 + 1]+1], un2);
     end;
 
 for i in FilterAllUnits([[f_side, side_bot], [f_btype, b_breastwork], [f_empty]]) do
     begin
-    if GetBase(i) then
-       continue;
-
     d := GetDir(i);
 
     if d < 3 then
@@ -83,8 +75,7 @@ ar_force_tmp := Replace(ar_force_tmp, 1, CreateHuman);
 PrepareHuman(sex_female, 4, skill);
 hc_gallery := 'SecondCharsGal';
 hc_face_number := 15;
-ar_force_tmp := Replace(ar_force_tmp, 2, CreateHuman);
-
+ar_force_tmp := Replace(ar_force_tmp, 2, CreateHuman); 
 
 PrepareHuman(sex_female, 4, skill);
 hc_gallery := '';
@@ -97,36 +88,63 @@ hc_face_number = 33;
 hc_name = 'Thabit Muhair Saliba';
 hc_skills = [5, 5, 3, 3];
 
-Saliba = CreateHuman;
+Saliba := CreateHuman;
 PlaceHumanInUnit(Saliba, ar_dep_s);
 
 hc_name := 'Dietrich Gensher';
 hc_class := 1;
 hc_gallery := 'sandar';
-hc_face_number := 2;
+hc_face_number := 4;
 hc_skills := [10, 6, 5, 4];
 
 Gensher := CreateHuman;
-PlaceHumanInUnit(Gensher, ar_dep_n);
+PlaceHumanInUnit(Gensher, ar_dep_w);
+
+hc_name := 'Abdul Shariff';
+hc_class := 11;
+hc_gallery := 'sandar';
+hc_face_number := 5;
+hc_skills := [6, 5, 3, 3];
+
+Shariff := CreateHuman;
+PlaceHumanInUnit(Shariff, ar_dep_n);
 
 InitHc;
 
 // prepare vehicles
-ar_defenders_tmp := [ [], [], [], [] ];
+for d := 1 to 5 do
+    begin
+    fac := FilterUnitsInArea(arAreas[d], [f_btype, b_factory]);
 
-for d = 1 to [3, 3, 4][Difficulty] do
-    for i = 1 to 3 do
+    if fac then
+       arFactories := Replace(arFactories, d, fac[1])
+    else
+       arFactories := Replace(arFactories, d, 0);
+
+    for i := 1 to 2 do
+        begin
+        PrepareVehicle(ar_half_tracked, engine_siberite, control_remote, ar_crane, 100);
+        un := CreateVehicle;
+        arVehicles := Replace(arVehicles, arVehicles + 1, [d, un]);
+        SetTag(un, 0);
+        SetDir(un, rand(0,5));
+        PlaceUnitArea(un, [parking_south, parking_north, parking_west, parking_east, parking_north2][d], false);
+        end;
+
+    for i := 1 to 4 do
         begin
         PrepareVehicle(ar_half_tracked,
-                      [engine_siberite, engine_solar][rand(1,2)],
+                      [engine_siberite, engine_siberite, engine_solar][rand(1,3)],
                       [control_manual, control_apeman][rand(1,2)],
-                      [ar_gatling_gun, ar_gun, ar_flame_thrower, ar_rocket_launcher][rand(1,4)],
+                      [ar_gatling_gun, ar_gun, ar_flame_thrower, ar_rocket_launcher][i mod 4 + 1],
                       100);
         un := CreateVehicle;
-        ar_defenders_tmp := ReplaceIn(ar_defenders_tmp, [i, ar_defenders_tmp[i]+1], un);
+        arVehicles := Replace(arVehicles, arVehicles + 1, [d, un]);
+        SetTag(un, 0);
         SetDir(un, rand(0,5));
-        PlaceUnitArea(un, [parking_north, parking_west, parking_east, parking_south][i], false);
+        PlaceUnitArea(un, [parking_south, parking_north, parking_west, parking_east, parking_north2][d], false);
         end;
+    end;
 
 InitHc;
 
@@ -139,110 +157,534 @@ if tmp and side <> 2 then
    end;
 End;
 
-
-Every 13$00+10$00 trigger IsOk(ar_dep_n) and GetSide(ar_dep_n) = side_bot do
-var i, t, x, base, tmp, coords, flags, danger, target, _target;
+Export Function PlaceMines(area, n);
+var i, tmp, r;
 begin
-enable;
+tmp := AreaToList(area, 0);
 
-base := 1;
-flags := [0, 0, 0, 0, 1, 0, 0, 0, 1, 0];
-coords := [ [28,14], [107,119], [127,97], [185,127] ];
-target := 0;
-x := 0;
+if not tmp then
+   exit;
 
-tmp := [
-         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-         [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
-         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-         [ar_half_tracked, engine_combustion, control_remote, ar_selfpropelled_bomb]
-       ];
-
-if Difficulty > 1 then
-   for i = 1 to Difficulty+2 do
-       tmp := Insert(tmp, tmp+1, [ar_half_tracked, engine_combustion, control_remote, [ar_rocket_launcher, ar_gun, ar_gun, ar_selfpropelled_bomb][rand(1, 4)]]);
-
-MC_SetProduceList(base, tmp);
-
-repeat
- wait(0$1);
-until MC_GetProduceList(base) = 0;
-
-wait(0$10);
-
-for i = 1 to coords do
+for i := 1 to n do
     begin
-    t := DangerAtRangeXY(side_bot, coords[i][1], coords[i][2], 35)[4];
+    r := rand(1, tmp[1]);
 
-    if t > x then
-       begin
-       x := t;
-       target := i;
-       end;
+    PlaceMine(tmp[1][r], tmp[2][r], side_bot, 0);
 
+    arMinesList := Insert(arMinesList, arMinesList + 1, tmp[1][r]);
+    arMinesList := Insert(arMinesList, arMinesList + 1, tmp[2][r]);
+
+    tmp := Replace(tmp, 1, Delete(tmp[1], r));
+    tmp := Replace(tmp, 2, Delete(tmp[2], r));
     end;
-
-case target of
-1: _target := [[60,8], [28,15]];
-2: _target := [[52,11], [76,90]];
-3: _target := [[129,66], [130,97]];
-4: _target := [[156,87], [183,127]];
-end;
-
-if not _target then
-   _target := [[52,11], [76,90]];
-
-MC_PrepareAttack(base, mc_vehicles[base], _target, flags);
 End;
 
-Every 13$00+10$00 trigger (IsOk(ar_dep_w) and GetSide(ar_dep_w) = side_bot) and (multi_players_amount = 3 or IsDead(ar_dep_n) or GetSide(ar_dep_n) <> side_bot)  do
-var i, t, x, base, tmp, coords, flags, danger, target, _target;
+Export arTech, arConstructList, arBuildings, arVehicles, arVehiclesAtttackers, arDrivers, arFactories, arAreas, arVehiclesCounter, arMinesList;
+Function InitScriptBases;
+begin
+arTech := GetTechNation(side_bot, nation_arabian, state_enabled);
+arConstructList := [];
+arBuildings := [];
+arVehicles := [];
+arVehiclesAtttackers := [];
+arDrivers := [];
+arFactories := [];
+arAreas := [area_base_south, area_base_north, area_base_west, area_base_east, area_base_north2];
+arVehiclesCounter := [6, 6, 6, 6, 2];
+arMinesList := [];
+
+PlaceMines(minefield_east, [7, 9, 11][Difficulty]);
+PlaceMines(minefield_north, [7, 9, 9][Difficulty]);
+PlaceMines(minefield_west, [6, 8, 12][Difficulty]);
+PlaceMines(minefield_north2, [5, 7, 9][Difficulty]);
+PlaceMines(minefield_south, [4, 6, 8][Difficulty]);
+PlaceMines(minefield_extra, [12, 14, 16][Difficulty]);
+End;
+
+// AI
+Function ArabianBaseScript(side, base, area, outerArea, forces, healPoint, parkingPoint);
+var i, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
 begin
 enable;
 
-base := 2;
-flags := [0, 0, 0, 0, 1, 0, 0, 0, 1, 0];
-coords := [ [101,110], [100,21] ];
-target := 0;
-x := 0;
+tmp := FilterAllUnits([f_enemy, side]);
 
-tmp := [
-         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-         [ar_half_tracked, engine_combustion, control_remote, ar_gatling_gun],
-         [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
-       ];
+if tmp then
+   enemySide := GetSide(tmp[1]);
 
-if Difficulty > 1 then
-   for i = 1 to Difficulty+1 do
-       tmp := Insert(tmp, tmp+1, [ar_half_tracked, engine_combustion, control_remote, [ar_rocket_launcher, ar_gun, ar_gun][i mod 2 + 1]]);
+enemyInBase := FilterUnitsInArea(area, [f_enemy, side]);
+enemyOuterBase := FilterUnitsInArea(outerArea, [f_enemy, side]);
 
-MC_SetProduceList(base, tmp);
+vehicles := CheckByIndex(arVehicles, 1, base, 2); 
 
-repeat
- wait(0$1);
-until MC_GetProduceList(base) = 0;
+depot := FilterUnitsInArea(area, [[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
-wait(0$10);
+if depot then
+   depot := depot[1];
 
-for i = 1 to coords do
-    begin
-    t := DangerAtRangeXY(side_bot, coords[i][1], coords[i][2], 35)[4];
+// research
+if arTech then
+   begin
+   lab := FilterUnitsInArea(area, [[f_side, side], [f_ok], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
 
-    if t > x then
+   if lab then
+      begin
+      if BuildingStatus(lab[1]) = bs_idle then
+         begin
+         for i in arTech do
+             if CanBeResearched(lab[1], i) then
+                begin
+                ComResearch(lab[1], i);
+                break;
+                end;
+         end;
+      end;
+   end;
+
+fac := FilterUnitsInArea(area, [[f_side, side], [f_btype, b_factory], [f_ok]]);
+
+if fac then
+   begin
+   if BuildingStatus(fac[1]) = bs_idle then
+      begin
+      emptyTowers := FilterUnitsInArea(area, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
+
+      if emptyTowers then
+         begin
+         weapon := GetTurretWeapon(emptyTowers[1], area);
+
+         if weapon then
+            ComPlaceWeapon(emptyTowers[1], weapon);
+         end;
+
+      if arConstructList then
+         for i := 1 to Count(arConstructList) do
+             begin
+             if arConstructList[i][1] = base then
+                if CanBeConstructed(fac[1], arConstructList[i][2][1], arConstructList[i][2][2], arConstructList[i][2][3], arConstructList[i][2][4]) then
+                   begin
+                   ComConstruct(fac[1], arConstructList[i][2][1], arConstructList[i][2][2], arConstructList[i][2][3], arConstructList[i][2][4]);
+                   arConstructList := Delete(arConstructList, i);
+                   break;
+                   end;
+             end;
+      end;
+   end;
+
+// damaged buildings
+tmp := FilterUnitsInArea(area, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(area);
+
+// mechanic
+mech := UnitFilter(forces, [[f_class, class_mechanic], [f_ok]]);
+
+if UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]) and IsOk(arFactories[base]) then
+   ComEnterUnit(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), arFactories[base]);
+
+// sci logic
+sci := UnitFilter(forces, [[f_class, class_scientistic], [f_ok]]);
+lab := FilterUnitsInArea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+
+if sci then
+   begin
+   hurtUnits := UnitFilter(forces, [[f_inarea, area], [f_tag, tHeal]]);
+
+   if hurtUnits then
+      begin
+      for i in sci do
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, hurtUnits[1]);
+      end
+   else if lab then
+      begin
+      for i in sci do
+          if not IsInUnit(i) then
+             ComEnterUnit(i, lab[1]);
+      end;
+   end;
+
+// eng logic
+eng := UnitFilter(forces, [f_class, 2]);
+buildingsToBuild := CheckByIndex(arBuildings, 1, base, 2);
+
+if eng then
+   begin
+   for i in eng do
        begin
-       x := t;
-       target := i;
+       tag := GetTag(i);
+
+       if IsInArea(i, outerArea) then
+          begin
+          ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
+          continue;
+          end;
+
+       if GetLives(i) < 800 and tag <> tHeal then
+          begin
+          SetTag(i, tHeal);
+          ComMoveXY(i, healPoint[1], healPoint[2]);
+          AddComHold(i);
+          end;
+
+       if tag = tHeal and GetLives(i) = 1000 then
+          SetTag(i, 0);
+
+       if not tag then
+          begin
+          undone := FilterUnitsInArea(area, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          if cr or tmp or buildingsToBuild then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, tRepair)
+             else if cr then
+                SetTag(i, tCrates)
+             else
+                SetTag(i, tBuild);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, depot);
+          end;
+
+       if tag = tRepair then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, area) then
+             ComMoveToArea(i, area);
+          end;
+
+       if tag = tBuild then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not buildingsToBuild or enemyInBase or enemyOuterBase then
+             begin
+             SetTag(i, 0);
+             continue;
+             end
+          else if not CanBeBuiltOnlyResources(depot, buildingsToBuild[1][1]) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          undone := FilterUnitsInArea(area, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;   
+
+          ComBuild(i, buildingsToBuild[1][1], buildingsToBuild[1][2], buildingsToBuild[1][3], buildingsToBuild[1][4]);
+          end;
+
+       if tag = tCrates then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
        end;
+   end;
 
+// cranes
+cranes := UnitFilter(vehicles, [[f_weapon, ar_crane], [f_ok]]);
+
+if cranes then
+   begin
+   if tmp then
+      begin
+      for i in cranes do
+          ComRepairBuilding(i, NearestUnitToUnit(tmp, i));
+      end
+   else
+      ComBackOnParking(cranes, parkingPoint);
+   end;
+
+
+// remote control
+vehicles2 := CheckByIndex(arVehiclesAtttackers, 1, base, 2);
+
+if vehicles2 then
+   for i in UnitFilter(vehicles2, [[f_control, control_remote], [f_ok], [f_not, [f_linked]]]) do
+       Connect(i);
+
+// defense logic
+if vehicles then
+   begin
+   for i in UnitFilter(vehicles, [[f_control, control_remote], [f_ok], [f_not, [f_linked]]]) do
+       Connect(i);
+
+   vehicles := UnitFilter(vehicles, [[f_not, [f_or, [f_weapon, ar_crane], [f_weapon, ar_cargo_bay]]], [f_ok]]);
+
+   if vehicles then
+      begin
+      for i in vehicles do
+          begin
+          tag := GetTag(i);
+
+          if not tag then
+             begin
+             if GetControl(i) = control_manual then
+                begin
+                drivers := CheckByIndex(arDrivers, 1, i, 2);
+
+                if not drivers then
+                   begin
+                   drivers := UnitFilter(mech, [f_not, [f_tag, tMech]]);
+
+                   if drivers then
+                      begin
+                      SetTag(drivers[1], tMech);
+                      arDrivers := Join(arDrivers, [i, drivers[1]]);
+                      end;
+                   end;
+
+                if drivers then
+                   SetTag(i, tBusy);
+
+                continue;
+                end;
+
+             SetTag(i, tBusy);
+             end
+          else if tag = tBusy then
+             begin
+             if GetLives(i) = 1000 then
+                begin
+                if GetControl(i) = control_manual and not IsDrivenBy(i) then
+                   begin
+                   drivers := CheckByIndex(arDrivers, 1, i, 2);
+
+                   if not drivers then
+                      begin
+                      SetTag(i, 0);
+                      continue;
+                      end;
+
+                   if IsInUnit(drivers[1]) and not IsDriver(drivers[1]) then
+                      ComExitBuilding(drivers[1]);
+
+                   if (UnitFilter(vehicles, [f_tag, tRepair]) and not HasTask(drivers[1])) or not UnitFilter(vehicles, [f_tag, tRepair]) then
+                      ComEnterUnit(drivers[1], i);
+
+                   continue;
+                   end;
+
+                SetTag(i, tAttack);
+                end;
+             end
+          else if tag = tAttack then
+             begin
+             enemy := enemyInBase;
+
+             if not enemy then
+                enemy := enemyOuterBase;
+
+             if not enemy and GetDistUnitXY(i, parkingPoint[1], parkingPoint[2]) > 10 then
+                begin
+                ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
+                continue;
+                end;
+
+             if GetLives(i) < 650 then
+                begin
+                SetTag(i, tVehRepair);
+                ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
+                continue;
+                end;
+
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+             end
+          else if tag = tVehRepair then
+             begin
+             if GetDistUnitXY(i, parkingPoint[1], parkingPoint[2]) > 10 then
+                begin
+                ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
+                continue;
+                end;
+
+             if GetLives(i) = 1000 then
+                begin
+                SetTag(i, tBusy);
+                continue;
+                end;
+
+             if GetControl(i) = control_manual and IsDrivenBy(i) then
+                ComRepairVehicleAndReturn(IsDrivenBy(i));
+             end;
+          end;
+      end;
+   end;
+
+sol := UnitFilter(forces, [[f_or, [f_class, class_soldier], [f_class, class_mortar], [f_class, class_sniper], [f_class, class_bazooker]], [f_ok]]);
+
+if sol then
+   begin
+   if enemyInBase then
+      begin
+      for i in sol do
+          begin
+          tw := IsInUnit(i);
+
+          if tw then
+             begin
+             if not tw in FilterAllUnits([[f_side, side], [f_see, enemySide], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) then
+                ComExitBuilding(i);
+             end
+          else
+             if IsInArea(i, area) then
+                ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i))
+             else
+                ComMoveToArea(i, area);
+          end;
+      end
+   else
+      begin
+      empty := FilterUnitsInArea(area, [[f_not, [f_full]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
+
+      if empty then
+         empty := ReverseArray(empty);
+
+      for i in sol do
+          begin
+          tag := GetTag(i);
+
+          if GetLives(i) < 1000 and tag <> tHeal then
+             begin
+             SetTag(i, tHeal);
+             ComMoveXY(i, healPoint[1], healPoint[2]);
+             AddComHold(i);
+             continue;
+             end;
+
+          if GetLives(i) = 1000 and tag = tHeal then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if HasTask(i) then
+             continue;
+
+          if not IsInUnit(i) and not tag and empty then
+             begin
+             ComEnterUnit(i, empty[1]);
+
+             if GetBType(empty[1]) = b_barracks and Prob(50) then
+                AddComChangeProfession(i, class_mortar);
+
+             empty := Delete(empty, 1);
+             end;
+          end;
+      end;
+   end;
+End;
+
+
+// [area_base_south, area_base_north, area_base_west, area_base_east, area_base_north2];
+// South-west base
+Every 0$2 trigger UnitFilter(ar_force_south, [f_ok]) do
+begin
+enable;
+ArabianBaseScript(side_bot, 1, area_base_south, area_base_south_outer, ar_force_south, [120, 129], [126, 136]);
+End;
+
+// North #1 base
+Every 0$2 trigger UnitFilter(ar_force_north, [f_ok]) do
+begin
+enable;
+ArabianBaseScript(side_bot, 2, area_base_north, area_base_north_outer, ar_force_north, [116, 9], [123, 12]);
+End;
+    
+// West base
+Every 0$2 trigger UnitFilter(ar_force_west, [f_ok]) do
+begin
+enable;
+ArabianBaseScript(side_bot, 3, area_base_west, area_base_west_outer, ar_force_west, [28, 10], [26, 17]);
+End;
+
+// East base
+Every 0$2 trigger UnitFilter(ar_force_east, [f_ok]) do
+begin
+enable;
+ArabianBaseScript(side_bot, 4, area_base_east, area_base_east_outer, ar_force_east, [173, 72], [167, 83]);
+End;
+
+// North #2
+Every 0$2 trigger UnitFilter(ar_force_north2, [f_ok]) do
+begin
+enable;
+ArabianBaseScript(side_bot, 5, area_base_north2, area_base_north2_outer, ar_force_north2, [147, 50], [159, 40]);
+End;
+
+
+// Mines
+// Triggered Mines
+Every 0$01 + 0$3 trigger arMinesList do
+var i, p, tmp;
+begin
+enable;
+
+p := 1;
+
+for i := 1 to Count(arMinesList) div 2 do
+    begin
+    tmp := HexInfo(arMinesList[p], arMinesList[p+1]);
+
+    if tmp then
+       if GetSide(tmp) <> side_bot then
+          begin
+          LaunchMineAtPos(arMinesList[p], arMinesList[p+1], side_bot);
+          arMinesList := Delete(arMinesList, p);
+          arMinesList := Delete(arMinesList, p);
+          p := p - 2;
+          end;
+
+    p := p + 2;
     end;
-
-case target of
-1: _target := [[49,35], [76,90]];
-2: _target := [[79,13], [100,22]];
-end;
-
-if not _target then
-   _target := [[49,35], [76,90]];
-
-MC_PrepareAttack(base, mc_vehicles[base], _target, flags);
 End;

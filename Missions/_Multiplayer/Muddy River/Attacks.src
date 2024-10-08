@@ -1,0 +1,334 @@
+// BASE NORTH (2)
+// BASE WEST (3)
+Var NorthBase, WestBase;
+Every 0$1 do
+var i;
+begin
+NorthBase := 2;
+WestBase := 3;
+End;
+
+Every 10$00 do
+var i;
+begin
+// north
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                NorthBase,
+                                                [ar_half_tracked,
+                                                [engine_siberite, engine_combustion][rand(1,2)],
+                                                control_remote,
+                                                [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_selfpropelled_bomb][rand(1,4)]]
+                                                ]);
+    end;
+
+// west
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                WestBase,
+                                                [ar_half_tracked,
+                                                engine_combustion,
+                                                control_remote,
+                                                [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_flame_thrower][rand(1,4)]]
+                                                ]);
+    end;
+
+
+wait(8$00 - (1$00 * Difficulty));
+
+// north
+for i := 1 to [5, 5, 6][Difficulty] do
+    begin
+    arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                NorthBase,
+                                                [ar_half_tracked,
+                                                [engine_siberite, engine_combustion][rand(1,2)],
+                                                control_remote,
+                                                [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_selfpropelled_bomb][rand(1,4)]]
+                                                ]);
+    end;
+
+if tick > 30$0 then
+   begin
+   for i := 1 to tick div 30$0 do
+       arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                   NorthBase,
+                                                   ar_half_tracked,
+                                                   engine_siberite,
+                                                   control_remote,
+                                                   ar_selfpropelled_bomb
+                                                   ]);
+   end;
+
+// west
+for i := 1 to [5, 6, 6][Difficulty] do
+    begin
+    arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                WestBase,
+                                                [ar_half_tracked,
+                                                engine_combustion,
+                                                control_remote,
+                                                [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_flame_thrower][rand(1,4)]]
+                                                ]);
+    end;
+
+repeat
+ wait([10$0, 9$0, 8$0][Difficulty]);
+
+ // north
+ for i := 1 to [5, 6, 7][Difficulty] do
+     begin
+     arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                 NorthBase,
+                                                 [ar_half_tracked,
+                                                 [engine_siberite, engine_combustion][rand(1,2)],
+                                                 control_remote,
+                                                 [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_selfpropelled_bomb][rand(1,4)]]
+                                                 ]);
+     end;
+
+ // west
+ for i := 1 to [4, 5, 6][Difficulty] do
+     begin
+     arConstructList := Replace(arConstructList, arConstructList + 1, [
+                                                 WestBase,
+                                                 [ar_half_tracked,
+                                                 engine_combustion,
+                                                 control_remote,
+                                                 [ar_gun, ar_gatling_gun, ar_rocket_launcher, ar_flame_thrower][rand(1,4)]]
+                                                 ]);
+     end;
+until false;
+End;
+
+Every 2$00 trigger CheckByIndex(arVehiclesAtttackers, 1, NorthBase, 2) do
+var i, tmp;
+begin
+enable;
+
+tmp := CheckByIndex(arVehiclesAtttackers, 1, NorthBase, 2);
+
+if not tmp then
+   exit;
+
+for i := Count(arVehiclesAtttackers) downto 1 do
+    if arVehiclesAtttackers[i][2] in tmp then
+       arVehiclesAtttackers := Delete(arVehiclesAtttackers, i);
+
+SendToAttack(tmp, [ [164,40], [174,72], [174,93], [196,110] ]);
+End;
+
+Every 2$00 trigger CheckByIndex(arVehiclesAtttackers, 1, WestBase, 2) do
+var i, tmp;
+begin
+enable;
+
+tmp := CheckByIndex(arVehiclesAtttackers, 1, WestBase, 2);
+
+if not tmp then
+   exit;
+
+for i := Count(arVehiclesAtttackers) downto 1 do
+    if arVehiclesAtttackers[i][2] in tmp then
+       arVehiclesAtttackers := Delete(arVehiclesAtttackers, i);
+
+SendToAttack(tmp, [ [49,37], [54,68], [77,91], [95,104] ]);
+End;
+
+Function SendToAttack(attackers, path);
+var i;
+begin
+repeat
+ wait(0$1);
+
+ for i in attackers do
+     begin
+     if not IsOk(i) then
+        begin
+        ComUnlink(i);
+        attackers := attackers diff i;
+        continue;
+        end;
+
+     AgressiveMove(i, path);
+     end;
+until not UnitFilter(attackers, [f_ok]);
+End;
+
+
+// Extra attack outside map
+Every 0$10 trigger not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot do
+var i, un, tmp, enemy;
+begin
+for i := 1 to 3 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_hovercraft, engine_combustion, control_remote, [ar_double_machine_gun, ar_light_gun, ar_mortar][rand(1,3)], 100);
+    un := CreateVehicle;
+    SetDir(un, 2);
+    PlaceUnitArea(un, river_spawn, false);
+
+    Connect(un);
+
+    wait(0$0.3);
+
+    ComMoveXY(un, 73, 17);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        ComAutodestruct(i);
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     if GetLives(i) < 750 then
+        begin          
+        enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+
+        if enemy then
+           ComMoveUnit(i, enemy);
+        end
+     else
+        AgressiveMove(i, [ [76,31], [93,67], [108,97] ]);
+     end;
+until not tmp;
+End;
+
+// Extra attack outside map
+Every 18$00 trigger (not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot) and (IsOk(ar_dep_w) and GetSide(ar_dep_w) = side_bot) do
+var i, un, tmp, enemy;
+begin
+enable;
+
+for i := 1 to 3 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_hovercraft, engine_combustion, control_apeman, [ar_double_machine_gun, ar_light_gun, ar_mortar][rand(1,3)], 100);
+    un := CreateVehicle;
+    SetDir(un, 2);
+    PlaceUnitArea(un, river_spawn, false);
+
+    wait(0$0.3);
+
+    ComMoveXY(un, 73, 17);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        ComAutodestruct(i);
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     if GetLives(i) < 750 then
+        begin
+        enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+
+        if enemy then
+           ComMoveUnit(i, enemy);
+        end
+     else
+        AgressiveMove(i, [ [76,31], [93,67], [108,97] ]);
+     end;
+until not tmp;
+End;
+
+// Extra attack outside map
+Every 0$10 trigger not IsOk(ar_dep_e) or GetSide(ar_dep_e) <> side_bot do
+var i, un, tmp, enemy;
+begin
+
+for i := 1 to [2, 3, 4][Difficulty] do
+    begin
+    uc_side := side_bot;
+    uc_nation := nation_nature;
+
+    PrepareApemanSoldier();
+    hc_class := class_apeman_kamikaze;
+
+    un := CreateHuman;
+    SetDir(un, 4);
+    PlaceUnitArea(un, east_ape_spawn, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+
+     if enemy then
+        ComAttackUnit(i, enemy);
+     end;
+until not tmp;
+End;
+
+// Extra attack outside map
+Every 0$10 trigger not IsOk(ar_dep_w) or GetSide(ar_dep_w) <> side_bot do
+var i, un, tmp, enemy;
+begin
+
+for i := 1 to [2, 3, 3][Difficulty] do
+    begin
+    uc_side := side_bot;
+    uc_nation := nation_nature;
+
+    PrepareApemanSoldier();
+    hc_class := class_apeman_kamikaze;
+
+    un := CreateHuman;
+    SetDir(un, 2);
+    PlaceUnitArea(un, west_ape_spawn, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+
+     if enemy then
+        ComAttackUnit(i, enemy);
+     end;
+until not tmp;
+End;
+
