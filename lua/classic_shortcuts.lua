@@ -163,7 +163,7 @@ menu.window_shortcuts.panel.pagesList = clListBox(
 menu.window_shortcuts.panel.buttonsList = clListBox(
     menu.window_shortcuts.panel, 
     XYWH(201, 50, 194, 226), 
-    loadShortcutsButtonsList(), 
+    nil, -- loadShortcutsButtonsList(), 
     1, 
     '', 
     {}

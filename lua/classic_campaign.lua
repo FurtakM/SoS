@@ -801,16 +801,23 @@ function runCampaign(ID)
 		campText = loc(9995);
 	end;
 
+	setXYWH(menu.window_campaign, {
+		X = 0,
+		Y = 0,
+		W = ScrWidth,
+		H = ScrHeight
+	});
+
 	setXYWH(menu.window_campaign_tree, {
-		X = 0, 
-		Y = 0, 
+		X = campContainerX, 
+		Y = campContainerY, 
 		W = campContainerWidth, 
 		H = campContainerHeight
 	});
 	
 	setXYWH(menu.window_campaign_tree.panel, {
-		X = campContainerX, 
-		Y = campContainerY, 
+		X = 0, 
+		Y = 0, 
 		W = campContainerWidth, 
 		H = campContainerHeight
 	});

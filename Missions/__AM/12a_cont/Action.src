@@ -150,7 +150,7 @@ if building then
 
    DialogueOn;
    end
-  else
+else
    begin
    ComTurnUnit(JMM, unit);
    ComTurnUnit(unit, JMM);
@@ -322,6 +322,8 @@ else if unit = Gary then
 
       DialogueOff;
       InGameOff;
+
+      SetSide(JMM, side);
       exit;
       end;
    end
@@ -340,6 +342,8 @@ else if unit = Kikuchi then
 
       DialogueOff;
       InGameOff;
+
+      SetSide(JMM, side);
       exit;
       end;
    end
@@ -517,7 +521,7 @@ for i in FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) do
        SetSide(i, 7);
 End;
 
-Every 0$01 trigger can_escape and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5) do
+Every 0$01 trigger can_escape and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_ok], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5) do
 var all_taken, tmp, m1, m2, m3;
 begin
 m1 := false;
@@ -527,15 +531,20 @@ m3 := false;
 all_taken := (UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0);
 
 if not all_taken then
-   case Query('Q1') of
-   1: begin
+   begin
+   if Query('Q1') = 1 then
+      begin
       repeat
        wait(0$1);
-      until UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0 and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5);
+      until UnitFilter(selected, [[f_side, 4], [f_type, unit_human]]) = 0 and not FilterUnitsExceptArea(escape_area, [[f_side, 7], [f_ok], [f_type, unit_human]]) and not FindArtifact(3) and not FindArtifact(5);
 
       all_taken := true;
       end;
-   2:;
+   end;
+
+if Count(FilterAllUnits([[f_side, 7], [f_type, unit_human], [f_ok]])) < 6 then
+   begin
+   YouLost('AlliesLost');
    end;
 
 if team_kill_counter < 3 then

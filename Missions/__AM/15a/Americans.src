@@ -20,7 +20,14 @@ SetResourceType(GetBase(am_depot2), mat_cans, 5500);
 SetResourceType(GetBase(am_depot2), mat_oil, 4000);
 SetResourceType(GetBase(am_depot2), mat_siberit, 10);
 
-Powell := NewCharacter('Powell');
+if LoadVariable('12a_PowellKilled', false) then
+   begin
+   PrepareHuman(sex_male, class_soldier, 10);
+   Powell := CreateHuman;
+   end
+else
+   Powell := NewCharacter('Powell');
+
 PlaceHumanInUnit(Powell, am_depot);
 
 tmp := [];
@@ -79,6 +86,8 @@ if Kikuchi then
    tmp := tmp ^ Kikuchi;
 
 tmp := tmp union CreateCharacterSet('12p_others');
+
+InitHc_All();
 
 if tmp < 36 then
    for i = 1 to 36 - tmp do
@@ -152,10 +161,11 @@ until MC_GetVehicles(4, true) >= 6 or p > 100;
 
 wait(0$30);
 
-tmp := MC_GetVehicles(4, true);
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_not, [f_weapon, us_siberium_rocket], [f_weapon, us_cargo_bay], [f_weapon, us_crane]]]) diff mc_defender[4];
 mc_vehicles := Replace(mc_vehicles, 4, mc_vehicles[4] diff tmp);
 
 target := rand(0, 2);
+p := 0;
 
 if target then
    begin
@@ -167,7 +177,8 @@ if target then
            ComMoveXY(i, 114, 108);
 
     wait(0$1);
-   until UnitFilter(tmp, [f_distxy, 114, 108, 9]) >= (tmp-1);
+    p := Inc(p);
+   until UnitFilter(tmp, [f_distxy, 114, 108, 9]) >= (tmp-1) or p > 30;
    end
 else
    begin
@@ -179,20 +190,16 @@ else
            ComMoveXY(i, 129, 139);
 
     wait(0$1);
-   until UnitFilter(tmp, [f_distxy, 129, 139, 9]) >= (tmp-1);
+    p := Inc(p);
+   until UnitFilter(tmp, [f_distxy, 129, 139, 9]) >= (tmp-1) or p > 30;
    end;
 
 repeat
  wait(0$1);
+ tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
-     begin
-     if GetLives(i) > 251 then
-        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i))
-     else
-      if IsDead(i) then
-         tmp := tmp diff i;
-     end;
+     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
 until not tmp;
 End;
 

@@ -281,9 +281,11 @@ ComMoveXY(Omar, 202, 115);
 End;
 
 // omar suicide attack
-Every 0$1 trigger IsOk(Omar) and russianDestroyed do
+Every 0$1 trigger IsOk(Omar) and russianDestroyed and GetSide(Omar) = 7 do
 var i;
 begin
+wait(0$2);
+
 SetSide(Omar, 5);
 
 if IsInUnit(Omar) then
@@ -413,7 +415,7 @@ begin
 MC_Kill(4);
 SetAttitude(1, 7, att_friend, true);
 
-speaker := FilterAllUnits([[f_side, 1], [f_sex, sex_male], [f_nation, 1]]) diff [Powell, Gladstone, Cyrus, Bobby, Gary, Houten];
+speaker := FilterAllUnits([[f_side, 1], [f_ok], [f_sex, sex_male], [f_nation, 1]]) diff [Powell, Gladstone, Cyrus, Bobby, Gary, Houten];
 
 if not speaker then
    begin
@@ -461,7 +463,7 @@ until IsDead(Yakotich);
 MC_Kill(2);
 SetAttitude(3, 7, att_friend, true);
 
-speaker := FilterAllUnits([[f_side, 3], [f_sex, sex_male], [f_nation, 3]]) diff Platonov;
+speaker := FilterAllUnits([[f_side, 3], [f_ok], [f_sex, sex_male], [f_nation, 3]]) diff Platonov;
 
 if not speaker then
    begin
@@ -579,6 +581,12 @@ Every 0$5 trigger americanDestroyed and russianDestroyed and legionDestroyed and
 var med1, med2;
 begin
 wait(0$5);
+
+if Count(FilterAllUnits([[f_side, 7], [f_type, unit_human], [f_nation, 1], [f_ok]])) < 3 then
+   begin
+   YouLost('LostVictory');
+   exit;
+   end;
 
 music_class := 5;
 music_nat := 5;

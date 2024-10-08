@@ -21,6 +21,12 @@ if un in FilterAllUnits([f_or, [f_class, class_apeman], [f_class, class_apeman_e
    apeKillCounter := apeKillCounter + 1;
 End;
 
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if un in FilterAllUnits([[f_side, 1], [f_nation, 1], [f_type, unit_human]]) and killerSide = 1 then
+   traitor := true;
+End;
+
 On VehicleConstructed(veh, fac) do
 begin
 SOS_VehicleConstructed(veh, fac);
@@ -36,6 +42,12 @@ End;
 // User want to end this crappy mission
 On EndTheMissionRaised(p) do
 begin
+if FilterAllUnits([[f_side, 2], [f_ok], [f_type, unit_human]]) then
+   begin
+   Query('QArabOnMap');
+   exit;
+   end;
+
 end_the_mission_allowed := false;
 end_mission := true;
 End;

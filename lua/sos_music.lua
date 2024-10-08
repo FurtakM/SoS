@@ -39,7 +39,7 @@ function playMusic(TRACK, CALLBACK)
 end;
 
 function playMenuMusic(MODE)
-    if (getvalue(OWV_ISEDITOR)) then
+    if (getvalue(OWV_ISEDITOR) or CONFIG_LOGOS) then
         return;
     end;
 

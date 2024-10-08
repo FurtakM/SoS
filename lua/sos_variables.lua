@@ -136,6 +136,9 @@ TID_Main_Menu_Contact = 9997;
 TID_Main_Menu_Changelog = 9998;
 TID_Changelog = 9999;
 
+-- config variables
+CONFIG_LOGOS = false;
+
 -- variables for lua
 SOS_GAME_DIFFICULTY = 1;
 

@@ -442,7 +442,7 @@ SetAttitude(2, 3, att_friend, true);
 SetAttitude(2, 6, att_friend, true);
  
 arCivilian := FilterAllUnits([[f_side, 2], [f_or, [f_class, 4], [f_class, 2], [f_class, 3]]]);
-arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+arSoldiers = FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff Dietrich;
 barracks := FilterAllUnits([[f_side, 2], [f_btype, b_barracks]]);
 
 ComExitBuilding(arCivilian);
@@ -461,7 +461,7 @@ for i in arCivilian do
     wait(0$0.5);
     end;
 
-wait(0$3);
+wait(0$5);
 
 CenterOnXY(76, 19);
 
@@ -495,23 +495,26 @@ wait(0$1);
 
 nearestBuilding := NearestUnitToUnit(FilterAllUnits([[f_side, 1], [f_type, unit_building]]), arSoldiers[1]);
 
-AddComPlaceDelayedCharge(UnitFilter(arSoldiers, [f_class, 1])[1], GetX(nearestBuilding), GetY(nearestBuilding), nearestBuilding);
+for i := 1 to 3 do
+    AddComPlaceDelayedCharge(UnitFilter(arSoldiers, [f_class, 1])[i], GetX(nearestBuilding), GetY(nearestBuilding), nearestBuilding);
 
-AddComMoveXY(arSoldiers, 84, 22);
-AddComMoveXY(arSoldiers, 82, 5);
+AddComAgressiveMove(arSoldiers, 84, 22);
 AddComMoveXY(arSoldiers, 95, 12);
 AddComMoveXY(arSoldiers, 102, 11);
 AddComMoveXY(arSoldiers, 116, 15);
 AddComMoveXY(arSoldiers, 140, 25);
 
-arSoldiers := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff [Dietrich];
+arSoldiers := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 1], [f_class, 8], [f_class, 15]]]) diff Dietrich;
 arCivilian := FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_or, [f_class, 2], [f_class, 3], [f_class, 4], [f_class, 12], [f_class, 16]]]);
 arCivilian := arCivilian ^ Dietrich;
 
+AddComMoveXY(arCivilian, 81, 12);
 AddComMoveXY(arCivilian, 88, 8);
 AddComMoveXY(arCivilian, 102, 10);
 AddComMoveXY(arCivilian, 116, 15);
 AddComMoveXY(arCivilian, 140, 25);
+
+wait(3);
 
 arEscapist := arCivilian union arSoldiers;
 
@@ -584,9 +587,9 @@ if IsInArea(Khatam, khatamArea) then
 End;
 
 // Spawn Cornell
-Every 0$30 trigger joinedToEpsilon and not InBattle(1) and hasBase and LoadVariable('02_mikhailStatus_1', 0) and FilterAllUnits([f_side, 5]) = 0 and (FilterAllUnits([[f_side, 2], [f_type, unit_human]]) = 0 or not arabianAttack) do
+Every 0$30 trigger joinedToEpsilon and LoadVariable('02_mikhailStatus_1', 0) and FilterAllUnits([[f_side, 5], [f_ok]]) = 0 and (FilterAllUnits([[f_side, 2], [f_ok], [f_type, unit_human]]) = 0 or not arabianAttack) do
 begin
-wait(5$00 * Difficulty);
+wait(2$00 * Difficulty);
 PrepareCornell;
 End;
 
@@ -665,6 +668,9 @@ End;
 Export function FinishMission;
 var m1, m2, m3, prefix;
 begin
+if Count(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_nation, 1], [f_ok]])) < 5 then
+   YouLost('Troops');
+
 if not hasSniper then
    SetAchievement('ACH_SNIPER');
 

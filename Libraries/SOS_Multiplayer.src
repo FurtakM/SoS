@@ -1,0 +1,503 @@
+// SoS Multiplayer module by Serpent
+// 2024
+
+Export
+  mpGameType,  // gameTypeNormal(1), gameTypeSurvival(2), gameTypeKing(3)
+  mpGameSettingsKeys, // [1, 0, 0, 1 ...]  -- settings keys available for current map
+  mpGameSettingsValues, // [ [0, 1, 2], [] ...] -- settings values available for current map
+  mpGameSettings, // [ [1], [] ...]  -- final selected settings values by host
+  mpSidePositions,
+  mpSideTeams,
+  mpSideNations,
+  mpTeams,
+  mpTeamGame,
+  mpOilDeposits,
+  mpSibDeposits,
+  mpDepots,
+  mpStartingResources,
+  mpSharedVision,
+  mpBuildings,
+  mpMarkedAreas,
+  mpBuildUpAreas,
+  mpBuildUpTime,
+  mpStartPos,
+  mpBattleFlag,
+  mpBattleFlags,
+  mpPeopleAmount,
+  mpPeopleSkill,
+  mpSibDetection,
+  mpShipments,
+  mpSibBomb,
+  mpMapSize,
+  mpApemans,
+  mpApemansArea,
+  mpRespawn,
+  mpKingArea,
+  mpPoints,    
+  mpDisplayStrings,
+  mpGameActive;
+
+{
+  mpBaseLevel,            // (0)  No Base, Depot Only, Fortified, Extra Fortified
+  mpAmountOfPeople,       // (1)  9, 12, 15, 24
+  mpSkillLevel,           // (2)  Unexperienced, Little Experienced, Experienced, More Experienced
+  mpStartingResources,    // (3)  None, Few, Medium, Lots
+  mpShipments,            // (4)  Low, Medium, High, Very High
+  mpOilSources,           // (5)  Normal, Extra / *Bool
+  mpSibSources,           // (6)  None, Normal, Extra / *-
+  mpSharedVision,         // (10) True, False
+  mpFlags,                // (11) None, Fast Decreasing, Decreasing, Slowly Decreasing, Not Decreasing
+  mpSibDetection,         // (12) True, False
+  mpPeopleRespawn,        // (13) None, Rare, Common
+  mpApemans,              // (14) None, Few, Medium, Lots
+  mpSibBomb,              // (17) Off, On
+  mpBuildUpTime,          // (20) BT
+}
+
+Export function InitMultiplayer;
+var i;
+begin
+disable(mpActive);
+disable(mpWin);
+disable(mpLose);
+
+// init arrays
+mpGameType := 0;
+mpGameSettings := [];
+mpGameSettingsKeys := [];
+mpGameSettingsValues := [];
+mpMapSize := [2, 2];
+
+mpOilDeposits := [];
+mpSibDeposits := [];
+
+mpDepots := [];
+mpBuildings := [];
+mpMarkedAreas := [];
+mpBuildUpAreas := [];
+mpBuildUpTime := [];
+mpStartingResources := [];
+mpStartPos := [];
+mpBattleFlag := -1;
+mpBattleFlags := [];
+mpApemans := [];
+mpApemansArea := [];
+mpRespawn := [];
+mpKingArea := 0;
+mpPoints := [];
+mpShipments := 0;
+
+mpPeopleSkill := 3;
+mpPeopleAmount := 15;
+
+mpDisplayStrings := 0;
+mpGameActive := false;
+
+for i := 1 to 32 do
+    mpGameSettings := Replace(mpGameSettings, i, 0);
+
+// load arrays from the map code
+End;
+
+Export function StartMultiplayer;
+var i, j, b, x, y, side, pos, nation, ape, team, setting, resources, gameTypes;
+begin
+gameTypes := [
+    GameTypeNormal,
+    GameTypeSurvival,
+    GameTypeKing
+];
+
+for i in gameTypes do
+    disable(i);
+
+if Multiplayer then
+   begin
+   mpGameType := mp_game_type;
+   your_side  := mp_player_side;
+
+   mpSidePositions := mp_sides_positions;
+   mpSideTeams     := mp_sides_teams;
+   mpSideNations   := mp_sides_nations;
+   mpTeams         := mp_teams;
+
+   for i := 1 to Count(mpGameSettingsKeys) do
+       begin
+       setting := mpGameSettingsKeys[i];
+
+       if setting then
+          mpGameSettings := Replace(mpGameSettings, i, mpGameSettingsValues[i][GetMultiplayerSetting(i - 1) + 1]);
+       end;
+
+   mpTeamGame := (mpSideTeams diff [0]) > 1;
+   end
+else // default
+   begin
+   
+   end;
+
+GetMultiplayerMapData(mpGameType); // custom function
+
+// unmark areas
+if Count(mpMarkedAreas) then
+   begin
+   for i in mpMarkedAreas do
+       SetAreaMapShow(i, 0);
+   end;
+
+// place everything on map..
+for i := 1 to 8 {max amount} do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    side := i;
+    nation := mpSideNations[i];
+    pos := mpSidePositions[i];
+
+    // oil
+    if Count(mpOilDeposits) then
+       begin
+       for j in mpOilDeposits[pos] do
+           begin
+           CreateDepositXY(j[1], j[2], mat_oil);
+           SetResourceVisibility(j[1], j[2], side);
+           end;
+       end;
+
+    // sib
+    if Count(mpSibDeposits) then
+       begin
+       for j in mpSibDeposits[pos] do
+           begin
+           CreateDepositXY(j[1], j[2], mat_siberit);
+           SetResourceVisibility(j[1], j[2], side);
+           end;
+       end;
+
+    InitBc;
+    InitUc;
+
+    uc_side := side;
+    uc_nation := nation;
+
+    // depots
+    if Count(mpDepots) then
+       begin
+       bc_level := 0;
+       bc_type := b_depot;
+       b := CreateAndPlaceBuildingXYD(mpDepots[pos][1], mpDepots[pos][2], mpDepots[pos][3]);
+
+       SetBName(b, '@' & side);
+
+       if Count(mpStartingResources) then
+          begin
+          for j := 1 to mpStartingResources do
+              SetResourceType(GetBase(b), j, mpStartingResources[j]);
+          end;
+       end
+    else
+       if Count(mpStartingResources) then
+          begin
+          for j := 1 to mpStartingResources do
+              begin
+              resources := mpStartingResources[j];
+
+              repeat
+               if resources >= 50 then
+                  begin
+                  CreateResourcesXYR(j, 5, x, y, 4, false);
+                  resources := resources - 50;
+                  end
+               else
+                  CreateResourcesXYR(j, resources div 10, x, y, 4, false);
+              until resources <= 0;
+              end;
+          end;
+
+    // buildings
+    if Count(mpBuildings) then
+       begin
+       for j in mpBuildings[pos] do
+           begin
+           bc_level := 0;
+           bc_type := j[1];
+           CreateAndPlaceBuildingXYD(j[2], j[3], j[4]);
+           end;
+       end;
+
+    // battle flag
+    if mpBattleFlag > -1 then
+       begin
+       x := mpStartPos[pos][1];
+       y := mpStartPos[pos][2];
+
+       PlaceEnvironment(x, y, 12, 2);
+
+       mpBattleFlags := Replace(mpBattleFlags, side, SetBattleFlag(side, x, y, [
+                                                                        [bfo_defend_bonus_human, 100],
+                                                                        [bfo_defend_bonus_vehicle, 70],
+                                                                        [bfo_defend_bonus_building, 40],
+                                                                        [bfo_range, 25],
+                                                                        [bfo_height, 100]
+                                                                   ]));
+       end;
+
+    // apemans
+    if mpApemans then
+       begin
+       for j := 1 to mpApemans do
+           begin
+           PrepareApeman(-5);
+           ape := CreateHuman;
+           SetTag(ape, side);
+           PlaceUnitArea(ape, mpApemansArea[side], false);
+           end;
+       end;
+
+    // tech
+    if mpSibDetection and GetTech(tech_sibdet, side) = state_enabled then
+       SetTech(tech_SibDet, side, state_researched);
+
+    SetTech(tech_artifact, side, state_disabled);
+
+    // sib bomb
+    if mpSibBomb = 1 then
+       begin
+       SetTech(tech_SibFiss, side, state_enabled);
+       end
+    else
+       begin
+       SetTech(tech_SibFiss, side, state_disabled);
+       end;
+
+    // units
+    team := mpPrepareTeam(side, nation, mpPeopleAmount, mpPeopleSkill);
+
+    for j in team do
+        PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 9, false);
+    end;
+
+// diplomacy
+if not mpTeamGame then
+   begin
+   for i := 1 to 8 do
+       for j := 1 to 8 do
+           if i <> j then
+              SetAttitude(i, j, att_neutral, true)
+           else
+              SetAttitude(i, j, att_friend, true);
+   end
+else
+   begin
+   if mpSharedVision then
+      begin
+      for i in mpTeams do
+          for j := 2 to i do
+              ChangeSideFog(i[j], i[1]);
+      end;
+   end;
+
+for i := 1 to 8 do
+    for j := 1 to 8 do
+        if mpSideTeams[i] = mpSideTeams[j] then
+           SetAttitude(i, j, att_friend, true)
+        else
+           SetAttitude(i, j, att_enemy, true);
+
+// start game
+music_nat := mpSideNations[your_side];
+
+if IAmSpec then
+   begin
+   FogOff(true);
+   CenterNowOnXY(mpMapSize[1] div 2, mpMapSize[2] div 2);
+   end
+else
+   begin
+   CenterNowOnXY(mpStartPos[mpSidePositions[your_side]][1], mpStartPos[mpSidePositions[your_side]][2]);
+   end;
+
+BeginBuildUp;
+
+enable(mpActive);
+enable(mpGameType);
+
+mpGameActive := true;
+End;
+
+
+// Prepare Team
+Function mpPrepareTeam(side, nation, amount, skill);
+var i, d, class;
+begin
+result := [];
+
+class := class_soldier;
+
+uc_side := side;
+uc_nation := nation;
+
+hc_name := mp_sides_players_names[side];
+PrepareHuman(rand(1, 2), class, skill + 2);
+hc_importance := 105;
+
+if Multiplayer then
+   begin
+   hc_gallery := 'MULTIAVATARS';
+   hc_face_number := Multiplayer_GetPlayerSideNum(side);
+   hc_sex := Multiplayer_GetPlayerSex(side);
+   end;
+
+result := Join(result, CreateHuman);
+
+InitHc_All();
+
+d := (amount div 4) + 1;
+
+for i := 2 to amount do
+    begin
+    if i mod d = 0 then
+       class := Inc(class);
+
+    PrepareHuman(false, class, skill);
+    result := Join(result, CreateHuman);
+    end;
+End;
+
+// In-game logic
+
+// Battle Flags logic
+Function mpUpdateFlags(strength);
+var i;
+begin
+for i in mpBattleFlags do
+    ChangeBattleFlagOptions(i, [ [bfo_defend_bonus_human, strength],
+                                 [bfo_defend_bonus_vehicle, strength * 0.7],
+                                 [bfo_defend_bonus_building, strength * 0.4],
+                                 [bfo_height, strength] ]);
+End;
+
+Every 0$1 trigger mpActive do
+var i, strength;
+begin
+if mpBattleFlag <= 0 then
+   exit;
+
+strength := 100;
+
+repeat
+  wait(mpBattleFlag);
+  strength := Dec(strength); 
+  mpUpdateFlags(strength);
+until not strength;
+
+for i in mpBattleFlags do
+    KillBattleFlag(i);
+End;
+
+
+// sib bomb
+Every 0$1 marked mpActive do
+var side;
+begin
+if mpSibBomb <= 1 then
+   exit;
+
+wait(mpSibBomb);
+
+for side := 1 to 8 do
+    SetTech(tech_SibFiss, side, state_enabled);
+End;
+
+// bt
+Export mpBuildUpTimeDelay, mpBuildUpTimeActive;
+Function BeginBuildUp;
+var i, j;
+begin
+mpBuildUpTimeDelay := 0;
+
+if not mpBuildUpTime then
+   exit;
+
+mpBuildUpTimeDelay := 4$00 + 1$00 * mpBuildUpTime;
+mpBuildUpTimeActive := true;
+
+for i := 1 to 8 do
+    if mpSidePositions[i] then
+       begin
+       SetAreaMapShow(mpBuildUpAreas[mpSidePositions[i]], 5);
+
+       for j := 1 to 8 do
+           if mpSidePositions[j] and ((mpSideTeams[i] <> mpSideTeams[j]) or (not mpTeamGame) and (i <> j)) then
+              HideArea(j, mpBuildUpAreas[mpSidePositions[i]]);
+       end;
+End;
+
+Function EndBuildUp;
+var i, j;
+begin
+mpBuildUpTimeActive := false;
+
+for i := 1 to 8 do
+    if mpSidePositions[i] then
+       begin
+       SetAreaMapShow(mpBuildUpAreas[mpSidePositions[i]], 0);
+
+       for j := 1 to 8 do
+           if mpSidePositions[j] and ((mpSideTeams[i] <> mpSideTeams[j]) or (not mpTeamGame) and (i <> j)) then
+              ShowArea(j, mpBuildUpAreas[mpSidePositions[i]]);
+       end;
+End;
+
+every 5 trigger mpBuildUpTimeActive marked mpActive do
+var i, un;
+begin
+for i := 1 to 8 do
+    if mpSidePositions[i] then
+      for un in FilterUnitsInArea(mpBuildUpAreas[mpSidePositions[i]], [[f_or, [f_type, unit_human], [f_type, unit_vehicle]], [f_side, your_side]]) do
+          if ((mpSideTeams[i] <> mpSideTeams[your_side]) or (not mpTeamGame) and (i <> your_side)) then
+             ComMoveToArea(un, BuildUpEscape);
+
+enable;
+End;
+
+// "None" "5 Minutes" "6 Minutes" "7 Minutes" "8 Minutes" "9 Minutes"
+// "10 Minutes" "11 Minutes" "12 Minutes" "13 Minutes" "14 Minutes" "15 Minutes"
+Every 0$1 trigger mpBuildUpTime marked mpActive do
+begin
+wait(4$00 + (mpBuildUpTime * 1$00));
+EndBuildUp;
+End;
+
+// win & lose
+Every 0$1 trigger mpActive marked mpWin do
+begin
+if Multiplayer then
+   YouWinInMultiplayer
+else
+   YouWin;
+End;
+
+Every 0$1 trigger mpActive marked mpLose do
+begin
+if Multiplayer then
+   YouLostInMultiplayer
+else
+   YouLost('');
+End;
+
+// display string
+Every 0$1 marked mpActive do
+begin
+enable;
+
+if not mpDisplayStrings then
+   begin
+   display_strings := [];
+   exit;
+   end;
+
+display_strings := mpDisplayStrings;
+End;
+

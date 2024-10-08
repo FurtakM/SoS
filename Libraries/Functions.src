@@ -1183,13 +1183,6 @@ if not weapon then
       exit;
 
    weapon := list[rand(1, list)];
-   {tmp := FilterAllUnits([[f_side, side], [f_not, [f_bweapon, 0]]]);
-
-   for i in tmp do
-       list := list diff GetBWeapon(i);
-
-   if list then
-      weapon := list[rand(1, list)];}
    end;
 
 if weapon then
@@ -1763,7 +1756,7 @@ End;
 Export Function AttackHovercraft(unit, enemy_unit);
 var i, j, tmp, x, y;
 begin
-if not unit or not enemy_unit or HasTask(unit) then
+if not unit or not enemy_unit then
    exit;
 
 if GetLives(i) < 250 then
@@ -2836,3 +2829,99 @@ if ValidHex(x, y) then
       ComAgressiveMove(unit, x, y);
 End;
 
+Export Function GetSourcesFromArea(area, all);
+var i, list;
+begin
+list := AreaToList(area, 0);
+
+if not list then
+   exit;
+
+if all then
+   begin
+   for i := 1 to list[1] do
+       result := Replace(result, result + 1, [list[1][i], list[2][i]]);
+
+   exit;
+   end;
+
+result := [[list[1][1], list[2][1]]];
+End;
+
+Export Function GetBuildingFromArea(area, direction);
+var list;
+begin
+list := AreaToList(area, 0);
+
+if not list then
+   exit;
+
+result := [list[1][1], list[2][1], direction];
+End;
+
+Export Function First(array);
+begin
+if not array then
+   exit;
+
+result := array[1];
+End;
+
+Export Function Last(array);
+begin
+if not array then
+   exit;
+
+result := array[array];
+End;
+
+Export Function CheckByIndex(array, index, value, indexColumn);
+var i;
+begin
+result := [];
+
+if not array then
+   exit;
+
+for i := 1 to array do
+    if array[i][index] = value then
+       begin
+       if indexColumn then
+          result := Join(result, array[i][indexColumn])
+       else
+          result := Join(result, array[i]);
+       end;
+End;
+
+Export Function CanBeBuiltOnlyResources(depot, btype);
+var pom, cost;
+begin
+if btype = b_depot then
+   begin
+   result := true;
+   exit;
+   end;
+
+pom := GetBase(depot);
+cost := CostOfBuilding(btype, GetNation(depot));
+
+result := (
+   GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3]
+);
+End;
+
+
+Export Function ComBackOnParking(vehicles, parkingPoint);
+begin
+if not vehicles or not parkingPoint then
+   exit;
+
+vehicles := UnitFilter(vehicles, [[f_ok], [f_not, [f_distxy, parkingPoint[1], parkingPoint[2], 8]]]);
+
+if not vehicles then
+   exit;
+
+ComMoveXY(vehicles, parkingPoint[1], parkingPoint[2]);
+End;

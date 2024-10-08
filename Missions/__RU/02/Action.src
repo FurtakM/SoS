@@ -357,15 +357,17 @@ var tmp;
 begin
 enable;
 
-InGameOn;
-
 tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
 
-ComMoveUnit(Platonov, tmp[1]);
+ComMoveUnit(Platonov, tmp);
 
-wait(0$2);
+repeat
+ wait(0$1);
+until GetDistUnits(Platonov, tmp) < 6;
 
-ComHold(Platonov);
+InGameOn;
+
+ComTurnUnit(Platonov, tmp);
 
 Say(Platonov, 'D6-Pla-1');
 Say(Burlak, 'D6-Bur-1');
@@ -388,9 +390,16 @@ enable;
 
 tmp := FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]])[1];
 
+ComMoveUnit(Platonov, tmp);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Platonov, tmp) < 6;
+
 InGameOn;
 
-ComMoveUnit(Platonov, tmp);
+ComTurnUnit(Platonov, tmp);
+
 Say(Platonov, 'DPlatAngry');
 Say(Burlak, 'D6-Bur-1');
 
@@ -414,7 +423,6 @@ End;
 
 // swamp
 Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_distxy, 112, 155, 8]]) < 2 and GetDistUnitXY(Burlak, 112, 155) < 8 do
-var Dickens;
 begin
 PlaceSeeing(112, 155, 3, -4);
 DoNotAttack(1, Burlak);
@@ -444,8 +452,6 @@ if not IsOk(Dickens) then
    exit;
 
 RemoveUnit(Dickens);
-
-SaveCharacters(Dickens, currentMissionPrefix & 'Dickens');
 End;
 
 // burlak is hurt

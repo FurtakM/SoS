@@ -57,11 +57,14 @@ for i := 1 to 5 do
 End;
 
 Function Action;
-var i;
+var i, p;
 begin
+p := 0;
+
 repeat
  wait(0$1);
-until FilterAllUnits([[f_side, 1], [f_inarea, stopConvoyArea], [f_not, [f_hastask]]]) >= 5;
+ p := Inc(p);
+until FilterAllUnits([[f_side, 1], [f_inarea, stopConvoyArea], [f_not, [f_hastask]]]) >= 5 or p > 20;
 
 wait(0$1);
 
@@ -76,9 +79,6 @@ AddComMoveXY(JMM, 52, 42);
 AddComMoveXY(Powell, 68, 55);
 AddComMoveXY(JMM, 68, 58);
 
-AddComTurnXY(Powell, 73, 54);
-AddComTurnXY(JMM, 74, 58);
-
 ComExitVehicle(people[4]);
 ComExitVehicle(people[5]);
 
@@ -89,7 +89,17 @@ ComMoveXY(people[5], 49, 59);
 
 repeat
  wait(0$1);
+
+ if not IsAt(JMM, 68, 58) and not HasTask(JMM) then
+    ComMoveXY(JMM, 68, 58);
+
+ if not IsAt(Powell, 68, 55) and not HasTask(Powell) then
+    ComMoveXY(Powell, 68, 55);
+
 until IsAt(Powell, 68, 55) and IsAt(JMM, 68, 58);
+
+AddComTurnXY(Powell, 73, 54);
+AddComTurnXY(JMM, 74, 58);
 
 CenterNowOnUnits(JMM);
 

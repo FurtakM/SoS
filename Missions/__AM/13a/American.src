@@ -19,6 +19,9 @@ for i = 1 to [6, 8, 10, 10][Difficulty] do
          us_morphling: weapon := [us_laser, us_heavy_gun, us_rocket_launcher][rand(1, 3)];
     end;
 
+    uc_side := 1;
+    uc_nation := 1;
+
     PrepareVehicle(chassis, [engine_combustion, engine_siberite][rand(1,2)], control_computer, weapon, rand(70, 90));
     veh := CreateVehicle;
     SetDir(veh, 2);
@@ -42,4 +45,38 @@ repeat
      else
         tmp := tmp diff i; 
 until not tmp;  
+End;
+
+Export function TryToStoleArtifact(artifact);
+var veh;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+InitHc;
+InitVc;
+
+PrepareVehicle(us_morphling, engine_siberite, control_computer, us_cargo_bay, 100);
+veh := CreateVehicle;
+SetDir(veh, 2);
+PlaceUnitArea(veh, north_spawn, false);
+
+ComGet(veh, artifact[1], artifact[2]);
+AddComMoveXY(veh, 59, 2);
+
+repeat
+ wait(0$1);
+
+ if not IsOk(veh) then
+    exit;
+
+until IsAt(veh, 59, 2);
+
+RemoveUnit(veh);
+
+if GetCargo(veh, mat_artifact) then
+   begin
+   wait(0$2);
+   YouLost('Artifact');
+   end;
 End;

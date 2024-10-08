@@ -611,20 +611,23 @@ function endLogos() -- Called by lua when logos are over
     setVisible(logos, false);
     setVisible(menu, true);
     OW_menumusic(false);
-    -- playMenuMusic(1);
     OW_hidemouse(false);
     OW_SET_VSYNC_VIDEOMODE(false);
+    
+    CONFIG_LOGOS = false;
+    playMenuMusic(1);
 end;
 
 function FROMOW_DOLOGOS() -- Called by game when Skip is false
-    timer:stop(InitMusicTimer);
+    --timer:stop(InitMusicTimer);
+    CONFIG_LOGOS = true;
+
     setVisible(menu,false)
     setVisible(logos,true);
     OW_menumusic(false);
     setFocus(logos);
     playLogo(0); -- See logos.lua
-    OW_SET_VSYNC_VIDEOMODE(true);
-    playMenuMusic(1);
+    OW_SET_VSYNC_VIDEOMODE(true); 
 end;
 
 function backToMenu_lite()
