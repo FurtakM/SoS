@@ -2,9 +2,9 @@ Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
        multi_teams, multi_spec, multi_pos_area, multi_allowed_nations,
        multi_bots, multi_teamgame, multi_custom_commanders,
        multi_settings, multi_settings_counter, multi_pep_amount,
-       multi_skill_level, multi_crates_spawn, multi_ape_amount,
+       multi_skill_level, multi_crates_spawn, mulit_extra_oil,
        multi_support, multi_commanders, multi_loosers, multi_players_amount,
-       multi_reinforcements, multi_reinforcements_spawned,  multi_support_arrive_time;
+       multi_reinforcements, multi_support_arrive_time, multi_buildings;
 Export Function InitMultiplayer;
 var i, j, x, tmp;
 begin
@@ -28,28 +28,38 @@ if Multiplayer then
    end
 else
    begin
-   your_side        := 1; // allowed values: 1-8
+   your_side        := 3; // allowed values: 1-8
    multi_gametype   := 1; // allowed values: 0, 1
-   multi_sides      := [2, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0-8
-   multi_side_teams := [1, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0, 1
-   multi_nations    := [1, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0, 1, 2, 3
-   multi_teams      := [[1, 3]];
-   multi_settings   := [2, 2, 1, 3, 1, 3]; // Difficulty, Pep.amount, Skill level, Crates, Ape, Support
+   multi_sides      := [0, 0, 1, 2, 3, 0, 0, 0]; // allowed values: 0-8
+   multi_side_teams := [0, 0, 1, 1, 1, 0, 0, 0]; // allowed values: 0, 1
+   multi_nations    := [0, 0, 3, 3, 3, 0, 0, 0]; // allowed values: 0, 1, 2, 3
+   multi_teams      := [[3, 4, 5]];
+   multi_settings   := [2, 4, 1, 3, 1, 3]; // Difficulty, Pep.amount, Skill level, Crates, Oil, Support
    end;
 
 multi_spec := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_bots := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_loosers := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_teamgame := true;
-multi_allowed_nations := [1];
+multi_allowed_nations := [3];
 multi_custom_commanders := true;
 multi_commanders := [];
 multi_reinforcements := [];
-multi_reinforcements_spawned := 0;
 multi_players_amount := 0;
-multi_pos_area := [ [player_1_hum, player_1_veh],
-                    [player_2_hum, player_2_veh],
-                    [player_3_hum, player_3_veh] ];
+multi_pos_area := [ [spawnPlayer1Area, spawnPlayer1VehArea],
+                    [spawnPlayer2Area, spawnPlayer2VehArea],
+                    [spawnPlayer3Area, spawnPlayer3VehArea] ];
+multi_buildings := [
+   [
+      [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan']
+   ],
+   [
+      [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria']
+   ],                                               
+   [
+      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov']
+   ]
+];
 
 
 // init arrays
@@ -100,19 +110,19 @@ for i in multi_teams do
 Difficulty := [1, 2, 3][multi_settings[1]];
 
 // others settings
-multi_pep_amount := [9, 12, 15, 18][multi_settings[2]];
-multi_skill_level := [5, 6, 8, 10][multi_settings[3]];
-multi_crates_spawn := [ [9000, 0$32], [12000, 0$22], [14000, 0$14], [16000, 0$12] ][multi_settings[4]];
-multi_ape_amount := [6, 8, 10][multi_settings[5]];
+multi_pep_amount := [4, 5, 6, 7][multi_settings[2]];
+multi_skill_level := [1, 2, 3, 5][multi_settings[3]];
+multi_crates_spawn := [ [3000, 0$32], [5000, 0$22], [6000, 0$14], [8000, 0$12] ][multi_settings[4]];
+mulit_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
-multi_support_arrive_time := [15$0, 18$0, 21$0][Difficulty];
+multi_support_arrive_time := [5$0, 15$0, 25$0][Difficulty];
 End;
 
 Export Function Multiplayer_SetBotSide(preferSide);
 var i;
 begin
-if not multi_sides[2] then
+if not multi_sides[preferSide] then
    begin
    result := preferSide;
    exit;
@@ -129,55 +139,79 @@ End;
 Export Function Multiplayer_PrepareCustomCommanders(side, num);
 begin
 uc_side := side;
-uc_nation := 1;
+uc_nation := nation_russian;
 
 hc_importance := 100;
-hc_class := 1;
+hc_class := class_soldier;
 
 if num = 1 then
    begin
-   hc_gallery := 'us';
-   hc_face_number := 5;
-   hc_name := 'John Macmilan';
+   hc_gallery := 'ru';
+   hc_face_number := 10;
+   hc_name := 'Popov';
    hc_sex := sex_male;
-   hc_skills := [7, 2, 4, 4];
-   hc_attr := [11, 10];
+   hc_skills := [3, 1, 1, 2];
+   hc_attr := [10, 10];
 
    result := CreateHuman;
    end;
 
 if num = 2 then
    begin
-   hc_gallery := 'us';
-   hc_face_number := 2;
-   hc_name := 'Lucy Donaldson';
-   hc_sex := sex_female;
-   hc_skills := [6, 3, 4, 3];
-   hc_attr := [9, 12];
+   hc_class := class_mechanic;
+   hc_gallery := 'ru';
+   hc_face_number := 1;
+   hc_name := 'Burlak';
+   hc_sex := sex_male;
+   hc_skills := [1, 2, 3, 0];
+   hc_attr := [10, 11];
 
    result := CreateHuman;
    end;
 
 if num = 3 then
    begin
-   hc_gallery := 'us';
-   hc_face_number := 7;
-   hc_name := 'Arthur Powell';
+   hc_gallery := 'ru';
+   hc_face_number := 8;
+   hc_name := 'Kurin';
    hc_sex := sex_male;
-   hc_skills := [8, 2, 5, 2];
-   hc_attr := [10, 11];
+   hc_skills := [4, 1, 0, 1];
+   hc_attr := [12, 11];
 
    result := CreateHuman;
    end;
 End;
 
 Export Function Multiplayer_PreparePlayers();
-var i, j, cl, un, veh, tmp, copy, people_amount;
+var i, j, b, cl, un, veh, tmp, copy, people_amount;
 begin
 for i := 1 to 8 do
     begin
     if not multi_sides[i] then
        continue;
+
+    // buildings
+    if multi_buildings[multi_sides[i]] then
+       begin
+       uc_side := i;
+       uc_nation := multi_nations[i];
+
+       for j in multi_buildings[multi_sides[i]] do
+           begin
+           bc_type := j[1];
+           bc_level := 2;
+
+           b := CreateAndPlaceBuildingXYD(j[2][1], j[2][2], j[2][3]);
+
+           if j[1] = b_depot then
+              begin
+              SetBName(b, j[3]);
+
+              SetResourceType(GetBase(b), mat_cans, 100);
+              SetResourceType(GetBase(b), mat_oil, 60);
+              end;
+           end;
+       end;
 
     if multi_custom_commanders then
        begin
@@ -227,18 +261,20 @@ for i := 1 to 8 do
     cl := 1;
 
     // prepare player units
-    for j = 2 to multi_pep_amount do
-        begin
-
+    for j := 2 to multi_pep_amount do
+        begin  
         if (j - 1) mod ((multi_pep_amount - 1) / 4) = 0 then
            cl := cl + 1;
+
+        if cl > 4 then
+           cl := 1;
 
         PrepareHuman(false, cl, multi_skill_level);
         un := CreateHuman;
 
         if j > copy then
            copy := Replace(copy, j, un)
-          else
+        else
            begin
            CopySkills(copy[j], un);
            SetAttr(un, attr_speed, GetAttr(copy[j], attr_speed));
@@ -249,7 +285,7 @@ for i := 1 to 8 do
            begin
            if GetClass(un) = 3 then
               begin
-              PrepareVehicle([us_medium_tracked, us_medium_wheeled][j mod 2 + 1], engine_solar, control_manual, [us_double_gun, us_gatling_gun, us_light_gun][j mod 3 + 1], 100);
+              PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, 80);
               veh := CreateVehicle;
               PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
               PlaceHumanInUnit(un, veh);
@@ -259,14 +295,7 @@ for i := 1 to 8 do
            PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
            end;
         end;
-
-    for j = 1 to 3 do
-        begin
-        PrepareVehicle([us_medium_wheeled, us_medium_tracked][rand(1,2)], engine_solar, control_computer, [us_radar, us_rocket_launcher, us_gatling_gun][j], 100);
-        PlaceUnitArea(CreateVehicle, multi_pos_area[multi_sides[i]][1], false);
-        end;
-    end;
-
+    end;   
 End;
 
 Export Function Multiplayer_PrepareReinforcements();
@@ -285,53 +314,30 @@ for i := 1 to 8 do
        begin
        tmp := [];
 
-       // 1 radar, 3 tanks
        if multi_support = 1 then
           begin
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_radar, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_wheeled, engine_combustion, control_computer, us_double_gun, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_gatling_gun, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_tracked, engine_solar, control_computer, us_laser, 40);
-          tmp := tmp ^ CreateVehicle;
+          for j := 1 to 2 do
+              begin
+              InitHC_All();
+              PrepareHuman(false, rand(1,4), 1);
+              tmp := tmp ^ CreateHuman;
+              end;
           end;
 
-       // 1 radar, 6 tanks
        if multi_support = 2 then
           begin
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_radar, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_tracked, engine_siberite, control_computer, us_cargo_bay, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          SetCargo(tmp[tmp], mat_cans, 100);
-
-          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_double_gun, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_heavy_tracked, engine_combustion, control_computer, us_heavy_gun, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_laser, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_laser, 40);
-          tmp := tmp ^ CreateVehicle;
-
-          PrepareVehicle(us_heavy_tracked, engine_combustion, control_computer, us_heavy_gun, 40);
-          tmp := tmp ^ CreateVehicle;
+          for j := 1 to 4 do
+              begin
+              InitHC_All();
+              PrepareHuman(false, rand(1,4), 2);
+              tmp := tmp ^ CreateHuman;
+              end;
           end;
 
        result := Replace(result, i, tmp);
@@ -357,7 +363,7 @@ Multiplayer_RegisterCondition(200);
 // for produce vehicle
 Multiplayer_RegisterCondition(2);
 
-Multiplayer_SpawnArtifact;
+// Multiplayer_SpawnArtifact;
 
 if multi_support then
    multi_reinforcements := Multiplayer_PrepareReinforcements();
@@ -367,36 +373,31 @@ if multi_sides[your_side] then
 End;
 
 Export Function Multiplayer_End();
-var i, j, tmp, reinforcements_arrive;
-begin
-reinforcements_arrive := 0;
-
+var i, j;
+begin    
 repeat
  wait(0$1);
 
- if tick > multi_support_arrive_time and not multi_reinforcements_spawned and multi_support then
+ if tick > multi_support_arrive_time and multi_support then
     begin
-    multi_reinforcements_spawned := true;
-
-    for i := 1 to 8 do
-        begin
-        if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] then
+    if tick mod 1$00 = 0 then
+       begin
+       for i := 1 to 8 do
            begin
-           tmp := multi_reinforcements[i];
+           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] and Prob(50) then
+              begin
+              PlaceUnitArea(multi_reinforcements[i][1], spawnHumanArea, false); 
+              multi_reinforcements := Replace(multi_reinforcements, i, Delete(multi_reinforcements, 1));
 
-           for j in tmp do
-               PlaceUnitArea(j, multi_pos_area[multi_sides[i]][2], false);
-
-           multi_reinforcements := Replace(multi_reinforcements, i, []);
+              break;
+              end;
            end;
-        end;
-
-    reinforcements_arrive := tick;
+       end;
     end;
 
  if not multi_custom_commanders then
     begin
-    for i = 1 to 8 do
+    for i := 1 to 8 do
         begin
         if FilterAllUnits([f_side, i]) = 0 and not multi_loosers[i] then
            begin
@@ -409,7 +410,7 @@ repeat
        break;
     end;
 
-until (FilterAllUnits([[f_side, side_bot], [f_type, unit_human], [f_ok]]) = 0 and game) or not multi_commanders;
+until (not Multiplayer_EnemyAlive() and game) or not multi_commanders;
 
 game := false;
 
@@ -433,6 +434,23 @@ else
    else
       YouWin;
    end;
+End;
+
+Export Function Multiplayer_EnemyAlive();
+var side;
+begin
+result := true;
+exit;
+
+result := false;
+
+for side in botSides do
+    begin
+    result := FilterAllUnits([[f_side, side], [f_type, unit_human], [f_ok]]);
+
+    if result then
+       exit;
+    end;
 End;
 
 Export Function Multiplayer_DisplayStrings();
@@ -472,7 +490,7 @@ if not multi_points or not side or side > 8 then
    exit;
 
 result := multi_points[side];
-End;     
+End;
 
 Export Function Multiplayer_RegisterCondition(points);
 begin
