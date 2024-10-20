@@ -5,7 +5,8 @@ game.ui.timer = getElementEX(
     XYWH(getWidth(game.ui.toolbar) + 1, 0, 113, 26),
     true,
     {
-        texture = 'SGUI/Amer/timer.png'
+        texture = 'SGUI/Amer/timer.png',
+        hint = loc(6094)
     }
 );
 

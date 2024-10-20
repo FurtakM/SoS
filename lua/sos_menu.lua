@@ -239,8 +239,8 @@ menu.window3.web = clButton(
     19, 
     248,
     30, 
-    loc(TID_Website), 
-    'OW_SOS_CLICKED("");',
+    'Wiki Online', 
+    'OW_SOS_CLICKED("wiki");',
     {}
 );
 
