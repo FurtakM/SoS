@@ -1,1 +1,444 @@
-//
+Every 25$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[2] do
+begin
+
+wait(5$00 - (1$00 * Difficulty));
+
+activeArabAttacks := true;
+ArabAttack(0);
+End;
+
+Every 45$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[2] do
+ArabAttack(Difficulty);
+
+Every 15$00 trigger IsOk(amDep) and GetSide(amDep) = botSides[1] do
+begin
+
+wait(5$00 - (1$00 * Difficulty));
+
+AmericanAttack(0);
+End;
+
+Every 45$00 trigger IsOk(amDep) and GetSide(amDep) = botSides[1] do
+AmericanAttack(Difficulty);
+
+
+// ARABS ATTACK
+Export arAttackersInf, arAttackersVeh;
+Export function ArabAttack(v);
+var i, skill, un, veh;
+begin
+uc_side := botSides[2];
+uc_nation := nation_arabian;
+
+skill := [3, 4, 5][Difficulty];
+arAttackersInf := [];
+arAttackersVeh := [];
+
+InitHC_All();
+
+for i := 1 to [3, 4, 6][Difficulty] + v do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if i mod 2 = 0 then
+       SetClass(un, class_mortar);
+
+    PlaceUnitArea(un, arAttackSpawn2Area, false);
+    arAttackersInf := Join(arAttackersInf, un);
+
+    ComAgressiveMove(un, 230, 143);
+    end;
+
+for i := 1 to 3 + v do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    SetTag(un, 999);
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_gun, ar_gatling_gun][i mod 2 + 1], 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 236, 127);
+
+    arAttackersVeh := Join(arAttackersVeh, veh);
+    end;
+
+wait(0$2);
+
+for i := 1 to [1, 2, 3][Difficulty] do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    SetTag(un, 999);
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 5);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 236, 127);
+
+    arAttackersVeh := Join(arAttackersVeh, veh);
+    end;
+
+wait(0$2);
+
+for i := 1 to [1, 2, 2][Difficulty] do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    SetTag(un, 999);
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher, 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 4);
+    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    if i mod 2 = 0 then
+       ComMoveXY(un, 136, 61)
+    else
+       ComMoveXY(un, 137, 41);
+
+    arAttackersVeh := Join(arAttackersVeh, veh);
+    end;
+End;
+
+Every 0$2 trigger arAttackersInf do
+var i, tmp, nearest, enemy;
+begin
+enable;
+
+tmp := UnitFilter(arAttackersInf, [f_ok]);
+
+arAttackersInf := [];
+
+ComMoveXY(tmp, 173, 139);
+
+wait(0$10);
+
+for i in UnitFilter(tmp, [f_class, class_soldier]) do
+    begin
+    nearest := NearestUnitToUnit(FilterAllUnits([[f_enemy, botSides[2]], [f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+    if not nearest then
+       break;
+
+    SetTag(nearest, tMined);
+    AddComPlaceDelayedCharge(i, 0, 0, nearest);
+    end;
+
+tmp := UnitFilter(tmp, [f_ok]);
+
+AddComMoveXY(tmp, 155, 119);
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+ enemy := FilterAllUnits([f_enemy, botSides[2]]);
+
+ for i in tmp do
+     if GetClass(i) <> 1 then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     else if not HasTask(i) then
+        begin                       
+        nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+        if not nearest then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else
+           begin
+           SetTag(nearest, tMined);
+           ComPlaceDelayedCharge(i, 0, 0, nearest);
+           end;
+        end;
+until not tmp;
+End;
+
+Every 0$2 trigger arAttackersVeh do
+var i, tmp;
+begin
+enable;
+
+tmp := arAttackersVeh;
+arAttackersVeh := [];
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [207,125], [185,114] ])
+until not tmp;
+End;
+
+
+Every 0$1 trigger arVehiclesAtttackers and activeArabAttacks do
+var i, mech, enemy;
+begin
+enable;
+
+if not arVehiclesAtttackers then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in arVehiclesAtttackers do
+    begin
+    if not IsOk(i) or GetSide(i) <> botSides[2] then
+       begin
+       arVehiclesAtttackers := arVehiclesAtttackers diff i;
+       continue;
+       end;
+
+    if GetTag(i) = 300 then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 198, 28);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 198, 28) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, arParkingArea) then
+          ComMoveToArea(i, arParkingArea)
+       else
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          SetLives(mech, 1000);
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) < 300 then
+       begin
+       enemy := FilterUnitsInArea(arBaseArea, [f_enemy, botSides[2]]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if arVehiclesAtttackers then
+          begin
+          enemy := FilterAllUnits([f_enemy, botSides[2]]);
+
+          if enemy then
+             AgressiveMove(i, [ [215,88], [197,90], [178,90], [169,104] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 0$2 trigger FilterAllUnits([[f_side, botSides[2]], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, botSides[2]], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+
+
+// AMERICAN ATTACKS
+Export amAttackersInf, amAttackersVeh;
+Export function AmericanAttack(v);
+var i, skill, un, veh;
+begin
+uc_side := botSides[1];
+uc_nation := nation_american;
+
+skill := [3, 4, 5][Difficulty];
+amAttackersInf := [];
+amAttackersVeh := [];
+
+InitHC_All();
+
+for i := 1 to [2, 4, 5][Difficulty] + v do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    PlaceUnitArea(un, amAttackSpawn2Area, false);
+    amAttackersInf := Join(amAttackersInf, un);
+
+    ComAgressiveMove(un, 110, 129);
+    end;
+
+for i := 1 to 2 + v do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    SetTag(un, 999);
+
+    PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, [us_light_gun, us_double_gun, us_gatling_gun][i mod 3 + 1], 80);
+    veh := CreateVehicle;
+
+    SetDir(veh, 0);
+    PlaceUnitArea(veh, amAttackSpawnArea, false);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(un, 96, 137);
+
+    amAttackersVeh := Join(amAttackersVeh, veh);
+    end;
+End;
+
+Every 0$2 trigger amAttackersVeh do
+var i, tmp;
+begin
+enable;
+
+tmp := amAttackersVeh union amAttackersInf;
+arAttackersVeh := [];
+amAttackersInf := [];
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [99,136], [88,110] ])
+until not tmp;
+End;
+
+Every 0$1 trigger amVehiclesAtttackers do
+var i, mech, enemy;
+begin
+enable;
+
+if not amVehiclesAtttackers then
+   exit;
+
+// tags:
+// 100 - idle,
+// 101 - go to parking, repair if needed
+// 102 - attack
+
+for i in amVehiclesAtttackers do
+    begin
+    if not IsOk(i) or GetSide(i) <> botSides[1] then
+       begin
+       amVehiclesAtttackers := amVehiclesAtttackers diff i;
+       continue;
+       end;
+
+    if GetTag(i) = 300 then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 24, 36);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 24, 36) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, amParkingArea) then
+          ComMoveToArea(i, amParkingArea)
+       else
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          SetLives(mech, 1000);
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) < 300 then
+       begin
+       enemy := FilterUnitsInArea(amBaseArea, [f_enemy, botSides[1]]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if amVehiclesAtttackers then
+          begin
+          enemy := FilterAllUnits([f_enemy, botSides[1]]);
+
+          if enemy then
+             AgressiveMove(i, [ [49,43], [63,56], [72,67] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 0$2 trigger FilterAllUnits([[f_side, botSides[1]], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, botSides[1]], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;

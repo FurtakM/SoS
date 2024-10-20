@@ -2787,6 +2787,25 @@ for i := 0 to 5 do
        end;
 End;
 
+Export function CanBeBuiltOnlyResources(depot, btype);
+var pom, cost;
+begin
+if btype = b_depot then
+   begin
+   result := true;
+   exit;
+   end;
+
+pom := GetBase(depot);
+cost := CostOfBuilding(btype, GetNation(depot));
+
+result := (
+   GetResourceType(pom, mat_cans) >= cost[1] and
+   GetResourceType(pom, mat_oil) >= cost[2] and
+   GetResourceType(pom, mat_siberit) >= cost[3]
+);
+End;
+
 Export Function SayRadioNoFaceNoName(unit, dialog);
 begin
 SayEX(unit, dialog, false, false, true, false);
@@ -2823,7 +2842,7 @@ x := GetX(enemy);
 y := GetY(enemy);
 
 if ValidHex(x, y) then
-   if GetType(enemy) in [unit_building, unit_vehicle] and See(GetSide(unit), enemy) then
+   if GetType(enemy) in [unit_building, unit_vehicle] or See(GetSide(unit), enemy) then
       ComAttackUnit(unit, enemy)
    else
       ComAgressiveMove(unit, x, y);
@@ -2893,26 +2912,6 @@ for i := 1 to array do
        end;
 End;
 
-Export Function CanBeBuiltOnlyResources(depot, btype);
-var pom, cost;
-begin
-if btype = b_depot then
-   begin
-   result := true;
-   exit;
-   end;
-
-pom := GetBase(depot);
-cost := CostOfBuilding(btype, GetNation(depot));
-
-result := (
-   GetResourceType(pom, mat_cans) >= cost[1] and
-   GetResourceType(pom, mat_oil) >= cost[2] and
-   GetResourceType(pom, mat_siberit) >= cost[3]
-);
-End;
-
-
 Export Function ComBackOnParking(vehicles, parkingPoint);
 begin
 if not vehicles or not parkingPoint then
@@ -2924,4 +2923,19 @@ if not vehicles then
    exit;
 
 ComMoveXY(vehicles, parkingPoint[1], parkingPoint[2]);
+End;
+
+Export Function PlaceHiddenCamerasInArea(side, area);
+var i, tmp;
+begin
+if not side or not area then
+   exit;
+
+tmp := AreaToList(area, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    if IsEnvironment(tmp[1][i], tmp[2][i]) then
+       HiddenCamera(tmp[1][i], tmp[2][i], side);
+    end;
 End;

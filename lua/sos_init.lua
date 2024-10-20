@@ -15,7 +15,7 @@ include('sos_credits');
 include('sos_stream');
 include('sos_dialogs');
 include('sos_eco');
-include('sos_timer');
+include('sos_upper_panel');
 include('sos_waypoint');
 include('sos_ingame');
 include('sos_locker');

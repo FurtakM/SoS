@@ -9,6 +9,7 @@ Export Function InitMultiplayer;
 var i, j, x, tmp;
 begin
 multi_settings_counter := 6; // MultiDesc<gametype>.wri
+multi_settings := [];
 
 if Multiplayer then
    begin
@@ -34,7 +35,7 @@ else
    multi_side_teams := [0, 0, 1, 1, 1, 0, 0, 0]; // allowed values: 0, 1
    multi_nations    := [0, 0, 3, 3, 3, 0, 0, 0]; // allowed values: 0, 1, 2, 3
    multi_teams      := [[3, 4, 5]];
-   multi_settings   := [2, 4, 1, 3, 1, 3]; // Difficulty, Pep.amount, Skill level, Crates, Oil, Support
+   multi_settings   := [2, 4, 4, 3, 1, 3]; // Pep.amount, Skill level, Crates, Oil, Support, Diff
    end;
 
 multi_spec := [0, 0, 0, 0, 0, 0, 0, 0];
@@ -106,17 +107,33 @@ for i in multi_teams do
         end;
     end;
 
+// [3, 2, 4, 4, 3, 1]; // Difficulty, Pep.amount, Skill level, Crates, Oil, Support
 // set difficulty
 Difficulty := [1, 2, 3][multi_settings[1]];
 
 // others settings
-multi_pep_amount := [4, 5, 6, 7][multi_settings[2]];
+multi_pep_amount := [6, 7, 8, 9][multi_settings[2]];
 multi_skill_level := [1, 2, 3, 5][multi_settings[3]];
 multi_crates_spawn := [ [3000, 0$32], [5000, 0$22], [6000, 0$14], [8000, 0$12] ][multi_settings[4]];
 mulit_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
 multi_support_arrive_time := [5$0, 15$0, 25$0][Difficulty];
+
+if mulit_extra_oil then
+   begin
+   if mulit_extra_oil = 1 then
+      begin
+      CreateDepositXY(109, 130, mat_oil);
+      end;
+
+   if mulit_extra_oil = 2 then
+      begin
+      CreateDepositXY(109, 130, mat_oil);
+      CreateDepositXY(150, 112, mat_oil);
+      end;
+   end;
+
 End;
 
 Export Function Multiplayer_SetBotSide(preferSide);
@@ -207,8 +224,8 @@ for i := 1 to 8 do
               begin
               SetBName(b, j[3]);
 
-              SetResourceType(GetBase(b), mat_cans, 100);
-              SetResourceType(GetBase(b), mat_oil, 60);
+              SetResourceType(GetBase(b), mat_cans, [120, 100, 80][Difficulty]);
+              SetResourceType(GetBase(b), mat_oil, [90, 60, 30][Difficulty]);
               end;
            end;
        end;
@@ -285,7 +302,7 @@ for i := 1 to 8 do
            begin
            if GetClass(un) = 3 then
               begin
-              PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, 80);
+              PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, [ru_gatling_gun, ru_heavy_machine_gun, ru_heavy_machine_gun][Difficulty], 80);
               veh := CreateVehicle;
               PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
               PlaceHumanInUnit(un, veh);
@@ -384,10 +401,10 @@ repeat
        begin
        for i := 1 to 8 do
            begin
-           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] and Prob(50) then
+           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] and Prob([80, 60, 40][Difficulty]) then
               begin
-              PlaceUnitArea(multi_reinforcements[i][1], spawnHumanArea, false); 
-              multi_reinforcements := Replace(multi_reinforcements, i, Delete(multi_reinforcements, 1));
+              PlaceUnitArea(multi_reinforcements[i][1], spawnHumanArea, true);
+              multi_reinforcements := Replace(multi_reinforcements, i, Delete(multi_reinforcements[i], 1));
 
               break;
               end;
@@ -439,14 +456,11 @@ End;
 Export Function Multiplayer_EnemyAlive();
 var side;
 begin
-result := true;
-exit;
-
 result := false;
 
 for side in botSides do
     begin
-    result := FilterAllUnits([[f_side, side], [f_type, unit_human], [f_ok]]);
+    result := FilterAllUnits([[f_side, side], [f_type, unit_human], [f_ok]]) > 0;
 
     if result then
        exit;

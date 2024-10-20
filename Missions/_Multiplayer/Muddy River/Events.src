@@ -23,6 +23,8 @@ End;
 On UnitDestroyed(un) do
 var i, side, base, chassis, engine, control, weapon, tmp, factory, btype;
 begin
+SOS_UnitDestroyed(un);
+
 side := GetSide(un);
 
 if multi_sides[side] then
@@ -146,6 +148,8 @@ End;
 On VehicleConstructed(vehicle, factory) do
 var i, side, tmp, base, amount;
 begin
+SOS_VehicleConstructed(vehicle, factory);
+
 side := GetSide(vehicle);
 
 if multi_sides[side] then
@@ -176,4 +180,11 @@ On EvacuateVehicle(driver, veh, p1, p2) do
 begin
 if GetTag(driver) = tMech then
    SetTag(driver, 0);
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = side_bot then
+   if tech in arTech then
+      arTech := arTech diff tech;
 End;
