@@ -1320,7 +1320,7 @@ function kickPlayer()
 
 	local index = clGetListSelectedIndex(menu.window_multiplayer_room.panel.page1.playerList.ID);
 
-	if (index == nil) then
+	if (index == nil or index < 1) then
 		return;
 	end;
 
@@ -2499,7 +2499,18 @@ function useModernGUILogic()
 	MultiDef.SideDef = copytable(MULTIPLAYER_ROOM_DATA.SIDEDEF);
 	MultiDef.TeamDef = copytable(MULTIPLAYER_ROOM_DATA.TEAMDEF);
 	MultiDef.MapName = copytable(MULTIPLAYER_ROOM_MAP_DATA);
+	
 	Players = copytable(MULTIPLAYER_ROOM_DATA.Players);
+
+	-- set avatartex
+	for i = 1, #Players do
+		if #Players[i] then
+			Players[i].Avatar = fixAVATAR(Players[i].AVATAR);
+			Players[i].AVATARTEX = makeAVATARTEX(0, Players[i].AVATAR, Players[i].AVATARSEX, Players[i].NATION);
+		end;
+	end;
+
+
 	MyID = MULTIPLAYER_ROOM_MY_PLID;
 	teamGame = MULTIPLAYER_ROOM_DATA.TeamGame;
 
@@ -2540,7 +2551,7 @@ function useModernGUILogic()
 	MultiDef.MultiMap.TECHLIMIT = AddData.TECHNOLOGYLIMITS;
 	MultiDef.MultiMap.POSCOORS = AddData.POSCOORS;
 	MultiDef.MultiMap.POSMARKS = AddData.POSMARKS;
- 	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
+	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
 end;
 
 -- override functions

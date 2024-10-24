@@ -221,18 +221,18 @@ spawnOmar := true;
 End;
 
 // spawn omar
-Every 0$1 trigger spawnOmar do
+Every 0$1 trigger spawnOmar and negotiationWithArabs do
 begin
 PrepareOmarAli;
 
 if not HasTask(Omar) then
    ComMoveXY(Omar, 252, 220);
 
-if not Omar then
-   exit;
-
 repeat
  wait(0$1);
+
+ if omarKilled then
+    exit;
 
  if not HasTask(Omar) and GetDistUnitXY(Omar, 252, 220) > 6 then
     ComMoveXY(Omar, 252, 220);
@@ -281,9 +281,12 @@ ComMoveXY(Omar, 202, 115);
 End;
 
 // omar suicide attack
-Every 0$1 trigger IsOk(Omar) and russianDestroyed and GetSide(Omar) = 7 do
+Every 0$1 trigger not omarKilled and russianDestroyed and ((IsOk(Omar) and GetSide(Omar) = 7) or not negotiationWithArabs) do
 var i;
 begin
+if not negotiationWithArabs and not omarKilled then
+   PrepareOmarAli2;
+
 wait(0$2);
 
 SetSide(Omar, 5);
@@ -300,6 +303,9 @@ ComMoveXY(Omar, 203, 120);
 
 repeat
  wait(0$1);
+
+ if omarKilled then
+    exit;
 until IsSelected(Omar) or GetDistUnitXY(Omar, 203, 120) < 20;
 
 DialogueOn;
@@ -577,7 +583,7 @@ AllianceSupport;
 
 // win
 Every 0$5 trigger americanDestroyed and russianDestroyed and legionDestroyed and arabianDestroyed and
-                  americanCapitulated and russianCapitulated and legionCapitulated and (GetSide(Omar) <> 5 or IsDead(Omar) or not IsPlaced(Omar)) do
+                  americanCapitulated and russianCapitulated and legionCapitulated and (GetSide(Omar) <> 5 or omarKilled or not IsPlaced(Omar)) do
 var med1, med2;
 begin
 wait(0$5);
