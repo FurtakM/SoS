@@ -1,0 +1,265 @@
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if not GetSide(un) in botSides then
+   exit;
+
+if not un in [Sikorski] then
+   MultiplayerEvent_UnitKilled(un, killerSide, false)
+else
+   MultiplayerEvent_UnitKilled(un, killerSide, Multiplayer_GetCondition(5));
+End;
+
+On UnitDestroyed(un) do
+var i, side, base, chassis, engine, control, weapon, tmp, factory, btype;
+begin
+SOS_UnitDestroyed(un);
+
+side := GetSide(un);
+
+if multi_sides[side] then
+   if GetType(un) = unit_human then
+      MultiplayerEvent_HumanLost(side);
+
+if side in botSides then
+   begin
+   if side = botSides[1] then
+      begin
+      if un in amForce then
+         amForce := amForce diff un;
+
+      if GetClass(un) = class_mechanic and amMechSpawnCounter then
+         begin
+         if not IsOk(amDep) then
+            exit;
+
+         amMechSpawnCounter := Dec(amMechSpawnCounter);
+
+         uc_side := botSides[1];
+         uc_nation := nation_american;
+
+         PrepareMechanic(false, [1, 2, 3][Difficulty]);
+         un := CreateHuman;
+         PlaceUnitXY(un, 52, 2, false);
+
+         ComMoveXY(un, 23, 19);
+
+         amForce := Join(amForce, un);
+         end;
+
+      if GetType(un) = unit_building then
+         begin
+         btype := GetBType(un);
+
+         if btype = b_barracks then
+            btype := b_armoury;
+
+         if btype = b_factory then
+            btype := b_workshop;
+
+         if btype in [b_lab_full, b_lab_half] then
+         btype := b_lab;
+
+         amBuildings := Replace(amBuildings, amBuildings + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
+         end;
+
+      if GetType(un) = unit_vehicle then
+         begin
+         chassis := GetChassis(un);
+         engine := GetEngine(un);
+         control := GetControl(un);
+         weapon := GetWeapon(un);
+
+         tmp := Produce(factory, chassis, engine, control, weapon);
+
+         amConstructList := Replace(amConstructList, amConstructList + 1, tmp);
+         end;
+      end;
+
+   if side = botSides[2] then
+      begin
+      if un in arForce then
+         arForce := arForce diff un;   
+
+      if GetClass(un) = class_mechanic and GetTag(un) < 999 and arMechSpawnCounter then
+         begin
+         if not IsOk(arDep) then
+            exit;
+
+         arMechSpawnCounter := Dec(arMechSpawnCounter);
+
+         uc_side := botSides[2];
+         uc_nation := nation_arabian;
+
+         PrepareMechanic(false, [1, 2, 3][Difficulty]);
+         un := CreateHuman;
+         PlaceUnitXY(un, 178, 2, false);
+
+         ComMoveXY(un, 204,35);
+
+         arForce := Join(arForce, un);
+         end;
+
+      if GetType(un) = unit_building then
+         begin
+         btype := GetBType(un);
+
+         if btype = b_barracks then
+            btype := b_armoury;
+
+         if btype = b_factory then
+            btype := b_workshop;
+
+         if btype in [b_lab_full, b_lab_half] then
+         btype := b_lab;
+
+         arBuildings := Replace(arBuildings, arBuildings + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
+         end;
+
+      if GetType(un) = unit_vehicle then
+         begin
+         chassis := GetChassis(un);
+         engine := GetEngine(un);
+         control := GetControl(un);
+         weapon := GetWeapon(un);
+
+         tmp := Produce(factory, chassis, engine, control, weapon);
+
+         arConstructList := Replace(arConstructList, arConstructList + 1, tmp);
+         end;
+      end;
+
+   end;
+
+if multi_commanders and multi_custom_commanders then
+   if un in multi_commanders then
+      begin
+      multi_loosers := Replace(multi_loosers, side, 1);
+      multi_commanders := multi_commanders diff un;
+      Multiplayer_Reside(side);
+      end;
+End;
+
+On BuildingComplete(building) do
+var i, j, side, btype;
+begin
+side := GetSide(building);
+
+if multi_sides[side] then
+   MultiplayerEvent_BuildingCompleted(side, GetBType(building));
+
+if side = botSides[1] then
+   begin
+   amBuildings := Delete(amBuildings, 1);
+
+   btype := GetBType(building);
+
+   case btype of
+        // b_armoury: ComUpgrade(building);
+        b_workshop: ComUpgrade(building);
+        b_lab: begin
+               AddComUpgradeLab(building, b_lab_weapon);
+               end;
+        end;
+   end;
+
+if side = botSides[2] then
+   begin
+   arBuildings := Delete(arBuildings, 1);
+
+   btype := GetBType(building);
+
+   case btype of
+        // b_armoury: ComUpgrade(building);
+        b_workshop: ComUpgrade(building);
+        b_lab: begin
+               AddComUpgradeLab(building, b_lab_weapon);
+               AddComUpgradeLab(building, b_lab_opto);
+               end;
+        end;
+   end;
+End;
+
+On EvacuateBuilding(building, unit) do
+begin
+if not GetSide(unit) in botSides then
+   exit;
+
+if unit in arForceTmp and GetBType(building) = b_breastwork then
+   ComEnterUnit(unit, HexInfo(215, 102));
+
+if HexInfo(44, 78) then
+   begin
+   ComMoveXY(unit, 26, 40);
+   amForce := Join(amForce, unit);
+   end;
+
+if GetX(building) > 71 then
+   begin
+   ComMoveXY(unit, 69, 39);
+   AddComMoveXY(unit, 26, 40);
+   amForce := Join(amForce, unit);
+   end;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var i, side, tmp, base, amount, driver;
+begin
+SOS_VehicleConstructed(vehicle, factory);
+
+side := GetSide(vehicle);
+
+if multi_sides[side] then
+   MultiplayerEvent_Produced(side);
+
+
+if side = botSides[1] then
+   begin
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      begin
+      SetTag(driver, tMech);
+      amDrivers := Join(amDrivers, driver);
+      end;
+
+   if amVehiclesCounter > Count(amVehicles) or GetBType(vehicle) in [us_cargo_bay, us_crane] then
+      amVehicles := Join(amVehicles, vehicle)
+   else
+      amVehiclesAtttackers := Join(amVehiclesAtttackers, vehicle);
+   end;
+
+if side = botSides[2] then
+   begin
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      begin
+      SetTag(driver, tMech);
+      arDrivers := Join(arDrivers, driver);
+      end;
+
+   if arVehiclesCounter > Count(arVehicles) or GetBType(vehicle) in [ar_cargo_bay, ar_crane] then
+      arVehicles := Join(arVehicles, vehicle)
+   else
+      arVehiclesAtttackers := Join(arVehiclesAtttackers, vehicle);
+   end;
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if GetTag(driver) = tMech then
+   SetTag(driver, 0);
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = botSides[1] then
+   if tech in amTech then
+      amTech := amTech diff tech;
+
+if GetSide(lab) = botSides[2] then
+   if tech in arTech then
+      arTech := arTech diff tech;
+End;
+
+
