@@ -118,6 +118,16 @@ function length(t)
   	return count;
 end;
 
+function prependToArray(array, element)
+    table.insert(array, 1, element);
+    return array;
+end;
+
+function appendToArray(array, element)
+    table.insert(array, #array + 1, element);
+    return array;
+end;
+
 function addToArray(array, element)
     array[#array + 1] = element;
     return array;
