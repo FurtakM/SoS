@@ -21,7 +21,7 @@ BIO_GALI = 20;
 BIO_SHAR = 21;
 BIO_MARK = 22;
 BIO_MARIA = 23;
-BIO_RICK = 24;
+BIO_ANDRE = 24;
 BIO_ERWIN = 25;
 BIO_KOL  = 26;
 BIO_RONN = 27;
@@ -74,6 +74,14 @@ BIO_GOSS = 73;
 BIO_YAKOT = 74;
 BIO_GLAD = 75;
 BIO_BYST = 76;
+BIO_TRUM = 77;
+BIO_GAYD = 78;
+BIO_NICH = 79;
+BIO_BASIM = 80;
+BIO_RICK = 81;
+BIO_LEMM = 82;
+BIO_MIA = 83;
+BIO_KURIN =84;
 
 ACTIVE_BIO = 0;
 
@@ -82,7 +90,7 @@ biographics = {
     {
         loc(8001),        -- NAME
         loc(8002),        -- DESC
-        'Steyer',          -- ID / IMG
+        'Heike Steyer',          -- ID / IMG
         2,                -- SIDE
         1,                -- CLASS
         '24.01.1983',     -- BIRTH
@@ -91,7 +99,7 @@ biographics = {
     {
         loc(8003),
         loc(8004),
-        'Kaia',
+        'Kaia Krizman',
         2,
         1,
         '23.03.1983',
@@ -100,7 +108,7 @@ biographics = {
     {
         loc(8005),
         loc(8006),
-        'Givi',
+        'Givi Maisuradze',
         2,
         1,
         '26.11.1960',
@@ -109,7 +117,7 @@ biographics = {
     {
         loc(8007),
         loc(8008),
-        'Turssen',
+        'Mike Turssen',
         2,
         1,
         '7.7.1969',
@@ -118,7 +126,7 @@ biographics = {
     {
         loc(8009),
         loc(8010),
-        'Wyrrick',
+        'Kamil Wyrick',
         2,
         2,
         '21.1.1970',
@@ -127,7 +135,7 @@ biographics = {
     {
         loc(8011),
         loc(8012),
-        'Larsson',
+        'Olaf Larsson',
         2,
         3,
         '15.9.1971',
@@ -136,7 +144,7 @@ biographics = {
     {
         loc(8013),
         loc(8014),
-        'Krastyo',
+        'Krastyo Markov',
         2,
         3,
         '28.2.1972',
@@ -145,7 +153,7 @@ biographics = {
     {
         loc(8015),
         loc(8016),
-        'Aviradze',
+        'Giorgi Aviradze',
         2,
         4,
         '26.7.1966',
@@ -154,7 +162,7 @@ biographics = {
     {
         loc(8017),
         loc(8018),
-        'Sophia',
+        'Sophia Spyros',
         2,
         2,
         '12.5.1975',
@@ -163,7 +171,7 @@ biographics = {
     {
         loc(8019),
         loc(8020),
-        'Farmer',
+        'Robert Farmer',
         2,
         1,
         '04.12.1963',
@@ -172,7 +180,7 @@ biographics = {
     {
         loc(8021),
         loc(8022),
-        'Omar',
+        'Omar Ali',
         2,
         1,
         '19.8.1970',
@@ -181,7 +189,7 @@ biographics = {
     {
         loc(8023),
         loc(8024),
-        'Ibrahim',
+        'Ibrahim Hasimow',
         2,
         4,
         '6.11.1964',
@@ -190,7 +198,7 @@ biographics = {
     {
         loc(8025),
         loc(8026),
-        'Kurt',
+        'Kurt Schmidt',
         2,
         1,
         '8.06.1969',
@@ -199,7 +207,7 @@ biographics = {
     {
         loc(8027),
         loc(8028),
-        'Bergkampf',
+        'Rolf Bergkampf',
         2,
         1,
         '17.11.1962',
@@ -208,7 +216,7 @@ biographics = {
     {
         loc(8029),
         loc(8030),
-        'Schulz',
+        'Louis Schulz',
         2,
         1,
         '24.08.1970',
@@ -217,7 +225,7 @@ biographics = {
     {
         loc(8031),
         loc(8032),
-        'Matover',
+        'Jenna Matover',
         2,
         4,
         '01.10.1977',
@@ -226,7 +234,7 @@ biographics = {
     {
         loc(8033),
         loc(8034),
-        'Karla',
+        'Karla Mann',
         2,
         1,
         '29.04.1981',
@@ -235,7 +243,7 @@ biographics = {
     {
         loc(8035),
         loc(8036),
-        'Genscher',
+        'Dietrich Gensher',
         2,
         1,
         '16.03.1945',
@@ -244,7 +252,7 @@ biographics = {
     {
         loc(8037),
         loc(8038),
-        'Schweppenburg',
+        'Joachim Schweppenburg',
         2,
         1,
         '14.12.1980',
@@ -253,7 +261,7 @@ biographics = {
     {
         loc(8039),
         loc(8040),
-        'Gali',
+        'Louis Gali',
         2,
         2,
         '24.10.1967',
@@ -262,7 +270,7 @@ biographics = {
     {
         loc(8041),
         loc(8042),
-        'Shariff',
+        'Abdul Shariff',
         2,
         1,
         '28.08.1941',
@@ -271,7 +279,7 @@ biographics = {
     {
         loc(8043),
         loc(8044),
-        'Dippi',
+        'Mark Dippi',
         2,
         3,
         '19.03.1983',
@@ -280,7 +288,7 @@ biographics = {
     {
         loc(8045),
         loc(8046),
-        'Bogdanovic',
+        'Maria Bogdanovic',
         2,
         1,
         '24.09.1973',
@@ -289,16 +297,16 @@ biographics = {
     {
         loc(8047),
         loc(8048),
-        'Hoft',
+        'Andreas Christiansen',
         2,
-        1,
+        2,
         '27.05.1974',
         loc(TID_RPA),
     },
     {
         loc(8049),
         loc(8050),
-        'Erwin',
+        'Erwin Van Der Veen',
         2,
         1,
         '29.04.1957',
@@ -307,7 +315,7 @@ biographics = {
     {
         loc(8051),
         loc(8052),
-        'Kol',
+        'Olaf Kol',
         2,
         4,
         '16.08.1967',
@@ -316,7 +324,7 @@ biographics = {
     {
         loc(8053),
         loc(8054),
-        'Ronn',
+        'Ronn Horntvedt',
         2,
         2,
         '13.05.1969',
@@ -325,7 +333,7 @@ biographics = {
     {
         loc(8055),
         loc(8056),
-        'Nia',
+        'Nia Maisuradze',
         2,
         1,
         '18.11.1978',
@@ -334,7 +342,7 @@ biographics = {
     {
         loc(8057),
         loc(8058),
-        'JMM',
+        'John Macmillan',
         1,
         1,
         '04.02.1968',
@@ -343,7 +351,7 @@ biographics = {
     {
         loc(8059),
         loc(8060),
-        'Joan',
+        'Joan Fergusson',
         1,
         4,
         '17.03.1972',
@@ -352,7 +360,7 @@ biographics = {
     {
         loc(8061),
         loc(8062),
-        'Barnes',
+        'Arnold Barnes',
         1,
         1,
         '14.08.1930',
@@ -361,16 +369,16 @@ biographics = {
     {
         loc(8063),
         loc(8064),
-        'Bobby',
+        'Bobby Brandon',
         1,
         3,
-        '23.06.1947',
+        '23.06.1948',
         loc(TID_USA),
     },
     {
         loc(8065),
         loc(8066),
-        'Cyrus',
+        'Cyrus Parker',
         1,
         1,
         '17.08.1971',
@@ -379,7 +387,7 @@ biographics = {
     {
         loc(8067),
         loc(8068),
-        'Lawson',
+        'Lisa Lawson',
         1,
         1,
         '05.05.1976',
@@ -388,7 +396,7 @@ biographics = {
     {
         loc(8069),
         loc(8070),
-        'Mikhail',
+        'Michail Bieriezow',
         3,
         2,
         '08.01.1977',
@@ -397,7 +405,7 @@ biographics = {
     {
         loc(8071),
         loc(8072),
-        'Khattam',
+        'Paul Khattam',
         1,
         4,
         '30.05.1969',
@@ -406,7 +414,7 @@ biographics = {
     {
         loc(8073),
         loc(8074),
-        'Cornell',
+        'Andy Cornell',
         1,
         1,
         '03.11.1969',
@@ -415,7 +423,7 @@ biographics = {
     {
         loc(8075),
         loc(8076),
-        'Frank',
+        'Frank Forsyth',
         1,
         1,
         '15.07.1966',
@@ -424,7 +432,7 @@ biographics = {
     {
         loc(8077),
         loc(8078),
-        'Brown',
+        'Jeff Brown',
         1,
         2,
         '19.11.1967',
@@ -433,7 +441,7 @@ biographics = {
     {
         loc(8079),
         loc(8080),
-        'Donaldson',
+        'Lucy Donaldson',
         1,
         1,
         '10.03.1978',
@@ -442,7 +450,7 @@ biographics = {
     {
         loc(8081),
         loc(8082),
-        'Gladstone',
+        'Tim Gladstone',
         1,
         4,
         '28.02.1946',
@@ -451,7 +459,7 @@ biographics = {
     {
         loc(8083),
         loc(8084),
-        'Denis',
+        'Denis Peterson',
         1,
         4,
         '14.03.1959',
@@ -460,7 +468,7 @@ biographics = {
     {
         loc(8085),
         loc(8086),
-        'Dawkins',
+        'Adam Dawkins',
         1,
         4,
         '18.05.1962',
@@ -469,7 +477,7 @@ biographics = {
     {
         loc(8087),
         loc(8088),
-        'Harrison',
+        'Ron Harrison',
         1,
         1,
         '04.23.1950',
@@ -478,7 +486,7 @@ biographics = {
     {
         loc(8089),
         loc(8090),
-        'Yamoko',
+        'Yamoko Kikuchi',
         1,
         1,
         '21.04.1973',
@@ -487,16 +495,16 @@ biographics = {
     {
         loc(8091),
         loc(8092),
-        'Van Houten',
+        'Peter Van Houten',
         1,
         1,
         '11.10.1963',
-        loc(TID_Scotland),
+        loc(TID_Holand),
     },
     {
         loc(8093),
         loc(8094),
-        'Sikorski',
+        'Jeremy Sikorski',
         1,
         1,
         '19.06.1960',
@@ -505,7 +513,7 @@ biographics = {
     {
         loc(8095),
         loc(8096),
-        'Gary',
+        'Gary Grant',
         1,
         1,
         '02.09.1959',
@@ -514,7 +522,7 @@ biographics = {
     {
         loc(8097),
         loc(8098),
-        'Powell',
+        'Arthur Powell',
         1,
         1,
         '29.08.1954',
@@ -523,7 +531,7 @@ biographics = {
     {
         loc(8099),
         loc(8100),
-        'Cathy',
+        'Cathy Simms',
         1,
         4,
         '01.02.1975',
@@ -532,7 +540,7 @@ biographics = {
     {
         loc(8101),
         loc(8102),
-        'Stevens',
+        'Hugh Stevens',
         1,
         4,
         '21.09.1957',
@@ -541,7 +549,7 @@ biographics = {
     {
         loc(8103),
         loc(8104),
-        'Roth',
+        'Peter Roth',
         1,
         4,
         '09.08.1961',
@@ -550,7 +558,7 @@ biographics = {
     {
         loc(8105),
         loc(8106),
-        'Burlak',
+        'Jurij Gorki',
         3,
         3,
         '04.07.1980',
@@ -559,7 +567,7 @@ biographics = {
     {
         loc(8107),
         loc(8108),
-        'Gnyevko',
+        'Siemon Gniewko',
         3,
         1,
         '03.08.1951',
@@ -568,7 +576,7 @@ biographics = {
     {
         loc(8109),
         loc(8110),
-        'Belkov',
+        'Piotr Bielkow',
         3,
         1,
         '04.01.1975',
@@ -577,7 +585,7 @@ biographics = {
     {
         loc(8111),
         loc(8112),
-        'Kirilienkova',
+        'Jelena Kirilienkowa',
         3,
         1,
         '04.01.1975',
@@ -587,7 +595,7 @@ biographics = {
     {
         loc(8113),
         loc(8114),
-        'Kovalyuk',
+        'Ilija Kowaliuk',
         3,
         3,
         '16.11.1964',
@@ -596,7 +604,7 @@ biographics = {
     {
         loc(8115),
         loc(8116),
-        'Belkov2',
+        'Iwan Bielkow',
         3,
         1,
         'Belkov2',
@@ -605,7 +613,7 @@ biographics = {
     {
         loc(8117),
         loc(8118),
-        'Platonov',
+        'Dawid Platonow',
         3,
         3,
         '02.03.1959',
@@ -614,7 +622,7 @@ biographics = {
     {
         loc(8119),
         loc(8120),
-        'Popov',
+        'Sergiej Popow',
         3,
         1,
         '06.01.1969',
@@ -623,7 +631,7 @@ biographics = {
     {
         loc(8121),
         loc(8122),
-        'Scholtze',
+        'Gennady Scholtze',
         3,
         4,
         '09.07.1963',
@@ -632,7 +640,7 @@ biographics = {
     {
         loc(8123),
         loc(8124),
-        'Kuzmov',
+        'Nikolaj Kuzmow',
         3,
         1,
         '29.01.1973',
@@ -641,7 +649,7 @@ biographics = {
     {
         loc(8125),
         loc(8126),
-        'Titov',
+        'Lew Titow',
         3,
         1,
         '03.08.1970',
@@ -650,7 +658,7 @@ biographics = {
     {
         loc(8127),
         loc(8128),
-        'Petrovova',
+        'Nina Pietrowowa',
         3,
         1,
         '13.10.1974',
@@ -659,7 +667,7 @@ biographics = {
     {
         loc(8129),
         loc(8130),
-        'Dolgov',
+        'Lazar Dolgow',
         3,
         4,
         '16.05.1950',
@@ -668,7 +676,7 @@ biographics = {
     {
         loc(8131),
         loc(8132),
-        'Petrosyan',
+        'Gedanny Petrosjan',
         3,
         4,
         '11.11.1955',
@@ -677,7 +685,7 @@ biographics = {
     {
         loc(8133),
         loc(8134),
-        'Gleb',
+        'Oleg Gleb',
         3,
         1,
         '18.09.1968',
@@ -686,7 +694,7 @@ biographics = {
     {
         loc(8135),
         loc(8136),
-        'Karamazov',
+        'Borys Karamazow',
         3,
         2,
         '15.08.1964',
@@ -695,7 +703,7 @@ biographics = {
     {
         loc(8137),
         loc(8138),
-        'Sevi',
+        'Wsjewolod Gorki',
         3,
         1,
         '12.06.1968',
@@ -704,7 +712,7 @@ biographics = {
     {
         loc(8139),
         loc(8140),
-        'Xavier',
+        'Raul Xavier',
         3,
         1,
         '21.03.1969',
@@ -713,7 +721,7 @@ biographics = {
     {
         loc(8141),
         loc(8142),
-        'Yashin',
+        'Nikita Jaszin',
         3,
         1,
         '26.10.1945',
@@ -722,7 +730,7 @@ biographics = {
     {
         loc(8143),
         loc(8144),
-        'Kozlov',
+        'Nikita Kozlow',
         3,
         4,
         '08.07.1967',
@@ -731,7 +739,7 @@ biographics = {
     {
         loc(8145),
         loc(8146),
-        'Gossudarov',
+        'Trofim Gossudarow',
         3,
         4,
         '23.03.1940',
@@ -740,7 +748,7 @@ biographics = {
     {
         loc(8147),
         loc(8148),
-        'Yakotich',
+        'Stojan Jakoticz',
         3,
         1,
         '17.07.1959',
@@ -749,7 +757,7 @@ biographics = {
     {
         loc(8149),
         loc(8150),
-        'Gladkov',
+        'Dimitrij Gladkow',
         3,
         1,
         '25.10.1973',
@@ -758,10 +766,82 @@ biographics = {
     {
         loc(8151),
         loc(8152),
-        'Bystrov',
+        'Aleksander Bystrow',
         3,
         4,
         '02.09.1956',
+        loc(TID_USSR),
+    },
+    {
+        loc(8153),
+        loc(8154),
+        'Jack Truman',
+        1,
+        1,
+        '10.01.1960',
+        loc(TID_USA),
+    },
+    {
+        loc(8155),
+        loc(8156),
+        'Timur Gajdar',
+        3,
+        1,
+        '30.05.1969',
+        loc(TID_USSR),
+    },
+    {
+        loc(8157),
+        loc(8158),
+        'Nicholas Vervecken',
+        2,
+        1,
+        '14.11.1977',
+        loc(TID_Holand),
+    },
+    {
+        loc(8159),
+        loc(8160),
+        'Basim Al-Masina',
+        2,
+        4,
+        '24.02.1970',
+        loc(TID_Iraq),
+    },
+    {
+        loc(8161),
+        loc(8162),
+        'Rick Hoft',
+        2,
+        4,
+        '27.05.1974',
+        loc(TID_RPA),
+    },
+    {
+        loc(8163),
+        loc(8164),
+        'Lemuel Titmus',
+        2,
+        2,
+        '11.10.1969',
+        loc(TID_England),
+    },
+    {
+        loc(8165),
+        loc(8166),
+        'Mia Mathiassen',
+        2,
+        4,
+        '14.07.1979',
+        loc(TID_Sweden),
+    },
+    {
+        loc(8167),
+        loc(8168),
+        'Iwan Kurin',
+        3,
+        1,
+        '25.06.1954',
         loc(TID_USSR),
     },
 };

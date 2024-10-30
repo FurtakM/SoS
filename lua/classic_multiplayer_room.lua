@@ -30,13 +30,13 @@ MULTIPLAYER_OPTION_LIMIT_TECH = 56;
 
 
 menu.window_multiplayer_room = getElementEX(
-	menu, 
-	anchorNone, 
-	XYWH(0, 0, LayoutWidth, LayoutHeight), 
-	false, 
-	{
-		colour1 = BLACKA(150)
-	}
+    menu, 
+    anchorNone, 
+    XYWH(0, 0, LayoutWidth, LayoutHeight), 
+    false, 
+    {
+        colour1 = BLACKA(150)
+    }
 );
 
 menu.window_multiplayer_room.panel = getElementEX(
@@ -56,99 +56,99 @@ menu.window_multiplayer_room.panel = getElementEX(
 
 -- upper panel
 menu.window_multiplayer_room.panel.quit = clButton(
-	menu.window_multiplayer_room.panel, 
-	19, 
-	68, 
-	150,
-	30, 
-	loc(TID_Multi_button_Leave_game), 
-	'hideMultiplayerGame();',
-	{}
+    menu.window_multiplayer_room.panel, 
+    19, 
+    68, 
+    150,
+    30, 
+    loc(TID_Multi_button_Leave_game), 
+    'hideMultiplayerGame();',
+    {}
 );
 
 menu.window_multiplayer_room.panel.changeAvatar = clButton(
-	menu.window_multiplayer_room.panel, 
-	19, 
-	102, 
-	150,
-	30, 
-	loc(TID_Main_Menu_ChangeAvatar),
-	'showMultiplayerAvatarGenerator();', -- for test
-	{}
+    menu.window_multiplayer_room.panel, 
+    19, 
+    102, 
+    150,
+    30, 
+    loc(TID_Main_Menu_ChangeAvatar),
+    'showMultiplayerAvatarGenerator();', -- for test
+    {}
 );
 
 
 menu.window_multiplayer_room.panel.start = clButton(
-	menu.window_multiplayer_room.panel, 
-	19, 
-	136, 
-	150,
-	30, 
-	loc(TID_Multi_button_Start_Game), 
-	'',
-	{}
+    menu.window_multiplayer_room.panel, 
+    19, 
+    136, 
+    150,
+    30, 
+    loc(TID_Multi_button_Start_Game), 
+    '',
+    {}
 );
 
 menu.window_multiplayer_room.panel.mapName = getLabelEX(
-	menu.window_multiplayer_room.panel,
-	anchorLTRB,
-	XYWH(12, 16, 326, 29),
-	nil,
-	loc(TID_InGame_NoName) .. '-' .. loc(TID_InGame_NoName), -- game name + game type,
-	{
-		font_colour = BLACK(),
-		nomouseevent = true,
-		font_name = ADMUI3L,
-		scissor = true,
-		wordwrap = false
-	}
+    menu.window_multiplayer_room.panel,
+    anchorLTRB,
+    XYWH(12, 16, 326, 29),
+    nil,
+    loc(TID_InGame_NoName) .. '-' .. loc(TID_InGame_NoName), -- game name + game type,
+    {
+    	font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+        scissor = true,
+        wordwrap = false
+    }
 ); 
 
 menu.window_multiplayer_room.panel.mapCount = getLabelEX(
-	menu.window_multiplayer_room.panel,
-	anchorR,
-	XYWH(342, 16, 50, 29),
-	nil,
-	'12/12',
-	{
-		font_colour = BLACK(),
-		nomouseevent = true,
-		font_name = ADMUI3L,
-		scissor = true,
-		wordwrap = false,
-		text_halign = ALIGN_RIGHT
-	}
+    menu.window_multiplayer_room.panel,
+    anchorR,
+    XYWH(342, 16, 50, 29),
+    nil,
+    '12/12',
+    {
+    	font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+        scissor = true,
+        wordwrap = false,
+        text_halign = ALIGN_RIGHT
+    }
 ); 
 
 menu.window_multiplayer_room.panel.playerName = getLabelEX(
-	menu.window_multiplayer_room.panel,
-	anchorLTRB,
-	XYWH(18, 48, 150, 14),
-	nil,
-	'', -- see showMultiplayerGame()
-	{
-		font_colour = BLACK(),
-		nomouseevent = true,
-		font_name = ADMUI3L,
-		scissor = true
-	}
+    menu.window_multiplayer_room.panel,
+    anchorLTRB,
+    XYWH(18, 48, 150, 14),
+    nil,
+    '', -- see showMultiplayerGame()
+    {
+    	font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+        scissor = true
+    }
 ); 
 
 menu.window_multiplayer_room.panel.status = getLabelEX(
-	menu.window_multiplayer_room.panel,
-	anchorLTRB,
-	XYWH(14, 174, 370, 60),
-	nil,
-	'',
-	{
-		font_colour = BLACK(),
-		nomouseevent = true,
-		font_name = ADMUI3L,
-		scissor = true,
-		wordwrap = true,
-		text_halign = ALIGN_TOP,	
-		text_valign = ALIGN_LEFT,
-	}
+    menu.window_multiplayer_room.panel,
+    anchorLTRB,
+    XYWH(14, 174, 370, 60),
+    nil,
+    '',
+    {
+    	font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+        scissor = true,
+        wordwrap = true,
+        text_halign = ALIGN_TOP,	
+        text_valign = ALIGN_LEFT,
+    }
 );
 
 menu.window_multiplayer_room.panel.globalSettings = getElementEX(
@@ -168,35 +168,35 @@ menu.window_multiplayer_room.panel.globalSettings = getElementEX(
 
 -- chat
 menu.window_multiplayer_room.panel.chat = clTextBoxWithTexture(
-	menu.window_multiplayer_room.panel,
-	anchorLTRB,
-	XYWH(412, 24, 596, 178), 
-	'',
-	{
-		font_colour = BLACK(),
-		nomouseevent = true,
-		font_name = ADMUI3L,
-		padding = {
-			x = 4,
-			y = 0
-		}
-		-- added='setTextID(%id, %data);',
-	}
+    menu.window_multiplayer_room.panel,
+    anchorLTRB,
+    XYWH(412, 24, 596, 178), 
+    '',
+    {
+        font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+        padding = {
+        	x = 4,
+        	y = 0
+        }
+        -- added='setTextID(%id, %data);',
+    }
 );
 
 menu.window_multiplayer_room.panel.chatInput = getEditEX(
-	menu.window_multiplayer_room.panel,
-	anchorNone,
-	XYWH(420, 208, 578, 14),
-	ADMUI3L,
-	'',
-	'',
-	{},
-	{
-		font_colour = BLACK(),
-		font_name = Arial_14,
-		callback_keypress = 'sendChatMessage(%k);'
-	}
+    menu.window_multiplayer_room.panel,
+    anchorNone,
+    XYWH(420, 208, 578, 14),
+    ADMUI3L,
+    '',
+    '',
+    {},
+    {
+        font_colour = BLACK(),
+        font_name = Arial_14,
+        callback_keypress = 'sendChatMessage(%k);'
+    }
 );
 
 textBoxTest = clTextBox(nil, anchorLTRB, XYWH(1, 1, 1, 1), 'test', {visible = false});
@@ -284,36 +284,36 @@ menu.window_multiplayer_room.panel.page1 = getElementEX(
 );
 
 menu.window_multiplayer_room.panel.page1.scroll = getScrollboxEX(
-	menu.window_multiplayer_room.panel.page1, 
-	anchorNone, 
-	XYWH(
+    menu.window_multiplayer_room.panel.page1, 
+    anchorNone, 
+    XYWH(
 		8, 
 		8,
 		768,
 		320
 	),
-	{
-		colour1 = WHITEA()
-	}
+    {
+        colour1 = WHITEA()
+    }
 );
 
 set_Property(menu.window_multiplayer_room.panel.page1.scroll.ID, PROP_AUTOHIDESCROLL, false);
 
 menu.window_multiplayer_room.panel.page1.scrollBar = clScrollBarEX2(
-	menu.window_multiplayer_room.panel.page1,
-	anchorNone,
-	XYWH(
-		762, 
-		menu.window_multiplayer_room.panel.page1.scroll.y + 6, 
-		12,
-		menu.window_multiplayer_room.panel.page1.scroll.height - 6 
-	), 
-	menu.window_multiplayer_room.panel.page1.scroll, 
-	SKINTYPE_NONE,
-	false,
-	{
-		visible = true
-	}
+    menu.window_multiplayer_room.panel.page1,
+    anchorNone,
+    XYWH(
+        762, 
+        menu.window_multiplayer_room.panel.page1.scroll.y + 6, 
+        12,
+        menu.window_multiplayer_room.panel.page1.scroll.height - 6 
+    ), 
+    menu.window_multiplayer_room.panel.page1.scroll, 
+    SKINTYPE_NONE,
+    false,
+    {
+        visible = true
+    }
 );
 
 menu.window_multiplayer_room.panel.page1.playerSlots = getElementEX(
@@ -350,30 +350,30 @@ menu.window_multiplayer_room.panel.page1.spectatorSlots = getElementEX(
 -- check init player slots
 menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	menu.window_multiplayer_room.panel.page1,
-	anchorT, 
-	XYWH(782, 9, 240, 12),
-	nil, 
-	loc(846), -- player list
-	{
+    anchorT, 
+    XYWH(782, 9, 240, 12),
+    nil, 
+    loc(846), -- player list
+    {
 		nomouseevent = true,
-		font_colour = WHITE(),
-		font_name = BankGotic_14,
-		wordwrap = true,
-		text_halign = ALIGN_LEFT,
-		text_valign = ALIGN_TOP,
-		scissor = true
-	}
+        font_colour = WHITE(),
+        font_name = BankGotic_14,
+        wordwrap = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        scissor = true
+ 	}
 );
 
 menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
-	menu.window_multiplayer_room.panel.page1,
-	808, 
-	338, 
-	156,
-	30, 
-	loc(498), -- kick player
-	'kickPlayer();',
-	{}
+    menu.window_multiplayer_room.panel.page1,
+    808, 
+    338, 
+    156,
+    30, 
+    loc(498), -- kick player
+    'kickPlayer();',
+    {}
 );
 
 menu.window_multiplayer_room.panel.page1.playerList = clListBox(
@@ -435,23 +435,23 @@ menu.window_multiplayer_room.panel.page4 = getElementEX(
 
 -- xichted avatar generator
 menu.window_multiplayer_room.avatarPanel = getElementEX(
-	menu.window_multiplayer_room,
-	anchorLTRB,
-	XYWH(0, 0, LayoutWidth, LayoutHeight),
-	false,
-	{
-		colour1 = BLACKA(50)
-	}
+    menu.window_multiplayer_room,
+    anchorLTRB,
+    XYWH(0, 0, LayoutWidth, LayoutHeight),
+    false,
+    {
+        colour1 = BLACKA(50)
+    }
 );
 
 menu.window_multiplayer_room.avatarPanel.popup = getElementEX(
 	menu.window_multiplayer_room.avatarPanel,
-	anchorNone,
-	XYWH(menu.window_multiplayer_room.avatarPanel.width / 2 - 310, menu.window_multiplayer_room.avatarPanel.height / 2 - 123, 621, 400),
-	true,
-	{
-		texture = 'classic/edit/avw_1.png'
-	}
+    anchorNone,
+    XYWH(menu.window_multiplayer_room.avatarPanel.width / 2 - 310, menu.window_multiplayer_room.avatarPanel.height / 2 - 123, 621, 400),
+    true,
+    {
+        texture = 'classic/edit/avw_1.png'
+    }
 );
 
 menu.window_multiplayer_room.avatarPanel.popup.preview = getElementEX(
@@ -485,48 +485,48 @@ menu.window_multiplayer_room.avatarPanel.popup.settings = getElementEX(
 );
 
 menu.window_multiplayer_room.avatarPanel.popup.saveBtn = clButton(
-	menu.window_multiplayer_room.avatarPanel.popup, 
-	235,
-	328,
-	150,
-	18, 
-	loc(1173), -- ok
-	'savePreviewAvatar();',
-	{
-		texture = 'classic/edit/menu_button_small_l.png',
-		texture2 = 'classic/edit/menu_button_small_c.png',
-		texture3 = 'classic/edit/menu_button_small_r.png'
-	}
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235,
+    328,
+    150,
+    18, 
+    loc(1173), -- ok
+    'savePreviewAvatar();',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
 );
 
 menu.window_multiplayer_room.avatarPanel.popup.randomBtn = clButton(
-	menu.window_multiplayer_room.avatarPanel.popup, 
-	235, 
-	352, 
-	150,
-	18, 
-	loc(1100), -- random face
-	'randomPreviewAvatar();',
-	{
-		texture = 'classic/edit/menu_button_small_l.png',
-		texture2 = 'classic/edit/menu_button_small_c.png',
-		texture3 = 'classic/edit/menu_button_small_r.png'
-	}
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235, 
+    352, 
+    150,
+    18, 
+    loc(1100), -- random face
+    'randomPreviewAvatar();',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
 );
 
 menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
-	menu.window_multiplayer_room.avatarPanel.popup, 
-	235, 
-	376, 
-	150,
-	18, 
-	loc(828), -- close
-	'hideMultiplayerAvatarGenerator();',
-	{
-		texture = 'classic/edit/menu_button_small_l.png',
-		texture2 = 'classic/edit/menu_button_small_c.png',
-		texture3 = 'classic/edit/menu_button_small_r.png'
-	}
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235, 
+    376, 
+    150,
+    18, 
+    loc(828), -- close
+    'hideMultiplayerAvatarGenerator();',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
 );
 
 function showMultiplayerAvatarGenerator()
@@ -598,63 +598,63 @@ function refreshPlayerAvatarSettings()
 	end;
 
 	getLabelEX(
-		menu.window_multiplayer_room.avatarPanel.popup.settings,
-		anchorT, 
-		XYWH(
-			10,
-			6,
-			240,
-			14
-		), 
-		nil,
-		SGUI_widesub(componentsNames[1], 1, 27),
-		{
-			font_colour = BLACK(),
-			nomouseevent = true,
-			font_name = BankGotic_14
-		}
+	    menu.window_multiplayer_room.avatarPanel.popup.settings,
+	    anchorT, 
+	    XYWH(
+	    	10,
+	    	6,
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    SGUI_widesub(componentsNames[1], 1, 27),
+	    {
+	        font_colour = BLACK(),
+	        nomouseevent = true,
+	        font_name = BankGotic_14
+	    }
 	);
 
 	clComboBox(
-		menu.window_multiplayer_room.avatarPanel.popup.settings,
-		10,
-		24,
-		{
+	    menu.window_multiplayer_room.avatarPanel.popup.settings,
+	    10,
+	    24,
+	    {
 			loc(1168), -- Male
 			loc(1169)  -- Female 
 		},
-		MULTIPLAYER_ROOM_MY_AVATAR_SEX + 1,
-		'updatePreviewAvatarSex("INDEX")',
-		{}
+	    MULTIPLAYER_ROOM_MY_AVATAR_SEX + 1,
+	    'updatePreviewAvatarSex("INDEX")',
+	    {}
 	);
 
 	for i = 2, #components do
 		getLabelEX(
-			menu.window_multiplayer_room.avatarPanel.popup.settings,
-			anchorT, 
-			XYWH(
-				10 + (((i - 1) % 2) * 240),
-				6 + (math.floor((i - 1) / 2) * 40),
-				240,
-				14
-			), 
-			nil,
-			SGUI_widesub(componentsNames[i], 1, 27),
-			{
-				font_colour = BLACK(),
-				nomouseevent = true,
-				font_name = BankGotic_14
-			}
+		    menu.window_multiplayer_room.avatarPanel.popup.settings,
+		    anchorT, 
+		    XYWH(
+		    	10 + (((i - 1) % 2) * 240),
+		    	6 + (math.floor((i - 1) / 2) * 40),
+		    	240,
+		    	14
+		    ), 
+		    nil,
+		    SGUI_widesub(componentsNames[i], 1, 27),
+		    {
+		        font_colour = BLACK(),
+	            nomouseevent = true,
+	            font_name = BankGotic_14
+		    }
 		);
 
 		clComboBox(
-			menu.window_multiplayer_room.avatarPanel.popup.settings,
-			10 + (((i - 1) % 2) * 240),
-			24 + (math.floor((i - 1) / 2) * 40),
-			parts[components[i]].PARTS,
-			MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[componentsID[i]],
-			'updatePreviewAvatar(' .. componentsID[i] .. ', "INDEX")',
-			{}
+		    menu.window_multiplayer_room.avatarPanel.popup.settings,
+		    10 + (((i - 1) % 2) * 240),
+		    24 + (math.floor((i - 1) / 2) * 40),
+		    parts[components[i]].PARTS,
+		    MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[componentsID[i]],
+		    'updatePreviewAvatar(' .. componentsID[i] .. ', "INDEX")',
+		    {}
 		);
 	end;
 end;
@@ -729,7 +729,7 @@ function randomPreviewAvatar()
 	end;
 
 	SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, previewAvatar(MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS), 80, 100, 80, 100);
-	refreshPlayerAvatarSettings();
+    refreshPlayerAvatarSettings();
 end;
 
 function savePreviewAvatar()
@@ -743,39 +743,39 @@ OW_ROOM_SETUP(menu.window_multiplayer_room.panel.chat.TEXTBOX.ID, textBoxTest.ID
 function FROMOW_MULTIROOM_GET_MAP_INFO_CALLBACK(DATA)
 --[[
 DATA Breakdown
-	MULTIMAP Breakdown
-		GAMETYPE      Integer
-		DESCRIPTION      WideString
-		RULES      WideString
-		RANDOMNATIONS      Boolean
-		ADDCOMPBUTTON     Boolean
-		CANSPEC       Boolean
-		MAPPARAMCOUNT     Integer
-		RESTRICTTECH       Boolean
-		RESTRICTBUILDINGS       Boolean
+    MULTIMAP Breakdown
+        GAMETYPE      Integer
+        DESCRIPTION      WideString
+        RULES      WideString
+        RANDOMNATIONS      Boolean
+        ADDCOMPBUTTON     Boolean
+        CANSPEC       Boolean
+        MAPPARAMCOUNT     Integer
+        RESTRICTTECH       Boolean
+        RESTRICTBUILDINGS       Boolean
 
-		MAPPARAMS [1..MAPPARAMCOUNT] of
-			COUNT     Integer
-			VALUE      default
-			ITEMS of
-				NAMES [1..COUNT] of WideString
-				HINTS [1..COUNT] of WideString
-			HINTS [1..2] of WideString
+        MAPPARAMS [1..MAPPARAMCOUNT] of
+            COUNT     Integer
+            VALUE      default
+            ITEMS of
+                NAMES [1..COUNT] of WideString
+                HINTS [1..COUNT] of WideString
+            HINTS [1..2] of WideString
 
-	TEAMDEF[1..9] of            1 isn't team
-		NAME    String                without name isn't avalible         1 hasn't name
-		SIDESMIN    Integer
-		SIDESMAX    Integer
-		ASSIGNED_POSITIONS[1..8] of Boolean
-		ASSIGNED_POSITIONS_COUNT    Integer
+    TEAMDEF[1..9] of            1 isn't team
+        NAME    String                without name isn't avalible         1 hasn't name
+        SIDESMIN    Integer
+        SIDESMAX    Integer
+        ASSIGNED_POSITIONS[1..8] of Boolean
+        ASSIGNED_POSITIONS_COUNT    Integer
 
-	SIDEDEF[1..8] of
-		NAME    String
-		ENABLED    Boolean
-		NATIONS of
-			AR    Boolean
-			US    Boolean
-			RU    Boolean 
+    SIDEDEF[1..8] of
+        NAME    String
+        ENABLED    Boolean
+        NATIONS of
+            AR    Boolean
+            US    Boolean
+            RU    Boolean 
 --]]
 
 	MULTIPLAYER_ROOM_DATA.MULTIMAP = DATA.MULTIMAP;
@@ -836,7 +836,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	setText(menu.window_multiplayer_room.panel.mapName, trim(MULTIPLAYER_ROOM_MAP_DATA.MAPLOC) .. ' - ' .. trim(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPELOC));
 
 	-- get map info data
-	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+  	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
@@ -866,13 +866,13 @@ function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
 	--MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
 
 	MultiDef.MapList      = UNRANKED.MAPLIST;
-	MultiDef.MapListCount = UNRANKED.MAPLISTCOUNT;
+  	MultiDef.MapListCount = UNRANKED.MAPLISTCOUNT;
 
 	MULTIPLAYER_ROOM_DATA.MAPS = UNRANKED.MAPLIST;
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
-	hideMultiplayerGame();
+    hideMultiplayerGame();
 end;
 
 function FROMOW_MULTI_PINGED(DATA)
@@ -890,20 +890,20 @@ end;
 function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 	useModernGUILogic(); -- use global variables from Sali's GUI...
 	
-	IN_LOBBY = false;
+    IN_LOBBY = false;
 	OW_IRC_DESTROY();
-		
+	  	
 	MULTIPLAYER_ROOM_ACTIVE = false;
-	MULTIPLAYER_ROOM_IS_HOST = false;
-	MULTIPLAYER_ROOM_IS_DEDI = false;
-	MULTIPLAYER_ROOM_DATA = {};
-	MULTIPLAYER_ROOM_MAP_DATA = {};
-	MULTIPLAYER_ROOM_SPECTATORS = {};
+  	MULTIPLAYER_ROOM_IS_HOST = false;
+  	MULTIPLAYER_ROOM_IS_DEDI = false;
+  	MULTIPLAYER_ROOM_DATA = {};
+  	MULTIPLAYER_ROOM_MAP_DATA = {};
+  	MULTIPLAYER_ROOM_SPECTATORS = {};
 
-	setVisible(menu.window_multiplayer_room, false);
+  	setVisible(menu.window_multiplayer_room, false);
 
-	deleteSlots();
-	clearAvatarCache();
+  	deleteSlots();
+  	clearAvatarCache();
 end;
 
 MULTIPLAYER_ROOM_TIMER_ID = timer:repeatable(0.1, 'refreshPlayerView();', -1);
@@ -912,10 +912,10 @@ timer:stop(MULTIPLAYER_ROOM_TIMER_ID);
 function updateMultiplayerView()
 	local _t = timer:get(MULTIPLAYER_ROOM_TIMER_ID);
 
-	if (_t.delay == 0) then
-		_t.delay = 0.1;
-		_t.time  = 0;
-	end;
+    if (_t.delay == 0) then
+        _t.delay = 0.1;
+        _t.time  = 0;
+    end;
 end;
 
 -- main functions
@@ -933,15 +933,15 @@ function startMultiplayerGame()
 	end;
 
 
-	if OW_ROOM_LAUNCH_GAME() then
-		IN_LOBBY = false;
+    if OW_ROOM_LAUNCH_GAME() then
+        IN_LOBBY = false;
 		OW_IRC_DESTROY();
 
-		setVisible(menu.window_multiplayer_room, false);
+	  	setVisible(menu.window_multiplayer_room, false);
 
-		deleteSlots();
-		clearAvatarCache();
-	end;
+	  	deleteSlots();
+	  	clearAvatarCache();
+    end;
 end;
 
 function switchCheckboxReady()
@@ -956,25 +956,25 @@ function setReadyMultiplayerGame()
 end;
 
 function showMultiplayerGame()
-	IN_LOBBY = false;	
-	MULTIPLAYER_ROOM_ACTIVE = true;
-	MULTIPLAYER_ROOM_IS_HOST = getvalue(OWV_IAMSERVER);
+  	IN_LOBBY = false;	
+  	MULTIPLAYER_ROOM_ACTIVE = true;
+  	MULTIPLAYER_ROOM_IS_HOST = getvalue(OWV_IAMSERVER);
 	MULTIPLAYER_ROOM_IS_DEDI = getvalue(OWV_IAMDEDIHOST);
 
-	setVisible(menu.window_multiplayer, false);
-	setVisible(menu.window_multiplayer_room, true);
+  	setVisible(menu.window_multiplayer, false);
+  	setVisible(menu.window_multiplayer_room, true);
 
-	-- set player nickname
-	setText(menu.window_multiplayer_room.panel.playerName, getPlayerName());
+  	-- set player nickname
+  	setText(menu.window_multiplayer_room.panel.playerName, getPlayerName());
 
-	-- set button
-	if canModifyServerSettings() then
-		setText(menu.window_multiplayer_room.panel.start, loc(804));
-		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
-	else
-		setText(menu.window_multiplayer_room.panel.start, loc(818));
-		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-	end;
+  	-- set button
+  	if canModifyServerSettings() then
+  		setText(menu.window_multiplayer_room.panel.start, loc(804));
+  		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
+  	else
+  		setText(menu.window_multiplayer_room.panel.start, loc(818));
+  		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+  	end;
 end;
 
 function hideMultiplayerGame()
@@ -985,16 +985,16 @@ function hideMultiplayerGame()
 	IN_LOBBY = true;	
 	MULTIPLAYER_ROOM_ACTIVE = false;
 
-	setVisible(menu.window_multiplayer_room, false);
-	setVisible(menu.window_multiplayer, true);
+  	setVisible(menu.window_multiplayer_room, false);
+  	setVisible(menu.window_multiplayer, true);
 
-	MULTIPLAYER_ROOM_IS_HOST = false;
-	MULTIPLAYER_ROOM_IS_DEDI = false;
-	MULTIPLAYER_ROOM_DATA = {};
-	MULTIPLAYER_ROOM_MAP_DATA = {};
+  	MULTIPLAYER_ROOM_IS_HOST = false;
+  	MULTIPLAYER_ROOM_IS_DEDI = false;
+  	MULTIPLAYER_ROOM_DATA = {};
+  	MULTIPLAYER_ROOM_MAP_DATA = {};
 
-	deleteSlots();
-	clearAvatarCache();
+  	deleteSlots();
+  	clearAvatarCache();
 end;
 
 function setMultiplayerGameLocked()
@@ -1038,68 +1038,68 @@ end;
 
 function generateGlobalSettings()
 	-- global multiroom settings
-	-- delete global settings panel to prevent duplicates
-	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
+  	-- delete global settings panel to prevent duplicates
+  	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
 
-	local banRandomColours = false;
+  	local banRandomColours = false;
 
-	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
-		banRandomColours = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banRandomColours;
-	end;
+  	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
+  		banRandomColours = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banRandomColours;
+  	end;
 
-	if (canModifyServerSettings()) then
+  	if (canModifyServerSettings()) then
 		menu.window_multiplayer_room.panel.gameLock = clCheckbox(
-			menu.window_multiplayer_room.panel.globalSettings,
-			1,
-			0,
-			'setMultiplayerGameLocked();',
-			{
-				checked = MULTIPLAYER_ROOM_GAME_LOCKED
-			}
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    1,
+		    0,
+		    'setMultiplayerGameLocked();',
+		    {
+		        checked = MULTIPLAYER_ROOM_GAME_LOCKED
+		    }
 		);
 
 		menu.window_multiplayer_room.panel.gameLockLabel = getLabelEX(
-			menu.window_multiplayer_room.panel.globalSettings,
-			anchorLT,
-			XYWH(21, 0, 199, 16),
-			BankGotic_14, 
-			loc(817),
-			{
-				font_colour = RGB(0, 0, 0),
-				shadowtext = false,
-				nomouseevent = true,
-				text_halign = ALIGN_LEFT,
-				text_valign = ALIGN_TOP,
-				wordwrap = false,
-				scissor = true
-			}
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    anchorLT,
+		    XYWH(21, 0, 199, 16),
+		    BankGotic_14, 
+		    loc(817),
+		    {
+		        font_colour = RGB(0, 0, 0),
+		        shadowtext = false,
+		        nomouseevent = true,
+		        text_halign = ALIGN_LEFT,
+		        text_valign = ALIGN_TOP,
+		        wordwrap = false,
+		        scissor = true
+		    }
 		);
-	--[[else
+  	--[[else
 		menu.window_multiplayer_room.panel.ready = clCheckbox(
-			menu.window_multiplayer_room.panel.globalSettings,
-			1,
-			0,
-			'setReadyMultiplayerGame();',
-			{
-				checked = (not MULTIPLAYER_ROOM_IM_READY)
-			}
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    1,
+		    0,
+		    'setReadyMultiplayerGame();',
+		    {
+		        checked = (not MULTIPLAYER_ROOM_IM_READY)
+		    }
 		);
 
 		menu.window_multiplayer_room.panel.readyLabel = getLabelEX(
-			menu.window_multiplayer_room.panel.globalSettings,
-			anchorLT,
-			XYWH(21, 0, 199, 16),
-			BankGotic_14, 
-			loc(818),
-			{
-				font_colour = RGB(0, 0, 0),
-				shadowtext = false,
-				nomouseevent = true,
-				text_halign = ALIGN_LEFT,
-				text_valign = ALIGN_TOP,
-				wordwrap = false,
-				scissor = true
-			}
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    anchorLT,
+		    XYWH(21, 0, 199, 16),
+		    BankGotic_14, 
+		    loc(818),
+		    {
+		        font_colour = RGB(0, 0, 0),
+		        shadowtext = false,
+		        nomouseevent = true,
+		        text_halign = ALIGN_LEFT,
+		        text_valign = ALIGN_TOP,
+		        wordwrap = false,
+		        scissor = true
+		    }
 		);--]]
 	end;
 
@@ -1114,148 +1114,148 @@ function generateGlobalSettings()
 	]]--
 
 	menu.window_multiplayer_room.panel.randomPos = clCheckbox(
-		menu.window_multiplayer_room.panel.globalSettings,
-		1,
-		30,
-		'setMultiplayerRandomPositions();',
-		{
-			checked = MULTIPLAYER_ROOM_RANDOM_POSITIONS,
-			disabled = not canModifyServerSettings(),
-			hint = loc(832)
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    30,
+	    'setMultiplayerRandomPositions();',
+	    {
+	        checked = MULTIPLAYER_ROOM_RANDOM_POSITIONS,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(832)
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.randomPosLabel = getLabelEX(
-		menu.window_multiplayer_room.panel.globalSettings,
-		anchorLT,
-		XYWH(21, 30, 199, 16),
-		BankGotic_14, 
-		SGUI_widesub(loc(831), 1, 21), -- random pos
-		{
-			font_colour = RGB(0, 0, 0),
-			shadowtext = false,
-			nomouseevent = true,
-			text_halign = ALIGN_LEFT,
-			text_valign = ALIGN_TOP,
-			wordwrap = false,
-			scissor = true
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 30, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(831), 1, 21), -- random pos
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.randomCol = clCheckbox(
-		menu.window_multiplayer_room.panel.globalSettings,
-		1,
-		48,
-		'setMultiplayerRandomColours();',
-		{
-			checked = MULTIPLAYER_ROOM_RANDOM_COLOURS,
-			disabled = not canModifyServerSettings() or banRandomColours,
-			hint = loc(836)
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    48,
+	    'setMultiplayerRandomColours();',
+	    {
+	        checked = MULTIPLAYER_ROOM_RANDOM_COLOURS,
+	        disabled = not canModifyServerSettings() or banRandomColours,
+	        hint = loc(836)
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.randomColLabel = getLabelEX(
-		menu.window_multiplayer_room.panel.globalSettings,
-		anchorLT,
-		XYWH(21, 48, 199, 16),
-		BankGotic_14, 
-		SGUI_widesub(loc(835), 1, 21), -- random colour
-		{
-			font_colour = RGB(0, 0, 0),
-			shadowtext = false,
-			nomouseevent = true,
-			text_halign = ALIGN_LEFT,
-			text_valign = ALIGN_TOP,
-			wordwrap = false,
-			scissor = true
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 48, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(835), 1, 21), -- random colour
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
 	);	
 
 	menu.window_multiplayer_room.panel.randomNat = clCheckbox(
-		menu.window_multiplayer_room.panel.globalSettings,
-		1,
-		66,
-		'setMultiplayerRandomNations();',
-		{
-			checked = MULTIPLAYER_ROOM_RANDOM_NATIONS,
-			disabled = not canModifyServerSettings(),
-			hint = loc(5040)
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    66,
+	    'setMultiplayerRandomNations();',
+	    {
+	        checked = MULTIPLAYER_ROOM_RANDOM_NATIONS,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(5040)
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.randomNatLabel = getLabelEX(
-		menu.window_multiplayer_room.panel.globalSettings,
-		anchorLT,
-		XYWH(21, 66, 199, 16),
-		BankGotic_14, 
-		SGUI_widesub(loc(5039), 1, 21), -- random nation
-		{
-			font_colour = RGB(0, 0, 0),
-			shadowtext = false,
-			nomouseevent = true,
-			text_halign = ALIGN_LEFT,
-			text_valign = ALIGN_TOP,
-			wordwrap = false,
-			scissor = true
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 66, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(5039), 1, 21), -- random nation
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.lockTeam = clCheckbox(
-		menu.window_multiplayer_room.panel.globalSettings,
-		1,
-		84,
-		'setMultiplayerLockTeams();',
-		{
-			checked = MULTIPLAYER_ROOM_LOCK_TEAMS,
-			disabled = not canModifyServerSettings(),
-			hint = loc(1231)
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    84,
+	    'setMultiplayerLockTeams();',
+	    {
+	        checked = MULTIPLAYER_ROOM_LOCK_TEAMS,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(1231)
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.lockTeamLabel = getLabelEX(
-		menu.window_multiplayer_room.panel.globalSettings,
-		anchorLT,
-		XYWH(21, 84, 199, 16),
-		BankGotic_14, 
-		SGUI_widesub(loc(1230), 1, 21), -- lock team diplomacy
-		{
-			font_colour = RGB(0, 0, 0),
-			shadowtext = false,
-			nomouseevent = true,
-			text_halign = ALIGN_LEFT,
-			text_valign = ALIGN_TOP,
-			wordwrap = false,
-			scissor = true
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 84, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(1230), 1, 21), -- lock team diplomacy
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
 	);	
 
 	menu.window_multiplayer_room.panel.limitedTech = clCheckbox(
-		menu.window_multiplayer_room.panel.globalSettings,
-		1,
-		102,
-		'',
-		{
-			checked = false,
-			disabled = true,
-			hint = loc(1217)
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    102,
+	    '',
+	    {
+	        checked = false,
+	        disabled = true,
+	        hint = loc(1217)
+	    }
 	);
 
 	menu.window_multiplayer_room.panel.limitedTechLabel = getLabelEX(
-		menu.window_multiplayer_room.panel.globalSettings,
-		anchorLT,
-		XYWH(21, 102, 199, 16),
-		BankGotic_14, 
-		SGUI_widesub(loc(1216), 1, 21), -- limited tech (todo)
-		{
-			font_colour = RGB(0, 0, 0),
-			shadowtext = false,
-			nomouseevent = true,
-			text_halign = ALIGN_LEFT,
-			text_valign = ALIGN_TOP,
-			wordwrap = false,
-			scissor = true
-		}
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 102, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(1216), 1, 21), -- limited tech (todo)
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
 	);
 end;
 
@@ -1320,7 +1320,7 @@ function kickPlayer()
 
 	local index = clGetListSelectedIndex(menu.window_multiplayer_room.panel.page1.playerList.ID);
 
-	if (index == nil or index < 1) then
+	if (index == nil) then
 		return;
 	end;
 
@@ -1498,35 +1498,35 @@ function refreshPlayerView()
 			end;
 
 			local teamLabel = getLabelEX(
-				menu.window_multiplayer_room.panel.page1.playerSlots, 
-				anchorT, 
-				XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
-				Tahoma_18B, 
-				MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].NAME,
-				{
-					wordwrap = true,
-					text_halign = ALIGN_MIDDLE,
-					text_valign = ALIGN_TOP,
-					font_colour = RGB(231, 222, 214),
-					shadowtext = true
-				}
+			    menu.window_multiplayer_room.panel.page1.playerSlots, 
+			    anchorT, 
+			    XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
+			    Tahoma_18B, 
+			    MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].NAME,
+			    {
+			        wordwrap = true,
+			        text_halign = ALIGN_MIDDLE,
+			        text_valign = ALIGN_TOP,
+			        font_colour = RGB(231, 222, 214),
+			        shadowtext = true
+			    }
 			);
 
 			posY = posY + 26;
 
 			local teamBtn = clButton(
-				menu.window_multiplayer_room.panel.page1.playerSlots, 
-				304, 
-				posY, 
-				150,
-				18, 
-				loc(824), -- join
-				'joinToTeam(' .. i .. ', -1);',
-				{
-					texture = 'classic/edit/menu_button_small_l.png',
-					texture2 = 'classic/edit/menu_button_small_c.png',
-					texture3 = 'classic/edit/menu_button_small_r.png'
-				}
+			    menu.window_multiplayer_room.panel.page1.playerSlots, 
+			    304, 
+			    posY, 
+			    150,
+			    18, 
+			    loc(824), -- join
+			    'joinToTeam(' .. i .. ', -1);',
+			    {
+			    	texture = 'classic/edit/menu_button_small_l.png',
+			    	texture2 = 'classic/edit/menu_button_small_c.png',
+			    	texture3 = 'classic/edit/menu_button_small_r.png'
+			    }
 			);
 
 			if (#teamPlayers[i] > 0) then
@@ -1632,19 +1632,19 @@ function refreshPlayerView()
 
 						local slotPlayerName = getLabelEX(
 							slot,
-							anchorT, 
-							XYWH(50, 6, 220, 14),
-							nil, 
-							playerData.NAME, 
-							{
+						    anchorT, 
+						    XYWH(50, 6, 220, 14),
+						    nil, 
+						    playerData.NAME, 
+						    {
 								nomouseevent = true,
-								font_colour = WHITE(),
-								font_name = BankGotic_14,
-								wordwrap = false,
-								text_halign = ALIGN_TOP,
-								text_valign = ALIGN_LEFT,
-								scissor = true
-							}
+						        font_colour = WHITE(),
+						        font_name = BankGotic_14,
+						        wordwrap = false,
+						        text_halign = ALIGN_TOP,
+						        text_valign = ALIGN_LEFT,
+						        scissor = true
+						 	}
 						);
 
 						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
@@ -1652,96 +1652,96 @@ function refreshPlayerView()
 						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
 
 						local slotPosition = clComboBox(
-							slot,
-							336,
-							3,
-							allowedPositions,
-							playerData.SIDE,
-							'OW_MULTIROOM_SET_MYSIDE(INDEX);',
-							{
-								width = 150,
-								texture = 'classic/edit/combobox-short.png',
-								defaultLabel = loc(809),
-								disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-							}
+						    slot,
+						    336,
+						    3,
+						    allowedPositions,
+						    playerData.SIDE,
+						    'OW_MULTIROOM_SET_MYSIDE(INDEX);',
+						    {
+						        width = 150,
+						        texture = 'classic/edit/combobox-short.png',
+						        defaultLabel = loc(809),
+						        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
+						    }
 						);
 
 						if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
 							local slotNation = clComboBox(
-								slot,
-								488,
-								3,
-								allowedNations,
-								getMultiplayerNation(playerData.NATION, playerData.SIDE),
-								'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
-								{
-									width = 150,
-									texture = 'classic/edit/combobox-short.png',
-									defaultLabel = loc(809),
-									disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-								}
+							    slot,
+							    488,
+							    3,
+							    allowedNations,
+							    getMultiplayerNation(playerData.NATION, playerData.SIDE),
+							    'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
+							    {
+							        width = 150,
+							        texture = 'classic/edit/combobox-short.png',
+							        defaultLabel = loc(809),
+							        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
+							    }
 							);
 						end;
 
 						if (isMySlot and not isMerged) then
 							local slotPlayerLock = clCheckbox(
-								slot,
-								659,
-								6,
-								'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
-								{
-									disabled = playerData.READY,
-									checked = playerData.LOCKED,
-									hint = loc(829)
-								}
+							    slot,
+							    659,
+							    6,
+							    'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
+							    {
+							    	disabled = playerData.READY,
+							        checked = playerData.LOCKED,
+							        hint = loc(829)
+							    }
 							);
 
 							local slotPlayerLockLabel = getLabelEX(
-								slot,
-								anchorLT,
-								XYWH(678, 6, 160, 16),
-								BankGotic_14, 
-								loc(828),
-								{
-									font_colour = RGB(0, 0, 0),
-									shadowtext = false,
-									nomouseevent = true,
-									text_halign = ALIGN_LEFT,
-									text_valign = ALIGN_TOP,
-									wordwrap = false,
-									scissor = true
-								}
+							    slot,
+							    anchorLT,
+							    XYWH(678, 6, 160, 16),
+							    BankGotic_14, 
+							    loc(828),
+							    {
+							        font_colour = RGB(0, 0, 0),
+							        shadowtext = false,
+							        nomouseevent = true,
+							        text_halign = ALIGN_LEFT,
+							        text_valign = ALIGN_TOP,
+							        wordwrap = false,
+							        scissor = true
+							    }
 							);
 						else
 							if (isMerged) then
 								local leavePlayer = clButton(
-									slot, 
-									660, 
-									5, 
-									84,
-									18, 
-									loc(844), -- separate
-									'joinToTeam(' .. i .. ', -1);',
-									{
-										texture = 'classic/edit/menu_button_small_l.png',
-										texture2 = 'classic/edit/menu_button_small_c.png',
-										texture3 = 'classic/edit/menu_button_small_r.png'
-									}
+								    slot, 
+								    660, 
+								    5, 
+								    84,
+								    18, 
+								    loc(844), -- separate
+								    'joinToTeam(' .. i .. ', -1);',
+								    {
+								    	texture = 'classic/edit/menu_button_small_l.png',
+								    	texture2 = 'classic/edit/menu_button_small_c.png',
+								    	texture3 = 'classic/edit/menu_button_small_r.png'
+								    }
 								);
 							elseif (not playerData.LOCKED) then
 								local joinToPlayer = clButton(
-									slot, 
-									660, 
-									5, 
-									84,
-									18, 
-									loc(839), -- join
-									'joinToTeam(' .. i .. ', ' .. playerData.TEAMPOS .. ');',
-									{
-										texture = 'classic/edit/menu_button_small_l.png',
-										texture2 = 'classic/edit/menu_button_small_c.png',
-										texture3 = 'classic/edit/menu_button_small_r.png'
-									}
+								    slot, 
+								    660, 
+								    5, 
+								    84,
+								    18, 
+								    loc(839), -- join
+								    'joinToTeam(' .. i .. ', ' .. playerData.TEAMPOS .. ');',
+								    {
+								    	texture = 'classic/edit/menu_button_small_l.png',
+								    	texture2 = 'classic/edit/menu_button_small_c.png',
+								    	texture3 = 'classic/edit/menu_button_small_r.png'
+								    }
 								);
 							end;
 						end;
@@ -1846,52 +1846,52 @@ function refreshPlayerView()
 
 			local slotPlayerName = getLabelEX(
 				slot,
-				anchorT, 
-				XYWH(50, 6, 220, 14),
-				nil, 
-				playerData.NAME, 
-				{
+			    anchorT, 
+			    XYWH(50, 6, 220, 14),
+			    nil, 
+			    playerData.NAME, 
+			    {
 					nomouseevent = true,
-					font_colour = WHITE(),
-					font_name = BankGotic_14,
-					wordwrap = false,
-					text_halign = ALIGN_TOP,
-					text_valign = ALIGN_LEFT,
-					scissor = true
-				}
+			        font_colour = WHITE(),
+			        font_name = BankGotic_14,
+			        wordwrap = false,
+			        text_halign = ALIGN_TOP,
+			        text_valign = ALIGN_LEFT,
+			        scissor = true
+			 	}
 			);
 
 			local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
 
 			local slotPosition = clComboBox(
-				slot,
-				336,
-				3,
-				allowedPositions,
-				playerData.SIDE,
-				'OW_MULTIROOM_SET_MYSIDE(INDEX);',
-				{
-					width = 150,
-					texture = 'classic/edit/combobox-short.png',
-					defaultLabel = loc(809),
-					disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-				}
+			    slot,
+			    336,
+			    3,
+			    allowedPositions,
+			    playerData.SIDE,
+			    'OW_MULTIROOM_SET_MYSIDE(INDEX);',
+			    {
+			        width = 150,
+			        texture = 'classic/edit/combobox-short.png',
+			        defaultLabel = loc(809),
+			        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
+			    }
 			);
 
 			if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
 				local slotNation = clComboBox(
-					slot,
-					488,
-					3,
-					allowedNations,
-					getMultiplayerNation(playerData.NATION, playerData.SIDE),
-					'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
-					{
-						width = 150,
-						texture = 'classic/edit/combobox-short.png',
-						defaultLabel = loc(809),
-						disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-					}
+				    slot,
+				    488,
+				    3,
+				    allowedNations,
+				    getMultiplayerNation(playerData.NATION, playerData.SIDE),
+				    'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
+				    {
+				        width = 150,
+				        texture = 'classic/edit/combobox-short.png',
+				        defaultLabel = loc(809),
+				        disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
+				    }
 				);
 			end;
 
@@ -1902,33 +1902,33 @@ function refreshPlayerView()
 	-- spectator
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP.CANSPEC and #MULTIPLAYER_ROOM_DATA.TEAMDEF >= 10 then
 		local specLabel = getLabelEX(
-			menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			anchorT, 
-			XYWH(10, 0, menu.window_multiplayer_room.panel.page1.spectatorSlots.width - 22, 18), 
-			Tahoma_18B, 
-			loc(1113),
-			{
-				wordwrap = true,
-				text_halign = ALIGN_MIDDLE,
-				text_valign = ALIGN_TOP,
-				font_colour = RGB(231, 222, 214),
-				shadowtext = true
-			}
+		    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+		    anchorT, 
+		    XYWH(10, 0, menu.window_multiplayer_room.panel.page1.spectatorSlots.width - 22, 18), 
+		    Tahoma_18B, 
+		    loc(1113),
+		    {
+		        wordwrap = true,
+		        text_halign = ALIGN_MIDDLE,
+		        text_valign = ALIGN_TOP,
+		        font_colour = RGB(231, 222, 214),
+		        shadowtext = true
+		    }
 		);
 
 		local teamBtn = clButton(
-			menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			304, 
-			26, 
-			150,
-			18, 
-			loc(839), -- join
-			'joinAsSpectator();',
-			{
-				texture = 'classic/edit/menu_button_small_l.png',
-				texture2 = 'classic/edit/menu_button_small_c.png',
-				texture3 = 'classic/edit/menu_button_small_r.png'
-			}
+		    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+		    304, 
+		    26, 
+		    150,
+		    18, 
+		    loc(839), -- join
+		    'joinAsSpectator();',
+		    {
+		    	texture = 'classic/edit/menu_button_small_l.png',
+		    	texture2 = 'classic/edit/menu_button_small_c.png',
+		    	texture3 = 'classic/edit/menu_button_small_r.png'
+		    }
 		);
 
 		posY = 50;
@@ -2008,19 +2008,19 @@ function refreshPlayerView()
 
 				local slotPlayerName = getLabelEX(
 					slot,
-					anchorT, 
-					XYWH(50, 6, 220, 14),
-					nil, 
-					playerData.NAME, 
-					{
+				    anchorT, 
+				    XYWH(50, 6, 220, 14),
+				    nil, 
+				    playerData.NAME, 
+				    {
 						nomouseevent = true,
-						font_colour = WHITE(),
-						font_name = BankGotic_14,
-						wordwrap = false,
-						text_halign = ALIGN_TOP,
-						text_valign = ALIGN_LEFT,
-						scissor = true
-					}
+				        font_colour = WHITE(),
+				        font_name = BankGotic_14,
+				        wordwrap = false,
+				        text_halign = ALIGN_TOP,
+				        text_valign = ALIGN_LEFT,
+				        scissor = true
+				 	}
 				);
 
 				posY = posY + 32;
@@ -2239,34 +2239,34 @@ end;
 
 function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
 	getLabelEX(
-		PARENT,
-		anchorT, 
-		XYWH(
-			10 + (((INDEX - 1) % 4) * 240),
-			6 + (math.floor((INDEX - 1) / 4) * 60),
-			240,
-			14
-		), 
-		nil,
-		SGUI_widesub(OPTION.NAME, 1, 27),
-		{
-			font_colour = WHITE(),
-			nomouseevent = true,
-			font_name = BankGotic_14
-		}
+	    PARENT,
+	    anchorT, 
+	    XYWH(
+	    	10 + (((INDEX - 1) % 4) * 240),
+	    	6 + (math.floor((INDEX - 1) / 4) * 60),
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    SGUI_widesub(OPTION.NAME, 1, 27),
+	    {
+	        font_colour = WHITE(),
+            nomouseevent = true,
+            font_name = BankGotic_14
+	    }
 	);
 	
 	clComboBox(
-		PARENT,
-		10 + (((INDEX - 1) % 4) * 240),
-		24 + (math.floor((INDEX - 1) / 4) * 60),
-		OPTION.LIST,
-		OPTION.DEFAULT + 1,
-		'changeMultiplayerOption(' .. OPTION.ID .. ', "INDEX")',
-		{
-			hint = OPTION.HINT,
-			disabled = MODIFIABLE
-		}
+	    PARENT,
+	    10 + (((INDEX - 1) % 4) * 240),
+	    24 + (math.floor((INDEX - 1) / 4) * 60),
+	    OPTION.LIST,
+	    OPTION.DEFAULT + 1,
+	    'changeMultiplayerOption(' .. OPTION.ID .. ', "INDEX")',
+	    {
+	        hint = OPTION.HINT,
+	        disabled = MODIFIABLE
+	    }
 	);
 end;
 
@@ -2277,21 +2277,21 @@ end;
 
 -- PAGE #3
 menu.window_multiplayer_room.panel.page3.mapNameLabel = getLabelEX(
-	menu.window_multiplayer_room.panel.page3,
-	anchorT, 
-	XYWH(
-		12,
-		12,
-		120,
-		14
-	), 
-	nil,
-	loc(821),
-	{
-		font_colour = WHITE(),
-		nomouseevent = true,
-		font_name = BankGotic_14
-	}
+    menu.window_multiplayer_room.panel.page3,
+    anchorT, 
+    XYWH(
+    	12,
+    	12,
+    	120,
+    	14
+    ), 
+    nil,
+   	loc(821),
+    {
+        font_colour = WHITE(),
+        nomouseevent = true,
+        font_name = BankGotic_14
+    }
 );
 
 menu.window_multiplayer_room.panel.page3.mapComboBox = getElementEX(
@@ -2310,21 +2310,21 @@ menu.window_multiplayer_room.panel.page3.mapComboBox = getElementEX(
 );
 
 menu.window_multiplayer_room.panel.page3.gameTypeLabel = getLabelEX(
-	menu.window_multiplayer_room.panel.page3,
-	anchorT, 
-	XYWH(
-		558,
-		12,
-		120,
-		14
-	), 
-	nil,
-	loc(822),
-	{
-		font_colour = WHITE(),
-		nomouseevent = true,
-		font_name = BankGotic_14
-	}
+    menu.window_multiplayer_room.panel.page3,
+    anchorT, 
+    XYWH(
+    	558,
+    	12,
+    	120,
+    	14
+    ), 
+    nil,
+   	loc(822),
+    {
+        font_colour = WHITE(),
+        nomouseevent = true,
+        font_name = BankGotic_14
+    }
 );
 
 menu.window_multiplayer_room.panel.page3.gameTypeComboBox = getElementEX(
@@ -2359,19 +2359,19 @@ menu.window_multiplayer_room.panel.page3.mapPic = getElementEX(
 
 menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 	menu.window_multiplayer_room.panel.page3,
-	anchorT, 
-	XYWH(556, 60, 447, 596),
-	nil, 
-	'',
-	{
+    anchorT, 
+    XYWH(556, 60, 447, 596),
+    nil, 
+    '',
+    {
 		nomouseevent = true,
-		font_colour = WHITE(),
-		font_name = ADMUI3L,
-		wordwrap = true,
-		text_halign = ALIGN_LEFT,
-		text_valign = ALIGN_TOP,
-		scissor = true
-	}
+        font_colour = WHITE(),
+        font_name = ADMUI3L,
+        wordwrap = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        scissor = true
+ 	}
 );
 
 function setMapList(mapList, selectedMap, isHost)
@@ -2388,21 +2388,21 @@ function setMapList(mapList, selectedMap, isHost)
 	end;
 
 	menu.window_multiplayer_room.panel.page3.mapComboBox.list = clComboBox(
-		menu.window_multiplayer_room.panel.page3.mapComboBox,
-		0,
-		0,
-		list,
-		selectedMap,
-		'selectMap(INDEX);',
-		{
-			texture = 'classic/edit/combobox-text.png',
-			textureList = 'classic/edit/combobox-list.png',
-			width = 447,
-			widthList = 447,
-			trimLength = 66,
-			trimFrom = 1,
-			disabled = (not isHost)
-		}
+	    menu.window_multiplayer_room.panel.page3.mapComboBox,
+	    0,
+	    0,
+	    list,
+	    selectedMap,
+	    'selectMap(INDEX);',
+	    {
+	    	texture = 'classic/edit/combobox-text.png',
+	    	textureList = 'classic/edit/combobox-list.png',
+	    	width = 447,
+	    	widthList = 447,
+	    	trimLength = 66,
+	    	trimFrom = 1,
+	    	disabled = (not isHost)
+	    }
 	);
 end;
 
@@ -2422,21 +2422,21 @@ function setGameTypeList(INDEX, selectedGameType, isHost)
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.gameTypeComboBox.ID);
 
 	menu.window_multiplayer_room.panel.page3.gameTypeComboBox.list = clComboBox(
-		menu.window_multiplayer_room.panel.page3.gameTypeComboBox,
-		0,
-		0,
-		gameTypeList,
-		selectedGameType,
-		'selectGameType(INDEX);',
-		{
-			texture = 'classic/edit/combobox-text.png',
-			textureList = 'classic/edit/combobox-list.png',
-			width = 447,
-			widthList = 447,
-			trimLength = 66,
-			trimFrom = 1,
-			disabled = (not isHost)
-		}
+	    menu.window_multiplayer_room.panel.page3.gameTypeComboBox,
+	    0,
+	    0,
+	    gameTypeList,
+	    selectedGameType,
+	    'selectGameType(INDEX);',
+	    {
+	    	texture = 'classic/edit/combobox-text.png',
+	    	textureList = 'classic/edit/combobox-list.png',
+	    	width = 447,
+	    	widthList = 447,
+	    	trimLength = 66,
+	    	trimFrom = 1,
+	    	disabled = (not isHost)
+	    }
 	);
 end;
 
@@ -2499,18 +2499,7 @@ function useModernGUILogic()
 	MultiDef.SideDef = copytable(MULTIPLAYER_ROOM_DATA.SIDEDEF);
 	MultiDef.TeamDef = copytable(MULTIPLAYER_ROOM_DATA.TEAMDEF);
 	MultiDef.MapName = copytable(MULTIPLAYER_ROOM_MAP_DATA);
-	
 	Players = copytable(MULTIPLAYER_ROOM_DATA.Players);
-
-	-- set avatartex
-	for i = 1, #Players do
-		if #Players[i] then
-			Players[i].Avatar = fixAVATAR(Players[i].AVATAR);
-			Players[i].AVATARTEX = makeAVATARTEX(0, Players[i].AVATAR, Players[i].AVATARSEX, Players[i].NATION);
-		end;
-	end;
-
-
 	MyID = MULTIPLAYER_ROOM_MY_PLID;
 	teamGame = MULTIPLAYER_ROOM_DATA.TeamGame;
 
@@ -2551,7 +2540,7 @@ function useModernGUILogic()
 	MultiDef.MultiMap.TECHLIMIT = AddData.TECHNOLOGYLIMITS;
 	MultiDef.MultiMap.POSCOORS = AddData.POSCOORS;
 	MultiDef.MultiMap.POSMARKS = AddData.POSMARKS;
-	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
+ 	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
 end;
 
 -- override functions
