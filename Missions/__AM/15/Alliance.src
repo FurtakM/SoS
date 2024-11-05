@@ -5,6 +5,10 @@ Export allianceSpecialForce;
 Export Function PrepareAlliance;
 var i, tmp, base, side, teleport, b;
 begin
+if Difficulty = 1 then
+   for i in FilterAllUnits([f_inarea, delBuildingsArea]) do
+       RemoveUnit(i);
+
 SetInvulnrability(alien, true);
 
 side := 7;
@@ -289,7 +293,11 @@ else
 
 wait(2$00);
 
-tmp := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle], [f_not, [f_weapon, us_crane], [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay], [f_weapon, ru_crane]]]) diff mc_defender[1];
+tmp := FilterAllUnits([[f_side, 7], [f_type, unit_vehicle],
+                      [f_not, [f_weapon, us_crane]],
+                      [f_not, [f_weapon, us_cargo_bay]],
+                      [f_not, [f_weapon, ru_cargo_bay]],
+                      [f_not, [f_weapon, ru_crane]]]) diff mc_defender[1];
 mc_vehicles := Replace(mc_vehicles, 1, mc_vehicles[1] diff tmp);
 
 target := rand(0, 1);

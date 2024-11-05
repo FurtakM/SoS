@@ -141,7 +141,7 @@ biographics = {
 		'Mike Turssen',
 		2,
 		1,
-		'7.7.1969',
+		'07.07.1969',
 		loc(TID_Germany),
 	},
 	{
@@ -150,7 +150,7 @@ biographics = {
 		'Kamil Wyrick',
 		2,
 		2,
-		'21.1.1970',
+		'21.01.1970',
 		loc(TID_Britain),
 	},
 	{
@@ -159,7 +159,7 @@ biographics = {
 		'Olaf Larsson',
 		2,
 		3,
-		'15.9.1971',
+		'15.09.1971',
 		loc(TID_Norway),
 	},
 	{
@@ -168,7 +168,7 @@ biographics = {
 		'Krastyo Markov',
 		2,
 		3,
-		'28.2.1972',
+		'28.02.1972',
 		loc(TID_Bulgaria),
 	},
 	{
@@ -177,7 +177,7 @@ biographics = {
 		'Giorgi Aviradze',
 		2,
 		4,
-		'26.7.1966',
+		'26.07.1966',
 		loc(TID_Georgia),
 	},
 	{
@@ -186,7 +186,7 @@ biographics = {
 		'Sophia Spyros',
 		2,
 		2,
-		'12.5.1975',
+		'12.05.1975',
 		loc(TID_Greece),
 	},
 	{
@@ -204,7 +204,7 @@ biographics = {
 		'Omar Ali',
 		2,
 		1,
-		'19.8.1970',
+		'19.08.1970',
 		loc(TID_Afghanistan),
 	},
 	{
@@ -213,7 +213,7 @@ biographics = {
 		'Ibrahim Hasimow',
 		2,
 		4,
-		'6.11.1964',
+		'06.11.1964',
 		loc(TID_Azerbaijan),
 	},
 	{
@@ -222,7 +222,7 @@ biographics = {
 		'Kurt Schmidt',
 		2,
 		1,
-		'8.06.1969',
+		'08.06.1969',
 		loc(TID_Switzerland),
 	},
 	{
