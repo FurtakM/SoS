@@ -2,6 +2,10 @@ Export Powell;
 Export Function PrepareAmerican;
 var i, b, veh, cl, p, tmp, depot, lab, armoury, workshop;
 begin
+if Difficulty = 1 then
+   for i in FilterAllUnits([f_inarea, delBuildingsArea]) do
+       RemoveUnit(i);
+
 InitHc;
 
 SetBName(am_depot, 'sigma');
@@ -161,7 +165,10 @@ until MC_GetVehicles(4, true) >= 6 or p > 100;
 
 wait(0$30);
 
-tmp := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_not, [f_weapon, us_siberium_rocket], [f_weapon, us_cargo_bay], [f_weapon, us_crane]]]) diff mc_defender[4];
+tmp := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle],
+                      [f_not, [f_weapon, us_siberium_rocket]],
+                      [f_not, [f_weapon, us_cargo_bay]],
+                      [f_not, [f_weapon, us_crane]]]) diff mc_defender[4];
 mc_vehicles := Replace(mc_vehicles, 4, mc_vehicles[4] diff tmp);
 
 target := rand(0, 2);

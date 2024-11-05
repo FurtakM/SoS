@@ -36,6 +36,7 @@ var i, veh, xy, un, area, counter, tmp, dir;
 begin
 result := [];
 arabianAttacksCounter := arabianAttacksCounter + 1;
+xy := [ ctArea1, ctArea2, ctArea3, ctArea4 ];
 
 if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) < 2 then
    begin
@@ -47,12 +48,21 @@ if FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]
    for i = FilterAllUnits([[f_side, 8], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) + 1 to 2 do
        begin
        veh := CreateVehicle;
-       SetDir(veh, 5);
-       xy := [ [181, 105], [137, 6] ][i mod 2 + 1];
-       PlaceUnitXYR(veh, xy[1], xy[2], 12, false);
+       SetDir(veh, rand(0, 5));
+
+       xy := Delete(xy, rand(1, Count(xy)));
+       area := xy[rand(1, Count(xy))];
+
+       if FilterUnitsInArea(area, [f_ok]) then
+          area := ctAreaExtra;
+
+       PlaceUnitArea(veh, area, false);
 
        PrepareMechanic(false, [7, 9, 10, 10][Difficulty]);
        PlaceHumanInUnit(CreateHuman, veh);
+
+       if area = ctAreaExtra then
+          ComMoveXY(veh, 73, 21);
        end;
    end;
 
