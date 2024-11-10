@@ -87,7 +87,7 @@ End;
 
 // leg script
 Every 0$2 trigger legScriptActive and Count(legForces) do
-var i, tmp, remote, undone, side, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon;
+var i, tmp, remote, undone, side, lab, eng, tag, tw, cr, sci, mech, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon;
 begin
 enable;
 
@@ -122,6 +122,11 @@ fac := FilterUnitsInArea(legBaseArea, [[f_side, side], [f_btype, b_factory], [f_
 
 if fac then
    begin
+   mech := UnitFilter(legForces, [[f_tag, tMech], [f_class, class_mechanic], [f_not, [f_inside]], [f_not, [f_driving]]]);
+
+   if mech and UnitsInside(fac[1]) < 6 then
+      ComEnterUnit(mech, fac[1]);
+
    if BuildingStatus(fac[1]) = bs_idle then
       begin
       emptyTowers := FilterUnitsInArea(legBaseArea, [[f_or, [f_btype, b_bunker], [f_btype, b_turret]], [f_bweapon, 0]]);
@@ -333,6 +338,9 @@ if sol then
              continue;
              end;
 
+          if not IsInArea(i, legBaseArea) and not IsInUnit(i) then
+             ComMoveToArea(i, legBaseArea);
+
           if HasTask(i) then
              continue;
 
@@ -377,8 +385,8 @@ else if GetCargo(legCargo, mat_cans) = 100 then
    ComGive(legCargo, legBase);
 End;
 
-Every 12$00 trigger Count(legTanks) < 5 and legScriptActive and spotByLegion and spotArabianBase do
-var i, parts, part;
+Every 6$00 trigger Count(UnitFilter(legRTanks, [f_ok])) < 5 and legScriptActive and spotByLegion and spotArabianBase do
+var i, parts, part, level;
 begin
 enable;
 
@@ -390,14 +398,16 @@ parts := [
   [ar_half_tracked, ar_gatling_gun]
 ];
 
-for i := 1 to [3, 3, 4, 4][Difficulty] do
+level := tick div 60$00;
+
+for i := 1 to [3, 3, 4, 4][Difficulty] + level do
     begin
     part := parts[rand(1, parts)];
     legConstructList := Join(legConstructList, [part[1], engine_combustion, control_remote, part[2]])
     end;
 End;
 
-Every 20$00 trigger not legionDestroyed and tick <= 60$00 do
+Every 20$00 trigger not legionDestroyed and tick <= 80$00 do
 begin
 enable;
 legConstructList := Join(legConstructList, [ar_half_tracked, engine_combustion, control_manual, ar_gun]);
