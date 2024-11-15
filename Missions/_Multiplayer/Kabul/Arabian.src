@@ -1,5 +1,5 @@
 Export arTech, arConstructList, arBuildings, arVehicles, arVehiclesAtttackers, arDrivers, arMechSpawnCounter,
-       arVehiclesCounter, arMinesList, arForce, arForceTmp;
+       arVehiclesCounter, arMinesList, arForce, arForceTmp, arRVehicles;
 Export Function PrepareArabian(side);
 var i, d, xy, un, un2, skill, tmp, fac;
 begin
@@ -7,13 +7,14 @@ arTech := GetTechNation(side, nation_arabian, state_enabled);
 arConstructList := [
    [ar_medium_trike, engine_combustion, control_manual, ar_gun],
    [ar_medium_trike, engine_combustion, control_manual, ar_gun],
-   [ar_medium_trike, engine_combustion, control_manual, ar_flame_thrower],
+   [ar_medium_trike, engine_combustion, control_manual, ar_rocket_launcher],
    [ar_medium_trike, engine_combustion, control_manual, ar_gatling_gun],
    [ar_medium_trike, engine_combustion, control_manual, ar_gun]
 ];
 arBuildings := [];
 arVehicles := [];
 arVehiclesAtttackers := [];
+arRVehicles := [];
 arDrivers := [];
 arVehiclesCounter := 3;
 arMinesList := [];
@@ -22,7 +23,7 @@ arMechSpawnCounter := [8, 11, 12][Difficulty];
 PlaceHiddenCamerasInArea(side, hiddenCamArea);
 PlaceMines(minefieldArea, [7, 9, 11][Difficulty]);
 
-skill := [3, 4, 5][Difficulty];
+skill := [3, 5, 7][Difficulty];
 
 uc_side := side;
 uc_nation := 2;
@@ -45,6 +46,16 @@ for i in FilterAllUnits([[f_side, side], [f_btype, b_breastwork], [f_not, [f_ina
 
     SetDir(un, d);
     PlaceHumanInUnit(un, i);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_control_tower, 100);
+    un := CreateVehicle;
+    PlaceUnitXYR(un, 102, 31, 6, false);
+
+    PrepareMechanic(false, skill + 2);
+    PlaceHumanInUnit(CreateHuman, un);
     end;
 
 for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
@@ -79,7 +90,7 @@ End;
 
 // AI
 Function BaseScript(side, base, area, outerArea, forces, healPoint, parkingPoint);
-var i, j, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
+var i, j, tmp, undone, ct, inside, veh, lab, eng, mech, tag, tw, cr, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
 begin
 enable;
 
@@ -91,12 +102,25 @@ if tmp then
 enemyInBase := FilterUnitsInArea(area, [f_enemy, side]);
 enemyOuterBase := FilterUnitsInArea(outerArea, [f_enemy, side]);
 
+ct := FilterAllUnits([[f_side, side], [f_ok], [f_weapon, ar_control_tower]]);
+
+if ct then
+   begin
+   veh := FilterAllUnits([[f_side, side], [f_not, [f_linked]], [f_ok], [f_control, control_remote]]);
+
+   if veh then
+      for i in veh do
+          Connect(i);
+   end;
+
 vehicles := arVehicles;
 
 depot := FilterUnitsInArea(area, [[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
 if depot then
    depot := depot[1];
+
+sci := UnitFilter(forces, [[f_class, class_scientistic], [f_ok]]);
 
 // research
 if arTech then
@@ -109,11 +133,25 @@ if arTech then
           if BuildingStatus(lab[j]) = bs_idle then
              begin
              for i in arTech do
-                 if CanBeResearched(lab[j], i) then
+                 if CanBeResearched(lab[j], i) and GetTech(i, side) = state_enabled then
                     begin
-                    ComResearch(lab[j], i);
-                    break;
+                    AddComResearch(lab[j], i);
                     end;  
+             end
+          else if BuildingStatus(lab[j]) = bs_need_people then
+             begin
+             for i in UnitFilter(sci, [f_not, [f_tag, tHealer]]) do
+                 begin
+                 inside := IsInUnit(i);
+
+                 if not inside then
+                    ComEnterUnit(i, lab[j])
+                 else if BuildingStatus(inside) = bs_idle then
+                    begin
+                    ComExitBuilding(i);
+                    AddComEnterUnit(i, lab[j]);
+                    end;
+                 end;
              end;
       end;
    end;
@@ -160,7 +198,6 @@ if UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]) and IsOk(fac
    ComEnterUnit(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), fac[1]);
 
 // sci logic
-sci := UnitFilter(forces, [[f_class, class_scientistic], [f_ok]]);
 lab := FilterUnitsInArea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
 
 if sci then
@@ -169,17 +206,25 @@ if sci then
 
    if hurtUnits then
       begin
-      for i in sci do
+      for i in UnitFilter(sci, [f_not, [f_tag, tHealer]]) do
+          begin
+          SetTag(i, tHealer);
+
           if IsInUnit(i) then
              ComExitBuilding(i)
           else
              ComHeal(i, hurtUnits[1]);
+          end;
       end
-   else if lab then
+   else if lab and UnitFilter(sci, [f_tag, tHealer]) then
       begin
-      for i in sci do
+      for i in UnitFilter(sci, [f_tag, tHealer]) do
+          begin
+          SetTag(i, 0);
+
           if not IsInUnit(i) then
-             ComEnterUnit(i, lab[1]);
+             ComEnterUnit(i, lab[1]);  
+          end;
       end;
    end;
 
@@ -506,13 +551,21 @@ for i := 1 to Count(arMinesList) div 2 do
     end;
 End;
 
-Every 3$00 trigger IsOk(arDep) and not arConstructList do
+
+Every 8$00 trigger IsOk(arDep) and not arConstructList do
 begin
 enable;
 
 arConstructList := [
-   [ar_half_tracked, engine_combustion, control_manual, ar_gun],
-   [ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower]
+   [ar_half_tracked, engine_combustion, control_remote, ar_gun],
+   [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
+   [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher]
 ];
-End;
 
+if Difficulty > 1 and GetTech(tech_SibImplosion, botSides[1]) = state_researched then
+   arConstructList := arConstructList ^ [
+      [ar_half_tracked, engine_siberite, control_remote, ar_selfpropelled_bomb],
+      [ar_half_tracked, engine_siberite, control_remote, ar_selfpropelled_bomb],
+      [ar_half_tracked, engine_siberite, control_remote, ar_selfpropelled_bomb]
+   ];
+End;

@@ -1229,6 +1229,11 @@ KillUnit(Kozlov);
 for i in FilterAllUnits([[f_side, 8], [f_nation, 3], [f_not, [f_type, b_turret]]]) do
     KillUnit(i);
 
+for i in FilterAllUnits([[f_side, 8], [f_type, unit_vehicle]]) do
+    KillUnit(i);
+
+wait(0$0.6);
+
 ChangeSideFog(8, 1);
 
 tmp := FilterAllUnits([[f_side, 8], [f_type, unit_human]]) diff [Kozlov, Kurt];
@@ -1258,11 +1263,6 @@ for i := tmp downto tmp - x do
     SetSide(tmp[i], 1);
     SetLives(tmp[i], 1000);
     end;
-
-wait(0$0.3);
-
-for i in FilterAllUnits([[f_side, 8], [f_type, unit_vehicle]]) do
-    KillUnit(i);
 
 SetSide(Kurt, 1);
 SetSide(FilterAllUnits([[f_side, 8], [f_type, unit_building]]), 1);
@@ -1511,7 +1511,7 @@ End;
 
 // Behemoths (najlepsze uzbrojenie konwencjonalne lol)
 Every 0$1 trigger missionTime >= 55$00 and IsOk(Kovalyuk) and IsOk(ru_depot2) do
-var tmp;
+var i, j, tmp;
 begin
 missionStage := 10;
 
@@ -1534,6 +1534,18 @@ DialogueOff;
 allowBehemothConstruct := true;
 
 ChangeMissionObjectives('M4');
+
+j := 3;
+tmp := FilterAllUnits([[f_side, 3], [f_ok], [f_not, [f_tag, 105]], [f_class, 3]]) diff Kovalyuk;
+
+for i in tmp do
+    begin
+    behemothBuilders := Join(behemothBuilders, i);
+    j := j - 1;
+
+    if j = 0 then
+       break;
+    end;
 
 BuildBehemoths;
 
@@ -1822,7 +1834,7 @@ if FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) then
 End;
 
 // Russian defeat
-Every 0$2 trigger IsDead(Platonov) and IsDead(Yakotich) and FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) < [7, 8, 9, 10][Difficulty] do
+Every 0$2 trigger IsDead(Platonov) and IsDead(Yakotich) and FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_ok]]) < [14, 13, 12, 10][Difficulty] do
 var i, tmp, tmp2, omarOnMotherLode;
 begin
 MC_Kill(2);

@@ -24,6 +24,13 @@ if side in botSides then
       if un in arForce then
          arForce := arForce diff un;
 
+      if un in arVehicles or un in arVehiclesAtttackers then
+         begin
+         arVehicles := arVehicles diff un;
+         arVehiclesAtttackers := arVehiclesAtttackers diff un;
+         arConstructList := arConstructList ^ [[GetChassis(un), GetEngine(un), GetControl(un), GetWeapon(un)]];
+         end;
+
       if GetClass(un) = class_mechanic and GetTag(un) < 999 and arMechSpawnCounter then
          begin
          if not IsOk(arDep) then
@@ -36,9 +43,9 @@ if side in botSides then
 
          PrepareMechanic(false, [1, 2, 3][Difficulty]);
          un := CreateHuman;
-         PlaceUnitXY(un, 178, 2, false);
+         PlaceUnitXY(un, 143, 29, false);
 
-         ComMoveXY(un, 204,35);
+         ComMoveXY(un, 115, 52);
 
          arForce := Join(arForce, un);
          end;
@@ -57,18 +64,6 @@ if side in botSides then
          btype := b_lab;
 
          arBuildings := Replace(arBuildings, arBuildings + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
-         end;
-
-      if GetType(un) = unit_vehicle then
-         begin
-         chassis := GetChassis(un);
-         engine := GetEngine(un);
-         control := GetControl(un);
-         weapon := GetWeapon(un);
-
-         tmp := Produce(factory, chassis, engine, control, weapon);
-
-         arConstructList := Replace(arConstructList, arConstructList + 1, tmp);
          end;
       end;
 
@@ -108,11 +103,25 @@ if side = botSides[1] then
    end;
 End;
 
+On UnitGoesToRed(un) do
+begin
+if un in FilterAllUnits([[f_side, botSides[1]], [f_control, control_remote]]) then
+   ComUnlink(un);
+End;
+
 On EvacuateBuilding(building, unit) do
 begin
 if not GetSide(unit) in botSides then
    exit;
 
+if unit in arForceTmp then
+   begin
+   arForceTmp := arForceTmp diff unit;
+   arForce := Join(arForce, unit);
+
+   ComMoveXY(unit, 103, 54);
+   end;
+                          
 End;
 
 On VehicleConstructed(vehicle, factory) do
@@ -135,7 +144,13 @@ if side = botSides[1] then
       arDrivers := Join(arDrivers, driver);
       end;
 
-   if arVehiclesCounter > Count(arVehicles) or GetBType(vehicle) in [ar_cargo_bay, ar_crane] then
+   if GetControl(vehicle) = control_remote and not GetWeapon(vehicle) in [ar_cargo_bay, ar_crane] then
+      begin
+      arRVehicles := Join(arRVehicles, vehicle);
+      exit;
+      end;
+
+   if arVehiclesCounter > Count(arVehicles) or GetWeapon(vehicle) in [ar_cargo_bay, ar_crane] then
       arVehicles := Join(arVehicles, vehicle)
    else
       arVehiclesAtttackers := Join(arVehiclesAtttackers, vehicle);
