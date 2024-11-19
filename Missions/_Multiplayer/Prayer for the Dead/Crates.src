@@ -1,0 +1,35 @@
+Every 0$20 trigger game do
+SpawnCrates([cratesWestArea, cratesEastArea, cratesMiddleArea], multi_crates_spawn[2], multi_crates_spawn[1]);
+
+Export Function SpawnCrates(areas, time, amount);
+var i, x;
+begin
+if not areas then
+   exit;
+
+x := 5;
+
+repeat
+ wait(time);
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < [15, 12, 10][Difficulty] then
+        begin
+        wait(0$5 * Difficulty);
+        CreateCratesArea(x, i, true);
+        amount := amount - (x * 10);
+        end;
+     end;
+
+ time := time + (0$2 * Difficulty);
+ x := x - 1;
+
+ if x = 0 then
+    x := 5;
+
+ if time > 2$00 then
+    time := 0$40;
+
+until not game or amount <= 0;
+End;

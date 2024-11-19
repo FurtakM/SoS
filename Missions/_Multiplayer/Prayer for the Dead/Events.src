@@ -1,0 +1,78 @@
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+var side;
+begin
+side := GetSide(un);
+
+if side = enemySide then
+   exit;
+
+if side = convoySide and multi_sides[killerSide] then
+   begin
+   Multiplayer_AddPoints(side, Multiplayer_GetCondition(9));
+   exit;
+   end;
+
+MultiplayerEvent_UnitKilled(un, killerSide, false);
+End;
+
+On UnitDestroyed(un) do
+var i, side, base, chassis, engine, control, weapon, tmp, factory, btype;
+begin
+SOS_UnitDestroyed(un);
+
+side := GetSide(un);
+
+if multi_sides[side] or side = convoySide then
+   begin
+   if un in convoys then
+      convoys := convoys diff un;
+
+   if GetType(un) = unit_human then
+      MultiplayerEvent_HumanLost(side);
+
+   if GetType(un) = unit_vehicle then
+      MultiplayerEvent_VehicleLost(side);
+   end;
+
+if multi_commanders and multi_custom_commanders then
+   if un in multi_commanders then
+      begin
+      multi_loosers := Replace(multi_loosers, side, 1);
+      multi_commanders := multi_commanders diff un;
+      Multiplayer_Reside(side);
+      end;
+End;
+
+On BuildingComplete(building) do
+var i, j, side, btype;
+begin
+side := GetSide(building);
+
+if multi_sides[side] then
+   MultiplayerEvent_BuildingCompleted(side, GetBType(building));
+
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var i, side, tmp, base, amount, driver;
+begin
+SOS_VehicleConstructed(vehicle, factory);
+
+side := GetSide(vehicle);
+
+if multi_sides[side] then
+   MultiplayerEvent_Produced(side);
+End;
+
+On ResearchComplete(tech, lab) do
+var i, side;
+begin
+side := GetSide(lab);
+
+if multi_sides[side] then
+   for i := 1 to 8 do
+       if multi_sides[i] and i <> side then
+          SetTech(tech, i, state_researched);
+End;
+
+
