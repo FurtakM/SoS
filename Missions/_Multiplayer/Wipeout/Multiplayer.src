@@ -2,7 +2,7 @@ Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
        multi_teams, multi_spec, multi_pos_area, multi_allowed_nations,
        multi_bots, multi_teamgame, multi_custom_commanders,
        multi_settings, multi_settings_counter, multi_pep_amount,
-       multi_skill_level, multi_crates_spawn, mulit_extra_oil,
+       multi_skill_level, multi_crates_spawn, multi_extra_oil,
        multi_support, multi_commanders, multi_loosers, multi_players_amount,
        multi_reinforcements, multi_support_arrive_time, multi_buildings;
 Export Function InitMultiplayer;
@@ -52,13 +52,19 @@ multi_pos_area := [ [spawnPlayer1Area, spawnPlayer1VehArea],
                     [spawnPlayer3Area, spawnPlayer3VehArea] ];
 multi_buildings := [
    [
-      [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan']
+      [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan'],
+      [b_breastwork, [67, 102, 3]],
+      [b_breastwork, [73, 103, 3]]
    ],
    [
-      [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria']
+      [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria'],
+      [b_breastwork, [102, 86, 2]],
+      [b_breastwork, [98, 96, 1]]
    ],                                               
    [
-      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov']
+      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov'],
+      [b_breastwork, [169, 101, 4]],
+      [b_breastwork, [175, 123, 5]]
    ]
 ];
 
@@ -113,21 +119,21 @@ Difficulty := [1, 2, 3][multi_settings[1]];
 
 // others settings
 multi_pep_amount := [6, 7, 8, 9][multi_settings[2]];
-multi_skill_level := [1, 2, 3, 5][multi_settings[3]];
+multi_skill_level := [2, 3, 4, 5][multi_settings[3]];
 multi_crates_spawn := [ [3000, 0$32], [5000, 0$22], [6000, 0$14], [8000, 0$12] ][multi_settings[4]];
-mulit_extra_oil := [0, 1, 2][multi_settings[5]];
+multi_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
 multi_support_arrive_time := [5$0, 15$0, 25$0][Difficulty];
 
-if mulit_extra_oil then
+if multi_extra_oil then
    begin
-   if mulit_extra_oil = 1 then
+   if multi_extra_oil = 1 then
       begin
       CreateDepositXY(109, 130, mat_oil);
       end;
 
-   if mulit_extra_oil = 2 then
+   if multi_extra_oil = 2 then
       begin
       CreateDepositXY(109, 130, mat_oil);
       CreateDepositXY(150, 112, mat_oil);
@@ -163,11 +169,10 @@ hc_class := class_soldier;
 
 if num = 1 then
    begin
+   PrepareSoldier(sex_male, multi_skill_level);
    hc_gallery := 'ru';
    hc_face_number := 10;
    hc_name := 'Popov';
-   hc_sex := sex_male;
-   hc_skills := [3, 1, 1, 2];
    hc_attr := [10, 10];
 
    result := CreateHuman;
@@ -175,12 +180,11 @@ if num = 1 then
 
 if num = 2 then
    begin
+   PrepareMechanic(sex_male, multi_skill_level);
    hc_class := class_mechanic;
    hc_gallery := 'ru';
    hc_face_number := 1;
    hc_name := 'Burlak';
-   hc_sex := sex_male;
-   hc_skills := [1, 2, 3, 0];
    hc_attr := [10, 11];
 
    result := CreateHuman;
@@ -188,11 +192,10 @@ if num = 2 then
 
 if num = 3 then
    begin
+   PrepareSoldier(sex_male, multi_skill_level);
    hc_gallery := 'ru';
    hc_face_number := 8;
    hc_name := 'Kurin';
-   hc_sex := sex_male;
-   hc_skills := [4, 1, 0, 1];
    hc_attr := [12, 11];
 
    result := CreateHuman;
@@ -224,8 +227,8 @@ for i := 1 to 8 do
               begin
               SetBName(b, j[3]);
 
-              SetResourceType(GetBase(b), mat_cans, [120, 100, 80][Difficulty]);
-              SetResourceType(GetBase(b), mat_oil, [90, 60, 30][Difficulty]);
+              SetResourceType(GetBase(b), mat_cans, [220, 200, 150][Difficulty]);
+              SetResourceType(GetBase(b), mat_oil, [150, 120, 90][Difficulty]);
               end;
            end;
        end;

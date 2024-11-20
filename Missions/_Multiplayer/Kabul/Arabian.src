@@ -528,7 +528,7 @@ End;
 // Mines
 // Triggered Mines
 Every 0$01 + 0$3 trigger arMinesList do
-var i, p, tmp;
+var i, p, tmp, side;
 begin
 enable;
 
@@ -536,10 +536,13 @@ p := 1;
 
 for i := 1 to Count(arMinesList) div 2 do
     begin
-    tmp := HexInfo(arMinesList[p], arMinesList[p+1]);
+    tmp := HexInfo(arMinesList[p], arMinesList[p+1]);      
 
     if tmp then
-       if GetSide(tmp) <> botSides[1] then
+       begin
+       side := GetSide(tmp);
+
+       if side <> botSides[1] and side > 0 then
           begin
           LaunchMineAtPos(arMinesList[p], arMinesList[p+1], botSides[1]);
           arMinesList := Delete(arMinesList, p);
@@ -547,16 +550,18 @@ for i := 1 to Count(arMinesList) div 2 do
           p := p - 2;
           end;
 
+       end;
+
     p := p + 2;
     end;
 End;
 
 
-Every 8$00 trigger IsOk(arDep) and not arConstructList do
+Every 8$00 trigger IsOk(arDep) do
 begin
 enable;
 
-arConstructList := [
+arConstructList := arConstructList ^ [
    [ar_half_tracked, engine_combustion, control_remote, ar_gun],
    [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher],
    [ar_half_tracked, engine_combustion, control_remote, ar_rocket_launcher]

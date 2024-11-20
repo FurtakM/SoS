@@ -4,29 +4,26 @@ var i;
 begin
 convoys := [];
 convoySide := side;
-convoyWave := 0;
+convoyWave := 1;
 
 for i := 1 to 8 do
     if multi_sides[i] then
        ChangeSideFog(i, side);
 End;     
 
-Every 3$00 + 2$00 trigger game do
+Every 2$00 + 1$00 trigger game do
 var i, tmp;
 begin
 enable;
+
+blockThread := true;
 SendConvoy(convoyWave);
+blockThread := false;
 End;
 
 Function SendConvoy(wave);
 var i, skill, un, veh, tmp, path;
 begin
-repeat
- wait(0$1);
-until not blockCreateUnitThread;
-
-blockCreateUnitThread := true;
-
 convoyWave := Inc(wave);
 skill := [5, 4, 3][Difficulty];
 tmp := [];
@@ -143,8 +140,6 @@ else // mixed
        ComMoveXY(un, 133, 15);
        end;
    end;
-
-blockCreateUnitThread := false;
 
 if not tmp then
    exit;

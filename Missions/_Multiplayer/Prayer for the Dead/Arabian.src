@@ -1,20 +1,133 @@
-Export enemyUnits, enemySide;
+Export enemyUnits, enemyMobile, enemyForestGuard, enemySide, arAttackersInf;
 Export Function PrepareArabian(side);
+var i, un, skill, veh;
 begin
 enemySide := side;
 enemyUnits := [];
+enemyMobile := [];
+enemyForestGuard := [];
+arAttackersInf := [];
+
+skill := [4, 6, 8][Difficulty];
+
+uc_side := side;
+uc_nation := nation_arabian;
+
+for i := 1 to [5, 7, 8][Difficulty] do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if i mod 2 = 0 then
+       SetClass(un, class_mortar);
+
+    enemyForestGuard := Join(enemyForestGuard, un);
+    PlaceUnitArea(un, forestGuardHill1Area, false);
+    end;
+
+PrepareScientist(false, skill);
+un := CreateHuman;
+enemyForestGuard := Join(enemyForestGuard, un);
+PlaceUnitArea(un, forestGuardHill1Area, false);
+
+for i := 1 to [2, 3, 3][Difficulty] do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_gun, 100);
+    veh := CreateVehicle;
+    enemyForestGuard := Join(enemyForestGuard, veh);
+    SetDir(veh, 5);
+
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    enemyForestGuard := Join(enemyForestGuard, un);
+
+    PlaceUnitArea(veh, forestGuardHill2Area, false);
+    PlaceHumanInUnit(un, veh);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_cargo_bay, 100);
+    veh := CreateVehicle;
+    SetDir(veh, rand(2, 3));
+    PlaceUnitArea(veh, arOilArea, false);
+    SetCargo(veh, mat_oil, 100);
+    end;
+
+End;
+
+Export function PrepareMobileGroup;
+var i, veh, un, skill, v;
+begin
+v := convoyWave div 10;
+skill := [4, 5, 6][Difficulty] + v;
+
+if skill > 10 then
+   skill := 10;
+
+if v > 8 then
+   v := 8;
+
+for i := 1 to [2, 3, 3][Difficulty] + v do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_gun, ar_gatling_gun][i mod 2 + 1], 100);
+    veh := CreateVehicle;
+    enemyMobile := Join(enemyMobile, veh);
+    SetDir(veh, 2);
+
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, arabNorthSpawnArea, false);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 104, 18);
+    end;
+End;
+
+Export function PrepareMobileGroup2;
+var i, veh, un, skill, v;
+begin
+v := convoyWave div 10;
+
+if v > 8 then
+   v := 8;
+
+for i := 1 to [3, 4, 5][Difficulty] + v do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_gun, ar_gatling_gun, ar_flame_thrower][i mod 3 + 1], 100);
+    veh := CreateVehicle;
+    enemyMobile := Join(enemyMobile, veh);
+    SetDir(veh, 4);
+
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, arabEastSpawnArea, false);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 151, 28);
+    end;
 End;
 
 Export function ClearRoadInForest;
-var i, un, tmp, skill;
+var i, un, veh, tmp, skill;
 begin
 skill := [4, 5, 7][Difficulty];
 
-repeat
- wait(0$1);
-until not blockCreateUnitThread;
-
-blockCreateUnitThread := true;
+tmp := AreaToList(forestRoadArea, 0);
 
 uc_side := enemySide;
 uc_nation := nation_arabian;
@@ -22,19 +135,114 @@ uc_nation := nation_arabian;
 PrepareMechanic(false, skill);
 un := CreateHuman;
 
-// TODO
+PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 100);
+veh := CreateVehicle;
+SetDir(veh, 4);
 
+repeat
+ wait(0$1);
+until PlaceUnitArea(veh, arabEastSpawnArea, false);
 
-blockCreateUnitThread := false;
+PlaceHumanInUnit(un, veh);
+
+for i := 1 to tmp[1] do
+    BurnTreeXYR(veh, tmp[1][i], tmp[2][i], 7);
+
+repeat
+ wait(0$1);
+
+ if IsDead(veh) then
+    exit;
+
+until FilterUnitsInArea(endOfTheForestArea, [f_side, enemySide]) or not HasTask(veh) or not HasTask(un);
+
+forestIsCleared := true;
+
+enemyMobile := Join(enemyMobile, veh);
 End;
 
-
-Every 0$3 trigger FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) do
-var i;
+Export function SendWestGroup;
+var i, un, skill;
 begin
-enable;
+skill := [3, 5, 7][Difficulty];
 
-for i in FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) do
-    if GetFuel(i) < 3 then
-       SetFuel(i, 3);
+for i := 1 to [3, 4, 5][Difficulty] do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if i mod 3 = 0 then
+       SetClass(un, class_mortar);
+
+    enemyUnits := Join(enemyUnits, un);
+    PlaceUnitArea(un, arabWestSpawnArea, false);
+    result := Join(result, un);
+    end;
+
+PrepareScientist(false, skill);
+un := CreateHuman;
+enemyUnits := Join(enemyUnits, un);
+PlaceUnitArea(un, arabWestSpawnArea, false);
+result := Join(result, un);
+
+ComAgressiveMove(result, 24, 37);
+End;
+
+Export function PrepareForestOnslaught;
+var i, veh, un, skill, v;
+begin
+v := convoyWave div 10;
+skill := [4, 5, 6][Difficulty] + v;
+
+if skill > 10 then
+   skill := 10;
+
+for i := 1 to [2, 3, 3][Difficulty] do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, [ar_gun, ar_radar, ar_light_gun][i mod 3 + 1], 100);
+    veh := CreateVehicle;
+    result := Join(result, veh);
+    SetDir(veh, 4);
+
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    result := Join(result, un);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, arabEastSpawnArea, false);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 159, 53);
+    end;
+End;
+
+Export function SendEastGroup;
+var i, un, skill;
+begin
+skill := [3, 5, 7][Difficulty];
+
+for i := 1 to [4, 5, 6][Difficulty] do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    if i mod 3 = 0 then
+       SetClass(un, class_mortar);
+
+    PlaceUnitArea(un, arabSouthSpawnArea, false);
+    result := Join(result, un);
+    end;
+
+ComAgressiveMove(result, 219, 168);
 End;

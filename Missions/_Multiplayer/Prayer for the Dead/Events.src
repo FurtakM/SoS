@@ -3,7 +3,7 @@ var side;
 begin
 side := GetSide(un);
 
-if side = enemySide then
+if killerSide = enemySide then
    exit;
 
 if side = convoySide and multi_sides[killerSide] then
@@ -33,6 +33,18 @@ if multi_sides[side] or side = convoySide then
    if GetType(un) = unit_vehicle then
       MultiplayerEvent_VehicleLost(side);
    end;
+
+if un in enemyForestGuard then
+   enemyForestGuard := enemyForestGuard diff un;
+
+if un in enemyMobile then
+   enemyMobile := enemyMobile diff un;
+
+if un in enemyUnits then
+   enemyUnits := enemyUnits diff un;
+
+if un in arAttackersInf then
+   arAttackersInf := arAttackersInf diff un;
 
 if multi_commanders and multi_custom_commanders then
    if un in multi_commanders then
@@ -73,6 +85,23 @@ if multi_sides[side] then
    for i := 1 to 8 do
        if multi_sides[i] and i <> side then
           SetTech(tech, i, state_researched);
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if veh in enemyMobile then
+   begin
+   repeat
+    ComMoveXY(driver, 163, 31);
+
+    wait(0$1);
+
+    if IsDead(driver) then
+       exit;
+   until IsAt(driver, 163, 31);
+
+   RemoveUnit(driver);
+   end;
 End;
 
 
