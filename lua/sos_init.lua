@@ -23,4 +23,5 @@ include('sos_change_interface');
 include('sos_map_end');
 include('sos_savedialog');
 include('sos_events');
+include('sos_map_description');
 include('sos_console');
