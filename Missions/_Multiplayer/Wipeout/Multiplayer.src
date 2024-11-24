@@ -54,17 +54,21 @@ multi_buildings := [
    [
       [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan'],
       [b_breastwork, [67, 102, 3]],
-      [b_breastwork, [73, 103, 3]]
+      [b_breastwork, [73, 103, 3]],
+      [b_oil_mine, [78, 112, 3]]
    ],
    [
       [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria'],
       [b_breastwork, [102, 86, 2]],
-      [b_breastwork, [98, 96, 1]]
+      [b_breastwork, [98, 96, 1]],
+      [b_workshop, [115, 104, 0]]
    ],                                               
    [
       [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov'],
       [b_breastwork, [169, 101, 4]],
-      [b_breastwork, [175, 123, 5]]
+      [b_breastwork, [175, 123, 5]],
+      [b_armoury, [166, 115, 5]],
+      [b_lab, [152, 98, 3]]
    ]
 ];
 
@@ -218,8 +222,17 @@ for i := 1 to 8 do
 
        for j in multi_buildings[multi_sides[i]] do
            begin
+           if j[1] = b_oil_mine then
+              SetResourceVisibility(j[2][1], j[2][2], i);
+
            bc_type := j[1];
            bc_level := 2;
+
+           if j[1] = b_lab then
+              begin
+              bc_kind1 := b_lab_basic;
+              bc_kind2 := b_lab_basic;
+              end;
 
            b := CreateAndPlaceBuildingXYD(j[2][1], j[2][2], j[2][3]);
 
@@ -227,8 +240,8 @@ for i := 1 to 8 do
               begin
               SetBName(b, j[3]);
 
-              SetResourceType(GetBase(b), mat_cans, [220, 200, 150][Difficulty]);
-              SetResourceType(GetBase(b), mat_oil, [150, 120, 90][Difficulty]);
+              SetResourceType(GetBase(b), mat_cans, [320, 240, 150][Difficulty]);
+              SetResourceType(GetBase(b), mat_oil, [160, 130, 100][Difficulty]);
               end;
            end;
        end;
@@ -237,7 +250,19 @@ for i := 1 to 8 do
        begin
        un := Multiplayer_PrepareCustomCommanders(i, multi_sides[i]);
        multi_commanders := Insert(multi_commanders, multi_commanders+1, un);
-       PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
+
+       if GetClass(un) = class_mechanic then
+          begin
+          PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, 100);
+          veh := CreateVehicle;
+
+          SetCargo(veh, mat_oil, 100 - (20 * Difficulty));
+
+          PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
+          PlaceHumanInUnit(un, veh);
+          end
+       else
+          PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
        end
     else
        begin
@@ -312,6 +337,16 @@ for i := 1 to 8 do
               continue;
               end;
 
+           tmp := FilterAllUnits([[f_side, i], [f_btype, b_breastwork], [f_empty]]);
+
+           if GetClass(un) = 1 and tmp then
+              begin
+              SetDir(un, GetDir(tmp[1]) - 3);
+              PlaceHumanInUnit(un, tmp[1]);
+
+              continue;
+              end;
+
            PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
            end;
         end;
@@ -339,10 +374,10 @@ for i := 1 to 8 do
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          for j := 1 to 2 do
+          for j := 1 to 3 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), 1);
+              PrepareHuman(false, rand(1,4), rand(1, 4));
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -352,10 +387,10 @@ for i := 1 to 8 do
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          for j := 1 to 4 do
+          for j := 1 to 5 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), 2);
+              PrepareHuman(false, rand(1,4), rand(2, 4));
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -393,10 +428,30 @@ if multi_sides[your_side] then
 End;
 
 Export Function Multiplayer_End();
-var i, j;
+var i, j, un, veh;
 begin    
 repeat
  wait(0$1);
+
+ if tick = 10$00 then
+    begin
+    for i := 1 to 8 do
+        begin
+        if multi_sides[i] and not multi_loosers[i] then
+           begin
+           uc_side := i;
+           uc_nation := nation_russian;
+
+           PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_gun, ru_gun, ru_heavy_machine_gun][Difficulty], 30);
+           veh := CreateVehicle;
+           PlaceUnitArea(veh, southSpawnArea, false);
+           PrepareMechanic(false, 5 - Difficulty);
+           PlaceHumanInUnit(CreateHuman, veh);
+
+           ComMoveXY(veh, 158, 106);
+           end;
+        end;
+    end;
 
  if tick > multi_support_arrive_time and multi_support then
     begin

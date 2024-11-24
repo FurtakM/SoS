@@ -214,6 +214,26 @@ if IsOk(unit) then
          end;
       end;
 
+    if type = unit_vehicle and GetWeapon(unit) = ru_cargo_bay and IsInArea(unit, cargoCheckpointArea) and GetCargo(unit, mat_cans) then
+       begin
+       goToUnload := Join(goToUnload, unit);
+       ComMoveXY(unit, 113, 117);
+       AddComUnload(unit);
+
+       exit;
+       end;
+
+    if unit in goToUnload then
+       begin            
+       if GetCargo(unit, mat_cans) = 0 then
+          begin
+          SetTag(unit, tag + 2);
+          goToUnload := goToUnload diff unit;
+          end
+       else
+          exit;
+       end;
+
     if type = unit_vehicle and cr > 3 and not GetWeapon(unit) in ignoreCratesWeapon then
        ComAttackPlace(unit, cr[1][1], cr[1][2])
     else if path > tag then

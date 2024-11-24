@@ -5,9 +5,27 @@ ClearRoadInForest;
 Every 18$00 trigger not forestIsCleared do
 ClearRoadInForest;
 
+Every 0$30 trigger convoyWave div 4 = 0 and convoyWave >= 4 do
+begin
+arAttackersInf := arAttackersInf union SendNorthGroup;
+
+wait(5$00);
+
+enable;
+End;
+
+Every 0$30 trigger convoyWave div 9 = 0 and convoyWave >= 9 do
+begin
+arAttackersInf := arAttackersInf union SendEastGroup2;
+
+wait(5$00);
+
+enable;
+End;
+
 Every 0$30 trigger convoyWave in [8, 12, 16, 20, 24, 28, 32, 36] do
 begin
-arAttackersInf := SendEastGroup;
+arAttackersInf := arAttackersInf union SendEastGroup;
 
 wait(5$00);
 
@@ -18,7 +36,7 @@ End;
 Every 0$2 trigger convoyWave mod 5 = 4 and not FilterAllUnits([[f_side, enemySide], [f_distxy, 30, 48, 20]]) do
 begin
 SendWestGroup;
-wait(3$00);
+wait(6$00);
 enable;
 End;
 
@@ -27,7 +45,7 @@ Every 2$30 + 2$00 trigger UnitFilter(enemyMobile, [f_ok]) < 5 do
 begin
 PrepareMobileGroup;  
 
-wait(2$00);
+wait(1$00);
 
 enable;
 End;
@@ -37,7 +55,7 @@ Every 0$30 trigger convoyWave mod 6 = 0 and convoyWave >= 6 and UnitFilter(enemy
 begin
 PrepareMobileGroup2;
 
-wait(3$00);
+wait(2$30);
 
 enable;
 End;
@@ -237,6 +255,11 @@ arAttackersInf := [];
 
 for i in UnitFilter(tmp, [f_class, class_soldier]) do
     begin
+    if Prob(50) then
+       SetTag(i, tMine)
+    else
+       continue;
+
     nearest := NearestUnitToUnit(FilterAllUnits([[f_enemy, enemySide], [f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
 
     if not nearest then
@@ -254,7 +277,7 @@ repeat
  enemy := FilterAllUnits([f_enemy, enemySide]);
 
  for i in tmp do
-     if GetClass(i) <> 1 then
+     if GetClass(i) <> 1 and GetTag(i) <> tMine then
         ComAttackUnit(i, NearestUnitToUnit(enemy, i))
      else if not HasTask(i) then
         begin

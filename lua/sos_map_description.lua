@@ -89,7 +89,7 @@ end
 	9911=Zniszcz przeciwników razem z sojusznikami.
 	9912=Przegrasz jeśli Twój dowódca zginie.
 	9913=Przegrasz jeśli wszyscy sojuszniczy dowódcy zginą.
-	9913=Zdobądź wymaganą liczbę punktów. 
+	9914=Zdobądź wymaganą liczbę punktów. 
 	9920=Punkty zdobywasz za
 	9921=Niszczenie wrogich jednostek.
 	9922=Budowanie pojazdów.
@@ -102,6 +102,63 @@ end
 function buildMapDescription(PARAMS)
 	local result = '';
 
+	if (PARAMS.DESC) then
+		result = result .. loc(9900) .. '\n' .. loc(PARAMS.DESC) .. '\n\n';
+	end;
+
+	if (PARAMS.WIN) then
+		result = result .. loc(9901);
+
+		 for i = 1, #PARAMS.WIN do
+		 	result = result .. '\n - ' .. loc(PARAMS.WIN[i]);
+		 end;
+
+		result = result .. '\n\n';
+	end;
+
+	if (PARAMS.LOSE) then
+		result = result .. loc(9902);
+
+		 for i = 1, #PARAMS.LOSE do
+		 	result = result .. '\n - ' .. loc(PARAMS.LOSE[i]);
+		 end;
+
+		result = result .. '\n\n';
+	end;
+
+	if (PARAMS.ADDITIONAL) then
+		result = result .. loc(9903);
+
+		 for i = 1, #PARAMS.ADDITIONAL do
+		 	result = result .. '\n - ' .. loc(PARAMS.ADDITIONAL[i]);
+		 end;
+
+		result = result .. '\n\n';
+	end;
+
+	if (PARAMS.POINTSG) then
+		result = result .. loc(9920);
+
+		 for i = 1, #PARAMS.POINTSG do
+		 	result = result .. '\n - ' .. loc(PARAMS.POINTSG[i]);
+		 end;
+
+		result = result .. '\n\n';
+	end;
+
+	if (PARAMS.POINTSL) then
+		result = result .. loc(9930);
+
+		 for i = 1, #PARAMS.POINTSL do
+		 	result = result .. '\n - ' .. loc(PARAMS.POINTSL[i]);
+		 end;
+
+		result = result .. '\n\n';
+	end;
+
+	if (PARAMS.BONUS) then
+		result = result .. PARAMS.BONUS;
+	end;
 
 	return result;
-end
+end;

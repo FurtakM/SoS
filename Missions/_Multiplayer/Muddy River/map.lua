@@ -1,8 +1,8 @@
 function FROMOW_MAP_START(MAPPATH)
 	local PARAMS = {
-		DESC = 9950,
+		DESC = 9951,
 		WIN = {
-			9914
+			9911
 		},
 		LOSE = {
 			9913
@@ -10,11 +10,10 @@ function FROMOW_MAP_START(MAPPATH)
 		POINTSG = {
 			9921,
 			9922,
-			9924
+			9923
 		},
 		POINTSL = {
-			9931,
-			9932
+			9931
 		}
 	};
 
