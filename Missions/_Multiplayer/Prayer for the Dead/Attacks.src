@@ -1,0 +1,320 @@
+// clear forest path
+Every 8$00 trigger not forestIsCleared do
+ClearRoadInForest;
+
+Every 18$00 trigger not forestIsCleared do
+ClearRoadInForest;
+
+Every 0$30 trigger convoyWave div 4 = 0 and convoyWave >= 4 do
+begin
+arAttackersInf := arAttackersInf union SendNorthGroup;
+
+wait(5$00);
+
+enable;
+End;
+
+Every 0$30 trigger convoyWave div 9 = 0 and convoyWave >= 9 do
+begin
+arAttackersInf := arAttackersInf union SendEastGroup2;
+
+wait(5$00);
+
+enable;
+End;
+
+Every 0$30 trigger convoyWave in [8, 12, 16, 20, 24, 28, 32, 36] do
+begin
+arAttackersInf := arAttackersInf union SendEastGroup;
+
+wait(5$00);
+
+enable;
+End;
+
+// west group
+Every 0$2 trigger convoyWave mod 5 = 4 and not FilterAllUnits([[f_side, enemySide], [f_distxy, 30, 48, 20]]) do
+begin
+SendWestGroup;
+wait(6$00);
+enable;
+End;
+
+// mobile group
+Every 2$30 + 2$00 trigger UnitFilter(enemyMobile, [f_ok]) < 5 do
+begin
+PrepareMobileGroup;  
+
+wait(1$00);
+
+enable;
+End;
+
+// mobile group #2
+Every 0$30 trigger convoyWave mod 6 = 0 and convoyWave >= 6 and UnitFilter(enemyMobile, [f_ok]) < 10 do
+begin
+PrepareMobileGroup2;
+
+wait(2$30);
+
+enable;
+End;
+
+// bonus attack if forest is clear
+Every 7$00 + 4$00 trigger forestIsCleared do
+var i, tmp;
+begin
+if tick > 50$00 then
+   begin
+   disable;
+   exit;
+   end;
+
+tmp := PrepareForestOnslaught;
+
+for i in tmp do
+    begin
+    AddComMoveXY(i, 197, 152);
+    AddComMoveXY(i, 159, 163);
+    AddComMoveXY(i, 116, 154);
+    AddComMoveXY(i, 93, 177);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if not IsOk(i) then
+        tmp := tmp diff i
+     else
+        if not HasTask(i) then
+           ComMoveXY(i, 93, 177);
+until not tmp;
+
+wait(rand(0$30, 5$30));
+
+enable;
+End;
+
+// forest guard
+Every 0$1 trigger enemyForestGuard do
+var i, tmp, enemyInForest, vehicle;
+begin
+enable;
+
+tmp := UnitFilter(enemyForestGuard, [f_ok]);
+enemyInForest := FilterUnitsInArea(arCampArea, [f_not, [f_side, enemySide]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    if enemyInForest then
+       begin
+       if GetClass(i) = 4 then
+          ComMoveUnit(i, NearestUnitToUnit(tmp diff i, i))
+       else
+          ComAttackUnit(i, NearestUnitToUnit(enemyInForest, i));
+       end
+    else
+       if not IsInArea(i, arForestArea) then
+          ComMoveToArea(i, arForestArea)
+       else
+          if GetClass(i) = 3 then
+             begin
+             vehicle := IsInUnit(i);
+
+             if vehicle then
+                begin
+                if GetLives(vehicle) < 1000 and not HasTask(i) then
+                   begin
+                   if not IsInArea(vehicle, arParkingArea) then
+                      ComMoveToArea(vehicle, arParkingArea)
+                   else if not GetTag(i) then
+                      begin
+                      SetTag(i, tMech);
+                      ComExitVehicle(i);
+                      AddComRepairVehicle(i, vehicle);
+
+                      repeat
+                       wait(0$1);
+                      until GetLives(i) = 1000;
+
+                      // SetLives(i, 1000);
+                      ComEnterUnit(i, vehicle);
+                      SetTag(i, 0);
+                      end;
+                   end;
+                end
+             else
+                if not IsInArea(i, arParkingArea) then
+                   ComMoveToArea(i, arParkingArea);
+             end;
+    end;
+End;
+
+// SI vehicles
+Every 0$1 trigger enemyMobile do
+var i, mech, enemy;
+begin
+enable;
+
+if not enemyMobile then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in enemyMobile do
+    begin
+    if GetSide(i) <> enemySide then
+       begin
+       enemyMobile := enemyMobile diff i;
+       continue;
+       end;
+
+    if GetTag(i) = 300 then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 170, 50);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 170, 50) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, arParkingArea) then
+          ComMoveToArea(i, arParkingArea)
+       else
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          SetLives(mech, 1000);
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) < 300 then
+       begin
+       enemy := FilterUnitsInArea(arCampArea, [f_enemy, enemySide]);
+
+       if GetLives(i) < 650 then
+          begin
+          ComStop(i);
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if enemyMobile then
+          begin
+          enemy := FilterAllUnits([f_enemy, enemySide]);
+
+          if enemy then
+             AgressiveMove(i, [ [130, 28] ]);
+          end;
+       end;
+    end;
+End;
+
+Every 0$2 trigger arAttackersInf do
+var i, tmp, nearest, enemy, path;
+begin
+enable;
+
+tmp := UnitFilter(arAttackersInf, [f_ok]);
+
+arAttackersInf := [];
+
+for i in UnitFilter(tmp, [f_class, class_soldier]) do
+    begin
+    if Prob(50) then
+       SetTag(i, tMine)
+    else
+       continue;
+
+    nearest := NearestUnitToUnit(FilterAllUnits([[f_enemy, enemySide], [f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+    if not nearest then
+       break;
+
+    SetTag(nearest, tMined);
+    AddComPlaceDelayedCharge(i, 0, 0, nearest);
+    end;
+
+tmp := UnitFilter(tmp, [f_ok]);
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+ enemy := FilterAllUnits([f_enemy, enemySide]);
+
+ for i in tmp do
+     if GetClass(i) <> 1 and GetTag(i) <> tMine then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     else if not HasTask(i) then
+        begin
+        nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+        if not nearest then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else
+           begin
+           SetTag(nearest, tMined);
+           ComPlaceDelayedCharge(i, 0, 0, nearest);
+           end;
+        end;
+until not tmp;
+End;
+
+// Refuel
+Every 0$3 trigger FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+
+// minus points for arab in last area
+Every 0$2 trigger FilterUnitsInArea(southEndArea, [f_side, enemySide]) do
+var i;
+begin
+enable;
+
+for i in FilterUnitsInArea(southEndArea, [f_side, enemySide]) do
+    begin
+    Multiplayer_AddPoints(convoySide, -100);
+    RemoveUnit(i);
+    end;
+End;

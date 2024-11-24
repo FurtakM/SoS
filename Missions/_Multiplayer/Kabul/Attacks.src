@@ -1,4 +1,4 @@
-Every 30$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
+Every 15$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
 begin
 
 wait(5$00 - (1$00 * Difficulty));
@@ -7,20 +7,32 @@ activeArabAttacks := true;
 ArabAttack(0);
 End;
 
-Every 45$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
+Every 35$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
 ArabAttack(Difficulty);
+
+Every 55$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
+ArabAttack(Difficulty + 1);
+
+Every 105$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[1] do
+ArabAttack(Difficulty + 2);
+
+Every 0$1 trigger FilterUnitsInArea(arBaseOuterArea, [f_enemy, botSides[1]]) do
+ArabAttack(Difficulty + 2);
 
 // ARABS ATTACK
 Export arAttackersInf, arAttackersVeh;
 Export function ArabAttack(v);
-var i, skill, un, veh;
+var i, skill, un, veh, path, area;
 begin
 uc_side := botSides[1];
 uc_nation := nation_arabian;
 
-skill := [3, 4, 5][Difficulty];
+skill := [3, 5, 7][Difficulty];
 arAttackersInf := [];
 arAttackersVeh := [];
+
+path := [ [48, 52], [135, 48] ][v mod 2 + 1];
+area := [ [arAttackSpawn2Area, arAttackSpawnArea], [arAttackSpawnE2Area, arAttackSpawnEArea] ][v mod 2 + 1];
 
 InitHC_All();
 
@@ -34,10 +46,10 @@ for i := 1 to [3, 4, 6][Difficulty] + v do
 
     SetDir(un, 1);
 
-    PlaceUnitArea(un, arAttackSpawn2Area, false);
+    PlaceUnitArea(un, area[1], false);
     arAttackersInf := Join(arAttackersInf, un);
 
-    ComAgressiveMove(un, 18, 20);
+    ComAgressiveMove(un, path[1], path[2]);
     end;
 
 for i := 1 to 3 + v do
@@ -50,10 +62,10 @@ for i := 1 to 3 + v do
     veh := CreateVehicle;
 
     SetDir(veh, 1);
-    PlaceUnitArea(veh, arAttackSpawnArea, false);
+    PlaceUnitArea(veh, area[2], false);
     PlaceHumanInUnit(un, veh);
 
-    ComMoveXY(un, 45, 55);
+    ComMoveXY(un, path[1], path[2]);
 
     arAttackersVeh := Join(arAttackersVeh, veh);
 
@@ -68,26 +80,22 @@ for i := 1 to [1, 2, 2][Difficulty] do
     veh := CreateVehicle;
 
     SetDir(veh, 1);
-    PlaceUnitArea(veh, arAttackSpawnArea, false);;
+    PlaceUnitArea(veh, area[2], false);;
 
-    ComMoveXY(un, 60, 63);
+    ComMoveXY(un, path[1], path[2]);
 
     arAttackersVeh := Join(arAttackersVeh, veh);
     end;
 End;
 
 Every 0$2 trigger arAttackersInf do
-var i, tmp, nearest, enemy;
+var i, tmp, nearest, enemy, path;
 begin
 enable;
 
 tmp := UnitFilter(arAttackersInf, [f_ok]);
 
 arAttackersInf := [];
-
-ComMoveXY(tmp, 46, 43);
-
-wait(0$10);
 
 for i in UnitFilter(tmp, [f_class, class_soldier]) do
     begin
@@ -101,8 +109,6 @@ for i in UnitFilter(tmp, [f_class, class_soldier]) do
     end;
 
 tmp := UnitFilter(tmp, [f_ok]);
-
-AddComMoveXY(tmp, 103, 85);
 
 repeat
  wait(0$2);
@@ -128,19 +134,29 @@ until not tmp;
 End;
 
 Every 0$2 trigger arAttackersVeh do
-var i, tmp;
+var i, tmp, path;
 begin
 enable;
 
 tmp := arAttackersVeh;
 arAttackersVeh := [];
 
+path := [
+  [ [139, 55], [155,92] ],
+  [ [53, 61], [74, 98] ]
+];
+
+if GetDistUnitXY(tmp[1], 139, 55) < GetDistUnitXY(tmp[1], 53, 61) then
+   path := path[1]
+else
+   path := path[2];
+
 repeat
  wait(0$2);
  tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
-     AgressiveMove(i, [ [58,77], [73,98] ])
+     AgressiveMove(i, path)
 until not tmp;
 End;
 
@@ -157,7 +173,7 @@ repeat
  tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
-     AgressiveMove(i, [ [58,77], [73,98] ])
+     AgressiveMove(i, [ [98, 63] ])
 until not tmp;
 End;
 
@@ -245,7 +261,7 @@ for i in arVehiclesAtttackers do
           enemy := FilterAllUnits([f_enemy, botSides[1]]);
 
           if enemy then
-             AgressiveMove(i, [ [69,55], [54,59], [82,88] ]);
+             AgressiveMove(i, [ [99,66] ]);
           end;
        end;
     end;

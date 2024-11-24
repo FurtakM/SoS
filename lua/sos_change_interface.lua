@@ -21,10 +21,11 @@ end;
 
 function DoInterfaceChange_Game()
 	uisettings = interface.current.game.ui;
-	UpdateToolBtns(game.ui.toolbtns,uisettings.toolBtns);
+
+	UpdateToolBtns(game.ui.toolbtns, uisettings.toolBtns);
 	
-    setInterfaceTexture(game.ui.toolbar,'toolbar2.png');
-    setInterfaceTextureMask(game.ui.toolbar,'toolbar2.png');
+    setInterfaceTexture(game.ui.toolbar,'toolbar.png');
+    setInterfaceTextureMask(game.ui.toolbar,'toolbar.png');
 	
     setWHV(game.ui.toolbar,uisettings.toolBar.X,uisettings.toolBar.Y);
 
@@ -158,6 +159,11 @@ function DoInterfaceChange_Game()
 	setColour1(game.ui.logpanel.log,uisettings.boxcols.background);
 	setBorderColour(floating_hint,uisettings.boxcols.border);
 
+	setInterfaceTexture1n2(dialog.map.panel.textboxscroll, 'scrollbar_back_v.png', 'scrollbar.png');
+
+	setBevelCol(dialog.map.panel.textbox, uisettings.boxcols.border,uisettings.boxcols.border);
+	setColour1(dialog.map.panel.textbox, uisettings.boxcols.background);
+
 	DoInterfaceChange_Game_ResourceBar();
 
 	local Idip = uisettings.dip;
@@ -207,7 +213,6 @@ function DoInterfaceChange_Game()
     --chat
 	ChatSetUI();
 
-
 	sgui_forcetextures(game.ui.ID);
 
 	setTexture(game.ui.infopanel.inner.img.flag,"SGUI/"..interface.current.side.."/flag.png");
@@ -220,4 +225,45 @@ function DoInterfaceChange_Game()
 	TeamSelectSetUI();
 
     DoInterfaceChangeTimer();
+end;
+
+function OnToolbarClick(ID)
+    switch(ID) : caseof {
+		[1] = function (x) 
+			OW_TOOLBARBUTTON(ID); 
+		end, -- Menu
+		[2] = function (x) 
+		-- 
+		end,          -- Team Review
+		[3] = function (x) 
+			if getvalue(OWV_MULTIPLAYER) then 
+				display_diplomacy(); 
+			else 
+				OW_TOOLBARBUTTON(ID); 
+			end; 
+		end, -- Objectives / Diplomacy
+		[4] = function (x) 
+			dialog.options.Show(); 
+		end, -- Options
+		[5] = function (x) 
+			ShowDialog(dialog.map);
+			--OF_HideDialog(dialog.map.FORMID, 'dialog.map');
+		end, -- Help
+		[6] = function (x) 
+			showIGAchievs() 
+		end,
+	}
+end;
+
+function UpdateToolBtns(Buttons, Settings)
+	for i = 1, 6 do
+		UpdateToolBtn(Buttons[i], i, Settings);
+	end;
+
+	setX(game.ui.toolbtns[6], getX(game.ui.toolbtns[4]));
+	setX(game.ui.toolbtns[4], getX(game.ui.toolbtns[3]));
+	setX(game.ui.toolbtns[3], getX(game.ui.toolbtns[2]));
+
+	setVisible(game.ui.toolbtns[2], false);
+	setEnabled(game.ui.toolbtns[5], false);
 end;

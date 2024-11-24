@@ -2,7 +2,7 @@ Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
        multi_teams, multi_spec, multi_pos_area, multi_allowed_nations,
        multi_bots, multi_teamgame, multi_custom_commanders,
        multi_settings, multi_settings_counter, multi_pep_amount,
-       multi_skill_level, multi_crates_spawn, mulit_extra_oil,
+       multi_skill_level, multi_crates_spawn, multi_extra_oil,
        multi_support, multi_commanders, multi_loosers, multi_players_amount,
        multi_reinforcements, multi_support_arrive_time, multi_buildings;
 Export Function InitMultiplayer;
@@ -52,13 +52,23 @@ multi_pos_area := [ [spawnPlayer1Area, spawnPlayer1VehArea],
                     [spawnPlayer3Area, spawnPlayer3VehArea] ];
 multi_buildings := [
    [
-      [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan']
+      [b_depot, GetBuildingFromArea(warehouse1Area, 0), 'kagan'],
+      [b_breastwork, [67, 102, 3]],
+      [b_breastwork, [73, 103, 3]],
+      [b_oil_mine, [78, 112, 3]]
    ],
    [
-      [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria']
+      [b_depot, GetBuildingFromArea(warehouse2Area, 0), 'beria'],
+      [b_breastwork, [102, 86, 2]],
+      [b_breastwork, [98, 96, 1]],
+      [b_workshop, [115, 104, 0]]
    ],                                               
    [
-      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov']
+      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov'],
+      [b_breastwork, [169, 101, 4]],
+      [b_breastwork, [175, 123, 5]],
+      [b_armoury, [166, 115, 5]],
+      [b_lab, [152, 98, 3]]
    ]
 ];
 
@@ -113,21 +123,21 @@ Difficulty := [1, 2, 3][multi_settings[1]];
 
 // others settings
 multi_pep_amount := [6, 7, 8, 9][multi_settings[2]];
-multi_skill_level := [1, 2, 3, 5][multi_settings[3]];
+multi_skill_level := [2, 3, 4, 5][multi_settings[3]];
 multi_crates_spawn := [ [3000, 0$32], [5000, 0$22], [6000, 0$14], [8000, 0$12] ][multi_settings[4]];
-mulit_extra_oil := [0, 1, 2][multi_settings[5]];
+multi_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
 multi_support_arrive_time := [5$0, 15$0, 25$0][Difficulty];
 
-if mulit_extra_oil then
+if multi_extra_oil then
    begin
-   if mulit_extra_oil = 1 then
+   if multi_extra_oil = 1 then
       begin
       CreateDepositXY(109, 130, mat_oil);
       end;
 
-   if mulit_extra_oil = 2 then
+   if multi_extra_oil = 2 then
       begin
       CreateDepositXY(109, 130, mat_oil);
       CreateDepositXY(150, 112, mat_oil);
@@ -163,11 +173,10 @@ hc_class := class_soldier;
 
 if num = 1 then
    begin
+   PrepareSoldier(sex_male, multi_skill_level);
    hc_gallery := 'ru';
    hc_face_number := 10;
    hc_name := 'Popov';
-   hc_sex := sex_male;
-   hc_skills := [3, 1, 1, 2];
    hc_attr := [10, 10];
 
    result := CreateHuman;
@@ -175,12 +184,11 @@ if num = 1 then
 
 if num = 2 then
    begin
+   PrepareMechanic(sex_male, multi_skill_level);
    hc_class := class_mechanic;
    hc_gallery := 'ru';
    hc_face_number := 1;
    hc_name := 'Burlak';
-   hc_sex := sex_male;
-   hc_skills := [1, 2, 3, 0];
    hc_attr := [10, 11];
 
    result := CreateHuman;
@@ -188,11 +196,10 @@ if num = 2 then
 
 if num = 3 then
    begin
+   PrepareSoldier(sex_male, multi_skill_level);
    hc_gallery := 'ru';
    hc_face_number := 8;
    hc_name := 'Kurin';
-   hc_sex := sex_male;
-   hc_skills := [4, 1, 0, 1];
    hc_attr := [12, 11];
 
    result := CreateHuman;
@@ -215,8 +222,17 @@ for i := 1 to 8 do
 
        for j in multi_buildings[multi_sides[i]] do
            begin
+           if j[1] = b_oil_mine then
+              SetResourceVisibility(j[2][1], j[2][2], i);
+
            bc_type := j[1];
            bc_level := 2;
+
+           if j[1] = b_lab then
+              begin
+              bc_kind1 := b_lab_basic;
+              bc_kind2 := b_lab_basic;
+              end;
 
            b := CreateAndPlaceBuildingXYD(j[2][1], j[2][2], j[2][3]);
 
@@ -224,8 +240,8 @@ for i := 1 to 8 do
               begin
               SetBName(b, j[3]);
 
-              SetResourceType(GetBase(b), mat_cans, [120, 100, 80][Difficulty]);
-              SetResourceType(GetBase(b), mat_oil, [90, 60, 30][Difficulty]);
+              SetResourceType(GetBase(b), mat_cans, [320, 240, 150][Difficulty]);
+              SetResourceType(GetBase(b), mat_oil, [160, 130, 100][Difficulty]);
               end;
            end;
        end;
@@ -234,7 +250,19 @@ for i := 1 to 8 do
        begin
        un := Multiplayer_PrepareCustomCommanders(i, multi_sides[i]);
        multi_commanders := Insert(multi_commanders, multi_commanders+1, un);
-       PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
+
+       if GetClass(un) = class_mechanic then
+          begin
+          PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, 100);
+          veh := CreateVehicle;
+
+          SetCargo(veh, mat_oil, 100 - (20 * Difficulty));
+
+          PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
+          PlaceHumanInUnit(un, veh);
+          end
+       else
+          PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
        end
     else
        begin
@@ -309,6 +337,16 @@ for i := 1 to 8 do
               continue;
               end;
 
+           tmp := FilterAllUnits([[f_side, i], [f_btype, b_breastwork], [f_empty]]);
+
+           if GetClass(un) = 1 and tmp then
+              begin
+              SetDir(un, GetDir(tmp[1]) - 3);
+              PlaceHumanInUnit(un, tmp[1]);
+
+              continue;
+              end;
+
            PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
            end;
         end;
@@ -336,10 +374,10 @@ for i := 1 to 8 do
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          for j := 1 to 2 do
+          for j := 1 to 3 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), 1);
+              PrepareHuman(false, rand(1,4), rand(1, 4));
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -349,10 +387,10 @@ for i := 1 to 8 do
           uc_side := i;
           uc_nation := multi_nations[i];
 
-          for j := 1 to 4 do
+          for j := 1 to 5 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), 2);
+              PrepareHuman(false, rand(1,4), rand(2, 4));
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -390,10 +428,30 @@ if multi_sides[your_side] then
 End;
 
 Export Function Multiplayer_End();
-var i, j;
+var i, j, un, veh;
 begin    
 repeat
  wait(0$1);
+
+ if tick = 10$00 then
+    begin
+    for i := 1 to 8 do
+        begin
+        if multi_sides[i] and not multi_loosers[i] then
+           begin
+           uc_side := i;
+           uc_nation := nation_russian;
+
+           PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_gun, ru_gun, ru_heavy_machine_gun][Difficulty], 30);
+           veh := CreateVehicle;
+           PlaceUnitArea(veh, southSpawnArea, false);
+           PrepareMechanic(false, 5 - Difficulty);
+           PlaceHumanInUnit(CreateHuman, veh);
+
+           ComMoveXY(veh, 158, 106);
+           end;
+        end;
+    end;
 
  if tick > multi_support_arrive_time and multi_support then
     begin
