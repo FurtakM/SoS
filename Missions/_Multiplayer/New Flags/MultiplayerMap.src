@@ -260,33 +260,67 @@ End;
 
 // Crates drop
 Every 0$2 marked mpActive do
-var i, d, cratesTimeRate, cratesPerMinute;
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
 begin
 if not mpShipments then
    exit;
 
 case mpShipments of
      1: begin // rare
-        cratesPerMinute := 90;
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 1$20;
+        delayTime := 0$5;
         end;
      2: begin // medium
-        cratesPerMinute := 120;
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 1$10;
+        delayTime := 0$4;
         end;
-     3: begin
-        cratesPerMinute := 150;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 1$00;
+        delayTime := 0$3;
         end;
-     4: begin
-        cratesPerMinute := 180;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$55;
+        delayTime := 0$2;
         end;
      end;
 
-if cratesPerMinute <= 50 then
-   cratesTimeRate := 60
-else
-   begin
-   d := cratesPerMinute div 50;
-   cratesTimeRate := 60 div d;
-   end;
+areas := [Between1, Between2, Between3, Between4, Center1, Center2];
+tmp := [buildUpTime1, buildUpTime2, buildUpTime3, buildUpTime4,
+        buildUpTime5, buildUpTime6, buildUpTime7, buildUpTime8];
 
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
 
+    areas := areas ^ tmp[i];
+    end;
+
+repeat
+ wait(time);
+ x := rand(1, 5);
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < 20 then
+        begin
+        wait(0$2);
+        CreateCratesArea(x, i, true);
+        end;
+     end;
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
 End;
