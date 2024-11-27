@@ -21,7 +21,7 @@ SetAreaMapShow(mpKingArea, 1);
 UpdateCounter;
 
 repeat
- wait(0$3);
+ wait(0$1);
  tmp := FilterUnitsInArea(mpKingArea, [[f_not, [f_constructed]], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
  if not tmp then
@@ -51,10 +51,10 @@ if mpTeamGame then
    if not team then
       exit;
 
-   if UnitFilter(depots, [f_enemy, side]) then
+   if FilterUnitsInArea(mpKingArea, [f_enemy, side]) then
       exit;
 
-   mpKingPoints := Replace(mpKingPoints, team, mpKingPoints[team] + 3);
+   mpKingPoints := Replace(mpKingPoints, team, mpKingPoints[team] + 1);
 
    for i in mpTeams[team] do
        SetMultiScore(i, mpKingPoints[team]);
@@ -64,10 +64,10 @@ else
    first := depots[1];
    side := GetSide(first);
 
-   if UnitFilter(depots, [f_not, [f_side, side]]) then
+   if FilterUnitsInArea(mpKingArea, [f_enemy, side]) then
       exit;
 
-   mpKingPoints := Replace(mpKingPoints, side, mpKingPoints[side] + 3);
+   mpKingPoints := Replace(mpKingPoints, side, mpKingPoints[side] + 1);
    SetMultiScore(side, mpKingPoints[side]);
    end;
 End;
