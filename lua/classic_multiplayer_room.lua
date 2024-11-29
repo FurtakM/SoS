@@ -267,6 +267,40 @@ menu.window_multiplayer_room.panel.page4Button = getElementEX(
 	}
 );
 
+menu.window_multiplayer_room.panel.watcher = getLabelEX(
+	menu.window_multiplayer_room.panel,
+	anchorLTRB,
+	XYWH(400, 243, 190, 30),
+	nil,
+	'A: 0',
+	{
+		font_colour = WHITE(),
+		nomouseevent = true,
+		font_name = ADMUI3L,
+		scissor = true,
+		wordwrap = true,
+		text_halign = ALIGN_TOP,	
+		text_valign = ALIGN_LEFT,
+	}
+);
+
+menu.window_multiplayer_room.panel.watcher2 = getLabelEX(
+	menu.window_multiplayer_room.panel,
+	anchorLTRB,
+	XYWH(600, 243, 190, 30),
+	nil,
+	'B: 0',
+	{
+		font_colour = WHITE(),
+		nomouseevent = true,
+		font_name = ADMUI3L,
+		scissor = true,
+		wordwrap = true,
+		text_halign = ALIGN_TOP,	
+		text_valign = ALIGN_LEFT,
+	}
+);
+
 -- players page
 menu.window_multiplayer_room.panel.page1 = getElementEX(
 	menu.window_multiplayer_room.panel, 
@@ -788,6 +822,8 @@ DATA Breakdown
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
 	setMapPictureDescription();
+
+	-- clDebug('FROMOW_MULTIROOM_GET_MAP_INFO_CALLBACK');
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -814,6 +850,9 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 		  PING Integer
 --]]
 
+	local stopwatch = STOPWATCH_ADD();
+	STOPWATCH_START(stopwatch);
+
 	MULTIPLAYER_ROOM_DATA.PlayerCount = DATA.PLAYERCOUNT;
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
@@ -823,9 +862,15 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 
-	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+	--setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 
 	updateMultiplayerView();
+	
+	--clDebug(STOPWATCH_STOP(stopwatch));
+	setText(menu.window_multiplayer_room.panel.watcher, 'A: ' .. string.format("%.18f",STOPWATCH_STOP(stopwatch)));
+	STOPWATCH_DELETE(stopwatch);
+
+	-- clDebug('FROMOW_MULTIROOM_TEAMLIST');
 end;
 
 -- trigger each when map is changed
@@ -833,13 +878,20 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	MULTIPLAYER_ROOM_MAP_DATA = DATA;
 	MULTIPLAYER_ROOM_SPECTATORS = {};
 
+	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+
 	setText(menu.window_multiplayer_room.panel.mapName, trim(MULTIPLAYER_ROOM_MAP_DATA.MAPLOC) .. ' - ' .. trim(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPELOC));
 
 	-- get map info data
 	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+
+	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_NAME');
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
+	local stopwatch2 = STOPWATCH_ADD();
+	STOPWATCH_START(stopwatch2);
+
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
 		for i = 1, DATA.MAPPARAMCOUNT do
 			if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
@@ -849,6 +901,14 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 
 	generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
 	end;
+
+	-- get map info data
+	--OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+
+	setText(menu.window_multiplayer_room.panel.watcher2, 'B: ' .. string.format("%.18f",STOPWATCH_STOP(stopwatch2)));
+	STOPWATCH_DELETE(stopwatch2);
+
+	--clDebug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
@@ -856,7 +916,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
 end;
 
 function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
-	-- clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
+	--clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
@@ -1362,7 +1422,7 @@ function updatePlayersOnServer(players)
 	local playersList = {};
 
 	for i = 1, table.getn(players) do
-		playersList = addToArray(playersList, players[i].NAME .. ' (' .. players[i].PLID .. ')');
+		playersList[i] = players[i].NAME .. ' (' .. players[i].PLID .. ')';
 	end;
 
 	clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'selectPlayerOnPlayerList(INDEX);', {});
@@ -1432,14 +1492,15 @@ function refreshPlayerView()
 	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
 	local teamCounter  = 0;
 	local isSpec = false;
+	local playersCount = #MULTIPLAYER_ROOM_DATA.Players;
 
 	MULTIPLAYER_ROOM_SPECTATORS = {};
 
-	if (#MULTIPLAYER_ROOM_DATA.Players > 0) then
+	if (playersCount > 0) then
 		-- get my plid
 		MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
 
-		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+		for i = 1, playersCount do
 			isSpec = false;
 
 			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
@@ -1478,12 +1539,12 @@ function refreshPlayerView()
 	local posY = 0;
 
 	if MULTIPLAYER_ROOM_DATA.TeamGame then
-		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX;
+		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + playersCount;
 
 		if (teamCounter < 5) then
 			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
 		else
-			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
+			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 60);
 		end;
 
 		-- generate team names
@@ -1760,7 +1821,7 @@ function refreshPlayerView()
 			end;
 		end;
 
-		for p = 1, #MULTIPLAYER_ROOM_DATA.Players do
+		for p = 1, playersCount do
 			local playerData = MULTIPLAYER_ROOM_DATA.Players[p];
 			local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
 			local allowedNations = {};
@@ -2121,11 +2182,13 @@ function isMerged(plid, team, teamPos, mergedPlayers)
 end;
 
 function getPlayerByPLID(plid)
-	if (#MULTIPLAYER_ROOM_DATA.Players == 0) then
+	local playersCount = #MULTIPLAYER_ROOM_DATA.Players;
+
+	if (playersCount == 0) then
 		return {};
 	end;
 
-	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+	for i = 1, playersCount do
 		if (MULTIPLAYER_ROOM_DATA.Players[i].PLID == plid) then
 			return MULTIPLAYER_ROOM_DATA.Players[i];
 		end;
