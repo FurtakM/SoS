@@ -33,7 +33,8 @@ Export
   mpApemansArea,
   mpRespawn,
   mpKingArea,
-  mpPoints,    
+  mpPoints,
+  mpVehicles,
   mpDisplayStrings,
   mpGameActive;
 
@@ -45,6 +46,8 @@ Export
   mpShipments,            // (4)  Low, Medium, High, Very High
   mpOilSources,           // (5)  Normal, Extra / *Bool
   mpSibSources,           // (6)  None, Normal, Extra / *-
+  mpPoints                // (7)
+  mpVehicles              // (8)
   mpSharedVision,         // (10) True, False
   mpFlags,                // (11) None, Fast Decreasing, Decreasing, Slowly Decreasing, Not Decreasing
   mpSibDetection,         // (12) True, False
@@ -85,6 +88,7 @@ mpApemansArea := [];
 mpRespawn := [];
 mpKingArea := 0;
 mpPoints := [];
+mpVehicles := 0;
 mpShipments := 0;
 
 mpPeopleSkill := 3;
@@ -272,10 +276,19 @@ for i := 1 to 8 {max amount} do
        end;
 
     // units
+    if mpVehicles then
+       begin
+       for j in mpPrepareVehicles(side, nation, mpVehicles) do
+           begin
+           SetDir(j, rand(0,5));
+           PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 12, false);
+           end;
+       end;
+
     team := mpPrepareTeam(side, nation, mpPeopleAmount, mpPeopleSkill);
 
     for j in team do
-        PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 9, false);
+        PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 12, false);
     end;
 
 // diplomacy
@@ -362,6 +375,31 @@ for i := 2 to amount do
 
     PrepareHuman(false, class, skill);
     result := Join(result, CreateHuman);
+    end;
+End;
+
+Function mpPrepareVehicles(side, nation, vehicles);
+var i;
+begin
+result := [];
+
+if not vehicles then
+   exit;
+
+for i := 1 to vehicles[nation] do
+    begin
+    uc_side := side;
+    uc_nation := nation;
+
+    PrepareVehicle(
+       vehicles[nation][i][1],
+       vehicles[nation][i][2],
+       vehicles[nation][i][3],
+       vehicles[nation][i][4],
+       80
+    );
+
+    result := Join(result, CreateVehicle);
     end;
 End;
 

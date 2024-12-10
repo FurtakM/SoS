@@ -54,7 +54,7 @@ function getAvatarID(INDEX)
 end;
 
 function setAvatar(SEX, AVATAR)
-	clearPreviewAvatarCache();
+	clearAvatarCache();
 	
 	OW_MULTIROOM_SET_MYAVATAR(
 		SEX,

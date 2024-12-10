@@ -234,7 +234,7 @@ function OnToolbarClick(ID)
 		end, -- Menu
 		[2] = function (x) 
 		-- 
-		end,          -- Team Review
+		end, -- Team Review
 		[3] = function (x) 
 			if getvalue(OWV_MULTIPLAYER) then 
 				display_diplomacy(); 

@@ -152,11 +152,11 @@ function netMask(PARENT)
     return PARENT;
 end;
 
---[[
-SGUI_ENABLE_CLICKTEST(true);
+
+--[[SGUI_ENABLE_CLICKTEST(true);
 
 TestLabel = getLabelEX(nil,anchorLRB,XYWH(0,ScrHeight-50,ScrWidth,50),nil,'',{special=true});
 
 function FROMOW_CLICKTEST(DATA)
-    debug('ID:'..DATA.ID..' DOWN:'..boolToStr(DATA.DOWN));
-end;]]--
+    clDebug('ID:'..DATA.ID..' DOWN:'..boolToStr(DATA.DOWN));
+end;--]]

@@ -17,8 +17,11 @@ MULTIPLAYER_ROOM_MY_AVATAR_ID = 0;
 MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_MY_AVATAR_SEX = 0;
-MULTIPLAYER_ROOM_SPECTATORS = {};
 MULTIPLAYER_ROOM_MAP_EXTRA_DATA = {};
+MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
+MULTIPLAYER_ROOM_PLAYERS = {};
+MULTIPLAYER_ROOM_TEAMS = {};
+MULTIPLAYER_ROOM_TEAMS_INIT = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -270,7 +273,7 @@ menu.window_multiplayer_room.panel.page4Button = getElementEX(
 menu.window_multiplayer_room.panel.watcher = getLabelEX(
 	menu.window_multiplayer_room.panel,
 	anchorLTRB,
-	XYWH(400, 243, 190, 30),
+	XYWH(240, 243, 190, 30),
 	nil,
 	'A: 0',
 	{
@@ -287,9 +290,26 @@ menu.window_multiplayer_room.panel.watcher = getLabelEX(
 menu.window_multiplayer_room.panel.watcher2 = getLabelEX(
 	menu.window_multiplayer_room.panel,
 	anchorLTRB,
-	XYWH(600, 243, 190, 30),
+	XYWH(440, 243, 190, 30),
 	nil,
 	'B: 0',
+	{
+		font_colour = WHITE(),
+		nomouseevent = true,
+		font_name = ADMUI3L,
+		scissor = true,
+		wordwrap = true,
+		text_halign = ALIGN_TOP,	
+		text_valign = ALIGN_LEFT,
+	}
+);
+
+menu.window_multiplayer_room.panel.watcher3 = getLabelEX(
+	menu.window_multiplayer_room.panel,
+	anchorLTRB,
+	XYWH(640, 243, 190, 30),
+	nil,
+	'C: 0',
 	{
 		font_colour = WHITE(),
 		nomouseevent = true,
@@ -566,6 +586,10 @@ menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
 function showMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, true);
 
+	MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1);
+	MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
+	MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
+
 	if (MULTIPLAYER_ROOM_MY_AVATAR_ID) then
 		SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, MULTIPLAYER_ROOM_MY_AVATAR_ID, 80, 100, 80, 100);
 		MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = copytable(MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS);
@@ -817,7 +841,6 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.TEAMDEF = DATA.TEAMDEF;
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
-	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
@@ -856,7 +879,6 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	MULTIPLAYER_ROOM_DATA.PlayerCount = DATA.PLAYERCOUNT;
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
-	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	updateHostVisibilitySettings(canModifyServerSettings());
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
@@ -867,7 +889,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updateMultiplayerView();
 	
 	--clDebug(STOPWATCH_STOP(stopwatch));
-	setText(menu.window_multiplayer_room.panel.watcher, 'A: ' .. string.format("%.18f",STOPWATCH_STOP(stopwatch)));
+	setText(menu.window_multiplayer_room.panel.watcher, 'A: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
 	STOPWATCH_DELETE(stopwatch);
 
 	-- clDebug('FROMOW_MULTIROOM_TEAMLIST');
@@ -876,7 +898,6 @@ end;
 -- trigger each when map is changed
 function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	MULTIPLAYER_ROOM_MAP_DATA = DATA;
-	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 
@@ -884,6 +905,10 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 
 	-- get map info data
 	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+
+	if (MULTIPLAYER_ROOM_INIT_PLAYERS_LIST) then
+		recreateTeams();
+	end;
 
 	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_NAME');
 end;
@@ -905,7 +930,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	-- get map info data
 	--OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 
-	setText(menu.window_multiplayer_room.panel.watcher2, 'B: ' .. string.format("%.18f",STOPWATCH_STOP(stopwatch2)));
+	setText(menu.window_multiplayer_room.panel.watcher2, 'B: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch2)));
 	STOPWATCH_DELETE(stopwatch2);
 
 	--clDebug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
@@ -956,9 +981,9 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 	MULTIPLAYER_ROOM_ACTIVE = false;
 	MULTIPLAYER_ROOM_IS_HOST = false;
 	MULTIPLAYER_ROOM_IS_DEDI = false;
+	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
 	MULTIPLAYER_ROOM_DATA = {};
 	MULTIPLAYER_ROOM_MAP_DATA = {};
-	MULTIPLAYER_ROOM_SPECTATORS = {};
 
 	setVisible(menu.window_multiplayer_room, false);
 
@@ -1044,6 +1069,7 @@ function hideMultiplayerGame()
 
 	IN_LOBBY = true;	
 	MULTIPLAYER_ROOM_ACTIVE = false;
+	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
 
 	setVisible(menu.window_multiplayer_room, false);
 	setVisible(menu.window_multiplayer, true);
@@ -1422,7 +1448,7 @@ function updatePlayersOnServer(players)
 	local playersList = {};
 
 	for i = 1, table.getn(players) do
-		playersList[i] = players[i].NAME .. ' (' .. players[i].PLID .. ')';
+		playersList[i] = players[i].NAME .. ' (' .. players[i].PING .. ')';
 	end;
 
 	clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'selectPlayerOnPlayerList(INDEX);', {});
@@ -1483,8 +1509,552 @@ function getTeamGame(teamDef)
 	return false;
 end;
 
--- generate SGUI slots for players
+function createPlayerSlot(NUMBER)
+	local posY = (NUMBER - 1) * 26;
+
+	local slot = getElementEX(
+		menu.window_multiplayer_room.panel.page1.playerSlots, 
+		anchorT,
+		XYWH(
+			0,
+			posY, 
+			750,
+			28
+		),
+		false,
+		{
+			texture = 'classic/edit/multiroom/player_slot.png'
+		}
+	);
+
+	local texture = 'notready';
+
+	if (NUMBER == 1) then
+		texture = 'server';
+	end;
+
+	local slotPlayerStatus = getElementEX(
+		slot, 
+		anchorLTRB,
+		XYWH(
+			4,
+			4, 
+			20,
+			20
+		),
+		true,
+		{
+			texture = 'classic/edit/special/' .. texture .. '.png'
+		}
+	);
+
+	local slotPlayerAvatar = getElementEX(
+		slot, 
+		anchorLTRB,
+		XYWH(
+			28,
+			4, 
+			20,
+			20
+		),
+		true,
+		{
+			texture = 'Avatars/unknow.png'
+		}
+	);
+
+	local slotPlayerName = getLabelEX(
+		slot,
+		anchorT, 
+		XYWH(50, 6, 220, 14),
+		nil, 
+		NUMBER, 
+		{
+			nomouseevent = true,
+			font_colour = WHITE(),
+			font_name = BankGotic_14,
+			wordwrap = false,
+			text_halign = ALIGN_TOP,
+			text_valign = ALIGN_LEFT,
+			scissor = true
+		}
+	);
+
+	local slotPosition = clComboBox(
+		slot,
+		336,
+		3,
+		{},
+		0,
+		'',
+		{
+			width = 150,
+			texture = 'classic/edit/combobox-short.png',
+			defaultLabel = loc(809),
+			disabled = true,
+			name = 'position:' .. NUMBER
+		}
+	);
+
+	local slotNation = clComboBox(
+		slot,
+		488,
+		3,
+		{},
+		0,
+		'',
+		{
+			width = 150,
+			texture = 'classic/edit/combobox-short.png',
+			defaultLabel = loc(809),
+			disabled = true,
+			name = 'nation:' .. NUMBER
+		}
+	);
+
+	return {
+		SLOT = slot.ID,
+		STATUS = slotPlayerStatus.ID,
+		AVATAR = slotPlayerAvatar.ID,
+		AVATARNUM = 0,
+		NAME = slotPlayerName.ID,
+		POSITION = slotPosition,
+		NATION = slotNation
+	};
+end;
+
+function updatePlayerSlot(NUMBER)
+--[[
+	SLOT = slot.ID,
+	STATUS = slotPlayerStatus.ID,
+	AVATAR = slotPlayerAvatar.ID,
+	NAME = slotPlayerName.ID,
+	POSITION = slotPosition,
+	NATION = slotNation
+]]--
+	local s = MULTIPLAYER_ROOM_PLAYERS[NUMBER];
+
+--[[
+	  ["ISCOMP"] = false
+	  ["NAME"] = $ierpek
+	  ["PLID"] = 1
+	  ["LOCKED"] = false
+	  ["TEAMPOS"] = 0
+	  ["TEAMREADY"] = false
+	  ["NATION"] = 0
+	  ["LASTOKTEAM"] = 0
+	  ["COLOUR"] = 0
+	  ["AVATARSEX"] = 0
+	  ["LASTMAP"] = 9
+	  ["ALIVE"] = true
+	  ["TEAM"] = 0
+	  ["AVATAR"] =
+	  ["LASTNM"] = 7
+	  ["ISSPEC"] = false
+	  ["PING"] = 0
+	  ["ISDEDI"] = false
+	  ["READY"] = true
+	  ["SIDE"] = 0
+	} 
+]]--
+	local player = MULTIPLAYER_ROOM_DATA.Players[NUMBER];
+
+	if (player == nil) then
+		setVisible({ID = s.SLOT}, false);
+
+		if (MULTIPLAYER_ROOM_TEAMS_INIT ~= {}) then
+			setParentID(s.SLOT, MULTIPLAYER_ROOM_TEAMS_INIT.SLOT);
+		end;
+		
+		return;
+	end;
+
+	if (not getVisible({ID = s.SLOT})) then
+		if (MULTIPLAYER_ROOM_TEAMS_INIT ~= {}) then
+			setVisible({ID = s.SLOT}, true);
+
+			if (MULTIPLAYER_ROOM_TEAMS_INIT.SLOT ~= nil) then
+				setParentID(s.SLOT, MULTIPLAYER_ROOM_TEAMS_INIT.SLOT);
+			end;
+		end;
+	end;
+
+	local isMySlot = MULTIPLAYER_ROOM_MY_PLID == player.PLID;
+	local imHost = isMySlot and canModifyServerSettings();
+
+	if (player.TEAM > 0 and MULTIPLAYER_ROOM_TEAMS[player.TEAM]) then
+		local team = MULTIPLAYER_ROOM_TEAMS[player.TEAM];
+
+		setParentID(s.SLOT, team.SLOT);
+
+		if (isMySlot) then
+			setText({ID = team.BUTTON}, loc(825));
+			set_Callback(team.BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
+		else
+			setText({ID = team.BUTTON}, loc(824)); -- join
+			set_Callback(team.BUTTON, CALLBACK_MOUSECLICK, 'joinToTeam(' .. NUMBER .. ', -1);');
+		end;
+
+		if (team ~= nil) then		
+			local children = getChildernIDs(team.SLOT);
+			local y = 60;
+
+			if (children ~= nil and #children > 2) then
+				for c = 1, #children do
+					local child = children[c];
+
+					if (child ~= team.LABEL and child ~= team.BUTTON) then
+						if (getY({ID = child}) ~= y) then
+							setY({ID = child}, y);
+						end;
+
+						y = y + 30;
+					end;
+				end;
+
+				setHeight({ID = team.SLOT}, 90 + (30 * (#children - 2)));
+			end;
+		end;
+
+		-- positon
+		if (isMySlot) then
+			clUpdateComboBoxItems(
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION.list.scroll.ID,
+				team.POSITIONS,
+				'OW_MULTIROOM_SET_MYSIDE(INDEX);',
+				{
+					width = 150,
+					defaultLabel = loc(809),
+					disabled = false
+				}
+			);
+		else
+			clUpdateComboBoxItems(
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION.list.scroll.ID,
+				team.POSITIONS,
+				'',
+				{
+					width = 150,
+					defaultLabel = loc(809),
+					disabled = true
+				}
+			);
+		end;
+
+		-- nation
+		if (isMySlot and player.SIDE > 0) then
+			clUpdateComboBoxItems(
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION.list.scroll.ID,
+				team.NATION,
+				'setMultiplayerNation(INDEX, ' .. player.SIDE .. ');',
+				{
+					width = 150,
+					defaultLabel = loc(809),
+					disabled = false
+				}
+			);
+		else
+			clUpdateComboBoxItems(
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION.list.scroll.ID,
+				team.NATION,
+				'',
+				{
+					width = 150,
+					defaultLabel = loc(809),
+					disabled = true
+				}
+			);
+		end;
+	end;
+
+	-- icon (status)
+	local texture = 'notready';
+
+	if (player.PLID > 1) then
+		if (player.READY) then
+			texture = 'ready';
+		end;
+
+		setTexture({ID = s.STATUS}, 'classic/edit/special/' .. texture .. '.png');
+
+		if (isMySlot) then
+			MULTIPLAYER_ROOM_IM_READY = player.READY;
+			set_Callback(s.STATUS, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+			-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
+		else
+			set_Callback(s.STATUS, CALLBACK_MOUSEDOWN, '');
+		end;
+	end;
+
+	-- avatar
+	if (s.AVATARNUM == 0 or s.AVATARNUM ~= getAvatarID(NUMBER)) then
+		local avatar = generateAvatar(
+			NUMBER, 
+			player.AVATAR, 
+			player.AVATARSEX, 
+			player.NATION
+		);
+
+		SGUI_settextureid(
+			s.AVATAR, 
+			avatar,
+			80, 
+			100, 
+			80, 
+			100
+		);
+
+		MULTIPLAYER_ROOM_PLAYERS[NUMBER].AVATARNUM = avatar;
+
+		if (isMySlot) then
+			set_Callback(s.AVATAR, CALLBACK_MOUSEDOWN, 'showMultiplayerAvatarGenerator();');
+		else
+			set_Callback(s.AVATAR, CALLBACK_MOUSEDOWN, '');
+		end;
+	end;
+
+	-- name
+	--setText({ID = s.NAME}, player.NAME);
+	if (isMySlot) then
+		setText({ID = s.NAME}, 'mySlot');
+	else
+		setText({ID = s.NAME}, 'notMySlot');
+	end;
+end;
+
+function recreateTeams()
+	createPlayerView();
+	createTeams(true);
+
+	if (#MULTIPLAYER_ROOM_PLAYERS) then
+		for i = 1, #MULTIPLAYER_ROOM_PLAYERS do
+			setParentID(MULTIPLAYER_ROOM_PLAYERS[i].SLOT, MULTIPLAYER_ROOM_TEAMS_INIT.SLOT);
+		end;
+	end;
+end
+
 function refreshPlayerView()
+	local stopwatch = STOPWATCH_ADD();
+	STOPWATCH_START(stopwatch);
+
+	if (not MULTIPLAYER_ROOM_INIT_PLAYERS_LIST) then	
+		createPlayerView();
+		createTeams(true);
+	else
+		reloadPlayerView();
+		reloadTeamContainers();
+	end;
+
+	setText(menu.window_multiplayer_room.panel.watcher3, 'C: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
+	STOPWATCH_DELETE(stopwatch);
+end;
+
+function reloadTeamContainers()
+	local team = MULTIPLAYER_ROOM_TEAMS_INIT;
+	local children = getChildernIDs(team.SLOT);
+	local y = 0;
+
+	if (children ~= nil) then
+		for c = 1, #children do
+			local child = children[c];
+
+			if (getVisible{ID = child}) then
+				if (getY({ID = child}) ~= y) then
+					setY({ID = child}, y);
+				end;
+
+				y = y + 30;
+			end;
+		end;
+
+		setHeight({ID = team.SLOT}, y);
+	else
+		if (getHeight({ID = team.SLOT}) > 0) then
+			setHeight({ID = team.SLOT}, 0);
+		end;
+	end;
+
+
+	for i = 1, #MULTIPLAYER_ROOM_TEAMS do
+		local team = MULTIPLAYER_ROOM_TEAMS[i];
+		local children = getChildernIDs(team.SLOT);
+		local y = 60;
+
+		if (children ~= nil and #children > 2) then
+			for c = 1, #children do
+				local child = children[c];
+
+				if (child ~= team.LABEL and child ~= team.BUTTON) then
+					if (getY({ID = child}) ~= y) then
+						setY({ID = child}, y);
+					end;
+
+					y = y + 30;
+				end;
+			end;
+
+			setHeight({ID = team.SLOT}, 90 + (30 * (#children - 2)));
+		else
+			if (getHeight({ID = team.SLOT}) > 90) then
+				setHeight({ID = team.SLOT}, 90);
+			end;
+		end;
+	end;
+end;
+
+function createTeams(MODE)
+	if MODE then
+		MULTIPLAYER_ROOM_TEAMS_INIT = {};
+
+		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
+
+		local teamSlot = getElementEX(
+			menu.window_multiplayer_room.panel.page1.playerSlots, 
+			anchorT,
+			XYWH(
+				2,
+				0,
+				750,
+				90
+			),
+			true,
+			{
+				colour1 = RGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+			}
+		);
+
+		MULTIPLAYER_ROOM_TEAMS_INIT = {
+			SLOT = teamSlot.ID
+		}
+	else
+		for i = 1, #MULTIPLAYER_ROOM_TEAMS do
+			sgui_delete(MULTIPLAYER_ROOM_TEAMS[i].SLOT);
+		end;
+	end;
+
+	if (not MULTIPLAYER_ROOM_DATA.TEAMDEF) then
+		return;
+	end;
+
+	MULTIPLAYER_ROOM_TEAMS = {};
+
+	local posY = 0;
+
+	-- generate team names
+	for i = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX do
+		posY = posY + 90;
+
+		-- get team allowed positions
+		local allowedPositions = {};
+
+		for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS_COUNT do
+			if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS[c]) then
+				allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
+			end;
+		end;
+
+		-- nations
+		local allowedNations = {};
+
+		if (#allowedPositions > 0) then
+			local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[i].NATIONS;
+		
+			if (nations.US) then
+				allowedNations = addToArray(allowedNations, loc(810));
+			end;
+
+			if (nations.AR) then
+				allowedNations = addToArray(allowedNations, loc(811));
+			end;
+
+			if (nations.RU) then
+				allowedNations = addToArray(allowedNations, loc(812));
+			end;
+		end;
+
+		local teamSlot = getElementEX(
+			menu.window_multiplayer_room.panel.page1.playerSlots, 
+			anchorT,
+			XYWH(
+				2,
+				posY,
+				750,
+				90
+			),
+			true,
+			{
+				colour1 = RGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+			}
+		);
+
+		local teamLabel = getLabelEX(
+			teamSlot,
+			anchorT, 
+			XYWH(0, 10, 750, 18), 
+			Tahoma_18B, 
+			MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].NAME,
+			{
+				wordwrap = true,
+				text_halign = ALIGN_MIDDLE,
+				text_valign = ALIGN_TOP,
+				font_colour = RGB(231, 222, 214),
+				shadowtext = true
+			}
+		);
+
+		local teamBtn = clButton(
+			teamSlot, 
+			304, 
+			36, 
+			150,
+			18, 
+			loc(824), -- join
+			'joinToTeam(' .. i .. ', -1);',
+			{
+				texture = 'classic/edit/menu_button_small_l.png',
+				texture2 = 'classic/edit/menu_button_small_c.png',
+				texture3 = 'classic/edit/menu_button_small_r.png',
+				anchor = anchorT
+			}
+		);
+
+		MULTIPLAYER_ROOM_TEAMS[i] = {
+			SLOT = teamSlot.ID,
+			LABEL = teamLabel.ID,
+			BUTTON = teamBtn.ID,
+			POSITIONS = allowedPositions,
+			NATION = allowedNations
+		}
+	end;
+
+	setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, posY + 90);
+end
+
+function createPlayerView()
+	deleteSlots();
+
+	MULTIPLAYER_ROOM_PLAYERS = {};
+
+	for i = 1, 12 do
+		MULTIPLAYER_ROOM_PLAYERS[i] = createPlayerSlot(i);
+	end;
+
+	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = true;
+end;
+
+function reloadPlayerView()
+	MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
+
+	for i = 1, 12 do
+		updatePlayerSlot(i);
+	end;
+end;
+
+-- generate SGUI slots for players
+function __refreshPlayerView()
+	local stopwatch = STOPWATCH_ADD();
+	STOPWATCH_START(stopwatch);
+
 	deleteSlots();
 
 	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
@@ -2088,6 +2658,9 @@ function refreshPlayerView()
 			end;
 		end;
 	end;
+
+	setText(menu.window_multiplayer_room.panel.watcher3, 'C: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
+	STOPWATCH_DELETE(stopwatch);
 end;
 
 function getMultiplayerNation(NATION, POSITION)
@@ -2161,6 +2734,8 @@ function setMultiplayerNation(INDEX, POSITION)
 end;
 
 function deleteSlots()
+	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
+
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.spectatorSlots.ID);
 end;
