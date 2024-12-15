@@ -22,6 +22,7 @@ MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
 MULTIPLAYER_ROOM_PLAYERS = {};
 MULTIPLAYER_ROOM_TEAMS = {};
 MULTIPLAYER_ROOM_TEAMS_INIT = {};
+MULTIPLAYER_ROOM_TEAMS_SPEC = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -899,12 +900,12 @@ end;
 function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	MULTIPLAYER_ROOM_MAP_DATA = DATA;
 
-	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
-
 	setText(menu.window_multiplayer_room.panel.mapName, trim(MULTIPLAYER_ROOM_MAP_DATA.MAPLOC) .. ' - ' .. trim(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPELOC));
 
 	-- get map info data
 	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+
+	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 
 	if (MULTIPLAYER_ROOM_INIT_PLAYERS_LIST) then
 		recreateTeams();
@@ -1060,7 +1061,18 @@ function showMultiplayerGame()
 		setText(menu.window_multiplayer_room.panel.start, loc(818));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
 	end;
+
+	waitUntilMapLoaded();
 end;
+
+function waitUntilMapLoaded()
+	if (MULTIPLAYER_ROOM_DATA.MAPS) then
+		selectMap(1);
+		return;
+	end;
+
+   	timer:single(0.1, 'waitUntilMapLoaded()');
+end
 
 function hideMultiplayerGame()
 	if (not IN_LOBBY) then
@@ -1580,46 +1592,18 @@ function createPlayerSlot(NUMBER)
 		}
 	);
 
-	local slotPosition = clComboBox(
-		slot,
-		336,
-		3,
-		{},
-		0,
-		'',
-		{
-			width = 150,
-			texture = 'classic/edit/combobox-short.png',
-			defaultLabel = loc(809),
-			disabled = true,
-			name = 'position:' .. NUMBER
-		}
-	);
-
-	local slotNation = clComboBox(
-		slot,
-		488,
-		3,
-		{},
-		0,
-		'',
-		{
-			width = 150,
-			texture = 'classic/edit/combobox-short.png',
-			defaultLabel = loc(809),
-			disabled = true,
-			name = 'nation:' .. NUMBER
-		}
-	);
-
 	return {
 		SLOT = slot.ID,
 		STATUS = slotPlayerStatus.ID,
 		AVATAR = slotPlayerAvatar.ID,
 		AVATARNUM = 0,
 		NAME = slotPlayerName.ID,
-		POSITION = slotPosition,
-		NATION = slotNation
+		POSITION =  nil,
+		NATION = nil,
+		COLOUR = nil,
+		LOCK = nil,
+		LOCKLABEL = nil,
+		MERGE = nil
 	};
 end;
 
@@ -1629,8 +1613,8 @@ function updatePlayerSlot(NUMBER)
 	STATUS = slotPlayerStatus.ID,
 	AVATAR = slotPlayerAvatar.ID,
 	NAME = slotPlayerName.ID,
-	POSITION = slotPosition,
-	NATION = slotNation
+	POSITION = slotPosition.ID,
+	NATION = slotNation.ID
 ]]--
 	local s = MULTIPLAYER_ROOM_PLAYERS[NUMBER];
 
@@ -1680,90 +1664,224 @@ function updatePlayerSlot(NUMBER)
 	end;
 
 	local isMySlot = MULTIPLAYER_ROOM_MY_PLID == player.PLID;
+	local isMerged = player.TEAMPOS > 0 and player.TEAMPOS < 99;
 	local imHost = isMySlot and canModifyServerSettings();
 
-	if (player.TEAM > 0 and MULTIPLAYER_ROOM_TEAMS[player.TEAM]) then
+	if (MULTIPLAYER_ROOM_TEAMS ~= {} and isMySlot) then
+		for i = 1, #MULTIPLAYER_ROOM_TEAMS do
+			setEnabled({ID = MULTIPLAYER_ROOM_TEAMS[i].BUTTON}, not MULTIPLAYER_ROOM_LOCK_TEAMS);
+
+			if (player.TEAM ~= i or player.TEAMPOS == 99) then
+				setText({ID = MULTIPLAYER_ROOM_TEAMS[i].BUTTON}, loc(824)); -- join
+				set_Callback(MULTIPLAYER_ROOM_TEAMS[i].BUTTON, CALLBACK_MOUSECLICK, 'joinToTeam(' .. i .. ', -1);');
+			else
+				setText({ID = MULTIPLAYER_ROOM_TEAMS[i].BUTTON}, loc(825));
+				set_Callback(MULTIPLAYER_ROOM_TEAMS[i].BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
+			end;
+		end;
+	end;
+
+	if MULTIPLAYER_ROOM_DATA.MULTIMAP.CANSPEC and #MULTIPLAYER_ROOM_DATA.TEAMDEF >= 10 then
+		setVisible({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT}, true);
+
+		local children = getChildernIDs(MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT);
+
+		if (isMySlot and player.TEAMPOS == 99) then
+			setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(825));
+			set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
+		else
+			setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(824)); -- join
+			set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'joinAsSpectator();');
+			setEnabled({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, #children < 5);
+		end;
+	else
+		setVisible({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT}, false);
+	end;
+
+	if (player.TEAM > 0 and MULTIPLAYER_ROOM_TEAMS[player.TEAM] and player.TEAMPOS < 99) then
 		local team = MULTIPLAYER_ROOM_TEAMS[player.TEAM];
 
 		setParentID(s.SLOT, team.SLOT);
 
-		if (isMySlot) then
-			setText({ID = team.BUTTON}, loc(825));
-			set_Callback(team.BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
-		else
-			setText({ID = team.BUTTON}, loc(824)); -- join
-			set_Callback(team.BUTTON, CALLBACK_MOUSECLICK, 'joinToTeam(' .. NUMBER .. ', -1);');
-		end;
-
 		if (team ~= nil) then		
-			local children = getChildernIDs(team.SLOT);
-			local y = 60;
-
-			if (children ~= nil and #children > 2) then
-				for c = 1, #children do
-					local child = children[c];
-
-					if (child ~= team.LABEL and child ~= team.BUTTON) then
-						if (getY({ID = child}) ~= y) then
-							setY({ID = child}, y);
-						end;
-
-						y = y + 30;
-					end;
-				end;
-
-				setHeight({ID = team.SLOT}, 90 + (30 * (#children - 2)));
-			end;
+			reloadTeamContainers();
 		end;
 
-		-- positon
-		if (isMySlot) then
-			clUpdateComboBoxItems(
-				MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION.list.scroll.ID,
-				team.POSITIONS,
-				'OW_MULTIROOM_SET_MYSIDE(INDEX);',
-				{
-					width = 150,
-					defaultLabel = loc(809),
-					disabled = false
-				}
-			);
-		else
-			clUpdateComboBoxItems(
-				MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION.list.scroll.ID,
-				team.POSITIONS,
-				'',
-				{
-					width = 150,
-					defaultLabel = loc(809),
-					disabled = true
-				}
-			);
+		if (s.COLOUR ~= nil) then
+			sgui_delete(s.COLOUR);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].COLOUR = nil;
 		end;
 
-		-- nation
-		if (isMySlot and player.SIDE > 0) then
-			clUpdateComboBoxItems(
-				MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION.list.scroll.ID,
-				team.NATION,
+		if (not MULTIPLAYER_ROOM_RANDOM_COLOURS) then
+			local colorPicker = clColorPicker(
+				{ID = s.SLOT}, 
+				isMySlot and ((not player.READY) or canModifyServerSettings()), 
+				player.COLOUR, 
+				277, 
+				5, 
+				MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banColour
+			);
+
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].COLOUR = colorPicker.ID;
+		end;
+
+		if (s.POSITION ~= nil) then
+			sgui_delete(s.POSITION);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION = nil;
+		end;
+
+		if (not MULTIPLAYER_ROOM_RANDOM_POSITIONS) then
+			local slotPosition = clComboBox(
+				{ID = s.SLOT},
+				336,
+				3,
+				team.POSITIONS,
+				player.SIDE + 1,
+				'setMyPosition(INDEX)',
+				{
+					width = 150,
+					texture = 'classic/edit/combobox-short.png',
+					defaultLabel = loc(809),
+					disabled = (not isMySlot or (player.READY and (not canModifyServerSettings())))
+				}
+			);
+
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION = slotPosition.ID;
+		end;
+
+		if (s.NATION ~= nil) then
+			sgui_delete(s.NATION);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = nil;
+		end;
+
+		setText({ID = s.NAME}, player.NATION);
+
+		if (not MULTIPLAYER_ROOM_RANDOM_NATIONS) then
+			local slotNation = clComboBox(
+				{ID = s.SLOT},
+				488,
+				3,
+				team.NATIONS,
+				getMultiplayerNation(player.NATION, player.SIDE),
 				'setMultiplayerNation(INDEX, ' .. player.SIDE .. ');',
 				{
 					width = 150,
+					texture = 'classic/edit/combobox-short.png',
 					defaultLabel = loc(809),
-					disabled = false
+					disabled = (not isMySlot or (player.READY and (not canModifyServerSettings())) or player.SIDE == 0)
 				}
 			);
-		else
-			clUpdateComboBoxItems(
-				MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION.list.scroll.ID,
-				team.NATION,
-				'',
+
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = slotNation.ID;
+		end;
+
+		if (isMySlot and not isMerged) then
+			if (s.LOCK ~= nil) then
+				sgui_delete(s.LOCK);
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCK = nil;
+			end;
+
+			local slotPlayerLock = clCheckbox(
+				{ID = s.SLOT},
+				659,
+				6,
+				'changeLockStatus(' .. boolToStr(not player.LOCKED) .. ');',
 				{
-					width = 150,
-					defaultLabel = loc(809),
-					disabled = true
+					disabled = player.READY,
+					checked = player.LOCKED,
+					hint = loc(829)
 				}
 			);
+
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCK = slotPlayerLock.ID;
+
+			if (s.LOCKLABEL ~= nil) then
+				sgui_delete(s.LOCKLABEL);
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCKLABEL = nil;
+			end;
+
+			local slotPlayerLockLabel = getLabelEX(
+				{ID = s.SLOT},
+				anchorLT,
+				XYWH(678, 6, 160, 16),
+				BankGotic_14, 
+				loc(828),
+				{
+					font_colour = RGB(0, 0, 0),
+					shadowtext = false,
+					nomouseevent = true,
+					text_halign = ALIGN_LEFT,
+					text_valign = ALIGN_TOP,
+					wordwrap = false,
+					scissor = true
+				}
+			);
+
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCKLABEL = slotPlayerLockLabel.ID;
+		else
+			if (s.MERGE ~= nil) then
+				sgui_delete(s.MERGE);
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].MERGE = nil;
+			end;
+
+			if (isMerged) then
+				local leavePlayer = clButton(
+					{ID = s.SLOT},
+					660, 
+					5, 
+					84,
+					18, 
+					loc(844), -- separate
+					'joinToTeam(' .. NUMBER .. ', -1);',
+					{
+						texture = 'classic/edit/menu_button_small_l.png',
+						texture2 = 'classic/edit/menu_button_small_c.png',
+						texture3 = 'classic/edit/menu_button_small_r.png'
+					}
+				);
+
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].MERGE = leavePlayer.ID;
+			elseif (not player.LOCKED) then
+				local joinToPlayer = clButton(
+					{ID = s.SLOT},
+					660, 
+					5, 
+					84,
+					18, 
+					loc(839), -- join
+					'joinToTeam(' .. NUMBER .. ', ' .. player.TEAMPOS .. ');',
+					{
+						texture = 'classic/edit/menu_button_small_l.png',
+						texture2 = 'classic/edit/menu_button_small_c.png',
+						texture3 = 'classic/edit/menu_button_small_r.png'
+					}
+				);
+
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].MERGE = joinToPlayer.ID;
+			end;
+		end;
+	else
+		if (player.TEAM == 0) then -- player without team
+			setParentID(s.SLOT, MULTIPLAYER_ROOM_TEAMS_INIT.SLOT);
+		else
+			setParentID(s.SLOT, MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT);
+		end;
+
+		reloadTeamContainers();
+
+		if (s.COLOUR ~= nil) then
+			sgui_delete(s.COLOUR);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].COLOUR = nil;
+		end;
+
+		if (s.POSITION ~= nil) then
+			sgui_delete(s.POSITION);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].POSITION = nil;
+		end;
+
+		if (s.NATION ~= nil) then
+			sgui_delete(s.NATION);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = nil;
 		end;
 	end;
 
@@ -1814,12 +1932,7 @@ function updatePlayerSlot(NUMBER)
 	end;
 
 	-- name
-	--setText({ID = s.NAME}, player.NAME);
-	if (isMySlot) then
-		setText({ID = s.NAME}, 'mySlot');
-	else
-		setText({ID = s.NAME}, 'notMySlot');
-	end;
+	setText({ID = s.NAME}, player.NAME);
 end;
 
 function recreateTeams()
@@ -1852,6 +1965,7 @@ end;
 function reloadTeamContainers()
 	local team = MULTIPLAYER_ROOM_TEAMS_INIT;
 	local children = getChildernIDs(team.SLOT);
+	local absY = 0;
 	local y = 0;
 
 	if (children ~= nil) then
@@ -1864,6 +1978,7 @@ function reloadTeamContainers()
 				end;
 
 				y = y + 30;
+				absY = absY + 30;
 			end;
 		end;
 
@@ -1877,6 +1992,9 @@ function reloadTeamContainers()
 
 	for i = 1, #MULTIPLAYER_ROOM_TEAMS do
 		local team = MULTIPLAYER_ROOM_TEAMS[i];
+
+		setY({ID = team.SLOT}, absY);
+
 		local children = getChildernIDs(team.SLOT);
 		local y = 60;
 
@@ -1899,6 +2017,33 @@ function reloadTeamContainers()
 				setHeight({ID = team.SLOT}, 90);
 			end;
 		end;
+
+		absY = absY + y;
+	end;
+
+	setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, absY + 10);
+
+	local team = MULTIPLAYER_ROOM_TEAMS_SPEC;
+	local children = getChildernIDs(team.SLOT);
+
+	if (children ~= nil) then
+		for c = 1, #children do
+			local child = children[c];
+
+			if (getVisible{ID = child}) then
+				if (getY({ID = child}) ~= y) then
+					setY({ID = child}, y);
+				end;
+
+				y = y + 30;
+			end;
+		end;
+
+		setHeight({ID = team.SLOT}, y);
+	else
+		if (getHeight({ID = team.SLOT}) > 0) then
+			setHeight({ID = team.SLOT}, 0);
+		end;
 	end;
 end;
 
@@ -1919,7 +2064,7 @@ function createTeams(MODE)
 			),
 			true,
 			{
-				colour1 = RGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+				colour1 = WHITEA()
 			}
 		);
 
@@ -1945,7 +2090,9 @@ function createTeams(MODE)
 		posY = posY + 90;
 
 		-- get team allowed positions
-		local allowedPositions = {};
+		local allowedPositions = {
+			loc(808)
+		};
 
 		for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS_COUNT do
 			if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS[c]) then
@@ -1954,7 +2101,9 @@ function createTeams(MODE)
 		end;
 
 		-- nations
-		local allowedNations = {};
+		local allowedNations = {
+			loc(809)
+		};
 
 		if (#allowedPositions > 0) then
 			local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[i].NATIONS;
@@ -1983,7 +2132,7 @@ function createTeams(MODE)
 			),
 			true,
 			{
-				colour1 = RGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+				colour1 = WHITEA()
 			}
 		);
 
@@ -2023,11 +2172,60 @@ function createTeams(MODE)
 			LABEL = teamLabel.ID,
 			BUTTON = teamBtn.ID,
 			POSITIONS = allowedPositions,
-			NATION = allowedNations
+			NATIONS = allowedNations
 		}
 	end;
 
-	setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, posY + 90);
+	local teamSlot = getElementEX(
+		menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+		anchorT,
+		XYWH(
+			2,
+			0,
+			750,
+			130
+		),
+		true,
+		{
+			colour1 = WHITEA()
+		}
+	);
+
+	local teamLabel = getLabelEX(
+		teamSlot, 
+		anchorT, 
+		XYWH(10, 0, menu.window_multiplayer_room.panel.page1.spectatorSlots.width - 22, 18), 
+		Tahoma_18B, 
+		loc(1113),
+		{
+			wordwrap = true,
+			text_halign = ALIGN_MIDDLE,
+			text_valign = ALIGN_TOP,
+			font_colour = RGB(231, 222, 214),
+			shadowtext = true
+		}
+	);
+
+	local teamBtn = clButton(
+		teamSlot, 
+		304, 
+		26, 
+		150,
+		18, 
+		loc(839), -- join
+		'joinAsSpectator();',
+		{
+			texture = 'classic/edit/menu_button_small_l.png',
+			texture2 = 'classic/edit/menu_button_small_c.png',
+			texture3 = 'classic/edit/menu_button_small_r.png'
+		}
+	);
+
+	MULTIPLAYER_ROOM_TEAMS_SPEC = {
+		SLOT = teamSlot.ID,
+		LABEL = teamLabel.ID,
+		BUTTON = teamBtn.ID
+	}
 end
 
 function createPlayerView()
@@ -2668,36 +2866,36 @@ function getMultiplayerNation(NATION, POSITION)
 	POSITION = parseInt(POSITION);
 
 	if POSITION < 1 or NATION < 1 or MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil then
-		return 0;
+		return 1;
 	end;
 
 	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
 
 	if nations.US and nations.AR and nations.RU then
-		return NATION;
+		return NATION + 1;
 	end;
 
 	if nations.US and nations.AR and NATION == 2 then
-		return 2;
+		return 3;
 	end;
 
 	if (nations.US or nations.AR) and nations.RU and NATION == 3 then
-		return 2;
+		return 3;
 	end;
 
 	if nations.US and NATION == 1 then
-		return 1;
+		return 2;
 	end;
 
 	if nations.AR and NATION == 2 then
-		return 1;
+		return 2;
 	end;
 
 	if nations.RU and NATION == 3 then
-		return 1;
+		return 2;
 	end; 
 
-	return 0;
+	return 1;
 end;
 
 function setMultiplayerNation(INDEX, POSITION)
@@ -2706,7 +2904,11 @@ function setMultiplayerNation(INDEX, POSITION)
 	
 	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
 
-	if INDEX == 1 then
+	if (INDEX == 1) then
+		return OW_MULTIROOM_SET_MYNATION(0);
+	end;
+
+	if INDEX == 2 then
 		if nations.US then
 			return OW_MULTIROOM_SET_MYNATION(1);
 		end;
@@ -2720,7 +2922,7 @@ function setMultiplayerNation(INDEX, POSITION)
 		end;
 	end;
 
-	if INDEX == 2 then
+	if INDEX == 3 then
 		if nations.AR then
 			return OW_MULTIROOM_SET_MYNATION(2);
 		end;
@@ -2732,6 +2934,10 @@ function setMultiplayerNation(INDEX, POSITION)
 
 	return OW_MULTIROOM_SET_MYNATION(3); -- RU
 end;
+
+function setMyPosition(INDEX)
+	OW_MULTIROOM_SET_MYSIDE(parseInt(INDEX) - 1);
+end
 
 function deleteSlots()
 	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
@@ -3013,11 +3219,11 @@ menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 );
 
 function setMapList(mapList, selectedMap, isHost)
-	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
-
 	if (mapList == nil) then
 		return;
 	end;
+
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
 
 	local list = {};
 

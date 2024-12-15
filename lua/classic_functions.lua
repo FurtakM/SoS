@@ -1806,7 +1806,12 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
         );
 
         for i = 1, 9 do
-            local isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            local isBannedColour = false;
+
+            if (BANNED_COLOURS) then
+                isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            end;
+
             local colourTexture = WHITEA();
 
             if isBannedColour then
@@ -1832,6 +1837,8 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
         set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
         set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', false);');
     end;
+
+    return ELEMENT;
 end;
 
 function filesInMod(mod, directory)
