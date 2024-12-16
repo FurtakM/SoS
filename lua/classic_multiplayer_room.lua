@@ -23,6 +23,7 @@ MULTIPLAYER_ROOM_PLAYERS = {};
 MULTIPLAYER_ROOM_TEAMS = {};
 MULTIPLAYER_ROOM_TEAMS_INIT = {};
 MULTIPLAYER_ROOM_TEAMS_SPEC = {};
+MULTIPLAYER_ROOM_MERGED = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -1037,7 +1038,7 @@ end
 
 function setReadyMultiplayerGame()
 	local ready = not MULTIPLAYER_ROOM_IM_READY;
-	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, ready);	
+	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, not ready or MULTIPLAYER_ROOM_IS_HOST);	
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
 
@@ -1359,7 +1360,7 @@ end;
 
 function sendChatMessage(key)
 	if key == VK_ENTER then
-		OW_MULTI_SENDALLCHATMSG(getText(menu.window_multiplayer_room.panel.chatInput), '#000000'); -- getHexColour(SIDE_COLOURS[Players[MyID].Colour+1]));
+		OW_MULTI_SENDALLCHATMSG(safeText(getText(menu.window_multiplayer_room.panel.chatInput)), '#000000'); -- getHexColour(SIDE_COLOURS[Players[MyID].Colour+1]));
 		setText(menu.window_multiplayer_room.panel.chatInput, '');
 		return;
 	end;
@@ -1594,6 +1595,9 @@ function createPlayerSlot(NUMBER)
 
 	return {
 		SLOT = slot.ID,
+		PLID = nil,
+		TEAM = nil,
+		TEAMPOS = nil,
 		STATUS = slotPlayerStatus.ID,
 		AVATAR = slotPlayerAvatar.ID,
 		AVATARNUM = 0,
@@ -1653,6 +1657,10 @@ function updatePlayerSlot(NUMBER)
 		return;
 	end;
 
+	MULTIPLAYER_ROOM_PLAYERS[NUMBER].PLID = player.PLID;
+	MULTIPLAYER_ROOM_PLAYERS[NUMBER].TEAM = player.TEAM;
+	MULTIPLAYER_ROOM_PLAYERS[NUMBER].TEAMPOS = player.TEAMPOS;
+
 	if (not getVisible({ID = s.SLOT})) then
 		if (MULTIPLAYER_ROOM_TEAMS_INIT ~= {}) then
 			setVisible({ID = s.SLOT}, true);
@@ -1664,8 +1672,8 @@ function updatePlayerSlot(NUMBER)
 	end;
 
 	local isMySlot = MULTIPLAYER_ROOM_MY_PLID == player.PLID;
-	local isMerged = player.TEAMPOS > 0 and player.TEAMPOS < 99;
 	local imHost = isMySlot and canModifyServerSettings();
+	local isMerged = isMerged(player.PLID, player.TEAM, player.TEAMPOS);
 
 	if (MULTIPLAYER_ROOM_TEAMS ~= {} and isMySlot) then
 		for i = 1, #MULTIPLAYER_ROOM_TEAMS do
@@ -1754,8 +1762,6 @@ function updatePlayerSlot(NUMBER)
 			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = nil;
 		end;
 
-		setText({ID = s.NAME}, player.NATION);
-
 		if (not MULTIPLAYER_ROOM_RANDOM_NATIONS) then
 			local slotNation = clComboBox(
 				{ID = s.SLOT},
@@ -1775,7 +1781,7 @@ function updatePlayerSlot(NUMBER)
 			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = slotNation.ID;
 		end;
 
-		if (isMySlot and not isMerged) then
+		if (isMySlot) then
 			if (s.LOCK ~= nil) then
 				sgui_delete(s.LOCK);
 				MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCK = nil;
@@ -1832,7 +1838,7 @@ function updatePlayerSlot(NUMBER)
 					84,
 					18, 
 					loc(844), -- separate
-					'joinToTeam(' .. NUMBER .. ', -1);',
+					'joinToTeam(' .. player.TEAM .. ', -1);',
 					{
 						texture = 'classic/edit/menu_button_small_l.png',
 						texture2 = 'classic/edit/menu_button_small_c.png',
@@ -1849,7 +1855,7 @@ function updatePlayerSlot(NUMBER)
 					84,
 					18, 
 					loc(839), -- join
-					'joinToTeam(' .. NUMBER .. ', ' .. player.TEAMPOS .. ');',
+					'joinToTeam(' .. player.TEAM .. ', ' .. player.TEAMPOS .. ');',
 					{
 						texture = 'classic/edit/menu_button_small_l.png',
 						texture2 = 'classic/edit/menu_button_small_c.png',
@@ -1882,6 +1888,21 @@ function updatePlayerSlot(NUMBER)
 		if (s.NATION ~= nil) then
 			sgui_delete(s.NATION);
 			MULTIPLAYER_ROOM_PLAYERS[NUMBER].NATION = nil;
+		end;
+
+		if (s.LOCK ~= nil) then
+			sgui_delete(s.LOCK);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCK = nil;
+		end;
+
+		if (s.LOCKLABEL ~= nil) then
+			sgui_delete(s.LOCKLABEL);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCKLABEL = nil;
+		end;
+
+		if (s.MERGE ~= nil) then
+			sgui_delete(s.MERGE);
+			MULTIPLAYER_ROOM_PLAYERS[NUMBER].MERGE = nil;
 		end;
 	end;
 
@@ -1977,6 +1998,10 @@ function reloadTeamContainers()
 					setY({ID = child}, y);
 				end;
 
+				if (getX({ID = child}) > 0) then
+					setX({ID = child}, 0);
+				end;
+
 				y = y + 30;
 				absY = absY + 30;
 			end;
@@ -1999,15 +2024,42 @@ function reloadTeamContainers()
 		local y = 60;
 
 		if (children ~= nil and #children > 2) then
+			-- resort by checking merge status
+			local resortedChildern = { {}, {}, {}, {}, {}, {}, {}, {}, {} };
+
 			for c = 1, #children do
 				local child = children[c];
+				local slot = nil;
 
-				if (child ~= team.LABEL and child ~= team.BUTTON) then
-					if (getY({ID = child}) ~= y) then
-						setY({ID = child}, y);
+				for k = 1, #MULTIPLAYER_ROOM_PLAYERS do
+					if (MULTIPLAYER_ROOM_PLAYERS[k].SLOT == child) then
+						slot = MULTIPLAYER_ROOM_PLAYERS[k];
+						break;
 					end;
+				end;
 
-					y = y + 30;
+				if (slot) then
+					resortedChildern[slot.TEAMPOS + 1] = addToArray(resortedChildern[slot.TEAMPOS + 1], child);
+				end;
+			end;
+
+			for c = 1, #resortedChildern do
+				for k = 1, #resortedChildern[c] do
+					local child = resortedChildern[c][k];
+
+					if (child ~= team.LABEL and child ~= team.BUTTON) then
+						if (getY({ID = child}) ~= y) then
+							setY({ID = child}, y);
+						end;
+
+						if (k > 1) then
+							setX({ID = child}, 12);
+						elseif (getX({ID = child}) > 0) then
+							setX({ID = child}, 0);
+						end;
+
+						y = y + 30;
+					end;
 				end;
 			end;
 
@@ -2033,6 +2085,10 @@ function reloadTeamContainers()
 			if (getVisible{ID = child}) then
 				if (getY({ID = child}) ~= y) then
 					setY({ID = child}, y);
+				end;
+
+				if (c > 2 and getX({ID = child}) > 0) then
+					setX({ID = child}, 0);
 				end;
 
 				y = y + 30;
@@ -2242,623 +2298,33 @@ end;
 
 function reloadPlayerView()
 	MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
+	MULTIPLAYER_ROOM_MERGED = { 
+		{ {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} },
+		{ {}, {}, {}, {}, {}, {}, {}, {} }
+	};
+
+	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+		local player = MULTIPLAYER_ROOM_DATA.Players[i];
+
+		if (player.TEAM < 9 and player.TEAMPOS < 99) then
+			MULTIPLAYER_ROOM_MERGED[player.TEAM + 1][player.TEAMPOS + 1] = addToArray(
+				MULTIPLAYER_ROOM_MERGED[player.TEAM + 1][player.TEAMPOS + 1],
+				player.PLID
+			);
+		end;
+	end;
 
 	for i = 1, 12 do
 		updatePlayerSlot(i);
 	end;
-end;
-
--- generate SGUI slots for players
-function __refreshPlayerView()
-	local stopwatch = STOPWATCH_ADD();
-	STOPWATCH_START(stopwatch);
-
-	deleteSlots();
-
-	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
-	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
-	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
-	local teamCounter  = 0;
-	local isSpec = false;
-	local playersCount = #MULTIPLAYER_ROOM_DATA.Players;
-
-	MULTIPLAYER_ROOM_SPECTATORS = {};
-
-	if (playersCount > 0) then
-		-- get my plid
-		MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
-
-		for i = 1, playersCount do
-			isSpec = false;
-
-			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
-			
-			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS ~= nil and MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1 > 0) then
-				if MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS < 99 then
-					playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
-				else
-					isSpec = true;
-					MULTIPLAYER_ROOM_SPECTATORS = addToArray(MULTIPLAYER_ROOM_SPECTATORS, i);
-				end;
-			end;
-
-			if (not isSpec and MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
-				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
-			end;
-		end;
-
-		MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1);
-		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
-		MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
-	end;
-
-	if (MULTIPLAYER_ROOM_DATA.TEAMDEF == nil) then
-		return;
-	end;
-
-	local bannedColours = {};
-
-	if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
-		if MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banColour then
-			bannedColours = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.banColour;
-		end;
-	end;
-
-	local posY = 0;
-
-	if MULTIPLAYER_ROOM_DATA.TeamGame then
-		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + playersCount;
-
-		if (teamCounter < 5) then
-			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
-		else
-			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 60);
-		end;
-
-		-- generate team names
-		for i = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX do
-			-- get team allowed positions
-			local allowedPositions = {};
-
-			for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS_COUNT do
-				if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS[c]) then
-					allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
-				end;
-			end;
-
-			local teamLabel = getLabelEX(
-				menu.window_multiplayer_room.panel.page1.playerSlots, 
-				anchorT, 
-				XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
-				Tahoma_18B, 
-				MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].NAME,
-				{
-					wordwrap = true,
-					text_halign = ALIGN_MIDDLE,
-					text_valign = ALIGN_TOP,
-					font_colour = RGB(231, 222, 214),
-					shadowtext = true
-				}
-			);
-
-			posY = posY + 26;
-
-			local teamBtn = clButton(
-				menu.window_multiplayer_room.panel.page1.playerSlots, 
-				304, 
-				posY, 
-				150,
-				18, 
-				loc(824), -- join
-				'joinToTeam(' .. i .. ', -1);',
-				{
-					texture = 'classic/edit/menu_button_small_l.png',
-					texture2 = 'classic/edit/menu_button_small_c.png',
-					texture3 = 'classic/edit/menu_button_small_r.png'
-				}
-			);
-
-			if (#teamPlayers[i] > 0) then
-				for p = 1, #teamPlayers[i] do				
-					local playerData = MULTIPLAYER_ROOM_DATA.Players[teamPlayers[i][p]];
-					local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
-					local isMerged = isMerged(playerData.PLID, playerData.TEAM, playerData.TEAMPOS, playerMerged[playerData.TEAMPOS + 1]);
-					local slotExists = #playerSlots[i] >= playerData.TEAMPOS + 1;
-					local allowedNations = {};
-
-					if (isMySlot) then
-						setText(teamBtn, loc(825));
-						set_Callback(teamBtn.ID, CALLBACK_MOUSECLICK, 'leaveTeam();');
-					end;
-
-					if (#allowedPositions > 0 and playerData.SIDE > 0) then
-						local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
-					
-						if (nations.US) then
-							allowedNations = addToArray(allowedNations, loc(810));
-						end;
-
-						if (nations.AR) then
-							allowedNations = addToArray(allowedNations, loc(811));
-						end;
-
-						if (nations.RU) then
-							allowedNations = addToArray(allowedNations, loc(812));
-						end;
-					end;
-
-					if (slotExists and isMerged) then
-						local id = parseInt(playerSlots[i][playerData.TEAMPOS + 1]);
-
-						if (id ~= nil) then
-							setTextID(id, getTextID(id) .. ' + ' .. playerData.NAME);
-						end;
-					else
-						posY = posY + 32;
-
-						local slot = getElementEX(
-							menu.window_multiplayer_room.panel.page1.playerSlots, 
-							anchorLTRB,
-							XYWH(
-								2,
-								posY, 
-								750,
-								28
-							),
-							true,
-							{
-								texture = 'classic/edit/multiroom/player_slot.png'
-							}
-						);
-
-						local texture = 'notready';
-
-						if (playerData.PLID == 1 and playerData.READY) then
-							texture = 'server';
-						elseif (playerData.READY == true) then
-							texture = 'ready';
-						end;
-
-						local slotPlayerStatus = getElementEX(
-							slot, 
-							anchorLTRB,
-							XYWH(
-								4,
-								4, 
-								20,
-								20
-							),
-							true,
-							{
-								texture = 'classic/edit/special/' .. texture .. '.png'
-							}
-						);
-
-						if (isMySlot and (not canModifyServerSettings())) then
-							MULTIPLAYER_ROOM_IM_READY = playerData.READY;
-							set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-							-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
-						end;
-
-						local slotPlayerAvatar = getElementEX(
-							slot, 
-							anchorLTRB,
-							XYWH(
-								28,
-								4, 
-								20,
-								20
-							),
-							true,
-							{
-								texture = 'Avatars/unknow.png'
-							}
-						);
-
-						if (playerData.AVATAR_ID) then
-							SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
-						end;
-
-						local slotPlayerName = getLabelEX(
-							slot,
-							anchorT, 
-							XYWH(50, 6, 220, 14),
-							nil, 
-							playerData.NAME, 
-							{
-								nomouseevent = true,
-								font_colour = WHITE(),
-								font_name = BankGotic_14,
-								wordwrap = false,
-								text_halign = ALIGN_TOP,
-								text_valign = ALIGN_LEFT,
-								scissor = true
-							}
-						);
-
-						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
-
-						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
-
-						local slotPosition = clComboBox(
-							slot,
-							336,
-							3,
-							allowedPositions,
-							playerData.SIDE,
-							'OW_MULTIROOM_SET_MYSIDE(INDEX);',
-							{
-								width = 150,
-								texture = 'classic/edit/combobox-short.png',
-								defaultLabel = loc(809),
-								disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-							}
-						);
-
-						if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
-							local slotNation = clComboBox(
-								slot,
-								488,
-								3,
-								allowedNations,
-								getMultiplayerNation(playerData.NATION, playerData.SIDE),
-								'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
-								{
-									width = 150,
-									texture = 'classic/edit/combobox-short.png',
-									defaultLabel = loc(809),
-									disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-								}
-							);
-						end;
-
-						if (isMySlot and not isMerged) then
-							local slotPlayerLock = clCheckbox(
-								slot,
-								659,
-								6,
-								'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
-								{
-									disabled = playerData.READY,
-									checked = playerData.LOCKED,
-									hint = loc(829)
-								}
-							);
-
-							local slotPlayerLockLabel = getLabelEX(
-								slot,
-								anchorLT,
-								XYWH(678, 6, 160, 16),
-								BankGotic_14, 
-								loc(828),
-								{
-									font_colour = RGB(0, 0, 0),
-									shadowtext = false,
-									nomouseevent = true,
-									text_halign = ALIGN_LEFT,
-									text_valign = ALIGN_TOP,
-									wordwrap = false,
-									scissor = true
-								}
-							);
-						else
-							if (isMerged) then
-								local leavePlayer = clButton(
-									slot, 
-									660, 
-									5, 
-									84,
-									18, 
-									loc(844), -- separate
-									'joinToTeam(' .. i .. ', -1);',
-									{
-										texture = 'classic/edit/menu_button_small_l.png',
-										texture2 = 'classic/edit/menu_button_small_c.png',
-										texture3 = 'classic/edit/menu_button_small_r.png'
-									}
-								);
-							elseif (not playerData.LOCKED) then
-								local joinToPlayer = clButton(
-									slot, 
-									660, 
-									5, 
-									84,
-									18, 
-									loc(839), -- join
-									'joinToTeam(' .. i .. ', ' .. playerData.TEAMPOS .. ');',
-									{
-										texture = 'classic/edit/menu_button_small_l.png',
-										texture2 = 'classic/edit/menu_button_small_c.png',
-										texture3 = 'classic/edit/menu_button_small_r.png'
-									}
-								);
-							end;
-						end;
-					end;
-				end;
-			end;
-
-			posY = posY + 38;
-		end;
-	else
-		local allowedPositions = {};
-
-		for c = 1, 8 do
-			if (MULTIPLAYER_ROOM_DATA.TEAMDEF[1].ASSIGNED_POSITIONS[c]) then
-				allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
-			end;
-		end;
-
-		for p = 1, playersCount do
-			local playerData = MULTIPLAYER_ROOM_DATA.Players[p];
-			local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
-			local allowedNations = {};
-
-			if (#allowedPositions > 0 and playerData.SIDE > 0) then
-				local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
-				
-				if (nations.US) then
-					allowedNations = addToArray(allowedNations, loc(810));
-				end;
-
-				if (nations.AR) then
-					allowedNations = addToArray(allowedNations, loc(811));
-				end;
-
-				if (nations.RU) then
-					allowedNations = addToArray(allowedNations, loc(812));
-				end;
-			end;
-
-			local slot = getElementEX(
-				menu.window_multiplayer_room.panel.page1.playerSlots, 
-				anchorLTRB,
-				XYWH(
-					2,
-					posY, 
-					750,
-					28
-				),
-				true,
-				{
-					texture = 'classic/edit/multiroom/player_slot.png'
-				}
-			);
-
-			local texture = 'notready';
-
-			if (playerData.PLID == 1 and playerData.READY) then
-				texture = 'server';
-			elseif (playerData.READY == true) then
-				texture = 'ready';
-			end;
-
-			local slotPlayerStatus = getElementEX(
-				slot, 
-				anchorLTRB,
-				XYWH(
-					4,
-					4, 
-					20,
-					20
-				),
-				true,
-				{
-					texture = 'classic/edit/special/' .. texture .. '.png'
-				}
-			);
-
-			if (isMySlot and (not canModifyServerSettings())) then
-				MULTIPLAYER_ROOM_IM_READY = playerData.READY;
-				set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-				-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
-			end;
-
-			local slotPlayerAvatar = getElementEX(
-				slot, 
-				anchorLTRB,
-				XYWH(
-					28,
-					4, 
-					20,
-					20
-				),
-				true,
-				{
-					texture = 'Avatars/unknow.png'
-				}
-			);
-
-			if (playerData.AVATAR_ID) then
-				SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
-			end;
-
-			local slotPlayerName = getLabelEX(
-				slot,
-				anchorT, 
-				XYWH(50, 6, 220, 14),
-				nil, 
-				playerData.NAME, 
-				{
-					nomouseevent = true,
-					font_colour = WHITE(),
-					font_name = BankGotic_14,
-					wordwrap = false,
-					text_halign = ALIGN_TOP,
-					text_valign = ALIGN_LEFT,
-					scissor = true
-				}
-			);
-
-			local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5, bannedColours);
-
-			local slotPosition = clComboBox(
-				slot,
-				336,
-				3,
-				allowedPositions,
-				playerData.SIDE,
-				'OW_MULTIROOM_SET_MYSIDE(INDEX);',
-				{
-					width = 150,
-					texture = 'classic/edit/combobox-short.png',
-					defaultLabel = loc(809),
-					disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-				}
-			);
-
-			if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
-				local slotNation = clComboBox(
-					slot,
-					488,
-					3,
-					allowedNations,
-					getMultiplayerNation(playerData.NATION, playerData.SIDE),
-					'setMultiplayerNation(INDEX, ' .. playerData.SIDE .. ');',
-					{
-						width = 150,
-						texture = 'classic/edit/combobox-short.png',
-						defaultLabel = loc(809),
-						disabled = (not isMySlot or (playerData.READY and (not canModifyServerSettings())))
-					}
-				);
-			end;
-
-			posY = posY + 32;
-		end;
-	end;
-
-	-- spectator
-	if MULTIPLAYER_ROOM_DATA.MULTIMAP.CANSPEC and #MULTIPLAYER_ROOM_DATA.TEAMDEF >= 10 then
-		local specLabel = getLabelEX(
-			menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			anchorT, 
-			XYWH(10, 0, menu.window_multiplayer_room.panel.page1.spectatorSlots.width - 22, 18), 
-			Tahoma_18B, 
-			loc(1113),
-			{
-				wordwrap = true,
-				text_halign = ALIGN_MIDDLE,
-				text_valign = ALIGN_TOP,
-				font_colour = RGB(231, 222, 214),
-				shadowtext = true
-			}
-		);
-
-		local teamBtn = clButton(
-			menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			304, 
-			26, 
-			150,
-			18, 
-			loc(839), -- join
-			'joinAsSpectator();',
-			{
-				texture = 'classic/edit/menu_button_small_l.png',
-				texture2 = 'classic/edit/menu_button_small_c.png',
-				texture3 = 'classic/edit/menu_button_small_r.png'
-			}
-		);
-
-		posY = 50;
-
-		if (#MULTIPLAYER_ROOM_SPECTATORS > 0) then
-			for p = 1, #MULTIPLAYER_ROOM_SPECTATORS do
-				local playerData = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_SPECTATORS[p]];
-				local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
-
-				if (isMySlot) then
-					setText(teamBtn, loc(825));
-					set_Callback(teamBtn.ID, CALLBACK_MOUSECLICK, 'leaveTeam();');
-				end;
-
-				local slot = getElementEX(
-					menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-					anchorLTRB,
-					XYWH(
-						2,
-						posY, 
-						750,
-						28
-					),
-					true,
-					{
-						texture = 'classic/edit/multiroom/player_slot.png'
-					}
-				);
-
-				local texture = 'notready';
-
-				if (playerData.PLID == 1 and playerData.READY) then
-					texture = 'server';
-				elseif (playerData.READY == true) then
-					texture = 'ready';
-				end;
-
-				local slotPlayerStatus = getElementEX(
-					slot, 
-					anchorLTRB,
-					XYWH(
-						4,
-						4, 
-						20,
-						20
-					),
-					true,
-					{
-						texture = 'classic/edit/special/' .. texture .. '.png'
-					}
-				);
-
-				if (isMySlot and (not canModifyServerSettings())) then
-					MULTIPLAYER_ROOM_IM_READY = playerData.READY;
-					set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
-					-- setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
-				end;
-
-				local slotPlayerAvatar = getElementEX(
-					slot, 
-					anchorLTRB,
-					XYWH(
-						28,
-						4, 
-						20,
-						20
-					),
-					true,
-					{
-						texture = 'Avatars/unknow.png'
-					}
-				);
-
-				if (playerData.AVATAR_ID) then
-					SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
-				end;
-
-				local slotPlayerName = getLabelEX(
-					slot,
-					anchorT, 
-					XYWH(50, 6, 220, 14),
-					nil, 
-					playerData.NAME, 
-					{
-						nomouseevent = true,
-						font_colour = WHITE(),
-						font_name = BankGotic_14,
-						wordwrap = false,
-						text_halign = ALIGN_TOP,
-						text_valign = ALIGN_LEFT,
-						scissor = true
-					}
-				);
-
-				posY = posY + 32;
-			end;
-		end;
-	end;
-
-	setText(menu.window_multiplayer_room.panel.watcher3, 'C: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
-	STOPWATCH_DELETE(stopwatch);
 end;
 
 function getMultiplayerNation(NATION, POSITION)
@@ -2946,20 +2412,17 @@ function deleteSlots()
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.spectatorSlots.ID);
 end;
 
-function isMerged(plid, team, teamPos, mergedPlayers)
-	if (#mergedPlayers < 2) then
+function isMerged(PLID, TEAM, TEAMPOS)
+	if (#MULTIPLAYER_ROOM_MERGED == 0) then
 		return false;
 	end;
 
-	for i = 1, #mergedPlayers do
-		local player = getPlayerByPLID(mergedPlayers[i]);
-
-		if (mergedPlayers[i] ~= plid and team == player.TEAM and teamPos == player.TEAMPOS) then
-			return true;
-		end;
+	if (TEAM > 9 or TEAMPOS == 99) then
+		return false;
 	end;
 
-	return false;
+	return inArray(MULTIPLAYER_ROOM_MERGED[TEAM + 1][TEAMPOS + 1], PLID) 
+		and #MULTIPLAYER_ROOM_MERGED[TEAM + 1][TEAMPOS + 1] > 1;
 end;
 
 function getPlayerByPLID(plid)

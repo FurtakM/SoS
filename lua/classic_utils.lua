@@ -228,6 +228,10 @@ function strlen(TEXT)
     return string.len(TEXT);
 end;
 
+function safeText(TEXT)
+    return string.gsub(TEXT, '%"', "“");
+end;
+
 function text(TEXT, MAXLENGTH, APPENDCHAR)
     if (TEXT == nil) then
         return '';
