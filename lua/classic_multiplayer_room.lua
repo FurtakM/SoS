@@ -272,6 +272,7 @@ menu.window_multiplayer_room.panel.page4Button = getElementEX(
 	}
 );
 
+--[[
 menu.window_multiplayer_room.panel.watcher = getLabelEX(
 	menu.window_multiplayer_room.panel,
 	anchorLTRB,
@@ -322,6 +323,7 @@ menu.window_multiplayer_room.panel.watcher3 = getLabelEX(
 		text_valign = ALIGN_LEFT,
 	}
 );
+--]]
 
 -- players page
 menu.window_multiplayer_room.panel.page1 = getElementEX(
@@ -875,8 +877,8 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 		  PING Integer
 --]]
 
-	local stopwatch = STOPWATCH_ADD();
-	STOPWATCH_START(stopwatch);
+	--local stopwatch = STOPWATCH_ADD();
+	--STOPWATCH_START(stopwatch);
 
 	MULTIPLAYER_ROOM_DATA.PlayerCount = DATA.PLAYERCOUNT;
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
@@ -891,8 +893,8 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updateMultiplayerView();
 	
 	--clDebug(STOPWATCH_STOP(stopwatch));
-	setText(menu.window_multiplayer_room.panel.watcher, 'A: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
-	STOPWATCH_DELETE(stopwatch);
+	--setText(menu.window_multiplayer_room.panel.watcher, 'A: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
+	--STOPWATCH_DELETE(stopwatch);
 
 	-- clDebug('FROMOW_MULTIROOM_TEAMLIST');
 end;
@@ -916,8 +918,8 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
-	local stopwatch2 = STOPWATCH_ADD();
-	STOPWATCH_START(stopwatch2);
+	--local stopwatch2 = STOPWATCH_ADD();
+	--STOPWATCH_START(stopwatch2);
 
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
 		for i = 1, DATA.MAPPARAMCOUNT do
@@ -932,8 +934,8 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	-- get map info data
 	--OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 
-	setText(menu.window_multiplayer_room.panel.watcher2, 'B: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch2)));
-	STOPWATCH_DELETE(stopwatch2);
+	--setText(menu.window_multiplayer_room.panel.watcher2, 'B: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch2)));
+	--STOPWATCH_DELETE(stopwatch2);
 
 	--clDebug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
 end;
@@ -1968,8 +1970,8 @@ function recreateTeams()
 end
 
 function refreshPlayerView()
-	local stopwatch = STOPWATCH_ADD();
-	STOPWATCH_START(stopwatch);
+	--local stopwatch = STOPWATCH_ADD();
+	--STOPWATCH_START(stopwatch);
 
 	if (not MULTIPLAYER_ROOM_INIT_PLAYERS_LIST) then	
 		createPlayerView();
@@ -1979,8 +1981,8 @@ function refreshPlayerView()
 		reloadTeamContainers();
 	end;
 
-	setText(menu.window_multiplayer_room.panel.watcher3, 'C: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
-	STOPWATCH_DELETE(stopwatch);
+	--setText(menu.window_multiplayer_room.panel.watcher3, 'C: ' .. string.format("%.18f", STOPWATCH_STOP(stopwatch)));
+	--STOPWATCH_DELETE(stopwatch);
 end;
 
 function reloadTeamContainers()

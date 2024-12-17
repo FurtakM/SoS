@@ -342,7 +342,7 @@ End;
 
 // Prepare Team
 Function mpPrepareTeam(side, nation, amount, skill);
-var i, d, class;
+var i, class;
 begin
 result := [];
 
@@ -366,15 +366,19 @@ result := Join(result, CreateHuman);
 
 InitHc_All();
 
-d := (amount div 4) + 1;
+// 9, 12, 15, 24
+// 2  3   4   6
+class := 2;
 
-for i := 2 to amount do
+for i := 1 to (amount - 1) do
     begin
-    if i mod d = 0 then
-       class := Inc(class);
-
     PrepareHuman(false, class, skill);
     result := Join(result, CreateHuman);
+
+    class := Inc(class);
+
+    if class = 5 then
+       class := 1;
     end;
 End;
 
@@ -521,14 +525,63 @@ End;
 // win & lose
 Every 0$1 trigger mpActive marked mpWin do
 begin
+if IAmServer then
+   wait(0$5);
+
 if Multiplayer then
    YouWinInMultiplayer
 else
    YouWin;
 End;
 
-Every 0$1 trigger mpActive marked mpLose do
+Export function HasPowerByGameType(gameType, side);
 begin
+result := false;
+
+case gameType of
+     GameTypeNormal:
+                   begin
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
+                   end;
+
+     GameTypeSurvival:
+                   begin
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])) and Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
+                   end;
+
+     GameTypeKing:
+                   begin
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
+                   end;
+     end;
+End;
+
+Every 0$1 trigger mpActive marked mpLose do
+var gameIsOn, i;
+begin
+if Multiplayer then
+   SetPlayerSpectator()
+else
+   FogOff(your_side);
+
+repeat
+ gameIsOn := false;
+
+ for i := 1 to 8 do
+     if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+        if not mpSideTeams[i] or (mpSideTeams[i] <> mpSideTeams[your_side]) then
+           if HasPowerByGameType(mpGameType, i) then
+              begin
+              gameIsOn := true;
+              break;
+              end;
+
+ wait(100);
+until not gameIsOn;
+
+if IAmServer then
+   wait(0$5);
+
 if Multiplayer then
    YouLostInMultiplayer
 else
