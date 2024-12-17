@@ -10,7 +10,9 @@ begin
   mpStartingResources,    // (3)  
   mpShipments,            // (4)  
   mpOilSources,           // (5) 
-  mpSibSources,           // (6)  
+  mpSibSources,           // (6)
+  mpPoints                // (7)
+  mpVehicles              // (8)
   mpSharedVision,         // (10) 
   mpFlags,                // (11) 
   mpSibDetection,         // (12) 
@@ -21,27 +23,27 @@ begin
 }
 
 mpGameSettingsKeys := [
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  0,
-  0,
-  0,
-  1,
-  1,
-  1,
-  1,
-  1,
-  0,
-  0,
-  1,
-  0,
-  0,
-  1
+  1, // 0
+  1, // 1
+  1, // 2
+  1, // 3
+  1, // 4
+  1, // 5
+  1, // 6
+  1, // 7
+  1, // 8
+  0, // 9
+  1, // 10
+  1, // 11
+  1, // 12
+  1, // 13
+  1, // 14
+  0, // 15
+  0, // 16
+  1, // 17
+  0, // 18
+  0, // 19
+  1  // 20
 ];
 
 mpGameSettingsValues := [
@@ -53,7 +55,7 @@ mpGameSettingsValues := [
   [0, 1, 2], // oil sources
   [0, 1, 2], // sib sources
   [250, 350, 500, 1000, 2000], // points
-  [],
+  [0, 2], // vehicles
   [],
   [0, 1], // shared vision
   [-1, 0$10, 0$20, 0$40, 0$0], // flag (morale time)
@@ -70,30 +72,30 @@ mpGameSettingsValues := [
 
 // default settings
 mpGameSettings := [
-  2,   // base
-  15,  // people
-  4,   // skill
-  [100,30,0], // resources
-  3,   // shipments
-  1,   // oil
-  2,   // sib
-  250, // points
-  0,   // -
-  0,   // -
-  1,   // vision
-  0$20, // morale
-  1,   // detection
-  1,   // respawn
-  3,   // apemans
-  0,   // -
-  0,   // -
-  15$0, // sib bomb
-  0,   // -
-  0,   // -
-  3$0  // bt
+  2,   // base 0
+  15,  // people 1
+  4,   // skill  2
+  [100,30,0], // resources 3
+  3,   // shipments  4
+  1,   // oil 5
+  2,   // sib 6
+  250, // points 7
+  2,   // vehicles 8
+  0,   // -  9
+  1,   // vision 10
+  0$20, // morale 11
+  1,   // detection 12
+  0$20,   // respawn 13
+  3,   // apemans  14
+  0,   // - 15
+  0,   // - 16
+  15$0, // sib bomb 17
+  0,   // - 18
+  0,   // - 19
+  3$0  // bt 20
 ];
               
-mpGameType := GameTypeNormal;
+mpGameType := GameTypeSurvival;
 your_side  := 1;
 
 mpSidePositions := [8,2,3,4,5,6,7,1];
@@ -150,13 +152,31 @@ else
    mpPoints := 0;
    end;
 
+if mpGameSettings[9] then
+   begin         
+   mpVehicles := [
+     [
+        [us_light_wheeled, engine_combustion, control_manual, us_machine_gun],
+        [us_light_wheeled, engine_combustion, control_manual, us_light_gun]
+     ], // american
+     [
+        [ar_light_trike, engine_combustion, control_manual, ar_double_machine_gun],
+        [ar_light_trike, engine_combustion, control_manual, ar_light_gun]
+     ], // arabian
+     [
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun],
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun]
+     ]  // russian
+   ];
+   end;
+
 mpSharedVision := mpGameSettings[11];
 mpBattleFlag := mpGameSettings[12];
 mpSibDetection := mpGameSettings[13];
 mpRespawn := mpGameSettings[14];
 mpApemans := mpGameSettings[15];
-mpSibBomb := mpGameSettings[17];
-mpBuildUpTime := mpGameSettings[20];
+mpSibBomb := mpGameSettings[18];
+mpBuildUpTime := mpGameSettings[21];
 
 mpApemansArea := [
   Base1ApeArea,
@@ -223,35 +243,43 @@ if baseLevel >= 2 then
    mpBuildings := [
      [
         b_breastwork ^ GetBuildingFromArea(bunArea1a, 5),
-        b_breastwork ^ GetBuildingFromArea(bunArea1b, 4)
+        b_breastwork ^ GetBuildingFromArea(bunArea1b, 4),
+        b_armoury ^ GetBuildingFromArea(armArea1, 5)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea2a, 1),
-        b_breastwork ^ GetBuildingFromArea(bunArea2b, 4)
+        b_breastwork ^ GetBuildingFromArea(bunArea2b, 4),
+        b_armoury ^ GetBuildingFromArea(armArea2, 4)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea3a, 0),
-        b_breastwork ^ GetBuildingFromArea(bunArea3b, 0)
+        b_breastwork ^ GetBuildingFromArea(bunArea3b, 5),
+        b_armoury ^ GetBuildingFromArea(armArea3, 0)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea4a, 1),
-        b_breastwork ^ GetBuildingFromArea(bunArea4b, 1)
+        b_breastwork ^ GetBuildingFromArea(bunArea4b, 1),
+        b_armoury ^ GetBuildingFromArea(armArea4, 1)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea5a, 2),
-        b_breastwork ^ GetBuildingFromArea(bunArea5b, 2)
+        b_breastwork ^ GetBuildingFromArea(bunArea5b, 2),
+        b_armoury ^ GetBuildingFromArea(armArea5, 2)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea6a, 1),
-        b_breastwork ^ GetBuildingFromArea(bunArea6b, 4)
+        b_breastwork ^ GetBuildingFromArea(bunArea6b, 4),
+        b_armoury ^ GetBuildingFromArea(armArea6, 5)
      ],
      [
-        b_breastwork ^ GetBuildingFromArea(bunArea7a, 3),
-        b_breastwork ^ GetBuildingFromArea(bunArea7b, 3)
+        b_breastwork ^ GetBuildingFromArea(bunArea7a, 4),
+        b_breastwork ^ GetBuildingFromArea(bunArea7b, 3),
+        b_armoury ^ GetBuildingFromArea(armArea7, 3)
      ],
      [
         b_breastwork ^ GetBuildingFromArea(bunArea8a, 4),
-        b_breastwork ^ GetBuildingFromArea(bunArea8b, 4)
+        b_breastwork ^ GetBuildingFromArea(bunArea8b, 4),
+        b_armoury ^ GetBuildingFromArea(armArea8, 4)
      ]
    ];
    end;
@@ -260,33 +288,66 @@ End;
 
 // Crates drop
 Every 0$2 marked mpActive do
-var i, d, cratesTimeRate, cratesPerMinute;
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
 begin
 if not mpShipments then
    exit;
 
 case mpShipments of
      1: begin // rare
-        cratesPerMinute := 90;
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 1$20;
+        delayTime := 0$5;
         end;
      2: begin // medium
-        cratesPerMinute := 120;
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 1$10;
+        delayTime := 0$4;
         end;
-     3: begin
-        cratesPerMinute := 150;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 1$00;
+        delayTime := 0$3;
         end;
-     4: begin
-        cratesPerMinute := 180;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$55;
+        delayTime := 0$2;
         end;
      end;
 
-if cratesPerMinute <= 50 then
-   cratesTimeRate := 60
-else
-   begin
-   d := cratesPerMinute div 50;
-   cratesTimeRate := 60 div d;
-   end;
+areas := [Between1, Between2, Between3, Between4, Center1, Center2];
+tmp := [buildUpTime1, buildUpTime2, buildUpTime3, buildUpTime4,
+        buildUpTime5, buildUpTime6, buildUpTime7, buildUpTime8];
 
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
 
+    areas := areas ^ tmp[i];
+    end;
+
+repeat
+ wait(time);
+ x := rand(1, 5);
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < 20 then
+        begin
+        CreateCratesArea(x, i, true);
+        end;
+     end;
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
 End;

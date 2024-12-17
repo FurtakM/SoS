@@ -6,7 +6,7 @@ Export Function SOS_UnitDestroyed(un);
 var i, eff, side;
 begin
 if GetWeapon(un) = ar_bio_bomb then
-   begin
+   begin     
    // upgrade for 3 bio
    if GetTech(tech_bio3, GetSide(un)) = state_researched then
       eff := 70
@@ -33,7 +33,7 @@ begin
 End;
 
 Export Function SOS_VehicleConstructed(vehicle, factory);
-var driver;
+var tag, driver;
 begin
 if not vehicle or not factory then
    exit;
@@ -44,10 +44,22 @@ if factoryWaypoints >= factory then
       if GetControl(vehicle) = control_manual then
          begin
          driver := IsDrivenBy(vehicle);
+         tag := GetTag(driver);
 
-         AddComMoveXY(driver, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
-         AddComExitVehicle(driver);
-         AddComEnterUnit(driver, factory);
+         if tag = tDriver then
+            exit;
+
+         if not HasTask(driver) then
+            begin
+            SetTag(driver, tDriver);
+            ComMoveXY(driver, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+            AddComExitVehicle(driver);
+            AddComEnterUnit(driver, factory);
+
+            wait(0$1);
+
+            SetTag(driver, tag);
+            end;
          end
       else if GetControl(vehicle) = control_remote then
          begin

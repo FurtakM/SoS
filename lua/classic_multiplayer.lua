@@ -351,7 +351,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
     local isDedicated = DATA.ISDEDICATED;
     local ping = DATA.REPLYTIME;
     local hasPassword = DATA.HASPASSWORD;
-    local allowToJoin = getvalue(OWV_PROTOCOLVERSION) == DATA.PROTOCOLVERSION and getvalue(OWV_MODDIR) == modDir;
+    local allowToJoin = getvalue(OWV_PROTOCOLVERSION) == DATA.PROTOCOLVERSION and (string.lower(getvalue(OWV_MODDIR)) == string.lower(modDir));
 
  	if (allowToJoin) then
  		fontColour = RGB(0, 0, 0);
@@ -377,7 +377,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
     end;
 
     if DATA.GAMEVERSION ~= '' then
-        gameVer = '[' .. DATA.GAMEVERSION .. ']';
+        gameVer = ' ' .. DATA.GAMEVERSION .. ' ';
     end;
 
     sgui_deletechildren(ROW_ID);
@@ -432,7 +432,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
     local serverLabel = serverName .. '  ' .. playerCount .. '/' .. playerMaxCount;
 
     if (modDir ~= '') then
-    	serverLabel = modDir .. '[' .. modVer .. ']  ' .. serverLabel;
+    	serverLabel = modDir .. ' (' .. modVer .. ')  ' .. serverLabel;
     end;
 
     local serverNameLabel = getLabelEX(

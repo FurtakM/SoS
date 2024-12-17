@@ -1,6 +1,18 @@
 Export function Multiplayer_UnitDestroyed(un);
-var ape, tag, area, side, tmp;
+var i, ape, tag, area, nation, side, tmp;
 begin
+if GetType(un) = unit_vehicle then
+   exit;
+
+if mpGameType = GameTypeSurvival then
+   if GetBType(un) in [b_depot, b_warehouse] then
+      begin
+      side := GetSide(un);
+
+      for i in FilterAllUnits([[f_side, side], [f_type, unit_human]]) do
+          KillUnit(i);
+      end;
+
 if GetClass(un) in [class_apeman, class_apeman_kamikaze, class_apeman_soldier, class_apeman_engineer] or GetControl(un) = control_apeman then
    begin
    tag := GetTag(un);
@@ -20,16 +32,17 @@ if GetType(un) = unit_human and GetNation(un) > nation_nature then
       exit;
 
    side := GetSide(un);
+   nation := GetNation(un);
 
    wait(mpRespawn);
 
-   if not MultiplayerSideAlive(side) then
+   if Multiplayer and not MultiplayerSideAlive(side) and HasPowerByGameType(mpGameType, side) then
       exit;
 
    uc_side := side;
-   uc_nation := GetNation(un);
+   uc_nation := nation;
 
-   PrepareHuman(GetSex(un), GetClass(un), 2);
+   PrepareHuman(false, rand(1,4), 2);
 
    tmp := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 

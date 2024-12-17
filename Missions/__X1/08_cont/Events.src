@@ -61,3 +61,24 @@ if meetWithMuchin then
 if (s1 = 2 and s2 = 3) or (s1 = 3 and s2 = 2) then
    isAlarm := true;
 End;
+
+On DestinationUnreachable(un) do
+var i, units;
+begin
+if un = ruDisturb and not isAlarm then
+   begin
+   units := FilterAllUnits([[f_side, 2], [f_type, unit_human]]) diff Heike;
+
+   if not units then
+      exit;
+
+   for i in units do
+       begin
+       if Carry(i) then
+          SetCargo(i, mat_cans, 0);
+
+       SetSide(i, 5);
+       ComMoveXY(i, 113, 17);
+       end;
+   end;
+End;

@@ -228,6 +228,10 @@ function strlen(TEXT)
     return string.len(TEXT);
 end;
 
+function safeText(TEXT)
+    return string.gsub(TEXT, '%"', "“");
+end;
+
 function text(TEXT, MAXLENGTH, APPENDCHAR)
     if (TEXT == nil) then
         return '';
@@ -376,4 +380,16 @@ end;
 
 function setFontColourID(ID, COLOR)
     setFontColour({ID=ID}, COLOR);
+end;
+
+function setParentID(ELEMENT_ID, PARENT_ID)
+   if PARENT_ID == nil then
+      SGUI_setparent(ELEMENT_ID, 0);
+   else
+      SGUI_setparent(ELEMENT_ID, PARENT_ID);
+   end;
+end;
+
+function getChildernIDs(ELEMENT_ID)
+    return sgui_get(ELEMENT_ID, PROP_CHILDIDS);
 end;

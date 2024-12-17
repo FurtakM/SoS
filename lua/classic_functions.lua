@@ -469,6 +469,10 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
         PROPERTIES.clickSound = '"Effects/Interface/bclick.wav"';
     end;
 
+    if (PROPERTIES.anchor == nil) then
+        PROPERTIES.anchor = anchorNone;
+    end;
+
     if (PROPERTIES.clickSoundCancel) then
         PROPERTIES.clickSound = '"Effects/Interface/cancel.wav"';
     end;
@@ -483,7 +487,7 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
 
     return getImageButtonEX(
         PARENT, 
-        anchorNone, 
+        PROPERTIES.anchor, 
         XYWH(X, Y, W, H), 
         CAPTION, 
         '', 
@@ -674,6 +678,10 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.defaultLabel = '';
     end;
 
+    if PROPERTIES.name == nil then
+        PROPERTIES.name = '';
+    end;
+
     local label = '';
 
     if ITEMS[SELECTEDITEM] == nil then
@@ -793,22 +801,24 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
 
     local elements = {};
 
-    for i = 1, table.getn(ITEMS) do
-        elements = addToArray(elements, clComboBoxItem(
-            ELEMENT.list.scroll, 
-            i, 
-            ITEMS[i], 
-            (SELECTEDITEM == i),
-            ELEMENT.ID,
-            ELEMENT.background.ID,
-            ELEMENT.list.ID, 
-            ELEMENT.comboBox.button.ID, 
-            ELEMENT.comboBox.selected.label.ID,
-            PROPERTIES.textureButton,
-            PROPERTIES.textureButtonClick,
-            CALLBACK,
-            PROPERTIES
-        ));
+    if (#ITEMS > 0) then
+        for i = 1, table.getn(ITEMS) do
+            elements = addToArray(elements, clComboBoxItem(
+                ELEMENT.list.scroll, 
+                i, 
+                ITEMS[i], 
+                (SELECTEDITEM == i),
+                ELEMENT.ID,
+                ELEMENT.background.ID,
+                ELEMENT.list.ID, 
+                ELEMENT.comboBox.button.ID, 
+                ELEMENT.comboBox.selected.label.ID,
+                PROPERTIES.textureButton,
+                PROPERTIES.textureButtonClick,
+                CALLBACK,
+                PROPERTIES
+            ));
+        end;
     end;
 
     if PROPERTIES.hint then
@@ -822,16 +832,116 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     COMBOBOX_LIST[ELEMENT.list.scroll.ID] = {
         ID = ELEMENT.list.scroll.ID,
         PARENT = ELEMENT.list.ID,
+        NAME = PROPERTIES.name,
+        BASIC = ELEMENT.ID,
         BACKGROUND = ELEMENT.background.ID,
         BUTTON = ELEMENT.comboBox.button.ID,
         TEXTURE = PROPERTIES.textureButton,
+        LABEL = ELEMENT.comboBox.selected.label.ID,
         ITEMS = ITEMS,
-        SELECTED = SELECTEDITEM,
+        SELECTEDITEM = SELECTEDITEM,
         ELEMENTS = elements
     };
 
     return ELEMENT;
 end;
+
+function clUpdateComboBoxItems(LIST, ITEMS, CALLBACK, PROPERTIES)
+    local elements = {};
+
+    if PROPERTIES.texture == nil then
+        PROPERTIES.texture = 'classic/edit/combobox-small-text.png';
+    end;
+
+    if PROPERTIES.textureButton == nil then
+        PROPERTIES.textureButton = 'classic/edit/combobox-small-button.png';
+    end;
+
+    if PROPERTIES.textureButtonClick == nil then
+        PROPERTIES.textureButtonClick = 'classic/edit/combobox-small-button-click.png';
+    end;
+
+    if PROPERTIES.textureList == nil then
+        PROPERTIES.textureList = 'classic/edit/combobox-small-list.png';
+    end;
+
+    if PROPERTIES.visible == nil then
+        PROPERTIES.visible = true;
+    end;
+
+    if PROPERTIES.disabled == nil then
+        PROPERTIES.disabled = false;
+    end;
+
+    if PROPERTIES.width == nil then
+        PROPERTIES.width = 234;
+    end;
+
+    if PROPERTIES.height == nil then
+        PROPERTIES.height = 22;
+    end;
+
+    if PROPERTIES.widthList == nil then
+        PROPERTIES.widthList = 234;
+    end;
+
+    if PROPERTIES.heightList == nil then
+        PROPERTIES.heightList = 270;
+    end;
+
+    if PROPERTIES.trimLength == nil then
+        PROPERTIES.trimLength = 22;
+    end;
+
+    if PROPERTIES.trimFrom == nil then
+        PROPERTIES.trimFrom = 1;
+    end;
+
+    if PROPERTIES.defaultLabel == nil then
+        PROPERTIES.defaultLabel = '';
+    end;
+
+    local SELECTEDITEM = COMBOBOX_LIST[LIST].SELECTEDITEM;
+
+    local label = '';
+
+    if ITEMS[SELECTEDITEM] == nil then
+        label = PROPERTIES.defaultLabel;
+    else
+        label = ITEMS[SELECTEDITEM];
+    end;
+
+    if (#ITEMS > 0) then
+        sgui_deletechildren(LIST);
+
+        setText({ID = COMBOBOX_LIST[LIST].LABEL}, SGUI_widesub(label, PROPERTIES.trimFrom));
+
+        for i = 1, table.getn(ITEMS) do
+            elements = addToArray(elements, clComboBoxItem(
+                {ID = LIST},--ELEMENT.list.scroll, 
+                i, 
+                ITEMS[i], 
+                (SELECTEDITEM == i),
+                LIST,
+                COMBOBOX_LIST[LIST].BACKGROUND,
+                COMBOBOX_LIST[LIST].PARENT, 
+                COMBOBOX_LIST[LIST].BUTTON, 
+                COMBOBOX_LIST[LIST].LABEL,
+                PROPERTIES.textureButton,
+                PROPERTIES.textureButtonClick,
+                CALLBACK,
+                PROPERTIES
+            ));
+        end;
+
+    COMBOBOX_LIST[LIST].ITEMS = ITEMS;
+    COMBOBOX_LIST[LIST].ELEMENTS = elements;
+    end;
+
+    setX({ID = COMBOBOX_LIST[LIST].PARENT}, getAbsX({ID = COMBOBOX_LIST[LIST].BASIC}));
+    setY({ID = COMBOBOX_LIST[LIST].PARENT}, getAbsY({ID = COMBOBOX_LIST[LIST].BASIC}) + 22);
+    setEnabled({ID = COMBOBOX_LIST[LIST].BASIC}, not PROPERTIES.disabled);
+end
 
 function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK, PROPERTIES)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
@@ -1696,7 +1806,12 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
         );
 
         for i = 1, 9 do
-            local isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            local isBannedColour = false;
+
+            if (BANNED_COLOURS) then
+                isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            end;
+
             local colourTexture = WHITEA();
 
             if isBannedColour then
@@ -1722,6 +1837,8 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
         set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
         set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', false);');
     end;
+
+    return ELEMENT;
 end;
 
 function filesInMod(mod, directory)
