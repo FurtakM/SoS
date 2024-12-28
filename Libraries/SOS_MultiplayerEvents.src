@@ -1,14 +1,14 @@
 Export function Multiplayer_UnitDestroyed(un);
-var i, ape, tag, area, nation, side, tmp;
+var i, ape, tag, class, area, nation, side, tmp;
 begin
 if GetType(un) = unit_vehicle then
    exit;
 
-if mpGameType = GameTypeSurvival then
-   if GetBType(un) in [b_depot, b_warehouse] then
-      begin
-      side := GetSide(un);
+side := GetSide(un);
 
+if mpGameType = GameTypeSurvival then
+   if GetBType(un) in [b_depot, b_warehouse] and GetTag(un) = side then
+      begin
       for i in FilterAllUnits([[f_side, side], [f_type, unit_human]]) do
           KillUnit(i);
       end;
@@ -33,22 +33,38 @@ if GetType(un) = unit_human and GetNation(un) > nation_nature then
 
    side := GetSide(un);
    nation := GetNation(un);
+   class := GetClass(un);
+
+   if class > 4 then
+      class := 1;
 
    wait(mpRespawn);
 
-   if Multiplayer and not MultiplayerSideAlive(side) and HasPowerByGameType(mpGameType, side) then
+   if not MultiplayerSideAlive(side) and not HasPowerByGameType(mpGameType, side) then
       exit;
 
    uc_side := side;
    uc_nation := nation;
 
-   PrepareHuman(false, rand(1,4), 2);
+   PrepareHuman(false, class, 2);
 
-   tmp := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
-
-   if not tmp then
-      PlaceUnitAnywhere(CreateHuman, true)
-   else
-      PlaceUnitXYR(CreateHuman, GetX(tmp[1]), GetY(tmp[1]), 20, true);
+   mpRespawnPull := Replace(mpRespawnPull, side, Join(mpRespawnPull[side], CreateHuman));
    end;
+End;  
+
+Export function Multiplayer_BuildingCaptured(building, oldSide, unit);
+var i;
+begin
+if mpGameType = GameTypeSurvival and GetBType(building) in [b_depot, b_warehouse] then
+   begin
+   KillUnit(building);
+
+   for i in FilterAllUnits([[f_side, oldSide], [f_type, unit_human]]) do
+       KillUnit(i);
+
+   exit;
+   end;
+
+if GetBType(building) in [b_depot, b_warehouse] then
+   SetBName(building, '@' & GetSide(building));
 End;

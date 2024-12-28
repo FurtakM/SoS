@@ -682,6 +682,10 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.name = '';
     end;
 
+    if PROPERTIES.blockElements == nil then
+        PROPERTIES.blockElements = nil;
+    end;
+
     local label = '';
 
     if ITEMS[SELECTEDITEM] == nil then
@@ -948,8 +952,19 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
     local colour = WHITEA();
+    local textColour = BLACK();
+    local isBlocked = false;
+
+    if (PROPERTIES.blockElements ~= nil) then
+        isBlocked = inArray(PROPERTIES.blockElements, VALUE);
+
+        if (isBlocked) then
+            textColour = RGB(191, 191, 191);
+        end;
+    end;
 
     if (SELECTED) then
+        textColour = BLACK();
         colour = RGB(191, 191, 191);
     end;
 
@@ -973,12 +988,18 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         {
             hint = SGUI_widesub(VALUE, PROPERTIES.trimFrom),
             colour1 = colour,
-            callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK
+            -- callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
+            -- callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
+            -- callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK
         }
     );
-    
+
+    if (not isBlocked) then
+        set_Callback(item.ID, CALLBACK_MOUSELEAVE, 'clHoverItem(' .. item.ID .. ', 0, ' .. BoolToInt(SELECTED) .. ');');
+        set_Callback(item.ID, CALLBACK_MOUSEOVER, 'clHoverItem(' .. item.ID .. ', 1, ' .. BoolToInt(SELECTED) .. ');');
+        set_Callback(item.ID, CALLBACK_MOUSEDOWN, 'clSelectComboBoxItem(' .. item.ID .. ', ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK);
+    end;
+
     item.label = getLabelEX(
         item,
         anchorLTRB,
@@ -986,9 +1007,9 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         nil,
         SGUI_widesub(VALUE, PROPERTIES.trimFrom, PROPERTIES.trimLength),
         {
-            font_colour = BLACK(),
+            font_colour = textColour,
             nomouseevent = true,
-            font_name = BankGotic_14,
+            font_name = BankGotic_14
         }
     );
 
@@ -1815,7 +1836,7 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
             local colourTexture = WHITEA();
 
             if isBannedColour then
-                colourTexture = BLACKA(120);
+                colourTexture = WHITEA(155);
             end;
 
             local color = getElementEX(
@@ -1830,6 +1851,8 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
 
             if not isBannedColour then
                 set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+            else
+                setTexture(color, 'classic/edit/ban_colour.png');
             end;
         end;
 

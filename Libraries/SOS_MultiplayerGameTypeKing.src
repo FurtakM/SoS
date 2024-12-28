@@ -1,7 +1,7 @@
 // GameTypeKing = 3
 Export mpKingPoints;
 Every 0$1 trigger mpGameActive marked GameTypeKing do
-var i, tmp;
+var i, j, tmp;
 begin
 mpKingPoints := [];
 
@@ -15,6 +15,12 @@ else // per player
    for i := 1 to 8 do
        mpKingPoints := Replace(mpKingPoints, i, 0);
    end;
+
+tmp := AreaToList(kingCamArea, 0);
+
+for i := 1 to tmp[1] do
+    for j := 1 to 8 do
+        PlaceSeeing(tmp[1][i], tmp[2][i], j, -12);
 
 SetAreaMapShow(mpKingArea, 1);
 
@@ -30,6 +36,22 @@ repeat
  AddPoints(tmp);
  UpdateCounter;
 
+until false;
+End;
+
+Every 0$1 trigger mpGameActive and mpEmissions marked GameTypeKing do
+var i, tmp;
+begin
+tmp := AreaToList(kingCamArea, 0);
+
+for i := 1 to tmp[1] do
+    ArtContamination(tmp[1][i], tmp[2][i], 125);
+
+repeat
+ wait(mpEmissions);
+
+ for i := 1 to tmp[1] do
+    ArtContamination(tmp[1][i], tmp[2][i], 15);
 until false;
 End;
 
@@ -92,6 +114,11 @@ else
 mpDisplayStrings := result;
 End;
 
+Export function HowMuchPointsKing(side);
+begin
+result := HowMuchPoints(side);
+End;
+
 Function HowMuchPoints(side);
 var i;
 begin
@@ -124,12 +151,12 @@ if not HasPower(your_side) then
    end
 else
    begin
-   canWin := HowMuchPoints(your_side) >= mpPoints;
+   canWin := (HowMuchPoints(your_side) >= mpPoints and HasPower(your_side)) or not EnemiesInGame;
 
    for i := 1 to 8 do
        if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
-          if not mpSideTeams[i] or (mpSideTeams[i] <> mpSideTeams[your_side]) then
-             if HowMuchPoints(i) >= mpPoints then
+          if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+             if HowMuchPoints(i) >= mpPoints and HasPower(i) then
                 begin
                 enable(mpLose);
                 exit;
@@ -140,6 +167,19 @@ else
    else
       enable;
    end;
+End;
+
+Function EnemiesInGame;
+var i;
+begin
+result := false;
+
+for i := 1 to 8 do
+    if i <> your_side and MultiplayerSideAlive(i) then
+       begin
+       result := true;
+       exit;
+       end;
 End;
 
 Function CanWinLoose;

@@ -1,0 +1,586 @@
+Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
+       multi_teams, multi_spec, multi_pos_area, multi_allowed_nations,
+       multi_bots, multi_teamgame, multi_custom_commanders,
+       multi_settings, multi_settings_counter, multi_pep_amount,
+       multi_skill_level, multi_crates_spawn, multi_ape_amount,
+       multi_support, multi_commanders, multi_loosers, multi_players_amount,
+       multi_reinforcements, multi_reinforcements_spawned,  multi_support_arrive_time;
+Export Function InitMultiplayer;
+var i, j, x, tmp;
+begin
+multi_settings_counter := 6; // MultiDesc<gametype>.wri
+
+if Multiplayer then
+   begin
+   your_side        := mp_player_side;
+   multi_gametype   := mp_game_type;
+   multi_sides      := mp_sides_positions;
+   multi_side_teams := mp_sides_teams;
+   multi_nations    := mp_sides_nations;
+   multi_teams      := [ [] ];
+
+   for i in mp_teams do
+       if i then
+          multi_teams := Replace(multi_teams, 1, multi_teams[1] union i);
+
+   for i := 1 to multi_settings_counter do
+       multi_settings := Replace(multi_settings, multi_settings + 1, GetMultiplayerSetting(i) + 1);
+   end
+else
+   begin
+   your_side        := 1; // allowed values: 1-8
+   multi_gametype   := 1; // allowed values: 0, 1
+   multi_sides      := [2, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0-8
+   multi_side_teams := [1, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0, 1
+   multi_nations    := [1, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0, 1, 2, 3
+   multi_teams      := [[1, 3]];
+   multi_settings   := [2, 2, 1, 3, 1, 3]; // Difficulty, Pep.amount, Skill level, Crates, Ape, Support
+   end;
+
+multi_spec := [0, 0, 0, 0, 0, 0, 0, 0];
+multi_bots := [0, 0, 0, 0, 0, 0, 0, 0];
+multi_loosers := [0, 0, 0, 0, 0, 0, 0, 0];
+multi_teamgame := true;
+multi_allowed_nations := [1];
+multi_custom_commanders := true;
+multi_commanders := [];
+multi_reinforcements := [];
+multi_reinforcements_spawned := 0;
+multi_players_amount := 0;
+multi_pos_area := [ [player_1_hum, player_1_veh],
+                    [player_2_hum, player_2_veh],
+                    [player_3_hum, player_3_veh] ];
+
+
+// init arrays
+for i := 1 to 8 do
+    begin
+    // check spectators
+    if Multiplayer_GetPlayerIsSpec(i) then
+       begin
+       multi_spec := Replace(multi_spec, i, 1);
+       multi_nations := Replace(multi_nations, i, 0);
+       multi_sides := Replace(multi_sides, i, 0);
+
+       for j = 1 to multi_teams do
+           begin
+           if i in multi_teams[j] then
+              begin
+              tmp := multi_teams[j] diff i;
+              multi_teams := Replace(multi_teams, j, tmp);
+              end;
+           end;
+       end;
+
+    // check allowed nations
+    if multi_nations[i] and not multi_nations[i] in multi_allowed_nations then
+       multi_nations := Replace(multi_nations, i, multi_allowed_nations[rand(1, multi_allowed_nations)]);
+
+    // empty slots for cpu players
+    if not multi_nations[i] and not multi_sides[i] and not multi_spec[i] then
+       multi_bots := Replace(multi_bots, i, 1);
+
+    if multi_sides[i] then
+       multi_players_amount := multi_players_amount + 1;
+    end;
+
+// share vision
+for i in multi_teams do
+    begin
+    for j = 2 to i do
+        begin
+        ChangeSideFog(i[j], i[1]);
+
+        for x = 1 to j-1 do
+            SetAttitude(i[j], i[x], att_friend, true);
+        end;
+    end;
+
+// set difficulty
+Difficulty := [1, 2, 3][multi_settings[1]];
+
+// others settings
+multi_pep_amount := [9, 12, 15, 18][multi_settings[2]];
+multi_skill_level := [5, 6, 8, 10][multi_settings[3]];
+multi_crates_spawn := [ [9000, 0$32], [12000, 0$22], [14000, 0$14], [16000, 0$12] ][multi_settings[4]];
+multi_ape_amount := [6, 8, 10][multi_settings[5]];
+multi_support := [0, 1, 2][multi_settings[6]];
+
+multi_support_arrive_time := [15$0, 18$0, 21$0][Difficulty];
+End;
+
+Export Function Multiplayer_SetBotSide(preferSide);
+var i;
+begin
+if not multi_sides[2] then
+   begin
+   result := preferSide;
+   exit;
+   end;
+
+for i := 1 to 8 do
+    if not multi_sides[i] then
+       begin
+       result := i;
+       exit;
+       end;
+End;
+
+Export Function Multiplayer_PrepareCustomCommanders(side, num);
+begin
+uc_side := side;
+uc_nation := 1;
+
+hc_importance := 100;
+hc_class := 1;
+
+if num = 1 then
+   begin
+   hc_gallery := 'us';
+   hc_face_number := 5;
+   hc_name := 'John Macmilan';
+   hc_sex := sex_male;
+   hc_skills := [7, 2, 4, 4];
+   hc_attr := [11, 10];
+
+   result := CreateHuman;
+   end;
+
+if num = 2 then
+   begin
+   hc_gallery := 'us';
+   hc_face_number := 2;
+   hc_name := 'Lucy Donaldson';
+   hc_sex := sex_female;
+   hc_skills := [6, 3, 4, 3];
+   hc_attr := [9, 12];
+
+   result := CreateHuman;
+   end;
+
+if num = 3 then
+   begin
+   hc_gallery := 'us';
+   hc_face_number := 7;
+   hc_name := 'Arthur Powell';
+   hc_sex := sex_male;
+   hc_skills := [8, 2, 5, 2];
+   hc_attr := [10, 11];
+
+   result := CreateHuman;
+   end;
+End;
+
+Export Function Multiplayer_PreparePlayers();
+var i, j, cl, un, veh, tmp, copy, people_amount;
+begin
+for i := 1 to 8 do
+    begin
+    if not multi_sides[i] then
+       continue;
+
+    if multi_custom_commanders then
+       begin
+       un := Multiplayer_PrepareCustomCommanders(i, multi_sides[i]);
+       multi_commanders := Insert(multi_commanders, multi_commanders+1, un);
+       PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
+       end
+    else
+       begin
+       uc_side := i;
+       uc_nation := multi_nations[i];
+
+       hc_importance := 100;
+
+       PrepareHuman(false, 1, multi_skill_level);
+
+       if multiplayer then
+          begin
+          hc_name := mp_sides_players_names[i];
+          hc_gallery := 'MULTIAVATARS';
+          hc_face_number := Multiplayer_GetPlayerSideNum(i);
+          hc_sex := Multiplayer_GetPlayerSex(i);
+          end
+         else
+          begin
+          hc_gallery := '';
+          hc_name := '';
+          hc_sex := rand(1, 2);
+          end;
+
+       un := CreateHuman;
+       PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
+
+       multi_commanders := Replace(multi_commanders, i, un);
+       end;
+
+    InitHc;
+    InitUc;
+
+    uc_side := i;
+    uc_nation := multi_nations[i];
+
+    hc_gallery := '';
+    hc_name := '';
+    hc_importance := 0;
+
+    cl := 1;
+
+    // prepare player units
+    for j = 2 to multi_pep_amount do
+        begin
+
+        if (j - 1) mod ((multi_pep_amount - 1) / 4) = 0 then
+           cl := cl + 1;
+
+        PrepareHuman(false, cl, multi_skill_level);
+        un := CreateHuman;
+
+        if j > copy then
+           copy := Replace(copy, j, un)
+          else
+           begin
+           CopySkills(copy[j], un);
+           SetAttr(un, attr_speed, GetAttr(copy[j], attr_speed));
+           SetAttr(un, attr_stamina, GetAttr(copy[j], attr_stamina));
+           end;
+
+        if multi_pos_area then
+           begin
+           if GetClass(un) = 3 then
+              begin
+              PrepareVehicle([us_medium_tracked, us_medium_wheeled][j mod 2 + 1], engine_solar, control_manual, [us_double_gun, us_gatling_gun, us_light_gun][j mod 3 + 1], 100);
+              veh := CreateVehicle;
+              PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
+              PlaceHumanInUnit(un, veh);
+              continue;
+              end;
+
+           PlaceUnitArea(un, multi_pos_area[multi_sides[i]][1], false);
+           end;
+        end;
+
+    for j = 1 to 3 do
+        begin
+        PrepareVehicle([us_medium_wheeled, us_medium_tracked][rand(1,2)], engine_solar, control_computer, [us_radar, us_rocket_launcher, us_gatling_gun][j], 100);
+        PlaceUnitArea(CreateVehicle, multi_pos_area[multi_sides[i]][1], false);
+        end;
+    end;
+
+End;
+
+Export Function Multiplayer_PrepareReinforcements();
+var i, j, un, tmp;
+begin
+if not multi_support then
+   exit;
+
+result := [];
+
+for i := 1 to 8 do
+    begin
+    result := Replace(result, i, []);
+
+    if multi_sides[i] then
+       begin
+       tmp := [];
+
+       // 1 radar, 3 tanks
+       if multi_support = 1 then
+          begin
+          uc_side := i;
+          uc_nation := multi_nations[i];
+
+          PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_radar, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_wheeled, engine_combustion, control_computer, us_double_gun, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_gatling_gun, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_tracked, engine_solar, control_computer, us_laser, 40);
+          tmp := tmp ^ CreateVehicle;
+          end;
+
+       // 1 radar, 6 tanks
+       if multi_support = 2 then
+          begin
+          uc_side := i;
+          uc_nation := multi_nations[i];
+
+          PrepareVehicle(us_medium_tracked, engine_combustion, control_computer, us_radar, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_tracked, engine_siberite, control_computer, us_cargo_bay, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          SetCargo(tmp[tmp], mat_cans, 100);
+
+          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_double_gun, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_heavy_tracked, engine_combustion, control_computer, us_heavy_gun, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_laser, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_laser, 40);
+          tmp := tmp ^ CreateVehicle;
+
+          PrepareVehicle(us_heavy_tracked, engine_combustion, control_computer, us_heavy_gun, 40);
+          tmp := tmp ^ CreateVehicle;
+          end;
+
+       result := Replace(result, i, tmp);
+       end;
+    end;
+End;
+
+Export Function Multiplayer_Start();
+begin
+Multiplayer_PreparePlayers();
+Multiplayer_InitPointSystem();
+
+// for kill
+Multiplayer_RegisterCondition(20);
+// for artifact
+Multiplayer_RegisterCondition(150);
+// for building
+Multiplayer_RegisterCondition(5);
+// for lost human
+Multiplayer_RegisterCondition(-40);
+// for kill important person
+Multiplayer_RegisterCondition(200);
+// for produce vehicle
+Multiplayer_RegisterCondition(2);
+
+Multiplayer_SpawnArtifact;
+
+if multi_support then
+   multi_reinforcements := Multiplayer_PrepareReinforcements();
+
+if multi_sides[your_side] then
+   CenterNowOnUnits(FilterAllUnits([f_side, your_side])[1]);
+End;
+
+Export Function Multiplayer_End();
+var i, j, tmp, reinforcements_arrive;
+begin
+reinforcements_arrive := 0;
+
+repeat
+ wait(0$1);
+
+ if tick > multi_support_arrive_time and not multi_reinforcements_spawned and multi_support then
+    begin
+    multi_reinforcements_spawned := true;
+
+    for i := 1 to 8 do
+        begin
+        if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] then
+           begin
+           tmp := multi_reinforcements[i];
+
+           for j in tmp do
+               PlaceUnitArea(j, multi_pos_area[multi_sides[i]][2], false);
+
+           multi_reinforcements := Replace(multi_reinforcements, i, []);
+           end;
+        end;
+
+    reinforcements_arrive := tick;
+    end;
+
+ if not multi_custom_commanders then
+    begin
+    for i = 1 to 8 do
+        begin
+        if FilterAllUnits([f_side, i]) = 0 and not multi_loosers[i] then
+           begin
+           multi_loosers := Replace(multi_loosers, i, 1);
+           Multiplayer_Reside(i);
+           end;
+        end;
+
+    if Count(multi_loosers) = Count(multi_sides) then
+       break;
+    end;
+
+until (FilterAllUnits([[f_side, side_bot], [f_type, unit_human], [f_ok]]) = 0 and game) or not multi_commanders;
+
+game := false;
+
+for i := 1 to 8 do
+    begin
+    if multi_sides[i] then
+       SetMultiScore(i, multi_points[i]);
+    end;
+
+if multi_loosers[your_side] then
+   begin
+   if Multiplayer then
+      YouLostInMultiplayer
+   else
+      YouLost('');
+   end
+else
+   begin
+   if Multiplayer then
+      YouWinInMultiplayer
+   else
+      YouWin;
+   end;
+End;
+
+Export Function Multiplayer_DisplayStrings();
+var i;
+begin
+result := [];
+
+for i := 1 to 8 do
+    begin
+    if multi_sides[i] then
+       begin
+       result := result  ^ ['#coop-points', i, i, multi_points[i]];
+       end;
+    end;
+End;
+
+
+Export multi_points, multi_points_conditions;
+Export Function Multiplayer_InitPointSystem();
+var i;
+begin
+multi_points := [0, 0, 0, 0, 0, 0, 0, 0];
+multi_points_conditions := [];
+End;
+
+Export Function Multiplayer_AddPoints(side, amount);
+begin
+if not multi_points or not side or side > 8 then
+   exit;
+
+multi_points := Replace(multi_points, side, multi_points[side] + amount);
+End;
+
+Export Function Multiplayer_GetPoints(side);
+begin
+if not multi_points or not side or side > 8 then
+   exit;
+
+result := multi_points[side];
+End;     
+
+Export Function Multiplayer_RegisterCondition(points);
+begin
+multi_points_conditions := Replace(multi_points_conditions, multi_points_conditions + 1, points);
+End;
+
+Export Function Multiplayer_GetCondition(id);
+begin
+if not id then
+   exit;
+
+result := multi_points_conditions[id];
+End;
+
+Export Function Multiplayer_Reside(side);
+var players, i, j, tmp;
+begin
+players := [];
+
+for i = 1 to 8 do
+    begin
+    if i = side then
+       continue;
+
+    if multi_sides[i] and not multi_loosers[i] then
+       players := players ^ i;
+    end;
+
+if not players then
+   exit;
+
+if players = 1 then
+   begin
+   for i in FilterAllUnits([[f_side, side], [f_alive]]) do
+       SetSide(i, players[1]);
+   end
+else
+   begin
+   j := 1;
+
+   for i in FilterAllUnits([[f_side, side], [f_or, [[f_type, unit_human], [f_alive]], [f_type, unit_vehicle]]]) do
+       begin
+       SetSide(i, players[j]);
+
+       if IsDrivenBy(i) then
+          SetSide(IsDrivenBy(i), players[j]);
+
+       if GetType(IsInUnit(i)) = unit_building then
+          ComExitBuilding(i);
+
+       j := j + 1;
+
+       if j > players then
+          j := 1;
+       end;
+   end;
+End;
+
+Export Function Multiplayer_SpawnArtifact();
+var i, pos;
+begin
+i := 3;
+pos := [ [5, 10], [120, 2], [101, 8], [27, 4] ];
+//i := rand(1, pos);
+
+CreateResourcesXY(mat_artifact, 5, pos[i][1], pos[i][2], false);
+End;
+
+Export Function MultiplayerEvent_Produced(side);
+begin
+if not side or side > 8 then
+   exit;
+
+Multiplayer_AddPoints(side, Multiplayer_GetCondition(6));
+End;
+
+Export Function MultiplayerEvent_HumanLost(side);
+begin
+if not side or side > 8 then
+   exit;
+
+Multiplayer_AddPoints(side, Multiplayer_GetCondition(4));
+End;
+
+Export Function MultiplayerEvent_BuildingCompleted(side, btype);
+begin
+if not side or side > 8 or not btype in [b_workshop, b_lab, b_control_tower, b_depot] then
+   exit;
+
+Multiplayer_AddPoints(side, Multiplayer_GetCondition(3));
+End;
+
+Export Function MultiplayerEvent_UnitKilled(un, side, points);
+var gained_points;
+begin
+if not un then
+   exit;
+
+if not points then
+   gained_points := Multiplayer_GetCondition(1)
+else
+   gained_points := points;
+
+Multiplayer_AddPoints(side, gained_points)
+End;
+
+Export Function MultiplayerEvent_ArtifactCaptured(side);
+begin
+Multiplayer_AddPoints(side, Multiplayer_GetCondition(2));
+End;
+
