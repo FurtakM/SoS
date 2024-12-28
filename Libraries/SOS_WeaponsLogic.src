@@ -3,18 +3,13 @@
 // by Serpent
 // 14-11-2020
 Export Function SOS_UnitDestroyed(un);
-var i, eff, side;
 begin
-if GetWeapon(un) = ar_bio_bomb then
-   begin     
-   // upgrade for 3 bio
-   if GetTech(tech_bio3, GetSide(un)) = state_researched then
-      eff := 70
-   else
-      eff := 30;
+ComRadiation(un);
+End;
 
-   ArtContamination(GetX(un), GetY(un), eff);
-   end;
+Export Function SOS_UnitKamikazed(un);
+begin
+ComRadiation(un);
 End;
 
 Export Function SOS_UnitExtraDestroyed(un, killerSide, killerUnit);
@@ -33,7 +28,7 @@ begin
 End;
 
 Export Function SOS_VehicleConstructed(vehicle, factory);
-var tag, driver;
+var tag, driver, hex;
 begin
 if not vehicle or not factory then
    exit;
@@ -46,19 +41,30 @@ if factoryWaypoints >= factory then
          driver := IsDrivenBy(vehicle);
          tag := GetTag(driver);
 
-         if tag = tDriver then
+         if tag = tDriver or GetTag(vehicle) = tDriver then
             exit;
 
          if not HasTask(driver) then
             begin
             SetTag(driver, tDriver);
-            ComMoveXY(driver, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+            SetTag(vehicle, tDriver);
+
+            hex := HexInfo(factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+
+            if hex then
+               ComMoveUnit(driver, hex)
+            else
+               ComMoveXY(driver, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+
             AddComExitVehicle(driver);
             AddComEnterUnit(driver, factory);
 
             wait(0$1);
 
+            // display_strings := [driver, GetTaskList(driver), GetTaskList(vehicle)];
+
             SetTag(driver, tag);
+            SetTag(vehicle, 0);
             end;
          end
       else if GetControl(vehicle) = control_remote then
@@ -83,8 +89,11 @@ if cmd = 252 and GetWeapon(unit) = ar_miner then
    MinerCreateMinefield(unit, x, y);
 if cmd = 253 and GetClass(unit) = class_sniper then
    ComBinocular(unit, x, y);
-if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
-   HackDestroyVehicle(unit, selectedUnit);
+
+if selectedUnit then
+   if cmd = 254 and GetWeapon(unit) = us_hack and GetControl(selectedUnit) = control_computer then
+      HackDestroyVehicle(unit, selectedUnit);
+
 if cmd = 255 and GetWeapon(unit) in [us_bulldozer, ru_bulldozer] and ValidHex(x, y) then
    CutTreeXYR(unit, x, y, 12);
 if cmd = 256 then
@@ -93,6 +102,21 @@ if cmd = 257 then
    SetWarehouseGatheringPoint(unit, x, y);
 if cmd = 258 then
    BurnTreeXYR(unit, x, y, 8);
+End;
+
+Export Function ComRadiation(un);
+var eff;
+begin
+if GetWeapon(un) <> ar_bio_bomb then
+   exit;
+
+// upgrade for 3 bio
+if GetTech(tech_bio3, GetSide(un)) = state_researched then
+   eff := 70
+else
+   eff := 30;
+
+ArtContamination(GetX(un), GetY(un), eff);
 End;
 
 Export Function CutTreeXYR(bulldozer, x, y, r);
@@ -462,9 +486,9 @@ for i in tmp do
 End;
 
 Export Function ComBinocular(unit, x, y);
-var dist, side, viewRange, _x, _y, _d;
+var dist, side, dir, viewRange, _x, _y, _d, p;
 begin
-if not GetClass(unit) = class_sniper then
+if GetClass(unit) <> class_sniper then
    exit;
 
 dist := 8;
@@ -488,22 +512,35 @@ if GetDistUnitXY(unit, x, y) > dist then
    end;
 
 ComTurnXY(unit, x, y);
-wait(5);
 
-_d := GetDir(unit);
-_x := ShiftX(GetX(unit), _d, dist);
-_y := ShiftY(GetY(unit), _d, dist);
+repeat
+ if Multiplayer then
+    wait(35)
+ else
+    wait(5);
+
+ _d := GetDir(unit);
+ dir := GetDirFromHex(GetX(unit), GetY(unit), x, y);
+until dir = _d;
+
+_x := ShiftX(GetX(unit), dir, dist);
+_y := ShiftY(GetY(unit), dir, dist);
 
 if not ValidHex(_x, _y) then
    exit;
 
 ComAnimCustom(unit, 1); // see customanim.txt in data/gameinit
 
+p := 0;
 PlaceSeeing(_x, _y, side, viewRange);
 
 repeat
- wait(1);
-until IsIdle(unit) or HasTask(unit) or not IsOk(unit) or IsDead(unit);
+ //if HasTask(unit) then
+    //break;
+
+ wait(0$1);
+ p := Inc(p);
+until p = 3 or not IsOk(unit) or IsDead(unit);
 
 RemoveSeeing(_x, _y, side);
 End;

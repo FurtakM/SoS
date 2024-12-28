@@ -35,8 +35,10 @@ Export
   mpKingArea,
   mpPoints,
   mpVehicles,
+  mpEmissions,
   mpDisplayStrings,
-  mpGameActive;
+  mpGameActive,
+  mpRespawnPull;
 
 {
   mpBaseLevel,            // (0)  No Base, Depot Only, Fortified, Extra Fortified
@@ -48,6 +50,7 @@ Export
   mpSibSources,           // (6)  None, Normal, Extra / *-
   mpPoints                // (7)
   mpVehicles              // (8)
+  mpEmissions             // (9)
   mpSharedVision,         // (10) True, False
   mpFlags,                // (11) None, Fast Decreasing, Decreasing, Slowly Decreasing, Not Decreasing
   mpSibDetection,         // (12) True, False
@@ -90,6 +93,8 @@ mpKingArea := 0;
 mpPoints := [];
 mpVehicles := 0;
 mpShipments := 0;
+mpRespawnPull := [ [], [], [], [], [], [], [], [] ];
+mpEmissions := 0;
 
 mpPeopleSkill := 3;
 mpPeopleAmount := 15;
@@ -193,6 +198,7 @@ for i := 1 to 8 {max amount} do
        b := CreateAndPlaceBuildingXYD(mpDepots[pos][1], mpDepots[pos][2], mpDepots[pos][3]);
 
        SetBName(b, '@' & side);
+       SetTag(b, side);
 
        if Count(mpStartingResources) then
           begin
@@ -247,18 +253,6 @@ for i := 1 to 8 {max amount} do
                                                                    ]));
        end;
 
-    // apemans
-    if mpApemans then
-       begin
-       for j := 1 to mpApemans do
-           begin
-           PrepareApeman(-5);
-           ape := CreateHuman;
-           SetTag(ape, side);
-           PlaceUnitArea(ape, mpApemansArea[side], false);
-           end;
-       end;
-
     // tech
     if mpSibDetection and GetTech(tech_sibdet, side) = state_enabled then
        SetTech(tech_SibDet, side, state_researched);
@@ -289,7 +283,19 @@ for i := 1 to 8 {max amount} do
 
     for j in team do
         PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 12, false);
-    end;
+
+    // apemans
+    if mpApemans then
+       begin
+       for j := 1 to mpApemans do
+           begin
+           PrepareApeman(-5);
+           ape := CreateHuman;
+           SetTag(ape, side);
+           PlaceUnitArea(ape, mpApemansArea[pos], false);
+           end;
+       end;
+    end;  
 
 // diplomacy
 if not mpTeamGame then
@@ -338,7 +344,6 @@ enable(mpGameType);
 
 mpGameActive := true;
 End;
-
 
 // Prepare Team
 Function mpPrepareTeam(side, nation, amount, skill);
@@ -526,7 +531,7 @@ End;
 Every 0$1 trigger mpActive marked mpWin do
 begin
 if IAmServer then
-   wait(0$5);
+   wait(0$3);
 
 if Multiplayer then
    YouWinInMultiplayer
@@ -551,7 +556,8 @@ case gameType of
 
      GameTypeKing:
                    begin
-                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]))
+                          and HowMuchPointsKing(side) < mpPoints;
                    end;
      end;
 End;
@@ -569,7 +575,7 @@ repeat
 
  for i := 1 to 8 do
      if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
-        if not mpSideTeams[i] or (mpSideTeams[i] <> mpSideTeams[your_side]) then
+        if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
            if HasPowerByGameType(mpGameType, i) then
               begin
               gameIsOn := true;
@@ -580,12 +586,46 @@ repeat
 until not gameIsOn;
 
 if IAmServer then
-   wait(0$5);
+   wait(0$3);
 
 if Multiplayer then
    YouLostInMultiplayer
 else
    YouLost('');
+End;
+
+// respawn
+Every 0$10 trigger mpRespawn marked mpActive do
+var i, j, tmp, spawn, sides;
+begin
+sides := [1, 2, 3, 4, 5, 6, 7, 8];
+
+repeat
+ wait(0$30);
+
+ for i := 1 to 8 do
+     begin
+     j := sides[i];
+
+     if Count(mpRespawnPull[j]) and MultiplayerSideAlive(j) and HasPowerByGameType(mpGameType, j) then
+        begin
+        wait(mpRespawn div 2);
+
+        tmp := FilterAllUnits([[f_side, j], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+        if not tmp then
+           continue;
+
+        spawn := tmp[1];
+    
+        PlaceUnitXYR(mpRespawnPull[j][1], GetX(spawn), GetY(spawn), 32, true);
+        mpRespawnPull := Replace(mpRespawnPull, j, Delete(mpRespawnPull[j], 1));
+        end;
+     end;
+
+ sides := Shuffle(sides);
+
+until false;
 End;
 
 // display string
@@ -600,5 +640,5 @@ if not mpDisplayStrings then
    end;
 
 display_strings := mpDisplayStrings;
-End;    
+End; 
 

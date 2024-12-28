@@ -229,7 +229,11 @@ function strlen(TEXT)
 end;
 
 function safeText(TEXT)
-    return string.gsub(TEXT, '%"', "“");
+    TEXT = string.gsub(TEXT, '%"', "“");
+    TEXT = string.gsub(TEXT, '%/', "");
+    TEXT = string.gsub(TEXT, '\\', "");
+
+    return TEXT;
 end;
 
 function text(TEXT, MAXLENGTH, APPENDCHAR)
@@ -369,6 +373,16 @@ function unionArray(a, b)
 
     return result;
 end;
+
+function joinArray(a, b)
+    local result = a;
+
+    for i = 1, #b do
+        result = addToArray(result, b[i]);
+    end;
+
+    return result;
+end
 
 function isSkirmish()
     return getvalue(OWV_SKIRMISH);
