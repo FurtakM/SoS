@@ -3,7 +3,7 @@ game.ui.timer = getElementEX(
     game.ui,
     anchorT,
     XYWH(getWidth(game.ui.toolbar) + 1, 0, 113, 26),
-    true,
+    OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),
     {
         texture = 'SGUI/Amer/timer.png',
         hint = loc(6094)

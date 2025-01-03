@@ -16,10 +16,10 @@ function FROMOW_MAP_START(MAPPATH)
 		}
 	};
 
-
-	setMapDescription(true, buildMapDescription(PARAMS));
+	setMapDescription(buildMapDescription(PARAMS));
+	turnMapDescription(true);
 end;
 
 function FROMOW_MAP_END()
-    setMapDescription(false, '');
+    turnMapDescription(false);
 end;

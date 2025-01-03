@@ -2,21 +2,19 @@
 soundoptionsy = 50;
 otherSettings = 305;
 
-
-
 soundoptionsy = soundoptionsy - 20;
 
 function setting_set(setting,value)
 	if (options_loading == false) then
 		OW_set(setting,value);
-		SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();',SETTING_TIMER_ID);
+		SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();', SETTING_TIMER_ID);
 	end;
 end;
 
 function setting_setvolume(setting,value)
 	if (options_loading == false) then
 		OW_settings_setvolume(setting,value);
-                SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();',SETTING_TIMER_ID);
+        SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();', SETTING_TIMER_ID);
 	end;
 end;
 
@@ -33,7 +31,7 @@ function addInGameOptionsSlider(X,Y,MIN,MAX,POS,HINT,CAPTION,CALLBACK)
         return ele;
 end;
 
-dialog.options                = getDialogEX(dialog.back,anchorNone,XYWH(LayoutWidth / 2 - 225,150,400,450),SKINTYPE_DIALOG1,{tile=true});
+dialog.options                = getDialogEX(dialog.back,anchorNone,XYWH(LayoutWidth / 2 - 225,150,400,480),SKINTYPE_DIALOG1,{tile=true});
 
 dialog.options.ok             = getImageButtonEX(dialog.options,anchorB,XYWH(dialog.options.width/2-75,dialog.options.height-30-15,150,24),
                                                  loc(TID_msg_Ok),'','dialog.options.Hide();',SKINTYPE_BUTTON,{font_colour_disabled=GRAY(127),});
@@ -70,37 +68,45 @@ dialog.options.showobjectives = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28
 dialog.options.subtitles      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.showobjectives.y+22,17,17),loc(550),{},'setting_set(SETTING_SUBTITLES,%value);',{checked=true,});
 dialog.options.altFact      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.subtitles.y+22,17,17),loc(TID_Options_Alternative)..' '..loc(TID_Options_AltFact),{},'dialog.options.setAltFact(%value);',{checked=true,});
 dialog.options.lockCursor      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.altFact.y+22,17,17),loc(TID_Options_LockCursor),{},'dialog.options.setLockCursor(%value);',{checked=true,});
+dialog.options.timer      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.lockCursor.y+22,17,17),loc(1675),{},'dialog.options.setTimer(%value);',{checked=OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),});
 
 function dialog.options.Show()
 	options_loading = true;
-        setChecked(dialog.options.subtitles,     OW_get(SETTING_SUBTITLES));
-        setChecked(dialog.options.showobjectives,OW_get(SETTING_AUTOMISSION));
-        setChecked(dialog.options.rawound,       OW_get(SETTING_RAWOUNDED));
-        setChecked(dialog.options.ranoncombat,   OW_get(SETTING_RANONCOMBAT));
-        setChecked(dialog.options.ravehicles,    OW_get(SETTING_RAVEHICLES));
-		setChecked(dialog.options.altFact  , altFact.inUse );
-		setChecked(dialog.options.lockCursor  , OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE) );
-		
-        dialog.options.musicvolume:setPos(OW_settings_getvolume(VOLUME_MUSIC));
-        dialog.options.soundvolume:setPos(OW_settings_getvolume(VOLUME_SPEECH));
-        dialog.options.effectsvolume:setPos(OW_settings_getvolume(VOLUME_EFFECTS));
-        dialog.options.exclamationsvolume:setPos(OW_settings_getvolume(VOLUME_EXCLAMATIONS));
 
-        options_loading = false;
+    setChecked(dialog.options.subtitles,     OW_get(SETTING_SUBTITLES));
+    setChecked(dialog.options.showobjectives,OW_get(SETTING_AUTOMISSION));
+    setChecked(dialog.options.rawound,       OW_get(SETTING_RAWOUNDED));
+    setChecked(dialog.options.ranoncombat,   OW_get(SETTING_RANONCOMBAT));
+    setChecked(dialog.options.ravehicles,    OW_get(SETTING_RAVEHICLES));
+	setChecked(dialog.options.altFact, altFact.inUse );
+	setChecked(dialog.options.lockCursor, OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE));
+    setChecked(dialog.options.timer, OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true));
+	
+    dialog.options.musicvolume:setPos(OW_settings_getvolume(VOLUME_MUSIC));
+    dialog.options.soundvolume:setPos(OW_settings_getvolume(VOLUME_SPEECH));
+    dialog.options.effectsvolume:setPos(OW_settings_getvolume(VOLUME_EFFECTS));
+    dialog.options.exclamationsvolume:setPos(OW_settings_getvolume(VOLUME_EXCLAMATIONS));
 
-        ShowDialogPause(dialog.options,false);
+    options_loading = false;
+
+    ShowDialogPause(dialog.options,false);
 end;
 
 function dialog.options.setAltFact(value);
-		OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_altFact', value);
-		altFact.inUse = value;
+	OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_altFact', value);
+	altFact.inUse = value;
 end;
 
 function dialog.options.setLockCursor(value);
-		OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_LIMITMOUSE, value);
-		OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_LIMITMOUSE', value);
+	OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_LIMITMOUSE, value);
+	OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_LIMITMOUSE', value);
+end;
+
+function dialog.options.setTimer(value)
+    OW_SETTING_WRITE('OPTIONS', 'OPTION_TIMER', value);
+    setVisible(game.ui.timer, value);
 end;
 
 function dialog.options.Hide()
-        HideDialogPause(dialog.options);
+    HideDialogPause(dialog.options);
 end;

@@ -40,6 +40,7 @@ OPTION_GAME_LOCKSPEED = 24;
 OPTION_INTERFACE_FACTORY = 25;
 OPTION_SOUND_AUDIO = 26;
 OPTION_SOUND_EXCLAMATIONS = 27;
+OPTION_TIMER = 28;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -307,6 +308,10 @@ function getSetting(setting)
     if setting == OPTION_INTERFACE_FACTORY then
         return OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_altFact', false);
     end;
+
+    if setting == OPTION_TIMER then
+        return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true);
+    end;
 end;
 
 function changeSetting(id, setting)
@@ -315,6 +320,11 @@ function changeSetting(id, setting)
     if setting == OPTION_STEAMOVERLAY then
         value = OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_STEAMOVERLAY', true);
         OW_SETTING_WRITE('OPTIONS', 'OPTION_STEAMOVERLAY', (not value));
+    end;
+
+    if setting == OPTION_TIMER then
+        value = OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true);
+        OW_SETTING_WRITE('OPTIONS', 'OPTION_TIMER', (not value));
     end;
 
     if setting == OPTION_GAME_WOUNDED then
@@ -1238,7 +1248,7 @@ menu.window_options.panel.controls.ping_label = getLabelEX(
     anchorLT,
     XYWH(31, 79, 200, 15),
     BankGotic_14, 
-    loc(TID_Options_PingMode),
+    loc(1525),
     {
         font_colour = RGB(0, 0, 0),
         shadowtext = false,

@@ -1,27 +1,126 @@
 dialog.map = getDialogEX(
 	dialog.back,
 	anchorNone,
-	XYWH(LayoutWidth / 2 - 200,125,400,380),
+	XYWH(
+		LayoutWidth / 2 - 200, 
+		125, 
+		600, 
+		540
+	),
 	SKINTYPE_DIALOG1,
 	{
 		tile = true
 	}
 );
 
-dialog.map.panel = getElementEX(
+dialog.map.btnPage1 = getImageButtonEX(
+	dialog.map,
+	anchorT,
+	XYWH(
+		20,
+		16,
+		120,
+		24
+	),
+    loc(9904),
+    '',
+    'showMapDescriptionPage(1);',
+    SKINTYPE_BUTTON,
+    {
+    	font_colour_disabled = GRAY(127)
+    }
+);
+
+dialog.map.btnPage2 = getImageButtonEX(
+	dialog.map,
+	anchorT,
+	XYWH(
+		140,
+		16,
+		120,
+		24
+	),
+    loc(9905),
+    '',
+    'showMapDescriptionPage(2);',
+    SKINTYPE_BUTTON,
+    {
+    	font_colour_disabled = GRAY(127)
+    }
+);
+
+dialog.map.btnPage3 = getImageButtonEX(
+	dialog.map,
+	anchorT,
+	XYWH(
+		260,
+		16,
+		120,
+		24
+	),
+    loc(9906),
+    '',
+    'showMapDescriptionPage(3);',
+    SKINTYPE_BUTTON,
+    {
+    	font_colour_disabled = GRAY(127)
+    }
+);
+
+dialog.map.name = getLabelEX(
+    dialog.map, 
+    anchorT, 
+    XYWH(0, 48, dialog.map.width, 18),
+    nil, 
+    'NAME',
+	{
+		nomouseevent = true,
+        font_colour = RGBA(250, 250, 250, 255),
+        text_halign = ALIGN_MIDDLE,
+        font_name = Tahoma_18B
+ 	}
+);
+
+-- PAGE 1
+dialog.map.page1 = getElementEX(
 	dialog.map,
 	anchorLTRB,
-	XYWH(20, 25, dialog.map.width-40, dialog.map.height-50-30-15),
+	XYWH(
+		20, 
+		74, 
+		dialog.map.width - 40, 
+		dialog.map.height - 140
+	),
+	false,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page1.panel = getElementEX(
+	dialog.map.page1,
+	anchorLTRB,
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page1.width,
+		dialog.map.page1.height
+	),
 	true,
 	{
 		colour1 = BLACKA(0)
 	}
 );
 
-dialog.map.panel.textbox = getElementEX(
-	dialog.map.panel,
+dialog.map.page1.panel.textbox = getElementEX(
+	dialog.map.page1.panel,
 	anchorLTR,
-	XYWH(0, 0, dialog.map.panel.width - 20, dialog.map.panel.height),
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page1.panel.width - 20, 
+		dialog.map.page1.panel.height
+	),
 	true,
 	{
 		type = TYPE_TEXTBOX,
@@ -34,10 +133,15 @@ dialog.map.panel.textbox = getElementEX(
 	}
 );
 
-dialog.map.panel.textboxscroll = getElementEX(
-	dialog.map.panel,
+dialog.map.page1.panel.textboxscroll = getElementEX(
+	dialog.map.page1.panel,
 	anchorTRB,
-	XYWH(dialog.map.panel.textbox.width + 4, 0, 16, dialog.map.panel.textbox.height),
+	XYWH(
+		dialog.map.page1.panel.textbox.width + 4, 
+		0, 
+		16, 
+		dialog.map.page1.panel.textbox.height
+	),
 	true,
 	{
 		type = TYPE_SCROLLBAR,
@@ -50,21 +154,156 @@ dialog.map.panel.textboxscroll = getElementEX(
 );
 
 setInterfaceTexture1n2(
-	dialog.map.panel.textboxscroll,
+	dialog.map.page1.panel.textboxscroll,
 	'scrollbar_back_v.png',
 	'scrollbar.png'
 );
 
 sgui_set(
-	dialog.map.panel.textbox.ID,
+	dialog.map.page1.panel.textbox.ID,
 	PROP_SCROLLBAR,
-	dialog.map.panel.textboxscroll.ID
+	dialog.map.page1.panel.textboxscroll.ID
+);
+
+-- PAGE 2
+dialog.map.page2 = getElementEX(
+	dialog.map,
+	anchorLTRB,
+	XYWH(
+		20, 
+		74, 
+		dialog.map.width - 40, 
+		dialog.map.height - 140
+	),
+	true,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page2.panel = getElementEX(
+	dialog.map.page2,
+	anchorLTRB,
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page2.width,
+		dialog.map.page2.height
+	),
+	true,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page2.panel.mapPic = getElementEX(
+	dialog.map.page2.panel, 
+	anchorLTRB,
+	XYWH(
+		dialog.map.page2.panel.width / 2 - 250,
+		dialog.map.page2.panel.height / 2 - 165,
+		500,
+		330
+	),
+	true,
+	{
+		texture = 'skirmish_unknown.png'
+	}
+);
+
+-- PAGE 3
+dialog.map.page3 = getElementEX(
+	dialog.map,
+	anchorLTRB,
+	XYWH(
+		20, 
+		74, 
+		dialog.map.width - 40, 
+		dialog.map.height - 140
+	),
+	false,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page3.panel = getElementEX(
+	dialog.map.page3,
+	anchorLTRB,
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page3.width,
+		dialog.map.page3.height
+	),
+	true,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page3.panel.textbox = getElementEX(
+	dialog.map.page3.panel,
+	anchorLTR,
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page3.panel.width - 20, 
+		dialog.map.page3.panel.height
+	),
+	true,
+	{
+		type = TYPE_TEXTBOX,
+		text = '',
+   		colour1 = RGB(16,31,24),
+		font_name = Tahoma_13,
+		wordwrap = true,
+		bevel_colour1 = RGB(76,148,128),
+		bevel_colour2 = RGB(76,148,128)
+	}
+);
+
+dialog.map.page3.panel.textboxscroll = getElementEX(
+	dialog.map.page3.panel,
+	anchorTRB,
+	XYWH(
+		dialog.map.page3.panel.textbox.width + 4, 
+		0, 
+		16, 
+		dialog.map.page3.panel.textbox.height
+	),
+	true,
+	{
+		type = TYPE_SCROLLBAR,
+		colour1 = WHITE(),
+		colour2 = WHITE(),
+		texture2 = "scrollbar.png",
+		tile = true,
+		skin = SKINTYPE_SCROLLBARWITHBUTTONS
+	}
+);
+
+setInterfaceTexture1n2(
+	dialog.map.page3.panel.textboxscroll,
+	'scrollbar_back_v.png',
+	'scrollbar.png'
+);
+
+sgui_set(
+	dialog.map.page3.panel.textbox.ID,
+	PROP_SCROLLBAR,
+	dialog.map.page3.panel.textboxscroll.ID
 );
 
 dialog.map.ok = getImageButtonEX(
 	dialog.map,
 	anchorB,
-	XYWH(dialog.map.width/2-75,dialog.map.height-30-15,150,24),
+	XYWH(
+		dialog.map.width / 2 - 75,
+		dialog.map.height - 30 - 15,
+		150,
+		24
+	),
     'OK',
     '',
     'HideDialog(dialog.map);OW_FORM_CLOSE(dialog.map.FORMID,OK);',
@@ -74,10 +313,158 @@ dialog.map.ok = getImageButtonEX(
     }
 );
 
-function setMapDescription(MODE, TEXT)
-	setEnabled(game.ui.toolbtns[5], MODE);
-	setText(dialog.map.panel.textbox, TEXT);
+function showMapDescriptionPage(PAGE)
+	setVisible(dialog.map.page1, PAGE == 1);
+	setVisible(dialog.map.page2, PAGE == 2);
+	setVisible(dialog.map.page3, PAGE == 3);
 end
+
+function setMapDescription(TEXT)
+	setText(dialog.map.page1.panel.textbox, TEXT);
+end;
+
+function addMapDescription(TEXT)
+	setText(dialog.map.page1.panel.textbox, getText(dialog.map.page1.panel.textbox) .. TEXT);
+end;
+
+function turnMapDescription(MODE)
+	setEnabled(game.ui.toolbtns[5], MODE);
+
+	if (MODE == false) then
+		mapDescription('', '', nil, nil, nil, nil);
+	end;
+end
+
+function mapDescription(NAME, TEXT, PICTURE, PLAYERS, POSITIONS, SETTINGS)
+	if (NAME ~= nil and strlen(NAME) > 0) then
+		setText(dialog.map.name, NAME);
+	else
+		setText(dialog.map.name, '');
+	end;
+
+	if (TEXT ~= nil and strlen(TEXT) > 0) then
+		setText(dialog.map.page1.panel.textbox, TEXT);
+	else
+		setText(dialog.map.page1.panel.textbox, '');
+	end;
+
+	if (PICTURE ~= nil and strlen(PICTURE) > 0) then
+		setTexture(dialog.map.page2.panel.mapPic, PICTURE);
+		setTextureFallback(dialog.map.page2.panel.mapPic, 'skirmish_unknown.png');
+	else
+		setTexture(dialog.map.page2.panel.mapPic, 'skirmish_unknown.png');
+	end;
+
+	-- POSITIONS 220, 220 -> 500, 330
+	sgui_deletechildren(dialog.map.page2.panel.mapPic.ID);
+
+	if (PLAYERS ~= nil and POSITIONS ~= nil) then
+		local scalX = 2.2722;
+		local scalY = 1.5000;
+		local tmp = {};
+
+		for i = 1, #PLAYERS do
+			if (PLAYERS[i].SIDE > 0 and PLAYERS[i].SIDE <= #POSITIONS) then
+				local coord = POSITIONS[PLAYERS[i].SIDE];
+
+				local player = PLAYERS[i];
+
+				if (tmp[coord] == nil) then
+					local border = getElementEX(
+						dialog.map.page2.panel.mapPic,
+						anchorLTRB,
+						XYWH(coord.X * scalX, coord.Y * scalY, 100, 90),
+						true,
+						{
+							colour1 = WHITEA()
+						}
+					);
+
+					if (player.NATION > 0) then
+						local nation = 'am';				 
+
+						if (player.NATION == 2) then
+							nation = 'ar';
+						end;
+
+						if (player.NATION == 3) then
+							nation = 'ru';
+						end;
+
+						local icon = getElementEX(
+							border,
+							anchorLTRB,
+							XYWH(20, 5, 60, 60),
+							true,
+							{
+								texture = 'SGUI/tags/' .. nation .. '-' .. player.COLOUR .. '.png'
+							}
+						);
+					else
+						local icon = getLabelEX(
+							border,
+							anchorLTRB,
+							XYWH(20, 5, 60, 60),
+							nil,
+							'?',
+							{
+								font_name = Tahoma_60B,
+								colour1 = WHITEA(),
+								font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[player.COLOUR],
+								text_halign = ALIGN_MIDDLE,
+								text_valign = ALIGN_MIDDLE,
+								shadowtext = true
+							}
+						);
+					end;
+
+					local label = getLabelEX(
+						border,
+						anchorLTRB,
+						XYWH(5, 70, 90, 16),
+						nil,
+						player.NAME,
+						{
+							colour1 = MULTIPLAYER_MINIMAP_PREVIEW_TEAM[player.TEAM],
+							text_halign = ALIGN_MIDDLE,
+							text_valign = ALIGN_MIDDLE,
+							font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[player.COLOUR],
+							nomouseevent = true,
+							font_name = ADMUI3L,
+							scissor = true,
+							wordwrap = false,
+							font_style_outline = true,
+		        			shadowtext = true  			
+						}
+					);
+
+					tmp[coord] = label.ID;
+				else
+					setText({ID = tmp[coord]}, getText({ID = MULTIPLAYER_MINIMAP_PLAYERS[coord]}) .. '+' .. player.NAME);
+				end;
+			end;
+		end; 
+	end;
+
+	-- SETTINGS
+	if (SETTINGS ~= nil) then
+		local settingsText = '';
+
+		for i = 1, #SETTINGS do
+			local setting = SETTINGS[i];
+
+			if (setting.ITEMS ~= nil and setting.VALUE > 0) then
+				if setting.TYPE == 1 and setting.ITEMS.COUNT > 0 then
+					settingsText = settingsText .. setting.NAME .. ': ' .. setting.ITEMS.NAMES[setting.VALUE + 1] .. '\n';
+				end;
+			end;
+		end;
+
+		setText(dialog.map.page3.panel.textbox, settingsText);
+	else
+		setText(dialog.map.page3.panel.textbox, '');
+	end;
+end;
 
 --[[
   see: LangX.wri

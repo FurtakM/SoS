@@ -24,6 +24,29 @@ MULTIPLAYER_ROOM_TEAMS = {};
 MULTIPLAYER_ROOM_TEAMS_INIT = {};
 MULTIPLAYER_ROOM_TEAMS_SPEC = {};
 MULTIPLAYER_ROOM_MERGED = {};
+MULTIPLAYER_MINIMAP_PREVIEW_TEAM = {
+	[0] = RGBA(140, 132, 99, 115),
+	[1] = RGBA(66, 130, 255, 115),
+	[2] = RGBA(255, 255, 132, 115),
+	[3] = RGBA(231, 65, 66, 115),
+	[4] = RGBA(0, 255, 255, 115),
+	[5] = RGBA(255, 180, 0, 115),
+	[6] = RGBA(255, 130, 255, 115),
+	[7] = RGBA(0, 255, 0, 115),
+	[8] = RGBA(200, 200, 200, 115)
+};
+MULTIPLAYER_MINIMAP_PREVIEW_COLOURS = {
+	[0] = RGB(140, 132, 99),
+	[1] = RGB(66, 130, 255),
+	[2] = RGB(255, 255, 132),
+	[3] = RGB(231, 65, 66),
+	[4] = RGB(0, 255, 255),
+	[5] = RGB(255, 180, 0),
+	[6] = RGB(255, 130, 255),
+	[7] = RGB(0, 255, 0),
+	[8] = RGB(200, 200, 200)
+};
+MULTIPLAYER_MINIMAP_PLAYERS = {};
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -187,8 +210,8 @@ menu.window_multiplayer_room.panel.chat = clTextBoxWithTexture(
 		padding = {
 			x = 4,
 			y = 0
-		}
-		-- added='setTextID(%id, %data);',
+		},
+		-- added='setTextID(%id, %data);'
 	}
 );
 
@@ -407,12 +430,27 @@ menu.window_multiplayer_room.panel.page1.spectatorSlots = getElementEX(
 	}
 );
 
+-- preview map
+menu.window_multiplayer_room.panel.page1.previewMap = getElementEX(
+	menu.window_multiplayer_room.panel.page1, 
+	anchorLTRB,
+	XYWH(
+		782, 
+		9,
+		220,
+		220
+	),
+	true,
+	{
+		
+	}
+);
 
 -- check init player slots
 menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	menu.window_multiplayer_room.panel.page1,
 	anchorT, 
-	XYWH(782, 9, 240, 12),
+	XYWH(782, 249, 240, 12),
 	nil, 
 	loc(846), -- player list
 	{
@@ -426,20 +464,20 @@ menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	}
 );
 
-menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
+--[[menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
 	menu.window_multiplayer_room.panel.page1,
 	808, 
-	338, 
+	538, 
 	156,
 	30, 
 	loc(498), -- kick player
 	'kickPlayer();',
 	{}
-);
+);--]]
 
 menu.window_multiplayer_room.panel.page1.playerList = clListBox(
 	menu.window_multiplayer_room.panel.page1, 
-	XYWH(782, 24, 224, 312), 
+	XYWH(782, 264, 224, 212), 
 	{}, 
 	1, 
 	'', 
@@ -593,7 +631,7 @@ menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
 function showMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, true);
 
-	MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1);
+	MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_MY_PLID);
 	MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
 	MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
 
@@ -856,6 +894,7 @@ DATA Breakdown
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
 	setMapPictureDescription();
+	setMapPreview();
 	
 	--clDebug('FROMOW_MULTIROOM_GET_MAP_INFO_CALLBACK');
 end;
@@ -891,7 +930,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
 
-	updateHostVisibilitySettings(canModifyServerSettings());
+	--updateHostVisibilitySettings(canModifyServerSettings());
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 
@@ -916,6 +955,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+	resetPlayerData(true);
 
 	if (MULTIPLAYER_ROOM_INIT_PLAYERS_LIST) then
 		recreateTeams();
@@ -1442,6 +1482,7 @@ function sendChatMessage(key)
 
 	if key == VK_ESC then
 		setText(menu.window_multiplayer_room.panel.chatInput, '');
+		clearFocus();
 		return;
 	end;
 end;
@@ -1507,6 +1548,21 @@ function kickPlayer()
 	OW_MULTIROOM_HOST_KICKPLAYER(player);
 end;
 
+function kickPlayerFromList(INDEX)
+	if (not canModifyServerSettings()) then
+		return;
+	end;
+
+	local index = parseInt(INDEX);
+	local player = MULTIPLAYER_ROOM_DATA.Players[index].PLID;
+
+	if (index == 1 or player == nil or player == 0) then
+		return;
+	end;
+
+	OW_MULTIROOM_HOST_KICKPLAYER(player);	
+end;
+
 function updateHostVisibilitySettings(isHost)
 	-- hide/show kick player button if player is host
 	setVisible(menu.window_multiplayer_room.panel.page1.playerListKick, isHost);
@@ -1539,7 +1595,8 @@ function updatePlayersOnServer(players)
 		playersList[i] = players[i].NAME .. ' (' .. players[i].PING .. ')';
 	end;
 
-	clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'selectPlayerOnPlayerList(INDEX);', {});
+	clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'kickPlayerFromList(INDEX);', {});
+	--clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'selectPlayerOnPlayerList(INDEX);', {});
 end;
 
 function updatePlayersCount(currentCount, maxCount)
@@ -1789,7 +1846,7 @@ function updatePlayerSlot(NUMBER)
 
 	local isMySlot = MULTIPLAYER_ROOM_MY_PLID == player.PLID;
 	local imHost = isMySlot and canModifyServerSettings();
-	local isMerged = isMerged(player.PLID, player.TEAM, player.TEAMPOS);
+	local isMerged = isMerged(MULTIPLAYER_ROOM_MY_PLID, player.TEAM, player.TEAMPOS);
 
 	if (isMySlot) then
 		if (MULTIPLAYER_ROOM_RANDOM_COLOURS) then
@@ -1905,7 +1962,7 @@ function updatePlayerSlot(NUMBER)
 					width = 150,
 					texture = 'classic/edit/combobox-short.png',
 					defaultLabel = loc(809),
-					disabled = (not isMySlot or (player.READY and (not canModifyServerSettings())) or player.SIDE == 0)
+					disabled = (not isMySlot or (player.READY and (not canModifyServerSettings())) or (player.SIDE == 0 and not MULTIPLAYER_ROOM_RANDOM_POSITIONS))
 				}
 			);
 
@@ -1913,6 +1970,11 @@ function updatePlayerSlot(NUMBER)
 		end;
 
 		if (isMySlot) then
+			if (s.MERGE ~= nil) then
+				sgui_delete(s.MERGE);
+				MULTIPLAYER_ROOM_PLAYERS[NUMBER].MERGE = nil;
+			end;
+
 			if (s.LOCK ~= nil) then
 				sgui_delete(s.LOCK);
 				MULTIPLAYER_ROOM_PLAYERS[NUMBER].LOCK = nil;
@@ -1924,7 +1986,7 @@ function updatePlayerSlot(NUMBER)
 				6,
 				'changeLockStatus(' .. boolToStr(not player.LOCKED) .. ');',
 				{
-					disabled = player.READY,
+					disabled = player.READY and not imHost,
 					checked = player.LOCKED,
 					hint = loc(829)
 				}
@@ -1969,7 +2031,7 @@ function updatePlayerSlot(NUMBER)
 					84,
 					18, 
 					loc(844), -- separate
-					'joinToTeam(' .. player.TEAM .. ', -1);',
+					'leaveTeam();',
 					{
 						texture = 'classic/edit/menu_button_small_l.png',
 						texture2 = 'classic/edit/menu_button_small_c.png',
@@ -2057,9 +2119,9 @@ function updatePlayerSlot(NUMBER)
 	end;
 
 	-- avatar
-	if (s.AVATARNUM == 0 or s.AVATARNUM ~= getAvatarID(NUMBER)) then
+	if (s.AVATARNUM == 0 or s.AVATARNUM ~= getAvatarID(player.PLID)) then
 		local avatar = generateAvatar(
-			NUMBER, 
+			player.PLID, 
 			player.AVATAR, 
 			player.AVATARSEX, 
 			player.NATION
@@ -2156,7 +2218,7 @@ function reloadTeamContainers()
 
 		if (children ~= nil and #children > 2) then
 			-- resort by checking merge status
-			local resortedChildern = { {}, {}, {}, {}, {}, {}, {}, {}, {} };
+			local resortedChildern = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} };
 
 			for c = 1, #children do
 				local child = children[c];
@@ -2431,16 +2493,16 @@ end;
 function reloadPlayerView()
 	MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
 	MULTIPLAYER_ROOM_MERGED = { 
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },
-		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} },  
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }, 
+		{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} } 
 	};
 
 	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
@@ -2457,11 +2519,17 @@ function reloadPlayerView()
 	for i = 1, 12 do
 		updatePlayerSlot(i);
 	end;
+
+	setMapPreview();
 end;
 
 function getMultiplayerNation(NATION, POSITION)
 	NATION = parseInt(NATION);
 	POSITION = parseInt(POSITION);
+
+	if MULTIPLAYER_ROOM_RANDOM_POSITIONS then
+		return NATION + 1;
+	end;
 
 	if POSITION < 1 or NATION < 1 or MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil then
 		return 1;
@@ -2499,6 +2567,10 @@ end;
 function setMultiplayerNation(INDEX, POSITION)
 	INDEX = parseInt(INDEX);
 	POSITION = parseInt(POSITION);
+
+	if (MULTIPLAYER_ROOM_RANDOM_POSITIONS) then
+		return OW_MULTIROOM_SET_MYNATION(INDEX - 1);
+	end;
 	
 	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
 
@@ -2553,7 +2625,7 @@ function isMerged(PLID, TEAM, TEAMPOS)
 		return false;
 	end;
 
-	return inArray(MULTIPLAYER_ROOM_MERGED[TEAM + 1][TEAMPOS + 1], PLID) 
+	return inArray(MULTIPLAYER_ROOM_MERGED[TEAM + 1][TEAMPOS + 1], parseInt(PLID)) 
 		and #MULTIPLAYER_ROOM_MERGED[TEAM + 1][TEAMPOS + 1] > 1;
 end;
 
@@ -2624,6 +2696,18 @@ function generateMapSettings(SETTINGS, IS_HOST)
 	sgui_deletechildren(parent.ID);
 
 	if #SETTINGS.MAPPARAMS == 0 then
+		return;
+	end;
+
+	if MULTIPLAYER_ROOM_MAP_DATA == nil then
+		return;
+	end;
+
+	if MULTIPLAYER_ROOM_MAP_DATA.GAMETYPE == nil then 
+		return; 
+	end;
+
+	if MULTIPLAYER_ROOM_MAP_DATA.MAP == nil then 
 		return;
 	end;
 
@@ -2936,6 +3020,73 @@ function setMapPictureDescription()
 	setText(menu.window_multiplayer_room.panel.page3.description, description .. '\n\n' .. rules);
 end;
 
+function setMapPreview()
+	local picture = '';
+	local mapName = nil;
+
+	if MULTIPLAYER_ROOM_DATA.MAPS ~= nil and MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME then
+		mapName = MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME;
+	end;
+
+	if mapName == nil or mapName == '' then
+		picture = 'skirmish_unknown.png';
+	else
+		picture = '%missions%/_multiplayer/' .. mapName .. '/mappic.png'
+	end;
+
+	setTexture(menu.window_multiplayer_room.panel.page1.previewMap, picture);
+	setTextureFallback(menu.window_multiplayer_room.panel.page1.previewMap, 'skirmish_unknown.png');
+
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.previewMap.ID);
+
+	MULTIPLAYER_MINIMAP_PLAYERS = {};
+
+	if (MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides ~= nil and MULTIPLAYER_ROOM_DATA.Players ~= nil) then
+		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+			if (MULTIPLAYER_ROOM_DATA.Players[i].SIDE > 0 and MULTIPLAYER_ROOM_DATA.Players[i].SIDE <= #MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides) then
+				local coord = MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides[MULTIPLAYER_ROOM_DATA.Players[i].SIDE];
+				local player = MULTIPLAYER_ROOM_DATA.Players[i];
+
+				if (MULTIPLAYER_MINIMAP_PLAYERS[coord] == nil) then
+					local border = getElementEX(
+						menu.window_multiplayer_room.panel.page1.previewMap,
+						anchorLTRB,
+						XYWH(coord.X, coord.Y, 52, 19),
+						true,
+						{
+							colour1 = BLACK()
+						}
+					);
+
+					local label = getLabelEX(
+						border,
+						anchorLTRB,
+						XYWH(1, 1, 50, 16),
+						nil,
+						string.sub(player.NAME, 1, 1),
+						{
+							colour1 = MULTIPLAYER_MINIMAP_PREVIEW_TEAM[player.TEAM],
+							text_halign = ALIGN_MIDDLE,
+							text_valign = ALIGN_MIDDLE,
+							font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[player.COLOUR],
+							nomouseevent = true,
+							font_name = ADMUI3L,
+							scissor = true,
+							wordwrap = false,
+							font_style_outline = true,
+		        			shadowtext = true  			
+						}
+					);
+
+					MULTIPLAYER_MINIMAP_PLAYERS[coord] = label.ID;
+				else
+					setText({ID = MULTIPLAYER_MINIMAP_PLAYERS[coord]}, getText({ID = MULTIPLAYER_MINIMAP_PLAYERS[coord]}) .. '+' .. string.sub(player.NAME, 1, 1));
+				end;
+			end;
+		end; 
+	end;
+end;
+
 function canModifyServerSettings()
 	return MULTIPLAYER_ROOM_IS_HOST or MULTIPLAYER_ROOM_IS_DEDI;
 end;
@@ -3001,6 +3152,15 @@ function useModernGUILogic()
 	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
 
 	LockedTeams = getChecked(menu.window_multiplayer_room.panel.lockTeam);
+
+	mapDescription(
+	  MultiDef.MapName.MAPLOC .. ' - ' .. MultiDef.MapName.GAMETYPELOC,
+	  MultiDef.MultiMap.RULES,
+	  '%missions%/_multiplayer/' .. mapName .. '/mappic.png',
+	  Players,
+	  MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides,
+	  copytable(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS)
+	);
 end;
 
 -- override functions
