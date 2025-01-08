@@ -159,10 +159,13 @@ function DoInterfaceChange_Game()
 	setColour1(game.ui.logpanel.log,uisettings.boxcols.background);
 	setBorderColour(floating_hint,uisettings.boxcols.border);
 
-	setInterfaceTexture1n2(dialog.map.panel.textboxscroll, 'scrollbar_back_v.png', 'scrollbar.png');
+	setInterfaceTexture1n2(dialog.map.page1.panel.textboxscroll, 'scrollbar_back_v.png', 'scrollbar.png');
 
-	setBevelCol(dialog.map.panel.textbox, uisettings.boxcols.border,uisettings.boxcols.border);
-	setColour1(dialog.map.panel.textbox, uisettings.boxcols.background);
+	setBevelCol(dialog.map.page1.panel.textbox, uisettings.boxcols.border,uisettings.boxcols.border);
+	setColour1(dialog.map.page1.panel.textbox, uisettings.boxcols.background);
+
+	setBevelCol(dialog.map.page3.panel.textbox, uisettings.boxcols.border,uisettings.boxcols.border);
+	setColour1(dialog.map.page3.panel.textbox, uisettings.boxcols.background);
 
 	DoInterfaceChange_Game_ResourceBar();
 

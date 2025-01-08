@@ -16,14 +16,27 @@ if mpGameType = GameTypeSurvival then
 if GetClass(un) in [class_apeman, class_apeman_kamikaze, class_apeman_soldier, class_apeman_engineer] or GetControl(un) = control_apeman then
    begin
    tag := GetTag(un);
-   area := mpApemansArea[tag];
+   area := mpApemansArea[mpSidePositions[tag]];
+
+   if not area then
+      exit;
 
    wait(4$00);
 
-   PrepareApeman(-5);
+   repeat
+    wait(10);
+   until not mpBlockRespThread;
+
+   mpBlockRespThread := true;
+
+   PrepareApeman(0);
    ape := CreateHuman;
    SetTag(ape, tag);
    PlaceUnitArea(ape, area, false);
+
+   wait(10);
+
+   mpBlockRespThread := false;
    end;
 
 if GetType(un) = unit_human and GetNation(un) > nation_nature then
@@ -31,26 +44,42 @@ if GetType(un) = unit_human and GetNation(un) > nation_nature then
    if not mpRespawn then
       exit;
 
+   if not MultiplayerSideAlive(side) and not HasPowerByGameType(mpGameType, side) then
+      exit;
+
    side := GetSide(un);
    nation := GetNation(un);
    class := GetClass(un);
 
    if class > 4 then
-      class := 1;
+      class := 1;   
+   
+   repeat
+    wait(10);
+   until not mpBlockRespThread;
 
-   wait(mpRespawn);
-
-   if not MultiplayerSideAlive(side) and not HasPowerByGameType(mpGameType, side) then
-      exit;
+   mpBlockRespThread := true;
 
    uc_side := side;
    uc_nation := nation;
 
    PrepareHuman(false, class, 2);
 
-   mpRespawnPull := Replace(mpRespawnPull, side, Join(mpRespawnPull[side], CreateHuman));
+   un := CreateHuman;       
+
+   mpRespawnPull := Replace(mpRespawnPull, side, Replace(mpRespawnPull[side], mpRespawnPull[side] + 1, un));
+
+   wait(10);
+
+   mpBlockRespThread := false;
    end;
-End;  
+End;
+
+Export function Multiplayer_BuildingComplete(building);
+begin
+if GetBType(building) in [b_depot, b_warehouse] then
+   SetBName(building, '@' & GetSide(building));
+End;
 
 Export function Multiplayer_BuildingCaptured(building, oldSide, unit);
 var i;

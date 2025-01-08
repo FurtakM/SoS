@@ -639,10 +639,12 @@ function backToMenu_lite()
     OW_menumusic(false);  
 
     killGameMusic();
-    playMenuMusic(0);
 
     if getVisible(Multi_Debrief) then
         bringToFront(Multi_Debrief);
+        playMenuMusic(1);
+    else
+        playMenuMusic(0);
     end;
 end;
 

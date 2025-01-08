@@ -22,13 +22,14 @@ arMechSpawnCounter := [8, 11, 12][Difficulty];
 
 PlaceHiddenCamerasInArea(side, hiddenCamArea);
 PlaceMines(minefieldArea, [24, 36, 48][Difficulty]);
+PlaceMines(extraMinefield, [6, 8, 10][Difficulty]);
 
 skill := [3, 5, 7][Difficulty];
 
 uc_side := side;
 uc_nation := 2;
 
-arForce := PrepareBase(arDep, arBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 4, 6, 3]);
+arForce := PrepareBase(arDep, arBaseArea, '', skill, [8000, 1200, 400], [[10, 11, 12][Difficulty], 4, 6, 3]);
 arForceTmp := [];
 
 for i in FilterAllUnits([[f_side, side], [f_btype, b_breastwork], [f_not, [f_inarea, arBaseArea]], [f_empty]]) do
@@ -186,7 +187,7 @@ if fac then
    end;
 
 // damaged buildings
-tmp := FilterUnitsInArea(area, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+tmp := FilterUnitsInArea(area, [[f_side, side], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
 
 // crates nearby base
 cr := GetListOfCratesInArea(area);
@@ -558,8 +559,25 @@ End;
 
 
 Every 6$00 trigger IsOk(arDep) do
+var un;
 begin
 enable;
+
+if UnitsInside(arFac) < 3 then
+   begin
+   arMechSpawnCounter := Dec(arMechSpawnCounter);
+
+   uc_side := botSides[1];
+   uc_nation := nation_arabian;
+
+   PrepareMechanic(false, [3, 6, 9][Difficulty]);
+   un := CreateHuman;
+   PlaceUnitXY(un, 143, 29, false);
+
+   ComMoveXY(un, 115, 52);
+
+   arForce := Join(arForce, un);
+   end;
 
 arConstructList := arConstructList ^ [
    [ar_half_tracked, engine_combustion, control_remote, ar_gun],

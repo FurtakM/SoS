@@ -1,0 +1,157 @@
+// SoS Lua Script module
+// SoS Timer
+Every 0$1 do
+begin
+enable;
+ToLua('updateTimer(' & tick & ');');
+End;
+
+// On map start/load
+Export Function SOS_MapStart();
+begin
+UpdateFactoryWaypoints();
+UpdateWarehouseGatheringPoints();
+End;
+
+Export Function SOS_TargetableHack(cmd, unit, selectedUnit, x, y, p1, p2, p3, p4, p5, p6);
+begin
+// Unsupported in multiplayer
+End;
+
+// WAYPOINTS
+Export factoryWaypoints;
+Export Function SetFactoryWaypoint(factory, x, y);
+var i;
+begin
+if not factory or not ValidHex(x, y) or (GetBType(factory) <> b_factory and not GetType(factory) = unit_human) then
+   exit;
+
+if GetType(factory) = unit_human then
+   factory := IsInUnit(factory);
+
+if GetBType(factory) <> b_factory then
+   exit;
+
+for i := 1 to Count(factoryWaypoints) do
+    begin
+    if HexInfo(x, y) = factoryWaypoints[i][2] then
+       begin
+       factoryWaypoints := Delete(factoryWaypoints, i);
+       UpdateFactoryWaypoints;
+       exit;
+       end
+    else if factory = factoryWaypoints[i][2] then
+       begin
+       factoryWaypoints := Delete(factoryWaypoints, i);
+       factoryWaypoints := Join(factoryWaypoints, [GetSide(factory), factory, x, y]);
+       UpdateFactoryWaypoints;
+       exit;
+       end;
+    end;
+
+factoryWaypoints := Join(factoryWaypoints, [GetSide(factory), factory, x, y]);
+UpdateFactoryWaypoints;
+End;
+
+Export Function UpdateFactoryWaypoints();
+var i, list;
+begin
+ToLua('resetFactoryWaypoint();');
+
+if factoryWaypoints then
+   begin
+   list := factoryWaypoints;
+
+   for i := 1 to list do
+       ToLua('setFactoryWaypointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
+   end;
+End;
+
+Export warehouseGatheringPoints, warehouseCratesCollectors;
+Export Function SetWarehouseGatheringPoint(warehouse, x, y);
+begin
+if HexInfo(x, y) = warehouse then
+   warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, 0)
+else
+   warehouseGatheringPoints := Replace(warehouseGatheringPoints, warehouse, [GetSide(warehouse), warehouse, x, y]);
+
+UpdateWarehouseGatheringPoints;
+End;
+
+Export Function UpdateWarehouseGatheringPoints();
+var i, list;
+begin
+ToLua('resetWarehouseGatheringPoints();');
+
+if warehouseGatheringPoints then
+   begin
+   list := PrepareArray(warehouseGatheringPoints);
+
+   for i := 1 to list do
+       ToLua('setWarehouseGatheringPointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
+   end;
+End;
+
+{Every 0$20 trigger warehouseGatheringPoints do
+var i, j, list, tmp, side, x, y, depot, cratesNearbyPoint;
+begin
+enable;
+
+list := PrepareArray(warehouseGatheringPoints);
+
+if not list then
+   exit;
+
+for i := 1 to list do
+    begin
+    depot := list[i][2];
+    side := list[i][1];
+
+    if IsDead(depot) or side <> GetSide(depot) then
+       begin
+       warehouseGatheringPoints := Replace(warehouseGatheringPoints, depot, 0);
+       exit;
+       end;
+
+    x := list[i][3];
+    y := list[i][4];
+
+    cratesNearbyPoint := GetCratesNearbyXY(x, y, 16);
+
+    if not cratesNearbyPoint then
+       exit;
+
+    tmp := FilterAllUnits([[f_side, side], [f_not, [f_hastask]], [f_dist, depot, 6], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]])
+        union UnitFilter(UnitsInside(depot), [[f_not, [f_hastask]], [f_or, [f_class, class_engineer], [f_class, class_apeman_engineer]]]);
+
+    if tmp then
+       begin
+       tmp := ShrinkArray(tmp, 3);
+
+       for j in tmp do
+           begin
+           if IsInUnit(j) then
+              ComExit(j);
+
+           AddComCollect(j, x, y);
+           end;
+
+       exit;
+       end;
+
+    tmp := FilterAllUnits([[f_side, side], [f_dist, depot, 8], [f_or, [f_weapon, us_cargo_bay], [f_weapon, ru_cargo_bay],
+                                                               [f_weapon, ar_cargo_bay], [f_weapon, ru_big_cargo_bay]]]);
+
+
+    if tmp then
+       begin
+       for j in tmp do
+           if (GetEngine(j) = engine_siberite or GetFuel(j) > 20) and not HasTask(j) and (GetControl(j) <> control_manual or IsDrivenBy(j)) then
+              begin
+              ComCollect(j, x, y);
+              AddComMoveUnit(j, depot);
+              exit;
+              end;
+       end;
+    end;
+End; }

@@ -1,4 +1,4 @@
-AVATARS_DATA = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; -- global array which contains OpenGL id's of AVATARS
+AVATARS_DATA = {}; -- global array which contains OpenGL id's of AVATARS
 AVATAR_PREVIEW_ID = nil;
 AVATARS_COMPONENTS = {};
 AVATAR_PARTS = {};
@@ -19,7 +19,7 @@ function generateAvatar(INDEX, AVATAR, SEX, NATION)
 
 	INDEX = parseInt(INDEX);
 
-	if (AVATARS_DATA[INDEX] > 0) then
+	if (AVATARS_DATA[INDEX] ~= nil) then
 		OW_XICHT_PORTRAIT_FREETEXTURE(AVATARS_DATA[INDEX]);
 	end;
 	
@@ -50,7 +50,11 @@ function generateAvatar(INDEX, AVATAR, SEX, NATION)
 end;
 
 function getAvatarID(INDEX)
-	return AVATARS_DATA[INDEX];
+	if (AVATARS_DATA[INDEX] ~= nil) then
+		return AVATARS_DATA[INDEX];
+	end;
+
+	return 0;
 end;
 
 function setAvatar(SEX, AVATAR)
@@ -92,7 +96,7 @@ function clearAvatarCache()
 			OW_XICHT_PORTRAIT_FREETEXTURE(AVATARS_DATA[i]);
 		end;
 
-		AVATARS_DATA = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		AVATARS_DATA = {};
 	end;
 end;
 

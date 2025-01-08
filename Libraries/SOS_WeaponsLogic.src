@@ -28,13 +28,16 @@ begin
 End;
 
 Export Function SOS_VehicleConstructed(vehicle, factory);
-var tag, driver, hex;
+var i, tag, driver, hex;
 begin
 if not vehicle or not factory then
    exit;
 
-if factoryWaypoints >= factory then
-   if factoryWaypoints[factory] then
+if not factoryWaypoints then
+   exit;
+
+for i := 1 to Count(factoryWaypoints) do
+   if factoryWaypoints[i][2] = factory then
       begin
       if GetControl(vehicle) = control_manual then
          begin
@@ -49,15 +52,26 @@ if factoryWaypoints >= factory then
             SetTag(driver, tDriver);
             SetTag(vehicle, tDriver);
 
-            hex := HexInfo(factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+            hex := HexInfo(factoryWaypoints[i][3], factoryWaypoints[i][4]);
 
             if hex then
                ComMoveUnit(driver, hex)
             else
-               ComMoveXY(driver, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+               ComMoveXY(driver, factoryWaypoints[i][3], factoryWaypoints[i][4]);
 
             AddComExitVehicle(driver);
-            AddComEnterUnit(driver, factory);
+
+            if Multiplayer then
+               begin
+               repeat
+                wait(10);
+               until not IsInUnit(driver);
+
+               if not HasTask(driver) then
+                  ComEnterUnit(driver, factory);
+               end
+            else
+               AddComEnterUnit(driver, factory);
 
             wait(0$1);
 
@@ -65,6 +79,8 @@ if factoryWaypoints >= factory then
 
             SetTag(driver, tag);
             SetTag(vehicle, 0);
+
+            break;
             end;
          end
       else if GetControl(vehicle) = control_remote then
@@ -72,10 +88,15 @@ if factoryWaypoints >= factory then
          wait(0$2);
 
          if Connect(vehicle) then
-            AddComMoveXY(vehicle, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+            AddComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+
+         break;
          end
       else
-         AddComMoveXY(vehicle, factoryWaypoints[factory][3], factoryWaypoints[factory][4]);
+         begin
+         AddComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+         break;
+         end;
       end;
 End;
 

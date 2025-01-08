@@ -38,7 +38,8 @@ Export
   mpEmissions,
   mpDisplayStrings,
   mpGameActive,
-  mpRespawnPull;
+  mpRespawnPull,
+  mpBlockRespThread;
 
 {
   mpBaseLevel,            // (0)  No Base, Depot Only, Fortified, Extra Fortified
@@ -101,6 +102,7 @@ mpPeopleAmount := 15;
 
 mpDisplayStrings := 0;
 mpGameActive := false;
+mpBlockRespThread := false;
 
 for i := 1 to 32 do
     mpGameSettings := Replace(mpGameSettings, i, 0);
@@ -315,14 +317,14 @@ else
           for j := 2 to i do
               ChangeSideFog(i[j], i[1]);
       end;
-   end;
 
-for i := 1 to 8 do
-    for j := 1 to 8 do
-        if mpSideTeams[i] = mpSideTeams[j] then
-           SetAttitude(i, j, att_friend, true)
-        else
-           SetAttitude(i, j, att_enemy, true);
+   for i := 1 to 8 do
+       for j := 1 to 8 do
+           if mpSideTeams[i] = mpSideTeams[j] then
+              SetAttitude(i, j, att_friend, true)
+           else
+              SetAttitude(i, j, att_enemy, true);
+   end;
 
 // start game
 music_nat := mpSideNations[your_side];
@@ -346,8 +348,10 @@ mpGameActive := true;
 End;
 
 // Prepare Team
+var mpTeamPreset;
+
 Function mpPrepareTeam(side, nation, amount, skill);
-var i, class;
+var i, un, class;
 begin
 result := [];
 
@@ -369,6 +373,13 @@ if Multiplayer then
 
 result := Join(result, CreateHuman);
 
+if mpTeamPreset then
+   begin
+   CopySkills(mpTeamPreset[1], result[result]);
+   SetAttr(result[result], attr_stamina, GetAttr(mpTeamPreset[1], attr_stamina));
+   SetAttr(result[result], attr_speed, GetAttr(mpTeamPreset[1], attr_speed));
+   end;
+
 InitHc_All();
 
 // 9, 12, 15, 24
@@ -378,13 +389,25 @@ class := 2;
 for i := 1 to (amount - 1) do
     begin
     PrepareHuman(false, class, skill);
-    result := Join(result, CreateHuman);
+    un := CreateHuman;
+
+    result := Join(result, un);
+
+    if mpTeamPreset then
+       begin
+       CopySkills(mpTeamPreset[i+1], un);
+       SetAttr(un, attr_stamina, GetAttr(mpTeamPreset[i+1], attr_stamina));
+       SetAttr(un, attr_speed, GetAttr(mpTeamPreset[i+1], attr_speed));
+       end;
 
     class := Inc(class);
 
     if class = 5 then
        class := 1;
     end;
+
+if not mpTeamPreset then
+   mpTeamPreset := result;
 End;
 
 Function mpPrepareVehicles(side, nation, vehicles);
@@ -556,8 +579,8 @@ case gameType of
 
      GameTypeKing:
                    begin
-                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]))
-                          and HowMuchPointsKing(side) < mpPoints;
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]])) and
+                             HowMuchPointsKing(side) < mpPoints;
                    end;
      end;
 End;
@@ -601,7 +624,7 @@ begin
 sides := [1, 2, 3, 4, 5, 6, 7, 8];
 
 repeat
- wait(0$30);
+ wait(0$10);
 
  for i := 1 to 8 do
      begin
@@ -609,7 +632,7 @@ repeat
 
      if Count(mpRespawnPull[j]) and MultiplayerSideAlive(j) and HasPowerByGameType(mpGameType, j) then
         begin
-        wait(mpRespawn div 2);
+        wait(mpRespawn div 3);
 
         tmp := FilterAllUnits([[f_side, j], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
@@ -623,7 +646,7 @@ repeat
         end;
      end;
 
- sides := Shuffle(sides);
+  sides := Reindex(sides, 1, 8, true);
 
 until false;
 End;
