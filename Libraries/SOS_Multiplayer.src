@@ -348,8 +348,10 @@ mpGameActive := true;
 End;
 
 // Prepare Team
+var mpTeamPreset;
+
 Function mpPrepareTeam(side, nation, amount, skill);
-var i, class;
+var i, un, class;
 begin
 result := [];
 
@@ -371,6 +373,13 @@ if Multiplayer then
 
 result := Join(result, CreateHuman);
 
+if mpTeamPreset then
+   begin
+   CopySkills(mpTeamPreset[1], result[result]);
+   SetAttr(result[result], attr_stamina, GetAttr(mpTeamPreset[1], attr_stamina));
+   SetAttr(result[result], attr_speed, GetAttr(mpTeamPreset[1], attr_speed));
+   end;
+
 InitHc_All();
 
 // 9, 12, 15, 24
@@ -380,13 +389,25 @@ class := 2;
 for i := 1 to (amount - 1) do
     begin
     PrepareHuman(false, class, skill);
-    result := Join(result, CreateHuman);
+    un := CreateHuman;
+
+    result := Join(result, un);
+
+    if mpTeamPreset then
+       begin
+       CopySkills(mpTeamPreset[i+1], un);
+       SetAttr(un, attr_stamina, GetAttr(mpTeamPreset[i+1], attr_stamina));
+       SetAttr(un, attr_speed, GetAttr(mpTeamPreset[i+1], attr_speed));
+       end;
 
     class := Inc(class);
 
     if class = 5 then
        class := 1;
     end;
+
+if not mpTeamPreset then
+   mpTeamPreset := result;
 End;
 
 Function mpPrepareVehicles(side, nation, vehicles);
@@ -558,8 +579,8 @@ case gameType of
 
      GameTypeKing:
                    begin
-                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]])) or
-                             HowMuchPointsKing(side) >= mpPoints;
+                   result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]])) and
+                             HowMuchPointsKing(side) < mpPoints;
                    end;
      end;
 End;

@@ -428,8 +428,10 @@ if multi_sides[your_side] then
 End;
 
 Export Function Multiplayer_End();
-var i, j, un, veh;
-begin    
+var i, j, un, s, tmp, veh;
+begin
+tmp := [1, 2, 3, 4, 5, 6, 7, 8];
+
 repeat
  wait(0$1);
 
@@ -455,11 +457,15 @@ repeat
 
  if tick > multi_support_arrive_time and multi_support then
     begin
-    if tick mod 1$00 = 0 then
+    tmp := Reindex(tmp, 1, 8, true);
+
+    if tick mod 2$00 = 0 then
        begin
-       for i := 1 to 8 do
+       for s := 1 to tmp do
            begin
-           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] and Prob([80, 60, 40][Difficulty]) then
+           i := tmp[s];
+
+           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] then
               begin
               PlaceUnitArea(multi_reinforcements[i][1], spawnHumanArea, true);
               multi_reinforcements := Replace(multi_reinforcements, i, Delete(multi_reinforcements[i], 1));

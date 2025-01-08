@@ -1473,11 +1473,24 @@ if GetType(factory) = unit_human then
 if GetBType(factory) <> b_factory then
    exit;
 
-if HexInfo(x, y) = factory then
-   factoryWaypoints := Replace(factoryWaypoints, factory, 0)
-else
-   factoryWaypoints := Replace(factoryWaypoints, factory, [GetSide(factory), factory, x, y]);
+for i := 1 to Count(factoryWaypoints) do
+    begin
+    if HexInfo(x, y) = factoryWaypoints[i][2] then
+       begin
+       factoryWaypoints := Delete(factoryWaypoints, i);
+       UpdateFactoryWaypoints;
+       exit;
+       end
+    else if factory = factoryWaypoints[i][2] then
+       begin
+       factoryWaypoints := Delete(factoryWaypoints, i);
+       factoryWaypoints := Join(factoryWaypoints, [GetSide(factory), factory, x, y]);
+       UpdateFactoryWaypoints;
+       exit;
+       end;
+    end;
 
+factoryWaypoints := Join(factoryWaypoints, [GetSide(factory), factory, x, y]);
 UpdateFactoryWaypoints;
 End;
 
@@ -1488,7 +1501,7 @@ ToLua('resetFactoryWaypoint();');
 
 if factoryWaypoints then
    begin
-   list := PrepareArray(factoryWaypoints);
+   list := factoryWaypoints;
 
    for i := 1 to list do
        ToLua('setFactoryWaypointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
