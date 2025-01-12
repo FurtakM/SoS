@@ -1,0 +1,121 @@
+Export Botvinov, Szyski, Burlak;
+Export group1, group2, group3;
+Export function PrepareRussian;
+var i, un;
+begin
+uc_side := 3;
+uc_nation := 3;
+
+InitHc;
+
+PrepareSoldier(sex_male, 1);
+hc_name := 'Botvinov';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 84;
+
+Botvinov := CreateHuman;
+PlaceUnitArea(Botvinov, botvinovArea, false);
+ComLookAtDir(Botvinov, 4);
+
+hc_name := 'Szyski';
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 86;
+
+Szyski := CreateHuman;
+PlaceUnitArea(Szyski, szyskiArea, false);
+ComLookAtDir(Szyski, 4);
+
+InitHC_All();
+
+for i := 1 to 3 do
+    begin
+    PrepareSoldier(sex_male, 1);
+    un := CreateHuman;
+    PlaceUnitArea(un, officerArea, false);
+    ComLookAtDir(un, 2);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareSoldier(sex_male, 1);
+    un := CreateHuman;
+    PlaceUnitArea(un, officer2Area, false);
+    ComLookAtDir(un, 5);
+    end;
+
+Burlak := NewCharacter('Burlak');
+// PlaceUnitXY(Burlak, 159, 51, false);
+
+InitHc_All();
+
+group1 := PrepareGroup;
+
+group1 := Replace(group1, 5, Burlak);
+
+group2 := PrepareGroup;
+group3 := PrepareGroup;
+
+for un in group1 ^ group2 ^ group3 do
+    begin
+    case GetClass(un) of
+         1: PlaceUnitArea(un, firstLineArea, false);
+         3: PlaceUnitArea(un, secondLineArea, false);
+         4: PlaceUnitArea(un, thirdLineArea, false);
+         end;
+
+    ComHold(un);
+    end;
+End;
+
+Function PrepareGroup;
+var i, j, tmp;
+begin
+result := [];
+
+tmp := [4, 0, 2, 1];
+
+for i := 1 to tmp do
+    if tmp[i] then
+       for j := 1 to tmp[i] do
+           begin
+           PrepareHuman(false, i, 1);
+           result := Join(result, CreateHuman);
+           end;
+End;
+
+Export function FormGroup(group, soldArea, mechArea, sciArea);
+var i, class, hexesS, hexesM, hexesSc;
+begin
+if not group then
+   exit;
+
+hexesS := AreaToList(soldArea, 0);
+hexesM := AreaToList(mechArea, 0);
+hexesSc := AreaToList(sciArea, 0);
+
+for i := 1 to Count(group) do
+    begin
+    class := GetClass(group[i]);
+
+    if class = 1 then
+       begin
+       RaiseSailEventCustom(1, group[i], hexesS[1][1], hexesS[2][1], 202, 49, 0);
+       hexesS := Replace(hexesS, 1, Delete(hexesS[1], 1));
+       hexesS := Replace(hexesS, 2, Delete(hexesS[2], 1));
+       end;
+
+    if class = 3 then
+       begin
+       RaiseSailEventCustom(1, group[i], hexesM[1][1], hexesM[2][1], 202, 49, 0);
+       hexesM := Replace(hexesM, 1, Delete(hexesM[1], 1));
+       hexesM := Replace(hexesM, 2, Delete(hexesM[2], 1));
+       end;
+
+    if class = 4 then
+       begin
+       RaiseSailEventCustom(1, group[i], hexesSc[1][1], hexesSc[2][1], 202, 49, 0);
+       hexesSc := Replace(hexesSc, 1, Delete(hexesSc[1], 1));
+       hexesSc := Replace(hexesSc, 2, Delete(hexesSc[2], 1));
+       end;
+    end;
+End;
