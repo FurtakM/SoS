@@ -150,16 +150,18 @@ repeat
         ComUnlink(i);
         attackers := attackers diff i;
         continue;
-        end;
-
-     AgressiveMove(i, path);
+        end
+     else if not IsControledBy(i) then
+        Connect(i)
+     else
+        AgressiveMove(i, path);
      end;
 until not UnitFilter(attackers, [f_ok]);
 End;
 
 
 // Extra attack outside map
-Every 0$10 trigger not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot do
+Every 0$10 trigger (not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot) and FilterAllUnits([[f_side, side_bot], [f_ok], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) do
 var i, un, tmp, enemy;
 begin
 for i := 1 to 3 do
@@ -172,9 +174,10 @@ for i := 1 to 3 do
     SetDir(un, 2);
     PlaceUnitArea(un, river_spawn, false);
 
-    Connect(un);
-
-    wait(0$0.3);
+    repeat
+     Connect(un);
+     wait(0$0.3);
+    until IsControledBy(un);
 
     ComMoveXY(un, 73, 17);
 
@@ -204,6 +207,10 @@ repeat
         AgressiveMove(i, [ [76,31], [93,67], [108,97] ]);
      end;
 until not tmp;
+
+wait(8$00 - (1$00 * Difficulty));
+
+enable;
 End;
 
 // Extra attack outside map
@@ -291,6 +298,10 @@ repeat
         ComAttackUnit(i, enemy);
      end;
 until not tmp;
+
+wait(10$00);
+
+enable;
 End;
 
 // Extra attack outside map
@@ -330,5 +341,9 @@ repeat
         ComAttackUnit(i, enemy);
      end;
 until not tmp;
+
+wait(10$00);
+
+enable;
 End;
 

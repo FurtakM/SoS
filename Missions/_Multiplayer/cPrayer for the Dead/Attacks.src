@@ -23,7 +23,7 @@ wait(5$00);
 enable;
 End;
 
-Every 0$30 trigger convoyWave in [8, 12, 16, 20, 24, 28, 32, 36] do
+Every 0$30 trigger convoyWave in [8, 12, 16, 20, 22, 24, 26, 28, 30, 32, 36, 38] do
 begin
 arAttackersInf := arAttackersInf union SendEastGroup;
 
@@ -114,7 +114,7 @@ for i in tmp do
        begin
        if GetClass(i) = 4 then
           ComMoveUnit(i, NearestUnitToUnit(tmp diff i, i))
-       else
+       else if GetClass(i) <> 3 then
           ComAttackUnit(i, NearestUnitToUnit(enemyInForest, i));
        end
     else
@@ -139,6 +139,14 @@ for i in tmp do
 
                       repeat
                        wait(0$1);
+
+                       if FilterUnitsInArea(arCampArea, [f_not, [f_side, enemySide]]) then
+                          begin
+                          ComEnterUnit(i, vehicle);
+                          SetTag(i, 0);
+                          exit;
+                          end;
+
                       until GetLives(vehicle) = 1000;
 
                       SetLives(i, 1000);
@@ -148,7 +156,7 @@ for i in tmp do
                    end;
                 end
              else
-                if not IsInArea(i, arParkingArea) then
+                if not IsInArea(i, arParkingArea) and GetClass(i) <> 3 then
                    ComMoveToArea(i, arParkingArea);
              end;
     end;

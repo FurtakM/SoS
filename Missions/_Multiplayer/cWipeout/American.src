@@ -83,7 +83,7 @@ for i in FilterAllUnits([[f_side, side], [f_btype, b_bunker]]) do
 End;
 
 // AI
-Function BaseScript(side, base, area, outerArea, forces, healPoint, parkingPoint);
+Function BaseScript(side, base, area, innerArea, outerArea, forces, healPoint, parkingPoint);
 var i, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
 begin
 enable;
@@ -93,7 +93,7 @@ tmp := FilterAllUnits([f_enemy, side]);
 if tmp then
    enemySide := GetSide(tmp[1]);
 
-enemyInBase := FilterUnitsInArea(area, [f_enemy, side]);
+enemyInBase := FilterUnitsInArea(innerArea, [f_enemy, side]);
 enemyOuterBase := FilterUnitsInArea(outerArea, [f_enemy, side]);
 
 vehicles := amVehicles;
@@ -151,7 +151,7 @@ if fac then
    end;
 
 // damaged buildings
-tmp := FilterUnitsInArea(area, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+tmp := FilterUnitsInArea(area, [[f_side, side], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
 
 // crates neamby base
 cr := GetListOfCratesInArea(area);
@@ -480,7 +480,7 @@ End;
 Every 0$2 trigger UnitFilter(amForce, [f_ok]) do
 begin
 enable;
-BaseScript(botSides[1], 1, amBaseArea, amBaseOuterArea, amForce, [27,33], [22,17]);
+BaseScript(botSides[1], 1, amBaseArea, amBaseInnerArea, amBaseOuterArea, amForce, [27,33], [22,17]);
 End;        
 
 Every 3$00 trigger IsOk(amDep) and not amConstructList do

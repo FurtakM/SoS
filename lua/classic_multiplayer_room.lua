@@ -3158,7 +3158,7 @@ function useModernGUILogic()
 	  MultiDef.MultiMap.RULES,
 	  '%missions%/_multiplayer/' .. mapName .. '/mappic.png',
 	  Players,
-	  MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides,
+	  copytable(MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides),
 	  copytable(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS)
 	);
 end;

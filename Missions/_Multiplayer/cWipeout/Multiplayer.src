@@ -144,6 +144,10 @@ if multi_extra_oil then
       end;
    end;
 
+if Difficulty > 1 then
+   for i := 2 to 8 do
+       SetTech(tech_advmet, i, state_disabled);
+
 End;
 
 Export Function Multiplayer_SetBotSide(preferSide);
@@ -430,7 +434,11 @@ End;
 Export Function Multiplayer_End();
 var i, j, un, s, tmp, veh;
 begin
-tmp := [1, 2, 3, 4, 5, 6, 7, 8];
+tmp := [];
+
+for i := 1 to 8 do
+    if multi_sides[i] then
+       tmp := Join(tmp, i);
 
 repeat
  wait(0$1);
@@ -457,10 +465,10 @@ repeat
 
  if tick > multi_support_arrive_time and multi_support then
     begin
-    tmp := Reindex(tmp, 1, 8, true);
-
     if tick mod 2$00 = 0 then
        begin
+       tmp := Reindex(tmp, 1, Count(tmp), true);
+
        for s := 1 to tmp do
            begin
            i := tmp[s];

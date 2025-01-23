@@ -5,7 +5,12 @@ var unit;
 begin                                          
 
 if exist_mode then
-   unit := CreateCharacter(prefix&ident)                                          
+   begin
+   unit := CreateCharacter(prefix & ident);
+
+   if unit then
+      DeleteCharacters(prefix & ident);
+   end
 else
    unit := NewCharacter(ident);
 
@@ -608,20 +613,20 @@ for i in list do
 
     if not result then
        result := [[i, tmp]]
-     else
-      begin
-       if result[result][2] < tmp then
-          result := Insert(result, result+1, [i, tmp])
+    else
+       begin
+       if result[result][2] <= tmp then
+          result := Insert(result, result + 1, [i, tmp])
        else
-       for j = 1 to result do
-           begin
-           if tmp < result[j][2] then
+          for j := 1 to result do
               begin
-              result := Insert(result, j, [i, tmp]);
-              break;
+              if tmp < result[j][2] then
+                 begin
+                 result := Insert(result, j, [i, tmp]);
+                 break;
+                 end;
               end;
-           end;
-      end;
+       end;
     end;
 
 if result and not asc then
