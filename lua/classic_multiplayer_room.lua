@@ -60,6 +60,8 @@ MULTIPLAYER_ROOM_START_TIMER = 5;
 MULTIPLAYER_ROOM_START_ERROR = false;
 MULTIPLAYER_ROOM_START_ERROR_MSG = '';
 
+MULTIPLAYER_REAL_POSITIONS = {};
+
 menu.window_multiplayer_room = getElementEX(
 	menu, 
 	anchorNone, 
@@ -1662,8 +1664,10 @@ function getMultiplayerUsedPosition(PLAYER, POSITIONS)
 		local tmp = MULTIPLAYER_ROOM_DATA.Players[i];
 
 		if (tmp.PLID ~= PLAYER.PLID) then
-			if (tmp.SIDE > 0) then
-				result = addToArray(result, POSITIONS[tmp.SIDE + 1]);
+			for j = 1, #POSITIONS do
+				if (tmp.SIDE > 0 and POSITIONS[j].POS == tmp.SIDE) then
+					result = addToArray(result, POSITIONS[j].NAME);
+				end; 
 			end;
 		end;
 	end;
@@ -1926,13 +1930,24 @@ function updatePlayerSlot(NUMBER)
 		end;
 
 		if (not MULTIPLAYER_ROOM_RANDOM_POSITIONS) then
+			local positions = {};
+			local realIndex = 0; -- player.SIDE + 1
+
+			for p = 1, #team.POSITIONS do
+				positions = addToArray(positions, team.POSITIONS[p].NAME);
+
+				if (player.SIDE == team.POSITIONS[p].POS) then
+					realIndex = p;
+				end;
+			end;
+
 			local slotPosition = clComboBox(
 				{ID = s.SLOT},
 				336,
 				3,
-				team.POSITIONS,
-				player.SIDE + 1,
-				'setMyPosition(INDEX)',
+				positions,
+				realIndex,
+				'setMyPosition(INDEX, ' .. player.TEAM .. ')',
 				{
 					width = 150,
 					texture = 'classic/edit/combobox-short.png',
@@ -2341,12 +2356,18 @@ function createTeams(MODE)
 
 		-- get team allowed positions
 		local allowedPositions = {
-			loc(808)
+			{
+				NAME = loc(808),
+				POS = 0 
+			}
 		};
 
-		for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS_COUNT do
+		for c = 1, 8 do
 			if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i+1].ASSIGNED_POSITIONS[c]) then
-				allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
+				allowedPositions = addToArray(allowedPositions, {
+					NAME = MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME,
+					POS = c
+				});
 			end;
 		end;
 
@@ -2605,8 +2626,9 @@ function setMultiplayerNation(INDEX, POSITION)
 	return OW_MULTIROOM_SET_MYNATION(3); -- RU
 end;
 
-function setMyPosition(INDEX)
-	OW_MULTIROOM_SET_MYSIDE(parseInt(INDEX) - 1);
+function setMyPosition(INDEX, TEAM)
+	local positions = MULTIPLAYER_ROOM_TEAMS[TEAM].POSITIONS;
+	OW_MULTIROOM_SET_MYSIDE(positions[parseInt(INDEX)].POS);
 end
 
 function deleteSlots()
@@ -2795,6 +2817,7 @@ end;
 
 function changeMultiplayerOption(ID, INDEX)
 	OW_MULTIROOM_HOST_SET_MAPPARAM(ID - 1, INDEX - 1); -- for some reason it must be -1 lol..
+	MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[parseInt(ID)].VALUE = parseInt(INDEX) - 1;
 end;
 
 
@@ -3051,7 +3074,7 @@ function setMapPreview()
 					local border = getElementEX(
 						menu.window_multiplayer_room.panel.page1.previewMap,
 						anchorLTRB,
-						XYWH(coord.X, coord.Y, 52, 19),
+						XYWH(coord.X - 26, coord.Y - 9, 52, 19),
 						true,
 						{
 							colour1 = BLACK()
@@ -3084,6 +3107,20 @@ function setMapPreview()
 				end;
 			end;
 		end; 
+	end;
+end;
+
+function setMultiplayerRealPosition(POSITIONS)
+	MULTIPLAYER_REAL_POSITIONS = { 0, 0, 0, 0, 0, 0, 0, 0 }; 
+
+	local pos = stringNumberToArray(POSITIONS);
+
+	for side = 1, #pos do
+		for p = 1, #MULTI_PLAYERINFO_CURRENT_PLID do
+			if parseInt(MULTI_PLAYERINFO_CURRENT_PLID[p].COLOUR) == side then
+				MULTIPLAYER_REAL_POSITIONS[p] = pos[side];
+			end;
+		end;
 	end;
 end;
 
@@ -3154,12 +3191,12 @@ function useModernGUILogic()
 	LockedTeams = getChecked(menu.window_multiplayer_room.panel.lockTeam);
 
 	mapDescription(
-	  MultiDef.MapName.MAPLOC .. ' - ' .. MultiDef.MapName.GAMETYPELOC,
-	  MultiDef.MultiMap.RULES,
-	  '%missions%/_multiplayer/' .. mapName .. '/mappic.png',
-	  Players,
-	  copytable(MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides),
-	  copytable(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS)
+		MultiDef.MapName.MAPLOC .. ' - ' .. MultiDef.MapName.GAMETYPELOC,
+		MultiDef.MultiMap.RULES,
+		'%missions%/_multiplayer/' .. mapName .. '/mappic.png',
+		Players,
+		copytable(MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides),
+		copytable(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS)
 	);
 end;
 

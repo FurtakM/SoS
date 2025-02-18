@@ -1,5 +1,10 @@
 FACTORY_WAYPOINTS = {};
-FACTORY_ACTIVE_WAYPOINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
+FACTORY_ACTIVE_WAYPOINT = {
+	ID = 0,
+	UNIT_ID = 0,
+	X = 0,
+	Y = 0
+};
 
 function displayFactoryWaypointXY(SIDE, UNIT_ID, X, Y)
 	if FACTORY_ACTIVE_WAYPOINT.X ~= X or FACTORY_ACTIVE_WAYPOINT.Y ~= Y then
@@ -17,19 +22,34 @@ function displayFactoryWaypointXY(SIDE, UNIT_ID, X, Y)
 		    }
 		);
 
-		FACTORY_ACTIVE_WAYPOINT = {ID = gamewindow.overlay.waypoint.ID, UNIT_ID = UNIT_ID, X = X, Y = Y};
+		FACTORY_ACTIVE_WAYPOINT = {
+			ID = gamewindow.overlay.waypoint.ID,
+			UNIT_ID = UNIT_ID,
+			X = X,
+			Y = Y
+		};
 	end;
 end;
 
 function clearFactoryWaypoint()
 	if FACTORY_ACTIVE_WAYPOINT.ID > 0 then
 		sgui_delete(FACTORY_ACTIVE_WAYPOINT.ID);
-		FACTORY_ACTIVE_WAYPOINT = {ID = 0, UNIT_ID = 0, X = 0, Y = 0};
+		FACTORY_ACTIVE_WAYPOINT = {
+			ID = 0,
+			UNIT_ID = 0,
+			X = 0,
+			Y = 0
+		};
 	end;
 end
 
 function setFactoryWaypointXY(SIDE, ID, X, Y)
-	FACTORY_WAYPOINTS[ID] = {parseInt(SIDE), parseInt(ID), parseInt(X), parseInt(Y)};
+	FACTORY_WAYPOINTS[ID] = {
+		parseInt(SIDE),
+		parseInt(ID),
+		parseInt(X),
+		parseInt(Y)
+	};
 end;
 
 function resetFactoryWaypoint()

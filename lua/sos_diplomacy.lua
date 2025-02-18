@@ -137,7 +137,7 @@ function FROMOW_PLAYERNOWSPECTATOR(X, PLAYERID)
 	if PLAYERID == MyID then
 		iSpec = true;
 		setChatPool(3);
-		setVisible(game.chat.CheckersArea,false);
+		setVisible(game.chat.CheckersArea, false);
 		showSpecBar(true);
 	end;
 	
@@ -150,7 +150,20 @@ function FROMOW_PLAYERACTION(DATA)
 -- {ACTION=NUMBER,PLID=Number,NAME=String}
 --	DEBUGLOG(DATA);
 
-	local PLAYER = MULTI_PLAYERINFO_CURRENT_PLID[DATA.PLID];
+	if (DATA.ACTION == MMT_PauseUnPause) then
+        internal_AddChat(DATA.NAME .. ' ' .. loc(6094));
+        return;
+    end;
+
+    local PLAYER = MULTI_PLAYERINFO_CURRENT_PLID[DATA.PLID];
+
+    if (DATA.ACTION < MMT_PlayerLeft) or (DATA.ACTION > MMT_PlayerDrop) then
+    	if (PLAYER) then
+    		MULTI_PLAYERINFO_CURRENT_PLID[DATA.PLID].ALIVE = false;
+    	end;
+    	
+        return;
+    end;
 
 	if (PLAYER == nil) then
 		return;
@@ -176,6 +189,7 @@ function FROMOW_PLAYERACTION(DATA)
 	
 	if sideIsDeath then
 		DipSides.SideCards[PLAYER.COLOUR + 1].IsSpec = true;
+		MULTI_PLAYERINFO_CURRENT_PLID[DATA.PLID].ALIVE = false;
 		Dip_Resort();		
 	end;
 end;

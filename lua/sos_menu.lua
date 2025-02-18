@@ -508,7 +508,7 @@ function displayChangeLogMessage(fromButton)
     ELEMENT.dialog = getElementEX(
         ELEMENT,
         anchorNone,
-        XYWH(ScrWidth / 2 - 225, ScrHeight / 2 - 300, 450, 600),
+        XYWH(ScrWidth / 2 - 225, ScrHeight / 2 - 300, 450, 640),
         true,
         {
             texture = 'classic/edit/query_changelog.png'
@@ -520,7 +520,7 @@ function displayChangeLogMessage(fromButton)
         anchorLT, 
         XYWH(16, 28, 200, 24),
         ADMUI3L, 
-        'Lista zmian',
+        loc(9998),
         {
             wordwrap = true,
             font_colour = BLACK(),
@@ -555,22 +555,15 @@ function displayChangeLogMessage(fromButton)
         }
     );
 
-    ELEMENT.close = getElementEX(
-        ELEMENT,
-        anchorLTRB,
-        XYWH(0, 0, LayoutWidth, LayoutHeight),
-        true,
-        {
-            colour1 = WHITEA()
-        }
-    );
-
-    bringToFront(ELEMENT.close);
-
-    set_Callback(
-        ELEMENT.close.ID,
-        CALLBACK_MOUSEDOWN,
-        'setVisibleID(' .. ELEMENT.ID .. ', false); sgui_deletechildren(' .. ELEMENT.ID .. ');'
+    ELEMENT.dialog.cancel = clButton(
+        ELEMENT.dialog, 
+        9, 
+        600,
+        431, 
+        30,
+        loc(1135), 
+        "setVisibleID(" .. ELEMENT.ID .. ", false); sgui_deletechildren(" .. ELEMENT.ID .. ");",
+        {}
     );
 end;
 

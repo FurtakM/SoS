@@ -11,6 +11,7 @@ Export Function SOS_MapStart();
 begin
 UpdateFactoryWaypoints();
 UpdateWarehouseGatheringPoints();
+ParseMultiDataToLua();
 End;
 
 Export Function SOS_TargetableHack(cmd, unit, selectedUnit, x, y, p1, p2, p3, p4, p5, p6);
@@ -19,7 +20,7 @@ begin
 End;
 
 // WAYPOINTS
-Export factoryWaypoints;
+Export factoryWaypoints, factoryWaypointsDrivers;
 Export Function SetFactoryWaypoint(factory, x, y);
 var i;
 begin
@@ -90,6 +91,22 @@ if warehouseGatheringPoints then
    for i := 1 to list do
        ToLua('setWarehouseGatheringPointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
    end;
+End;
+
+Function ParseMultiDataToLua();
+var i;
+begin
+if not mpSidePositions then
+   exit;
+
+result := '';
+
+for i := 1 to 8 do
+    begin
+    result := result & mpSidePositions[i] & ';';
+    end;
+
+ToLua('setMultiplayerRealPosition("' & result & '");');
 End;
 
 {Every 0$20 trigger warehouseGatheringPoints do

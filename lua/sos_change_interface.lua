@@ -249,7 +249,8 @@ function OnToolbarClick(ID)
 			dialog.options.Show(); 
 		end, -- Options
 		[5] = function (x) 
-			ShowDialog(dialog.map);
+			showMapDescription();
+			--ShowDialog(dialog.map);
 			--OF_HideDialog(dialog.map.FORMID, 'dialog.map');
 		end, -- Help
 		[6] = function (x) 
