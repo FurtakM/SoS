@@ -3,6 +3,9 @@
     03-2020
 --]]
 
+--LUAScript.ToLua('OWV_VERSION=0;OWV_PROFILE=1;OWV_MODVER=2;OWV_ISMOD=3;OWV_DEVMODE=4;OWV_ISEDITOR=5;OWV_STEAMUSERNAME=6;OWV_USERNAME=7;OWV_MULTIPLAYER=8;OWV_PROTOCOLVERSION=9;OWV_IAMSERVER=10;OWV_MULTI_JOINED=11;OWV_SKIRMISH=12;OWV_LANG=13;OWV_MYSIDE=14;OWV_MODDIR=15');
+--LUAScript.ToLua('OWV_GAMEPAUSED=16;OWV_INGAME_VIDEO=17;OWV_STOP_ACTION=18;OWV_IAMDEDIHOST=19;OWV_PROFILENAME=20;OWV_ISDEMO=21;');
+
 TID_Main_Menu_User = 494;
 TID_Main_Menu_Play = 804;
 TID_Main_Menu_Skirmish = 539;
@@ -407,3 +410,17 @@ end;
 function getChildernIDs(ELEMENT_ID)
     return sgui_get(ELEMENT_ID, PROP_CHILDIDS);
 end;
+
+function kFormat(VALUE)
+    VALUE = parseInt(VALUE);
+
+    if (VALUE < 1000) then
+        return VALUE;
+    end;
+
+    if (VALUE < 1000000) then
+        return (VALUE / 1000) .. 'k';
+    end;
+
+    return (VALUE / 1000000) .. 'm';
+end

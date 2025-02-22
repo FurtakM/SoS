@@ -1,42 +1,76 @@
-// every 1 do
+// export value ; every 1 do
    0: GO 2
    2: DISABLE
-// begin enable ;
-   3: ENABLE
-// display_strings := [ Tick: & tick , Depot: & GetLives ( b1 ) , Beh: & GetLives ( b2 ) , Hum: & GetLives ( b3 ) ] ;
-   4: LD_ADDR_OWVAR 47
-   8: PUSH
-   9: LD_STRING Tick:
-  11: PUSH
-  12: LD_OWVAR 1
-  16: STR
-  17: PUSH
-  18: LD_STRING Depot:
-  20: PUSH
-  21: LD_INT 7
-  23: PPUSH
-  24: CALL_OW 256
-  28: STR
-  29: PUSH
-  30: LD_STRING Beh:
-  32: PUSH
-  33: LD_INT 38
-  35: PPUSH
-  36: CALL_OW 256
-  40: STR
-  41: PUSH
-  42: LD_STRING Hum:
-  44: PUSH
-  45: LD_INT 48
-  47: PPUSH
-  48: CALL_OW 256
-  52: STR
-  53: PUSH
-  54: EMPTY
-  55: LIST
-  56: LIST
-  57: LIST
-  58: LIST
-  59: ST_TO_ADDR
+// value := 100 ;
+   3: LD_ADDR_EXP 1
+   7: PUSH
+   8: LD_INT 100
+  10: ST_TO_ADDR
+  11: END
+// on OilExtracted ( building , side , base , amount ) do begin if HexInfo ( 80 , 71 ) = building then
+  12: LD_INT 80
+  14: PPUSH
+  15: LD_INT 71
+  17: PPUSH
+  18: CALL_OW 428
+  22: PUSH
+  23: LD_VAR 0 1
+  27: EQUAL
+  28: IFFALSE 103
+// begin if value = 0 then
+  30: LD_EXP 1
+  34: PUSH
+  35: LD_INT 0
+  37: EQUAL
+  38: IFFALSE 73
+// begin RemoveDepositXY ( GetX ( building ) , GetY ( building ) ) ;
+  40: LD_VAR 0 1
+  44: PPUSH
+  45: CALL_OW 250
+  49: PPUSH
+  50: LD_VAR 0 1
+  54: PPUSH
+  55: CALL_OW 251
+  59: PPUSH
+  60: CALL_OW 63
+// KillUnit ( building ) ;
+  64: LD_VAR 0 1
+  68: PPUSH
+  69: CALL_OW 66
+// end ; value := value - amount ;
+  73: LD_ADDR_EXP 1
+  77: PUSH
+  78: LD_EXP 1
+  82: PUSH
+  83: LD_VAR 0 4
+  87: MINUS
+  88: ST_TO_ADDR
+// SetUnitDisplayNumber ( building , value ) ;
+  89: LD_VAR 0 1
+  93: PPUSH
+  94: LD_EXP 1
+  98: PPUSH
+  99: CALL_OW 505
+// end ; display_strings := [ building , side , base , amount , value ] ;
+ 103: LD_ADDR_OWVAR 47
+ 107: PUSH
+ 108: LD_VAR 0 1
+ 112: PUSH
+ 113: LD_VAR 0 2
+ 117: PUSH
+ 118: LD_VAR 0 3
+ 122: PUSH
+ 123: LD_VAR 0 4
+ 127: PUSH
+ 128: LD_EXP 1
+ 132: PUSH
+ 133: EMPTY
+ 134: LIST
+ 135: LIST
+ 136: LIST
+ 137: LIST
+ 138: LIST
+ 139: ST_TO_ADDR
 // end ;
-  60: END
+ 140: PPOPN 4
+ 142: END

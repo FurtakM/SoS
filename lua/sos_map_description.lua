@@ -362,7 +362,7 @@ function refreshPlayersPage()
 		local tmp = {};
 
 		for i = 1, #PLAYERS do
-			if PLAYERS[i] then
+			if PLAYERS[i] and REALPOSITIONS[i] then
 				local realPos = parseInt(REALPOSITIONS[i]);
 
 				if (realPos > 0 and realPos <= #POSITIONS) then
@@ -404,7 +404,8 @@ function refreshPlayersPage()
 							XYWH(X - 30, Y - 20, 60, 40),
 							true,
 							{
-								texture = 'SGUI/tags/b' .. team .. '.png'
+								texture = 'SGUI/tags/b' .. team .. '.png',
+								hint = player.NAME
 							}
 						);
 
@@ -425,7 +426,8 @@ function refreshPlayersPage()
 								XYWH(15, 5, 30, 30),
 								true,
 								{
-									texture = 'SGUI/tags/' .. nation .. '-' .. colour .. '.png'
+									texture = 'SGUI/tags/' .. nation .. '-' .. colour .. '.png',
+									hint = player.NAME
 								}
 							);
 						else
@@ -441,7 +443,8 @@ function refreshPlayersPage()
 									font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[colour],
 									text_halign = ALIGN_MIDDLE,
 									text_valign = ALIGN_MIDDLE,
-									shadowtext = true
+									shadowtext = true,
+									hint = player.NAME
 								}
 							);
 						end;

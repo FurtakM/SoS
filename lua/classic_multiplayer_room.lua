@@ -3111,7 +3111,7 @@ function setMapPreview()
 end;
 
 function setMultiplayerRealPosition(POSITIONS)
-	MULTIPLAYER_REAL_POSITIONS = { 0, 0, 0, 0, 0, 0, 0, 0 }; 
+	MULTIPLAYER_REAL_POSITIONS = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; 
 
 	local pos = stringNumberToArray(POSITIONS);
 
@@ -3201,7 +3201,57 @@ function useModernGUILogic()
 end;
 
 -- override functions
--- @TODO
 function init_specBars()
+	local sides = {};
+	local yOffSet = 0;
+	local icons = {
+		[1] = 'rand', 
+		[2] = 'am', 
+		[3] = 'ar', 
+		[4] = 'ru'
+	};
 
+	for i = 1, 9 do
+		sides[i] = {};
+	end;
+
+	for k, v in pairs(MULTI_PLAYERINFO_CURRENT_PLID) do
+		if v.ALIVE  then
+			if v.COLOUR > 0 then
+				sides[v.COLOUR].nat = 'SGUI/Alien/multiplayer/Nat/'.. icons[v.NATION + 1] .. '.png';
+
+				if sides[v.COLOUR].name then
+					sides[v.COLOUR].name = sides[v.COLOUR].name .. '+' .. v.NAME;
+				else
+					sides[v.COLOUR].name = v.NAME;
+				end;
+			end;
+		end;
+	end;
+
+	for i = 1, 8 do
+		if sides[i].nat then
+			SpecBar.bars[i].isInGame = true;
+			setText(SpecBar.bars[i].l[1], sides[i].name);
+			setTexture(SpecBar.bars[i].logo[1].nat, sides[i].nat);
+
+			for k = 2, 5 do
+				setTexture(SpecBar.bars[i].logo[k], 'empty.png');
+				SpecBar.bars[i].logo[k].iconName = "";
+				setText(SpecBar.bars[i].l[k], '');
+			end;
+
+			setY(SpecBar.bars[i], yOffSet);
+			yOffSet = yOffSet + interface.current.game.ui.specbar.h;
+			
+		else
+			SpecBar.bars[i].isInGame = false;
+		end;
+	end;
+
+	if MULTI_PLAYERINFO_CURRENT_PLID[MyID].ISSPEC == true then
+		showSpecBar(true);
+	else
+		showSpecBar(false);
+	end;
 end;
