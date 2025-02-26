@@ -1,0 +1,37 @@
+{Every 1 do
+begin
+enable;
+
+display_strings := [
+   'Tick:' & tick,
+   'Depot:' & GetLives(b1),
+   'Beh:' & GetLives(b2),
+   'Hum:' & GetLives(b3)
+];
+End; }
+
+Export value;
+Every 1 do
+begin
+value := 120;
+SetInvulnrability(t22, true);
+TeleportExit(t22, 12, 10);
+End;
+
+
+On OilExtracted(building, side, base, amount) do
+begin
+if HexInfo(80, 71) = building then
+   begin
+   if value = 0 then
+      begin         
+      RemoveDepositXY(GetX(building), GetY(building));
+      KillUnit(building);
+      end;
+
+   value := value - amount;
+   SetUnitDisplayNumber(building, value);
+   end;
+
+display_strings := [building, side, base, amount, value];
+End;

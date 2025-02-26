@@ -15,6 +15,8 @@ function gamewindow.overlay.onTick(FRAMETIME)
         if SELECTED_UNIT then
             local selectedUnitID = parseInt(SELECTED_UNIT.ID);
             local unitKindID = parseInt(SELECTED_UNIT.KIND);
+            local unitSide = parseInt(SELECTED_UNIT.SIDE);
+            local side = getvalue(OWV_MYSIDE);
 
         	if selectedUnitID > 0 and unitKindID == 3 and FACTORY_WAYPOINTS[selectedUnitID] ~= nil and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
         		local point = FACTORY_WAYPOINTS[selectedUnitID];
@@ -28,6 +30,37 @@ function gamewindow.overlay.onTick(FRAMETIME)
                 displayWarehouseGatheringPointXY(point[1], point[2], point[3], point[4]);
             elseif WAREHOUSE_ACTIVE_POINT ~= nil then
                 clearWarehouseGatheringPoint();
+            end;
+
+            if side == 9 then
+                if unitSide ~= nil and (unitKindID == 0 or unitKindID == 1) then
+                    local bases = OW_GET_SIDE_BASES(unitSide);
+
+                    if bases ~= nil then
+                        local base = nil;
+
+                        for i, v in pairs(bases) do
+                            if parseInt(v.DEPOT.ID) == selectedUnitID then
+                                base = v;
+                                break;
+                            end;
+                        end;
+
+                        if (base ~= nil) then
+                            -- ID, X, Y, CRATES, OIL, SIB
+                            displayAmountOfResourcesDepot(
+                                selectedUnitID,
+                                base.DEPOT.XS,
+                                base.DEPOT.YS,
+                                base.POOL.MATS[1],
+                                base.POOL.MATS[2],
+                                base.POOL.MATS[3]
+                            );
+                        end;
+                    end;
+                else
+                    clearAmountOfResourcesDepot();
+                end;
             end;
         end;
     end;

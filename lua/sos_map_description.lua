@@ -91,7 +91,7 @@ dialog.map.page1 = getElementEX(
 		dialog.map.width - 40, 
 		dialog.map.height - 140
 	),
-	false,
+	true,
 	{
 		colour1 = BLACKA(0)
 	}
@@ -175,7 +175,7 @@ dialog.map.page2 = getElementEX(
 		dialog.map.width - 40, 
 		dialog.map.height - 140
 	),
-	true,
+	false,
 	{
 		colour1 = BLACKA(0)
 	}
@@ -313,9 +313,19 @@ dialog.map.ok = getImageButtonEX(
     }
 );
 
+function showMapDescription()
+	refreshPlayersPage();
+	ShowDialog(dialog.map);
+end;
+
 function showMapDescriptionPage(PAGE)
 	setVisible(dialog.map.page1, PAGE == 1);
 	setVisible(dialog.map.page2, PAGE == 2);
+
+	if (PAGE == 2) then
+		refreshPlayersPage();		
+	end;
+
 	setVisible(dialog.map.page3, PAGE == 3);
 end
 
@@ -332,6 +342,116 @@ function turnMapDescription(MODE)
 
 	if (MODE == false) then
 		mapDescription('', '', nil, nil, nil, nil);
+	end;
+end
+
+function refreshPlayersPage()
+	if (MULTI_PLAYERINFO_CURRENT_PLID == nil or MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides == nil) then
+		return;
+	end;
+
+	local PLAYERS = copytable(MULTI_PLAYERINFO_CURRENT_PLID);
+	local POSITIONS = copytable(MULTIPLAYER_ROOM_MAP_EXTRA_DATA.mapPosSides);
+	local REALPOSITIONS = copytable(MULTIPLAYER_REAL_POSITIONS);
+
+	sgui_deletechildren(dialog.map.page2.panel.mapPic.ID);
+
+	if (PLAYERS ~= nil and POSITIONS ~= nil) then
+		local scalX = 2.2722;
+		local scalY = 1.5000;
+		local tmp = {};
+
+		for i = 1, #PLAYERS do
+			if PLAYERS[i] and REALPOSITIONS[i] then
+				local realPos = parseInt(REALPOSITIONS[i]);
+
+				if (realPos > 0 and realPos <= #POSITIONS) then
+					local coord = POSITIONS[realPos];
+
+					local player = PLAYERS[i];
+
+					if (tmp[coord] == nil) then
+						local X = (coord.X * scalX);
+						local Y = (coord.Y * scalY);
+
+						if (X < 35) then
+							X = 35;
+						end;
+
+						if (X > 440) then
+							X = 440;
+						end;
+
+						if (Y < 25) then
+							Y = 25;
+						end;
+
+						if (Y > 290) then
+							Y = 290;
+						end;
+
+						local team = player.TEAM;
+						local colour = player.COLOUR;
+
+						if not player.ALIVE then
+							team = 0;
+							colour = 0;
+						end;
+
+						local badge = getElementEX(
+							dialog.map.page2.panel.mapPic,
+							anchorLTRB,
+							XYWH(X - 30, Y - 20, 60, 40),
+							true,
+							{
+								texture = 'SGUI/tags/b' .. team .. '.png',
+								hint = player.NAME
+							}
+						);
+
+						if (player.NATION > 0) then
+							local nation = 'am';				 
+
+							if (player.NATION == 2) then
+								nation = 'ar';
+							end;
+
+							if (player.NATION == 3) then
+								nation = 'ru';
+							end;
+
+							local icon = getElementEX(
+								badge,
+								anchorLTRB,
+								XYWH(15, 5, 30, 30),
+								true,
+								{
+									texture = 'SGUI/tags/' .. nation .. '-' .. colour .. '.png',
+									hint = player.NAME
+								}
+							);
+						else
+							local icon = getLabelEX(
+								badge,
+								anchorLTRB,
+								XYWH(15, 5, 30, 30),
+								nil,
+								'?',
+								{
+									font_name = Tahoma_60B,
+									colour1 = WHITEA(),
+									font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[colour],
+									text_halign = ALIGN_MIDDLE,
+									text_valign = ALIGN_MIDDLE,
+									shadowtext = true,
+									hint = player.NAME
+								}
+							);
+						end;
+					end;
+				end;
+			end;
+		end; 
 	end;
 end
 
@@ -358,93 +478,7 @@ function mapDescription(NAME, TEXT, PICTURE, PLAYERS, POSITIONS, SETTINGS)
 	-- POSITIONS 220, 220 -> 500, 330
 	sgui_deletechildren(dialog.map.page2.panel.mapPic.ID);
 
-	if (PLAYERS ~= nil and POSITIONS ~= nil) then
-		local scalX = 2.2722;
-		local scalY = 1.5000;
-		local tmp = {};
-
-		for i = 1, #PLAYERS do
-			if (PLAYERS[i].SIDE > 0 and PLAYERS[i].SIDE <= #POSITIONS) then
-				local coord = POSITIONS[PLAYERS[i].SIDE];
-
-				local player = PLAYERS[i];
-
-				if (tmp[coord] == nil) then
-					local border = getElementEX(
-						dialog.map.page2.panel.mapPic,
-						anchorLTRB,
-						XYWH(coord.X * scalX, coord.Y * scalY, 100, 90),
-						true,
-						{
-							colour1 = WHITEA()
-						}
-					);
-
-					if (player.NATION > 0) then
-						local nation = 'am';				 
-
-						if (player.NATION == 2) then
-							nation = 'ar';
-						end;
-
-						if (player.NATION == 3) then
-							nation = 'ru';
-						end;
-
-						local icon = getElementEX(
-							border,
-							anchorLTRB,
-							XYWH(20, 5, 60, 60),
-							true,
-							{
-								texture = 'SGUI/tags/' .. nation .. '-' .. player.COLOUR .. '.png'
-							}
-						);
-					else
-						local icon = getLabelEX(
-							border,
-							anchorLTRB,
-							XYWH(20, 5, 60, 60),
-							nil,
-							'?',
-							{
-								font_name = Tahoma_60B,
-								colour1 = WHITEA(),
-								font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[player.COLOUR],
-								text_halign = ALIGN_MIDDLE,
-								text_valign = ALIGN_MIDDLE,
-								shadowtext = true
-							}
-						);
-					end;
-
-					local label = getLabelEX(
-						border,
-						anchorLTRB,
-						XYWH(5, 70, 90, 16),
-						nil,
-						player.NAME,
-						{
-							colour1 = MULTIPLAYER_MINIMAP_PREVIEW_TEAM[player.TEAM],
-							text_halign = ALIGN_MIDDLE,
-							text_valign = ALIGN_MIDDLE,
-							font_colour = MULTIPLAYER_MINIMAP_PREVIEW_COLOURS[player.COLOUR],
-							nomouseevent = true,
-							font_name = ADMUI3L,
-							scissor = true,
-							wordwrap = false,
-							font_style_outline = true,
-		        			shadowtext = true  			
-						}
-					);
-
-					tmp[coord] = label.ID;
-				else
-					setText({ID = tmp[coord]}, getText({ID = MULTIPLAYER_MINIMAP_PLAYERS[coord]}) .. '+' .. player.NAME);
-				end;
-			end;
-		end; 
-	end;
+	-- see refreshPlayersPage
 
 	-- SETTINGS
 	if (SETTINGS ~= nil) then
@@ -453,7 +487,7 @@ function mapDescription(NAME, TEXT, PICTURE, PLAYERS, POSITIONS, SETTINGS)
 		for i = 1, #SETTINGS do
 			local setting = SETTINGS[i];
 
-			if (setting.ITEMS ~= nil and setting.VALUE > 0) then
+			if (setting.ITEMS ~= nil and setting.VALUE >= 0) then
 				if setting.TYPE == 1 and setting.ITEMS.COUNT > 0 then
 					settingsText = settingsText .. setting.NAME .. ': ' .. setting.ITEMS.NAMES[setting.VALUE + 1] .. '\n';
 				end;

@@ -104,7 +104,7 @@ End;
 
 
 On ArtifactUsed(side, icon, x, y) do
-var i, lab, time, list, un;
+var i, lab, time, list, un, base;
 begin
 // research artifacts
 if icon = artifactsButtons[1][3] then
@@ -126,7 +126,7 @@ if icon = artifactsButtons[1][3] then
 
 if icon = artifactsButtons[2][3] then
    begin
-   lab := artifactsLabs[2];
+   lab := artifactsLabs[2]; 
 
    if not lab then
       exit;
@@ -162,12 +162,15 @@ if icon = artifactsButtons[3][3] then
 if icon = artifactsButtons[1][1] then
    begin
    lab := artifactsLabs[1];
+   base := GetBase(lab);
 
    if GetBaseMaterials(GetBase(lab))[3] < artifactsSibCost[1] then
       begin
       HintSpec('ArtifactCost', 2);
       exit;
       end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[1]));
 
    artifactsReady := Replace(artifactsReady, 1, false);
    PlaceSeeing(x, y, 7, -12);
@@ -181,6 +184,7 @@ if icon = artifactsButtons[1][1] then
 if icon = artifactsButtons[2][1] then
    begin
    lab := artifactsLabs[2];
+   base := GetBase(lab);
 
    if not x in FilterAllUnits([[f_enemy, 7], [f_or, [f_engine, engine_siberite], [f_btype, b_siberite_power], [f_btype, b_siberite_mine], [f_bweapon, ru_time_lapser], [f_weapon, ru_time_lapser], [f_btype, b_ext_siberium]]]) then
       exit;
@@ -190,6 +194,8 @@ if icon = artifactsButtons[2][1] then
       HintSpec('ArtifactCost', 2);
       exit;
       end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[2]));
 
    artifactsReady := Replace(artifactsReady, 2, false);
    KillUnit(x);
@@ -202,12 +208,15 @@ if icon = artifactsButtons[2][1] then
 if icon = artifactsButtons[3][1] then
    begin
    lab := artifactsLabs[3];
+   base := GetBase(lab);
 
    if GetBaseMaterials(GetBase(lab))[3] < artifactsSibCost[3] then
       begin
       HintSpec('ArtifactCost', 2);
       exit;
       end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[3]));
 
    SetAreaMapShow(teleportArea, 1);
    time := 0$30;

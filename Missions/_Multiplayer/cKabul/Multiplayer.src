@@ -5,9 +5,12 @@ Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
        multi_skill_level, multi_crates_spawn, multi_apeman,
        multi_support, multi_commanders, multi_loosers, multi_players_amount,
        multi_reinforcements, multi_support_arrive_time, multi_buildings;
+Export mpGameType, mpSidePositions;
 Export Function InitMultiplayer;
 var i, j, x, tmp;
 begin
+mpGameType := GameTypeCoop;
+
 multi_settings_counter := 6; // MultiDesc<gametype>.wri
 multi_settings := [];
 
@@ -37,6 +40,8 @@ else
    multi_teams      := [[3, 4, 5]];
    multi_settings   := [2, 4, 4, 3, 2, 3]; // Pep.amount, Skill level, Crates, Oil, Support, Diff
    end;
+
+mpSidePositions := multi_sides;
 
 multi_spec := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_bots := [0, 0, 0, 0, 0, 0, 0, 0];
@@ -392,18 +397,28 @@ if multi_sides[your_side] then
 End;
 
 Export Function Multiplayer_End();
-var i, j;
+var i, j, s, tmp;
 begin
+tmp := [];
+
+for i := 1 to 8 do
+    if multi_sides[i] then
+       tmp := Join(tmp, i);
+
 repeat
  wait(0$1);
 
  if tick > multi_support_arrive_time and multi_support then
     begin
-    if tick mod 1$00 = 0 then
+    if tick mod 2$00 = 0 then
        begin
-       for i := 1 to 8 do
+       tmp := Reindex(tmp, 1, Count(tmp), true);
+
+       for s := 1 to tmp do
            begin
-           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] and Prob([80, 60, 40][Difficulty]) then
+           i := tmp[s];
+
+           if multi_sides[i] and not multi_loosers[i] and multi_reinforcements[i] then
               begin
               PlaceUnitArea(multi_reinforcements[i][1], spawnHumanArea, true);
               multi_reinforcements := Replace(multi_reinforcements, i, Delete(multi_reinforcements[i], 1));

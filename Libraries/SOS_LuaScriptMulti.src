@@ -11,6 +11,51 @@ Export Function SOS_MapStart();
 begin
 UpdateFactoryWaypoints();
 UpdateWarehouseGatheringPoints();
+ParseMultiDataToLua();
+
+ToLua('setSpecLogoNumber(' & 2 & ',' & 1 & ')');
+ToLua('setSpecLogoNumber(' & 3 & ',' & 2 & ')');
+ToLua('setSpecLogoNumber(' & 4 & ',' & 3 & ')');
+ToLua('setSpecLogoNumber(' & 5 & ',' & 4 & ')');
+End;
+
+Export Function UpdateSpectatorBar;
+var i, j, crates, oil, sib, people, base, bases;
+begin
+for i := 1 to 8 do
+    begin
+    if mpSidePositions[i] then
+       begin
+       people := Count(FilterAllUnits([[f_side, i], [f_type, unit_human]]));
+       bases := FilterAllUnits([[f_side, i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+       crates := 0;
+       oil := 0;
+       sib := 0;
+
+       if bases then
+          begin
+          for j in bases do
+              begin
+              base := GetBase(j);
+              crates := crates + GetResourceType(base, mat_cans);
+              oil := oil + GetResourceType(base, mat_oil);
+              sib := sib + GetResourceType(base, mat_siberit);
+              end;
+          end;
+
+       ToLua('setSpecText(' & i & ',' & 2 & ',' & crates & ')');
+       ToLua('setSpecText(' & i & ',' & 3 & ',' & oil & ')');
+       ToLua('setSpecText(' & i & ',' & 4 & ',' & sib & ')');
+       ToLua('setSpecText(' & i & ',' & 5 & ',' & people & ')');
+       end;
+    end;
+End;
+
+Every 20+0$5 trigger FilterAllUnits([f_or, [f_btype, b_depot], [f_btype, b_warehouse]]) do
+begin
+enable;
+UpdateSpectatorBar;
 End;
 
 Export Function SOS_TargetableHack(cmd, unit, selectedUnit, x, y, p1, p2, p3, p4, p5, p6);
@@ -19,7 +64,7 @@ begin
 End;
 
 // WAYPOINTS
-Export factoryWaypoints;
+Export factoryWaypoints, factoryWaypointsDrivers;
 Export Function SetFactoryWaypoint(factory, x, y);
 var i;
 begin
@@ -90,6 +135,22 @@ if warehouseGatheringPoints then
    for i := 1 to list do
        ToLua('setWarehouseGatheringPointXY(' & list[i][1] & ',' & list[i][2] & ',' & list[i][3] & ',' & list[i][4] & ')');
    end;
+End;
+
+Function ParseMultiDataToLua();
+var i;
+begin
+if not mpSidePositions then
+   exit;
+
+result := '';
+
+for i := 1 to 8 do
+    begin
+    result := result & mpSidePositions[i] & ';';
+    end;
+
+ToLua('setMultiplayerRealPosition("' & result & '");');
 End;
 
 {Every 0$20 trigger warehouseGatheringPoints do

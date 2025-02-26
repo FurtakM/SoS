@@ -31,6 +31,7 @@ Export
   mpMapSize,
   mpApemans,
   mpApemansArea,
+  mpApePosIndex,
   mpRespawn,
   mpKingArea,
   mpPoints,
@@ -39,6 +40,10 @@ Export
   mpDisplayStrings,
   mpGameActive,
   mpRespawnPull,
+  mpGlobalOilDeposits,
+  mpGlobalSibDeposits,
+  mpTeleports,
+  mpArtifacts,
   mpBlockRespThread;
 
 {
@@ -78,6 +83,9 @@ mpMapSize := [2, 2];
 mpOilDeposits := [];
 mpSibDeposits := [];
 
+mpGlobalOilDeposits := [];
+mpGlobalSibDeposits := [];
+
 mpDepots := [];
 mpBuildings := [];
 mpMarkedAreas := [];
@@ -95,7 +103,10 @@ mpPoints := [];
 mpVehicles := 0;
 mpShipments := 0;
 mpRespawnPull := [ [], [], [], [], [], [], [], [] ];
+mpApePosIndex := [ [], [], [], [], [], [], [], [] ];
 mpEmissions := 0;
+mpTeleports := 0;
+mpArtifacts := 0;
 
 mpPeopleSkill := 3;
 mpPeopleAmount := 15;
@@ -116,7 +127,8 @@ begin
 gameTypes := [
     GameTypeNormal,
     GameTypeSurvival,
-    GameTypeKing
+    GameTypeKing,
+    GameTypeFamine
 ];
 
 for i in gameTypes do
@@ -195,12 +207,21 @@ for i := 1 to 8 {max amount} do
     // depots
     if Count(mpDepots) then
        begin
-       bc_level := 0;
-       bc_type := b_depot;
+       if mpGameType = GameTypeSurvival then
+          begin
+          bc_level := 10;
+          bc_type := b_warehouse;
+          end
+       else
+          begin
+          bc_level := 0;
+          bc_type := b_depot;
+          end;
+
        b := CreateAndPlaceBuildingXYD(mpDepots[pos][1], mpDepots[pos][2], mpDepots[pos][3]);
 
        SetBName(b, '@' & side);
-       SetTag(b, side);
+       // SetTag(b, side);
 
        if Count(mpStartingResources) then
           begin
@@ -259,7 +280,8 @@ for i := 1 to 8 {max amount} do
     if mpSibDetection and GetTech(tech_sibdet, side) = state_enabled then
        SetTech(tech_SibDet, side, state_researched);
 
-    SetTech(tech_artifact, side, state_disabled);
+    if not mpArtifacts then
+       SetTech(tech_artifact, side, state_disabled);
 
     // sib bomb
     if mpSibBomb = 1 then
@@ -293,7 +315,7 @@ for i := 1 to 8 {max amount} do
            begin
            PrepareApeman(-5);
            ape := CreateHuman;
-           SetTag(ape, side);
+           mpApePosIndex := Replace(mpApePosIndex, pos, Join(mpApePosIndex[pos], ape));
            PlaceUnitArea(ape, mpApemansArea[pos], false);
            end;
        end;
@@ -567,7 +589,7 @@ begin
 result := false;
 
 case gameType of
-     GameTypeNormal:
+     GameTypeNormal, GameTypeFamine:
                    begin
                    result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
                    end;
@@ -636,7 +658,7 @@ repeat
 
         tmp := FilterAllUnits([[f_side, j], [f_ok], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
-        if not tmp then
+        if not tmp or not MultiplayerSideAlive(j) or not HasPowerByGameType(mpGameType, j) then
            continue;
 
         spawn := tmp[1];

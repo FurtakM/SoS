@@ -511,6 +511,8 @@ else
    dir := 0;
    end;
 
+EraseResourceArea(mat_cans, area);
+
 squad := [];
 tmp := [];
 tmpVehs := [];
@@ -522,13 +524,28 @@ if vehicles then
    begin
    for i := 1 to vehicles do
        begin
-       vc_chassis := vehicles[i][1];
-       vc_engine := vehicles[i][2];
-       vc_control := vehicles[i][3];
-       vc_weapon := vehicles[i][4];
+       if vehicles[i] then
+          begin
+          if not vehicles[i][1] then
+             continue;
 
-       veh := CreateVehicle;
-       tmpVehs := Join(tmpVehs, veh);
+          if not vehicles[i][2] then
+             continue;
+
+          if not vehicles[i][3] then
+             continue;
+
+          if not vehicles[i][4] then
+             continue;
+
+          vc_chassis := vehicles[i][1];
+          vc_engine := vehicles[i][2];
+          vc_control := vehicles[i][3];
+          vc_weapon := vehicles[i][4];
+
+          veh := CreateVehicle;
+          tmpVehs := Join(tmpVehs, veh);
+          end;
        end;
    end;
 
@@ -627,12 +644,20 @@ if tmp then
        if GetClass(i) = class_mechanic and tmpVehs then
           begin
           SetDir(tmpVehs[1], 0);
-          PlaceUnitXY(tmpVehs[1], point[1], point[2], false);
+
+          repeat
+           wait(10);
+          until PlaceUnitXY(tmpVehs[1], point[1], point[2], false);
+
           PlaceHumanInUnit(i, tmpVehs[1]);
           tmpVehs := Delete(tmpVehs, 1);
           end
        else
-          PlaceUnitArea(i, area, false);
+          begin
+          repeat
+           wait(10);
+          until PlaceUnitArea(i, area, false);
+          end;
 
        ComMoveXY(i, point2[1], point2[2]);
 

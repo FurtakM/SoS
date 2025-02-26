@@ -1,0 +1,307 @@
+// Artifacts module
+// Artifact #1 - 30
+// Artifact #2 - 40
+// Artifact #3 - 50
+Export artifactsPos, artifactsRecharge, artifactsSibCost, artifactsResearched, artifactsReady;
+Export artifactsResDifficulty, artifactsResProgress, artifactsButtons, artifactsLabsWorking;
+Export Function InitArtifact;
+var i;
+begin
+for i := 1 to 8 do
+    SetArtifactRes(i, true);
+
+CreateResourcesArea(mat_artifact, 3, ArtifactArea1, false);
+CreateResourcesArea(mat_artifact, 4, ArtifactArea2, false);
+CreateResourcesArea(mat_artifact, 5, ArtifactArea3, false);
+
+artifactsPos := [ [], [], [] ];
+artifactsRecharge := [ 0$30, 1$20, 5$00 ];
+artifactsSibCost := [ 10, 35, 100 ];
+artifactsResDifficulty := [ 300, 500, 800 ];
+artifactsLabsWorking := [ [], [], [] ];
+artifactsResearched := [ [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] ];
+artifactsResProgress := [ [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] ];
+artifactsReady := [ [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0] ];
+artifactsButtons := [
+                      [ art_use_eye, art_place, art_exp_left ],
+                      [ art_use_sibexplosion, art_unit, art_exp_mid ],
+                      [ art_use_atom, art_place, art_exp_right ]
+                    ];
+End;
+
+
+Function TeleportArtefact(number, area);
+var hex, cargo;
+begin
+if not number in [3, 4, 5] then
+   exit;
+
+hex := FindArtifact(number);
+
+if hex then
+   begin
+   if InArea(hex[1], hex[2], area) then
+      exit;
+
+   MoveAreaXY(artifactTeleportArea, hex[1], hex[2]);
+   EffectTeleport(hex[1], hex[2]);
+   wait(30);
+   EraseResourceArea(artifactTeleportArea, mat_artefact);
+   end
+else
+   begin
+   cargo := FilterAllUnits([[f_tag, number],
+                            [f_or, [f_weapon, us_cargo_bay],
+                                   [f_weapon, ar_cargo_bay],
+                                   [f_weapon, ru_cargo_bay],
+                                   [f_weapon, ru_big_cargo_bay]]]);
+
+   if not cargo then
+      exit;
+
+   SetCargo(cargo[1], mat_artifact, 0);
+   end;
+
+CreateResourcesArea(mat_artifact, number, area, false);
+End;
+
+Every 8$30 trigger mpArtifacts do
+begin
+enable; 
+TeleportArtefact(3, ArtifactArea1);
+End;
+
+Every 6$10 trigger mpArtifacts do
+begin
+enable;
+TeleportArtefact(4, ArtifactArea2);
+End;
+
+Every 4$10 trigger mpArtifacts do
+begin
+enable;
+TeleportArtefact(5, ArtifactArea3);
+End;
+  
+// update artifacts
+Every 0$1 trigger mpArtifacts do
+var i, pos, j, side, labs, nearestLab;
+begin
+enable;
+
+for i := 1 to 3 do
+    begin
+    pos := FindArtifact(i + 2);
+
+    artifactsPos := Replace(artifactsPos, i, pos);
+    labs := FilterAllUnits([f_lab, b_lab_siberium]);
+
+    if not labs then
+       exit;
+
+    if pos then
+       begin
+       if not labs then
+          continue;
+
+       nearestLab := NearestUnitToXY(labs, artifactsPos[i][1], artifactsPos[i][2]);
+
+       if not nearestLab then
+          begin
+          for j in labs do
+              begin
+              side := GetSide(j);
+
+              SetArtifactUse(side, artifactsButtons[i][3], art_no, j);
+              SetArtifactUse(side, artifactsButtons[i][1], art_no, j);
+              end;
+
+          continue;
+          end;
+
+       if GetDistUnitXY(nearestLab, artifactsPos[i][1], artifactsPos[i][2]) < 8 and GetTech(tech_artifact, GetSide(nearestLab)) = state_researched then
+          begin
+          side := GetSide(nearestLab);
+
+          if not artifactsResearched[side][i] then
+             begin
+             if BuildingStatus(nearestLab) = bs_idle then
+                SetArtifactUse(side, artifactsButtons[i][3], art_instant, nearestLab)
+             else
+                SetArtifactUse(side, artifactsButtons[i][3], art_gray, nearestLab);
+             end
+          else // use art
+             begin
+             if BuildingStatus(nearestLab) = bs_idle and artifactsReady[side][i] then
+                SetArtifactUse(side, artifactsButtons[i][1], artifactsButtons[i][2], nearestLab)
+             else
+                SetArtifactUse(side, artifactsButtons[i][1], art_gray, nearestLab)
+             end;
+          end
+       else
+          begin
+          for j in labs diff nearestLab do
+              begin
+              side := GetSide(j);
+
+              if not artifactsResearched[side][i] then
+                 SetArtifactUse(side, artifactsButtons[i][3], art_no, j)
+              else
+                 SetArtifactUse(side, artifactsButtons[i][1], art_no, j);
+              end;
+          end;
+       end
+    else // artifact not found
+       begin
+       for j in labs do
+           begin
+           side := GetSide(j);
+
+           SetArtifactUse(side, artifactsButtons[i][3], art_no, j);
+           SetArtifactUse(side, artifactsButtons[i][1], art_no, j);
+
+           if j in artifactsLabsWorking[i] then
+              begin
+              artifactsLabsWorking := Replace(artifactsLabsWorking, i, artifactsLabsWorking[i] diff j);
+              ComCancel(j);
+              end;
+           end;
+       end;
+    end;
+End;
+
+On ArtifactUsed(side, icon, x, y) do
+var i, labs, lab, base, time;
+begin
+labs := FilterAllUnits([[f_side, side], [f_lab, b_lab_siberium]]);
+
+// research artifacts
+for i := 1 to 3 do
+    begin
+    if icon = artifactsButtons[i][3] then
+       begin
+       lab := NearestUnitToXY(labs, artifactsPos[i][1], artifactsPos[i][2]);
+
+       if not lab then
+          continue;
+
+       SetSpecResearch(lab, artifactsResDifficulty[i], true);
+       SetTag(lab, i);
+
+       if artifactsResProgress[side][i] then
+          SetWorkingProgress(lab, artifactsResProgress[side][i]);
+
+       artifactsLabsWorking := Replace(artifactsLabsWorking, i, artifactsLabsWorking[i] union lab);
+
+       SetArtifactUse(side, artifactsButtons[i][3], art_no, lab);
+       end;
+   end;
+
+// use artifacts
+if icon = artifactsButtons[1][1] then
+   begin
+   lab := NearestUnitToXY(labs, artifactsPos[1][1], artifactsPos[1][2]);
+   base := GetBase(lab);
+
+   if GetBaseMaterials(GetBase(lab))[3] < artifactsSibCost[1] then
+      begin
+      exit;
+      end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[1]));
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 1, false));
+
+   PlaceSeeing(x, y, side, -12);
+   wait(0$30);
+   RemoveSeeing(x, y, side);
+
+   wait(artifactsRecharge[1]);
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 1, true));
+   end;
+
+if icon = artifactsButtons[2][1] then
+   begin
+   lab := NearestUnitToXY(labs, artifactsPos[2][1], artifactsPos[2][2]);
+   base := GetBase(lab);
+
+   if not x in FilterAllUnits([[f_enemy, side], [f_or, [f_engine, engine_siberite], [f_btype, b_siberite_power], [f_btype, b_siberite_mine], [f_bweapon, ru_time_lapser], [f_weapon, ru_time_lapser], [f_weapon, us_double_laser], [f_weapon, ar_bio_bomb], [f_weapon, ar_selfpropelled_bomb], [f_btype, b_ext_siberium]]]) then
+      exit;
+
+   if GetBaseMaterials(GetBase(lab))[3] < artifactsSibCost[2] then
+      begin
+      exit;
+      end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[2]));
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 2, false));
+
+   KillUnit(x);
+
+   wait(artifactsRecharge[2]);
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 2, true));
+   end;
+
+if icon = artifactsButtons[3][1] then
+   begin
+   lab := NearestUnitToXY(labs, artifactsPos[3][1], artifactsPos[3][2]);
+   base := GetBase(lab);
+
+   if GetBaseMaterials(base)[3] < artifactsSibCost[3] then
+      begin
+      exit;
+      end;
+
+   SetResourceType(base, mat_siberit, (GetResourceType(base, mat_siberit) - artifactsSibCost[3]));
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 3, false));
+
+   ArtContamination(x, y, 50);
+
+   wait(artifactsRecharge[3]);
+
+   artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 3, true));
+   end;
+End;
+
+On SpecResearchCancel(lab, progress) do
+var side, tag;
+begin
+tag := GetTag(lab);
+side := GetSide(lab);
+
+SetArtifactUse(side, artifactsButtons[tag][3], art_instant, lab);
+artifactsResProgress := Replace(artifactsResProgress, side, Replace(artifactsResProgress[side], tag, progress));
+artifactsLabsWorking := Replace(artifactsLabsWorking, side, artifactsLabsWorking[side] diff lab);
+
+SetTag(lab, 0);
+End;
+
+
+On SpecResearchComplete(lab) do
+var side, tag;
+begin
+tag := GetTag(lab);
+side := GetSide(lab);
+
+SetArtifactUse(side, artifactsButtons[tag][3], art_no, lab);
+
+artifactsResearched := Replace(artifactsResearched, side, Replace(artifactsResearched[side], tag, 1));
+artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], tag, 1));
+artifactsLabsWorking := Replace(artifactsLabsWorking, side, artifactsLabsWorking[side] diff lab);
+End;
+
+On ArtifactLoaded(cargo, artifact) do
+begin
+SetTag(cargo, artifact);
+End;
+
+On ArtifactUnloaded(cargo, artifact) do
+begin
+SetTag(cargo, 0);
+End;
+
+

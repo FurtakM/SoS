@@ -1,0 +1,69 @@
+// GameTypeNormal = 5
+// Conditions: destroy all enemies by killing all of his human and computer units
+Every 0$3 trigger mpGameActive and CanWinLoose and Multiplayer marked GameTypeFamine do
+var i, canWin;
+begin
+canWin := false;
+
+if not HasPower(your_side) then
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end
+else
+   begin
+   canWin := true;
+
+   for i := 1 to 8 do
+       if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+          if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+             if HasPower(i) then
+                begin
+                canWin := false;
+                break;
+                end;
+
+   if canWin then
+      enable(mpWin)
+   else
+      enable;
+   end;
+End;
+
+Function CanWinLoose;
+begin
+result := true;
+
+//if IAmServer and PlayerCount > 0 then
+//   result := false;
+
+if IAmSpec and PlayerCount > 1 then
+   result := false;
+End;
+
+Function HasPower(i);
+begin
+result := FilterAllUnits([[f_side, i], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]);
+End;
+
+Export function FamineDeposits(areas, values, type);
+var i, j, list;
+begin
+if not areas or not values or not type in [mat_oil, mat_siberit] then
+   exit;
+
+for i := 1 to Count(areas) do
+    begin
+    list := AreaToList(areas[i], 0);
+
+    for j := 1 to list[1] do
+        begin
+        CreateDepositXY(list[1][j], list[2][j], type);
+
+        if type = mat_oil then
+           mpGlobalOilDeposits := Join(mpGlobalOilDeposits, [list[1][j], list[2][j], values[i]])
+        else
+           mpGlobalSibDeposits := Join(mpGlobalSibDeposits, [list[1][j], list[2][j], values[i]])
+        end;
+    end; 
+End;

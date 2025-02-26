@@ -1,0 +1,1 @@
+bud_ext_solar     = 42;

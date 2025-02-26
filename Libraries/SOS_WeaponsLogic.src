@@ -28,7 +28,7 @@ begin
 End;
 
 Export Function SOS_VehicleConstructed(vehicle, factory);
-var i, tag, driver, hex;
+var i, driver, hex;
 begin
 if not vehicle or not factory then
    exit;
@@ -37,67 +37,74 @@ if not factoryWaypoints then
    exit;
 
 for i := 1 to Count(factoryWaypoints) do
-   if factoryWaypoints[i][2] = factory then
-      begin
-      if GetControl(vehicle) = control_manual then
-         begin
-         driver := IsDrivenBy(vehicle);
-         tag := GetTag(driver);
+    if factoryWaypoints[i][2] = factory then
+       begin
+       if GetControl(vehicle) = control_manual then
+          begin
+          driver := IsDrivenBy(vehicle);
 
-         if tag = tDriver or GetTag(vehicle) = tDriver then
-            exit;
+          if driver in factoryWaypointsDrivers or vehicle in factoryWaypointsDrivers then
+             exit;
 
-         if not HasTask(driver) then
-            begin
-            SetTag(driver, tDriver);
-            SetTag(vehicle, tDriver);
+          if not HasTask(driver) then
+             begin
+             factoryWaypointsDrivers := Join(factoryWaypointsDrivers, driver);
+             factoryWaypointsDrivers := Join(factoryWaypointsDrivers, vehicle);
 
-            hex := HexInfo(factoryWaypoints[i][3], factoryWaypoints[i][4]);
+             hex := HexInfo(factoryWaypoints[i][3], factoryWaypoints[i][4]);
 
-            if hex then
-               ComMoveUnit(driver, hex)
-            else
-               ComMoveXY(driver, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+             if hex then
+                ComMoveUnit(driver, hex)
+             else if GetDistUnitXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]) > 0 then
+                ComMoveXY(driver, factoryWaypoints[i][3], factoryWaypoints[i][4]);
 
-            AddComExitVehicle(driver);
+             AddComExitVehicle(driver);
 
-            if Multiplayer then
-               begin
-               repeat
-                wait(10);
-               until not IsInUnit(driver);
+             if Multiplayer then
+                begin
+                repeat
+                 wait(10);
+                until not IsInUnit(driver);
 
-               if not HasTask(driver) then
-                  ComEnterUnit(driver, factory);
-               end
-            else
-               AddComEnterUnit(driver, factory);
+                if not HasTask(driver) then
+                   ComEnterUnit(driver, factory);
+                end
+             else
+                AddComEnterUnit(driver, factory);
 
-            wait(0$1);
+             wait(0$1);
 
-            // display_strings := [driver, GetTaskList(driver), GetTaskList(vehicle)];
+             // display_strings := [driver, GetTaskList(driver), GetTaskList(vehicle)];
 
-            SetTag(driver, tag);
-            SetTag(vehicle, 0);
+             factoryWaypointsDrivers := factoryWaypointsDrivers diff driver;
+             factoryWaypointsDrivers := factoryWaypointsDrivers diff vehicle;
 
-            break;
-            end;
-         end
-      else if GetControl(vehicle) = control_remote then
-         begin
-         wait(0$2);
+             break;
+             end;
+          end
+       else if GetControl(vehicle) = control_remote then
+          begin
+          wait(0$2);
 
-         if Connect(vehicle) then
-            AddComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+          repeat
+           wait(10);
+           Connect(vehicle);
+          until IsControledBy(vehicle);
 
-         break;
-         end
-      else
-         begin
-         AddComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
-         break;
-         end;
-      end;
+          wait(10);
+
+          ComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+
+          break;
+          end
+       else
+          begin
+          wait(0$3);
+
+          ComMoveXY(vehicle, factoryWaypoints[i][3], factoryWaypoints[i][4]);
+          break;
+          end;
+       end;
 End;
 
 Export Function SOS_TargetableSAIL(cmd, unit, selectedUnit, x, y);
@@ -133,9 +140,9 @@ if GetWeapon(un) <> ar_bio_bomb then
 
 // upgrade for 3 bio
 if GetTech(tech_bio3, GetSide(un)) = state_researched then
-   eff := 70
+   eff := 50
 else
-   eff := 30;
+   eff := 25;
 
 ArtContamination(GetX(un), GetY(un), eff);
 End;

@@ -5,9 +5,12 @@ Export multi_gametype, multi_sides, multi_side_teams, multi_nations,
        multi_skill_level, multi_crates_spawn, multi_ape_amount,
        multi_support, multi_commanders, multi_loosers, multi_players_amount,
        multi_reinforcements, multi_reinforcements_spawned,  multi_support_arrive_time;
+Export mpGameType, mpSidePositions;
 Export Function InitMultiplayer;
 var i, j, x, tmp;
 begin
+mpGameType := GameTypeCoop;
+
 multi_settings_counter := 6; // MultiDesc<gametype>.wri
 
 if Multiplayer then
@@ -35,7 +38,9 @@ else
    multi_nations    := [1, 0, 1, 0, 0, 0, 0, 0]; // allowed values: 0, 1, 2, 3
    multi_teams      := [[1, 3]];
    multi_settings   := [2, 2, 1, 3, 1, 3]; // Difficulty, Pep.amount, Skill level, Crates, Ape, Support
-   end;
+   end; 
+
+mpSidePositions := multi_sides;
 
 multi_spec := [0, 0, 0, 0, 0, 0, 0, 0];
 multi_bots := [0, 0, 0, 0, 0, 0, 0, 0];
@@ -102,11 +107,20 @@ Difficulty := [1, 2, 3][multi_settings[1]];
 // others settings
 multi_pep_amount := [9, 12, 15, 18][multi_settings[2]];
 multi_skill_level := [5, 6, 8, 10][multi_settings[3]];
-multi_crates_spawn := [ [9000, 0$32], [12000, 0$22], [14000, 0$14], [16000, 0$12] ][multi_settings[4]];
+multi_crates_spawn := [ [12000, 0$32], [15000, 0$22], [20000, 0$14], [24000, 0$12] ][multi_settings[4]];
 multi_ape_amount := [6, 8, 10][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
 multi_support_arrive_time := [15$0, 18$0, 21$0][Difficulty];
+
+if multi_ape_amount then
+   begin
+   for i := 1 to multi_ape_amount do
+       begin
+       PrepareApeman(-5);
+       PlaceUnitArea(CreateHuman, ape_area, false);
+       end;
+   end;
 End;
 
 Export Function Multiplayer_SetBotSide(preferSide);
@@ -161,10 +175,10 @@ if num = 2 then
 if num = 3 then
    begin
    hc_gallery := 'us';
-   hc_face_number := 7;
-   hc_name := 'Arthur Powell';
-   hc_sex := sex_male;
-   hc_skills := [8, 2, 5, 2];
+   hc_face_number := 3;
+   hc_name := 'Lisa Lawson';
+   hc_sex := sex_female;
+   hc_skills := [8, 4, 3, 3];
    hc_attr := [10, 11];
 
    result := CreateHuman;
