@@ -108,3 +108,57 @@ if mpGameType = GameTypeSurvival and GetBType(building) in [b_depot, b_warehouse
 if GetBType(building) in [b_depot, b_warehouse] then
    SetBName(building, '@' & GetSide(building));
 End;
+
+Export function Multiplayer_OilExtracted(building, side, base, amount);
+var i, value;
+begin
+if mpGameType <> GameTypeFamine then
+   exit;
+
+for i := 1 to mpGlobalOilDeposits do
+    begin
+    if HexInfo(mpGlobalOilDeposits[i][1], mpGlobalOilDeposits[i][2]) = building then
+       begin
+       value := mpGlobalOilDeposits[i][3]; 
+       value := Dec(value);
+
+       mpGlobalOilDeposits := Replace(mpGlobalOilDeposits, i, Replace(mpGlobalOilDeposits[i], 3, value));
+       SetUnitDisplayNumber(building, value);
+
+       if value = 0 then
+          begin
+          RemoveDepositXY(mpGlobalOilDeposits[i][1], mpGlobalOilDeposits[i][2]);
+          KillUnit(building);
+          exit;
+          end;
+       end;
+    end;
+End;
+
+Export function Multiplayer_SibExtracted(building, side, base, amount);
+var i, value;
+begin
+if mpGameType <> GameTypeFamine then
+   exit;
+
+for i := 1 to mpGlobalSibDeposits do
+    begin
+    if HexInfo(mpGlobalSibDeposits[i][1], mpGlobalSibDeposits[i][2]) = building then
+       begin
+       value := mpGlobalSibDeposits[i][3];
+       value := Dec(value);
+
+       mpGlobalSibDeposits := Replace(mpGlobalSibDeposits, i, Replace(mpGlobalSibDeposits[i], 3, value));
+       SetUnitDisplayNumber(building, value);
+
+       if value = 0 then
+          begin
+          RemoveDepositXY(mpGlobalSibDeposits[i][1], mpGlobalSibDeposits[i][2]);
+          KillUnit(building);
+          exit;
+          end;
+       end;
+    end;
+End;
+
+

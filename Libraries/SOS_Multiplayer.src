@@ -40,6 +40,10 @@ Export
   mpDisplayStrings,
   mpGameActive,
   mpRespawnPull,
+  mpGlobalOilDeposits,
+  mpGlobalSibDeposits,
+  mpTeleports,
+  mpArtifacts,
   mpBlockRespThread;
 
 {
@@ -79,6 +83,9 @@ mpMapSize := [2, 2];
 mpOilDeposits := [];
 mpSibDeposits := [];
 
+mpGlobalOilDeposits := [];
+mpGlobalSibDeposits := [];
+
 mpDepots := [];
 mpBuildings := [];
 mpMarkedAreas := [];
@@ -98,6 +105,8 @@ mpShipments := 0;
 mpRespawnPull := [ [], [], [], [], [], [], [], [] ];
 mpApePosIndex := [ [], [], [], [], [], [], [], [] ];
 mpEmissions := 0;
+mpTeleports := 0;
+mpArtifacts := 0;
 
 mpPeopleSkill := 3;
 mpPeopleAmount := 15;
@@ -118,7 +127,8 @@ begin
 gameTypes := [
     GameTypeNormal,
     GameTypeSurvival,
-    GameTypeKing
+    GameTypeKing,
+    GameTypeFamine
 ];
 
 for i in gameTypes do
@@ -270,7 +280,8 @@ for i := 1 to 8 {max amount} do
     if mpSibDetection and GetTech(tech_sibdet, side) = state_enabled then
        SetTech(tech_SibDet, side, state_researched);
 
-    SetTech(tech_artifact, side, state_disabled);
+    if not mpArtifacts then
+       SetTech(tech_artifact, side, state_disabled);
 
     // sib bomb
     if mpSibBomb = 1 then
@@ -578,7 +589,7 @@ begin
 result := false;
 
 case gameType of
-     GameTypeNormal:
+     GameTypeNormal, GameTypeFamine:
                    begin
                    result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
                    end;
