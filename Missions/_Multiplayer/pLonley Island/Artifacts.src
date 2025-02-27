@@ -31,7 +31,7 @@ End;
 
 
 Function TeleportArtefact(number, area);
-var hex, cargo;
+var i, hex, tmp, cargo;
 begin
 if not number in [3, 4, 5] then
    exit;
@@ -42,6 +42,23 @@ if hex then
    begin
    if InArea(hex[1], hex[2], area) then
       exit;
+
+   if artifactsLabsWorking[number - 2] then
+      begin
+      for i in artifactsLabsWorking[number - 2] do
+          begin
+          SetArtifactUse(GetSide(i), artifactsButtons[number - 2][3], art_no, i);
+          ComCancel(i);
+          end;
+
+      artifactsLabsWorking := Replace(artifactsLabsWorking, number - 2, []);         
+      end;
+
+   tmp := FilterUnitsInArea(area, [f_placed]);
+
+   if tmp then
+      for i in tmp do
+          DestroyUnit(i);
 
    MoveAreaXY(artifactTeleportArea, hex[1], hex[2]);
    EffectTeleport(hex[1], hex[2]);
@@ -140,14 +157,17 @@ for i := 1 to 3 do
           end
        else
           begin
-          for j in labs diff nearestLab do
+          for j in labs do
               begin
-              side := GetSide(j);
+              if GetDistUnitXY(j, artifactsPos[i][1], artifactsPos[i][2]) >= 8 then
+                 begin
+                 side := GetSide(j);
 
-              if not artifactsResearched[side][i] then
-                 SetArtifactUse(side, artifactsButtons[i][3], art_no, j)
-              else
-                 SetArtifactUse(side, artifactsButtons[i][1], art_no, j);
+                 if not artifactsResearched[side][i] then
+                    SetArtifactUse(side, artifactsButtons[i][3], art_no, j)
+                 else
+                    SetArtifactUse(side, artifactsButtons[i][1], art_no, j);
+                 end;
               end;
           end;
        end
@@ -226,7 +246,21 @@ if icon = artifactsButtons[2][1] then
    lab := NearestUnitToXY(labs, artifactsPos[2][1], artifactsPos[2][2]);
    base := GetBase(lab);
 
-   if not x in FilterAllUnits([[f_enemy, side], [f_or, [f_engine, engine_siberite], [f_btype, b_siberite_power], [f_btype, b_siberite_mine], [f_bweapon, ru_time_lapser], [f_weapon, ru_time_lapser], [f_weapon, us_double_laser], [f_weapon, ar_bio_bomb], [f_weapon, ar_selfpropelled_bomb], [f_btype, b_ext_siberium]]]) then
+   if not x in FilterAllUnits([[f_enemy, side], [f_or, [f_engine, engine_siberite],
+                                                       [f_btype, b_siberite_power],
+                                                       [f_btype, b_siberite_mine],
+                                                       [f_bweapon, ru_time_lapser],
+                                                       [f_weapon, ru_time_lapser],
+                                                       [f_weapon, us_double_laser],
+                                                       [f_bweapon, us_double_laser],
+                                                       [f_weapon, ar_bio_bomb],
+                                                       [f_weapon, ar_selfpropelled_bomb],
+                                                       [f_btype, b_ext_siberium],
+                                                       [f_weapon, us_siberium_rocket],
+                                                       [f_weapon, ru_siberium_rocket],
+                                                       [f_chassis, ru_behemoth],
+                                                       [f_bweapon, us_siberium_rocket],
+                                                       [f_bweapon, ru_siberium_rocket]]]) then
       exit;
 
    if GetBaseMaterials(GetBase(lab))[3] < artifactsSibCost[2] then
@@ -239,6 +273,11 @@ if icon = artifactsButtons[2][1] then
    artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], 2, false));
 
    KillUnit(x);
+
+   if GetWeapon(x) in [us_siberium_rocket, ru_siberium_rocket] or GetBWeapon(x) in [us_siberium_rocket, ru_siberium_rocket] then
+      begin
+      ArtContamination(x, y, 50);
+      end;
 
    wait(artifactsRecharge[2]);
 
@@ -275,7 +314,7 @@ side := GetSide(lab);
 
 SetArtifactUse(side, artifactsButtons[tag][3], art_instant, lab);
 artifactsResProgress := Replace(artifactsResProgress, side, Replace(artifactsResProgress[side], tag, progress));
-artifactsLabsWorking := Replace(artifactsLabsWorking, side, artifactsLabsWorking[side] diff lab);
+artifactsLabsWorking := Replace(artifactsLabsWorking, tag, artifactsLabsWorking[tag] diff lab);
 
 SetTag(lab, 0);
 End;
@@ -291,7 +330,7 @@ SetArtifactUse(side, artifactsButtons[tag][3], art_no, lab);
 
 artifactsResearched := Replace(artifactsResearched, side, Replace(artifactsResearched[side], tag, 1));
 artifactsReady := Replace(artifactsReady, side, Replace(artifactsReady[side], tag, 1));
-artifactsLabsWorking := Replace(artifactsLabsWorking, side, artifactsLabsWorking[side] diff lab);
+artifactsLabsWorking := Replace(artifactsLabsWorking, tag, artifactsLabsWorking[tag] diff lab);
 End;
 
 On ArtifactLoaded(cargo, artifact) do

@@ -99,10 +99,15 @@ mpGameSettings := [
 mpGameType := GameTypeFamine;
 your_side  := 1;
 
-mpSidePositions := [8,2,3,4,5,6,7,1];
-mpSideTeams     := [1,2,2,3,3,4,4,1];
-mpSideNations   := [1,2,3,1,2,3,1,2];
-mpTeams         := [[1,8],[2,3],[4,5],[6,7]];
+//mpSidePositions := [8,2,3,4,5,6,7,1];
+//mpSideTeams     := [1,2,2,3,3,4,4,1];
+//mpSideNations   := [1,2,3,1,2,3,1,2];
+//mpTeams         := [[1,8],[2,3],[4,5],[6,7]];
+
+mpSidePositions := [1,2,0,0,0,6,7,0];
+mpSideTeams     := [1,2,0,0,0,2,2,0];
+mpSideNations   := [1,2,0,0,0,3,1,0];
+mpTeams         := [[1,2],[6,7]];
 
 mpTeamGame        := false;
 mpMapSize         := [240, 270];
@@ -191,7 +196,7 @@ End;
 
 // Crates drop
 Every 0$2 marked mpActive do
-var i, j, x, phase, f, tmp, areas, areasPhase, time, normalTime, delayTime, maxTime;
+var i, j, x, phase, additionalSpawnPhase, f, tmp, areas, areasPhase, time, normalTime, delayTime, maxTime;
 begin
 if not mpShipments then
    exit;
@@ -202,24 +207,28 @@ case mpShipments of
         normalTime := 0$30;
         maxTime := 1$20;
         delayTime := 0$5;
+        additionalSpawnPhase := 10;
         end;
      2: begin // medium
         time := 0$25;
         normalTime := 0$25;
         maxTime := 1$10;
         delayTime := 0$4;
+        additionalSpawnPhase := 8;
         end;
      3: begin  // high
         time := 0$20;
         normalTime := 0$20;
         maxTime := 1$00;
         delayTime := 0$3;
+        additionalSpawnPhase := 6;
         end;
      4: begin  // very high
         time := 0$15;
         normalTime := 0$15;
         maxTime := 0$55;
         delayTime := 0$2;
+        additionalSpawnPhase := 5;
         end;
      end;
 
@@ -253,12 +262,15 @@ repeat
  if f mod 20 = 0 then
     phase := Inc(phase);
 
+ if f mod additionalSpawnPhase = 0 then
+    CreateCratesArea(x, worldCratesArea, true);
+
  if phase > 2 then
     phase := 1;
 
  for i in areas do
      begin
-     if GetResourceArea(i, mat_cans) < 30 then
+     if GetResourceArea(i, mat_cans) < 15 and phase = 2 then
         begin
         CreateCratesArea(x, i, true);
         end;
@@ -266,7 +278,7 @@ repeat
 
  for i in areasPhase[phase] do
      begin
-     if GetResourceArea(i, mat_cans) < 20 then
+     if GetResourceArea(i, mat_cans) < 25 then
         begin
         CreateCratesArea(x, i, true);
         end;
@@ -290,7 +302,11 @@ tmp := [ [T1TeleportArea, T4TeleportExitArea],
          [T3TeleportArea, T2TeleportExitArea],
          [T4TeleportArea, T1TeleportExitArea],
          [T5TeleportArea, T6TeleportExitArea],
-         [T6TeleportArea, T5TeleportExitArea]  ];
+         [T6TeleportArea, T5TeleportExitArea],
+         [T7TeleportArea, IslandArea1],
+         [T8TeleportArea, IslandArea1],
+         [T9TeleportArea, IslandArea1],
+         [T10TeleportArea, IslandArea1]  ];
 
 for i in tmp do
     CheckBuildUpArea(i[1], i[2], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]);
