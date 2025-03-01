@@ -840,6 +840,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         BASIC = ELEMENT.ID,
         BACKGROUND = ELEMENT.background.ID,
         BUTTON = ELEMENT.comboBox.button.ID,
+        SELECTED = ELEMENT.comboBox.selected.ID,
         TEXTURE = PROPERTIES.textureButton,
         LABEL = ELEMENT.comboBox.selected.label.ID,
         ITEMS = ITEMS,
@@ -848,6 +849,19 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     };
 
     return ELEMENT;
+end;
+
+function clComboBoxChangeHint(ID, HINT)
+    if (COMBOBOX_LIST == nil) then
+        return;
+    end;
+
+    for i, v in pairs(COMBOBOX_LIST) do
+        if (inArray(v.ELEMENTS, ID)) then
+            setHint({ID = v.SELECTED}, HINT);
+            break;
+        end;
+    end;
 end;
 
 function clUpdateComboBoxItems(LIST, ITEMS, CALLBACK, PROPERTIES)

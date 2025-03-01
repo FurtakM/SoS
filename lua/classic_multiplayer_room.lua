@@ -2764,7 +2764,7 @@ function generateMapSettings(SETTINGS, IS_HOST)
 			LIST = param.ITEMS.NAMES,
 			DEFAULT = param.VALUE,
 			NAME = param.NAME,
-			HINT = param.ITEMS.HINTS[param.VALUE]
+			HINT = param.ITEMS.HINTS[param.VALUE + 1]
 		};
 
 		setMultiplayerOption(parent, option, counter, not IS_HOST);
@@ -2807,7 +2807,7 @@ function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
 		24 + (math.floor((INDEX - 1) / 4) * 60),
 		OPTION.LIST,
 		OPTION.DEFAULT + 1,
-		'changeMultiplayerOption(' .. OPTION.ID .. ', "INDEX")',
+		'changeMultiplayerOption(%id, ' .. OPTION.ID .. ', "INDEX")',
 		{
 			hint = OPTION.HINT,
 			disabled = MODIFIABLE
@@ -2815,9 +2815,10 @@ function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
 	);
 end;
 
-function changeMultiplayerOption(ID, INDEX)
+function changeMultiplayerOption(ELEMENT, ID, INDEX)
 	OW_MULTIROOM_HOST_SET_MAPPARAM(ID - 1, INDEX - 1); -- for some reason it must be -1 lol..
 	MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[parseInt(ID)].VALUE = parseInt(INDEX) - 1;
+	clComboBoxChangeHint(ELEMENT, MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[parseInt(ID)].ITEMS.HINTS[parseInt(INDEX)]);
 end;
 
 
