@@ -3112,14 +3112,14 @@ function setMapPreview()
 end;
 
 function setMultiplayerRealPosition(POSITIONS)
-	MULTIPLAYER_REAL_POSITIONS = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; 
+	MULTIPLAYER_REAL_POSITIONS = { }; 
 
 	local pos = stringNumberToArray(POSITIONS);
 
 	for side = 1, #pos do
-		for p = 1, #MULTI_PLAYERINFO_CURRENT_PLID do
-			if parseInt(MULTI_PLAYERINFO_CURRENT_PLID[p].COLOUR) == side then
-				MULTIPLAYER_REAL_POSITIONS[p] = pos[side];
+		for k, v in pairs(MULTI_PLAYERINFO_CURRENT_PLID) do
+			if parseInt(v.COLOUR) == side then
+				MULTIPLAYER_REAL_POSITIONS[parseInt(v.PLID)] = pos[side];
 			end;
 		end;
 	end;

@@ -361,14 +361,14 @@ function refreshPlayersPage()
 		local scalY = 1.5000;
 		local tmp = {};
 
-		for i = 1, #PLAYERS do
-			if PLAYERS[i] and REALPOSITIONS[i] then
-				local realPos = parseInt(REALPOSITIONS[i]);
+		for k, v in pairs(PLAYERS) do
+			if REALPOSITIONS[parseInt(v.PLID)] then
+				local realPos = parseInt(REALPOSITIONS[parseInt(v.PLID)]);
 
 				if (realPos > 0 and realPos <= #POSITIONS) then
 					local coord = POSITIONS[realPos];
 
-					local player = PLAYERS[i];
+					local player = v;
 
 					if (tmp[coord] == nil) then
 						local X = (coord.X * scalX);
