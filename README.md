@@ -1,8 +1,10 @@
-# SoS
-Sand of Siberia - Original War Mod Repo
+# Sand of Siberia
+Official repository of Sand of Siberia - modification for Original War game.
 
-Steam Workshop:
-http://steamcommunity.com/sharedfiles/filedetails/?id=582832390
+## Actual version: v1.6.7
 
-Website:
-https://sand-of-siberia.pl
+### Links
+> Official website: https://sand-of-siberia.pl
+> Steam Workshop: http://steamcommunity.com/sharedfiles/filedetails/?id=582832390
+> ModDB: https://www.moddb.com/mods/sand-of-siberia
+
