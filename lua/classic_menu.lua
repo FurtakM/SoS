@@ -2,9 +2,14 @@
 -- version check
 if (not compareVersions(getvalue(OWV_VERSION), MOD_DATA.Req_Ver)) then
     getCustomDialog({
-        COUNT = 1,
+        COUNT = 2,
         QUESTION = loc(TID_Main_Menu_Mod_Old_Ver) .. ' ' .. MOD_DATA.Req_Ver,
         LIST = {
+            {
+                NAME = loc(5066),
+                CALLBACK = 'OW_SOS_CLICKED("patches");',
+                PREVENT_CLOSE = true
+            },
             {
                 NAME = loc(TID_Main_Menu_Quit),
                 CALLBACK = 'exit();'

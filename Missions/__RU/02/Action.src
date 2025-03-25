@@ -270,6 +270,10 @@ repeat
 until GetDistUnitXY(Platonov, x, y) < 5 and GetResourceTypeXY(x, y) = mat_cans;
 
 ComStop(Platonov);
+
+if ingame_video then
+   exit;
+
 Say(Platonov, 'D4-Pla-1');
 End;
 
@@ -511,21 +515,6 @@ InGameOn;
 
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_dist, kirov, 8]]);
 
-if belkovTeam < 3 then
-   begin
-   for i := belkovTeam to 3 do
-       begin
-       un := kirovBaseSquad[1];
-       kirovBaseSquad := Delete(kirovBaseSquad, 1);
-       belkovTeam := Replace(belkovTeam, belkovTeam + 1, un);
-       end;
-   end;
-
-if Kirilenkova then
-   belkovTeam := Join(belkovTeam, Kirilenkova)
-else
-   belkovTeam := Join(belkovTeam, UnitFilter(kirovBaseSquad, [f_class, 4])[1]);
-
 ComExit(Kurin);
 AddComTurnUnit(Kurin, tmp[1]);
 
@@ -652,6 +641,8 @@ PrepareAmericanTrap;
 usSol := UnitFilter(usTrapForces, [f_sex, sex_male])[1];
 // stop burlak team
 ComStop(FilterAllUnits([[f_side, 3], [f_not, [f_type, unit_building]], [f_hastask]]));
+
+
 InGameOn;
 
 CenterNowOnXY(69, 22);
@@ -767,7 +758,7 @@ if belkovTank then
 ComMoveXY(Belkov, 40, 17);
 AddComHold(Belkov);
 
-tmp := [ [44,18], [42,16], [40,15], [44,20], [42,20], [42,12], [42,8] ];
+tmp := [ [44,18], [42,16], [40,15], [44,20], [42,20], [42,12], [42,8], [41, 16] ];
 
 for i in UnitFilter(belkovTeam, [f_class, 1]) do
     begin
@@ -843,49 +834,52 @@ End;
 // bielkov trap
 Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
 begin
-case Query('QAttackAm') of
-     1: begin
-        initiative := true;
+if not initiative then
+   begin
+   case Query('QAttackAm') of
+        1: begin
+           initiative := true;
 
-        DialogueOn;
+           DialogueOn;
 
-        Say(Burlak, 'D17-Bur-1');
-        SayRadio(Platonov, 'D17-Pla-1');
-        Say(Burlak, 'D17-Bur-2');
-        SayRadio(Platonov, 'D17-Pla-2');
+           Say(Burlak, 'D17-Bur-1');
+           SayRadio(Platonov, 'D17-Pla-1');
+           Say(Burlak, 'D17-Bur-2');
+           SayRadio(Platonov, 'D17-Pla-2');
 
-        DialogueOff;
+           DialogueOff;
+           end;
+
+        2: begin
+           initiative := true;
+
+           DialogueOn;
+
+           Say(Burlak, 'D18-Bur-1');
+           SayRadio(Platonov, 'D18-Pla-1');
+           Say(Burlak, 'D18-Bur-2');
+
+           if not reinforcementsGained then
+              begin
+              SayRadio(Platonov, 'D18-Pla-2');
+              SendReinforcements;
+              end
+           else
+              SayRadio(Platonov, 'D22-Pla-1b');
+
+           DialogueOff;
+           end;
+
+        3: begin
+           if IsOk(Gnyevko) then
+              Say(Gnyevko, 'D19A-Gny-1')
+           else if IsOk(Kovalyuk) then
+              Say(Kovalyuk, 'D19A-Kov-1');
+
+           exit;
+           end;
         end;
-
-     2: begin
-        initiative := true;
-
-        DialogueOn;
-
-        Say(Burlak, 'D18-Bur-1');
-        SayRadio(Platonov, 'D18-Pla-1');
-        Say(Burlak, 'D18-Bur-2');
-
-        if not reinforcementsGained then
-           begin
-           SayRadio(Platonov, 'D18-Pla-2');
-           SendReinforcements;
-           end
-        else
-           SayRadio(Platonov, 'D22-Pla-1b');
-
-        DialogueOff;
-        end;
-
-     3: begin
-        if IsOk(Gnyevko) then
-           Say(Gnyevko, 'D19A-Gny-1')
-        else if IsOk(Kovalyuk) then
-           Say(Kovalyuk, 'D19A-Kov-1');
-
-        exit;
-        end;
-     end;
+   end;
 
 if IsOk(Gnyevko) then
    begin
@@ -902,42 +896,44 @@ End;
 
 Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
 begin
-case Query('QAttackBw') of
-     1: begin
-        initiative := true;
+if not initiative then
+   begin
+   case Query('QAttackBw') of
+        1: begin
+           initiative := true;
 
-        DialogueOn;
+           DialogueOn;
 
-        Say(Burlak, 'D21-Bur-1');
-        SayRadio(Platonov, 'D21-Pla-1');
+           Say(Burlak, 'D21-Bur-1');
+           SayRadio(Platonov, 'D21-Pla-1');
 
-        DialogueOff;
+           DialogueOff;
+           end;
+
+        2: begin
+           initiative := true;
+
+           DialogueOn;
+
+           Say(Burlak, 'D22-Bur-1');
+
+           if not reinforcementsGained and westOutpostDestroyed then
+              begin
+              SayRadio(Platonov, 'D22-Pla-1');
+              SendReinforcements;
+              end
+           else if not westOutpostDestroyed then
+              SayRadio(Platonov, 'D22-Pla-1a')
+           else
+              SayRadio(Platonov, 'D22-Pla-1b');
+
+           DialogueOff;
+           end;
+
+        3: begin
+           end;
         end;
-
-     2: begin
-        initiative := true;
-
-        DialogueOn;
-
-        Say(Burlak, 'D22-Bur-1');
-
-        if not reinforcementsGained and westOutpostDestroyed then
-           begin
-           SayRadio(Platonov, 'D22-Pla-1');
-           SendReinforcements;
-           end
-        else if not westOutpostDestroyed then
-           SayRadio(Platonov, 'D22-Pla-1a')
-        else
-           SayRadio(Platonov, 'D22-Pla-1b');
-
-        DialogueOff;
-        end;
-
-     3: begin
-
-        end;
-     end;
+    end;
 
 ChangeMissionObjectives('M9');
 
@@ -1161,7 +1157,7 @@ ChangeMissionObjectives('M10a');
 End;
 
 Every 0$1 trigger hasAllTanks do
-var timer, wantToTalk, wasOutsideBeria, westOutpostReported, eastOutpostReported;
+var timer, tmp, burlakIsInsideBuilding, wantToTalk, wasOutsideBeria, westOutpostReported, eastOutpostReported;
 begin
 wasOutsideBeria := false;
 wantToTalk := false;
@@ -1172,13 +1168,21 @@ timer := 0$0;
 
 repeat
  wait(0$2);
+
  timer := timer + 0$2;
+
+ burlakIsInsideBuilding := false;
+
+ tmp := IsInUnit(Burlak);
+
+ if tmp then
+    burlakIsInsideBuilding := GetType(tmp) = unit_building;
 
  if timer >= 0$30 then
     wantToTalk := true;
 
  //if FilterAllUnits([[f_side, 3], [f_not, [f_dist, beria, 30]]]) then
- if GetDistUnits(Burlak, Platonov) > 9 then
+ if GetDistUnits(Burlak, Platonov) > 9 and not burlakIsInsideBuilding then
     wasOutsideBeria := true;
 
  if wantToTalk and wasOutsideBeria and (GetDistUnits(Burlak, Platonov) < 8 or GetDistUnits(IsInUnit(Burlak), Platonov) < 8) then

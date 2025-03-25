@@ -4,7 +4,7 @@ Export Burlak, Gnyevko, Belkov, Kirilenkova,
        Kurin, Kovalyuk, Platonov, Kuklajs, Benko;
 Export kirovBaseSquad, beriaBaseSquad, belkovTeam; 
 Export Function PrepareRussian;
-var i, j, tmp, un;
+var i, j, tmp, un, additional;
 begin
 uc_side := 6;
 uc_nation := 3;
@@ -19,8 +19,13 @@ ComLookAtDir(Kurin, 2);
 Kovalyuk := NewCharacter('Kovalyuk');
 PlaceHumanInUnit(Kovalyuk, kirov);
 
+additional := (3 - Count(CreateCharacterSet('01_belkovTeam')));
+
+if additional < 0 then
+   additional := 0;
+
 tmp := [
-    [ru2_arm1, class_soldier, 2],
+    [ru2_arm1, class_soldier, 2 + additional],
     [ru2_arm2, class_soldier, 2],
     [ru_lab, class_scientistic, 2],
     [kirov, class_engineer, 2],
@@ -40,6 +45,7 @@ if not TestCharacters(prevMissionPrefix & 'Belkov') and not debug then
 else
    begin
    un := NewCharacter('Belkov2');
+   SetTag(un, tBelkov);
    kirovBaseSquad := Replace(kirovBaseSquad, kirovBaseSquad + 1, un);
    PlaceHumanInUnit(un, ru2_arm2);
    end;
@@ -103,7 +109,7 @@ Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
 Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
 Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
 
-belkovTeam := CreateCharacterSet('01_OtherSurvivors');
+belkovTeam := CreateCharacterSet('01_belkovTeam');
 
 result := [Burlak, Gnyevko, Kirilenkova, Belkov] union belkovTeam;
 End;
@@ -144,7 +150,7 @@ ComEnterUnit(tmp, kirov);
 End;
 
 Export Function BelkovAttackScript;
-var i, belkovTank, mech, tmp, fuel;
+var i, un, brother, belkovTank, mech, tmp, fuel;
 begin
 belkovTank := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]);
 
@@ -194,6 +200,27 @@ AddComMoveXY(Belkov, 95, 101);
 AddComMoveXY(Belkov, 89, 100);
 
 wait(0$2);
+
+brother := FilterAllUnits([[f_side, 6], [f_tag, tBelkov], [f_class, class_soldier]]);
+
+if brother then
+   if not brother[1] in belkovTeam then
+      belkovTeam := Join(belkovTeam, brother[1]);
+
+if belkovTeam < 3 then
+   begin
+   for i := belkovTeam to 3 do
+       begin
+       un := kirovBaseSquad[1];
+       kirovBaseSquad := Delete(kirovBaseSquad, 1);
+       belkovTeam := Replace(belkovTeam, belkovTeam + 1, un);
+       end;
+   end;
+
+if Kirilenkova then
+   belkovTeam := Join(belkovTeam, Kirilenkova)
+else
+   belkovTeam := Join(belkovTeam, UnitFilter(kirovBaseSquad, [f_class, 4])[1]);
 
 for i in belkovTeam do
     begin
