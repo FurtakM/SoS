@@ -1,0 +1,115 @@
+Export Brown, Gladstone, Holland, Frank;
+Export amApes;
+Export function PrepareAmerican;
+var i, ape;
+begin
+uc_side := 1;
+uc_nation := nation_american;
+
+hc_class := class_soldier;
+hc_sex := sex_male;
+hc_gallery := 'AmGalRemake';
+hc_face_number := 1;
+hc_name := 'Charles Brown';
+hc_attr := [12, 11];
+hc_basic_skills := [3, 0, 0, 0];
+hc_skills := [3, 1, 1, 1];
+
+Brown := CreateHuman;
+
+hc_sex := sex_female;
+hc_gallery := 'AmGalRemake';
+hc_face_number := 2;
+hc_name := 'Johanna Holland';
+hc_attr := [10, 10];
+hc_basic_skills := [1, 0, 0, 1];
+hc_skills := [Difficulty, 0, 1, 2];
+
+Holland := CreateHuman;
+SetDir(Holland, 2);
+PlaceHumanInUnit(Holland, usBun1);
+
+Gladstone := PrepareUnit('Gladstone', false, '');
+PlaceHumanInUnit(Gladstone, usLab);
+
+for i := 1 to [4, 5, 6, 7][Difficulty] do
+    begin
+    PrepareApemanEngineer();
+    ape := CreateHuman;
+    PlaceUnitArea(ape, usApeSpawn, false);
+    amApes := Join(amApes, ape);
+    end;
+
+SetTag(amApes[1], tApeEng);
+End;
+
+Every 0$20 trigger Difficulty > 2 and burlakAsCommander do
+begin
+uc_side := 1;
+uc_nation := nation_american;
+
+hc_class := class_soldier;
+hc_sex := sex_male;
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 50;
+hc_name := 'Frank Hughes';
+hc_attr := [10, 10];
+hc_basic_skills := [1, 2, 0, 0];
+hc_skills := [Difficulty, 2, 0, 0];
+
+Frank := CreateHuman;
+PlaceUnitXY(Frank, 77, 19, true);
+
+wait(0$2);
+
+ComAgressiveMove(Frank, 50, 21);
+End;
+
+Every 10 trigger activeAmericanScript do
+var i, eng, enemyInRange, tmp;
+begin
+enable;
+
+tmp := UnitFilter(amApes, [[f_not, [f_tag, tApeEng]]]);
+eng := UnitFilter(amApes, [f_tag, tApeEng]);
+enemyInRange := FilterUnitsInArea(amBaseArea, [f_side, 3]);
+
+if IsOk(Frank) then
+   tmp := Join(tmp, Frank);
+
+if UnitFilter(tmp, [f_not, [f_lives, 1000]]) then
+   begin
+   if IsInUnit(Gladstone) then
+      begin
+      ComExitBuilding(Gladstone);
+      AddComMoveXY(Gladstone, 39, 7);
+      end;
+   end
+else if not IsInUnit(Gladstone) then
+   ComEnterUnit(Gladstone, usLab);
+
+if eng then
+   if GetLives(usBun1) < 1000 then
+      ComRepairBuilding(eng, usBun1)
+   else if GetDistUnitXY(eng[1], 37, 9) > 5 then
+      ComMoveXY(eng, 37, 9);
+
+for i in tmp do
+    begin
+    if GetLives(i) < 600 and GetDistUnitXY(i, 37, 9) > 5 then
+       begin
+       ComMoveXY(i, 37, 9);
+       continue;
+       end;
+
+    if not enemyInRange and GetDistUnitXY(i, 37, 9) > 5 then
+       begin
+       ComMoveXY(i, 37, 9);
+       continue;
+       end;
+
+    if enemyInRange and GetLives(i) = 1000 then
+       ComAttackUnit(i, NearestUnitToUnit(enemyInRange, i));
+    end;
+
+End;

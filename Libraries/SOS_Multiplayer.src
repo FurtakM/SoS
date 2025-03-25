@@ -204,6 +204,23 @@ for i := 1 to 8 {max amount} do
     uc_side := side;
     uc_nation := nation;
 
+    // battle flag
+    if mpBattleFlag > -1 then
+       begin
+       x := mpStartPos[pos][1];
+       y := mpStartPos[pos][2];
+
+       PlaceEnvironment(x, y, 12, 2);
+
+       mpBattleFlags := Replace(mpBattleFlags, side, SetBattleFlag(side, x, y, [
+                                                                        [bfo_defend_bonus_human, 100],
+                                                                        [bfo_defend_bonus_vehicle, 70],
+                                                                        [bfo_defend_bonus_building, 40],
+                                                                        [bfo_range, 25],
+                                                                        [bfo_height, 100]
+                                                                   ]));
+       end;
+
     // depots
     if Count(mpDepots) then
        begin
@@ -232,20 +249,29 @@ for i := 1 to 8 {max amount} do
     else
        if Count(mpStartingResources) then
           begin
+          x := mpStartPos[pos][1];
+          y := mpStartPos[pos][2];
+
           for j := 1 to mpStartingResources do
               begin
               resources := mpStartingResources[j];
 
+              if resources = 0 then
+                 continue;
+
               repeat
                if resources >= 50 then
                   begin
-                  CreateResourcesXYR(j, 5, x, y, 4, false);
+                  CreateResourcesXYR(j, 5, x, y, 6, false);
                   resources := resources - 50;
                   end
                else
-                  CreateResourcesXYR(j, resources div 10, x, y, 4, false);
+                  begin
+                  CreateResourcesXYR(j, resources div 10, x, y, 6, false);
+                  resources := 0;
+                  end;
               until resources <= 0;
-              end;
+              end; 
           end;
 
     // buildings
@@ -257,23 +283,6 @@ for i := 1 to 8 {max amount} do
            bc_type := j[1];
            CreateAndPlaceBuildingXYD(j[2], j[3], j[4]);
            end;
-       end;
-
-    // battle flag
-    if mpBattleFlag > -1 then
-       begin
-       x := mpStartPos[pos][1];
-       y := mpStartPos[pos][2];
-
-       PlaceEnvironment(x, y, 12, 2);
-
-       mpBattleFlags := Replace(mpBattleFlags, side, SetBattleFlag(side, x, y, [
-                                                                        [bfo_defend_bonus_human, 100],
-                                                                        [bfo_defend_bonus_vehicle, 70],
-                                                                        [bfo_defend_bonus_building, 40],
-                                                                        [bfo_range, 25],
-                                                                        [bfo_height, 100]
-                                                                   ]));
        end;
 
     // tech
@@ -302,6 +311,8 @@ for i := 1 to 8 {max amount} do
            PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 12, false);
            end;
        end;
+
+    uc_nation := nation;
 
     team := mpPrepareTeam(side, nation, mpPeopleAmount, mpPeopleSkill);
 
@@ -443,7 +454,11 @@ if not vehicles then
 for i := 1 to vehicles[nation] do
     begin
     uc_side := side;
-    uc_nation := nation;
+
+    if Count(vehicles[nation][i]) > 4 then
+       uc_nation := vehicles[nation][i][5]
+    else
+       uc_nation := nation;
 
     PrepareVehicle(
        vehicles[nation][i][1],

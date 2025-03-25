@@ -318,6 +318,12 @@ function getCustomDialog(DATA)
             PROPERTIES.clickSoundSelect = true;
         end;
 
+        local FINAL_CALLBACK = 'setVisibleID(' .. ELEMENT.ID .. ', false);' .. DATA.LIST[i].CALLBACK;
+
+        if DATA.LIST[i].PREVENT_CLOSE ~= nil then
+            FINAL_CALLBACK = DATA.LIST[i].CALLBACK;
+        end;
+
         clButton(
             tmp, 
             8, 
@@ -325,7 +331,7 @@ function getCustomDialog(DATA)
             284, 
             30, 
             DATA.LIST[i].NAME, 
-            'setVisibleID(' .. ELEMENT.ID .. ', false);' .. DATA.LIST[i].CALLBACK,
+            FINAL_CALLBACK,
             PROPERTIES
         );
     end;

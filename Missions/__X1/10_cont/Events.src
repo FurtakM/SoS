@@ -29,8 +29,14 @@ if unit in amTanks then
 if unit in amPatrol then
    amPatrol := amPatrol diff unit;
 
-if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 1 then
-   amBuildings := Join(amBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+if GetSide(unit) = 1 then
+   begin
+   if GetBType(unit) in [b_bunker, b_turret] then
+      amBuildings := Join(amBuildings, [b_turret, GetX(unit), GetY(unit), GetDir(unit)]);
+
+   if GetBType(unit) in [b_armoury, b_barracks] then
+      amBuildings := Join(amBuildings, [b_armoury, GetX(unit), GetY(unit), GetDir(unit)]);
+   end;
 
 if unit in legForces then
    legForces := legForces diff unit;
@@ -41,8 +47,14 @@ if unit in legTanks then
 if unit in legRTanks then
    legRTanks := legRTanks diff unit;
 
-if GetBType(unit) in [b_bunker, b_turret] and GetSide(unit) = 8 then
-   legBuildings := Join(legBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+if GetSide(unit) = 8 then
+   begin
+   if GetBType(unit) in [b_bunker, b_turret] then
+      legBuildings := Join(legBuildings, [GetBType(unit), GetX(unit), GetY(unit), GetDir(unit)]);
+
+   if GetBType(unit) in [b_armoury, b_barracks] then
+      legBuildings := Join(legBuildings, [b_armoury, GetX(unit), GetY(unit), GetDir(unit)]);
+   end;
 
 if GetWeapon(unit) = us_crane and GetSide(unit) = 1 then
    amConstructList := Join(amConstructList, [us_medium_wheeled, engine_combustion, control_remote, us_crane]);
@@ -184,6 +196,14 @@ type := GetBType(b);
 if side = 1 then
    begin
    amBuildings := Delete(amBuildings, 1);
+
+   if type in [b_depot, b_armoury, b_workshop] then
+      ComUpgrade(b);
+   end;
+
+if side = 8 then
+   begin
+   legBuildings := Delete(legBuildings, 1);
 
    if type in [b_depot, b_armoury, b_workshop] then
       ComUpgrade(b);
