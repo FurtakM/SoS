@@ -98,12 +98,21 @@ End;
 
 // killed apeman with radio
 Every 0$1 trigger apeRadioKilled do
-var un;
+var un, tmp, tmp2;
 begin
-un := NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), apeRadioKilled);
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, apeRadioKilled, 12]]);
 
-if not un in [Kirilenkova, Belkov, Burlak, Saseda, Jaworska] or FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 then
+if not tmp or FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 then
    exit;
+
+tmp2 := [Kirilenkova, Belkov, Saseda, Jaworska];
+
+Randomize;
+
+un := tmp2[rand(1, Count(tmp2))];
+
+if not un in tmp then
+   un := Burlak;
 
 DialogueOn;
 
@@ -485,11 +494,13 @@ Say(Pokryshkin, 'D7-Pok-1');
 
 wait(0$0.3);
 
+async;
 Say(Holland, 'D7-FSol1-1');
+sync;
 
 repeat
  wait(0$1);
-until IsDying(Pokryshkin);
+until not IsOk(Pokryshkin);
 
 Say(Belkov, 'D7a-Bel-1');
 
@@ -884,6 +895,10 @@ InGameOff;
 hasKirilenkova := true;
 End;
 
+Every 0$1 trigger joinedToBelkov and not UnitFilter([Saseda, Jaworska, Balei, Belkov, Jaunzeme], [f_alive]) do
+begin
+YouLost('Comrades');
+End;   
 
 // End
 Every 0$1 trigger canEnd and IsInArea(Burlak, exitArea) do
