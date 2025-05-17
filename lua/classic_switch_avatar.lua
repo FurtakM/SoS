@@ -453,7 +453,10 @@ function showAvatarGenerator()
 			components = addToArray(components, parseInt(componentsArray[i]));
 		end;
 
-		MY_AVATAR_ID = previewAvatar(unionArray({parseInt(multiplayerAvatarSettings.SEX)}, components));
+		-- override nation with sex
+		components[1] = parseInt(multiplayerAvatarSettings.SEX);
+
+		MY_AVATAR_ID = previewAvatar(components);
 		MY_AVATAR_COMPONENTS = components;
 		MY_AVATAR_SEX = parseInt(multiplayerAvatarSettings.SEX);
 	end;

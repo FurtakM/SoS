@@ -180,7 +180,7 @@ function previewAvatar(AVATAR)
 	AVATAR_PREVIEW_ID = OW_XICHT_PORTRAIT(
 		0, 
 		AVATAR[1],
-		1,
+		1, -- nation
 		true,
 		0,
 		AVATAR[2],
