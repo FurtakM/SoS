@@ -1,0 +1,59 @@
+Export function AddToBuildingsArray(var x, unit);
+var type;
+begin
+type := GetBType(unit);
+
+if type = b_barracks then
+   begin
+   x := Join(x, [b_armoury, GetX(unit), GetY(unit), GetDir(unit)]);
+   exit;
+   end;
+
+if type in [b_lab, b_lab_half, b_lab_full] then
+   begin
+   x := Join(x, [b_lab, GetX(unit), GetY(unit), GetDir(unit)]);
+   exit;
+   end;
+
+if type = b_factory then
+   begin
+   x := Join(x, [b_workshop, GetX(unit), GetY(unit), GetDir(unit)]);
+   exit;
+   end;
+
+x := Join(x, [type, GetX(unit), GetY(unit), GetDir(unit)]);
+End;
+
+Export ruBuildings1, ruBuildings2, ruBuildings3, ruBuildings4;
+Export function Init;
+begin
+ruBuildings1 := [];
+ruBuildings2 := [];
+ruBuildings3 := [];
+ruBuildings4 := [];
+End;
+
+Starting
+begin
+ResetFog;
+Init;
+End;
+
+On UnitDestroyed(unit) do
+begin
+if GetSide(unit) = 1 and GetType(unit) = unit_building then
+   begin
+   if IsInArea(unit, RuBase1) then
+      AddToBuildingsArray(RuBuildings1, unit);
+
+   if IsInArea(unit, RuBase2) then
+      AddToBuildingsArray(RuBuildings2, unit);
+
+   if IsInArea(unit, RuBase3) then
+      AddToBuildingsArray(RuBuildings3, unit);
+
+   if IsInArea(unit, RuBase4) then
+      AddToBuildingsArray(RuBuildings4, unit);
+   end;
+End;
+

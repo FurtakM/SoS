@@ -1,4 +1,4 @@
-Export commanders, player, gladkov, davidov, gorki, stolypin, player_squad, player_com;
+Export Commanders, Player, Gladkov, Davidov, Gorki, Stolypin, playerSquad, playerCom;
 Export Function InitCommanders(commander);
 var i, skill, tmp, team, veh;
 begin
@@ -7,24 +7,24 @@ uc_nation := nation_russian;
 
 // Gladkov
 // dostepne bazooki, lepsi zolnierze
-gladkov := NewCharacter('Gladkov');
+Gladkov := NewCharacter('Gladkov');
 
 // Dawidow
 // dostepne pojazdy komputerowe, pole tau, lepsi naukowce
-davidov := NewCharacter('Davidov');
+Davidov := NewCharacter('Davidov');
 
 // Burlak
 // dostepne hg, rakiety, lepsi mechanicy
-gorki := NewCharacter('Burlak');
+Gorki := NewCharacter('Burlak');
 
 // Stolypin
 // lepsi inzynierowie, dzwig na start, komora z surowcami na start
-stolypin := NewCharacter('Stolypin');
+Stolypin := NewCharacter('Stolypin');
 
-commanders := [gladkov, davidov, gorki, stolypin];
+commanders := [Gladkov, Davidov, Gorki, Stolypin];
 
 //player := CharacterSelection('text', 1, 1, [sel_not_hired, sel_changeable]^commanders, []);
-player_com := commanders[commander];
+playerCom := commanders[commander];
 
 team := [];
 skill := [4, 3, 3][Difficulty];
@@ -36,37 +36,39 @@ hc_gallery := '';
 hc_name := '';
 hc_importance := 0;
 
-// 15 ludzi
-case player_com of
-gladkov: begin
-         // ludzie
-         for i = 1 to 10 do
+case playerCom of
+     Gladkov:
+         begin
+         for i := 1 to 10 do
              begin
-             PrepareHuman(false, 1, skill+1);
-             team := team ^ CreateHuman;
+             PrepareHuman(false, 1, skill + 1);
+             team := Join(team, CreateHuman);
              end;
-         for i = 1 to 15 do
+
+         for i := 1 to 15 do
              begin
-             PrepareHuman(false, (i mod 3)+2, skill);
-             team := team ^ CreateHuman;
+             PrepareHuman(false, (i mod 3) + 2, skill);
+             team := Join(team, CreateHuman);
              end;
-         // techy
+
          SetTech(tech_bazooka, 3, state_enabled);
          SetTech(tech_advmet, 3, state_enabled);
          end;
-davidov: begin
-         // ludzie
-         for i = 1 to 10 do
+
+     Davidov:
+         begin
+         for i := 1 to 10 do
              begin
-             PrepareHuman(false, 4, skill+1);
-             team := team ^ CreateHuman;
+             PrepareHuman(false, 4, skill + 1);
+             team := Join(team, CreateHuman);
              end;
-         for i = 1 to 15 do
+
+         for i := 1 to 15 do
              begin
-             PrepareHuman(false, (i mod 3)+1, skill);
-             team := team ^ CreateHuman;
+             PrepareHuman(false, (i mod 3) + 1, skill);
+             team := Join(team, CreateHuman);
              end;
-         // techy
+
          SetTech(tech_advmet, 3, state_enabled);
          SetTech(tech_ai, 3, state_enabled);
          SetTech(tech_advai, 3, state_enabled);
@@ -74,62 +76,67 @@ davidov: begin
          SetTech(63, 3, state_enabled);
          SetTech(tech_comp1, 3, state_enabled);
          SetTech(tech_comp2, 3, state_enabled);
+
          SetRestrict(b_lab_full, 3, state_enabled);
          SetRestrict(b_lab_computer, 3, state_enabled);
          SetRestrict(b_lab_spacetime, 3, state_enabled);
          SetRestrict(b_ext_computer, 3, state_enabled);
          SetRestrict(b_turret, 3, state_enabled);
-         SetResourceType(GetBase(player_depot), 3, 20);
+
+         SetResourceType(GetBase(playerDepot), 3, 20);
          end;
-gorki:   begin
-         // ludzie
-         for i = 1 to 10 do
+
+     Gorki:
+         begin
+         for i := 1 to 10 do
              begin
-             PrepareHuman(false, 3, skill+1);
-             team := team ^ CreateHuman;
-             LogHuman(team[team]);
-             end;
-         for i = 1 to 15 do
-             begin
-             PrepareHuman(false, [1, 2, 4][Rand(1, 3)], skill);
-             team := team ^ CreateHuman;
-             LogHuman(team[team]);
+             PrepareHuman(false, 3, skill + 1);
+             team := Join(team, CreateHuman);
              end;
 
-         // techy
+         for i := 1 to 15 do
+             begin
+             PrepareHuman(false, [1, 2, 4][Rand(1, 3)], skill);
+             team := Join(team, CreateHuman);
+             end;
+
          SetTech(tech_rocket, 3, state_enabled);
          SetTech(tech_advmet, 3, state_enabled);
          SetRestrict(b_ext_rocket, 3, state_enabled);
 
-         // pojazdy
          vc_chassis := ru_medium_tracked;
          vc_engine := engine_combustion;
          vc_control := control_manual;
          vc_weapon := ru_rocket_launcher;
-         vc_fuel_battery := 3;
+         vc_fuel_battery := 50;
+
          veh := CreateVehicle;
          SetMark(veh, 1);
          PlaceUnitXY(veh, 107, 83, false);
          end;
-stolypin:begin
-         // ludzie
-         for i = 1 to 10 do
+
+     Stolypin:
+         begin
+         for i := 1 to 10 do
              begin
              PrepareHuman(false, 2, skill+1);
-             team := team ^ CreateHuman;
+             team := Join(team, CreateHuman);
              end;
-         for i = 1 to 15 do
+
+         for i := 1 to 15 do
              begin
              PrepareHuman(false, [1, 3, 4][Rand(1, 3)], skill);
-             team := team ^ CreateHuman;
+             team := Join(team, CreateHuman);
              end;
+
          SetTech(tech_advmet, 3, state_enabled);
-         // pojazdy
+
          vc_chassis := ru_medium_tracked;
          vc_engine := engine_combustion;
          vc_control := control_manual;
          vc_weapon := ru_cargo_bay;
          vc_fuel_battery := 30;
+
          veh := CreateVehicle;
          SetCargo(veh, 1, 100);
          PlaceUnitXY(veh, 107, 83, false);
@@ -139,19 +146,20 @@ stolypin:begin
          vc_control := control_manual;
          vc_weapon := ru_crane;
          vc_fuel_battery := 30;
+
          veh := CreateVehicle;
          PlaceUnitXY(veh, 115, 96, false);
          end;
-end;
+     end;
 
 if isTest then
    tmp := team
-    else
-     tmp := CharacterSelection('text', [10, 9, 8][Difficulty], [10, 9, 8][Difficulty], [sel_not_hired, sel_change_class, sel_changeable]^team, [class_soldier, class_engineer, class_mechanic, class_scientistic]);
+else
+   tmp := CharacterSelection('text', [10, 9, 8][Difficulty], [10, 9, 8][Difficulty], [sel_not_hired, sel_change_class, sel_changeable] ^ team, [class_soldier, class_engineer, class_mechanic, class_scientistic]);
 
-SetDir(player_com, 4);
-PlaceUnitArea(player_com, east_arr, false);
-ComHold(player_com);
+SetDir(playerCom, 4);
+PlaceUnitArea(playerCom, eastArr, false);
+ComHold(playerCom);
 
 for i in tmp do
     SetSide(i, 6);
@@ -163,9 +171,7 @@ for i = 1 to 4 do
     tmp := Delete(tmp, 1);
     end;
 
-player_squad := tmp;
-
-MCN_AddApes(ape_east, 5, 1);
+playerSquad := tmp;
 End;
 
 
@@ -178,8 +184,7 @@ ChangeSideFog(6, 3);
 CenterNowOnXY(1, 1);
 
 uc_side := 6;
-Popov := NewCharacter('Popov');
-
+Popov := NewCharacter('Popov');   
 
 Difficulty := GetMultiplayerSetting(0);
 
@@ -192,342 +197,30 @@ if not commander then
    commander := 1;
    
 InitCommanders(commander);
-End;
+End;       
 
-
-Every 1$45 trigger player_squad do
+Every 0$03 do
 var i;
 begin
-enable;
-
-for i := 1 to 3 do
-    begin
-    PlaceUnitArea(player_squad[1], east_arr, false);
-    ComMoveXY(player_squad[1], 107, 88);
-    SetSide(player_squad[1], 3);
-
-    player_squad := Delete(player_squad, 1);
-    end;
-End;
-
-Export Function Dialog;
-var i;
-begin
-
-if not isTest then
-   case query('task') of
-   1: ;
-   end;
-
-PlaceSeeing(105, 84, 3, -30);
-RemoveSeeing(105, 84, 3);
-
-InGameOn;
-CenterNowOnXY(128, 64);
-
-if isTest then
-   dialogue_skipped := true;
-
-SayRadio(Popov, 'DR1');
-SayRadio(Popov, 'DR2');
-SayRadio(Popov, 'DR3');
-
-InGameOff;
-
-ChangeMissionObjectives('C1');
-
 repeat
- wait(0$1);
-until FilterUnitsInArea(gaidar_base, [f_side, 3]);
+ wait(0$45);
 
-for i in FilterUnitsInArea(gaidar_base, [f_side, 6]) do
-    SetSide(i, 3);
-
-if not isTest then
-   case query('support') of
-   1:;
-   end;
-
-SetArtifactUse(3, art_use_exclamation, art_instant, FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1]);
-
-if player_com = stolypin then
-   PrepareConvoy(east_arr, [3, 3, 2][Difficulty]);
-End;
-
-On ArtifactUsed(side, button_type, x, y) do
-begin
-if call and tick < 15$00 then
-   case query('call1') of
-   1: begin
-      callUsed := true;
-      // surowce
-      SetArtifactUse(3, art_use_exclamation, art_gray, player_depot);
-      call := false;
-      SayRadio(Popov, 'DR6');
-      Wait(Rand(3$00, 4$00));
-      PrepareConvoy([east_arr, south_arr][Rand(1,2)], Rand(1, 2));
-      Wait(Rand(12$00, 17$00));
-      call := true;
-      SetArtifactUse(3, art_use_exclamation, art_instant, player_depot);
-      end;
-   2: ;
-   end;
-
-if call and tick >= 15$00 then
-   case query('call2') of
-   1: begin
-      callUsed := true;
-      // atak
-      call := false;
-      if MCF_Get(1, [f_type, unit_building]) and MCF_Get(4, [f_type, unit_building]) then
-         PrepareAttack([east_arr, south_arr][Rand(1,2)], [5, 4, 4][Difficulty]);
-      if MCF_Get(1, [f_type, unit_building]) = 0 then
-         PrepareAttack(south_arr, [5, 4, 3][Difficulty]);
-      if MCF_Get(4, [f_type, unit_building]) = 0 then
-         PrepareAttack(east_arr, [5, 4, 4][Difficulty]);
-      
-      Wait(Rand(5$00, 11$00));
-      call := true;
-      SetArtifactUse(3, art_use_exclamation, art_instant, player_depot);
-      end;
-   2: begin
-      callUsed := true;
-      // surowce
-      SetArtifactUse(3, art_use_exclamation, art_gray, player_depot);
-      call := false;
-      SayRadio(Popov, 'DR6');
-      Wait(Rand(3$00, 4$00));
-      PrepareConvoy([east_arr, south_arr][Rand(1,2)], [3, 2, 2][Difficulty] - Rand(0, 1));
-      Wait(Rand(17$00, 21$00));
-      call := true;
-      SetArtifactUse(3, art_use_exclamation, art_instant, player_depot);
-      end;
-   3: ;
-   end;
-
-End;
-
-
-Every 0$01 trigger FilterAllUnits([[f_side, 1], [f_type, unit_human]]) = 0 and
-                   FilterAllUnits([[f_side, 4], [f_type, unit_human]]) = 0 do
-begin
-DialogueOn;
-SayRadio(Popov, 'DR7');
-
-case player_com of
-Gorki: SetAchievement('ACH_GORKI');
-Stolypin: SetAchievement('ACH_STOLYP');
-Davidov: SetAchievement('ACH_DAVIDOV');
-Gladkov: SetAchievement('ACH_GLADKOV');
-end;
-
-if not callUsed then
-   SetAchievement('ACH_NOSUPP');
-
-if (tick < [55$30, 45$30, 42$30][Difficulty]) then
-   AddMedal('med1', 1)
-    else
-     AddMedal('med1', -1);
-
-if FilterAllUnits([[f_enemy, 3], [f_type, unit_building]]) = 0 then
-   AddMedal('med3', 1)
-    else
-     AddMedal('med3', -1);
-
-if player_loss = 0 then
-   AddMedal('med2', 1)
-    else
-     if player_loss > 0 and player_loss < 3 then
-        AddMedal('med2', 2)
-         else
-          AddMedal('med2', -1);
-
-GiveMedals('MAIN');
-YouWin;
-End;
-
-Every 0$01 trigger IsDead(player_com) do
-begin
-if IsLive(Houten) then
-   SayRadio(Houten, 'DJ5')
-    else
-     if IsLive(Brown) then
-        SayRadio(Brown, 'DS5');
-
-Wait(0$01);
-
-YouLost('dead');
-End;
-
-Every 0$01 trigger IsDead(player_depot) and not isTest do
-begin
-if IsLive(Brown) then
-   SayRadio(Brown, 'DS5')
-    else
-     if IsLive(Houten) then
-        SayRadio(Houten, 'DJ5');
-
-Wait(0$01);
-
-YouLost('depot');
-End;
-
-Export Function PrepareAttack(area, n);
-var i, un;
-begin
-
-for i = 1 to n do
+ for i := 1 to 3 do
     begin
-    uc_side := 6;
-    uc_nation := 3;
-    vc_chassis := [ru_heavy_wheeled, ru_medium_tracked][Rand(1,2)];
-    vc_control := control_computer;
-    vc_engine := engine_siberite;
-    vc_weapon := [ru_gatling_gun, ru_gun, ru_gun][Rand(1,3)];
-    un := CreateVehicle;
+    repeat
+     wait(0$3);
+    until PlaceUnitArea(playerSquad[1], eastArr, false);
 
-    case area of
-    east_arr: begin
-              PlaceUnitArea(un, area, false);
-              ComMoveXY(un, 79, 33);
-              end;
+    ComMoveXY(playerSquad[1], 107, 88);
+    SetSide(playerSquad[1], 3);
 
-    south_arr:begin
-              PlaceUnitArea(un, area, false);
-              ComMoveXY(un, 131, 148);
-              end;
+    playerSquad := Delete(playerSquad, 1);
+
+    if not playerSquad then
+       exit;
     end;
-
-    Wait(0$02);
-    end;
-
-pink_attack := true;
-End;
-
-Export Function PrepareConvoy(area, n);
-var i, un;
-begin
-
-for i = 1 to n do
-    begin
-    uc_side := 6;
-    uc_nation := 3;
-    PrepareHuman(false, 3, 4);
-    vc_chassis := ru_medium_tracked;
-    vc_control := control_manual;
-    vc_engine := engine_combustion;
-    vc_weapon := ru_cargo_bay;
-    vc_fuel_battery := 50;
-    un := CreateVehicle;
-
-    case area of
-    east_arr: SetDir(un, 4);
-    south_arr: SetDir(un, 5);
-    end;
-
-    PlaceUnitArea(un, area, false);
-    PlaceHumanInUnit(CreateHuman, un);
-
-    SetCargo(un, mat_cans, 100);
-
-    ComMoveXY(un, 106, 88);
-    AddComUnload(un);
-    AddComMoveToArea(un, area);
-
-    Wait(0$02);
-    end;
-
-Wait(0$05);
-
-while (MCF_Get(6, [f_weapon, ru_cargo_bay])) do
-begin
-wait(0$01);
-for i in MCF_Get(6, [f_weapon, ru_cargo_bay]) do
-    begin
-    if IsInArea(i, gaidar_base) and GetSex(GetDriver(i)) = sex_male and dialog_trans then
-       begin
-       Say(GetDriver(i), 'Dtran');
-       dialog_trans := false;
-       end;
-
-    if IsIdle(i) then
-       ComMoveToArea(i, area);
-
-    if IsInArea(i, area) and GetCargo(i, mat_cans) = 0 then
-       begin
-       RemoveUnit(GetDriver(i));
-       RemoveUnit(i);
-       end;
-    end;
-end;
-
-End;
-
-Export Function PrepareAlfaAttack(area, n);
-var i, un, ch;
-begin
-if isTest then
-   exit;
-
-for i = 1 to n do
-    begin
-    uc_side := 8;
-    uc_nation := 1;
-    ch := [us_medium_tracked, us_heavy_tracked, us_heavy_tracked][Rand(1,Difficulty)];
-    vc_chassis := ch;
-    vc_control := control_computer;
-    vc_engine := engine_combustion;
-
-    if tick < [20$00, 16$00, 14$00][Difficulty] then
-       vc_weapon := [us_light_gun, us_double_gun][rand(1,2)]
-    else if ch = us_medium_tracked then
-       vc_weapon := [us_light_gun, us_gatling_gun, us_double_gun, us_rocket_launcher][Rand(Difficulty,Difficulty+1)]
-        else
-         vc_weapon := [us_double_gun, us_heavy_gun, us_rocket_launcher, us_rocket_launcher][Rand(1,Difficulty+1)];
-
-    vc_fuel_battery := 70;
-    un := CreateVehicle;
-    PlaceUnitArea(un, area, false);
-    ComMoveXY(un, 65, 9);
-    Wait(0$02);
-    end;
-
-if Prob([90, 80, 70][Difficulty]) then
-   begin
-   uc_side := 8;
-   uc_nation := 1;
-   vc_chassis := us_heavy_tracked;
-   vc_control := control_computer;
-   vc_engine := engine_combustion;
-   vc_weapon := us_bulldozer;
-   vc_fuel_battery := 70;
-   un := CreateVehicle;
-   PlaceUnitArea(un, area, false);
-   ComMoveXY(un, 65, 9);
-   Wait(0$02);
-   end;
-
-alfa_support := true;
-End;
+until not playerSquad;
+End;      
 
 
-Every 0$01 trigger tick > [12$00, 11$00, 10$00][Difficulty] do
-var n;
-begin
-n := [3, 4, 5][Difficulty];
 
-repeat
- wait(Rand(0$30, 2$00));
- PrepareAlfaAttack(north_arr, n);
-
- if FilterAllUnits([f_side, 8]) then
-    SayRadio(Popov, 'DR5');
-
- wait(rand(4$00, 6$00));
- n := n + 1;
-
- if n > 9 then
-    n := 9;
-until tick >= 120$00;
-
-End;

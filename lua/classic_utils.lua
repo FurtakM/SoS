@@ -418,9 +418,9 @@ function kFormat(VALUE)
         return VALUE;
     end;
 
-    if (VALUE < 1000000) then
+    if (VALUE < 100000) then
         return (VALUE / 1000) .. 'k';
     end;
 
-    return (VALUE / 1000000) .. 'm';
+    return (VALUE / 100000) .. 'm';
 end

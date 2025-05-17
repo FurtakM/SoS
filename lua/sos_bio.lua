@@ -923,6 +923,7 @@ end;
 
 function hoverOnBiographic(ID)
 	setTextureID(ID, 'SGUI/Bio/placeholder-active.PNG');
+	sound.play('Effects/Interface/posun.wav', "", 1);
 end;
 
 function unHoverOnBiographic(ID)
@@ -1115,7 +1116,7 @@ function openBioPopup(ID)
 	setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
 	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. nat[biographics[ID][4]] .. '.png');
 	setTexture(menu.window_bio.popup.panel.avatar.face, avatarPath .. nat[biographics[ID][4]] .. '/' .. biographics[ID][3] .. '.png');
-	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '.png');
+	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '-active' .. '.png');
 
 	setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
 	setEnabled(menu.window_bio.popup.panel.button_next, ID < #biographics);

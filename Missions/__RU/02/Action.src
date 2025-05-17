@@ -459,8 +459,11 @@ RemoveUnit(Dickens);
 End;
 
 // burlak is hurt
-Every 0$2 trigger GetLives(Burlak) < 600 do
-Say(Burlak, 'DUsSpawnBur');
+Every 0$2 trigger GetLives(Burlak) < 900 do
+begin
+if SideShoot(Burlak) = 1 then
+   Say(Burlak, 'DUsSpawnBur');
+End;
 
 // has tank
 Every 0$2 trigger hasTank do
@@ -1083,7 +1086,7 @@ Every 0$1 trigger FilterUnitsInArea(usEastOutpostArea, [[f_side, 1], [f_ok]]) = 
 var i;
 begin
 Say(Burlak, 'D20-Bur-1');
-SayRadio(Platonov, 'D20-Pla-1');
+SayRadio(Platonov, 'D20a-Pla-1');
 
 eastOutpostDestroyed := true;
 
@@ -1169,14 +1172,15 @@ timer := 0$0;
 repeat
  wait(0$2);
 
- timer := timer + 0$2;
-
  burlakIsInsideBuilding := false;
 
  tmp := IsInUnit(Burlak);
 
  if tmp then
     burlakIsInsideBuilding := GetType(tmp) = unit_building;
+
+ if not burlakIsInsideBuilding then
+    timer := timer + 0$2;
 
  if timer >= 0$30 then
     wantToTalk := true;
@@ -1277,15 +1281,41 @@ until false;
 
 End;
 
+Every 0$2 trigger not hasAllTanks do
+begin
+if IsOk(Gnyevko) then
+   if SideShoot(Gnyevko) = 3 then
+      begin
+      YouLost('SelfAttack');
+      exit;
+      end;
+
+if IsOk(Kovalyuk) then
+   if SideShoot(Kovalyuk) = 3 then
+      begin
+      YouLost('SelfAttack');
+      exit;
+      end;
+
+enable;
+End;
+
 Function EndMission;
 var i, tmp;
 begin
 if initiative then
    AddMedal('Initiative', 1)
-else if not eastOutpostDestroyed then
-   AddMedal('Initiative', -2)
 else
-   AddMedal('Initiative', -1);
+   begin
+   SaveVariable(1, '02_Selfish');
+
+   if not eastOutpostDestroyed then
+      AddMedal('Initiative', -2)
+   else
+      AddMedal('Initiative', -1);
+   end;
+
+SaveVariable(belkovSaved, '02_belkovSaved');
 
 if not belkovDied and belkovSaved then
    AddMedal('Belkov', 1)
@@ -1329,14 +1359,14 @@ SaveVariable(eastOutpostDestroyed, '02_EasternOutpostDestroyed');
 tmp := [];
 
 for i in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) do
-    tmp := Join(tmp, [GetBType(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
+    tmp := Join(tmp, [GetBType(i), GetNation(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
 
 SaveVariable(tmp, '02_Beria');
 
 tmp := [];
 
 for i in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) do
-    tmp := Join(tmp, [GetBType(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
+    tmp := Join(tmp, [GetBType(i), GetNation(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
 
 SaveVariable(tmp, '02_Kirov');
 

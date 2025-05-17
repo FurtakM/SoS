@@ -184,6 +184,8 @@ menu.window2.back = clButton(
 
 -- steam
 function steam_init()
+    --[[setVisible(profile_label, false);
+
 	steam_username = getLabelEX(
         profilebar, 
         anchorLT, 
@@ -196,12 +198,14 @@ function steam_init()
     );
 
 	setFontName(steam_username, ADMUI3LB);
-    setFontName(profile_label, ADMUI3LB);
+    -- setFontName(profile_label, ADMUI3LB);
 
     setFontColour(steam_username, RGB(0,0,0));
-    setFontColour(profile_label, RGB(0,0,0));
+    -- setFontColour(profile_label, RGB(0,0,0));
 
-	setXYV(profile_label, 64 + 10, 15);
+	-- setXYV(profile_label, 64 + 10, 15);--]]
+
+    setText(profile_label, getvalue(OWV_STEAMUSERNAME));
 
 	SteamInitialized = true;
 end;
@@ -225,8 +229,9 @@ profile_avatar = getElementEX(
     true,
 	{
         texture = 'profile_select.png', 
-        --callback_mouseclick ='changeProfileAvatar()', 
-        bevel = true
+        callback_mouseclick ='showSwitchAvatar(1);', 
+        bevel = true,
+        hint = loc(5038)
     }
 );
 
@@ -298,6 +303,12 @@ setVisible(menu.side, false);
 setVisible(menu.window, true);
 setVisible(classic_logo, true);
 setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));
+
+setFontName(profile_label, ADMUI3LB);
+setFontColour(profile_label, RGB(0,0,0));
+setXYV(profile_label, 64 + 10, 0);
+ReloadAvatar();
+
 
 SGUI_INIT_CLASSIC_OLD = Init;
 function Init()

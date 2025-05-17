@@ -3,7 +3,7 @@ Export ruTech, ruBaseArea, ruBaseArea2, ruBase, ruBase2, ruConstructList, ruCons
        ruCratesArea, ruCratesArea2, ruHealPoint, ruHealPoint2, ruBuildings, ruBuildings2, ruTransportDestroyed,
        ruTanks, ruTanks2, ruExtraTanks, ruParkingArea, ruParkingArea2, ruCratesSpawnArea, ruCratesSpawnArea2;
 Export function PrepareRussian;
-var i, j, un, skill, sources;
+var i, j, un, c, skill, sources;
 begin
 uc_side := 3;
 uc_nation := nation_russian;
@@ -57,9 +57,12 @@ skill := [5, 6, 7, 8][Difficulty];
 
 ruCommander := PrepareUnit('Tsaritsyn', false, '');
 
+c := 0;
+
 for i := 1 to 4 do
     for j := 1 to [[5, 6, 8, 9][Difficulty], [3, 4, 5, 6][Difficulty], [3, 4, 5, 6][Difficulty], [2, 3, 3, 3][Difficulty]][i] do
         begin
+        c := Inc(c);
         PrepareHuman(false, i, skill);
         un := CreateHuman;
         ruForces := Join(ruForces, un);
@@ -70,6 +73,8 @@ for i := 1 to 4 do
            SetClass(un, class_soldier);
            end;
         end;
+
+debug_strings := c;
 
 if Difficulty < 4 then
    exit;
@@ -138,7 +143,10 @@ point := [ [96, 102], [54, 85], [146, 67] ][spawn];
 
 for i in ruForces union ruCommander do
     begin
-    PlaceUnitArea(i, area, false);
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(i, area, false);
+
     ComMoveXY(i, point[1], point[2]);
     wait(0$0.4);
     end;
@@ -161,7 +169,10 @@ RevealFogArea(1, ruSpawnWestArea);
 
 for i in ruForces2 union ruCommander2 do
     begin
-    PlaceUnitArea(i, ruSpawnWestArea, false);
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(i, ruSpawnWestArea, false);
+
     ComAgressiveMove(i, 54, 85);
     wait(0$0.8);
     end;

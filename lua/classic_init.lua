@@ -30,6 +30,7 @@ include('classic_campaign');
 include('classic_skirmish');
 include('classic_multiplayer');
 include('classic_loadgame');
+include('classic_switch_avatar');
 include('classic_menu');
 include('classic_credits');
 include('classic_events');

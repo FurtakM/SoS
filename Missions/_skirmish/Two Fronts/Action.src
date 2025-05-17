@@ -1,0 +1,123 @@
+Export Function Action;
+var i;
+begin   
+if not isTest then
+   Query('task');
+
+PlaceSeeing(105, 84, 3, -30);
+RemoveSeeing(105, 84, 3);
+
+InGameOn;
+CenterNowOnXY(128, 64);
+
+if isTest then
+   dialogue_skipped := true;
+
+SayRadio(Popov, 'DR1');
+SayRadio(Popov, 'DR2');
+SayRadio(Popov, 'DR3');
+
+InGameOff;
+
+ChangeMissionObjectives('C1');
+
+repeat
+ wait(0$1);
+until FilterUnitsInArea(playerBaseArea, [f_side, 3]);
+
+for i in FilterUnitsInArea(playerBaseArea, [f_side, 6]) do
+    SetSide(i, 3);
+
+if not isTest then
+   Query('support');
+
+SetArtifactUse(3, art_use_exclamation, art_instant, FilterAllUnits([[f_side, 3], [f_btype, b_depot]])[1]);
+
+if playerCom = Stolypin then
+   PrepareConvoy(eastArr, [3, 3, 2][Difficulty]);
+End;
+
+Every 0$01 trigger tick > [12$00, 11$00, 10$00][Difficulty] do
+var n;
+begin
+n := [3, 4, 5][Difficulty];
+
+repeat
+ wait(rand(0$30, 2$00));
+
+ SayRadio(Popov, 'DR5');
+
+ PrepareAlfaAttack(northArr, n);
+
+ wait(rand(4$00, 6$00));
+
+ n := n + 1;
+
+ if n > 12 then
+    n := 12;
+until tick >= 120$00;
+End;
+
+
+// win
+Every 0$01 trigger FilterAllUnits([[f_side, 1], [f_ok]]) = 0 and
+                   FilterAllUnits([[f_side, 4], [f_ok]]) = 0 do
+begin
+DialogueOn;
+SayRadio(Popov, 'DR7');
+
+case playerCom of
+     Gorki: SetAchievement('ACH_GORKI');
+     Stolypin: SetAchievement('ACH_STOLYP');
+     Davidov: SetAchievement('ACH_DAVIDOV');
+     Gladkov: SetAchievement('ACH_GLADKOV');
+     end;
+
+if not callUsed then
+   SetAchievement('ACH_NOSUPP');
+
+if (tick < [55$30, 45$30, 42$30][Difficulty]) then
+   AddMedal('med1', 1)
+    else
+     AddMedal('med1', -1);
+
+if FilterAllUnits([[f_enemy, 3], [f_type, unit_building]]) = 0 then
+   AddMedal('med3', 1)
+else
+   AddMedal('med3', -1);
+
+if playerLoss = 0 then
+   AddMedal('med2', 1)
+else if playerLoss > 0 and playerLoss < 3 then
+   AddMedal('med2', 2)
+else
+   AddMedal('med2', -1);
+
+GiveMedals('MAIN');
+YouWin;
+End;
+
+// lost
+Every 0$01 trigger IsDead(playerCom) do
+begin
+if IsOk(Jakes) then
+   SayRadio(Jakes, 'DJ5')
+else if IsOk(Sylvia) then
+   SayRadio(Sylvia, 'DS5');
+
+wait(0$01);
+
+YouLost('dead');
+End;
+
+Every 0$01 trigger IsDead(playerDepot) and not isTest do
+begin
+if IsOk(Sylvia) then
+   SayRadio(Sylvia, 'DS5')
+else if IsOk(Jakes) then
+   SayRadio(Jakes, 'DJ5');
+
+wait(0$01);
+
+YouLost('depot');
+End;

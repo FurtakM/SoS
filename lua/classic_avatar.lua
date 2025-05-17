@@ -57,7 +57,7 @@ function getAvatarID(INDEX)
 	return 0;
 end;
 
-function setAvatar(SEX, AVATAR)
+function setMyHeroAvatar(SEX, AVATAR)
 	clearAvatarCache();
 	
 	OW_MULTIROOM_SET_MYAVATAR(
@@ -86,7 +86,73 @@ function setAvatar(SEX, AVATAR)
 		..AVATAR[13]
 		..';0;'
 	);
+
+	local str = SEX
+		.. ';'
+		.. AVATAR[2]
+		.. ';'
+		.. AVATAR[3]
+		.. ';'
+		.. AVATAR[4]
+		.. ';'
+		.. AVATAR[5]
+		.. ';'
+		.. AVATAR[6]
+		.. ';'
+		.. AVATAR[7]
+		.. ';'
+		.. AVATAR[8]
+		.. ';'
+		.. AVATAR[9]
+		.. ';'
+		.. AVATAR[10]
+		.. ';'
+		.. AVATAR[11]
+		.. ';0;'
+		.. AVATAR[13]
+		.. ';0;';
+
+	OW_SETTING_WRITE('OPTIONS', 'AVATAR_COMPONENTS', str);
+
+	ReloadAvatar();
 end;
+
+function loadAvatarComponentsFromProfile()
+	local str = OW_SETTING_READ_STRING('OPTIONS', 'AVATAR_COMPONENTS', '');
+
+	if (strlen(str) == 0) then
+		return nil;
+	end;
+
+	return stringNumberToArray(str);
+end;
+
+function resetAvatarComponentsFromProfile()
+	OW_SETTING_WRITE('OPTIONS', 'AVATAR_COMPONENTS', '');
+end
+
+function generateAvatarFromComponents(AVATAR)
+	return OW_XICHT_PORTRAIT(
+		0, 
+		AVATAR[1],
+		1,
+		true,
+		0,
+		AVATAR[2],
+		AVATAR[3],
+		AVATAR[4],
+		AVATAR[5],
+		AVATAR[6],
+		AVATAR[7],
+		AVATAR[8],
+		AVATAR[9],
+		AVATAR[10],
+		AVATAR[11],
+		0,
+		AVATAR[13],
+		0
+	);
+end
 
 function clearAvatarCache()
 	clearPreviewAvatarCache();

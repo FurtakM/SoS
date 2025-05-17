@@ -1,0 +1,222 @@
+Export usForces1, usForces2,
+       usVehicles1, usVehicles2,
+       usTechs1, usTechs2,
+       usConstructList1, usConstructList2,
+       usBuildingsToBuild1, usBuildingsToBuild2,
+       usAttackVehicles1, usAttackVehicles2;
+Export Function PrepareAmericans;
+begin
+usForces1 := PrepareSquad(1, 1, americanBaseNorthArea, 'sylvia', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
+usForces2 := PrepareSquad(4, 1, americanBaseSouthArea, 'jakes', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
+
+usVehicles1 := [];
+usTechs1 := GetTechNation(1, nation_american, state_enabled);
+usConstructList1 := [];
+usAttackVehicles1 := [];
+
+usVehicles2 := [];
+usTechs2 := GetTechNation(4, nation_american, state_enabled);
+usConstructList2 := [];
+usAttackVehicles2 := [];
+
+if Difficulty > 1 then
+   SetTech(tech_comp2, 8, state_researched);
+if Difficulty > 2 then
+   SetTech(tech_comp3, 8, state_researched);
+End;
+
+Export Function PrepareSquad(side, nat, area, commander, skill, num);
+var i, un, team, tmp;
+begin
+uc_side := side;
+uc_nation := nat;
+
+team := [];
+
+hc_importance := 100;
+     
+case commander of
+     'jakes':  begin
+               PrepareHuman(sex_male, class_soldier, skill);
+               hc_gallery := 'pkremaster';
+               hc_face_number := 12;
+               hc_name := 'Jan van Jakes';
+               Jakes := CreateHuman;
+
+               team := Join(team, Jakes);
+               end;
+
+     'sylvia': begin
+               PrepareHuman(sex_female, class_soldier, skill);
+               hc_gallery := 'pkremaster';
+               hc_face_number := 13;
+               hc_name := 'Sylvia Johnson';
+               Sylvia := CreateHuman;
+
+               team := Join(team, Sylvia);
+               end;
+     end;
+
+
+InitHC_All();
+
+for i := 1 to num do
+    begin
+    PrepareHuman(false, (i mod 4) + 1, skill);
+    un := CreateHuman;
+
+    team := team ^ un;
+    end;
+
+for i := 1 to 5 do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    team := team ^ un;
+    end;
+
+for i in team do
+    begin
+    case GetClass(i) of
+         class_soldier: tmp := FilterAllUnits([[f_side, side], [f_not, [f_full]], [f_btype, b_barracks]]);
+         class_engineer: tmp := FilterAllUnits([[f_side, side], [f_not, [f_full]], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+         class_scientistic: tmp := FilterAllUnits([[f_side, side], [f_not, [f_full]], [f_or, [f_btype, b_lab], [f_btype, b_lab_full]]]);
+         class_mechanic: tmp := FilterAllUnits([[f_side, side], [f_not, [f_full]], [f_btype, b_factory]]);
+         end;
+
+    if tmp then
+       PlaceHumanInUnit(i, tmp[1])
+    else
+       PlaceUnitArea(i, area, false);
+    end;
+
+result := team diff 0;
+End;
+
+Export Function PrepareAlfaAttack(area, n);
+var i, un, ch;
+begin
+result := [];
+
+for i := 1 to n do
+    begin
+    uc_side := 8;
+    uc_nation := 1;
+
+    ch := [us_medium_tracked, us_heavy_tracked, us_heavy_tracked][rand(1, Difficulty)];
+
+    vc_chassis := ch;
+    vc_control := control_computer;
+    vc_engine := engine_combustion;
+
+    if tick < [14$00, 12$00, 10$00][Difficulty] then
+       vc_weapon := [us_light_gun, us_double_gun][rand(1,2)]
+    else if ch = us_medium_tracked then
+       vc_weapon := [us_light_gun, us_gatling_gun, us_double_gun, us_rocket_launcher][rand(Difficulty, Difficulty + 1)]
+    else
+       vc_weapon := [us_double_gun, us_heavy_gun, us_rocket_launcher, us_rocket_launcher][rand(1, Difficulty + 1)];
+
+    vc_fuel_battery := 70;
+
+    un := CreateVehicle;
+
+    SetDir(un, 2);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(un, area, false);
+
+    result := Join(result, un);
+
+    ComMoveXY(un, 65, 9);
+    end;
+
+if Prob([90, 80, 70][Difficulty]) then
+   begin
+   uc_side := 8;
+   uc_nation := 1;
+
+   vc_chassis := us_heavy_tracked;
+   vc_control := control_computer;
+   vc_engine := engine_combustion;
+   vc_weapon := us_bulldozer;
+   vc_fuel_battery := 70;
+
+   un := CreateVehicle;
+
+   repeat
+    wait(0$1);
+   until PlaceUnitArea(un, area, false);
+
+   ComMoveXY(un, 65, 9);
+
+   wait(0$02);
+
+   CutTreeXYR(un, 104, 65, 12);
+   AddComAttackUnit(un, playerDepot);
+   end;
+
+
+repeat
+ wait(0$1);
+
+ result := UnitFilter(result, [f_ok]);
+
+ AgressiveMove(result, [ [82,14], [83,39], [89,51], [91,58] ]);
+until not result;
+End;
+
+
+Every 0$1 trigger FilterAllUnits([f_side, 1]) do
+begin
+enable;
+BaseScript(1, americanBaseNorthArea, americanBaseNorthArea, americanBaseNorthInnerArea, americanBaseNorthOuterArea, usForces1,
+           usVehicles1, usTechs1, usConstructList1, usBuildingsToBuild1,
+           [19,9], [40,5], []);
+End;
+
+Every 0$1 trigger FilterAllUnits([f_side, 4]) do
+begin
+enable;
+BaseScript(4, americanBaseSouthArea, americanBaseSouthArea, americanBaseSouthInnerArea, americanBaseSouthOuterArea, usForces2,
+           usVehicles2, usTechs2, usConstructList2, usBuildingsToBuild2,
+           [83,151], [92,144], []);
+End;
+
+
+{
+Every 3$00 trigger IsOk(amDep) and not amConstructList do
+begin
+enable;
+
+amConstructList := [
+   [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
+   [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+   [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
+];
+End;
+
+Every 0$2 trigger arAttackersVeh do
+var i, tmp;
+begin
+enable;
+
+tmp := arAttackersVeh;
+arAttackersVeh := [];
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, [ [207,125], [185,114] ])
+until not tmp;
+End;
+}
+
+
+
+
+
+
