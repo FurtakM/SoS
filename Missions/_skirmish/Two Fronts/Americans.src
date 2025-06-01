@@ -23,6 +23,12 @@ if Difficulty > 1 then
    SetTech(tech_comp2, 8, state_researched);
 if Difficulty > 2 then
    SetTech(tech_comp3, 8, state_researched);
+
+SetResourceType(GetBase(usDep1), mat_cans, 7500);
+SetResourceType(GetBase(usDep1), mat_oil, 3000);
+
+SetResourceType(GetBase(usDep2), mat_cans, 5500);
+SetResourceType(GetBase(usDep2), mat_oil, 3000);
 End;
 
 Export Function PrepareSquad(side, nat, area, commander, skill, num);
@@ -63,6 +69,14 @@ InitHC_All();
 for i := 1 to num do
     begin
     PrepareHuman(false, (i mod 4) + 1, skill);
+    un := CreateHuman;
+
+    team := team ^ un;
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareMechanic(false, skill);
     un := CreateHuman;
 
     team := team ^ un;
@@ -173,7 +187,7 @@ begin
 enable;
 BaseScript(1, americanBaseNorthArea, americanBaseNorthArea, americanBaseNorthInnerArea, americanBaseNorthOuterArea, usForces1,
            usVehicles1, usTechs1, usConstructList1, usBuildingsToBuild1,
-           [19,9], [40,5], []);
+           [19,9], [40,5], {[82,47]}[]);
 End;
 
 Every 0$1 trigger FilterAllUnits([f_side, 4]) do
@@ -185,35 +199,61 @@ BaseScript(4, americanBaseSouthArea, americanBaseSouthArea, americanBaseSouthInn
 End;
 
 
-{
-Every 3$00 trigger IsOk(amDep) and not amConstructList do
+Every 5$00 + 3$00 trigger IsOk(usDep1) and not usConstructList1 do
+var i;
 begin
 enable;
 
-amConstructList := [
-   [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
-   [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
-   [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
+usConstructList1 := [
+   [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
+   [us_medium_tracked, engine_combustion, control_remote, us_gatling_gun],
+   [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
+   [us_medium_tracked, engine_combustion, control_manual, us_double_gun]
 ];
+
+if Difficulty > 1 then
+   usConstructList1 := usConstructList1 ^ [
+                            [us_heavy_tracked, engine_combustion, control_remote, us_heavy_gun],
+                            [us_medium_tracked, engine_combustion, control_remote, us_gatling_gun]
+                       ];
+
+if Difficulty > 2 then
+   usConstructList1 := usConstructList1 ^ [
+                            [us_heavy_tracked, engine_combustion, control_remote, us_gatling_gun],
+                            [us_medium_tracked, engine_combustion, control_remote, us_gatling_gun]
+                       ];
+
+for i := 1 to attackWave1 do
+    usConstructList1 := usConstructList1 ^ [
+                            [us_heavy_tracked, engine_combustion, control_remote, [us_gatling_gun, us_double_gun, us_heavy_gun][rand(1,3)]]
+                        ];
 End;
 
-Every 0$2 trigger arAttackersVeh do
-var i, tmp;
+Export Function SendUsAttack1;
+var i, tmp, path;
 begin
-enable;
+attackWave1 := Inc(attackWave1);
 
-tmp := arAttackersVeh;
-arAttackersVeh := [];
+if attackWave1 > 6 then
+   attackWave1 := 6;
+
+tmp := usAttackVehicles1;
+usAttackVehicles1 := [];
+
+path := [
+          [[38,41], [90,51]],
+          [[72,14], [83,42]]
+        ][rand(1,2)];
 
 repeat
  wait(0$2);
  tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
-     AgressiveMove(i, [ [207,125], [185,114] ])
+     AgressiveMove(i, path)
 until not tmp;
 End;
-}
+
 
 
 

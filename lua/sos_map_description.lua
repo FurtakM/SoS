@@ -463,6 +463,8 @@ function mapDescription(NAME, TEXT, PICTURE, PLAYERS, POSITIONS, SETTINGS)
 	end;
 
 	if (TEXT ~= nil and strlen(TEXT) > 0) then
+		TEXT = SGUI_widesub(splitstringrest(TEXT, ': '), 2);
+		TEXT = TEXT:gsub("%$", '\n');
 		setText(dialog.map.page1.panel.textbox, TEXT);
 	else
 		setText(dialog.map.page1.panel.textbox, '');

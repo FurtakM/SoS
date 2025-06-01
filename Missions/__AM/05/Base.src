@@ -89,11 +89,14 @@ team := team ^ CreateHuman;
 
 InitHc_All();
 
+team := team diff 0;
+
 if team < 9 then
-   repeat
-   PrepareHuman(false, rand(1,4), 4);
-   team := team ^ CreateHuman;
-   until team = 9;
+   for i := team to 9 do
+       begin
+       PrepareHuman(false, rand(1,4), 4);
+       team := team ^ CreateHuman;
+       end;
 
 // place units in base
 dep := FilterAllUnits([f_btype, b_depot])[1];
@@ -214,7 +217,8 @@ PlaceHumanInUnit(Gladstone, veh);
 
 veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_cargo_bay, 100);
 SetDir(veh, rand(0,5));
-PlaceUnitArea(veh, gammaBaseArea, false);
+if not PlaceUnitArea(veh, gammaBaseArea, false) then
+   PlaceUnitXYR(veh, 71, 24, 5, false);
 End;
 
 Function PrepareBase;

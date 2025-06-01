@@ -147,6 +147,8 @@ if sci then
 
    if hurtUnits then
       begin
+      hurtUnits := SortByHealth(hurtUnits, true);
+
       for i in sci do
           if IsInUnit(i) then
              ComExitBuilding(i)
@@ -443,7 +445,7 @@ if vehicles then
              end
           else if tag = tVehRepair then
              begin
-             if GetDistUnitXY(i, parkingPoint[1], parkingPoint[2]) > 10 then
+             if GetDistUnitXY(i, parkingPoint[1], parkingPoint[2]) > 6 then
                 begin
                 ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
                 continue;
@@ -478,7 +480,7 @@ if sol then
                 ComExitBuilding(i);
              end
           else
-             if IsInarea(i, area) then
+             if IsInArea(i, area) then
                 ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i))
              else
                 ComMoveToArea(i, area);
@@ -521,7 +523,7 @@ if sol then
              continue;
              end;
 
-          if IsInUnit(i) and not tag and emptyTowers then
+          if IsInUnit(i) and not tag and Count(emptyTowers) then
              begin
              if GetBType(IsInUnit(i)) in [b_bunker, b_breastwork] then
                 continue;
@@ -545,7 +547,18 @@ if sol then
 
              SetTag(i, 0);
              SetTag(emptyTowers[1], 0);
-             exit;
+             continue;
+             end;
+
+          if IsInUnit(i) and not tag and GetTech(tech_LasSight, side) = state_researched and GetClass(i) <> class_sniper then
+             begin
+             tmp := IsInUnit(i);
+
+             if GetBType(tmp) = b_barracks then
+                begin
+                if UnitFilter(UnitsInside(tmp), [f_class, class_soldier]) > 3 then
+                   SetClass(i, class_sniper);
+                end;
              end;
           end;
       end;

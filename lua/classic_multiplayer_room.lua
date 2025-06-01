@@ -2929,7 +2929,7 @@ menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 	{
 		nomouseevent = true,
 		font_colour = WHITE(),
-		font_name = ADMUI3L,
+		font_name = Tahoma_14,
 		wordwrap = true,
 		text_halign = ALIGN_LEFT,
 		text_valign = ALIGN_TOP,
@@ -3057,7 +3057,7 @@ function setMapPictureDescription()
 	local description = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 2);
 	local rules = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 2);
 
-	setText(menu.window_multiplayer_room.panel.page3.description, description .. '\n\n' .. rules);
+	setText(menu.window_multiplayer_room.panel.page3.description, description:gsub("%$", '\n') .. '\n\n' .. rules:gsub("%$", '\n'));
 end;
 
 function setMapPreview()

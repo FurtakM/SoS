@@ -1546,7 +1546,7 @@ function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
     PROPERTIES.type = TYPE_TEXTBOX;
     
     if PROPERTIES.font_name == nil then
-        PROPERTIES.font_name = ADMUI3L;
+        PROPERTIES.font_name = BankGotic_14;
     end;
 
     if PROPERTIES.visible == nil then
