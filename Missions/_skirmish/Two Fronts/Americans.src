@@ -3,11 +3,12 @@ Export usForces1, usForces2,
        usTechs1, usTechs2,
        usConstructList1, usConstructList2,
        usBuildingsToBuild1, usBuildingsToBuild2,
-       usAttackVehicles1, usAttackVehicles2;
+       usAttackVehicles1, usAttackVehicles2,
+       usCargo1, usCargo2;
 Export Function PrepareAmericans;
 begin
-usForces1 := PrepareSquad(1, 1, americanBaseNorthArea, 'sylvia', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
-usForces2 := PrepareSquad(4, 1, americanBaseSouthArea, 'jakes', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
+usForces1 := PrepareSquad(1, 1, americanBaseNorthArea, 'jakes', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
+usForces2 := PrepareSquad(4, 1, americanBaseSouthArea, 'sylvia', [4, 6, 8][Difficulty], [21, 22, 24][Difficulty]);
 
 usVehicles1 := [];
 usTechs1 := GetTechNation(1, nation_american, state_enabled);
@@ -29,6 +30,11 @@ SetResourceType(GetBase(usDep1), mat_oil, 3000);
 
 SetResourceType(GetBase(usDep2), mat_cans, 5500);
 SetResourceType(GetBase(usDep2), mat_oil, 3000);
+
+usConstructList2 := [
+   [us_medium_wheeled, engine_combustion, control_manual, us_double_gun],
+   [us_medium_wheeled, engine_combustion, control_manual, us_gatling_gun]
+];
 End;
 
 Export Function PrepareSquad(side, nat, area, commander, skill, num);
@@ -187,7 +193,7 @@ begin
 enable;
 BaseScript(1, americanBaseNorthArea, americanBaseNorthArea, americanBaseNorthInnerArea, americanBaseNorthOuterArea, usForces1,
            usVehicles1, usTechs1, usConstructList1, usBuildingsToBuild1,
-           [19,9], [40,5], {[82,47]}[]);
+           [19,9], [40,5], [82,47]);
 End;
 
 Every 0$1 trigger FilterAllUnits([f_side, 4]) do
@@ -207,9 +213,23 @@ enable;
 usConstructList1 := [
    [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
    [us_medium_tracked, engine_combustion, control_remote, us_gatling_gun],
-   [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
-   [us_medium_tracked, engine_combustion, control_manual, us_double_gun]
+   [us_medium_tracked, engine_combustion, control_remote, us_double_gun]
 ];
+
+if not FilterAllUnits([[f_side, 1], [f_weapon, us_cargo_bay]]) then
+   usConstructList1 := usConstructList1 ^ [
+                       [us_medium_tracked, engine_combustion, control_remote, us_cargo_bay]
+                    ];
+
+if FilterAllUnits([[f_side, 1], [f_weapon, us_crane]]) < 2 then
+   usConstructList1 := usConstructList1 ^ [
+                       [us_medium_tracked, engine_combustion, control_remote, us_crane]
+                    ];
+
+if UnitsInside(usFac1) > 3 then
+   usConstructList1 := usConstructList1 ^ [
+                       [us_medium_tracked, engine_combustion, control_manual, us_double_gun]
+                    ];
 
 if Difficulty > 1 then
    usConstructList1 := usConstructList1 ^ [
@@ -230,7 +250,7 @@ for i := 1 to attackWave1 do
 End;
 
 Export Function SendUsAttack1;
-var i, tmp, path;
+var i, tmp, path, dial;
 begin
 attackWave1 := Inc(attackWave1);
 
@@ -239,6 +259,17 @@ if attackWave1 > 6 then
 
 tmp := usAttackVehicles1;
 usAttackVehicles1 := [];
+
+if IsOk(Jakes) and lastRadioAttackMsg + 1$00 < tick then
+   begin
+   dial := ['DJ1', 'DJ6'];
+
+   if UnitFilter(tmp, [f_weapon, us_heavy_gun]) then
+      dial := Join(dial, 'DJ4');
+
+   lastRadioAttackMsg := tick;
+   SayRadio(Jakes, dial[rand(1, dial)]);
+   end;
 
 path := [
           [[38,41], [90,51]],
@@ -253,6 +284,121 @@ repeat
      AgressiveMove(i, path)
 until not tmp;
 End;
+
+Every 5$00 + 3$00 trigger IsOk(usDep2) and not usConstructList2 do
+var i;
+begin
+enable;
+
+usConstructList2 := [
+   [us_medium_wheeled, engine_combustion, control_remote, us_double_gun],
+   [us_medium_wheeled, engine_combustion, control_remote, us_gatling_gun],
+   [us_medium_wheeled, engine_combustion, control_remote, us_double_gun]
+];
+
+if not FilterAllUnits([[f_side, 4], [f_weapon, us_cargo_bay]]) then
+   usConstructList2 := usConstructList2 ^ [
+                       [us_medium_wheeled, engine_combustion, control_remote, us_cargo_bay]
+                    ];
+
+if FilterAllUnits([[f_side, 4], [f_weapon, us_crane]]) < 2 then
+   usConstructList2 := usConstructList2 ^ [
+                       [us_medium_wheeled, engine_combustion, control_remote, us_crane]
+                    ];
+
+for i := 1 to attackWave2 do
+    usConstructList2 := usConstructList2 ^ [
+                            [us_medium_wheeled, engine_combustion, control_remote, us_rocket_launcher]
+                        ];
+End;
+
+Export Function SendUsAttack2;
+var i, tmp, path, dial;
+begin
+attackWave2 := Inc(attackWave2);
+
+if attackWave2 > 9 then
+   attackWave2 := 9;
+
+tmp := usAttackVehicles2;
+usAttackVehicles2 := [];
+
+if IsOk(Sylvia) and lastRadioAttackMsg + 1$00 < tick then
+   begin
+   dial := ['DS2', 'DS3'];
+
+   if UnitFilter(tmp, [f_weapon, us_rocket_launcher]) then
+      dial := Join(dial, 'DS6');
+
+   lastRadioAttackMsg := tick;
+   SayRadio(Sylvia, dial[rand(1, dial)]);
+   end;
+
+path := [[123,138], [125,126]];
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     AgressiveMove(i, path)
+until not tmp;
+End;
+
+Every 0$2 trigger IsOk(usCargo1) do
+var cr, enemyInArea;
+begin
+enable;
+
+enemyInArea := FilterUnitsInArea(amCrates1Area, [[f_enemy, 1], [f_ok]]);
+cr := GetListOfCratesInArea(amCrates1Area);
+
+if GetFuel(usCargo1) < 10 and not See(3, usCargo1) then
+   SetFuel(usCargo1, 100);
+
+if not HasTask(usCargo1) and GetCargo(usCargo1, mat_cans) < 100 and not enemyInArea then
+   begin
+   if cr then
+      ComCollect(usCargo1, cr[1], cr[2])
+   else if not IsInArea(usCargo1, amCrates1Area) then
+      ComMoveToArea(usCargo1, amCrates1Area);
+
+   exit;
+   end;
+
+if enemyInArea and not IsInArea(usCargo1, americanBaseNorthArea) then
+   ComMoveXY(usCargo1, 21, 8)
+else if GetCargo(usCargo1, mat_cans) then
+   ComGive(usCargo1, usDep1);
+End;
+
+Every 0$2 trigger IsOk(usCargo2) do
+var cr, enemyInArea;
+begin
+enable;
+
+enemyInArea := FilterUnitsInArea(amCrates2Area, [[f_enemy, 1], [f_ok]]);
+cr := GetListOfCratesInArea(amCrates2Area);
+
+if GetFuel(usCargo2) < 10 and not See(3, usCargo2) then
+   SetFuel(usCargo2, 100);
+
+if not HasTask(usCargo2) and GetCargo(usCargo2, mat_cans) < 100 and not enemyInArea then
+   begin
+   if cr then
+      ComCollect(usCargo2, cr[1], cr[2])
+   else if not IsInArea(usCargo2, amCrates2Area) then
+      ComMoveToArea(usCargo2, amCrates2Area);
+
+   exit;
+   end;
+
+if enemyInArea and not IsInArea(usCargo2, americanBaseSouthArea) then
+   ComMoveXY(usCargo2, 85, 153)
+else if GetCargo(usCargo2, mat_cans) then
+   ComGive(usCargo2, usDep2);
+End;
+
 
 
 

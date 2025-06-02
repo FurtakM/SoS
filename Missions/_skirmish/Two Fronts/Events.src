@@ -72,6 +72,47 @@ On UnitDestroyed(un) do
 begin
 SOS_UnitDestroyed(un);
 
+if un in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) and not alfaNorthTriggered then
+   begin
+   alfaNorthTriggered := true;
+   SayRadio(Jakes, 'DJ3');
+
+   wait(0$30);
+
+   PrepareAlfaAttack(northArr, [6, 7, 8][Difficulty]);
+   end;
+
+if un in FilterAllUnits([[f_side, 4], [f_type, unit_building]]) and not alfaSouthTriggered then
+   begin
+   alfaSouthTriggered := true;
+   SayRadio(Sylvia, 'DS4');
+
+   wait(0$30);
+
+   PrepareAlfaAttack(northArr, [6, 7, 8][Difficulty]);
+   end;
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]) then
+   begin
+   if Prob(50) or lastRadioMsg + 1$00 > tick then
+      exit;
+
+   lastRadioMsg := tick;
+
+   if killerSide = 1 then
+      begin
+      if IsOk(Jakes) then
+         SayRadio(Jakes, 'DJ2');
+      end
+   else if killerSide = 4 then
+      begin
+      if IsOk(Sylvia) then
+         SayRadio(Sylvia, 'DS1');
+      end;
+   end;
 End;
 
 On VehicleConstructed(vehicle, factory) do
@@ -84,6 +125,18 @@ side := GetSide(vehicle);
 if side = 1 then
    begin
    usConstructList1 := Delete(usConstructList1, 1);
+
+   if GetWeapon(vehicle) in [us_cargo_bay] then
+      begin
+      usCargo1 := vehicle;
+      exit;
+      end;
+
+   if GetWeapon(vehicle) = us_crane then
+      begin
+      usVehicles1 := Join(usVehicles1, vehicle);
+      exit;
+      end;
 
    if GetControl(vehicle) = control_manual then
       begin
@@ -103,6 +156,18 @@ if side = 4 then
    begin
    usConstructList2 := Delete(usConstructList2, 1);
 
+   if GetWeapon(vehicle) in [us_cargo_bay] then
+      begin
+      usCargo2 := vehicle;
+      exit;
+      end;
+
+   if GetWeapon(vehicle) = us_crane then
+      begin
+      usVehicles2 := Join(usVehicles2, vehicle);
+      exit;
+      end;
+
    if GetControl(vehicle) = control_manual then
       begin
       usVehicles2 := Join(usVehicles2, vehicle);
@@ -111,6 +176,9 @@ if side = 4 then
    else
       begin
       usAttackVehicles2 := Join(usAttackVehicles2, vehicle);
+
+      if Count(usAttackVehicles2) >= [3, 5, 7][Difficulty] + attackWave2 then
+         SendUsAttack2;
       end;
    end;
 End;

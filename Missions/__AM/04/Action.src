@@ -186,12 +186,12 @@ Every 3$0 do
 PrepareFirstAttack;
 
 // Fallback first attack
-Every 0$2 trigger FilterAllUnits([[f_side, 5], [f_type, unit_human], [f_not, [f_lives, 250]]]) > 0 and firstRussianAttack = 1 do
+Every 0$2 trigger UnitFilter(firstAttackGroup, [[f_type, unit_human], [f_not, [f_lives, 250]]]) > 0 and firstRussianAttack = 1 do
 var i;
 begin
-firstRussianAttack = 2;
+firstRussianAttack := 2;
 
-ComMoveXY(FilterAllUnits([[f_side, 5], [f_type, unit_human]]), 125, 98);
+ComMoveXY(firstAttackGroup, 125, 98);
     
 DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human]]) diff [JMM, Brown, Lisa], 'DAtt1-Sol1-1', 'DAtt1-FSol1-1');
 Say(JMM, 'DAtt1-JMM-1');
@@ -206,15 +206,12 @@ DialogRandom(FilterAllUnits([[f_side, 1], [f_type, unit_human], [f_sex, 1]]) dif
 End;
 
 // Remove units from first attack
-Every 0$1 trigger firstRussianAttack = 2 and FilterUnitsInArea(RussianEscape, [[f_side, 5], [f_type, unit_human]]) do
+Every 0$1 trigger firstRussianAttack > 1 and UnitFilter(firstAttackGroup, [[f_inarea, RussianEscape], [f_type, unit_human]]) do
 var i;
 begin
-for i in FilterAllUnits([[f_side, 5], [f_type, unit_human]]) do
+for i in UnitFilter(firstAttackGroup, [f_ok]) do
     RemoveUnit(i);
 End;
-
-Every 0$1 trigger FilterAllUnits([[f_side, 5]]) = 0 and firstRussianAttack = 2 do
-firstRussianAttack = 3;
 
 // Donaldson dialog
 Every 0$01 trigger timeToSupport = 0$00 do 
