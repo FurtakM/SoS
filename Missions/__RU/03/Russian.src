@@ -1,0 +1,217 @@
+Export Burlak, Gnyevko, Belkov, Kirilenkova,
+       Kurin, Kovalyuk, Popov, Scholtze, Grishko;
+Export kirovBaseSquad, beriaBaseSquad, grishkoTeam, burlakTeam, kirovTeam, beriaTeam, popovTeam,
+       kirovDepot, beriaDepot, kaganDepot, mainRuCharacters, kirovVehicles, kirovAttackVehicles, kirovTechs,
+       kirovBuildingsToBuild, kirovConstructList,  ruCargos, ruGuards;
+Export function PrepareRussian;
+var i, vehiclesAmount, veh, tmp;
+begin
+SetResourceType(GetBase(kirovDepot), mat_cans, 3000);
+SetResourceType(GetBase(kirovDepot), mat_oil, 600);
+
+SetResourceType(GetBase(beriaDepot), mat_cans, [350, 280, 210, 150][Difficulty]);
+SetResourceType(GetBase(beriaDepot), mat_oil, [60, 40, 20, 0][Difficulty]);
+
+
+uc_side := 3;
+uc_nation := 3;
+
+Burlak := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
+
+beriaBaseSquad := [];
+kirovBaseSquad := [];
+popovTeam := [];
+grishkoTeam := [];
+
+uc_side := 5;
+
+Scholtze := NewCharacter('Scholtze');
+
+uc_side := 6;    
+
+Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
+Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
+Kovalyuk := PrepareUnit('Kovalyuk', (not debug), prevMissionPrefix);
+Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
+
+Kurin := NewCharacter('Kurin');
+Popov := NewCharacter('Popov');
+Grishko := NewCharacter('Grishko');
+
+burlakTeam := CreateCharacterSet(prevMissionPrefix & 'burlakTeam');
+kirovTeam := CreateCharacterSet(prevMissionPrefix & 'kirovTeam');
+
+if kirovTeam < 15 then
+   for i := Count(kirovTeam) to 15 do
+       begin
+       PrepareHuman(false, i mod 4 + 1, 2);
+       kirovTeam := Join(kirovTeam, CreateHuman);
+       end;
+
+for i in kirovTeam union burlakTeam do
+    begin
+    case GetClass(i) of
+         class_soldier, class_engineer: tmp := FilterAllUnits([[f_side, 6], [f_not, [f_full]], [f_btype, b_armoury]]);
+         class_scientistic: tmp := FilterAllUnits([[f_side, 6], [f_not, [f_full]], [f_btype, b_lab]]);
+         class_mechanic: tmp := FilterAllUnits([[f_side, 6], [f_not, [f_full]], [f_btype, b_workshop]]);
+         end;
+
+    if tmp then
+       PlaceHumanInUnit(i, tmp[1])
+    else
+       PlaceUnitXYR(i, 158, 106, 3, false);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareSoldier(sex_male, 2);
+    grishkoTeam := Join(grishkoTeam, CreateHuman);
+    end;
+
+grishkoTeam := Join(grishkoTeam, Grishko);
+
+vehiclesAmount := LoadVariable('02_VehiclesCount', 2);
+
+if vehiclesAmount > 4 then
+   vehiclesAmount := 4;
+
+if Difficulty > 2 and vehiclesAmount > 2 then
+   vehiclesAmount := 2;
+
+for i := 1 to vehiclesAmount do
+    begin
+    uc_side := 3;
+
+    PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, 80);
+    veh := CreateVehicle;
+    SetDir(veh, rand(0, 5));
+
+    PlaceUnitXYR(veh, 112, 98, 12, false);
+    end;
+
+vehiclesAmount := LoadVariable('02_KirovVehiclesCount', 1);   
+
+for i := 1 to vehiclesAmount do
+    begin
+    uc_side := 6;
+
+    PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, 80);
+    veh := CreateVehicle;
+    SetDir(veh, rand(0, 5));
+
+    PlaceUnitXYR(veh, 157, 106, 12, false);
+    end;
+
+mainRuCharacters := [Burlak, Kovalyuk, Gnyevko, Belkov, Scholtze, Kirilenkova];
+kirovVehicles := FilterAllUnits([[f_side, 6], [f_type, unit_vehicle]]);
+kirovAttackVehicles := [];
+kirovTechs := GetTechNation(6, nation_russian, state_enabled);
+kirovConstructList := [];
+kirovBuildingsToBuild := [
+   [b_factory, 159, 113, 0],
+   [b_lab_half, 153, 99, 3, b_lab_weapon],
+   [b_bunker, 144, 98, 1],
+   [b_oil_power, 155, 94, 0],
+   [b_oil_power, 158, 96, 2],
+   [b_ext_gun, 162, 116, 5],
+   [b_bunker, 169, 101, 3],
+   [b_bunker, 171, 119, 5],
+   [b_bunker, 144, 106, 1]
+];
+End;
+
+Every 0$1 trigger gameStart do
+begin
+enable;
+BaseScript(6, kirovBaseArea, kirovCratesArea, kirovBaseInnerArea, kirovBaseOuterArea,
+           kirovBaseSquad, kirovVehicles, kirovTechs, kirovConstructList, kirovBuildingsToBuild,
+           [153, 103], [144, 102], [122, 49]);
+End;
+
+// Grishko event
+Every 0$10 + 4$00 trigger gameStart do
+var i;
+begin
+for i in grishkoTeam do
+    begin
+    PlaceUnitArea(i, grishkoTeamSpawnArea, false);
+
+    ComMoveXY(i, 142, 135);
+    AddComWait(i, 0$12 - (i * 0$2));
+    AddComMoveXY(i, 176, 131);
+    AddComWait(i, 0$6);
+    AddComMoveXY(i, 199, 105);
+
+    wait(rand(0$1, 0$3));
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in grishkoTeam do
+     if IsAt(i, 199, 105) then
+        RemoveUnit(i)
+     else if not HasTask(i) then
+        ComMoveXY(i, 199, 105);
+
+until not UnitFilter(grishkoTeam, [f_ok]);
+End;
+
+Export function SendCargoWithOil;
+var i, tmp, un, veh;
+begin
+ruCargos := [];
+ruGuards := [];
+
+for i := 1 to 3 do
+    EraseResourceArea(i, southSpawnEraseArea);
+
+tmp := FilterAllUnits([f_distxy, 207, 162, 6]);
+
+if tmp then
+   begin
+   if UnitFilter(tmp, [f_type, unit_building]) then
+      begin
+      for i in UnitFilter(tmp, [f_type, unit_building]) do
+          RemoveUnit(i);
+      end;
+
+   ComMoveXY(tmp, 200, 147);
+   end;
+
+tmp := [];
+
+for i := 1 to 3 do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, ru_cargo_bay, 90);
+    veh := CreateVehicle;
+    ruCargos := Join(ruCargos, veh);
+    SetCargo(veh, mat_oil, 100);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, southRoadSpawnArea, false);
+
+    PrepareSoldier(false, 2);
+    un := CreateHuman;
+    ruGuards := Join(ruGuards, un);
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 105, 47);
+    AddComMoveXY(veh, 71, 29);
+    end;
+
+repeat
+ wait(0$3);
+until UnitFilter(ruCargos, [f_distxy, 71, 29, 6]) >= 2;
+
+for i in ruGuards do
+    begin
+    ComExitVehicle(i);
+    wait(0$1);
+    ComAgressiveMove(i, 63, 47);
+    end;
+End;

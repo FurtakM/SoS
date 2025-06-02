@@ -1,0 +1,142 @@
+On UnitDestroyed(un) do
+begin
+SOS_UnitDestroyed(un);
+
+if un in kirovVehicles then
+   kirovVehicles := kirovVehicles diff un;
+
+if un = Burlak then
+   YouLost('Burlak');
+
+if un = Popov then
+   YouLost('Popov');
+
+if un = Kurin and not arabAttackActive then
+   YouLost('Kurin');
+
+if un = beriaDepot and not arabAttackActive then
+   YouLost('Beria');
+
+if un = kaganDepot and not arabAttackActive then
+   YouLost('Kagan');
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var side;
+begin
+SOS_VehicleConstructed(vehicle, factory);
+
+side := GetSide(vehicle);
+
+if side = 6 then
+   begin
+   kirovVehicles := Join(kirovVehicles, vehicle);
+   SetTag(IsDrivenBy(vehicle), tMech);
+   end;
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if GetTag(driver) = tMech then
+   SetTag(driver, 0);
+End;
+
+On UpgradeComplete(b) do
+var side, btype;
+begin
+side := GetSide(b);
+btype := GetBType(b);
+
+if side = 6 then
+   begin
+   kirovBuildingsToBuild := Delete(kirovBuildingsToBuild, 1);
+   end;
+
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+
+if side = 6 then
+   kirovTechs := kirovTechs diff tech;
+End;
+
+On BuildingComplete(b) do
+var side, btype;
+begin
+side := GetSide(b);
+btype := GetBType(b);
+
+if side = 3 then
+   begin
+   if btype = b_oil_mine then
+      hasOilTower := true;
+
+   if btype = b_depot then
+      if GetDistUnitXY(b, 78, 112) < depotRangeDist and not hasKagan then
+         begin
+         hasKagan := true;
+         kaganDepot := b;
+
+         SetBName(b, 'kagan');
+         end;
+   end;
+
+if side = 6 then
+   kirovBuildingsToBuild := Delete(kirovBuildingsToBuild, 1);
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 3 and s2 = 6 then
+   allianceAttacked := true;
+End;
+
+On TakeMaterials(unit, building) do
+begin
+if GetSide(building) = 6 and GetSide(unit) = 3 then
+   youTookCratesFromKirov := Inc(youTookCratesFromKirov);
+End;
+
+On VehicleCaptured(newId, oldId, oldSide, driver) do
+begin
+if canCaptureKirovVehs then
+   exit;
+
+if oldSide = 6 then
+   begin
+   ComExit(driver);
+   SetSide(newId, 6);
+
+   if oldId in kirovVehicles then
+      begin
+      kirovVehicles := kirovVehicles diff oldId;
+      kirovVehicles := Join(kirovVehicles, newId);
+      end
+   else
+      begin
+      kirovAttackVehicles := kirovAttackVehicles diff oldId;
+      kirovAttackVehicles := Join(kirovAttackVehicles, newId);
+      end;
+   end;
+End;
+
+On ClassChanged(un, oldClass, newClass) do
+var tag;
+begin
+tag := GetTag(un);
+
+if tag = tWannaBeMech then
+   SetTag(un, 0);
+End;
+
+On SailEvent(event) do
+begin
+if event = eventCargo then
+   SendCargoWithOil;
+
+if event = eventConvoy then
+   SendConvoy;
+End;

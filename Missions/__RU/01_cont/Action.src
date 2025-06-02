@@ -144,7 +144,7 @@ begin
 if Difficulty = 1 then
    exit;
 
-wait(7$00 - (1$00 * Difficulty));
+wait(8$00 - (1$00 * Difficulty));
 
 if hasGnyevko then
    exit;
@@ -432,7 +432,8 @@ AddComMoveXY(Jaworska, 87, 73);
 AddComMoveXY(Jaunzeme, 87, 69);
 AddComMoveXY(Belkov, 90, 71);
 
-CenterOnXY(84, 64);
+if not dialogue_skipped then
+   CenterOnXY(84, 64);
 
 Say(Pokryshkin, 'D6-Pok-2');
 
@@ -449,7 +450,8 @@ AddComMoveXY(Pokryshkin, 119, 93);
 
 Say(Burlak, 'D6-Bur-2');
 
-CenterOnXY(105, 82);
+if not dialogue_skipped then
+   CenterOnXY(105, 82);
 
 Say(Pokryshkin, 'D6-Pok-3');
 
@@ -517,6 +519,8 @@ for i in tmp do
     NormalAttack(1, i);
 
 InGameOn;
+
+ComHold(Burlak);
 
 CenterNowOnUnits(Belkov);
 
@@ -667,11 +671,11 @@ hollandEscaped := true;
 SaveVariable(1, '01_HollandEscaped');
 End;
 
-Every 0$1 trigger IsInArea(Frank, escapeArea) or IsAt(Frank, 70, 1) do
+Every 0$1 trigger IsInArea(Mel, escapeArea) or IsAt(Mel, 70, 1) do
 begin
-RemoveUnit(Frank);
-frankEscaped := true;
-SaveVariable(1, '01_FrankEscaped');
+RemoveUnit(Mel);
+MelEscaped := true;
+SaveVariable(1, '01_MelEscaped');
 End;
 
 Every 0$1 trigger not IsOk(usBun1) do
@@ -684,24 +688,27 @@ if IsInUnit(Gladstone) then
 
 AddComMoveXY(Gladstone, 71, 1);
 ComMoveXY(Holland, 72, 1);
-ComMoveXY(Frank, 70, 1);
+ComMoveXY(Mel, 70, 1);
 
 Say(Holland, 'D8-FSol1-2a');
 Say(Gladstone, 'D8-Glad-2'); 
 
 wait(0$1);
 
-DialogueOn;
+if IsOk(Gladstone) then
+   begin
+   DialogueOn;
 
-PlaceSeeing(GetX(Gladstone), GetY(Gladstone), 3, -3);
+   PlaceSeeing(GetX(Gladstone), GetY(Gladstone), 3, -3);
 
-CenterNowOnUnits(Gladstone);
+   CenterNowOnUnits(Gladstone);
 
-Say(Burlak, 'D8-Bur-2');
+   Say(Burlak, 'D8-Bur-2');
 
-RemoveSeeing(GetX(Gladstone), GetY(Gladstone), 3);
+   RemoveSeeing(GetX(Gladstone), GetY(Gladstone), 3);
 
-DialogueOff;
+   DialogueOff;
+   end;
 
 repeat
  wait(0$1);
@@ -755,8 +762,6 @@ wait(rand(0$20, 0$40));
 repeat
  wait(0$1);
 until PlaceUnitArea(Kirilenkova, kirilenkovaSpawn, true);
-
-wait(0$2);
 
 if not See(3, Kirilenkova) then
    begin
@@ -952,11 +957,11 @@ if tick <= 4$00 then
 if not someoneGetsHurt then
    SetAchievement('ACH_BANDAGE');
 
-if gladstoneEscaped and (hollandEscaped or frankEscaped) then
+if gladstoneEscaped and (hollandEscaped or MelEscaped) then
    AddMedal('NoEscape', -3)
 else if gladstoneEscaped then
    AddMedal('NoEscape', -1)
-else if hollandEscaped or frankEscaped then
+else if hollandEscaped or MelEscaped then
    AddMedal('NoEscape', -2)
 else
    AddMedal('NoEscape', 1);

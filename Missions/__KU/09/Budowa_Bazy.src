@@ -1,0 +1,196 @@
+Export ArBuildings;
+
+Export Function Baza;
+var i;
+begin
+
+ArBuildings := [
+   [b_depot, 42, 20 , 2],
+   [b_armoury, 46, 15, 2],
+   [b_breastwork, 35, 21, 0],
+   [b_lab, 30, 10, 2, b_lab_weapon, b_lab_siberium],
+   [b_workshop, 24, 17, 4],
+   [b_solar_power, 35, 5, 3],
+   [b_solar_power, 37, 5, 3],
+   [b_solar_power, 39, 5, 3],
+];
+End;
+
+On BuildingComplete(b) do
+var side, type, depot, toUpgrade;
+begin
+side := GetSide(b);
+type := GetBType(b);
+
+if side = 8 then
+   begin
+   ArBuildings := Delete(ArBuildings, 1);
+
+   depot := FilterUnitsInArea(ArBaza, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+
+   if not depot then
+      exit;
+
+   depot := depot[1];
+   toUpgrade := 0;
+
+   case type of
+        b_depot: toUpgrade := b_warehouse;
+        b_armoury: toUpgrade := b_barracks;
+        b_workshop: toUpgrade := b_factory;
+        end;
+
+   if not toUpgrade then
+      exit;
+
+   repeat
+    wait(0$1);
+   until CanBeBuiltOnlyResources(depot, toUpgrade);
+
+   if type in [b_depot, b_armoury, b_workshop] then
+      ComUpgrade(b);
+   end;
+end;
+
+On UnitDestroyed(unit) do
+if GetSide(unit) = 8 and IsInArea(unit, ArBaza) then
+   begin
+   if GetBType(unit) in [b_bunker, b_turret] then
+      ArBuildings := Join(ArBuildings, [b_turret, GetX(unit), GetY(unit), GetDir(unit)]);
+
+   if GetBType(unit) in [b_armoury, b_barracks] then
+      ArBuildings := Join(ArBuildings, [b_armoury, GetX(unit), GetY(unit), GetDir(unit)]);
+   end;
+
+
+Every 0$5 do
+var i, tmp, depot, undone, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, empty, fac, emptyTowers, weapon, D, LudzieEng;
+begin
+enable;
+
+depot := FilterUnitsInArea(ArBaza, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+
+if depot then
+   depot := depot[1];
+
+// engi
+LudzieEng := FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_class, 2]]);
+
+// damaged buildings
+tmp := FilterUnitsInArea(ArBaza, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+
+// crates nearby base
+cr := GetListOfCratesInArea(Skrzynie);
+
+// eng logic
+
+if LudzieEng then
+   begin
+   for i in LudzieEng do
+       begin
+       tag := GetTag(i);
+
+       if GetLives(i) < 800 then
+          begin
+          ComMoveXY(i, ArBaza[1], ArBaza[2]);
+          AddComHold(i);
+          end;
+
+       if not tag then
+          begin
+          undone := FilterUnitsInArea(ArBaza, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          if cr or tmp or Count(ArBuildings) then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i);
+
+             if tmp then
+                SetTag(i, 200)
+             else if cr then
+                SetTag(i, 201)
+             else
+                SetTag(i, 202);
+             end
+          else
+             if not IsInUnit(i) then
+                ComEnterUnit(i, D);
+          end;
+
+       if tag = 200 then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not tmp then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) then
+             ComRepairBuilding(i, tmp[1]);
+
+          if not IsInArea(i, ArBaza) then
+             ComMoveToArea(i, ArBaza);
+          end;
+
+       if tag = 202 then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not Count(ArBuildings) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end
+          else if not CanBeBuiltOnlyResources(depot, ArBuildings[1][1]) then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          undone := FilterUnitsInArea(ArBaza, [f_constructed]);
+
+          if undone then
+             begin
+             ComComplete(i, undone[1]);
+             continue;
+             end;
+
+          ComBuild(i, ArBuildings[1][1], ArBuildings[1][2], ArBuildings[1][3], ArBuildings[1][4]);
+          end;
+
+       if tag = 201 then
+          begin
+          if IsInUnit(i) then
+             begin
+             ComExitBuilding(i);
+             continue;
+             end;
+
+          if not cr then
+             begin
+             SetTag(i, 0);
+             continue;
+             end;
+
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, 8], [f_distxy, cr[1], cr[2], 12]]) then
+             ComCollect(i, cr[1], cr[2]);
+          end;
+          end;
+       end;
+   end;

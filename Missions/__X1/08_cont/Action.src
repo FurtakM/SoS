@@ -347,7 +347,7 @@ begin
 PlaceSeeing(115, 27, 2, -6);
 
 PlaceHumanInUnit(Heike, HexInfo(115, 27));
-SetClass(Heike, 33);
+SetClass(Heike, class_prison);
 
 CenterNowOnXY(124, 39);
 
@@ -615,7 +615,7 @@ heikeSquad := Join(heikeSquad, Mike);
 End;
 
 // gave revolver to kaia
-Every 0$1 trigger GetDistUnits(Heike, Kaia) < 6 and GetClass(Kaia) = 33 and not isAlarm and not hasMuchin and IsOk(Kaia) and heikeHasRevolver and Kaia in heikeSquad and GetSide(Kaia) = 2 marked gameStartEvent do
+Every 0$1 trigger GetDistUnits(Heike, Kaia) < 6 and GetClass(Kaia) = class_prison and not isAlarm and not hasMuchin and IsOk(Kaia) and heikeHasRevolver and Kaia in heikeSquad and GetSide(Kaia) = 2 marked gameStartEvent do
 begin
 DialogueOn;
 
@@ -1360,6 +1360,11 @@ if class <> class_prison then
     wait(0$1);
    until IsInArea(Kaia, hideWeaponArea);
 
+   repeat
+    wait(1);
+    ComWalk(Kaia);
+   until not Crawls(Kaia);
+
    SetClass(Kaia, class_prison);
    // SetAreaMapShow(hideWeaponArea, 0);
 
@@ -1411,6 +1416,11 @@ if class <> class_prison then
    repeat
     wait(0$1);
    until IsInArea(Kaia, hideWeaponArea);
+
+   repeat
+    wait(1);
+    ComWalk(Kaia);
+   until not Crawls(Kaia);
 
    SetClass(Kaia, class_prison);
    // SetAreaMapShow(hideWeaponArea, 0);
@@ -1499,6 +1509,11 @@ enable;
 
 if not kaiaWeaponHidden then
    exit;
+
+repeat
+ wait(1);
+ ComWalk(Kaia);
+until not Crawls(Kaia);
 
 SetClass(Kaia, kaiaWeaponHidden);
 
@@ -1701,6 +1716,12 @@ else
                         else
                            begin
                            Say(Kaia, 'DK-Sniper-2');
+
+                           repeat
+                            wait(1);
+                            ComWalk(Kaia);
+                           until not Crawls(Kaia);
+
                            SetClass(Kaia, class_hunter);
 
                            if IsOK(Markov) and Markov in heikeSquad then
@@ -2024,7 +2045,14 @@ ChangeMissionObjectives('M1-people-out');
 End;
 
 Every 0$2 trigger GetSide(Mike) = 2 and Mike in heikeSquad and GetDistUnits(Heike, Mike) < 6 and not hasMuchin and giveSniperRifleToMike marked gameStartEvent do
+begin
+repeat
+ wait(1);
+ ComWalk(Mike);
+until not Crawls(Mike);
+
 SetClass(Mike, class_hunter);
+End;
 
 // weaponaries
 Every 0$5 trigger canEquipWeapons and weaponsAmount and GetSide(ruWeaponsBar) = 3 and UnitFilter(heikeSquad, [[f_inarea, weaponariesArea], [f_side, 2], [f_class, class_prison]]) and not GetAttitude(2, 3) = att_enemy and not GetDistUnits(ruDisturb, ruWeaponsBar) < 12 marked gameStartEvent do

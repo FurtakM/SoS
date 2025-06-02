@@ -633,9 +633,23 @@ menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
 function showMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, true);
 
-	MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_MY_PLID);
-	MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
-	MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
+	local avatarFromProfile = loadAvatarComponentsFromProfile();
+
+	if avatarFromProfile ~= nil then
+		local components = {};
+
+		for i = 1, #avatarFromProfile do
+			components = addToArray(components, parseInt(avatarFromProfile[i]));
+		end;
+
+		MULTIPLAYER_ROOM_MY_AVATAR_ID = previewAvatar(avatarFromProfile);
+		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = components;
+		MULTIPLAYER_ROOM_MY_AVATAR_SEX = parseInt(avatarFromProfile[1]);
+	else
+		MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_MY_PLID);
+		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
+		MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
+	end;
 
 	if (MULTIPLAYER_ROOM_MY_AVATAR_ID) then
 		SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, MULTIPLAYER_ROOM_MY_AVATAR_ID, 80, 100, 80, 100);
@@ -838,7 +852,7 @@ function randomPreviewAvatar()
 end;
 
 function savePreviewAvatar()
-	setAvatar(MULTIPLAYER_ROOM_MY_AVATAR_SEX, MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS);
+	setMyHeroAvatar(MULTIPLAYER_ROOM_MY_AVATAR_SEX, MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS);
 	setVisible(menu.window_multiplayer_room.avatarPanel, false);
 end;
 
@@ -2915,7 +2929,7 @@ menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 	{
 		nomouseevent = true,
 		font_colour = WHITE(),
-		font_name = ADMUI3L,
+		font_name = Tahoma_14,
 		wordwrap = true,
 		text_halign = ALIGN_LEFT,
 		text_valign = ALIGN_TOP,
@@ -3043,7 +3057,7 @@ function setMapPictureDescription()
 	local description = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 2);
 	local rules = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 2);
 
-	setText(menu.window_multiplayer_room.panel.page3.description, description .. '\n\n' .. rules);
+	setText(menu.window_multiplayer_room.panel.page3.description, description:gsub("%$", '\n') .. '\n\n' .. rules:gsub("%$", '\n'));
 end;
 
 function setMapPreview()

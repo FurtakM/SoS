@@ -11,6 +11,7 @@ DATA
 		SELECTED : Boolean
 --]]	
 	PROFILES_DATA = {};
+	
 	local profiles = {};
 	local selected = 0;
 

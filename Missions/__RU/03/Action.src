@@ -1,0 +1,714 @@
+Export function Action;
+var i, c, tmp;
+begin
+InGameOn;
+
+RevealFogArea(3, prevMissionFogArea);
+
+PlaceHumanInUnit(Kurin, kirovDepot);
+PlaceHumanInUnit(Burlak, kirovDepot);
+
+if Belkov then
+   PlaceHumanInUnit(Belkov, kirovDepot);
+
+PlaceHumanInUnit(Popov, kirovDepot);
+
+CenterNowOnXY(159, 103);
+
+wait(0$0.3);
+
+if not Belkov then
+   begin
+   Say(Kurin, 'D1a-Kur-1');
+
+   if not belkovSaved then
+      begin
+      Say(Burlak, 'D1a-Bur-1');
+      Say(Kurin, 'D1a-Kur-2');
+      end;
+
+   if wasSelfish then
+      Say(Kurin, 'D1a-Kur-2a');
+
+   hasProblem := true;
+
+   Say(Kurin, 'D1a-Kur-2b');
+   Say(Burlak, 'D1a-Bur-2');
+   end
+else
+   begin
+   Say(Kurin, 'D1b-Kur-1');
+   Say(Belkov, 'D1b-Bel-1');
+   Say(Kurin, 'D1b-Kur-2'); 
+   end;
+
+Say(Kurin, 'D2-Kur-1');
+Say(Burlak, 'D2-Bur-1');
+Say(Kurin, 'D2-Kur-2');
+Say(Burlak, 'D2-Bur-2');
+Say(Kurin, 'D2-Kur-3');
+
+wait(0$0.5);
+
+Say(Popov, 'D2-Pop-3');
+Say(Kurin, 'D2-Kur-4');
+Say(Burlak, 'D2-Bur-4');
+Say(Kurin, 'D2-Kur-5');
+Say(Burlak, 'D2-Bur-5');
+Say(Kurin, 'D2-Kur-6');
+
+beriaBaseSquad := CharacterSelection(
+                       '1',
+                       [7, 6, 6, 5][Difficulty],
+                       [7, 6, 6, 5][Difficulty],
+                       [sel_change_class, Burlak, sel_changeable, sel_change_class] ^
+                       Belkov ^ Gnyevko ^ Kirilenkova ^ Kovalyuk ^ beriaTeam ^
+                       [sel_not_hired, sel_not_changeable, sel_dont_change_class, Kurin, Popov] ^
+                       [sel_changeable, sel_change_class] ^ kirovTeam,
+                       [[class_engineer, 1], [class_scientistic, 1], [class_mechanic, 0], [class_soldier, 2]]
+                  );      
+
+stop_talking := true;
+
+ComExitBuilding(Burlak);
+AddComMoveXY(Burlak, 123, 98);
+
+for i in beriaBaseSquad do
+    begin
+    SetSide(i, 3);
+
+    if not IsPlaced(i) then
+       PlaceUnitXYR(i, 112, 98, 3, false)
+    else
+       begin
+       ComExit(i);
+       AddComMoveXY(i, 123, 98);
+       end;
+    end;
+
+stop_talking := false;
+
+wait(0$2);
+
+CenterOnXY(110, 97);
+
+if Belkov and not Belkov in beriaBaseSquad then
+   popovTeam := Join(popovTeam, Belkov);
+
+if Gnyevko and not Gnyevko in beriaBaseSquad then
+   popovTeam := Join(popovTeam, Gnyevko);            
+
+if Kirilenkova and not Kirilenkova in beriaBaseSquad then
+   popovTeam := Join(popovTeam, Kirilenkova);
+
+if Kovalyuk and not Kovalyuk in beriaBaseSquad then
+   popovTeam := Join(popovTeam, Kovalyuk);
+
+for i in beriaTeam do
+    if not i in beriaBaseSquad then
+       popovTeam := Join(popovTeam, i);
+
+if popovTeam < 3 then
+   for i := Count(popovTeam) to 3 do
+       begin
+       uc_side := 6;
+       uc_nation := nation_russian;
+
+       PrepareHuman(false, class_soldier, 2);
+       popovTeam := Join(popovTeam, CreateHuman);
+       end;
+
+if not UnitFilter(popovTeam, [f_class, 4]) then
+   SetClass(popovTeam[1], 4);
+
+for i in popovTeam do
+    begin
+    if not GetClass(i) in [1,4] then
+       SetClass(i, class_soldier);
+
+    if not IsPlaced(i) then
+       PlaceUnitXYR(i, 161, 107, 3, false)
+    else if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComHold(i);
+    end;
+
+kirovBaseSquad := FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff ([Kurin, Popov] ^ popovTeam);
+
+for i in kirovBaseSquad do
+    begin
+    tmp := IsInUnit(i);
+
+    if not tmp then
+       continue;
+
+    case GetBType(tmp) of
+         b_workshop: SetClass(i, class_mechanic);
+         b_lab: SetClass(i, class_scientistic);
+         b_armoury: SetClass(i, class_soldier);
+         b_depot: SetClass(i, class_engineer);
+         end;
+    end;
+
+for c := 1 to 4 do
+    if UnitFilter(kirovBaseSquad, [f_class, c]) < 2 then
+       begin
+       tmp := SortBySkill(kirovBaseSquad, c);
+
+       for i := 1 to 2 do
+           SetClass(tmp[i], c);
+       end;
+
+wait(0$3);
+
+InGameOff;        
+
+gameStart := true;
+
+Query('QBriefing');
+ChangeMissionObjectives('M1');
+
+SaveForQuickRestart;
+
+wait(0$5);
+
+ComExitBuilding(Popov);
+AddComMoveXY(Popov, 142, 64);
+AddComMoveXY(popovTeam, 142, 64);
+End;
+
+// self attack on allies
+Every 0$2 trigger allianceAttacked do
+begin
+DialogueOn;
+Say(Kurin, 'DArestKur');
+dwait(0$1);
+YouLost('SelfAttack');
+DialogueOff;
+End;
+
+Every 0$2 trigger youTookCratesFromKirov do
+begin
+Query('QTookCrates');
+
+repeat
+ wait(0$1);
+until youTookCratesFromKirov >= 3;
+                   
+DialogueOn;
+Say(Kurin, 'DArestKur');
+dwait(0$1);
+YouLost('TookCrates');
+DialogueOff;
+End;
+
+// found oil on the west
+Every 0$1 trigger GetResourceVisibility(78, 112, 3) do
+begin
+foundOil := true;
+
+if not IsOk(Burlak) then
+   exit;
+
+DialogueOn;
+
+Say(Burlak, 'D2a-Bur-1');
+SayRadio(Kurin, 'D2a-Kur-1');
+
+DialogueOff;
+End;
+
+// has Kagan base and oil tower
+Every 0$1 trigger hasKagan and hasOilTower do
+begin
+ChangeMissionObjectives('M2');
+End;
+
+Every 0$1 trigger (FilterAllUnits([[f_side, 3], [f_btype, b_factory], [f_not, [f_constructed]]]) or
+                  FilterAllUnits([[f_side, 3], [f_btype, b_lab_half], [f_not, [f_constructed]]])) and
+                  not FilterAllUnits([[f_side, 3], [f_btype, b_oil_power]]) and IsOk(Burlak) do
+var sci;
+begin
+DialogueOn;
+
+Say(Burlak, 'D3aa-Bur-1');
+
+if hasScholtze and IsOk(Scholtze) then
+   begin
+   sci := Scholtze;
+   Say(Scholtze, 'D3aa-Sch-1');
+   end
+else
+   begin
+   sci := FilterAllUnits([[f_side, 3], [f_ok], [f_class, class_scientistic], [f_sex, sex_male]]) diff mainRuCharacters;
+
+   if sci then
+      begin
+      sci := sci[rand(1, Count(sci))];
+      Say(sci, 'D3aa-Sci1-1');
+      end;
+   end;
+
+if sci then
+   Say(Burlak, 'D3aa-Bur-2');
+
+DialogueOff;
+End;
+
+// see american reinforcements
+Every 0$1 trigger UnitFilter(americanReinforcementsTroops, [f_see, 3]) and IsOk(Burlak) and not allowedToAttackOmicron do
+var sol, tmp;
+begin
+tmp := UnitFilter(americanReinforcementsTroops, [f_see, 3]);
+sol := FilterAllUnits([[f_side, 3], [f_ok], [f_sex, sex_male]]) diff mainRuCharacters;
+
+if not sol then
+   exit;
+
+sol := sol[rand(1, Count(sol))];
+
+DialogueOn;
+
+CenterNowOnUnits(NearestUnitToUnit(tmp, Burlak));
+
+if not hasKagan then
+   begin
+   Say(sol, 'D3a-RSol1-1');
+   Say(Burlak, 'D3a-Bur-1');
+   end
+else
+   begin
+   Say(sol, ['D3a-RSol1-1', 'D3b-RSol1-1'][sol mod 2 + 1]);
+
+   if IsOk(Gnyevko) and Gnyevko in beriaBaseSquad then
+      Say(Gnyevko, 'D3b-Gny-1')
+   else if IsOk(Kovalyuk) and Kovalyuk in beriaBaseSquad then
+      Say(Kovalyuk, 'D3b-Kov-1')
+   else
+      Say(sol, 'D3b-RSol1-2');
+
+   Say(Burlak, 'D3b-Bur-1');
+   end;
+
+DialogueOff;
+End;
+
+// Scholtze
+Every 0$2 trigger foundOil do
+var fake, x, y, scholtzeArea, Dickens, DickensFriend;
+begin
+wait(0$30 + rand(0$10, 1$00));
+
+case Difficulty of
+     1: scholtzeArea := scholtzeSpawn3Area;
+     2: scholtzeArea := [scholtzeSpawn3Area, scholtzeSpawn2Area, scholtzeSpawn2Area][rand(1,3)];
+     3: scholtzeArea := [scholtzeSpawn2Area, scholtzeSpawn2Area, scholtzeSpawn1Area][rand(1,3)];
+     4: scholtzeArea := [scholtzeSpawn2Area, scholtzeSpawn1Area, scholtzeSpawn1Area][rand(1,3)];
+     end;
+
+PlaceUnitArea(Scholtze, scholtzeArea, true);
+ComHold(Scholtze);
+
+wait(0$4);
+
+if See(3, Scholtze) then
+   begin
+   hasScholtze := true;
+   SetSide(Scholtze, 3);
+
+   ComFree(Scholtze);
+
+   CenterNowOnUnits(Scholtze);
+
+   DialogueOn;
+
+   Say(Scholtze, 'D4a-Sch-1');
+   Say(Burlak, 'D4a-Bur-1');
+   Say(Scholtze, 'D4a-Sch-2');
+
+   DialogueOff;
+   end;
+
+x := GetX(Scholtze);
+y := GetY(Scholtze);
+
+uc_side := 6;
+PrepareHuman(sex_male, class_soldier, 1);
+fake := CreateHuman;
+
+InGameOn;
+DialogueOn;
+
+SayRadioNoFaceNoName(fake, 'D4-Sch-1');
+Say(Burlak, 'D4-Bur-1');
+
+DialogueOff;
+InGameOff;
+
+ChangeMissionObjectives('M4');
+
+canSearchForScholtze := true;
+
+if dickensKilled then
+   exit;
+
+wait(2$00 - (0$20 * Difficulty));
+
+uc_side := 1;
+uc_nation := nation_american;
+
+Dickens := NewCharacter('Dickens');
+SetSkill(Dickens, skill_combat, Difficulty);
+
+PrepareSoldier(sex_male, Difficulty);
+hc_attr := [10, 10];
+DickensFriend := CreateHuman;
+
+PlaceUnitXYR(Dickens, 22, 17, 3, false);
+PlaceUnitXYR(DickensFriend, 22, 17, 3, false);
+
+ComAgressiveMove([Dickens, DickensFriend], x, y);
+
+repeat
+ wait(0$1);
+
+ if not IsOk(Dickens) then
+    begin
+    ComMoveXY(DickensFriend, 31, 39);
+    AddComEnterUnit(DickensFriend, usArm1);
+
+    omicronTroops := omicronTroops union DickensFriend;
+    exit;
+    end;
+
+ if not IsOk(DickensFriend) then
+    begin
+    ComMoveXY(Dickens, 31, 39);
+    AddComEnterUnit(Dickens, usArm1);
+
+    omicronTroops := omicronTroops union Dickens;
+    exit;
+    end;
+
+until See(1, Scholtze) and GetLives(Scholtze) < 1000 and not hasScholtze;
+
+canSearchForScholtze := false;
+
+ComAttackUnit([Dickens, DickensFriend], Scholtze);
+
+wait(0$0.3);
+
+InGameOn;
+DialogueOn;
+
+PlaceSeeing(x, y, 3, -10);
+CenterNowOnXY(x, y);
+
+Say(Scholtze, 'D4b-Sch-1');
+Say(DickensFriend, 'D4b-Sol1-1');
+Say(Dickens, 'D4b-Sol2-1');
+Say(Scholtze, 'D4b-Sch-2');  
+
+DialogueOff;
+
+wait(0$0.3);
+
+RemoveSeeing(x, y, 3);
+
+Say(Burlak, 'D4b-Bur-2');  
+InGameOff;
+
+ChangeMissionObjectives('MScholtzeDel');
+
+KillUnit(Scholtze);
+
+ComMoveXY([Dickens, DickensFriend], 25, 31);
+
+omicronTroops := omicronTroops union [Dickens, DickensFriend];
+End;
+
+Every 0$2 trigger See(3, Scholtze) and canSearchForScholtze and not hasScholtze do
+begin
+hasScholtze := true;
+SetSide(Scholtze, 3);
+
+CenterNowOnUnits(Scholtze);
+
+DialogueOn;
+
+Say(Scholtze, 'D4a-Sch-1');
+Say(Burlak, 'D4a-Bur-1');
+Say(Scholtze, 'D4a-Sch-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('MScholtzeOut');
+End;
+
+// popov cam
+Every 0$2 trigger FilterUnitsInArea(easternHillArea, [[f_side, 6], [f_type, unit_human]]) do
+begin
+PlaceSeeing(131, 50, 3, 12);
+
+repeat
+ wait(0$1);
+until not FilterUnitsInArea(easternHillArea, [[f_side, 6], [f_type, unit_human]]);
+
+RemoveSeeing(131, 50, 3);
+End;
+
+Every 0$1 trigger not retreat and FilterUnitsInArea(hillArea, [[f_side, 3], [f_type, unit_vehicle], [f_chassis, ru_medium_wheeled]]) and IsOk(Burlak) do
+begin
+DialogueOn;
+
+Say(Burlak, 'D5a-Bur-1');
+
+DialogueOff;
+End;
+
+Every 0$1 trigger hasFactory and hasOilTower do
+var i, un, tmp, vehicles, vehiclesOwned, q, pepCount, points, sendMechanics;
+begin
+ChangeMissionObjectives('M3');
+
+sendMechanics := false;
+
+repeat
+ wait(0$1);
+ vehiclesOwned := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]]);
+ pepCount := Count(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+ if vehiclesOwned < (pepCount + requiredVehiclesAmount) then
+    display_strings := ['#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned]
+ else
+    display_strings := ['#Ru03-5a'];
+
+ kurinWaitForVehiclesTime := kurinWaitForVehiclesTime - 0$1;
+until kurinWaitForVehiclesTime = 0$0;
+
+if vehiclesOwned >= (pepCount + requiredVehiclesAmount) then
+   begin
+   AddMedal('Surplus', 1);
+   points := [1, 2, 3];
+   end
+else if vehiclesOwned >= pepCount then
+   begin
+   AddMedal('Surplus', -1);
+   points := [2, 3];
+   end
+else
+   begin
+   AddMedal('Surplus', -2);
+   points := [3];
+   end;
+
+InGameOn;
+DialogueOn;
+
+SayRadio(Kurin, 'D5-Kur-1');
+
+q := SelectiveQuery('QVehicles', points);
+
+case q of
+     1: begin
+        Say(Burlak, 'D6a-Bur-1');
+        SayRadio(Kurin, 'D6a-Kur-1');
+
+        timeToAttackOnOmicron := 2$00;
+        sendMechanics := true;
+        end;
+     2: begin
+        Say(Burlak, 'D6b-Bur-1');
+        SayRadio(Kurin, 'D6b-Kur-1');
+
+        timeToAttackOnOmicron := 3$00;
+        sendMechanics := true;
+        end;
+     3: begin
+        Say(Burlak, 'D6c-Bur-1');
+        SayRadio(Kurin, 'D6c-Kur-1');
+
+        kurinWaitForVehiclesTime := 7$00;
+        end;
+     end;
+
+DialogueOff;
+InGameOff;
+
+if q = 3 then
+   begin
+   repeat
+    wait(0$1);
+    vehiclesOwned := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]]);
+    pepCount := Count(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+    if vehiclesOwned < (pepCount + requiredVehiclesAmount) then
+       display_strings := ['#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned]
+    else
+       display_strings := ['#Ru03-5a'];
+
+    kurinWaitForVehiclesTime := kurinWaitForVehiclesTime - 0$1;
+   until kurinWaitForVehiclesTime = 0$0;
+
+   if vehiclesOwned < requiredVehiclesAmount then
+      begin
+      DialogueOn;
+      SayRadio(Kurin, 'D6d-Kur-1');
+      YouLost('Vehicles');
+      DialogueOff;
+      exit;
+      end;
+
+   DialogueOn;
+   SayRadio(Kurin, 'D6c-Kur-2');
+   DialogueOff;
+
+   sendMechanics := true;
+   timeToAttackOnOmicron := 2$00;
+   end;
+
+display_strings := [];
+
+ChangeMissionObjectives('M5');
+
+if sendMechanics then
+   begin
+   tmp := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic], [f_not, [f_tag, tMech]]]);
+
+   if Count(tmp) < requiredVehiclesAmount then
+      begin
+      for i := Count(tmp) to requiredVehiclesAmount do
+          begin
+          uc_side := 6;
+          uc_nation := nation_russian;
+
+          PrepareMechanic(false, 3);
+          un := CreateHuman;
+
+          repeat
+           wait(0$1);
+          until PlaceUnitArea(un, southRoadSpawnArea, false);
+
+          ComMoveXY(un, 193, 135);
+          AddComMoveXY(un, 159, 106);
+
+          wait(0$1);
+          end;
+
+      tmp := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic], [f_not, [f_tag, tMech]]]);
+      end;
+
+   kirovBaseSquad := kirovBaseSquad diff tmp;
+
+   vehicles := [];
+   vehiclesOwned := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]]);
+
+   for i := 1 to requiredVehiclesAmount do
+       begin
+       ComExit(IsDrivenBy(vehiclesOwned[i]));
+       SetSide(vehiclesOwned[i], 6);
+       vehicles := Join(vehicles, vehiclesOwned[i]);
+       ComExit(tmp[i]);
+       end;
+
+   if not vehicles then
+      exit;                            
+
+   kirovAttackVehicles := kirovVehicles union vehicles;
+   kirovVehicles := [];
+   
+   for i in kirovAttackVehicles do
+       SetTag(i, 0);
+
+   repeat
+    wait(0$3);
+    tmp := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic], [f_not, [f_driving]], [f_not, [f_tag, tMech]]]);
+    vehicles := UnitFilter(kirovAttackVehicles, [f_empty]);
+
+    for i := 1 to Count(vehicles) do
+        if i <= tmp then
+           ComEnterUnit(tmp[i], vehicles[i]);
+   until not UnitFilter(kirovAttackVehicles, [f_empty]);
+
+   tmp := FilterAllUnits([[f_side, 6], [f_class, class_mechanic], [f_not, [f_tag, tMech]], [f_not, [f_driving]]]);
+
+   for i in tmp do
+       if not i in kirovBaseSquad then
+          kirovBaseSquad := Join(kirovBaseSquad, i);
+
+   ComMoveXY(kirovAttackVehicles, 71, 36);
+   end;
+End;
+
+Every 0$1 trigger timeToAttackOnOmicron do
+begin
+SetAreaMapShow(omicronGatheringArea, 1);
+RaiseSailEvent(eventCargo);
+
+repeat
+ wait(0$1);
+ display_strings := ['#Ru03-1', timeToAttackOnOmicron];
+ timeToAttackOnOmicron := timeToAttackOnOmicron - 0$1;
+until timeToAttackOnOmicron = 0$0;
+
+if FilterUnitsExceptArea(omicronGatheringArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) or
+   FilterUnitsExceptArea(omicronGatheringArea, [[f_side, 3], [f_type, unit_human], [f_not, [f_driving]]]) then
+   begin
+   DialogueOn;
+   SayRadio(Kurin, 'D7a-Kur-1');
+   DialogueOff;
+
+   timeToAttackOnOmicron := 2$00;
+
+   repeat
+    wait(0$1);
+    display_strings := ['#Ru03-2', timeToAttackOnOmicron];
+    timeToAttackOnOmicron := timeToAttackOnOmicron - 0$1;
+   until timeToAttackOnOmicron = 0$0;
+
+   if FilterUnitsExceptArea(omicronGatheringArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) or
+      FilterUnitsExceptArea(omicronGatheringArea, [[f_side, 3], [f_type, unit_human], [f_not, [f_driving]]]) then
+      begin
+      YouLost('Delay');
+      exit;
+      end;
+   end;
+
+display_strings := [];
+allowedToAttackOmicron := true;
+canCaptureKirovVehs := true;
+retreatToKirovAllowed := false;
+SetAreaMapShow(omicronGatheringArea, 0);
+
+DialogueOn;
+
+Say(Burlak, 'D7-Bur-1');
+SayRadio(Kurin, 'D7-Kur-1');
+
+DialogueOff;
+
+ChangeMissionObjectives('M5a');
+
+Query('QRefuel');
+End;
+
+Every 0$2 trigger not retreatToKirovAllowed and FilterAllUnits([[f_side, 3], [f_dist, kirovDepot, 16], [f_not, [f_and, [f_type, unit_vehicle], [f_empty]]], [f_not, [f_type, unit_building]]]) do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 3], [f_dist, kirovDepot, 16], [f_not, [f_and, [f_type, unit_vehicle], [f_empty]]], [f_not, [f_type, unit_building]]]);
+
+CenterNowOnUnits(tmp);
+
+InGameOn;
+
+ComMoveXY(tmp, 70, 33);
+
+SayRadio(Kurin, 'D12-Kur-1');
+
+InGameOff;
+
+wait(0$2);
+
+enable;
+End;

@@ -1,0 +1,79 @@
+Export Sikorski, omicronTroops, americanReinforcementsTroops, omicronVehicles,
+       omicronTechs, omicronConstructList, omicronBuildingsToBuild;
+Export function PrepareAmerican;
+var i, un, limit;
+begin
+uc_side := omicronSide;
+uc_nation := nation_american;
+
+americanReinforcementsTroops := [];
+omicronTroops := [];
+omicronVehicles := [];
+omicronTechs := GetTechNation(omicronSide, nation_american, state_enabled);
+omicronBuildingsToBuild := [];
+omicronConstructList := [];
+
+SetBName(usDep, 'omikron');
+
+limit := [8, 9, 9, 10][Difficulty];
+
+Sikorski := NewCharacter('Sikorski');
+PlaceHumanInUnit(Sikorski, usDep);
+
+for i := 1 to limit - 5 do
+    begin
+    PrepareSoldier(false, [2, 2, 3, 4][Difficulty]);
+    un := CreateHuman;
+    omicronTroops := Join(omicronTroops, un);
+    PlaceUnitXYR(un, 27, 36, 5, false);
+    end;
+
+limit := limit - 5;
+
+for i := 1 to limit do
+    begin
+    PrepareHuman(false, i mod 3 + 2, 3);
+    un := CreateHuman;
+    omicronTroops := Join(omicronTroops, un);
+    PlaceUnitXYR(un, 27, 36, 5, false);
+    end;
+
+if debug then
+   begin
+   uc_side := reinforcementsSide;
+
+   PrepareSoldier(false, 1);
+   un := CreateHuman;
+   americanReinforcementsTroops := Join(americanReinforcementsTroops, un);
+
+   PlaceUnitXYR(un, 71, 102, 3, false);
+   end;
+End;
+
+Every 0$1 trigger gameStart do
+begin
+enable;
+BaseScript(omicronSide, omicronBaseArea, omicronBaseArea, omicronBaseInnerArea, omicronBaseOuterArea,
+           omicronTroops, omicronVehicles, omicronTechs, omicronConstructList, omicronBuildingsToBuild,
+           [27,32], [19,14], []);
+End;
+
+// Convoys
+Every 0$1 trigger gameStart do
+var i, time;
+begin
+time := [4$00, 3$30, 3$20, 3$00][Difficulty];
+
+repeat
+ wait(time + rand(-0$20, 0$20));
+ RaiseSailEvent(eventConvoy);
+until convoysCounter = 0;
+End;
+
+Export function SendConvoy;
+var i, tmp, path;
+begin
+path := rand(1,2);
+
+
+End;

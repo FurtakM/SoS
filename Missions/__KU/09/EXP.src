@@ -1,0 +1,37 @@
+Every 0$45 do
+var i, tmp, blist, class;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 8], [f_type, unit_human], [f_inside]]);
+
+if not tmp then
+   exit;
+
+blist := [
+  [b_barracks, b_armoury, b_bunker, b_breastwork],
+  [b_depot, b_warehouse],
+  [b_workshop, b_factory],
+  [b_lab, b_lab_half, b_lab_full]
+];
+
+for i in tmp do
+    begin
+    class := GetClass(i);
+
+    if class > 4 then
+    class := 1;
+
+    if GetBType(IsInUnit(i)) in blist[class] then
+       AddExperience(i, class, 100)
+    else
+       AddExperience(i, class, 50)
+    end;
+
+End;
+
+Every 1$06 trigger FilterUnitsInArea(Skrzynie,[[f_placed],[f_type, unit_crate]]) <5 do
+begin
+     enable;
+     CreateCratesArea(Rand(1,5),Skrzynie,true);
+end;

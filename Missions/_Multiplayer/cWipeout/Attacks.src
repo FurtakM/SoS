@@ -115,8 +115,6 @@ End;
 Every 0$2 trigger arAttackersInf do
 var i, tmp, nearest, enemy;
 begin
-enable;
-
 tmp := UnitFilter(arAttackersInf, [f_ok]);
 
 arAttackersInf := [];
@@ -141,34 +139,42 @@ tmp := UnitFilter(tmp, [f_ok]);
 AddComMoveXY(tmp, 155, 119);
 
 repeat
- wait(0$3);
+ wait(0$2);
  tmp := UnitFilter(tmp, [f_ok]);
  enemy := FilterAllUnits([f_enemy, botSides[2]]);
 
  for i in tmp do
-     //if GetClass(i) <> 1 then
-     if not HasTask(i) then
-        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
-     {else if not HasTask(i) then
-        begin                       
-        nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
-
-        if not nearest then
+     if GetClass(i) <> 1 then
+        begin
+        if not HasTask(i) then
            ComAttackUnit(i, NearestUnitToUnit(enemy, i))
-        else
+        end
+     else if not HasTask(i) then
+        begin
+        if GetTag(i) <> tMine then
            begin
-           SetTag(nearest, tMined);
-           ComPlaceDelayedCharge(i, 0, 0, nearest);
-           end;
-        end;}
+           nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_dist, i, 12], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+           if not nearest then
+              ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+           else
+              begin
+              SetTag(nearest, tMined);
+              SetTag(i, tMine);
+              ComPlaceDelayedCharge(i, 0, 0, nearest);
+              end;
+           end
+        else
+          ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        end;
 until not tmp;
+
+enable;
 End;
 
 Every 0$2 trigger arAttackersVeh do
 var i, tmp;
 begin
-enable;
-
 tmp := arAttackersVeh;
 arAttackersVeh := [];
 
@@ -179,6 +185,8 @@ repeat
  for i in tmp do
      AgressiveMove(i, [ [207,125], [185,114] ])
 until not tmp;
+
+enable;
 End;
 
 
@@ -330,10 +338,8 @@ End;
 Every 0$2 trigger amAttackersVeh do
 var i, tmp;
 begin
-enable;
-
 tmp := amAttackersVeh union amAttackersInf;
-arAttackersVeh := [];
+amAttackersVeh := [];
 amAttackersInf := [];
 
 repeat
@@ -343,6 +349,8 @@ repeat
  for i in tmp do
      AgressiveMove(i, [ [96,145], [99,130], [87,103] ])
 until not tmp;
+
+enable;
 End;
 
 Every 0$1 trigger amVehiclesAtttackers and activeAmerAttacks do
