@@ -1,6 +1,7 @@
 MULTIPLAYER_ROOM_ACTIVE = false;
 MULTIPLAYER_ROOM_DATA = {};
 MULTIPLAYER_ROOM_MAP_DATA = {};
+MULTIPLAYER_ROOM_MAPS_PLAYERS = {};
 MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = 1;
 MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = 1;
 MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
@@ -979,6 +980,10 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 		recreateTeams();
 	end;
 
+	if not MULTIPLAYER_ROOM_IS_HOST then
+		OW_MULTIROOM_SET_MYREADY(false);
+	end;
+
 	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_NAME');
 end;
 
@@ -993,7 +998,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 			end;
 		end;
 
-	generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
+		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
 	end;
 
 	-- get map info data
@@ -1080,6 +1085,24 @@ function FROMOW_MULTIROOM_TEAMERROR(ERR, ISERR)
     else
     	MULTIPLAYER_ROOM_START_ERROR = false;
     end;
+
+    -- check settings before start
+    if MULTIPLAYER_ROOM_DATA.Players then
+        if #MULTIPLAYER_ROOM_DATA.Players < 2 then
+            return loc(875), true;
+        end;
+
+        if MULTIPLAYER_ROOM_MAP_EXTRA_DATA then
+            if MULTIPLAYER_ROOM_MAP_EXTRA_DATA.forceToPickColours then
+                for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+                    if MULTIPLAYER_ROOM_DATA.Players[i].COLOUR == 0 then
+                        MULTIPLAYER_ROOM_START_ERROR = true;    
+                        return loc(5063), true;
+                    end;
+                end;
+            end;
+        end;
+    end;
 end;
 
 -- main functions
@@ -1157,6 +1180,21 @@ end
 
 function setReadyMultiplayerGame()
 	local ready = not MULTIPLAYER_ROOM_IM_READY;
+
+    if ready then
+        if MULTIPLAYER_ROOM_MAP_EXTRA_DATA and MULTIPLAYER_ROOM_DATA.Players then
+            if MULTIPLAYER_ROOM_MAP_EXTRA_DATA.forceToPickColours then
+                for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+                    if MULTIPLAYER_ROOM_MY_PLID == MULTIPLAYER_ROOM_DATA.Players[i].PLID and MULTIPLAYER_ROOM_DATA.Players[i].COLOUR == 0 then
+                        OW_MULTI_SENDALLCHATMSG(loc(5069):gsub("%$", MULTIPLAYER_ROOM_DATA.Players[i].NAME) .. ' (HOST)', '#000000');
+                        OW_MULTIROOM_SET_MYREADY(false);
+                        return false;
+                    end;
+                end;
+            end;
+        end;
+    end;
+
 	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, not ready or MULTIPLAYER_ROOM_IS_HOST);	
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
@@ -1930,7 +1968,7 @@ function updatePlayerSlot(NUMBER)
 		if (not MULTIPLAYER_ROOM_RANDOM_COLOURS) then
 			local colorPicker = clColorPicker(
 				{ID = s.SLOT}, 
-				isMySlot and ((not player.READY) or canModifyServerSettings()), 
+				isMySlot and ((not player.READY) or MULTIPLAYER_ROOM_IS_HOST), --canModifyServerSettings()),
 				player.COLOUR, 
 				277, 
 				5, 
@@ -2181,6 +2219,7 @@ function updatePlayerSlot(NUMBER)
 end;
 
 function recreateTeams()
+    clearAvatarCache();
 	createPlayerView();
 	createTeams(true);
 
@@ -2949,13 +2988,22 @@ function setMapList(mapList, selectedMap, isHost)
 	for i = 1, #mapList do
 		local name = mapList[i].NAME;
 		local typ = '[PvP]';
+		local amount = '';
 		local char = string.sub(name, 1, 1);
 
 		if (char == 'c') then
 			typ = '[COOP]';
 		end;
 
-		list = addToArray(list, typ .. ' ' .. mapList[i].NAMELOC);
+		if (MULTIPLAYER_ROOM_MAPS_PLAYERS[name]) then
+			amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX;
+		end;
+
+		if (strlen(amount) > 0) then
+			list = addToArray(list, typ .. ' ' .. '(' .. amount .. ') ' .. mapList[i].NAMELOC);
+		else
+			list = addToArray(list, typ .. ' ' .. mapList[i].NAMELOC);
+		end;
 	end;
 
 	menu.window_multiplayer_room.panel.page3.mapComboBox.list = clComboBox(

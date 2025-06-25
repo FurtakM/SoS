@@ -1,5 +1,11 @@
 Every 10$00 trigger IsOk(amDep) do
+begin
 activeAmerAttacks := true;
+
+wait(5$00 - (1$00 * Difficulty));
+
+AmericanAttack(0);
+End;
 
 Every 13$00 trigger IsOk(arDep) and GetSide(arDep) = botSides[2] do
 begin
@@ -10,16 +16,8 @@ wait(35$00 - (1$00 * Difficulty));
 ArabAttack(0);
 End;
 
-Every 19$00 trigger IsOk(amDep) and GetSide(amDep) = botSides[1] do
-begin
-
-wait(5$00 - (1$00 * Difficulty));
-
-AmericanAttack(0);
-End;
-
-//Every 45$00 trigger IsOk(amDep) and GetSide(amDep) = botSides[1] do
-//AmericanAttack(Difficulty);
+Every 45$00 trigger IsOk(amDep) and GetSide(amDep) = botSides[1] do
+AmericanAttack(Difficulty);
 
 
 // ARABS ATTACK
@@ -80,7 +78,11 @@ for i := 1 to [1, 2, 3][Difficulty] do
     veh := CreateVehicle;
 
     SetDir(veh, 5);
-    PlaceUnitArea(veh, arAttackSpawnArea, false);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, arAttackSpawnArea, false);
+
     PlaceHumanInUnit(un, veh);
 
     ComMoveXY(un, 236, 127);
@@ -100,7 +102,11 @@ for i := 1 to [1, 2, 2][Difficulty] do
     veh := CreateVehicle;
 
     SetDir(veh, 4);
-    PlaceUnitArea(veh, arAttackSpawnArea, false);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, arAttackSpawnArea, false);
+
     PlaceHumanInUnit(un, veh);
 
     if i mod 2 = 0 then
@@ -115,6 +121,8 @@ End;
 Every 0$2 trigger arAttackersInf do
 var i, tmp, nearest, enemy;
 begin
+enable;
+
 tmp := UnitFilter(arAttackersInf, [f_ok]);
 
 arAttackersInf := [];
@@ -168,13 +176,13 @@ repeat
           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
         end;
 until not tmp;
-
-enable;
 End;
 
 Every 0$2 trigger arAttackersVeh do
 var i, tmp;
 begin
+enable;
+
 tmp := arAttackersVeh;
 arAttackersVeh := [];
 
@@ -185,8 +193,6 @@ repeat
  for i in tmp do
      AgressiveMove(i, [ [207,125], [185,114] ])
 until not tmp;
-
-enable;
 End;
 
 
@@ -310,10 +316,13 @@ for i := 1 to [2, 3, 4][Difficulty] + v do
     PrepareSoldier(false, skill);
     un := CreateHuman;
 
-    PlaceUnitArea(un, amAttackSpawn2Area, false);
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(un, amAttackSpawnArea, false);
+
     amAttackersInf := Join(amAttackersInf, un);
 
-    ComAgressiveMove(un, 110, 129);
+    ComAgressiveMove(un, 102, 23);
     end;
 
 for i := 1 to 2 + v do
@@ -325,19 +334,25 @@ for i := 1 to 2 + v do
     PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, [us_light_gun, us_double_gun, us_gatling_gun][i mod 3 + 1], 80);
     veh := CreateVehicle;
 
-    SetDir(veh, 0);
-    PlaceUnitArea(veh, amAttackSpawnArea, false);
+    SetDir(veh, 2);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, amAttackSpawnArea, false);
+
     PlaceHumanInUnit(un, veh);
 
-    ComMoveXY(un, 96, 137);
+    ComMoveXY(un, 102, 19);
 
     amAttackersVeh := Join(amAttackersVeh, veh);
     end;
 End;
 
-Every 0$2 trigger amAttackersVeh do
+Every 0$2 trigger amAttackersVeh or amAttackersInf do
 var i, tmp;
 begin
+enable;
+
 tmp := amAttackersVeh union amAttackersInf;
 amAttackersVeh := [];
 amAttackersInf := [];
@@ -347,10 +362,8 @@ repeat
  tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
-     AgressiveMove(i, [ [96,145], [99,130], [87,103] ])
+     AgressiveMove(i, [ [111,48], [120,73], [123,87] ])
 until not tmp;
-
-enable;
 End;
 
 Every 0$1 trigger amVehiclesAtttackers and activeAmerAttacks do
