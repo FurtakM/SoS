@@ -1,0 +1,314 @@
+// Multiplayer map module
+// Each map has his own
+// SOS_Multiplayer required
+Export function InitMultiplayerSettings;
+begin
+{
+  mpBaseLevel,            // (0)  
+  mpAmountOfPeople,       // (1)  
+  mpSkillLevel,           // (2)  
+  mpStartingResources,    // (3)  
+  mpShipments,            // (4)  
+  mpOilSources,           // (5) 
+  mpSibSources,           // (6)
+  mpPoints                // (7)
+  mpVehicles              // (8)
+  mpEmissions             // (9)
+  mpSharedVision,         // (10) 
+  mpFlags,                // (11) 
+  mpSibDetection,         // (12) 
+  mpPeopleRespawn,        // (13) 
+  mpApemans,              // (14) 
+  mpSibBomb,              // (17) 
+  mpBuildUpTime,          // (20) 
+}
+
+mpGameSettingsKeys := [
+  1, // 0
+  1, // 1
+  1, // 2
+  1, // 3
+  1, // 4
+  1, // 5
+  1, // 6
+  1, // 7
+  1, // 8
+  1, // 9
+  1, // 10
+  1, // 11
+  1, // 12
+  1, // 13
+  1, // 14
+  0, // 15
+  0, // 16
+  1, // 17
+  0, // 18
+  0, // 19
+  1  // 20
+];
+
+mpGameSettingsValues := [
+  [0, 1, 2], // base level (only depot, breastworks, breastworks + armoury)
+  [9, 12, 15, 24], // amount of people
+  [1, 3, 5, 7], // people skill
+  [[0,0,0], [100,30,0], [200,75,10], [500,150,30]], // resources
+  [1, 2, 3, 4], // shipments
+  [0, 1, 2], // oil sources
+  [0, 1, 2], // sib sources
+  [250, 350, 500, 1000, 2000], // points
+  [0, 2], // vehicles
+  [0, 5$00, 10$00, 15$00, 20$00, 30$00], // emissions
+  [0, 1], // shared vision
+  [-1, 0$10, 0$20, 0$40, 0$0], // flag (morale time)
+  [0, 1], // sib detection
+  [0, 6$30, 3$30], // people respawn
+  [0, 2, 4, 6], // apemans
+  [],
+  [],
+  [0, 1, 15$0, 25$0, 30$0, 45$0, 60$0, 90$0, 100$0, 120$0, 180$0], // sib bomb
+  [],
+  [],
+  [0, 3$0, 5$0, 8$0, 10$0, 12$0, 15$0, 20$0, 30$0] // bt
+];
+
+// default settings
+mpGameSettings := [
+  2,   // base 0
+  15,  // people 1
+  4,   // skill  2
+  [100,30,0], // resources 3
+  3,   // shipments  4
+  1,   // oil 5
+  1,   // sib 6
+  250, // points 7
+  2,   // vehicles 8
+  5$00,   // emission 9
+  1,   // vision 10
+  0$20, // morale 11
+  1,   // detection 12
+  0$20,   // respawn 13
+  3,   // apemans  14
+  0,   // - 15
+  0,   // - 16
+  15$0, // sib bomb 17
+  0,   // - 18
+  0,   // - 19
+  3$0  // bt 20
+];
+              
+mpGameType := GameTypeNormal;
+your_side  := 1;
+
+mpSidePositions := [1,2,0,0,0,0,0,0];
+mpSideTeams     := [1,2,0,0,0,0,0,0];
+mpSideNations   := [1,2,0,0,0,0,0,0];
+mpTeams         := [[1],[2]];
+mpTeamGame      := true;
+mpMapSize       := [90, 120];
+End;
+
+Export kingArea, kingCamArea;
+Export function GetMultiplayerMapData(gameType);
+var i, all, hasOil, hasSib, baseLevel, startPos;
+begin
+mpBuildUpAreas := [
+  buildUpTime1,
+  buildUpTime2
+];
+
+mpMarkedAreas := [
+  Between1Area,
+  Between2Area,
+  Between3Area,
+  Between4Area,
+  CenterArea
+] union mpBuildUpAreas;
+
+if gameType = GameTypeSurvival then
+   baseLevel := 1
+else
+   baseLevel := mpGameSettings[1];
+
+mpPeopleAmount := mpGameSettings[2];
+mpPeopleSkill := mpGameSettings[3];
+mpStartingResources := mpGameSettings[4];
+mpShipments := mpGameSettings[5];
+hasOil := mpGameSettings[6] > 0;
+hasSib := mpGameSettings[7] > 0;
+
+mpKingArea := 0;
+mpPoints := 0;
+mpEmissions := 0;
+
+kingArea := 0;
+kingCamArea := 0;
+
+if mpGameSettings[9] then
+   begin         
+   mpVehicles := [
+     [
+        [us_light_wheeled, engine_combustion, control_manual, us_machine_gun],
+        [us_light_wheeled, engine_combustion, control_manual, us_light_gun]
+     ], // american
+     [
+        [ar_light_trike, engine_combustion, control_manual, ar_double_machine_gun],
+        [ar_light_trike, engine_combustion, control_manual, ar_light_gun]
+     ], // arabian
+     [
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun],
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun]
+     ]  // russian
+   ];
+   end;
+
+mpSharedVision := mpGameSettings[11];
+mpBattleFlag := mpGameSettings[12];
+mpSibDetection := mpGameSettings[13];
+mpRespawn := mpGameSettings[14];
+mpApemans := mpGameSettings[15];
+mpSibBomb := mpGameSettings[18];
+mpBuildUpTime := mpGameSettings[21];
+
+mpApemansArea := [
+  Base1ApeArea,
+  Base2ApeArea
+];
+
+startPos := [
+  GetBuildingFromArea(depotArea1, 2),
+  GetBuildingFromArea(depotArea2, 0)
+];
+
+for i := 1 to Count(startPos) do
+    mpStartPos := Replace(mpStartPos, i, [ShiftX(startPos[i][1], startPos[i][3], 10), ShiftY(startPos[i][2], startPos[i][3], 10)]);
+
+if hasOil then
+   begin
+   all := (mpGameSettings[6] = 2);
+
+   if all then
+      mpOilDeposits := [
+        GetSourcesFromArea(oilArea1, all),
+        GetSourcesFromArea(oilArea2, all)
+      ]
+   else
+      mpOilDeposits := [
+        [[49,3]],
+        [[108,117]]
+      ];
+   end;
+
+if hasSib then
+   begin
+   all := (mpGameSettings[7] = 2);
+
+   if all then
+      mpSibDeposits := [
+        GetSourcesFromArea(sibArea1, all),
+        GetSourcesFromArea(sibArea2, all)
+      ]
+   else
+      mpSibDeposits := [
+        [[52,2]],
+        [[110,115]]
+      ];
+   end;
+
+if baseLevel >= 1 then
+   mpDepots := startPos;
+
+if baseLevel >= 2 then
+   begin
+   mpBuildings := [
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea1a, 5),
+        b_breastwork ^ GetBuildingFromArea(bunArea1b, 1),
+        b_armoury ^ GetBuildingFromArea(armArea1, 5)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea2a, 3),
+        b_breastwork ^ GetBuildingFromArea(bunArea2b, 1),
+        b_armoury ^ GetBuildingFromArea(armArea2, 2)
+     ]
+   ];
+   end;
+End;
+
+
+// Crates drop
+Every 0$2 marked mpActive do
+var i, x, tmp, time, areas, normalTime, delayTime, maxTime;
+begin
+if not mpShipments then
+   exit;
+
+case mpShipments of
+     1: begin // rare
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 1$20;
+        delayTime := 0$5;
+        end;
+     2: begin // medium
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 1$10;
+        delayTime := 0$4;
+        end;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 1$00;
+        delayTime := 0$3;
+        end;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$55;
+        delayTime := 0$2;
+        end;
+     end;
+
+tmp := [buildUpTime1, buildUpTime2];
+areas := [Between1Area, Between2Area, Between3Area, Between4Area];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    areas := areas ^ tmp[mpSidePositions[i]];
+    end;
+
+x := 1;
+
+repeat
+ wait(time);
+ x := Inc(x);
+
+ if x > 5 then
+    x := 1;
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < 20 then
+        begin
+        CreateCratesArea(x, i, true);
+        end;
+     end;
+
+ if GetResourceArea(CenterArea, mat_cans) = 0 then
+    begin
+    for i := 1 to 3 do
+        CreateCratesArea(x, CenterArea, true);
+    end
+ else if GetResourceArea(CenterArea, mat_cans) < 30 then
+    CreateCratesArea(x, CenterArea, true);
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
+End;

@@ -10,11 +10,17 @@ else
 End;
 
 On UnitDestroyed(un) do
-var i, side, base, chassis, engine, control, weapon, tmp, factory, btype;
+var i, skill, side, base, chassis, engine, control, weapon, tmp, factory, btype;
 begin
 SOS_UnitDestroyed(un);
 
 side := GetSide(un);
+skill := tick div 10$00;
+
+if skill < 0 then
+   skill := 0
+else if skill > 7 then
+   skill := 7;
 
 if multi_sides[side] then
    if GetType(un) = unit_human then
@@ -43,7 +49,7 @@ if side in botSides then
          uc_side := botSides[1];
          uc_nation := nation_american;
 
-         PrepareMechanic(false, [1, 2, 3][Difficulty]);
+         PrepareMechanic(false, [1, 2, 3][Difficulty] + skill);
          un := CreateHuman;
          PlaceUnitXY(un, 52, 2, false);
 
@@ -52,7 +58,7 @@ if side in botSides then
          amForce := Join(amForce, un);
          end;
 
-      if GetType(un) = unit_building then
+      if GetType(un) = unit_building and IsInArea(un, amBaseArea) then
          begin
          btype := GetBType(un);
 
@@ -63,7 +69,7 @@ if side in botSides then
             btype := b_workshop;
 
          if btype in [b_lab_full, b_lab_half] then
-         btype := b_lab;
+            btype := b_lab;
 
          amBuildings := Replace(amBuildings, amBuildings + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
          end;
@@ -102,16 +108,16 @@ if side in botSides then
          uc_side := botSides[2];
          uc_nation := nation_arabian;
 
-         PrepareMechanic(false, [1, 2, 3][Difficulty]);
+         PrepareMechanic(false, [1, 2, 3][Difficulty] + skill);
          un := CreateHuman;
          PlaceUnitXY(un, 178, 2, false);
 
-         ComMoveXY(un, 204,35);
+         ComMoveXY(un, 204, 35);
 
          arForce := Join(arForce, un);
          end;
 
-      if GetType(un) = unit_building then
+      if GetType(un) = unit_building and IsInArea(un, amBaseArea) then
          begin
          btype := GetBType(un);
 
@@ -122,7 +128,7 @@ if side in botSides then
             btype := b_workshop;
 
          if btype in [b_lab_full, b_lab_half] then
-         btype := b_lab;
+            btype := b_lab;
 
          arBuildings := Replace(arBuildings, arBuildings + 1, [btype, GetX(un), GetY(un), GetDir(un)]);
          end;
@@ -205,14 +211,14 @@ if unit in arForceTmp and GetBType(building) = b_breastwork then
    exit;
    end;
 
-if HexInfo(44, 78) then
+if HexInfo(44, 78) and GetSide(unit) = 1 then
    begin
    ComMoveXY(unit, 26, 40);
    amForce := Join(amForce, unit);
    exit;
    end;
 
-if GetX(building) > 71 then
+if GetX(building) > 71 and GetSide(unit) = 1 then
    begin
    ComMoveXY(unit, 69, 39);
    AddComMoveXY(unit, 26, 40);

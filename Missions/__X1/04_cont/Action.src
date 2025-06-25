@@ -183,7 +183,10 @@ InGameOn;
 CenterNowOnUnits(Kurt);
 
 if IsInUnit(Heike) then
-   ComExitBuilding(Heike);
+   begin
+   ComExit(Heike);
+   wait(0$1);
+   end;
 
 ComMoveUnit([Kurt, Mike], Heike);
 AddComTurnUnit(Heike, Kurt);
@@ -195,9 +198,6 @@ if FilterAllUnits([[f_side, 2], [f_dist, Kurt, 10], [f_type, unit_building]]) th
    end;
 
 CenterOnUnits(Heike);
-
-if IsInUnit(Heike) then
-   ComExit(Heike);
 
 repeat
  wait(0$1);
@@ -259,6 +259,7 @@ RemoveSeeing(144, 65, 2);
 CenterOnXY(144, 65);
 
 Say(Kurt, 'DKs-scout-11');
+Say(Kurt, 'DKs-scout-12');
                                
 wait(0$1);
 
@@ -271,6 +272,8 @@ if Mike and not Givi then
    end;
 
 SetSide([Kurt, Mike], 2);
+
+ComStop([Kurt, Mike]);
 
 InGameOff;
 
@@ -304,7 +307,11 @@ for i := 1 to [3, 3, 2, 2][Difficulty] do
     PrepareTank(2, 2, ar_medium_trike, [engine_solar, engine_combustion][i mod 2 + 1], control_manual, [ar_gun, ar_gatling_gun, ar_gun, ar_light_gun, ar_light_gun][Difficulty + rand(0, 1)], 77);
     veh := CreateVehicle;
     SetDir(veh, 2);
-    PlaceUnitXYR(veh, 178, 2, 2, false);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitXYR(veh, 178, 2, 2, false);
+
     PlaceHumanInUnit(un, veh);
 
     ComMoveXY(un, 183, 11);

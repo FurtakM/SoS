@@ -53,6 +53,10 @@ function changeCategory(category)
     displayAchivs(category, -1, -1);
 end;
 
+-- [ID] = {}   (image of badges have to have name as achiev have ID)
+--         = {name,desc,show, request progress, type of progress}
+-- if show is false, desc will be hidden until achieve achievement
+-- type of progress - 0 set, 1 add, 2 task   (is ignored, when request progress is 0)
 function displayAchivs(category, filter, filterMission)
     local imgsize = 96;
 

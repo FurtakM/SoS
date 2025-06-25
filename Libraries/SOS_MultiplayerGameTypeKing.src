@@ -151,7 +151,13 @@ if not HasPower(your_side) then
    end
 else
    begin
-   canWin := (HowMuchPoints(your_side) >= mpPoints and HasPower(your_side)) or not EnemiesInGame;
+   if not EnemiesInGame then
+      begin
+      enable(mpWin);
+      exit;
+      end;
+
+   canWin := (HowMuchPoints(your_side) >= mpPoints and HasPower(your_side));
 
    for i := 1 to 8 do
        if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
@@ -175,11 +181,12 @@ begin
 result := false;
 
 for i := 1 to 8 do
-    if i <> your_side and HasPower(i) then
-       begin
-       result := true;
-       exit;
-       end;
+    if i <> your_side and HasPower(i) and MultiplayerSideAlive(i) then
+       if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+          begin
+          result := true;
+          exit;
+          end;
 End;
 
 Function CanWinLoose;
