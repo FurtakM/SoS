@@ -1,7 +1,7 @@
 # Sand of Siberia
 Official repository of Sand of Siberia - modification for Original War game.
 
-### Actual version - v1.6.7
+### Actual version - v1.6.12
 
 ### Links
 > Official website: https://sand-of-siberia.pl
