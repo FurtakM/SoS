@@ -129,7 +129,7 @@ Difficulty := [1, 2, 3][multi_settings[1]];
 // others settings
 multi_pep_amount := [6, 7, 8, 9][multi_settings[2]];
 multi_skill_level := [2, 3, 4, 5][multi_settings[3]];
-multi_crates_spawn := [ [3000, 0$32], [5000, 0$22], [6000, 0$14], [8000, 0$12] ][multi_settings[4]];
+multi_crates_spawn := [ [3600, 0$32], [5600, 0$22], [6800, 0$14], [9000, 0$12] ][multi_settings[4]];
 multi_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
@@ -386,7 +386,7 @@ for i := 1 to 8 do
           for j := 1 to 3 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), rand(1, 4));
+              PrepareHuman(false, rand(1,4), 3);
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -399,7 +399,7 @@ for i := 1 to 8 do
           for j := 1 to 5 do
               begin
               InitHC_All();
-              PrepareHuman(false, rand(1,4), rand(2, 4));
+              PrepareHuman(false, rand(1,4), 5);
               tmp := tmp ^ CreateHuman;
               end;
           end;
@@ -448,7 +448,67 @@ for i := 1 to 8 do
 repeat
  wait(0$1);
 
- if tick = 10$00 then
+ if tick = 10$00 and multi_support then
+    begin
+    for i := 1 to 8 do
+        begin
+        if multi_sides[i] and not multi_loosers[i] then
+           begin
+           for j := 1 to 2 do
+               begin
+               uc_side := i;
+               uc_nation := nation_russian;
+
+               PrepareVehicle(ru_medium_wheeled, engine_combustion, control_manual, [ru_gun, ru_gatling_gun, ru_heavy_machine_gun][Difficulty], 30);
+               veh := CreateVehicle;
+
+               repeat
+                wait(0$1);
+               until PlaceUnitArea(veh, southSpawnArea, false);
+
+               uc_side := i;
+               uc_nation := nation_russian;
+
+               PrepareMechanic(false, 5 - Difficulty);
+               PlaceHumanInUnit(CreateHuman, veh);
+
+               ComMoveXY(veh, 158, 106);
+               end;
+           end;
+        end;
+    end;
+
+ if tick = 20$00 and multi_support then
+    begin
+    for i := 1 to 8 do
+        begin
+        if multi_sides[i] and not multi_loosers[i] then
+           begin
+           for j := 1 to 2 do
+               begin
+               uc_side := i;
+               uc_nation := nation_russian;
+
+               PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_gun, 30);
+               veh := CreateVehicle;
+
+               repeat
+                wait(0$1);
+               until PlaceUnitArea(veh, southSpawnArea, false);
+
+               uc_side := i;
+               uc_nation := nation_russian;
+
+               PrepareMechanic(false, 6 - Difficulty);
+               PlaceHumanInUnit(CreateHuman, veh);
+
+               ComMoveXY(veh, 158, 106);
+               end;
+           end;
+        end;
+    end;
+
+ if tick = 30$00 and multi_support then
     begin
     for i := 1 to 8 do
         begin
@@ -457,13 +517,35 @@ repeat
            uc_side := i;
            uc_nation := nation_russian;
 
-           PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_gun, ru_gun, ru_heavy_machine_gun][Difficulty], 30);
+           PrepareVehicle(ru_heavy_tracked, engine_combustion, control_manual, ru_heavy_gun, 30);
            veh := CreateVehicle;
-           PlaceUnitArea(veh, southSpawnArea, false);
-           PrepareMechanic(false, 5 - Difficulty);
+
+           repeat
+            wait(0$1);
+           until PlaceUnitArea(veh, southSpawnArea, false);
+
+           uc_side := i;
+           uc_nation := nation_russian;
+
+           PrepareMechanic(false, 7 - Difficulty);
            PlaceHumanInUnit(CreateHuman, veh);
 
            ComMoveXY(veh, 158, 106);
+
+           for j := 1 to 2 do
+               begin
+               uc_side := i;
+               uc_nation := nation_russian;
+
+               PrepareSoldier(false, 7 - Difficulty);
+               un := CreateHuman;
+
+               repeat
+                wait(0$1);
+               until PlaceUnitArea(un, southSpawnArea, false);
+
+               ComMoveXY(un, 158, 106);
+               end;
            end;
         end;
     end;

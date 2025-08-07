@@ -110,3 +110,8 @@ function playNextTrack()
     changeBackgroundMenuImage();
     SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC);
 end;
+
+function playNextTrackClick()
+    sound.finish(SOS_MUSIC_MENU_ID);
+    playNextTrack();
+end;

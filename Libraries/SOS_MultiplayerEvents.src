@@ -121,12 +121,12 @@ for i := 1 to mpGlobalOilDeposits do
     if HexInfo(mpGlobalOilDeposits[i][1], mpGlobalOilDeposits[i][2]) = building then
        begin
        value := mpGlobalOilDeposits[i][3]; 
-       value := Dec(value);
+       value := value - amount;
 
        mpGlobalOilDeposits := Replace(mpGlobalOilDeposits, i, Replace(mpGlobalOilDeposits[i], 3, value));
        SetUnitDisplayNumber(building, value);
 
-       if value = 0 then
+       if value <= 0 then
           begin
           RemoveDepositXY(mpGlobalOilDeposits[i][1], mpGlobalOilDeposits[i][2]);
           KillUnit(building);
@@ -147,12 +147,12 @@ for i := 1 to mpGlobalSibDeposits do
     if HexInfo(mpGlobalSibDeposits[i][1], mpGlobalSibDeposits[i][2]) = building then
        begin
        value := mpGlobalSibDeposits[i][3];
-       value := Dec(value);
+       value := value - amount;
 
        mpGlobalSibDeposits := Replace(mpGlobalSibDeposits, i, Replace(mpGlobalSibDeposits[i], 3, value));
        SetUnitDisplayNumber(building, value);
 
-       if value = 0 then
+       if value <= 0 then
           begin
           RemoveDepositXY(mpGlobalSibDeposits[i][1], mpGlobalSibDeposits[i][2]);
           KillUnit(building);
@@ -160,6 +160,51 @@ for i := 1 to mpGlobalSibDeposits do
           end;
        end;
     end;
+End;
+
+Export function Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
+var side;
+begin
+side := GetSide(factory);
+
+if weapon = ar_miner and FilterAllUnits([[f_side, side], [f_weapon, ar_miner]]) > 0 then
+   begin
+   ComCancel(factory);
+
+   if side = your_side then
+      HintSpec('VehLimit', 2);
+   end;
+End;
+
+Export function Multiplayer_VehicleCaptured(newId, oldId, oldSide, unit);
+var i, j;
+begin
+if GetWeapon(newId) = ar_miner and GetControl(newId) = control_manual then
+   begin
+   for i := 1 to Count(minersList) do
+       begin
+       if minersList[i] = oldId then
+          begin
+          for j := 1 to minerMinesList[i] do
+              RemoveMineXY(minerMinesList[i][j][1], minerMinesList[i][j][2]);
+
+          minerMinesList := Delete(minerMinesList, i);
+          break;
+          end;
+       end;
+
+   minersList := minersList diff oldId;
+
+   if FilterAllUnits([[f_side, GetSide(unit)], [f_weapon, ar_miner]]) > 1 then
+      begin
+      ComExit(unit);
+      SetSide(newId, oldSide);
+      exit;
+      end;   
+
+   minersList := Replace(minersList, minersList + 1, newId);
+   minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
+   end;
 End;
 
 

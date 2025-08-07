@@ -20,14 +20,14 @@ arMinesList := [];
 arMechSpawnCounter := [8, 11, 12][Difficulty];
 
 PlaceHiddenCamerasInArea(side, hiddenCamArea);
-PlaceMines(minefieldArea, [7, 9, 11][Difficulty]);
+PlaceMines(minefieldArea, [12, 14, 16][Difficulty]);
 
 skill := [3, 4, 5][Difficulty];
 
 uc_side := side;
 uc_nation := 2;
 
-arForce := PrepareBase(arDep, arBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 4, 6, 3]);
+arForce := PrepareBase(arDep, arBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 6, 6, 3]);
 arForceTmp := [];
 
 for i in FilterAllUnits([[f_side, side], [f_btype, b_breastwork], [f_not, [f_inarea, arBaseArea]], [f_empty]]) do
@@ -513,14 +513,19 @@ for i := 1 to Count(arMinesList) div 2 do
     end;
 End;
 
-Every 3$00 trigger IsOk(arDep) and not arConstructList do
+Every 3$00 trigger IsOk(arDep) and FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) do
+var i;
 begin
 enable;
 
-arConstructList := [
-   [ar_half_tracked, engine_combustion, control_manual, ar_gun],
-   [ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower],
-   [ar_half_tracked, engine_combustion, control_manual, ar_gun]
-];
+for i in FilterAllUnits([[f_side, 2], [f_btype, b_factory]]) do
+    if BuildingStatus(i) = bs_idle and UnitsInside(i) > 0 then
+       begin
+       arConstructList := [
+         [ar_half_tracked, engine_combustion, control_manual, ar_gun],
+         [ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower],
+         [ar_half_tracked, engine_combustion, control_manual, ar_gun]
+       ];
+       end;
 End;
 

@@ -1,0 +1,184 @@
+// GameTypeArmsRace = 6
+// Init
+Every 0$1 trigger mpGameActive marked GameTypeArmsRace do
+var i, j, k, techs, hasCameras, cameras, resource, depot, b, un, type, buildings, side, nation;
+begin
+for i := 1 to 8 do
+    begin
+    hasCameras := false;
+
+    if mpSideTeams[i] = 1 and mpSidePositions[i] then
+       begin
+       side := i;
+       nation := mpSideNations[i];
+
+       depot := FilterAllUnits([[f_side, side], [f_btype, b_warehouse]]);
+
+       for j := 1 to mpStartingResources do
+           begin
+           resource := mpStartingResources[j];
+
+           if not resource then
+              resource := 30;
+
+           SetResourceType(GetBase(depot[1]), j, resource * 2);
+           end;
+
+       uc_side := side;
+
+       // fog
+       PlaceSeeing(1, 1, side, -32793);
+       RemoveSeeing(1, 1, side);
+
+       if nation = nation_arabian and not hasCameras then
+          begin
+          hasCameras := true;
+          PlaceHiddenCamerasInArea(side, camsArea);
+          end;
+
+       // techs
+       techs := GetTechNation(side, nation, -1) diff [
+                                                        tech_bio3, tech_bio2, tech_bio1, tech_comp3, tech_comp2, tech_comp1,
+                                                        tech_opto3, tech_opto2, tech_sib3, tech_sib2, tech_weap3, tech_weap2,
+                                                        tech_radmat, tech_artillery, tech_sibimplosion, tech_behemoth, tech_sibfiss
+                                                     ];
+
+       for j in techs do
+           SetTech(j, side, state_researched);
+
+       // vehicles
+       PrepareArmsRaceVehiclesList(mpSidePositions[i], side, nation);
+
+       // buildings 
+       buildings := GetArmsRaceBuildingsList(mpSidePositions[i]);
+
+       for j in buildings do
+           begin
+           uc_nation := nation;
+
+           if j[1] = b_bunker and nation in [nation_american, nation_russian] then
+              type := b_turret
+           else if j[1] = b_lab then
+              type := b_lab_full
+           else
+              type := j[1];
+
+           bc_level := 10;
+           bc_type := type;
+
+           bc_kind1 := -1;
+           bc_kind2 := -1;
+
+           if j[1] = b_lab then
+              begin
+              bc_kind1 := b_lab_weapon;
+              bc_kind2 := b_lab_siberium;
+              end;
+
+           b := CreateAndPlaceBuildingXYD(j[2], j[3], j[4]);
+
+           if j[1] = b_depot then
+              begin
+              SetBName(b, '@' & side);
+
+              for k := 1 to 2 do
+                  begin
+                  PrepareApemanEngineer();
+                  PlaceHumanInUnit(CreateHuman, b);
+                  end;
+
+              for k := 1 to mpStartingResources do
+                  begin
+                  resource := mpStartingResources[k];
+
+                  if resource then
+                     SetResourceType(GetBase(b), k, resource div 2);
+                  end;
+              end;
+
+           if j[1] = b_bunker and nation = nation_arabian then
+              begin
+              PrepareApemanSoldier();
+              PlaceHumanInUnit(CreateHuman, b);
+              end;
+
+           if Count(j) > 4 and j[1] = b_bunker then
+              PlaceWeaponTurret(b, j[5][nation]);
+           end;
+       end
+    else
+       // SetRestrict(b_depot, i, state_disabled);
+    end;  
+
+repeat
+ mpDisplayStrings := ['#TimeToWin', (mpBuildUpTime + mpTimeToWin) - tick];
+
+ if mpBuildUpTime > tick then
+    mpDisplayStrings := mpDisplayStrings ^ ['#PrepareTime', mpBuildUpTime - tick];
+
+ wait(0$1);
+
+ if ((30$0 + mpBuildUpTime) = tick) then
+    begin
+    for i := 1 to 8 do
+        if mpSideTeams[i] = 1 and mpSidePositions[i] then
+           SetTech(tech_SibFiss, i, state_enabled);
+    end;
+
+until (mpBuildUpTime + mpTimeToWin) <= tick;
+
+if mpSideTeams[your_side] = 1 then
+   enable(mpWin)
+else
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end;
+End;
+
+// Conditions: destroy all enemies by killing all of his human and computer units
+Every 0$3 trigger mpGameActive and CanWinLoose and Multiplayer marked GameTypeArmsRace do
+var i, canWin;
+begin
+canWin := false;
+
+if not HasPower(your_side) then
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end
+else
+   begin
+   canWin := true;
+
+   for i := 1 to 8 do
+       if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+          if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+             if HasPower(i) then
+                begin
+                canWin := false;
+                break;
+                end;
+
+   if canWin then
+      enable(mpWin)
+   else
+      enable;
+   end;
+End;
+
+Function CanWinLoose;
+begin
+result := true;
+
+//if IAmServer and PlayerCount > 0 then
+//   result := false;
+
+if IAmSpec and PlayerCount > 1 then
+   result := false;
+End;
+
+Function HasPower(i);
+begin
+result := FilterAllUnits([[f_side, i], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]);
+End;

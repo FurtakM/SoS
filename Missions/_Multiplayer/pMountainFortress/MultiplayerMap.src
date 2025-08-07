@@ -1,0 +1,477 @@
+// Multiplayer map module
+// Each map has his own
+// SOS_Multiplayer required
+Export function InitMultiplayerSettings;
+begin
+{
+  mpBaseLevel,            // (0)  
+  mpAmountOfPeople,       // (1)  
+  mpSkillLevel,           // (2)  
+  mpStartingResources,    // (3)  
+  mpShipments,            // (4)  
+  mpOilSources,           // (5) 
+  mpSibSources,           // (6)
+  mpPoints                // (7)
+  mpVehicles              // (8)
+  mpEmissions             // (9)
+  mpSharedVision,         // (10) 
+  mpFlags,                // (11) 
+  mpSibDetection,         // (12) 
+  mpPeopleRespawn,        // (13) 
+  mpApemans,              // (14) 
+  mpSibBomb,              // (17) 
+  mpBuildUpTime,          // (20)
+  mpTimeToWin             // (21)
+}
+
+mpGameSettingsKeys := [
+  0, // 0
+  1, // 1
+  1, // 2
+  1, // 3
+  1, // 4
+  1, // 5
+  1, // 6
+  0, // 7
+  0, // 8
+  0, // 9
+  1, // 10
+  0, // 11
+  0, // 12
+  1, // 13
+  1, // 14
+  0, // 15
+  0, // 16
+  0, // 17
+  0, // 18
+  0, // 19
+  1, // 20
+  1, // 21
+];
+
+mpGameSettingsValues := [
+  [], // base level (only depot, breastworks, breastworks + armoury)
+  [9, 12, 15, 24], // amount of people
+  [3, 5, 7, 9], // people skill
+  [[0,0,0], [1000,300,0], [2000,750,100], [3000,1500,300]], // resources
+  [1, 2, 3, 4], // shipments
+  [0, 1, 2], // oil sources
+  [0, 1, 2], // sib sources
+  [], // points
+  [], // vehicles
+  [], // emissions
+  [0, 1], // shared vision
+  [], // flag (morale time)
+  [], // sib detection
+  [0, 6$30, 3$30], // people respawn
+  [0, 2, 4, 6], // apemans
+  [],
+  [],
+  [0, 1, 15$0, 25$0, 30$0, 45$0, 60$0, 90$0, 100$0, 120$0, 180$0], // sib bomb
+  [],
+  [],
+  [5$0, 10$0, 15$0, 20$0], // bt
+  [60$0, 90$0, 120$0], // time to win
+];
+
+// default settings
+mpGameSettings := [
+  0,   // base 0
+  24,  // people 1
+  4,   // skill  2
+  [1000,300,0], // resources 3
+  3,   // shipments  4
+  1,   // oil 5
+  2,   // sib 6
+  0, // points 7
+  0,   // vehicles 8
+  0,   // emission 9
+  1,   // vision 10
+  -1, // morale 11
+  0,   // detection 12
+  0$20,   // respawn 13
+  3,   // apemans  14
+  0,   // - 15
+  0,   // - 16
+  0, // sib bomb 17
+  0,   // - 18
+  0,   // - 19
+  3$0,  // bt 20
+  60$0 // time 21
+];
+              
+mpGameType := GameTypeArmsRace;
+your_side  := 3;
+
+mpSidePositions := [3,2,1,4,5,6,7,8];
+mpSideTeams     := [2,1,1,2,2,2,2,2];
+mpSideNations   := [3,2,3,1,2,3,1,2];
+mpTeams         := [[3,2],[1,4,5,6,7,8]];
+mpTeamGame      := true;
+mpMapSize       := [140, 250];
+End;
+
+Export kingArea, kingCamArea;
+Export function GetMultiplayerMapData(gameType);
+var i, all, hasOil, hasSib, baseLevel, startPos;
+begin
+mpBuildUpAreas := [
+  buildUpNorthArea,
+  buildUpNorthArea,
+  buildUpSouthArea,
+  buildUpSouthArea,
+  buildUpSouthArea,
+  buildUpSouthArea,
+  buildUpSouthArea,
+  buildUpSouthArea
+];
+
+mpMarkedAreas := [
+
+] union mpBuildUpAreas;
+
+if gameType in [GameTypeSurvival, GameTypeArmsRace] then
+   baseLevel := 1
+else
+   baseLevel := mpGameSettings[1];
+
+mpPeopleAmount := mpGameSettings[2];
+mpPeopleSkill := mpGameSettings[3];
+mpStartingResources := mpGameSettings[4];
+mpShipments := mpGameSettings[5];
+hasOil := mpGameSettings[6] > 0;
+hasSib := mpGameSettings[7] > 0;
+
+kingCamArea := 0;
+kingArea := 0;
+
+if gameType = GameTypeKing then
+   begin
+   mpKingArea := 0;
+   mpPoints := mpGameSettings[8];
+   mpEmissions := mpGameSettings[10];
+   end
+else
+   begin
+   mpKingArea := 0;
+   mpPoints := 0;
+   mpEmissions := 0;
+   end;
+
+mpVehicles := [
+     [
+        [us_morphling, engine_siberite, control_manual, us_heavy_gun],
+        [us_morphling, engine_siberite, control_manual, us_heavy_gun],
+        [us_morphling, engine_siberite, control_computer, us_cargo_bay]
+     ], // american
+     [
+        [ar_half_tracked, engine_siberite, control_manual, ar_gun],
+        [ar_half_tracked, engine_siberite, control_manual, ar_gun],
+        [ar_half_tracked, engine_siberite, control_apeman, ar_cargo_bay]
+     ], // arabian
+     [
+        [ru_heavy_wheeled, engine_siberite, control_manual, ru_heavy_gun],
+        [ru_heavy_wheeled, engine_siberite, control_manual, ru_heavy_gun],
+        [ru_medium_wheeled, engine_siberite, control_computer, ru_cargo_bay]
+     ]  // russian
+];
+
+mpSharedVision := mpGameSettings[11];
+mpBattleFlag := mpGameSettings[12];
+mpSibDetection := mpGameSettings[13];
+mpRespawn := mpGameSettings[14];
+mpApemans := mpGameSettings[15];
+mpSibBomb := mpGameSettings[18];
+mpBuildUpTime := mpGameSettings[21];
+mpTimeToWin := mpGameSettings[22];
+
+mpApemansArea := [
+  base1ApeArea,
+  base2ApeArea,
+  base3ApeArea,
+  base4ApeArea,
+  base5ApeArea,
+  base6ApeArea,
+  base7ApeArea,
+  base8ApeArea
+];
+
+startPos := [
+  GetBuildingFromArea(depotArea1, 2),
+  GetBuildingFromArea(depotArea2, 3),
+  GetBuildingFromArea(depotArea3, 0),
+  GetBuildingFromArea(depotArea4, 1),
+  GetBuildingFromArea(depotArea5, 0),
+  GetBuildingFromArea(depotArea6, 5),
+  GetBuildingFromArea(depotArea7, 5),
+  GetBuildingFromArea(depotArea8, 4)
+];
+
+for i := 1 to Count(startPos) do
+    mpStartPos := Replace(mpStartPos, i, [ShiftX(startPos[i][1], startPos[i][3], 10), ShiftY(startPos[i][2], startPos[i][3], 10)]);
+
+if hasOil then
+   begin
+   all := (mpGameSettings[6] = 2);
+
+   mpOilDeposits := [
+        GetSourcesFromArea(oilArea1, all),
+        GetSourcesFromArea(oilArea2, all),
+        GetSourcesFromArea(oilArea3, all),
+        GetSourcesFromArea(oilArea4, all),
+        GetSourcesFromArea(oilArea5, all),
+        GetSourcesFromArea(oilArea6, all),
+        GetSourcesFromArea(oilArea7, all),
+        GetSourcesFromArea(oilArea8, all)
+   ];
+   end;
+
+if hasSib then
+   begin
+   all := (mpGameSettings[7] = 2);
+
+   mpSibDeposits := [
+        GetSourcesFromArea(sibArea1, all),
+        GetSourcesFromArea(sibArea2, all),
+        GetSourcesFromArea(sibArea3, all),
+        GetSourcesFromArea(sibArea4, all),
+        GetSourcesFromArea(sibArea5, all),
+        GetSourcesFromArea(sibArea6, all),
+        GetSourcesFromArea(sibArea7, all),
+        GetSourcesFromArea(sibArea8, all)
+   ];
+   end;
+
+if baseLevel >= 1 then
+   mpDepots := startPos;
+
+End;
+
+
+// Crates drop
+Every 0$2 marked mpActive do
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
+begin
+if not mpShipments then
+   exit;
+
+case mpShipments of
+     1: begin // rare
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 1$20;
+        delayTime := 0$5;
+        end;
+     2: begin // medium
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 1$10;
+        delayTime := 0$4;
+        end;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 1$00;
+        delayTime := 0$3;
+        end;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$55;
+        delayTime := 0$2;
+        end;
+     end;
+
+areas := [cratesArea1, cratesArea2, cratesArea3, cratesArea4, cratesArea5, cratesArea6];
+tmp := [0, 0, playerCratesArea3, playerCratesArea4, playerCratesArea5, playerCratesArea6, playerCratesArea7, playerCratesArea8];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] or tmp[mpSidePositions[i]] = 0 then
+       continue;
+
+    areas := areas ^ tmp[mpSidePositions[i]];
+    end;
+
+x := 1;
+
+repeat
+ wait(time);
+ x := Inc(x);
+
+ if x > 5 then
+    x := 1;
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < 30 then
+        begin
+        CreateCratesArea(x, i, true);
+        end;
+     end;
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
+End;
+
+Export function PrepareArmsRaceVehiclesList(pos, side, nation);
+var i, j;
+begin
+if nation = nation_american then
+   begin
+   uc_nation := nation_american;
+
+   for j := 1 to 2 do
+       begin
+       PrepareVehicle(us_morphling, engine_siberite, control_manual, us_autoloader, 100);
+
+       uc_direction := 2;
+
+       PlaceUnitXYR(CreateVehicle, 76, 18, 10, false);
+       end;
+
+   for j := 1 to 3 do
+       begin
+       PrepareVehicle(us_morphling, engine_siberite, control_computer, us_double_laser, 100);
+
+       uc_direction := 2;
+
+       PlaceUnitXYR(CreateVehicle, 76, 18, 10, false);
+       end;
+   end;
+
+if nation = nation_russian then
+   begin
+   uc_nation := nation_russian;
+
+   PrepareVehicle(ru_behemoth, engine_siberite, control_computer, ru_behemoth, 100);
+
+   uc_direction := 2;
+
+   for j := 1 to 2 do
+       PlaceUnitXYR(CreateVehicle, 104, 59, 10, false);
+   end;
+
+if nation = nation_arabian then
+   begin
+   uc_nation := nation_arabian;
+
+   PrepareVehicle(ar_half_tracked, engine_siberite, control_manual, ar_miner, 100);
+
+   uc_direction := 2;
+
+   for j := 1 to 3 do
+       PlaceUnitXYR(CreateVehicle, 81, 30, 8, false);
+   end;
+
+uc_nation := nation;
+uc_direction := 2;
+
+case nation of
+     1: begin
+        PrepareVehicle(us_morphling, engine_siberite, control_computer, us_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(us_morphling, engine_siberite, control_computer, us_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(us_morphling, engine_siberite, control_computer, us_radar, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+        end;
+     2: begin
+        PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, ar_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, ar_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(ar_half_tracked, engine_siberite, control_apeman, ar_radar, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+        end;
+     3: begin
+        PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_crane, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+
+        PrepareVehicle(ru_medium_tracked, engine_siberite, control_computer, ru_radar, 100);
+        PlaceUnitXYR(CreateVehicle, 104, 59, 6, false);
+        end;
+     end;
+
+for i in FilterAllUnits([f_weapon, ar_miner]) do
+    begin
+    if not i in minersList then
+       begin
+       minersList := Replace(minersList, minersList + 1, i);
+       minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
+       end
+    end;
+End;
+
+Export function GetArmsRaceBuildingsList(pos);
+begin
+case pos of
+     1: begin
+        result := [
+              b_depot ^ GetBuildingFromArea(dep1Area1, 2),
+              b_depot ^ GetBuildingFromArea(dep2Area1, 2),
+              b_depot ^ GetBuildingFromArea(dep3Area1, 2),
+              b_siberite_power ^ GetBuildingFromArea(pw1Area1, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw2Area1, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw3Area1, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw4Area1, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw5Area1, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw6Area1, 5),
+              b_barracks ^ GetBuildingFromArea(arm1Area1, 5),
+              b_barracks ^ GetBuildingFromArea(arm2Area1, 0),
+              b_lab ^ GetBuildingFromArea(lab1Area1, 4),
+              b_factory ^ GetBuildingFromArea(fac1Area1, 1),
+              b_bunker ^ GetBuildingFromArea(tw1Area1, 0) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw2Area1, 0) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw3Area1, 0) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw4Area1, 0) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw5Area1, 0) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw6Area1, 0) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw7Area1, 0) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw8Area1, 0) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw9Area1, 0) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw10Area1, 0) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw11Area1, 0) ^ [[us_gatling_gun, ar_gatling_gun, ru_gatling_gun]]
+        ];
+        end;
+     2: begin
+        result := [
+              b_depot ^ GetBuildingFromArea(dep1Area2, 3),
+              b_depot ^ GetBuildingFromArea(dep2Area2, 2),
+              b_depot ^ GetBuildingFromArea(dep3Area2, 3),
+              b_siberite_power ^ GetBuildingFromArea(pw1Area2, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw2Area2, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw3Area2, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw4Area2, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw5Area2, 5),
+              b_siberite_power ^ GetBuildingFromArea(pw6Area2, 5),
+              b_barracks ^ GetBuildingFromArea(arm1Area2, 0),
+              b_barracks ^ GetBuildingFromArea(arm2Area2, 5),
+              b_lab ^ GetBuildingFromArea(lab1Area2, 1),
+              b_factory ^ GetBuildingFromArea(fac1Area2, 4),
+              b_bunker ^ GetBuildingFromArea(tw1Area2, 5) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw2Area2, 5) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw3Area2, 5) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw4Area2, 5) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw5Area2, 5) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw6Area2, 5) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw7Area2, 5) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw8Area2, 5) ^ [[us_laser, ar_gun, ru_heavy_gun]],
+              b_bunker ^ GetBuildingFromArea(tw9Area2, 5) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw10Area2, 5) ^ [[us_rocket_launcher, ar_rocket_launcher, ru_rocket_launcher]],
+              b_bunker ^ GetBuildingFromArea(tw11Area2, 5) ^ [[us_gatling_gun, ar_gatling_gun, ru_gatling_gun]]
+        ];
+        end;
+     end;
+End;

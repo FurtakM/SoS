@@ -1,3 +1,5 @@
+MAP_DESCRIPTION_WINDOW_ACTIVE = false;
+
 dialog.map = getDialogEX(
 	dialog.back,
 	anchorNone,
@@ -61,6 +63,24 @@ dialog.map.btnPage3 = getImageButtonEX(
     loc(9906),
     '',
     'showMapDescriptionPage(3);',
+    SKINTYPE_BUTTON,
+    {
+    	font_colour_disabled = GRAY(127)
+    }
+);
+
+dialog.map.btnPage4 = getImageButtonEX(
+	dialog.map,
+	anchorT,
+	XYWH(
+		380,
+		16,
+		120,
+		24
+	),
+    'Netstat',
+    '',
+    'showMapDescriptionPage(4);',
     SKINTYPE_BUTTON,
     {
     	font_colour_disabled = GRAY(127)
@@ -295,6 +315,37 @@ sgui_set(
 	dialog.map.page3.panel.textboxscroll.ID
 );
 
+-- PAGE 4
+dialog.map.page4 = getElementEX(
+	dialog.map,
+	anchorLTRB,
+	XYWH(
+		20, 
+		74, 
+		dialog.map.width - 40, 
+		dialog.map.height - 140
+	),
+	false,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
+dialog.map.page4.panel = getElementEX(
+	dialog.map.page4,
+	anchorLTRB,
+	XYWH(
+		0, 
+		0, 
+		dialog.map.page4.width,
+		dialog.map.page4.height
+	),
+	true,
+	{
+		colour1 = BLACKA(0)
+	}
+);
+
 dialog.map.ok = getImageButtonEX(
 	dialog.map,
 	anchorB,
@@ -306,7 +357,7 @@ dialog.map.ok = getImageButtonEX(
 	),
     'OK',
     '',
-    'HideDialog(dialog.map);OW_FORM_CLOSE(dialog.map.FORMID,OK);',
+    'HideDialog(dialog.map);OW_FORM_CLOSE(dialog.map.FORMID,OK);MAP_DESCRIPTION_WINDOW_ACTIVE=false;',
     SKINTYPE_BUTTON,
     {
     	font_colour_disabled = GRAY(127)
@@ -314,8 +365,13 @@ dialog.map.ok = getImageButtonEX(
 );
 
 function showMapDescription()
+	MAP_DESCRIPTION_WINDOW_ACTIVE = true;
 	refreshPlayersPage();
 	ShowDialog(dialog.map);
+
+	if (getVisible(dialog.map.page4)) then
+		refreshPlayersPingPage();
+	end;
 end;
 
 function showMapDescriptionPage(PAGE)
@@ -327,6 +383,11 @@ function showMapDescriptionPage(PAGE)
 	end;
 
 	setVisible(dialog.map.page3, PAGE == 3);
+	setVisible(dialog.map.page4, PAGE == 4);
+
+	if (PAGE == 4) then
+		refreshPlayersPingPage();
+	end;
 end
 
 function setMapDescription(TEXT)
@@ -343,6 +404,91 @@ function turnMapDescription(MODE)
 	if (MODE == false) then
 		mapDescription('', '', nil, nil, nil, nil);
 	end;
+end;
+
+function refreshPlayersPingPage()
+	if (not getVisible(dialog.map.page4) or not MAP_DESCRIPTION_WINDOW_ACTIVE) then
+		return;
+	end;
+
+	sgui_deletechildren(dialog.map.page4.panel.ID);
+
+	if (MULTI_PLAYERINFO_CURRENT_PLID == nil or MULTIPLAYER_ROOM_PING_DATA == nil) then
+		local info = getLabelEX(
+			dialog.map.page4.panel,
+			anchorLTRB,
+			XYWH(15, 3, 60, 16),
+			nil,
+			loc(874),
+			{
+				font_name = Tahoma_16B,
+				colour1 = WHITEA(),
+				font_colour = WHITE(),
+				text_halign = ALIGN_LEFT,
+				text_valign = ALIGN_MIDDLE,
+				shadowtext = true
+			}
+		);	
+
+		return;
+	end;
+
+	local PLAYERS = copytable(MULTI_PLAYERINFO_CURRENT_PLID);
+	local NETSTAT_DATA = copytable(MULTIPLAYER_ROOM_PING_DATA);
+
+	if (PLAYERS ~= nil and #PLAYERS > 0) then
+		for i, v in pairs(PLAYERS) do
+			local player = v;
+			local pingData = '~';
+
+			for k, p in pairs(NETSTAT_DATA) do
+				if parseInt(p.PLID) == parseInt(player.PLID) then
+					if (parseInt(p.PING) == 65535) then
+						p.PING = 0;
+					end;
+
+					pingData = p.PING .. 'ms / ' .. p.PACKETS_LOST .. '% ' .. loc(9985) 
+								.. ' / ' .. p.PACKETS_SENT .. ' ' .. loc(9987) .. ' / ' .. p.PACKETS_RECIEVED .. ' ' .. loc(9986);
+					break;
+				end;
+			end;
+
+			local info = getLabelEX(
+				dialog.map.page4.panel,
+				anchorLTRB,
+				XYWH(15, 3 + ((i - 1) * 12), 520, 12),
+				nil,
+				i .. '. ' .. player.NAME .. ': ' .. pingData,
+				{
+					font_name = Tahoma_12,
+					colour1 = WHITEA(),
+					font_colour = WHITE(),
+					text_halign = ALIGN_LEFT,
+					text_valign = ALIGN_MIDDLE,
+					shadowtext = true,
+					scissor = true
+				}
+			);			
+		end;
+	else
+		local info = getLabelEX(
+			dialog.map.page4.panel,
+			anchorLTRB,
+			XYWH(15, 3, 30, 16),
+			nil,
+			loc(874),
+			{
+				font_name = Tahoma_16B,
+				colour1 = WHITEA(),
+				font_colour = WHITE(),
+				text_halign = ALIGN_LEFT,
+				text_valign = ALIGN_MIDDLE,
+				shadowtext = true
+			}
+		);	
+	end;
+
+	timer:single(2.5, 'refreshPlayersPingPage();');
 end
 
 function refreshPlayersPage()

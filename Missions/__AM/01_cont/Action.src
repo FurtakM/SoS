@@ -11,9 +11,10 @@ Wait(0$0.3);
 
 PlaceUnitXY(JMM, 80, 79, true);
 
-Wait(0$03);
+wait(0$03);
 
 ComMoveXY(JMM, 80, 76);
+
 Say(JMM, 'D1-JMM-1');
 
 Wait(0$0.3);
@@ -81,7 +82,7 @@ End;
 
 
 Every 0$01 trigger active_russian_dialog do
-var wait_points;
+var i, wait_points, tmp;
 begin
 wait_points := 0;
 
@@ -118,8 +119,16 @@ if Difficulty > 1 then
 
    if Difficulty > 2 then
       begin
-      AddComAgressiveMove(russian_troops_1, 65, 79);
-      wait_points := wait_points + 5;
+      AddComAgressiveMove(russian_troops_1, 63, 81);
+      wait_points := wait_points + 7;
+      end;
+
+   if Difficulty > 3 then
+      begin
+      AddComAgressiveMove(russian_troops_1[1], 56, 73);
+      AddComAgressiveMove(russian_troops_1[2], 89, 96);
+      AddComAgressiveMove(russian_troops_1, 67, 95);
+      wait_points := wait_points + 12;
       end;
    end;
 
@@ -131,13 +140,21 @@ repeat
     begin
     Say(russian_troops_1[2], 'D1Rb-Rus1-1');
     ComAgressiveMove(russian_troops_1, GetX(JMM), GetY(JMM));
-    Wait(0$03);
+    wait(0$03);
     end;
 
 until wait_points = 0;
 
 Say(russian_troops_1[2], 'D1Rc-Rus1-1');
 Say(russian_troops_1[1], 'D1Ra-Rus2-1a');
+
+tmp := FilterAllUnits([[f_side, 0], [f_distxy, 70, 89, 9]]);
+
+if tmp then
+   begin
+   ComAttackUnit(russian_troops_1, tmp[1]);
+   wait(0$4);
+   end;
 
 active_powell_dialog := true;
 
@@ -185,6 +202,12 @@ InGameOn;
 
 ComTurnUnit(JMM, Bobby);
 
+if not cyrus_in_squad then
+   begin
+   AddComAnim(JMM, 6);
+   AddComTurnUnit(JMM, Bobby);
+   end;
+
 if cyrus_in_squad and IsOk(Cyrus) and GetDistUnits(JMM, Cyrus) < 10 then
    begin
    ComMoveXY(Cyrus, GetX(JMM), GetY(JMM));
@@ -193,9 +216,10 @@ if cyrus_in_squad and IsOk(Cyrus) and GetDistUnits(JMM, Cyrus) < 10 then
 
 Say(JMM, 'D2-JMM-1');
 
+ComTurnUnit(Bobby, JMM);
+
 Wait(0$0.3);
 
-ComTurnUnit(Bobby, JMM);
 Say(Bobby, 'D2-Bobby-1');
 Say(JMM, 'D2-JMM-2');
 

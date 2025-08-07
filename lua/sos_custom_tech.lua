@@ -9,6 +9,11 @@ IT_LR_Bulldozer = 86;
 IT_LR_Hovercraft = 87;
 IT_LR_MultiBarrels = 88;
 IT_LR_EarlyDet = 89;
+IT_LR_PowOpt = 90;
+IT_LR_SibOre = 91;
+IT_LR_OilOre = 92;
+IT_LR_MineDetector = 93;
+IT_LR_Miner = 94;
 
 -- buttons.txt
 SOS_TECH = {
@@ -51,6 +56,26 @@ SOS_TECH = {
     {
         TECH = IT_LR_EarlyDet,
         BUTTON = 176
+    },
+    {
+        TECH = IT_LR_PowOpt,
+        BUTTON = 65
+    },
+    {
+        TECH = IT_LR_SibOre,
+        BUTTON = 61
+    },
+    {
+        TECH = IT_LR_OilOre,
+        BUTTON = 37
+    },
+    {
+        TECH = IT_LR_MineDetector,
+        BUTTON = 52
+    },
+    {
+        TECH = IT_LR_Miner,
+        BUTTON = 7
     }
 }
 

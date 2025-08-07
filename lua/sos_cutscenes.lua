@@ -1,3 +1,5 @@
+cutscene.onSeqEnd = 'setVisible(cutscene,false);OW_hidemouse(false);clearFocus();OW_SEQ_FINISH();OW_SET_VSYNC_VIDEOMODE(false);SEQ_VID_ID=-1;';
+
 function cutscene.doCutscene(FILENAME, RECIEVER, CALLBACK)
     setTexture(cutscene.video, 'black.png');
     
@@ -8,7 +10,7 @@ function cutscene.doCutscene(FILENAME, RECIEVER, CALLBACK)
     setFocus(cutscene.video);
     setVisible(cutscene, true);
 
-    setText(cutscene.subtitles,'');
+    setText(cutscene.subtitles, '');
 
     setVisible(cutscene.video.glare, RECIEVER);
     setVisible(cutscene.video.bord, RECIEVER);
@@ -46,4 +48,53 @@ function FROMOW_PLAYSEQ(SIDE, FILENAME)
     elseif SIDE == 5 then
         cutscene.doX2(FILENAME, cutscene.onSeqEnd);
     end;
+end;
+
+function FROMOW_VIDEO_SUBTITLE(TEXT)
+    setText(cutscene.subtitles, TEXT);
+end;
+
+SEQ_VID_ID = -1;
+SEQ_VID_NAME = '';
+SEQ_VID_EXT = '';
+
+function FROMOW_SEQ_VIDEO_UPDATE(ID, PLAYING, NAME)
+    if PLAYING then
+        SEQ_VID_ID = ID;
+
+        local setting = OW_SETTING_READ_NUMBER('OPTIONS', 'SUBTITLES', 4);
+
+        if (inArray({2, 4}, setting)) then
+            SEQ_VID_NAME, SEQ_VID_EXT = string.match(NAME, "([^%.]+)");
+
+            PlayCustomVideoSubtitles();
+        end;
+    else
+        setText(cutscene.subtitles, '');
+        SEQ_VID_NAME = '';
+        SEQ_VID_EXT = '';
+        SEQ_VID_ID = -1;
+    end;
+end;
+
+function PlayCustomVideoSubtitles();
+    if SEQ_VID_ID == -1 then
+        return;
+    end;
+
+    -- ładujemy z pliku odpowiedni fragment napisów wg. timestampa
+    if (strlen(SEQ_VID_NAME) and SOS_SUBTITLES[SEQ_VID_NAME] ~= nil) then
+        for i, v in pairs(SOS_SUBTITLES[SEQ_VID_NAME]) do
+            local t = VIDEO_TIME(SEQ_VID_ID);
+
+            if (t >= v.min and t <= v.max) then
+                setText(cutscene.subtitles, v.text);
+                break;
+            end;
+
+            setText(cutscene.subtitles, '');
+        end;
+    end;
+
+    timer:single(0.1, 'PlayCustomVideoSubtitles()');
 end;

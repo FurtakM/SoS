@@ -6,7 +6,7 @@ game.ui.timer = getElementEX(
     OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),
     {
         texture = 'SGUI/Amer/timer.png',
-        hint = loc(6094)
+        hint = loc(6096)
     }
 );
 

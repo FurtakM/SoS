@@ -34,11 +34,11 @@ hc_skills := [5, 3, 2, 1];
 hc_attr := [10, 11];
 
 Sikorski := CreateHuman;
-PlaceHumanInUnit(Sikorski, amDep);
+PlaceHumanInUnit(Sikorski, HexInfo(35, 45));
 
 InitHC_All();
 
-amForce := PrepareBase(amDep, amBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 4, 6, 3]);
+amForce := PrepareBase(amDep, amBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 6, 6, 3]);
 amForceTmp := [];
 
 
@@ -483,14 +483,19 @@ BaseScript(botSides[1], 1, amBaseArea, amBaseInnerArea, amBaseOuterArea, amForce
 enable;
 End;        
 
-Every 3$00 trigger IsOk(amDep) and not amConstructList do
+Every 3$00 trigger IsOk(amDep) and FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) do
+var i;
 begin
 enable;
 
-amConstructList := [
-   [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
-   [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
-   [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
-];
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) do
+    if BuildingStatus(i) = bs_idle and UnitsInside(i) > 0 then
+       begin
+       amConstructList := [
+         [us_medium_tracked, engine_combustion, control_manual, us_double_gun],
+         [us_medium_tracked, engine_combustion, control_manual, us_gatling_gun],
+         [us_heavy_tracked, engine_combustion, control_manual, us_heavy_gun]
+       ];
+       end;
 End;
 
