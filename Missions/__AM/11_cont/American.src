@@ -162,23 +162,45 @@ uc_side := 1;
 uc_nation := 1;
 
 vehs := [
-          [us_medium_tracked, engine_combustion, control_computer, us_double_gun],
-          [us_medium_tracked, engine_combustion, control_computer, us_rocket_launcher],
-          [us_medium_tracked, engine_combustion, control_computer, us_rocket_launcher],
-          [us_medium_tracked, engine_combustion, control_computer, us_radar],
-          [us_heavy_tracked, engine_combustion, control_computer, us_heavy_gun],
-          [us_heavy_tracked, engine_combustion, control_computer, us_double_gun]
+          [us_medium_tracked, engine_siberite, control_computer, us_laser],
+          [us_medium_tracked, engine_siberite, control_computer, us_rocket_launcher],
+          [us_medium_tracked, engine_siberite, control_computer, us_rocket_launcher],
+          [us_medium_tracked, engine_siberite, control_computer, us_radar],
+          [us_heavy_tracked, engine_siberite, control_computer, us_heavy_gun],
+          [us_heavy_tracked, engine_siberite, control_computer, us_laser],
+          [us_medium_tracked, engine_siberite, control_computer, us_cargo_bay]
         ];
 
 
-for i := 1 to 7 - Difficulty do
+for i := 1 to [7, 7, 6, 5][Difficulty] do
     begin
+    uc_side := 1;
+    uc_nation := 1;
+
     vc_chassis := vehs[i][1];
     vc_engine := vehs[i][2];
     vc_control := vehs[i][3];
     vc_weapon := vehs[i][4];
 
     veh := CreateVehicle;
-    PlaceUnitArea(veh, am_veh_start, false);
+
+    if vc_weapon = us_cargo_bay then
+       SetCargo(veh, mat_cans, 100);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(veh, am_veh_start, false);
+
+    ComMoveXY(veh, 90, 143);
     end;
+
+wait(0$2);
+
+DialogueOn;
+
+CenterNowOnXY(90, 143);
+
+dwait(0$0.3);
+
+DialogueOff;
 End;

@@ -26,6 +26,9 @@ if multi_sides[side] then
    if GetType(un) = unit_human then
       MultiplayerEvent_HumanLost(side);
 
+if un = Sikorski then
+   AmericanAttack(Difficulty);
+
 if side in botSides then
    begin
    if side = botSides[1] then
@@ -234,8 +237,7 @@ SOS_VehicleConstructed(vehicle, factory);
 side := GetSide(vehicle);
 
 if multi_sides[side] then
-   MultiplayerEvent_Produced(side);
-
+   MultiplayerEvent_Produced(side);  
 
 if side = botSides[1] then
    begin
@@ -274,6 +276,22 @@ On EvacuateVehicle(driver, veh, p1, p2) do
 begin
 if GetTag(driver) = tMech then
    SetTag(driver, 0);
+
+if GetTag(driver) = 999 then
+   begin
+   if GetSide(driver) = 1 then
+      begin
+      SetTag(driver, 0);
+      ComMoveXY(driver, 26, 40);
+      amForce := Join(amForce, driver);
+      end
+   else if GetSide(driver) = 2 then
+      begin
+      SetTag(driver, 0);
+      ComMoveXY(driver, 197, 30);
+      arForce := Join(arForce, driver);
+      end;
+   end;
 End;
 
 On ResearchComplete(tech, lab) do
@@ -285,6 +303,27 @@ if GetSide(lab) = botSides[1] then
 if GetSide(lab) = botSides[2] then
    if tech in arTech then
       arTech := arTech diff tech;
+End;
+
+
+On EnterBuilding(b, un) do
+begin
+if GetSide(un) in [1, 2] and GetClass(un) = class_mechanic then
+   SetLives(un, 1000);
+End;
+
+On VehicleConstructionStarted(factory, chassis, engine, control, weapon) do
+var side;
+begin
+side := GetSide(factory);
+
+if weapon = ar_miner and FilterAllUnits([[f_side, side], [f_weapon, ar_miner]]) > 0 then
+   begin
+   ComCancel(factory);
+   HintSpec('VehLimit', 2);
+   end;
+
+//Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
 End;
 
 

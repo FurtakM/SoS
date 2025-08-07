@@ -44,6 +44,7 @@ Export
   mpGlobalSibDeposits,
   mpTeleports,
   mpArtifacts,
+  mpTimeToWin,
   mpBlockRespThread;
 
 {
@@ -64,6 +65,7 @@ Export
   mpApemans,              // (14) None, Few, Medium, Lots
   mpSibBomb,              // (17) Off, On
   mpBuildUpTime,          // (20) BT
+  mpTimeToWin,            // (21) Time to Win
 }
 
 Export function InitMultiplayer;
@@ -107,6 +109,7 @@ mpApePosIndex := [ [], [], [], [], [], [], [], [] ];
 mpEmissions := 0;
 mpTeleports := 0;
 mpArtifacts := 0;
+mpTimeToWin := 0$0;
 
 mpPeopleSkill := 3;
 mpPeopleAmount := 15;
@@ -128,7 +131,9 @@ gameTypes := [
     GameTypeNormal,
     GameTypeSurvival,
     GameTypeKing,
-    GameTypeFamine
+    GameTypeFamine,
+    GameTypeArmsRace,
+    GameTypeArmsArtifact,
 ];
 
 for i in gameTypes do
@@ -150,7 +155,7 @@ if Multiplayer then
 
        if setting then
           mpGameSettings := Replace(mpGameSettings, i, mpGameSettingsValues[i][GetMultiplayerSetting(i - 1) + 1]);
-       end;
+       end;            
 
    mpTeamGame := (mpSideTeams diff [0]) > 1;
    end
@@ -224,7 +229,7 @@ for i := 1 to 8 {max amount} do
     // depots
     if Count(mpDepots) then
        begin
-       if mpGameType = GameTypeSurvival then
+       if mpGameType in [GameTypeSurvival, GameTypeArmsRace, GameTypeArmsArtifact] then
           begin
           bc_level := 10;
           bc_type := b_warehouse;
@@ -314,7 +319,10 @@ for i := 1 to 8 {max amount} do
 
     uc_nation := nation;
 
-    team := mpPrepareTeam(side, nation, mpPeopleAmount, mpPeopleSkill);
+    if mpGameType in [GameTypeArmsRace, GameTypeArmsArtifact] and mpSidePositions[i] in [1,2] then
+       team := mpPrepareTeam(side, nation, mpPeopleAmount + (mpPeopleAmount div 2), mpPeopleSkill + 1)
+    else
+       team := mpPrepareTeam(side, nation, mpPeopleAmount, mpPeopleSkill);
 
     for j in team do
         PlaceUnitXYR(j, mpStartPos[pos][1], mpStartPos[pos][2], 12, false);
@@ -426,7 +434,7 @@ for i := 1 to (amount - 1) do
 
     result := Join(result, un);
 
-    if mpTeamPreset then
+    if Count(mpTeamPreset) >= amount then
        begin
        CopySkills(mpTeamPreset[i+1], un);
        SetAttr(un, attr_stamina, GetAttr(mpTeamPreset[i+1], attr_stamina));
@@ -604,7 +612,7 @@ begin
 result := false;
 
 case gameType of
-     GameTypeNormal, GameTypeFamine:
+     GameTypeNormal, GameTypeFamine, GameTypeArmsRace, GameTypeArmsArtifact:
                    begin
                    result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
                    end;

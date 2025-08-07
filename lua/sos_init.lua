@@ -6,6 +6,7 @@ include('sos_avatar');
 include('sos_custom_tech');
 include('sos_loading');
 include('sos_multiplayer_maps');
+include('sos_subtitles');
 include('sos_cutscenes');
 include('sos_achiev');
 include('sos_hack_init');

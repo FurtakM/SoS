@@ -62,6 +62,12 @@ TID_msg_Default = 5049;
 TID_msg_Search = 5050;
 TID_Main_Menu_Options_Exclamations_Volume = 5061;
 TID_Main_Menu_Options_Exclamations_Volume_Desc = 5062;
+TID_Main_Menu_Options_PingButton_Desc = 5070;
+TID_Main_Menu_Options_PingButton_Hint = 5071;
+TID_Main_Menu_Options_PingButton_Button0 = 5072;
+TID_Main_Menu_Options_PingButton_Button1 = 5073;
+TID_Main_Menu_Options_PingButton_Button2 = 5074;
+TID_Main_Menu_Options_PingButton_Test = 5075;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;

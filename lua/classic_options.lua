@@ -41,6 +41,7 @@ OPTION_INTERFACE_FACTORY = 25;
 OPTION_SOUND_AUDIO = 26;
 OPTION_SOUND_EXCLAMATIONS = 27;
 OPTION_TIMER = 28;
+OPTION_PING_BUTTON = 29;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -142,6 +143,14 @@ function getMonitorsList()
     end;
 
     return list;
+end
+
+function getPingButtonList()
+    return {
+        loc(TID_Main_Menu_Options_PingButton_Button0),
+        loc(TID_Main_Menu_Options_PingButton_Button1),
+        loc(TID_Main_Menu_Options_PingButton_Button2),
+    };
 end
 
 function getSetting(setting)
@@ -311,6 +320,10 @@ function getSetting(setting)
 
     if setting == OPTION_TIMER then
         return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true);
+    end;
+
+    if setting == OPTION_PING_BUTTON then
+        return OW_SETTING_READ_NUMBER('OPTIONS', 'OPTION_PING_BUTTON', 2);
     end;
 end;
 
@@ -527,6 +540,17 @@ function saveComboBoxSetting(setting, value)
                 break;
             end;
         end;
+    end;
+
+    if setting == OPTION_PING_BUTTON then
+        local buttons = getPingButtonList();
+
+        for i = 1, #buttons do
+            if (value == buttons[i]) then
+                OW_SETTING_WRITE('OPTIONS', 'OPTION_PING_BUTTON', i - 1);
+                break;
+            end;
+        end;        
     end;
 end;
 
@@ -1251,6 +1275,69 @@ function generateOptions()
         XYWH(31, 79, 200, 15),
         BankGotic_14, 
         loc(1525),
+        {
+            font_colour = RGB(0, 0, 0),
+            shadowtext = false,
+            nomouseevent = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+            wordwrap = false,
+            scissor = true
+        }
+    );
+
+    menu.window_options.panel.controls.ping_button_listbox = clComboBox(
+        menu.window_options.panel.controls,
+        92,
+        118,
+        getPingButtonList(),
+        getSetting(OPTION_PING_BUTTON) + 1,
+        'saveComboBoxSetting(' .. OPTION_PING_BUTTON .. ', "VALUE")',
+        {
+            texture = 'classic/edit/combobox-small-opt2.png',
+            textureButton = 'classic/edit/combobox-small-button-opt.png',
+            textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+            hint = loc(TID_Main_Menu_Options_PingButton_Hint),
+            width = 146
+        }
+    );
+
+    menu.window_options.panel.controls.ping_test = getElementEX(
+        menu.window_options.panel.controls,
+        anchorLT,
+        XYWH(9, 119, 72, 15),
+        true,
+        {
+            colour1 = WHITEA(),
+            hint = loc(TID_Main_Menu_Options_PingButton_Test)
+        }
+    );
+
+    menu.window_options.panel.controls.ping_test_label = getLabelEX(
+        menu.window_options.panel.controls.ping_test,
+        anchorLT,
+        XYWH(0, 0, 72, 15),
+        BankGotic_14, 
+        loc(TID_Main_Menu_Options_PingButton_Test),
+        {
+            font_colour = RGB(0, 0, 0),
+            shadowtext = false,
+            nomouseevent = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+            wordwrap = false,
+            scissor = true,
+        }
+    );
+
+    set_Callback(menu.window_options.panel.controls.ping_test.ID, CALLBACK_MOUSEDOWN, 'setTextID(' .. menu.window_options.panel.controls.ping_test_label.ID .. ', %b)');
+
+    menu.window_options.panel.controls.ping_button_label = getLabelEX(
+        menu.window_options.panel.controls,
+        anchorLT,
+        XYWH(9, 103, 200, 15),
+        BankGotic_14, 
+        loc(TID_Main_Menu_Options_PingButton_Desc),
         {
             font_colour = RGB(0, 0, 0),
             shadowtext = false,

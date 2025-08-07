@@ -57,6 +57,24 @@ else
     end;
 end;
 
+if ((OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_TEXTLANG) == nil) or (not inArray({'ENG', 'POL'}, OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_TEXTLANG)))) then
+    getCustomDialog({
+        COUNT = 2,
+        QUESTION = loc(TID_UnsupportedLang),
+        LIST = {
+            {
+                NAME = loc(545),
+                CALLBACK = 'showOptions(1);',
+            },
+            {
+                NAME = loc(632),
+                CALLBACK = ''
+            }
+        },
+        INSTANT = 1
+    });
+end;
+
 -- menu logo
 setVisible(version, false);
 setVisible(mod_version, false);
@@ -89,10 +107,26 @@ InitMusicTimer = timer:repeatable(0.5, 'playMenuMusic(1);', -1);
 -- override menu
 sgui_deletechildren(menu.window.ID);
 
+setHeight(menu.window, 327);
+setTexture(menu.window, 'classic/edit/mainmenu-7c.png');
+
+menu.window.switch = getImageButtonEX(
+    menu.window, 
+    anchorB, 
+    XYWH(249, 310, 14, 15), 
+    '', 
+    '', 
+    'playNextTrackClick();', 
+    nil,
+    {
+        texture = 'classic/edit/scrollbar_horiz_right.png'
+    }
+);
+
 menu.window2 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 92, 270, 184),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 92, 271, 184),
     true,
     {}
 );
@@ -103,7 +137,7 @@ setVisible(menu.window2, false);
 menu.window3 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 134, 270, 268),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 134, 271, 268),
     true,
     {}
 );
@@ -116,7 +150,7 @@ menu.window.user = clButton(
     menu.window, 
     12, 
     19, 
-    248,
+    247,
     30,
     loc(TID_Main_Menu_User) .. ': ' .. PROFILE_NAME,
     'showProfile(1);',
@@ -127,7 +161,7 @@ menu.window.play = clButton(
     menu.window, 
     12, 
     61, 
-    248,
+    247,
     30,
     loc(TID_Main_Menu_Play), 
     'showMenuButton(2);',
@@ -138,7 +172,7 @@ menu.window.options = clButton(
     menu.window, 
     12, 
     145, 
-    248,
+    247,
     30, 
     loc(TID_Main_Menu_Options), 
     'showOptions(1);',
@@ -149,7 +183,7 @@ menu.window.mods = clButton(
     menu.window, 
     12, 
     187,
-    248,
+    247,
     30, 
     loc(TID_MODS), 
     'showMods(1);',
@@ -160,7 +194,7 @@ menu.window.sospedia = clButton(
     menu.window, 
     12, 
     103, 
-    248,
+    247,
     30, 
     'Sospedia', 
     'showMenuButton(3);',
@@ -171,7 +205,7 @@ menu.window.credits = clButton(
     menu.window, 
     12, 
     229, 
-    248,
+    247,
     30, 
     loc(TID_Main_Menu_Extras_Credits), 
     'showCredits();',
@@ -182,7 +216,7 @@ menu.window.quit = clButton(
     menu.window, 
     12, 
     271,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Quit), 
     'exit();',
@@ -193,7 +227,7 @@ menu.window2.campaign = clButton(
     menu.window2, 
     12, 
     19,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Campaign), 
     'showCampaign(1)',
@@ -204,7 +238,7 @@ menu.window2.multiplayer = clButton(
     menu.window2, 
     12, 
     61, 
-    248,
+    247,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
     'showMultiplayerWindow(1);',
@@ -215,7 +249,7 @@ menu.window2.skirmish = clButton(
     menu.window2, 
     12, 
     103,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Skirmish), 
     'showSkirmishWindow(1);',
@@ -226,7 +260,7 @@ menu.window2.back = clButton(
     menu.window2, 
     12, 
     145,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
     'showMenuButton(1);',
@@ -237,7 +271,7 @@ menu.window3.web = clButton(
     menu.window3, 
     12, 
     19, 
-    248,
+    247,
     30, 
     'Wiki Online', 
     'OW_SOS_CLICKED("wiki");',
@@ -250,7 +284,7 @@ menu.window3.biographies = clButton(
     menu.window3, 
     12, 
     61, 
-    248,
+    247,
     30, 
     loc(TID_Biographies), 
     'showBiographic(1);',
@@ -261,7 +295,7 @@ menu.window3.achivs = clButton(
     menu.window3, 
     12, 
     103, 
-    248,
+    247,
     30, 
     loc(TID_ACHIEVEMENTS), 
     'showAchivs(1);',
@@ -272,7 +306,7 @@ menu.window3.changelog = clButton(
     menu.window3, 
     12, 
     145,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Changelog), 
     'displayChangeLogMessage(true);',
@@ -283,7 +317,7 @@ menu.window3.contact = clButton(
     menu.window3, 
     12, 
     187,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Contact), 
     'OW_SOS_CLICKED("contact");',
@@ -294,7 +328,7 @@ menu.window3.back = clButton(
     menu.window3, 
     12, 
     229,
-    248,
+    247,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
     'showMenuButton(1);',

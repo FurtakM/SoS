@@ -28,10 +28,18 @@ begin
 End;
 
 Export Function SOS_VehicleConstructed(vehicle, factory);
-var i, driver, hex;
+var i, driver, hex, weapon;
 begin
 if not vehicle or not factory then
    exit;
+
+weapon := GetWeapon(vehicle);
+
+if weapon = ar_miner then
+   begin
+   minersList := Replace(minersList, minersList + 1, vehicle);
+   minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
+   end;
 
 if not factoryWaypoints then
    exit;
@@ -376,17 +384,12 @@ End;
 // ar miner script
 Export initMiner, minersList, minerMinesList, minesLimitPerVehicle;
 Every 0$1 trigger not initMiner do
+var i;
 begin
 initMiner := true;
 minersList := [];
 minerMinesList := [];
-minesLimitPerVehicle := 5;
-End;
-
-Every 0$1 trigger initMiner and FilterAllUnits([f_weapon, ar_miner]) do
-var i, j, side, tmp;
-begin
-enable;
+minesLimitPerVehicle := 6;
 
 for i in FilterAllUnits([f_weapon, ar_miner]) do
     begin
@@ -396,11 +399,26 @@ for i in FilterAllUnits([f_weapon, ar_miner]) do
        minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
        end
     end;
+End;
+
+Every 0$1 trigger initMiner and (Count(minerMinesList) or FilterAllUnits([f_weapon, ar_miner])) do
+var i, j, side, tmp;
+begin
+enable;
+
+{for i in FilterAllUnits([f_weapon, ar_miner]) do
+    begin
+    if not i in minersList then
+       begin
+       minersList := Replace(minersList, minersList + 1, i);
+       minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
+       end
+    end;}
 
 for i := minerMinesList downto 1 do
     begin
     if IsLive(minersList[i]) then
-       SetUnitDisplayNumber(minersList[i], minerMinesList[i]);
+       SetUnitDisplayNumber(minersList[i], Count(minerMinesList[i]));
 
     if not minerMinesList[i] then
        continue;
@@ -408,6 +426,14 @@ for i := minerMinesList downto 1 do
     for j := minerMinesList[i] downto 1 do
         begin
         side := GetSide(minersList[i]);
+
+        if IsDead(minersList[i]) or not IsPlaced(minersList[i]) then
+           begin
+           RemoveMineXY(minerMinesList[i][j][1], minerMinesList[i][j][2]);
+           minerMinesList := Replace(minerMinesList, i, Delete(minerMinesList[i], j));
+           continue;
+           end;
+
         tmp := HexInfo(minerMinesList[i][j][1], minerMinesList[i][j][2]);
 
         if not tmp then
@@ -423,13 +449,14 @@ for i := minerMinesList downto 1 do
 End;
 
 Export Function MinerPlaceMine(unit, x, y);
-var index;
+var index, side, i;
 begin
 result := false;
 
 if not GetWeapon(unit) = ar_miner then
    exit;
 
+side := GetSide(unit);
 index := GetElementIndex(minersList, unit);
 
 if minerMinesList[index] >= minesLimitPerVehicle then
@@ -445,10 +472,24 @@ repeat
 
 until HexInfo(x, y) = unit and not HasTask(unit);
 
-PlaySoundXY(x, y, 'PlantMine');
-PlaceMine(x, y, GetSide(unit), 0);
+if MineAtPos(x, y) then
+   exit;
 
-minerMinesList := ReplaceIn(minerMinesList, [index, minerMinesList[index] + 1], [x, y]);
+if your_side = side then
+   PlaySoundXY(x, y, 'PlantMine');
+
+repeat
+ wait(1);
+until PlaceMine(x, y, side, 0);
+
+if MineAtPos(x, y) then
+   begin
+   for i in minerMinesList[index] do
+       if i[1] = x and i[2] = y then
+          exit;
+
+   minerMinesList := ReplaceIn(minerMinesList, [index, minerMinesList[index] + 1], [x, y]);
+   end;
 
 result := true;
 End;
@@ -461,7 +502,7 @@ if not unit in minersList then
 
 index := GetElementIndex(minersList, unit);
 
-for i := minerMinesList[index] downto 1 do
+{for i := minerMinesList[index] downto 1 do
     begin
     if minerMinesList[index][i][1] = x and minerMinesList[index][i][2] = y then
        begin
@@ -469,7 +510,7 @@ for i := minerMinesList[index] downto 1 do
        minerMinesList := Replace(minerMinesList, index, Delete(minerMinesList[index], i));
        exit;
        end;
-    end;
+    end; }
 
 for i := minerMinesList[index] downto 1 do
     begin
@@ -571,4 +612,109 @@ repeat
 until p = 3 or not IsOk(unit) or IsDead(unit);
 
 RemoveSeeing(_x, _y, side);
+End;
+
+Function RevealDetectorMine(unit);
+var side, r, x, y, min_x, min_y, max_x, max_y, _x, _y;
+begin
+if not unit then
+   exit;
+
+side := GetSide(unit);
+x := GetX(unit);
+y := GetY(unit);
+r := 8;
+
+if x - r < 0 then
+   min_x := 0
+else
+   min_x := x - r;
+
+if y - r < 0 then
+   min_y := 0
+else
+   min_y := y - r;
+
+max_x := x + r;
+max_y := y + r;
+
+for _x = min_x to max_x do
+    for _y = min_y to max_y do
+        begin
+        if not ValidHex(_x, _y) then
+           continue;
+
+        if MineAtPos(_x, _y) then
+           ViewMineAtPos(_x, _y, side);
+        end;
+End;
+
+Function DetectMine(units);
+var i, x, y, scaners, timer;
+begin
+if not units then
+   exit;
+
+scaners := [];
+
+for i in units do
+    begin
+    if GetWeapon(i) <> us_radar or not IsOk(i) or GetTag(i) = tMineDetector then
+       continue;
+
+    ComStop(i);
+
+    x := GetX(i);
+    y := GetY(i);
+
+    if GetSide(i) = your_side then
+       PlaySoundXY(x, y, 'mineDetector');
+
+    scaners := Join(scaners, i);
+    SetTag(i, tMineDetector);
+    end;
+
+if not scaners then
+   exit;
+
+wait(3);
+
+timer := 6;
+
+repeat
+   for i in scaners do
+       begin
+       if not IsOk(i) or HasTask(i) or (GetControl(i) = control_manual and not IsDrivenBy(i)) then
+          begin
+          SetUnitDisplayNumber(i, 0);
+          SetTag(i, 0);
+          scaners := scaners diff i;
+          continue;
+          end;
+
+       SetUnitDisplayNumber(i, timer);
+       end;
+
+   if not scaners then
+      exit;
+
+   timer := Dec(timer);
+   wait(0$1);
+until timer = 0;
+
+if not scaners then
+   exit;
+
+for i in scaners do
+    begin
+    SetUnitDisplayNumber(i, 0);
+    SetTag(i, 0);
+    RevealDetectorMine(i);
+    end;
+End;
+
+Export function SOS_CommPanelCommandWeapon(units, p1, p2, p3, p4, p5);
+begin
+if p1 = mine_detector_mode then
+   DetectMine(units);
 End;

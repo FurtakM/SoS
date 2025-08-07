@@ -25,6 +25,7 @@ MULTIPLAYER_ROOM_TEAMS = {};
 MULTIPLAYER_ROOM_TEAMS_INIT = {};
 MULTIPLAYER_ROOM_TEAMS_SPEC = {};
 MULTIPLAYER_ROOM_MERGED = {};
+MULTIPLAYER_ROOM_PING_DATA = {};
 MULTIPLAYER_MINIMAP_PREVIEW_TEAM = {
 	[0] = RGBA(140, 132, 99, 115),
 	[1] = RGBA(66, 130, 255, 115),
@@ -980,10 +981,6 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 		recreateTeams();
 	end;
 
-	if not MULTIPLAYER_ROOM_IS_HOST then
-		OW_MULTIROOM_SET_MYREADY(false);
-	end;
-
 	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_NAME');
 end;
 
@@ -1035,7 +1032,7 @@ function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
 end;
 
 function FROMOW_MULTI_PINGED(DATA)
-
+	MULTIPLAYER_ROOM_PING_DATA = DATA;
 end;
 
 function FROMOW_MULTIROOM_CONSTATUS_UPDATE(DATA)
@@ -1058,6 +1055,7 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 	MULTIPLAYER_ROOM_INIT_PLAYERS_LIST = false;
 	MULTIPLAYER_ROOM_DATA = {};
 	MULTIPLAYER_ROOM_MAP_DATA = {};
+	MULTIPLAYER_ROOM_PING_DATA = {};
 
 	setVisible(menu.window_multiplayer_room, false);
 
@@ -1939,13 +1937,15 @@ function updatePlayerSlot(NUMBER)
 
 		local children = getChildernIDs(MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT);
 
-		if (isMySlot and player.TEAMPOS == 99) then
-			setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(825));
-			set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
-		else
-			setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(824)); -- join
-			set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'joinAsSpectator();');
-			setEnabled({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, #children < 5);
+		if children then
+			if (isMySlot and player.TEAMPOS == 99) then
+				setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(825));
+				set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'leaveTeam();');
+			else
+				setText({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, loc(824)); -- join
+				set_Callback(MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON, CALLBACK_MOUSECLICK, 'joinAsSpectator();');
+				setEnabled({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.BUTTON}, #children < 5);
+			end;
 		end;
 	else
 		setVisible({ID = MULTIPLAYER_ROOM_TEAMS_SPEC.SLOT}, false);

@@ -493,7 +493,7 @@ function showMod(id, name, dir, desc, steam_visible, coop_visible, mod_ver, mod_
     end;
 
     -- check which languages are support
-    local langs = OW_FILELIST('%ow%/mods/'..dir..'/texts', 'wri');
+    local langs = OW_FILELIST('%ow%/mods/' .. dir .. '/texts', 'wri');
     local langCount = table.getn(langs);
 
     if (langCount > 0) then

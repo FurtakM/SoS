@@ -82,6 +82,7 @@ TID_Credits_Ares_Voice_Actors = 6113;
 TID_Credits_American_Soldier = 6114;
 TID_Credits_Arabian_Soldier = 6115;
 TID_Credits_Russian_Soldier = 6116;
+TID_Credits_Models = 6117;
 
 TID_Biographies = 8000;
 
@@ -131,6 +132,8 @@ TID_Kyrgyzstan = 9042;
 TID_Moldova = 9043;
 TID_Uzbekistan = 9044;
 
+TID_UnsupportedLangHeader = 9988;
+TID_UnsupportedLang = 9989;
 TID_Main_Menu_Support = 9996;
 TID_Main_Menu_Contact = 9997;
 TID_Main_Menu_Changelog = 9998;

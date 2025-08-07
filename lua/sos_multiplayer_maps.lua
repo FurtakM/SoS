@@ -106,5 +106,13 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pUnchartedLands = {
 		MIN = 2,
 		MAX = 8
+	},
+	pMountainFortress = {
+		MIN = 2,
+		MAX = 8
+	},
+	pMonteCassino = {
+		MIN = 3,
+		MAX = 8
 	}
 }

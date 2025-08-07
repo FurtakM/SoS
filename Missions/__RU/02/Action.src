@@ -274,6 +274,7 @@ ComStop(Platonov);
 if ingame_video then
    exit;
 
+ComHold(Platonov);
 Say(Platonov, 'D4-Pla-1');
 End;
 
@@ -361,7 +362,7 @@ var tmp;
 begin
 enable;
 
-tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]])[1];
 
 ComMoveUnit(Platonov, tmp);
 
@@ -372,18 +373,21 @@ until GetDistUnits(Platonov, tmp) < 6;
 InGameOn;
 
 ComTurnUnit(Platonov, tmp);
+ComTurnUnit(Burlak, Platonov);
 
 Say(Platonov, 'D6-Pla-1');
 Say(Burlak, 'D6-Bur-1');
 
-RemoveUnit(tmp[1]);
+RemoveUnit(tmp);
 
-if GetBType(tmp[1]) = b_breastwork then
+if GetBType(tmp) = b_breastwork then
    AddResourceType(GetBase(beria), mat_cans, 10)
 else
    AddResourceType(GetBase(beria), mat_cans, 30);
 
 InGameOff;
+
+ComFree(Burlak);
 End;
 
 // build outside beria
@@ -403,6 +407,7 @@ until GetDistUnits(Platonov, tmp) < 6;
 InGameOn;
 
 ComTurnUnit(Platonov, tmp);
+ComTurnUnit(Burlak, Platonov);
 
 Say(Platonov, 'DPlatAngry');
 Say(Burlak, 'D6-Bur-1');
@@ -410,6 +415,8 @@ Say(Burlak, 'D6-Bur-1');
 RemoveUnit(tmp);
 
 InGameOff;
+
+ComFree(Burlak);
 
 amount := 0;
 

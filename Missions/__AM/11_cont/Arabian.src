@@ -39,7 +39,7 @@ for i = 1 to 3 do
 
 ar_force_north := PrepareBase(ar_dep_n, base_north, 'dammam', skill, [10000, 1000, 300], [12, [2, 3, 4, 4][Difficulty], -1, 4]);
 ar_force_north := ar_force_north union PrepareBase(ar_dep_n2, base_north_2, '', skill, [500, 60, 0], [8, [2, 3, 4, 5][Difficulty], 2, 0]);
-ar_force_west := PrepareBase(ar_dep_w, base_west, 'jeddah', skill, [700, 300, 10], [9, 4, 3, 2]);
+ar_force_west := PrepareBase(ar_dep_w, base_west, 'jeddah', skill, [900, 300, 10], [9, 4, 3, 2]);
 ar_force_south := PrepareBase(ar_dep_s, base_south, 'riyadh', skill, [500, 60, 0], [4, 2, 3, 1]);
 ar_force_east := PrepareBase(ar_dep_e, base_east, '', skill, [500, 50, 0], [9, 2, 3, 1]);
 
@@ -145,7 +145,7 @@ InitHc;
 // prepare vehicles
 ar_vehicles_tmp := [];
 
-for i = 1 to 5 do
+for i := 1 to 5 do
     begin
     PrepareVehicle([ar_medium_trike, ar_half_tracked][rand(1,2)],
                    [engine_combustion, engine_solar][rand(1,2)],
@@ -162,8 +162,8 @@ for i = 1 to 5 do
 
 ar_defenders_tmp := [ [], [], [] ];
 
-for d = 1 to [3, 3, 4, 4][Difficulty] do
-for i = 1 to 3 do
+for d := 1 to [3, 3, 4, 4][Difficulty] do
+for i := 1 to 3 do
     begin
     PrepareVehicle(ar_half_tracked,
                    [engine_siberite, engine_solar][rand(1,2)],
@@ -394,11 +394,9 @@ if gensher_active then
    end;
 End;
 
-Every 5$0 + 15$0 do
-var i, tmp, tmp2, coords, w, list, p;
+Every 4$0 + 15$0 do
+var i, tmp, enemy, tmp2, coords, w, list, p;
 begin
-enable;
-
 tmp := [];
 w := rand(1, 3);
 
@@ -441,18 +439,21 @@ p := 60;
 repeat
  wait(0$1);
  p := Dec(p);
-until UnitFilter(mc_vehicles[1], [f_not, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]) >= 4 or p <= 0;
+until UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]) >= 4 or p <= 0;
 
 wait(0$10);
 
-tmp := UnitFilter(mc_vehicles[1], [f_not, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]);
-tmp2 := UnitFilter(mc_vehicles[2], [f_not, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]);
+tmp := UnitFilter(mc_vehicles[1], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]);
+tmp2 := UnitFilter(mc_vehicles[2], [f_not, [f_or, [f_weapon, ar_cargo_bay], [f_weapon, ar_crane]]]);
 
 if tmp2 then
    tmp := tmp union tmp2;
 
 if not tmp then
+   begin
+   enable;
    exit;
+   end;
 
 if Count(tmp2) or Prob(50) then
    coords := [ [48,33], [71,88] ]
@@ -465,30 +466,36 @@ if w = 3 then
 if FilterUnitsInArea(base_north, [f_side, 1]) then
    coords := [ [163, 41] ];
 
-ComAgressiveMove(tmp, coords[1], coords[2]);
-
 p := 30;
 
 repeat
  wait(0$1);
+ AgressiveMove(tmp, coords);
  p := Dec(p);
 until UnitFilter(tmp, [f_hastask]) = 0 or p <= 0;
 
 repeat
  wait(0$2);
+ enemy := FilterAllUnits([f_side, 1]);
+
  tmp := UnitFilter(tmp, [f_ok]);
 
  for i in tmp do
      if GetChassis(i) = ar_hovercraft then
-        AttackHovercraft(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i))
+        begin
+        if not AttackHovercraft(i, NearestUnitToUnit(enemy, i)) then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+        end
      else
-        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
-until not tmp;
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+until not tmp; 
+
+enable;
 End;
 
 // Run
 Every 28$00 do
-var i, tmp, un, x, p;
+var i, enemy, tmp, un, x, p;
 begin
 enable;
 
@@ -499,7 +506,7 @@ tmp := [];
 InitHc;
 
 // first spawn on east
-for i = 1 to 3 do
+for i := 1 to 3 do
     begin
     uc_side := 8;
     uc_nation := 2;
@@ -511,7 +518,7 @@ for i = 1 to 3 do
     tmp := Replace(tmp, tmp+1, un);
     end;
 
-for i = 1 to 3 do
+for i := 1 to 3 do
     begin
     uc_side := 8;
     uc_nation := 2;
@@ -533,9 +540,10 @@ p := 0;
 repeat
  wait(0$3);
  p := p + 3;
+ enemy := FilterAllUnits([f_enemy, 8]);
 
  for i in UnitFilter(tmp, [f_ok]) do
-     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i));
+     ComAttackUnit(i, NearestUnitToUnit(enemy, i));
 until p >= 120;
 
 repeat
@@ -558,4 +566,49 @@ if IsOk(ar_dep_w) and GetSide(ar_dep_w) then
    ComMoveXY(FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]), 18, 8)
 else
    ComMoveXY(FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]), 106, 14);
+End;
+
+// Extra attack outside map
+Every 0$10 trigger not IsOk(ar_dep_e) or GetSide(ar_dep_e) <> 2 do
+var i, un, tmp, enemy;
+begin
+if Difficulty = 1 then
+   exit;
+
+for i := 1 to [2, 3, 4][Difficulty - 1] do
+    begin
+    uc_side := 2;
+    uc_nation := nation_nature;
+
+    PrepareApemanSoldier();
+    hc_class := class_apeman_kamikaze;
+
+    un := CreateHuman;
+    SetDir(un, 4);
+    PlaceUnitArea(un, east_ape_spawn, false);
+
+    tmp := Join(tmp, un);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+
+     if enemy then
+        ComAttackUnit(i, enemy);
+     end;
+until not tmp;
+
+wait(10$00);
+
+enable;
 End;
