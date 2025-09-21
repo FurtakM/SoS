@@ -675,8 +675,12 @@ Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 
 ChangeMissionObjectives('RemoteControlDone');
 
 Every 0$1 trigger (convoyCounter < 1 and not UnitFilter(ruConvoySquad, [[f_placed], [f_type, unit_human]])) or tick >= 60$00 do
-var i, tmp, tmp2, vehs;
+var i, tmp, tmp2, vehs, m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 ChangeMissionObjectives('ReinforcementsDone');
 music_class := music_victory;
 
@@ -717,21 +721,33 @@ if not flamethrowerBuilt then
    SetAchievement('ACH_FIRE');
 
 if drugsTested then
-   AddMedal('med1', 1)
+   begin
+   m1 := true;
+   AddMedal('med1', 1);
+   end
 else if GetTech(tech_stimDrugs, 2) = state_researched then
    AddMedal('med1', -1)
 else
    AddMedal('med1', -2);
 
 if FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 3 and FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) >= 1 then
-   AddMedal('med2', 1)
+   begin
+   m2 := true;
+   AddMedal('med2', 1);
+   end
 else
    AddMedal('med2', -1);
 
 if convoySavedCounter < [10, 8, 6, 5][Difficulty] then
-   AddMedal('med3', 1)
+   begin
+   m3 := true;
+   AddMedal('med3', 1);
+   end
 else
    AddMedal('med3', -1);
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 5);
 
 GiveMedals('MAIN');
 

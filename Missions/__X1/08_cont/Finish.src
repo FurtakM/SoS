@@ -20,8 +20,12 @@ EndMission;
 End;
 
 Function EndMission;
-var tmp;
+var tmp, m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 PlayOriginalMusic;
 
 if not IsInArea(Heike, finalArea) then
@@ -43,21 +47,33 @@ if tick < 20$00 then
    SetAchievement('ACH_HSPEED_8');
 
 if FilterAllUnits([[f_side, 5], [f_type, unit_human]]) = 0 and loseCounter = 0 then
-   AddMedal('med1', 1)
+   begin
+   m1 := true;
+   AddMedal('med1', 1);
+   end
 else
    AddMedal('med1', -1);
 
 if explosivePlantedList >= 3 then
-   AddMedal('med2', 1)
+   begin
+   m2 := true;
+   AddMedal('med2', 1);
+   end
 else if explosivePlantedList < 3 then
    AddMedal('med2', -2)
 else
    AddMedal('med2', -1);
 
 if GetTech(tech_stimDrugs, 2) = state_researched then
-   AddMedal('med3', 1)
+   begin
+   m3 := true;
+   AddMedal('med3', 1);
+   end
 else
    AddMedal('med3', -1);
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 8);
 
 GiveMedals('MAIN');
 

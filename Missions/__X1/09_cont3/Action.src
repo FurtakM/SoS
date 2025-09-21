@@ -262,8 +262,12 @@ KillUnit(Kaia);
 End;
 
 Every 0$1 trigger ruDefeated and not FilterAllUnits([[f_enemy, 2], [f_ok]]) do
-var i, sib;
+var i, sib, m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 InGameOn;
 DialogueOn;
 
@@ -337,19 +341,31 @@ for i in FilterAllUnits([[f_side, 2], [f_or, [f_weapon, ar_cargo_bay], [f_weapon
     sib := sib + GetCargo(i, mat_siberit);
 
 if sib >= sibToCollect then
-   AddMedal('med1', 1)
+   begin
+   m1 := true;
+   AddMedal('med1', 1);
+   end
 else
    AddMedal('med1', -1);
 
 if apeDriver or kamikazeTrained then
-   AddMedal('med2', 1)
+   begin
+   m2 := true;
+   AddMedal('med2', 1);
+   end
 else
    AddMedal('med2', -1);
 
 if not UnitFilter([Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Olaf, Kurt, Aviradze], [f_ok]) then
    AddMedal('med3', -1)
 else
+   begin
+   m3 := true;
    AddMedal('med3', 1);
+   end;
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 9);
 
 GiveMedals('MAIN');
 

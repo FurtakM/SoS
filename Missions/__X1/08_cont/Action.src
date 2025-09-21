@@ -1593,7 +1593,7 @@ for i in entranceAllowedList do
 End;
 
 Function HeikeEnterBuilding(building);
-var i, tmp, tmp2;
+var i, tmp, tmp2, someoneTookWeapon;
 begin
 if not building then
    exit;
@@ -1883,6 +1883,8 @@ else
                       end;
                    end;
         ruWeaponsBar: begin
+                      someoneTookWeapon := false;
+
                       if hasWeapons then
                          begin
                          entranceVisitedList := entranceVisitedList diff ruWeaponsBar; // exception
@@ -1942,6 +1944,8 @@ else
 
                                Say(Heike, 'DH-Kaia-Revolver-2');
 
+                               someoneTookWeapon := true;
+
                                SetClassKaiaRevolver;
 
                                hasRevolver := false;
@@ -1959,6 +1963,8 @@ else
 
                             if Givi in tmp and GetClass(Givi) = class_prison then
                                begin
+                               someoneTookWeapon := true;
+
                                SetSide(Givi, 5);
                                ComEnterUnit(Givi, ruWeaponsBar);
 
@@ -1983,6 +1989,8 @@ else
                                end
                             else if Kamil in tmp and GetClass(Kamil) = class_prison then
                                begin
+                               someoneTookWeapon := true;
+
                                SetSide(Kamil, 5);
                                ComEnterUnit(Kamil, ruWeaponsBar);
 
@@ -2006,7 +2014,8 @@ else
                                end
                             else
                                begin
-                               Say(Heike, 'DH-Weapons-Alone-2');
+                               if not someoneTookWeapon then
+                                  Say(Heike, 'DH-Weapons-Alone-2');
 
                                if hasRevolver then
                                   begin

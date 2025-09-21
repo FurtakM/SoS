@@ -828,8 +828,12 @@ End;
 
 // end mission
 Every 0$1 trigger lastObjectiveActive and IsOk(Heike) and FilterUnitsExceptArea(escapeEast, [[f_type, unit_human], [f_side, 2], [f_ok]]) = 0 do
-var tmp;
+var m1, m2, m3, tmp;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 if not heikeHurt then
    SetAchievement('ACH_INVINCIBLE');
 
@@ -850,7 +854,10 @@ if prisonFound then
    if not IsOk(Kamil) then
       AddMedal('med1', -2)
    else
+      begin
+      m1 := true;
       AddMedal('med1', 1);
+      end
    end
 else
    AddMedal('med1', -1);
@@ -859,12 +866,21 @@ if (tmp < 3 and not prisonFound)
 or (tmp < 4 and prisonFound) then
    AddMedal('med2', -1)
 else
+   begin
+   m2 := true;
    AddMedal('med2', 1);
+   end;
 
 if prisonFound and johnnySaved and tmp >= 4 then
-   AddMedal('med3', 1)
+   begin
+   m3 := true;
+   AddMedal('med3', 1);
+   end
 else
    AddMedal('med3', -1);
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 1);
 
 GiveMedals('MAIN');
 
