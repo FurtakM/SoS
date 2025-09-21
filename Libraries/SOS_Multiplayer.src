@@ -40,6 +40,7 @@ Export
   mpDisplayStrings,
   mpGameActive,
   mpRespawnPull,
+  mpCommanders,
   mpGlobalOilDeposits,
   mpGlobalSibDeposits,
   mpTeleports,
@@ -106,6 +107,7 @@ mpVehicles := 0;
 mpShipments := 0;
 mpRespawnPull := [ [], [], [], [], [], [], [], [] ];
 mpApePosIndex := [ [], [], [], [], [], [], [], [] ];
+mpCommanders := [0, 0, 0, 0, 0, 0, 0, 0];
 mpEmissions := 0;
 mpTeleports := 0;
 mpArtifacts := 0;
@@ -134,6 +136,7 @@ gameTypes := [
     GameTypeFamine,
     GameTypeArmsRace,
     GameTypeArmsArtifact,
+    GameTypeSurvivalH
 ];
 
 for i in gameTypes do
@@ -229,7 +232,7 @@ for i := 1 to 8 {max amount} do
     // depots
     if Count(mpDepots) then
        begin
-       if mpGameType in [GameTypeSurvival, GameTypeArmsRace, GameTypeArmsArtifact] then
+       if mpGameType in [GameTypeSurvival, GameTypeSurvivalH, GameTypeArmsRace, GameTypeArmsArtifact] then
           begin
           bc_level := 10;
           bc_type := b_warehouse;
@@ -280,7 +283,7 @@ for i := 1 to 8 {max amount} do
           end;
 
     // buildings
-    if Count(mpBuildings) then
+    if Count(mpBuildings) and not mpGameType in [GameTypeSurvival, GameTypeSurvivalH] then
        begin
        for j in mpBuildings[pos] do
            begin
@@ -392,7 +395,7 @@ End;
 var mpTeamPreset;
 
 Function mpPrepareTeam(side, nation, amount, skill);
-var i, un, class;
+var i, un, class, commander;
 begin
 result := [];
 
@@ -412,7 +415,10 @@ if Multiplayer then
    hc_sex := Multiplayer_GetPlayerSex(side);
    end;
 
-result := Join(result, CreateHuman);
+commander := CreateHuman;
+
+result := Join(result, commander);
+mpCommanders := Replace(mpCommanders, side, commander);
 
 if mpTeamPreset then
    begin
@@ -620,6 +626,11 @@ case gameType of
      GameTypeSurvival:
                    begin
                    result := Count(FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])) and Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
+                   end;
+
+     GameTypeSurvivalH:
+                   begin
+                   result := IsLive(mpCommanders[side]) and Count(FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]])) and Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
                    end;
 
      GameTypeKing:

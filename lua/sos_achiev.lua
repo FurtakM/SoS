@@ -297,7 +297,12 @@ TID_ACH_TIGERTAME = 6590;
 TID_ACH_TIGERTAME_DESC = 6591;
 TID_ACH_REVANGE = 6592;
 TID_ACH_REVANGE_DESC = 6593;
-
+TID_ACH_OMARPLACE = 6594;
+TID_ACH_OMARPLACE_DESC = 6595;
+TID_ACH_SCIDEAD = 6596;
+TID_ACH_SCIDEAD_DESC = 6597;
+TID_ACH_ARES = 6598;
+TID_ACH_ARES_DESC = 6599;
 
 TID_ACH_DESERT = 6600;
 TID_ACH_DESERT_DESC = 6601;
@@ -993,6 +998,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_SCIDEAD'] = {
+        loc(TID_ACH_SCIDEAD), 
+        loc(TID_ACH_SCIDEAD_DESC),
+        false,
+        0,
+        0
+    },
     ['ACH_HSPEED_2'] = {
         loc(TID_ACH_HSPEED_2), 
         loc(TID_ACH_HSPEED_2_DESC),
@@ -1315,6 +1327,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_OMARPLACE'] = {
+        loc(TID_ACH_OMARPLACE), 
+        loc(TID_ACH_OMARPLACE_DESC),
+        false,
+        0,
+        0
+    },
     ['ACH_HSPEED_6'] = {
         loc(TID_ACH_HSPEED_6), 
         loc(TID_ACH_HSPEED_6_DESC),
@@ -1420,13 +1439,6 @@ achievements = {
         0,
         0
     },
-    ['ACH_HSPEED_10'] = {
-        loc(TID_ACH_HSPEED_10), 
-        loc(TID_ACH_HSPEED_10_DESC),
-        true,
-        0,
-        0
-    },
     ['ACH_MASTODONTTAME'] = {
         loc(TID_ACH_MASTODONTTAME), 
         loc(TID_ACH_MASTODONTTAME_DESC),
@@ -1447,6 +1459,20 @@ achievements = {
         false,
         0,
         0
+    },
+    ['ACH_HSPEED_10'] = {
+        loc(TID_ACH_HSPEED_10), 
+        loc(TID_ACH_HSPEED_10_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ARES'] = {
+        loc(TID_ACH_ARES),
+        loc(TID_ACH_ARES_DESC),
+        true,
+        10,
+        2
     }
 };
 
@@ -1475,11 +1501,11 @@ ACHIV_FILTER_MISSION_LIST = {
     },
     {
         {'ACH_DOGTAG', 'ACH_INVINCIBLE', 'ACH_ZOOLIGST', 'ACH_HSPEED_1'},
-        {'ACH_TRAP', 'ACH_SCRAP', 'ACH_DELTA', 'ACH_HSPEED_2'},
+        {'ACH_TRAP', 'ACH_SCRAP', 'ACH_DELTA', 'ACH_SCIDEAD', 'ACH_HSPEED_2'},
         {'ACH_ENG', 'ACH_BABY', 'ACH_CLEAN', 'ACH_APEGEN', 'ACH_IBRAHIM', 'ACH_HSPEED_3'},
         {'ACH_FIST', 'ACH_LAB', 'ACH_COMMISAR', 'ACH_KING', 'ACH_CAMERA', 'ACH_HSPEED_4'},
         {'ACH_FIRE', 'ACH_CHEM', 'ACH_KEY', 'ACH_EXT', 'ACH_HSPEED_5'},
-        {'ACH_ROLF', 'ACH_OIL', 'ACH_LENIN', 'ACH_HSPEED_6'},
+        {'ACH_ROLF', 'ACH_OIL', 'ACH_LENIN', 'ACH_OMARPLACE', 'ACH_HSPEED_6'},
         {'ACH_ANTSNIPER', 'ACH_WEST', 'ACH_UNTOUCH', 'ACH_HSPEED_7'},
         {'ACH_REVOLVER', 'ACH_HEIKERU', 'ACH_GIVIRU', 'ACH_TOY', 'ACH_POKER', 'ACH_HSPEED_8'},
         {'ACH_BOB', 'ACH_KNIGHT', 'ACH_GREEN', 'ACH_HSPEED_9'},
@@ -1585,6 +1611,7 @@ achievsCategory = {
         'ACH_ASPEED_19'
     },
     [2] = {
+        'ACH_ARES',
         'ACH_DOGTAG',
         'ACH_INVINCIBLE',
         'ACH_ZOOLIGST',
@@ -1592,6 +1619,7 @@ achievsCategory = {
         'ACH_TRAP',
         'ACH_SCRAP',
         'ACH_DELTA',
+        'ACH_SCIDEAD',
         'ACH_HSPEED_2',
         'ACH_ENG',
         'ACH_BABY',
@@ -1613,6 +1641,7 @@ achievsCategory = {
         'ACH_ROLF',
         'ACH_OIL',
         'ACH_LENIN',
+        'ACH_OMARPLACE',
         'ACH_HSPEED_6',
         'ACH_ANTSNIPER', 
         'ACH_WEST', 

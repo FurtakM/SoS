@@ -525,7 +525,7 @@ End;
 // Attacks
 // on heike's base
 Every 10$00 + 2$00 trigger not omarAttack and not disableAttackOnHeike do
-var i, un, veh, tmp, tmp2;
+var i, un, veh, tmp, tmp2, empty;
 begin
 enable;
 
@@ -594,11 +594,17 @@ for i in tmp do
 repeat
  wait(0$2);
 
- for i in tmp do
-     if IsDead(i) then
-        tmp := tmp diff i
-     else
-        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+  for i in tmp do
+      begin
+      empty := FilterAllUnits([[f_type, unit_vehicle], [f_empty], [f_dist, i, 8]]);
+
+      if IsDead(i) then
+         tmp := tmp diff i
+      else if empty then
+         ComAttackUnit(i, NearestUnitToUnit(empty, i))
+      else
+         ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+      end;
 
 until not tmp;
 

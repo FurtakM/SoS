@@ -161,6 +161,9 @@ begin
 if not IsOk(bulldozer) or not ValidHex(x, y) or not r then
    exit;
 
+if Count(GetTaskList(bulldozer)) > 10 then
+   exit;
+
 list := [];
 
 if x - r < 0 then
@@ -197,6 +200,9 @@ Export Function BurnTreeXYR(flame, x, y, r);
 var i, min_x, min_y, max_x, max_y, _x, _y, list, task;
 begin
 if not IsOk(flame) or not ValidHex(x, y) or not r then
+   exit;
+
+if Count(GetTaskList(flame)) > 10 then
    exit;
 
 list := [];
@@ -389,7 +395,7 @@ begin
 initMiner := true;
 minersList := [];
 minerMinesList := [];
-minesLimitPerVehicle := 6;
+minesLimitPerVehicle := 10;
 
 for i in FilterAllUnits([f_weapon, ar_miner]) do
     begin
@@ -417,15 +423,16 @@ enable;
 
 for i := minerMinesList downto 1 do
     begin
-    if IsLive(minersList[i]) then
+    side := GetSide(minersList[i]);
+
+    if IsLive(minersList[i]) and side in [your_side, 9] then
        SetUnitDisplayNumber(minersList[i], Count(minerMinesList[i]));
 
     if not minerMinesList[i] then
        continue;
 
     for j := minerMinesList[i] downto 1 do
-        begin
-        side := GetSide(minersList[i]);
+        begin          
 
         if IsDead(minersList[i]) or not IsPlaced(minersList[i]) then
            begin
@@ -650,7 +657,7 @@ for _x = min_x to max_x do
 End;
 
 Function DetectMine(units);
-var i, x, y, scaners, timer;
+var i, x, y, scaners, timer, side;
 begin
 if not units then
    exit;
@@ -684,6 +691,8 @@ timer := 6;
 repeat
    for i in scaners do
        begin
+       side := GetSide(i);
+
        if not IsOk(i) or HasTask(i) or (GetControl(i) = control_manual and not IsDrivenBy(i)) then
           begin
           SetUnitDisplayNumber(i, 0);
@@ -692,7 +701,8 @@ repeat
           continue;
           end;
 
-       SetUnitDisplayNumber(i, timer);
+       if side in [your_side, 9] then
+          SetUnitDisplayNumber(i, timer);
        end;
 
    if not scaners then

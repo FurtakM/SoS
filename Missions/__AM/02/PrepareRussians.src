@@ -1,3 +1,4 @@
+Export ruPatrol;
 Export function PrepareRussianHeroes;
 var tmp;
 begin
@@ -10,7 +11,7 @@ uc_side = 6;
 Mikhail = NewCharacter('Mikhail');
 SetClass(Mikhail, 3);
 PlaceUnitXYR(Mikhail, GetX(tmp[1]),  GetY(tmp[1]), 5, true);
-end;
+End;
 
 Export function PrepareRussianCommander;
 begin
@@ -89,22 +90,32 @@ End;
 Export function PrepareOtherRussians;
 var i, un;
 begin
-for i = 1 to 2 do
+for i := 1 to 2 do
     begin
-    uc_side = 3;
-    uc_nation = 3;
+    uc_side := 3;
+    uc_nation := 3;
 
     hc_gallery = '';
     hc_name = '';
     PrepareHuman(false, 1, rand(RuSoldMinLevel, RuSoldMaxLevel));
 
-    un = CreateHuman;
+    un := CreateHuman;
     PlaceUnitArea(un, RussiansWaterSpawn, false);
     ComTurnXY(un, 80, 73);
     end;
 
 for i in FilterAllUnits([[f_side, 3], [f_btype, 31]]) do
     PrepareSolBun(rand(RuSoldMinLevel, RuSoldMaxLevel), i);
+
+if Difficulty < 4 then
+   exit;
+
+ruPatrol := [];
+
+PrepareSoldier(false, 4);
+un := CreateHuman;
+ruPatrol := Join(ruPatrol, un);
+PlaceUnitXY(un, 92, 44, false);
 End;
 
 Export function PrepareCargoBays;
@@ -252,4 +263,23 @@ enable;
 for i in UnitFilter(attackGroup, [f_type, unit_vehicle]) do
     if GetFuel(i) < 3 then
        SetFuel(i, 3);
+End;
+
+Every 0$2 trigger ruPatrol do
+begin
+if not UnitFilter(ruPatrol, [f_ok]) then
+   exit;
+
+if GetDistUnitXY(ruPatrol[1], 92, 44) < 3 and not HasTask(ruPatrol[1]) then
+   begin
+   wait(0$5);
+   ComAgressiveMove(ruPatrol[1], 122, 68);
+   end
+else if not HasTask(ruPatrol[1]) then
+   begin
+   wait(0$5);
+   ComAgressiveMove(ruPatrol[1], 92, 44);
+   end;
+
+enable;
 End;

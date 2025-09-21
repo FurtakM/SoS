@@ -469,8 +469,12 @@ YouLost('Time');
 End;
 
 Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_warehouse], [f_btype, b_depot]]]) = 0 do
-var tmp;
+var tmp, m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 if Count(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human], [f_ok]])) < 5 then
    begin
    YouLost('Troops');
@@ -481,12 +485,18 @@ if (tick + gameTime) <= 55$00 then
    SetAchievement('ACH_HSPEED_4');
 
 if (tick + gameTime) <= [85$00, 75$00, 65$00, 60$00][Difficulty] then
-   AddMedal('med1', 1)
+   begin
+   m1 := true;
+   AddMedal('med1', 1);
+   end
 else
    AddMedal('med1', -1);
 
 if (flamethrowers >= 3) * baseHill * hannibalPath * (loseCounter < [6, 5, 4, 3][Difficulty]) then
-   AddMedal('med2', 1)
+   begin
+   m2 := true;
+   AddMedal('med2', 1);
+   end
 else if flamethrowers < 3 then
    AddMedal('med2', -1)
 else if not baseHill then
@@ -499,9 +509,15 @@ else
 SaveVariable(gaidarKilled, '04_2_GaidarKilled');
 
 if gaidarKilled then
-   AddMedal('med3', 1)
+   begin
+   m3 := true;
+   AddMedal('med3', 1);
+   end
 else
    AddMedal('med3', -1);
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 4);
 
 GiveMedals('MAIN');
  

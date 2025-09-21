@@ -532,7 +532,7 @@ SetAttitude(1, 2, att_friend, true);
 if IsDead(usCommander) then
    exit;
 
-for i in FilterAllUnits([[f_side, 2], [f_type, unit_human], [f_hastask]]) do
+for i in FilterAllUnits([[f_side, 2], [f_or, [f_type, unit_human], [f_type, unit_vehicle]], [f_hastask]]) do
     ComStop(i);
 
 for i in FilterAllUnits([[f_side, 2], [f_not, [f_ok]], [f_type, unit_human]]) do
@@ -551,6 +551,9 @@ InGameOn;
 ComExit(usCommander);
 AddComMoveXY(usCommander, 81, 143);
 AddComTurnXY(usCommander, 81, 139);
+
+for i in FilterAllUnits([f_side, 2]) do
+    ComStop(i);
 
 PlaceSeeing(81, 144, 2, -10);
 
@@ -755,7 +758,12 @@ hasRockets := true;
 
 // end
 Every 0$1 trigger russianAttack and not FilterAllUnits([f_side, 3]) do
+var m1, m2, m3;
 begin
+m1 := false;
+m2 := false;
+m3 := false;
+
 DialogueOn;
 
 if vehLossCounter = 0 then
@@ -787,19 +795,31 @@ if IsOk(Kaia) then
 Say(Heike, 'DH-End-11');
 
 if GetTech(tech_MatDet, 2) = state_researched then
-   AddMedal('med1', 1)
+   begin
+   m1 := true;
+   AddMedal('med1', 1);
+   end
 else
    AddMedal('med1', -1);
 
 if hasRockets then
-   AddMedal('med2', 1)
+   begin
+   m2 := true;
+   AddMedal('med2', 1);
+   end
 else
    AddMedal('med2', -1);
 
 if tick < [50$00, 45$00, 40$00, 35$00][Difficulty] then
-   AddMedal('med3', 1)
+   begin
+   m3 := true;
+   AddMedal('med3', 1);
+   end
 else
    AddMedal('med3', -1);
+
+if m1 and m2 and m3 and Difficulty >= 3 then
+   SetAchievementEX('ACH_ARES', 7);
 
 GiveMedals('MAIN');
 

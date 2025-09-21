@@ -8,6 +8,7 @@ SOS_MUSIC_CREDITS_ID = 0;
 -- VOLUME_MUSIC_VALUE = OW_settings_getvolume(VOLUME_MUSIC);
 
 OW_menumusic(false);
+OW_settings_setvolume(VOLUME_MUSIC_MENU, OW_SETTING_READ_NUMBER('OPTIONS', 'MUSIC_MENU', 2200));
 
 function sound.play(FILENAME, CALLBACK, VOLUMEID)
     sound:add({ID = OW_OAL_LOAD(FILENAME, false, true, 'sound.finish(' .. (sound.COUNT + 1) .. ');' .. CALLBACK, VOLUMEID)});
@@ -64,7 +65,7 @@ function playCreditsMusic(MODE)
     if MODE == 1 then
         playMenuMusic(0);  
 
-        SOS_MUSIC_CREDITS_ID = sound.play(SOS_MUSIC_CREDITS, 'playCreditsMusic(1);', VOLUME_MUSIC);
+        SOS_MUSIC_CREDITS_ID = sound.play(SOS_MUSIC_CREDITS, 'playCreditsMusic(1);', VOLUME_MUSIC_MENU);
     else     
         sound.finish(SOS_MUSIC_CREDITS_ID);
         playMenuMusic(1);
@@ -74,7 +75,7 @@ end;
 function changeVolumeChannel(STEP, MODE)
     if (STEP == 50) then
         if (MODE == 0) then
-            OW_settings_setvolume(VOLUME_MUSIC, VOLUME_MUSIC_VALUE);
+            OW_settings_setvolume(VOLUME_MUSIC_MENU, VOLUME_MUSIC_VALUE);
         end;
 
         return;
@@ -83,15 +84,15 @@ function changeVolumeChannel(STEP, MODE)
     if (MODE == 1) then 
         if (STEP == 1) then
             OW_settings_setvolume(VOLUME_CREDITS, 0);
-            VOLUME_MUSIC_VALUE = OW_settings_getvolume(VOLUME_MUSIC);
+            VOLUME_MUSIC_VALUE = OW_settings_getvolume(VOLUME_MUSIC_MENU);
         end;
 
         local tmp = VOLUME_MUSIC_VALUE / 50;
         OW_settings_setvolume(VOLUME_CREDITS, tmp * STEP);
-        OW_settings_setvolume(VOLUME_MUSIC, tmp * (50 - STEP));
+        OW_settings_setvolume(VOLUME_MUSIC_MENU, tmp * (50 - STEP));
     else
         local tmp = VOLUME_MUSIC_VALUE / 50;
-        OW_settings_setvolume(VOLUME_MUSIC, tmp * STEP);
+        OW_settings_setvolume(VOLUME_MUSIC_MENU, tmp * STEP);
         OW_settings_setvolume(VOLUME_CREDITS, tmp * (50 - STEP));
     end;
 
@@ -108,7 +109,7 @@ function playNextTrack()
 
     OW_menumusic(false);
     changeBackgroundMenuImage();
-    SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC);
+    SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC_MENU);
 end;
 
 function playNextTrackClick()

@@ -138,11 +138,17 @@ ComExitBuilding(russian_troops_2);
 AddComAgressiveMove(russian_troops_2, GetX(un), GetY(un));
 End;
 
-Every 0$01 trigger (GetLives(russian_patrol_tanks[1]) < 999 or GetLives(russian_patrol_tanks[2]) < 999)
+Every 0$01 trigger (GetLives(russian_patrol_tanks[1]) < 990 or GetLives(russian_patrol_tanks[2]) < 990)
                and See(3, JMM) do
+var i;
 begin
 active_road_patrol := false;
-ComAttackUnit(russian_patrol_tanks, JMM);
+
+for i in russian_patrol_tanks do
+    ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 1]), i));
+
+wait(0$2);
+enable;
 End;
 
 // Macmilan in trap
@@ -194,6 +200,7 @@ begin
 if GetSide(driver) = 3 then
    begin
    wait(11);
-   ComEnterUnit(driver, NearestUnitToUnit(FilterAllUnits([f_btype, b_depot]), driver));
+   ComMoveXY(driver, 24, 14);
+   AddComEnterUnit(driver, NearestUnitToUnit(FilterAllUnits([f_btype, b_depot]), driver));
    end;
 End;

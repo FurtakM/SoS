@@ -8,7 +8,7 @@
 ---               Morgan Nao
 ------------------------------------------------------------------------------
 
-function setCallbackForPing(bool,type)
+function setCallbackForPing(bool, type)
 	if bool then
 		set_Callback(gamewindow.ID,CALLBACK_MOUSECLICK, 'PingLocation(%x,%y,'.. type .. '); setCallbackForPing(false,0);');
 	else
@@ -107,7 +107,7 @@ function PingLocation(X,Y,T)
 	local recipients = 0;
 
 	for k, v in pairs(HV) do
-		recipients = OW_BINARY_ADD(recipients,1,v,1);
+		recipients = OW_BINARY_ADD(recipients, 1, v, 1);
 	end;
 	
 	--debugIngameChat('recipients number ' .. recipients);
@@ -138,7 +138,7 @@ function SetPing(side, T, X, Y)
 				i = n;
 			end;
 		elseif (ping.transparentelement.ping[n].side == side) and getVisible(ping.transparentelement.ping[n]) then
-			sidePingsCount = sidePingsCount+1;
+			sidePingsCount = sidePingsCount + 1;
 			sidePings[sidePingsCount] = ping.transparentelement.ping[n];
 		end;
 	end;
@@ -167,7 +167,7 @@ function SetPing(side, T, X, Y)
 	sound.play(ping.sounds[T], '', VOLUME_EFFECTS);
 	
 	if sidePingsCount > 1 then
-		for i = 1, sidePingsCount-1 do
+		for i = 1, sidePingsCount - 1 do
 			if getVisible(sidePings[i]) then
 				AddEventFade(sidePings[i].ID, 0, menu_fade_time, 'setVisibleID(' .. sidePings[i].ID .. ', false)');
 			end;
@@ -177,7 +177,7 @@ end;
 
 function ping_delete(id)	
 	AddEventFade(ping.transparentelement.ping[id].ID, 0, menu_fade_time, 'setVisibleID(' .. ping.transparentelement.ping[id].ID .. ',false)');
-	AddSingleUseTimer(3,'sgui_delete(ping.transparentelement.ping[' .. id .. '].ID); ping.transparentelement.ping[' .. id ..'] = nil;');
+	AddSingleUseTimer(3, 'sgui_delete(ping.transparentelement.ping[' .. id .. '].ID); ping.transparentelement.ping[' .. id ..'] = nil;');
 end;
 
 --[[
@@ -223,13 +223,23 @@ end;
 
 ping.clone = getElementEX(nil,anchorLT,XYWH(0,0,ScrWidth,ScrHeight),false,{colour1=BLACKA(0)});
 
-set_Callback(gamewindow.ID,CALLBACK_MOUSEDOWN, 'gamewindow.onMouseDown(%b,%x,%y);');
-set_Callback(ping.clone.ID,CALLBACK_MOUSEUP, 'HidePings(%b,false)');
-set_Callback(gamewindow.ID,CALLBACK_MOUSEUP, '');
+set_Callback(gamewindow.ID, CALLBACK_MOUSEDOWN, 'gamewindow.onMouseDown(%b,%x,%y);');
+set_Callback(ping.clone.ID, CALLBACK_MOUSEUP, 'HidePings(%b,false)');
+set_Callback(gamewindow.ID, CALLBACK_MOUSEUP, '');
 
 
-ping.wheelBox = getElementEX(ping.clone,anchorLT,XYWH(0,0,132,132),true,{nomouseevent=false, colour1=BLACKA(0)});
-set_Callback(ping.wheelBox.ID,CALLBACK_MOUSEUP,'HidePings(%b,false)');
+ping.wheelBox = getElementEX(
+	ping.clone,
+	anchorLT,
+	XYWH(0, 0, 132, 132),
+	true,
+	{
+		nomouseevent = false,
+		colour1 = BLACKA(0)
+	}
+);
+
+set_Callback(ping.wheelBox.ID, CALLBACK_MOUSEUP, 'HidePings(%b,false)');
 
 --   220, 220
 --T 32,0,156,77
@@ -284,8 +294,12 @@ function gamewindow.onMouseDown(B, X, Y)
 		ShowPings(B,X,Y);
 	else
 		gamewindow.moveWindow = true;
-		gamewindow.moveXY     = {mX = X, mY = Y};
-		gamewindow.moveMVR    = OW_GETMVRXY();
+		gamewindow.moveXY = {
+			mX = X,
+			mY = Y
+		};
+		gamewindow.moveMVR = OW_GETMVRXY();
+
 		set_Callback(gamewindow.ID, CALLBACK_MOUSEUPANY, 'gamewindow.onMouseUp(%b,%x,%y);');
 		set_Callback(gamewindow.ID, CALLBACK_MOUSEMOVE, 'gamewindow.onMouseMove(%x,%y);');
 	end;
@@ -344,7 +358,7 @@ function ShowPings(B, X, Y)
 	end;
 end;
 
-function HidePings(B,P,T)
+function HidePings(B, P, T)
 	if getVisible(ping.wheelBox) then
 		local BUTTON = getSetting(OPTION_PING_BUTTON);
 
