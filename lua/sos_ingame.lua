@@ -167,3 +167,23 @@ function FROMOW_SHOW_INGAME_MENU(DATA)
 
     -- dialog.options.Show()
 end;
+
+LFC_UNITS_CUSTOM_ICON = {};
+
+function LFC_GET_UNITPANEL_ICONS_CALLBACK(UNIT, LICON, RICON)
+    if (#LFC_UNITS_CUSTOM_ICON == 0) then
+        return LICON, RICON;
+    end;
+
+    local ID = parseInt(UNIT.ID);
+
+    for i = 1, #LFC_UNITS_CUSTOM_ICON do
+        if (ID == LFC_UNITS_CUSTOM_ICON[i][1]) then
+            return LICON, RICON, -1, LFC_UNITS_CUSTOM_ICON[i][2];
+        end;
+    end;
+
+    return LICON, RICON;
+end;
+
+OW_LFC_ADD(LFC_GET_UNITPANEL_ICONS, LFC_GET_UNITPANEL_ICONS_CALLBACK, nil);

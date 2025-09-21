@@ -3,9 +3,9 @@ SOS_TREE_BONUS_LAST_TICK = 0;
 function displayTreeBonusDetails(ID, SKILL, VALUE)
     local mySide = getvalue(OWV_MYSIDE);
 
-    if mySide < 9 then
+    --[[if mySide < 9 then
         return;
-    end;
+    end;--]]
 
     local tick = OW_GET_TICK();
 
@@ -26,6 +26,10 @@ function displayTreeBonusDetails(ID, SKILL, VALUE)
     local SIDE = parseInt(info.SIDE);
     local NATION = parseInt(info.NATION);
     local NAME = info.INFO[1];
+
+    if (mySide < 9 and SIDE ~= mySide) then
+        return;
+    end;
 
     treeWindowGain = getElementEX(
         nil,

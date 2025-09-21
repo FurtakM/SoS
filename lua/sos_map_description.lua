@@ -435,6 +435,7 @@ function refreshPlayersPingPage()
 
 	local PLAYERS = copytable(MULTI_PLAYERINFO_CURRENT_PLID);
 	local NETSTAT_DATA = copytable(MULTIPLAYER_ROOM_PING_DATA);
+	local row = 1;
 
 	if (PLAYERS ~= nil and #PLAYERS > 0) then
 		for i, v in pairs(PLAYERS) do
@@ -447,7 +448,7 @@ function refreshPlayersPingPage()
 						p.PING = 0;
 					end;
 
-					pingData = p.PING .. 'ms / ' .. p.PACKETS_LOST .. '% ' .. loc(9985) 
+					pingData = p.PING .. 'ms / ' .. p.PACKETS_LOST .. ' ' .. loc(9985) 
 								.. ' / ' .. p.PACKETS_SENT .. ' ' .. loc(9987) .. ' / ' .. p.PACKETS_RECIEVED .. ' ' .. loc(9986);
 					break;
 				end;
@@ -456,9 +457,9 @@ function refreshPlayersPingPage()
 			local info = getLabelEX(
 				dialog.map.page4.panel,
 				anchorLTRB,
-				XYWH(15, 3 + ((i - 1) * 12), 520, 12),
+				XYWH(15, 3 + ((row - 1) * 12), 520, 12),
 				nil,
-				i .. '. ' .. player.NAME .. ': ' .. pingData,
+				row .. '. ' .. player.NAME .. ': ' .. pingData,
 				{
 					font_name = Tahoma_12,
 					colour1 = WHITEA(),
@@ -468,7 +469,9 @@ function refreshPlayersPingPage()
 					shadowtext = true,
 					scissor = true
 				}
-			);			
+			);
+
+			row = row + 1;			
 		end;
 	else
 		local info = getLabelEX(

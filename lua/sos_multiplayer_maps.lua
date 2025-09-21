@@ -35,6 +35,10 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 		MIN = 2,
 		MAX = 8
 	},
+	pDesert = {
+		MIN = 2,
+		MAX = 4
+	},
 	pLonleyIsland = {
 		MIN = 2,
 		MAX = 8
@@ -114,5 +118,21 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pMonteCassino = {
 		MIN = 3,
 		MAX = 8
+	},
+	pHighlands = {
+		MIN = 2,
+		MAX = 4
+	},
+	pFourToWin = {
+		MIN = 2,
+		MAX = 4
+	},
+	pParty = {
+		MIN = 2,
+		MAX = 4
+	},
+	pAmaranthRiver = {
+		MIN = 2,
+		MAX = 6
 	}
 }

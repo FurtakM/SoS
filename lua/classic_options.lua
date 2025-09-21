@@ -11,7 +11,16 @@ SETTING_SPECIAL_VSYNC=4;
 SETTING_SPECIAL_FPS=5;
 SETTING_SPECIAL_LIMITMOUSE=6;
 SETTING_PERMSTANDGROUND=8;
+
+VOLUME_DEFAULT = 50;
+VOLUME_MUSIC   = 0;
+VOLUME_EFFECTS = 1;
+VOLUME_DIALOGS = 2;
+VOLUME_EXCLAMATIONS = 3;
+VOLUME_VIDEO   = 4;
 --]]
+
+VOLUME_MUSIC_MENU = 20;
 
 OPTION_STEAMOVERLAY = 1;
 OPTION_GAME_WOUNDED = 2;
@@ -42,6 +51,7 @@ OPTION_SOUND_AUDIO = 26;
 OPTION_SOUND_EXCLAMATIONS = 27;
 OPTION_TIMER = 28;
 OPTION_PING_BUTTON = 29;
+OPTION_SOUND_MUSIC_MENU = 30;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -198,6 +208,9 @@ function getSetting(setting)
         return OW_settings_getvolume(VOLUME_EXCLAMATIONS);
     end;
 
+    if setting == OPTION_SOUND_MUSIC_MENU then
+        return OW_SETTING_READ_NUMBER('OPTIONS', 'MUSIC_MENU', 2200);
+    end;
 
     if setting == OPTION_SOUND_VIDEO then
         return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_VOLUME_VIDEO', 5000);
@@ -416,6 +429,11 @@ function saveSliderSetting(setting, value)
         OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_MUSIC', value);
     end;
 
+    if setting == OPTION_SOUND_MUSIC_MENU then
+        OW_settings_setvolume(VOLUME_MUSIC_MENU, value);
+        OW_SETTING_WRITE('OPTIONS', 'MUSIC_MENU', value);
+    end;
+
     if setting == OPTION_SOUND_EFFECTS then
         OW_settings_setvolume(VOLUME_EFFECTS, value);
         OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_EFFECTS', value);
@@ -569,7 +587,7 @@ menu.window_options = getElementEX(
 menu.window_options.panel = getElementEX(
     menu.window_options, 
     anchorL, 
-    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 300, 753, 600), 
+    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 360, 753, 720), 
     true,
     {
         texture = 'classic/edit/background_options_2.png'
@@ -581,7 +599,7 @@ function generateOptions()
     menu.window_options.panel.cancel = clButton(
         menu.window_options.panel, 
         12, 
-        560,
+        680,
         236, 
         30,
         loc(TID_msg_Cancel), 
@@ -592,7 +610,7 @@ function generateOptions()
     menu.window_options.panel.shortcuts = clButton(
         menu.window_options.panel, 
         255, 
-        560,
+        680,
         244, 
         30,
         loc(TID_msg_Shortcuts), 
@@ -605,7 +623,7 @@ function generateOptions()
     menu.window_options.panel.accept = clButton(
         menu.window_options.panel, 
         505, 
-        560,
+        680,
         236, 
         30,
         loc(TID_msg_Ok), 
@@ -617,7 +635,7 @@ function generateOptions()
     menu.window_options.panel.sound = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(8, 20, 242, 218), 
+        XYWH(8, 20, 242, 338), 
         true,
         {
             colour1 = WHITEA(),
@@ -793,11 +811,41 @@ function generateOptions()
         }
     );
 
+    menu.window_options.panel.sound.music_menu_label = getLabelEX(
+        menu.window_options.panel.sound,
+        anchorLT,
+        XYWH(6, 186, 200, 15),
+        BankGotic_14, 
+        loc(TID_Main_Menu_Options_Music_Menu_Volume),
+        {
+            font_colour = RGB(0, 0, 0),
+            shadowtext = false,
+            nomouseevent = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+            wordwrap = false,
+            scissor = true
+        }
+    );
+
+    menu.window_options.panel.sound.music_menu_slider = clSliderElement(
+        menu.window_options.panel.sound, 
+        anchorNone, 
+        XYWH(6, 202, 230, 15),
+        0,
+        5000, 
+        getSetting(OPTION_SOUND_MUSIC_MENU), 
+        'saveSliderSetting(' .. OPTION_SOUND_MUSIC_MENU .. ', menu.window_options.panel.sound.music_menu_slider.POS);',
+        {        
+            hint = loc(TID_Main_Menu_Options_Music_Menu_Volume_Desc)
+        }
+    );
+
 
     menu.window_options.panel.sound.audio_listbox = clComboBox(
         menu.window_options.panel.sound,
         5,
-        200,
+        234,
         getAudioDeviceList(),
         getSetting(OPTION_SOUND_AUDIO),
         'saveComboBoxSetting(' .. OPTION_SOUND_AUDIO .. ', "VALUE")',
@@ -812,7 +860,7 @@ function generateOptions()
     menu.window_options.panel.sound.audio_label = getLabelEX(
         menu.window_options.panel.sound,
         anchorLT,
-        XYWH(9, 185, 200, 15),
+        XYWH(9, 219, 200, 15),
         BankGotic_14, 
         loc(TID_Main_Menu_Options_Audio_Desc),
         {
@@ -829,7 +877,7 @@ function generateOptions()
     menu.window_options.panel.sound.desc = getLabelEX(
         menu.window_options.panel.sound,
         anchorLT,
-        XYWH(6, 244, 230, 32),
+        XYWH(6, 306, 230, 32),
         Tahoma_12, 
         loc(TID_Main_Menu_Options_Sound_Label),
         {
@@ -848,7 +896,7 @@ function generateOptions()
     menu.window_options.panel.language = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(256, 20, 242, 218), 
+        XYWH(256, 20, 242, 338), 
         true,
         {
             colour1 = WHITEA(),
@@ -1001,7 +1049,7 @@ function generateOptions()
     menu.window_options.panel.language.desc = getLabelEX(
         menu.window_options.panel.language,
         anchorLT,
-        XYWH(6, 244, 230, 32),
+        XYWH(6, 306, 230, 32),
         Tahoma_12, 
         loc(TID_Main_Menu_Options_Lang_Label),
         {
@@ -1019,7 +1067,7 @@ function generateOptions()
     menu.window_options.panel.graphics = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(502, 20, 242, 218), 
+        XYWH(502, 20, 242, 338), 
         true,
         {
             colour1 = WHITEA(),
@@ -1170,7 +1218,7 @@ function generateOptions()
     menu.window_options.panel.graphics.desc = getLabelEX(
         menu.window_options.panel.graphics,
         anchorLT,
-        XYWH(6, 244, 230, 32),
+        XYWH(6, 306, 230, 32),
         Tahoma_12, 
         loc(TID_Main_Menu_Options_Graphics_Label),
         {
@@ -1189,10 +1237,10 @@ function generateOptions()
     menu.window_options.panel.controls = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(8, 300, 242, 192), 
+        XYWH(8, 360, 242, 312), 
         true,
         {
-            colour1 = WHITEA(),
+            colour1 = WHITEA()
         }
     );
 
@@ -1353,7 +1401,7 @@ function generateOptions()
     menu.window_options.panel.game = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(256, 300, 242, 192), 
+        XYWH(256, 360, 242, 312), 
         true,
         {
             colour1 = WHITEA(),
@@ -1538,7 +1586,7 @@ function generateOptions()
     menu.window_options.panel.interface = getElementEX(
         menu.window_options.panel, 
         anchorLT, 
-        XYWH(503, 300, 242, 192), 
+        XYWH(503, 360, 242, 312), 
         true,
         {
             colour1 = WHITEA(),

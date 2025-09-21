@@ -1,0 +1,59 @@
+// GameTypeSurvivalHardcore = 8
+// Init
+Every 0$1 trigger mpGameActive marked GameTypeSurvivalH do
+var i;
+begin
+// disable depot
+for i := 1 to 8 do
+    SetRestrict(b_depot, i, state_disabled);
+End;
+
+// Conditions: destroy all enemies by killing thier depot
+Every 0$3 trigger mpGameActive and CanWinLoose and Multiplayer marked GameTypeSurvivalH do
+var i, canWin;
+begin
+canWin := false;
+
+if not HasPower(your_side) then
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end
+else
+   begin
+   canWin := true;
+
+   for i := 1 to 8 do
+       if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+          if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+             if HasPower(i) then
+                begin
+                canWin := false;
+                break;
+                end;
+
+   if canWin then
+      enable(mpWin)
+   else
+      enable;
+   end;
+End;
+
+Function CanWinLoose;
+begin
+result := true;
+
+//if IAmServer and PlayerCount > 0 then
+//   result := false;
+
+if IAmSpec and PlayerCount > 1 then
+   result := false;
+End;
+
+Function HasPower(i);
+begin
+if not FilterAllUnits([[f_side, i], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) then
+   exit;
+
+result := FilterAllUnits([[f_side, i], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]);
+End;
