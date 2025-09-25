@@ -404,10 +404,6 @@ function isMultiplayer()
     return getvalue(OWV_MULTIPLAYER);
 end;
 
-function setFontColourID(ID, COLOR)
-    setFontColour({ID=ID}, COLOR);
-end;
-
 function setParentID(ELEMENT_ID, PARENT_ID)
    if PARENT_ID == nil then
       SGUI_setparent(ELEMENT_ID, 0);

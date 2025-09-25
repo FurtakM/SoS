@@ -1,4 +1,4 @@
-cutscene.onSeqEnd = 'setVisible(cutscene,false);OW_hidemouse(false);clearFocus();OW_SEQ_FINISH();OW_SET_VSYNC_VIDEOMODE(false);SEQ_VID_ID=-1;';
+cutscene.onSeqEnd = 'setVisible(cutscene,false);OW_hidemouse(false);clearFocus();OW_SEQ_FINISH();OW_SET_VSYNC_VIDEOMODE(false);SEQ_VID_ID=-1;SEQ_DATA_LOADED=false;';
 
 function cutscene.doCutscene(FILENAME, RECIEVER, CALLBACK)
     setTexture(cutscene.video, 'black.png');
@@ -57,6 +57,7 @@ end;
 SEQ_VID_ID = -1;
 SEQ_VID_NAME = '';
 SEQ_VID_EXT = '';
+SEQ_DATA_LOADED = false;
 
 function FROMOW_SEQ_VIDEO_UPDATE(ID, PLAYING, NAME)
     if PLAYING then
@@ -77,6 +78,10 @@ function FROMOW_SEQ_VIDEO_UPDATE(ID, PLAYING, NAME)
     end;
 end;
 
+function FROMOW_SEQ_GLOBAL_DATA_LOADED()
+    SEQ_DATA_LOADED = true;
+end;
+
 function PlayCustomVideoSubtitles();
     if SEQ_VID_ID == -1 then
         return;
@@ -94,13 +99,34 @@ function PlayCustomVideoSubtitles();
             local t = VIDEO_TIME(SEQ_VID_ID);
 
             if (t >= v.min and t <= v.max) then
-                setText(cutscene.subtitles, v.text);
-                break;
+                if (v.var ~= nil) then
+                    local set = nil;
+
+                    if (SEQ_DATA_LOADED and OW_GET_GLOBAL_CHARACTER_SET_SIZE(v.var)) then
+                        set = v.yes;
+                    else
+                        set = v.no;
+                    end;
+
+                    if (set ~= nil) then
+                        for _i, _v in pairs(set) do   
+                            if (t >= _v.min and t <= _v.max) then
+                                setText(cutscene.subtitles, _v.text);
+                                goto outerBreak;
+                            end;
+                        end;
+                    end;
+                else
+                    setText(cutscene.subtitles, v.text);
+                    break;
+                end;
             end;
 
             setText(cutscene.subtitles, '');
         end;
     end;
+
+    ::outerBreak::
 
     timer:single(0.1, 'PlayCustomVideoSubtitles()');
 end;
