@@ -123,6 +123,24 @@ menu.window.switch = getImageButtonEX(
     }
 );
 
+menu.window.label = getLabelEX(
+    menu.window,
+    anchorR,
+    XYWH(4, 310, 232, 14),
+    Tahoma_12, 
+    '',
+    {
+        font_name = BankGotic_14,
+        font_colour = RGB(0, 0, 0),
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true,
+        font_size = 14
+    }
+);
+
 menu.window2 = getElementEX(
     menu,
     anchorNone,

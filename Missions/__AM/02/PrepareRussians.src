@@ -151,7 +151,7 @@ PlaceHumanInUnit(driver2, cargo2);
 End;
 
 Export function PrepareRussianAttack(count, area);
-var i, veh, un, tmp, mech;
+var i, veh, un, tmp, mech, mechs;
 begin
 uc_side = 3;
 uc_nation = 3;
@@ -228,19 +228,28 @@ repeat
      if not GetTag(i) and GetLives(i) < 650 and GetType(i) = unit_vehicle then
         begin
         SetTag(i, 1);
-        ComMoveXY(i, 20, 8);
+        ComMoveXY(i, 10, 10);
         end;
 
-     if GetTag(i) = 1 and GetDistUnitXY(i, 20, 8) < 6 then
+     if GetTag(i) = 1 and GetDistUnitXY(i, 10, 10) < 6 and not FilterAllUnits([[f_side, 1], [f_dist, i, 8]]) then
         SetTag(i, 2);
 
      if GetTag(i) = 2 then
         begin  
         if GetLives(i) = 1000 then
            SetTag(i, 3)
+        else if FilterAllUnits([[f_side, 1], [f_dist, i, 8]]) and not IsDrivenBy(i) then
+           begin
+           SetTag(i, 3);
+           mech := FilterAllUnits([[f_side, 3], [f_tag, i]]);
+
+           if mech then
+              ComEnterUnit(mech[1], i);
+           end
         else if IsDrivenBy(i) then
            begin
            mech := IsDrivenBy(i);
+           SetTag(mech, i);
 
            if not See(1, mech) and GetLives(mech) < 1000 then
               SetLives(mech, 1000);
@@ -250,7 +259,10 @@ repeat
         end;
 
      if GetTag(i) = 3 and IsDrivenBy(i) then
-        SetTag(i, 0);
+        begin
+        SetTag(IsDrivenBy(i), 0);
+        SetTag(i, 0)
+        end;
      end;
 until not attackGroup;
 end;

@@ -19,6 +19,10 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 		MIN = 2,
 		MAX = 8
 	},
+	pCrossfireCanyon = {
+		MIN = 2,
+		MAX = 8
+	},
 	pFlags = {
 		MIN = 2,
 		MAX = 8
@@ -132,6 +136,10 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 		MAX = 4
 	},
 	pAmaranthRiver = {
+		MIN = 2,
+		MAX = 6
+	},
+	pVerdantDivide = {
 		MIN = 2,
 		MAX = 6
 	}

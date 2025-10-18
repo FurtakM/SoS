@@ -59,8 +59,8 @@ Say(Kurin, 'D2-Kur-6');
 
 beriaBaseSquad := CharacterSelection(
                        '1',
-                       [7, 6, 6, 5][Difficulty],
-                       [7, 6, 6, 5][Difficulty],
+                       [9, 8, 8, 7][Difficulty],
+                       [9, 8, 8, 7][Difficulty],
                        [sel_change_class, Burlak, sel_changeable, sel_change_class] ^
                        Belkov ^ Gnyevko ^ Kirilenkova ^ Kovalyuk ^ beriaTeam ^
                        [sel_not_hired, sel_not_changeable, sel_dont_change_class, Kurin, Popov] ^
@@ -176,6 +176,30 @@ wait(0$5);
 ComExitBuilding(Popov);
 AddComMoveXY(Popov, 142, 64);
 AddComMoveXY(popovTeam, 142, 64);
+AddComFree(popovTeam);
+
+wait(1$00);
+
+if not UnitFilter(americanReinforcementsTroops, [f_ok]) then
+   exit;
+
+ComMoveXY(americanReinforcementsTroops, 27, 36);
+
+repeat
+ wait(0$1);
+
+ if not UnitFilter(americanReinforcementsTroops, [f_ok]) then
+    exit;
+
+until IsInArea(americanReinforcementsTroops[1], omicronBaseArea);
+
+SetSide(americanReinforcementsTroops[1], 1);
+omicronTroops := omicronTroops union americanReinforcementsTroops[1];
+
+if HexInfo(30, 53) and UnitsInside(HexInfo(30, 53)) = 0 then
+   ComEnterUnit(americanReinforcementsTroops[1], HexInfo(30, 53));
+
+americanReinforcementsTroops := [];
 End;
 
 // self attack on allies
@@ -465,6 +489,9 @@ DialogueOn;
 Say(Burlak, 'D5a-Bur-1');
 
 DialogueOff;
+
+SetTech(tech_Track, 3, state_enabled);
+SetRestrict(b_ext_track, 3, state_enabled);
 End;
 
 Every 0$1 trigger hasFactory and hasOilTower do
@@ -480,9 +507,15 @@ repeat
  pepCount := Count(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
 
  if vehiclesOwned < (pepCount + requiredVehiclesAmount) then
-    display_strings := ['#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned]
+    display_strings := [
+       '#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned,
+       '#Ru03-6', kurinWaitForVehiclesTime
+    ]
  else
-    display_strings := ['#Ru03-5a'];
+    display_strings := [
+       '#Ru03-5a',
+       '#Ru03-6', kurinWaitForVehiclesTime
+    ];
 
  kurinWaitForVehiclesTime := kurinWaitForVehiclesTime - 0$1;
 until kurinWaitForVehiclesTime = 0$0;
@@ -544,9 +577,15 @@ if q = 3 then
     pepCount := Count(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
 
     if vehiclesOwned < (pepCount + requiredVehiclesAmount) then
-       display_strings := ['#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned]
+       display_strings := [
+          '#Ru03-5', (pepCount + requiredVehiclesAmount) - vehiclesOwned,
+          '#Ru03-6', kurinWaitForVehiclesTime
+       ]
     else
-       display_strings := ['#Ru03-5a'];
+       display_strings := [
+          '#Ru03-5a',
+          '#Ru03-6', kurinWaitForVehiclesTime
+       ];
 
     kurinWaitForVehiclesTime := kurinWaitForVehiclesTime - 0$1;
    until kurinWaitForVehiclesTime = 0$0;
@@ -641,6 +680,7 @@ if sendMechanics then
    end;
 End;
 
+// attack on Omicron
 Every 0$1 trigger timeToAttackOnOmicron do
 begin
 SetAreaMapShow(omicronGatheringArea, 1);
@@ -693,6 +733,7 @@ ChangeMissionObjectives('M5a');
 Query('QRefuel');
 End;
 
+// retreat to Kirov before Arabs
 Every 0$2 trigger not retreatToKirovAllowed and FilterAllUnits([[f_side, 3], [f_dist, kirovDepot, 16], [f_not, [f_and, [f_type, unit_vehicle], [f_empty]]], [f_not, [f_type, unit_building]]]) do
 var i, tmp;
 begin
@@ -712,3 +753,198 @@ wait(0$2);
 
 enable;
 End;
+
+// attack on american without permission
+Every 0$2 trigger not allowedToAttackOmicron and FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3]) do
+var i;
+begin
+if IsOk(Gnyevko) and omicronRetreatCounter = 0 then
+   begin
+   DialogueOn;
+   Say(Gnyevko, 'D11-Gny-1');
+   Say(Burlak, 'D11-Bur-1');
+   DialogueOff;
+   end
+else
+   begin
+   DialogueOn;
+   SayRadio(Kurin, 'D11-Kur-1');
+   DialogueOff;
+   end;
+
+omicronRetreatCounter := Inc(omicronRetreatCounter);
+
+InGameOn;
+
+for i in FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3]) do
+    ComMoveToArea(i, omicronRetreatArea);
+
+wait(0$2);
+
+InGameOff;
+
+enable;
+End;
+
+// American talk about Arabs
+Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) or GetLives(usDep) < 1000) and allowedToAttackOmicron do
+var i, tmp, random, sol, nearest;
+begin
+uc_side := 1;
+uc_nation := nation_american;
+
+PrepareSoldier(sex_male, 1);
+random := CreateHuman;
+
+SayRadioNoFaceNoName(random, 'D8-Sol1-1');
+
+sol := FilterAllUnits([[f_side, 3], [f_ok], [f_sex, sex_male]]) diff mainRuCharacters;
+
+if sol then
+   Say(sol[1], 'D8-RSol1-1');
+
+if IsOk(Kovalyuk) then
+   Say(Kovalyuk, 'D8-Kov-1');  
+
+americanRetreat := true;
+
+wait(0$4);
+
+if Count(sol) > 1 then
+   Say(sol[2], 'D8-RSol2-1')
+else if IsOk(Gnyevko) then
+   Say(Gnyevko, 'D8-Gny-1');
+
+
+wait(0$4);
+
+DialogueOn;
+
+CenterNowOnUnits(Kurin);
+
+SayRadio(Grishko, 'D9-Gri-1');
+SayRadio(Kurin, 'D9-Kur-1');
+SayRadio(Grishko, 'D9-Gri-2');
+SayRadio(Kurin, 'D9-Kur-2');
+
+dwait(0$2);
+
+SayRadio(Grishko, 'D9-Gri-3');
+SayRadio(Kurin, 'D9-Kur-3');
+
+DialogueOff;
+
+arabAttackActive := true;
+
+CenterNowOnUnits(Burlak);
+
+wait(0$5);
+
+SpawnArabAttack;
+
+InGameOn;
+
+CenterNowOnUnits(Kurin);
+
+SayRadio(Kurin, 'D9a-Kur-1');
+Say(Burlak, 'D9a-Bur-');
+SayRadio(Kurin, 'D9a-Kur-2');
+
+InGameOff;
+
+CenterNowOnUnits(Burlak);
+
+ChangeMissionObjectives('M6a');
+
+ComMoveXY(Popov union popovTeam, 121, 43);
+AddComMoveXY(Popov union popovTeam, 90, 60);
+
+// see popov
+repeat
+ wait(0$1);
+ nearest := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_nation, 3], [f_ok]]) diff [Belkov, Gnyevko, Kovalyuk, Scholtze];
+
+ if not nearest then
+    exit;
+
+ nearest := NearestUnitToUnit(nearest, Popov);
+until GetDistUnits(nearest, Popov) < 8;
+
+retreat := true;
+
+ComMoveXY(FilterAllUnits([f_side, 2]), 185, 126);
+
+if nearest = Burlak then
+   begin
+   InGameOn;
+   CenterOnUnits(Popov);
+
+   for i in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+       ComMoveXY(i, 83, 49);
+
+   ComMoveUnit(Burlak, Popov);
+   ComTurnUnit(Popov, Burlak);
+
+   Say(Burlak, 'D10a-Bur-1');
+
+   ComTurnUnit(Burlak, Popov);
+
+   Say(Popov, 'D10a-Pop-1');
+   Say(Burlak, 'D10a-Bur-2');
+
+   CenterOnXY(159, 107);
+
+   Say(Popov, 'D10a-Pop-2');
+
+   CenterNowOnUnits(Popov);
+   
+   Say(Burlak, 'D10a-Bur-3');
+   Say(Popov, 'D10a-Pop-3');
+   Say(Burlak, 'D10a-Bur-4');
+   Say(Popov, 'D10a-Pop-4');
+   Say(Burlak, 'D10a-Bur-5');
+   Say(Popov, 'D10a-Pop-5');    
+   
+   end
+else
+   begin
+   InGameOn;
+   CenterOnUnits(Popov);
+
+   for i in FilterAllUnits([[f_side, 3], [f_type, unit_human]]) do
+       ComHold(i);
+
+   ComMoveUnit(nearest, Popov);
+   ComTurnUnit(Popov, nearest);
+
+   Say(nearest, 'D10b-RSol1-1');
+
+   ComTurnUnit(nearest, Popov);
+
+   Say(Popov, 'D10b-Pop-1');
+   Say(nearest, 'D10b-RSol1-2');
+   SayRadio(Popov, 'D10b-Pop-2');
+   Say(Burlak, 'D10b-Bur-2');
+   SayRadio(Popov, 'D10b-Pop-3');
+   Say(Burlak, 'D10b-Bur-3');
+   SayRadio(Popov, 'D10b-Pop-4');
+   Say(Burlak, 'D10b-Bur-4');
+   SayRadio(Popov, 'D10b-Pop-5');
+   end;
+
+ComMoveXY(Popov ^ popovTeam ^ FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 67, 127);
+
+wait(0$3);
+
+FinishMission;
+End;
+
+
+Function FinishMission;
+begin
+
+End;
+
+
+
+

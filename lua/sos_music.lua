@@ -110,6 +110,8 @@ function playNextTrack()
     OW_menumusic(false);
     changeBackgroundMenuImage();
     SOS_MUSIC_MENU_ID = sound.play(SOS_MUSIC_LIST[SOS_MUSIC_TRACK], 'playNextTrack();', VOLUME_MUSIC_MENU);
+
+    setText(menu.window.label, loc(6089) .. ' ' .. SOS_MUSIC_LIST[SOS_MUSIC_TRACK]:match("([^/]+)%.%w+$"));
 end;
 
 function playNextTrackClick()

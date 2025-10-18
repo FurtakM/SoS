@@ -339,14 +339,15 @@ repeat
  if GetDistUnits(ruDisturb, Heike) > 6 then
     ComMoveUnit(ruDisturb, Heike);
 
- if GetClass(Heike) <> class_prison or UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then    begin
+ if GetClass(Heike) <> class_prison or UnitFilter(heikeSquad, [[f_side, 2], [f_dist, ruDisturb, 8], [f_or, [f_class, class_soldier], [f_class, class_desert_warior], [f_class, class_hunter], [f_class, class_revolver]]]) then
+    begin
     isAlarm := true;
     exit;
     end;
 
 until UnitFilter(heikeSquad union Heike, [f_distxy, 100, 37, 6]);
 
-PlaceSeeing(100, 37, 3, -10);
+PlaceSeeing(100, 37, 2, -10);
 
 tmp := UnitFilter(heikeSquad union Heike, [[f_class, class_prison], [f_dist, ruOutpost0, 12]]);
 
@@ -358,6 +359,9 @@ for i in tmp do
 
 ComMoveXY(ruDisturb, 104, 37);
 AddComTurnUnit(ruDisturb, Heike);
+
+if Kaia in heikeSquad and IsOk(Kaia) and GetClass(Kaia) = class_prison and not Kaia in tmp then
+   ComMoveXY(Kaia, 104, 36);
 
 repeat
  wait(0$1);
@@ -372,12 +376,12 @@ until not cr;
 
 wait(0$2);
 
-RemoveSeeing(100, 37, 3);
+RemoveSeeing(100, 37, 2);
 
 for i in tmp do
     SetSide(i, 2);
 
-if Kaia in tmp then
+if Kaia in tmp or GetDistUnits(Kaia, ruDisturb) < 8 then
    begin
    InGameOn;
 
@@ -460,6 +464,8 @@ ComMoveXY(Heike, 43, 21);
 AddComTurnUnit(ruDisturb, Heike);
 AddComTurnUnit(Heike, ruDisturb);
 
+CenterNowOnUnits(Heike);
+
 // RaiseSailEvent(centerCamEvent);
 
 wait(0$2);
@@ -498,7 +504,6 @@ case Query('MuchinQuestion') of
 2: begin
    Say(Heike, 'DH-Fail-a-8');
    Say(Heike, 'DH-Fail-a-9');
-   Say(Heike, 'DH-Fail-10');
    Say(Heike, 'DH-Fail-a-11');
 
    async;

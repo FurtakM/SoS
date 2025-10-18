@@ -466,7 +466,7 @@ else
 End;
 
 // heike on the border of base
-Every 0$1 trigger IsInArea(Heike, baseBorderArea) marked gameStartEvent do
+Every 0$1 trigger IsInArea(Heike, baseBorderArea) and not isAlarm marked gameStartEvent do
 var x, y, v;
 begin
 DialogueOn;
@@ -514,7 +514,7 @@ DialogueOff;
 End;
 
 // admin area
-Every 0$2 trigger IsInArea(Heike, adminArea) and not adminAreaDiscovered and not hasMuchin marked gameStartEvent do
+Every 0$2 trigger IsInArea(Heike, adminArea) and not isAlarm and not adminAreaDiscovered and not hasMuchin marked gameStartEvent do
 begin
 DialogueOn;
 PlaceSeeing(152, 115, 2, -16);
@@ -1257,6 +1257,13 @@ ChangeMissionObjectives('M3-out');
 
 DialogueOff;
 
+if not Markov or IsDead(Markov) then
+   Query('QMarkovMissing')
+else if Markov in heikeSquad and GetSide(Markov) = 2 then
+   Query('QMarkovFactory')
+else
+   Query('QMarkov');
+
 SetCargo(Jerry, mat_cans, 10);
 
 ComMoveXY(Jerry, 95, 17);
@@ -1715,7 +1722,8 @@ else
                            end
                         else
                            begin
-                           Say(Kaia, 'DK-Sniper-2');
+                           if Markov then
+                              Say(Kaia, 'DK-Sniper-2');
 
                            repeat
                             wait(1);
@@ -1880,6 +1888,8 @@ else
                       SetSide(Kaia, 2);
                       heikeSquad := Join(heikeSquad, Kaia);
                       ComExitBuilding(Kaia);
+
+                      Query('QKaia');
                       end;
                    end;
         ruWeaponsBar: begin
@@ -1981,7 +1991,7 @@ else
                                ComExitBuilding(Givi);
                                SetSide(Givi, 2);
 
-                               if hasRevolver then
+                               if hasRevolver and not heikeHasRevolver then
                                   begin
                                   Say(Heike, 'DH-Kaia-Revolver-1');
                                   heikeHasRevolver := true;
@@ -2006,7 +2016,7 @@ else
                                ComExitBuilding(Kamil);
                                SetSide(Kamil, 2);
 
-                               if hasRevolver then
+                               if hasRevolver and not heikeHasRevolver then
                                   begin
                                   Say(Heike, 'DH-Kaia-Revolver-1');
                                   heikeHasRevolver := true;
@@ -2065,7 +2075,7 @@ End;
 
 // weaponaries
 Every 0$5 trigger canEquipWeapons and weaponsAmount and GetSide(ruWeaponsBar) = 3 and UnitFilter(heikeSquad, [[f_inarea, weaponariesArea], [f_side, 2], [f_class, class_prison]]) and not GetAttitude(2, 3) = att_enemy and not GetDistUnits(ruDisturb, ruWeaponsBar) < 12 marked gameStartEvent do
-var i, tmp;
+var i, tmp, p;
 begin
 enable;
 
@@ -2082,8 +2092,19 @@ if Query('QWeapons') = 1 then
        ComEnterUnit(i, ruWeaponsBar);
        weaponsAmount := Dec(weaponsAmount);
 
+       p := 0;
+
        repeat
         wait(0$0.3);
+        p := Inc(p);
+
+        if p > 5 then
+           begin
+           ComStop(i);
+           Query('QBlocked');
+           InGameOff;
+           exit;
+           end;
        until IsInUnit(i);
 
        SetClass(i, class_soldier);          
@@ -2098,6 +2119,7 @@ if Query('QWeapons') = 1 then
 
        if weaponsAmount = 0 then
           begin
+          Query('QWeaponsAmountZero');
           SetAreaMapShow(weaponariesArea, 0);
           disable;
           exit;

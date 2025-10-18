@@ -345,7 +345,7 @@ for i in filter do
 End;
 
 Every 0$2 trigger retreatFromOmicron do
-var i, tmp;
+var i, tmp, enemy;
 begin
 ComMoveXY(russianCargo, 79, 155);
 AddComMoveToArea(russianCargo, westEscapeArea);
@@ -356,15 +356,18 @@ tmp := tmp diff UnitFilter(tmp, [[f_class, class_mechanic], [f_not, [f_driving]]
 for i in tmp do
     begin
     ComAgressiveMove(i, 123, 60);
-    AddComAgressiveMove(i, 153, 103);
+    AddComAgressiveMove(i, 133, 95);
     end;
+
+wait(0$20);
 
 repeat
  wait(0$1);
  tmp := UnitFilter(russianOmicronAttackers, [f_ok]);
+ enemy := FilterAllUnits([[f_enemy, 3], [f_not, [f_type, unit_building]], [f_not, [f_inarea, hillArea]]]);
 
  for i in tmp do
-     ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([[f_enemy, 3], [f_not, [f_type, unit_building]]]), i))
+     ComAttackUnit(i, NearestUnitToUnit(enemy, i))
 
 until not tmp;
 End;
