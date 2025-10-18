@@ -158,12 +158,6 @@ if fac then
 // damaged buildings
 tmp := FilterUnitsInArea(area, [[f_side, side], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
 
-// crates neamby base
-cr := GetListOfCratesInArea(area);
-
-if cratesArea then
-   cr := cr union GetListOfCratesInArea(cratesArea);
-
 // mechanic
 mech := UnitFilter(forces, [[f_class, class_mechanic], [f_ok]]);
 
@@ -177,7 +171,7 @@ lab := FilterUnitsInarea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [
 
 if sci then
    begin
-   hurtUnits := UnitFilter(forces, [[f_inarea, area], [f_tag, tHeal]]);
+   hurtUnits := UnitFilter(forces, [[f_inarea, area], [f_not, [f_lives, 1000]], [f_tag, tHeal]]);
 
    if hurtUnits then
       begin
@@ -202,6 +196,12 @@ if eng then
    begin
    for i in eng do
        begin
+       // crates nearby base
+       cr := GetListOfCratesInArea(area);
+
+       if cratesArea then
+          cr := cr union GetListOfCratesInArea(cratesArea);
+
        tag := GetTag(i);
 
        if IsInArea(i, outerArea) and not tCrates then
@@ -295,7 +295,7 @@ if eng then
              continue;
              end;
 
-          if buildingsToBuild[1][1] in [b_factory, b_barracks] then               
+          if buildingsToBuild[1][1] in [b_factory, b_barracks] then
              begin
              if HexInfo(buildingsToBuild[1][2], buildingsToBuild[1][3]) and CanBeBuiltOnlyResources(depot, buildingsToBuild[1][1]) then
                 begin
@@ -330,6 +330,12 @@ if eng then
 
        if tag = tCrates then
           begin
+          // crates nearby base
+          cr := GetListOfCratesInArea(area);
+
+          if cratesArea then
+             cr := cr union GetListOfCratesInArea(cratesArea);
+
           if IsInUnit(i) then
              begin
              ComExitBuilding(i);
@@ -342,7 +348,7 @@ if eng then
              continue;
              end;
 
-          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) then
+          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) and ValidHex(cr[1], cr[2]) then
              ComCollect(i, cr[1], cr[2]);
           end;
        end;
@@ -491,7 +497,7 @@ if sol then
                 ComExitBuilding(i);
              end
           else
-             if IsInarea(i, area) then
+             if IsInArea(i, area) then
                 ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i))
              else
                 ComMoveToArea(i, area);

@@ -1,6 +1,47 @@
+// spawn crates nearby kirov
 Every 3$00 + 0$20 trigger not arabAttackActive do
 begin
-enable;
-
+enable;   
 CreateCratesArea(rand(1,5), kirovCratesArea, true);
+End;
+
+// spawn crates nearby omicron
+Every 2$30 trigger not allowedToAttackOmicron and GetResourceArea(omicronBaseArea, mat_cans) < 6 do
+begin
+enable;
+CreateCratesArea(rand(1,5), omicronBaseArea, true);
+End;   
+
+// spawn crates nearby beria
+Every 0$20 do
+var i, time, area;
+begin
+for i := 1 to [3, 3, 2, 2][Difficulty] + rand(0, 1) do
+    begin
+    CreateCratesXYR(rand(1, 5), 110, 97, 12, true);
+    wait(0$15);
+    end;
+
+for i := 1 to 6 do
+    begin
+    CreateCratesArea(rand(3, 5), beriaCrates1Area, true);
+    wait(0$25);
+    end;
+
+CreateCratesXYR(5, 76, 117, 5, true);
+
+repeat
+ wait(0$45);
+
+ area := 0;
+
+ case rand(0, 10) of
+      1..2: area := beriaCrates1Area;
+      3..7: area := beriaCrates2Area;
+      8..10: area := beriaCrates3Area;
+      end;
+
+ if area and GetResourceArea(area, mat_cans) < 6 then
+    CreateCratesArea(rand(1, 5), area, true);
+until arabAttackActive;
 End;

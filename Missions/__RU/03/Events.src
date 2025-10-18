@@ -22,7 +22,7 @@ if un = kaganDepot and not arabAttackActive then
 End;
 
 On VehicleConstructed(vehicle, factory) do
-var side;
+var side, driver;
 begin
 SOS_VehicleConstructed(vehicle, factory);
 
@@ -30,8 +30,27 @@ side := GetSide(vehicle);
 
 if side = 6 then
    begin
+   driver := IsDrivenBy(vehicle);
+
    kirovVehicles := Join(kirovVehicles, vehicle);
-   SetTag(IsDrivenBy(vehicle), tMech);
+   SetTag(driver, tMech);
+
+   kirovConstructList := Delete(kirovConstructList, 1);
+   end;
+
+if side = 1 then
+   begin
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      SetTag(driver, tMech);
+
+   if Count(omicronVehicles) < 3 or GetBType(vehicle) in [us_cargo_bay, us_crane] then
+      omicronVehicles := Join(omicronVehicles, vehicle)
+   else
+      omicronAttackVehicles := Join(omicronAttackVehicles, vehicle);
+
+   omicronConstructList := Delete(omicronConstructList, 1);
    end;
 End;
 
@@ -39,6 +58,9 @@ On EvacuateVehicle(driver, veh, p1, p2) do
 begin
 if GetTag(driver) = tMech then
    SetTag(driver, 0);
+
+if GetSide(driver) = 1 and IsOk(usFac) then
+   ComEnterUnit(driver, usFac);
 End;
 
 On UpgradeComplete(b) do
@@ -83,6 +105,9 @@ if side = 3 then
          SetBName(b, 'kagan');
          end;
    end;
+
+if side = 1 then
+   omicronBuildingsToBuild := Delete(omicronBuildingsToBuild, 1);
 
 if side = 6 then
    kirovBuildingsToBuild := Delete(kirovBuildingsToBuild, 1);
@@ -139,4 +164,10 @@ if event = eventCargo then
 
 if event = eventConvoy then
    SendConvoy;
+End;
+
+On EnterBuilding(b, un) do
+begin
+if b = usFac and GetSide(un) = 1 then
+   SetLives(un, 1000);
 End;

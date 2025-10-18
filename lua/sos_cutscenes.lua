@@ -89,12 +89,12 @@ function PlayCustomVideoSubtitles();
 
     local lang = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_AUDIOLANG);
 
-    if lang == nil then
+    if lang == nil or strlen(lang) == 0 then
         lang = 'ENG';
     end;
 
     -- ładujemy z pliku odpowiedni fragment napisów wg. timestampa
-    if (strlen(SEQ_VID_NAME) and SOS_SUBTITLES[lang][SEQ_VID_NAME] ~= nil) then
+    if (strlen(SEQ_VID_NAME) and SOS_SUBTITLES[lang] ~= nil and SOS_SUBTITLES[lang][SEQ_VID_NAME] ~= nil) then
         for i, v in pairs(SOS_SUBTITLES[lang][SEQ_VID_NAME]) do
             local t = VIDEO_TIME(SEQ_VID_ID);
 
