@@ -89,7 +89,10 @@ for i := 1 to vehiclesAmount do
     PlaceUnitXYR(veh, 112, 98, 12, false);
     end;
 
-vehiclesAmount := LoadVariable('02_KirovVehiclesCount', 1);   
+vehiclesAmount := LoadVariable('02_KirovVehiclesCount', 1);
+
+if vehiclesAmount > 4 then
+   vehiclesAmount := 4;
 
 for i := 1 to vehiclesAmount do
     begin
@@ -216,6 +219,12 @@ for i in ruGuards do
     end;
 End;
 
+Every 0$1 trigger hasFactory and tick > 15$00 and Count(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]])) > 2 do
+kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun]);
+
+Every 0$1 trigger hasFactory and tick > 15$00 and Count(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]])) > 6 do
+kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gun]); 
+
 Every 0$1 trigger GetLives(Popov) < 500 and IsInArea(Popov, easternHillArea) and GetDistUnitXY(Popov, 146, 67) > 3 do
 begin
 enable;
@@ -228,4 +237,70 @@ begin
 enable;
 
 ComMoveXY(Popov, 146, 67);
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 6], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 6], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+Every 0$1 trigger allowedToAttackOmicron and kirovAttackVehicles do
+var i, filter, tmp, enemy, x, points, point;
+begin
+enable;
+
+filter := UnitFilter(kirovAttackVehicles, [f_type, unit_vehicle]);
+enemy := FilterAllUnits([f_side, 1]);
+points := [ [44,15], [54,39] ];
+
+for i in filter do
+    begin
+    tmp := IsDrivenBy(i);
+
+    if not tmp then
+       continue;
+
+    if GetFuel(i) > 90 and GetTag(i) = 2 then
+       SetTag(i, 0)
+    else if GetTag(i) = 2 and UnitFilter(ruCargos, [f_ok]) then
+       begin
+       x := rand(1, 2);
+       AddComMoveUnit(i, ruCargos[x]);
+       end;
+
+    if GetLives(i) >= 600 and not GetTag(i) then
+       ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+    if GetLives(i) < 600 and not GetTag(i) then
+       begin
+       SetTag(i, 1);
+
+       point := GetNearestPoint(i, points);
+
+       ComMoveXY(i, point[1], point[2]);
+       AddComMoveXY(i, 71, 29);
+       end;
+
+    if GetTag(i) = 1 and GetDistUnitXY(i, 71, 29) < 9 and tmp then
+       begin
+       ComExitVehicle(tmp);
+       AddComRepairVehicle(tmp, i);
+
+       repeat
+        wait(0$1);
+       until GetLives(i) = 1000;
+
+       ComEnterUnit(tmp, i);
+
+       if GetFuel(i) <= 90 and UnitFilter(ruCargos, [f_ok]) then
+          SetTag(i, 2)
+        else
+          SetTag(i, 0);
+       end;
+    end;
 End;

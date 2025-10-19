@@ -59,7 +59,7 @@ Say(Kurin, 'D2-Kur-6');
 
 beriaBaseSquad := CharacterSelection(
                        '1',
-                       [9, 8, 8, 7][Difficulty],
+                       [7, 6, 6, 5][Difficulty],
                        [9, 8, 8, 7][Difficulty],
                        [sel_change_class, Burlak, sel_changeable, sel_change_class] ^
                        Belkov ^ Gnyevko ^ Kirilenkova ^ Kovalyuk ^ beriaTeam ^
@@ -415,6 +415,29 @@ repeat
     exit;
     end;
 
+ if GetSide(Scholtze) = 3 then
+    begin
+    wait(0$10);
+
+    if IsOk(Dickens) then
+       begin
+       ComMoveXY(DickensFriend, 31, 39);
+       AddComEnterUnit(DickensFriend, usArm1);
+
+       omicronTroops := omicronTroops union DickensFriend;
+       end;
+
+    if IsOk(DickensFriend) then
+       begin
+       ComMoveXY(Dickens, 31, 39);
+       AddComEnterUnit(Dickens, usArm1);
+
+       omicronTroops := omicronTroops union Dickens;
+       end;
+
+    exit;
+    end;
+
 until See(1, Scholtze) and GetLives(Scholtze) < 1000 and not hasScholtze;
 
 canSearchForScholtze := false;
@@ -468,6 +491,8 @@ Say(Scholtze, 'D4a-Sch-2');
 DialogueOff;
 
 ChangeMissionObjectives('MScholtzeOut');
+
+SetAchievement('ACH_PROFESSOR');
 End;
 
 // popov cam
@@ -609,6 +634,7 @@ if q = 3 then
 
 display_strings := [];
 
+ChangeMissionObjectives('M3a');
 ChangeMissionObjectives('M5');
 
 if sendMechanics then
@@ -813,8 +839,7 @@ wait(0$4);
 if Count(sol) > 1 then
    Say(sol[2], 'D8-RSol2-1')
 else if IsOk(Gnyevko) then
-   Say(Gnyevko, 'D8-Gny-1');
-
+   Say(Gnyevko, 'D8-Gny-1'); 
 
 wait(0$4);
 
@@ -842,13 +867,29 @@ wait(0$5);
 
 SpawnArabAttack;
 
+repeat
+ wait(0$1);
+until FilterUnitsInArea(kirovBaseOuterArea, [f_side, 2]);
+
 InGameOn;
 
-CenterNowOnUnits(Kurin);
+CenterNowOnXY(160, 107);
+
+for i in FilterAllUnits([[f_side, 6], [f_or, [f_class, 2], [f_class, 4]]]) diff popovTeam do
+    begin
+    kirovBaseSquad := kirovBaseSquad diff i;
+
+    ComExitBuilding(i);
+    AddComMoveXY(i, 56, 94);
+    end;  
 
 SayRadio(Kurin, 'D9a-Kur-1');
-Say(Burlak, 'D9a-Bur-');
+Say(Burlak, 'D9a-Bur-1');
 SayRadio(Kurin, 'D9a-Kur-2');
+
+ComExitBuilding(Kurin);
+
+wait(0$2);
 
 InGameOff;
 
@@ -863,12 +904,16 @@ AddComMoveXY(Popov union popovTeam, 90, 60);
 repeat
  wait(0$1);
  nearest := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_sex, sex_male], [f_nation, 3], [f_ok]]) diff [Belkov, Gnyevko, Kovalyuk, Scholtze];
+ tmp := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_dist, Popov, 7], [f_not, [f_empty]]]);
 
- if not nearest then
-    exit;
-
- nearest := NearestUnitToUnit(nearest, Popov);
-until GetDistUnits(nearest, Popov) < 8;
+ if nearest then
+    nearest := NearestUnitToUnit(nearest, Popov)
+ else if tmp then
+    begin
+    for i in tmp do            
+        ComExitVehicle(IsDrivenBy(i));
+    end;
+until nearest and GetDistUnits(nearest, Popov) < 8;
 
 retreat := true;
 
@@ -941,8 +986,59 @@ End;
 
 
 Function FinishMission;
+var i, saveVehicles;
 begin
+if not joinToOmicronCounter then
+   SetAchievement('ACH_REINFORCE');
 
+if Count(joinToOmicronCounter) > [12, 10, 8, 6][Difficulty] then
+   AddMedal('PreventReinforcements', -1)
+else
+   AddMedal('PreventReinforcements', 1);
+
+if IsLive(Scholtze) then
+   AddMedal('Scholtze', 1)
+else if hasScholtze then
+   AddMedal('Scholtze', -2)
+else
+   AddMedal('Scholtze', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+SaveCharacters(Popov, currentMissionPrefix & 'Popov');
+
+if IsLive(Gnyevko) then
+   SaveCharacters(Gnyevko, currentMissionPrefix & 'Gnyevko');
+
+if IsLive(Kovalyuk) then
+   SaveCharacters(Kovalyuk, currentMissionPrefix & 'Kovalyuk');
+
+if IsLive(Belkov) then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+if IsLive(Scholtze) then
+   SaveCharacters(Scholtze, currentMissionPrefix & 'Scholtze');
+
+SaveCharacters(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova, Scholtze, Popov], currentMissionPrefix & 'burlakTeam');
+SaveCharacters(FilterAllUnits([[f_side, 6], [f_nation, 3], [f_ok], [f_type, unit_human]]) diff [Gnyevko, Kovalyuk, Belkov, Kirilenkova, Popov, Kurin], currentMissionPrefix & 'popovTeam');
+
+SaveTech(3, currentMissionPrefix & 'Techs');
+
+saveVehicles := [];
+
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok]]) do
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i)]);
+
+if saveVehicles then
+   SaveVariable(saveVehicles, currentMissionPrefix & 'Vehicles');
+
+YouWin;
 End;
 
 

@@ -67,6 +67,17 @@ SetBName(beriaDepot, 'beria');
 SetBName(kirovDepot, 'kirov');
 End;
 
+Export function SaveTech(side, saveId);
+var i;
+begin
+result := [];
+
+for i := 1 to 100 do
+    result := Join(result, GetTech(i, side));
+
+SaveVariable(result, saveId);
+End;
+
 
 // AI
 Export function BaseScript(side, area, cratesArea, innerArea, outerArea, forces,
@@ -348,7 +359,7 @@ if eng then
              continue;
              end;
 
-          if not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) and ValidHex(cr[1], cr[2]) then
+          if cr and not HasTask(i) and not FilterAllUnits([[f_enemy, side], [f_distxy, cr[1], cr[2], 12]]) and ValidHex(cr[1], cr[2]) then
              ComCollect(i, cr[1], cr[2]);
           end;
        end;
@@ -505,11 +516,11 @@ if sol then
       end
    else
       begin
-      empty := FilterUnitsInArea(area, [[f_not, [f_full]], [f_not, [f_constructed]], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
+      empty := FilterUnitsInArea(area, [[f_not, [f_full]], [f_not, [f_constructed]], [f_ok], [f_or, [f_btype, b_bunker], [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork]]]);
       emptyTowers := [];
 
       if empty then
-         emptyTowers := UnitFilter(empty, [[f_not, [f_tag, tTower]], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
+         emptyTowers := UnitFilter(empty, [[f_not, [f_tag, tTower]], [f_ok], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
 
       for i in sol do
           begin

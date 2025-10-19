@@ -1,11 +1,229 @@
+Export arForces;
 Export Function SpawnArabAttack;
-var i;
+var i, un, veh;
 begin
-result := [];
+for i := 1 to 8 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
 
+    PrepareSoldier(false, 6);
+    un := CreateHuman;
+    arForces := Join(arForces, un);
+
+    PlaceUnitArea(un, arabSouthSpawnArea, false);
+
+    ComAgressiveMove(un, 164, 108);
+
+    if i mod 2 = 0 then
+       SetTag(i, tMine);
+    end;
+
+for i := 1 to 6 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 100);
+
+    veh := CreateVehicle;
+    arForces := Join(arForces, veh);
+
+    SetDir(veh, 4);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(veh, arabSpawnArea, false);
+
+    PrepareMechanic(false, 6);
+    un := CreateHuman;
+    arForces := Join(arForces, un);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComAgressiveMove(veh, 164, 108);
+    end;
+
+for i := 1 to 6 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, [ar_gun, ar_gatling_gun][rand(1,2)], 100);
+
+    veh := CreateVehicle;
+    arForces := Join(arForces, veh);
+
+    SetDir(veh, 4);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(veh, arabSpawnArea, false);
+
+    PrepareMechanic(false, 6);
+    un := CreateHuman;
+    arForces := Join(arForces, un);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComAgressiveMove(veh, 164, 108);
+    end;
+
+for i := 1 to 3 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareScientist(false, 6);
+    un := CreateHuman;
+    arForces := Join(arForces, un);
+
+    PlaceUnitArea(un, arabSouthSpawnArea, false);
+
+    ComMoveXY(un, 175, 132);
+    end;
 End;     
 
 Every 0$1 trigger arabAttackActive do
+var i, tag, enemy;
 begin
+repeat
+ wait(0$1);
 
+ enemy := FilterUnitsInArea(kirovBaseArea, [f_side, 6]);
+
+ for i in arForces do
+     begin
+     if IsDead(i) then
+        begin
+        arForces := arForces diff i;
+        continue;
+        end;
+
+     if GetClass(i) = class_scientistic then
+        begin
+        if GetDistUnitXY(i, 176, 135) > 10 then
+           ComMoveXY(i, 176, 135)
+        else if UnitFilter(arForces, [f_tag, tHeal]) then
+           ComHeal(i, UnitFilter(arForces, [f_tag, tHeal])[1]);
+        end;
+
+     if GetClass(i) = class_soldier then
+        begin
+        tag := GetTag(i);
+
+        if GetLives(i) < 650 and tag <> tHeal then
+           begin
+           SetTag(i, tHeal);
+           ComMoveXY(i, 176, 135);
+           continue;
+           end;
+
+        if GetLives(i) = 1000 and tag = tHeal then
+           SetTag(i, 0);
+
+        if not tag then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else if tag = tMine then
+           begin
+           ComPlaceDelayedCharge(i, 0, 0, NearestUnitToUnit(enemy, i));
+           SetTag(i, tMined);
+           end;
+        end;
+
+     if GetClass(i) = class_mechanic then
+        begin
+        if IsInUnit(i) then
+           continue;
+
+        if not IsInArea(i, arabSpawnArea) then
+           ComMoveToArea(i, arabSpawnArea)
+        else
+           begin
+           RemoveUnit(i);
+           arForces := arForces diff i;
+           continue;
+           end;
+        end;
+
+     if GetType(i) = unit_vehicle then
+        begin
+        if not HasTask(i) then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+        end;
+     end;
+until not enemy;
+
+for i in arForces do
+    if not See(3, i) then
+       SetLives(i, 1000);
+
+wait(2$00 - (0$10 * Difficulty));
+
+repeat
+ wait(0$1);
+
+ enemy := FilterAllUnits([f_enemy, 2]);
+
+ for i in arForces do
+     begin
+     if IsDead(i) then
+        begin
+        arForces := arForces diff i;
+        continue;
+        end;
+
+     if GetClass(i) = class_scientistic then
+        begin
+        if GetDistUnitXY(i, 176, 135) > 10 then
+           ComMoveXY(i, 176, 135)
+        else if UnitFilter(arForces, [f_tag, tHeal]) then
+           ComHeal(i, UnitFilter(arForces, [f_tag, tHeal])[1]);
+        end;
+
+     if GetClass(i) = class_soldier then
+        begin
+        tag := GetTag(i);
+
+        if GetLives(i) < 650 and tag <> tHeal then
+           begin
+           SetTag(i, tHeal);
+           ComMoveXY(i, 176, 135);
+           continue;
+           end;
+
+        if GetLives(i) = 1000 and tag = tHeal then
+           SetTag(i, 0);
+
+        if not tag then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else if tag = tMine then
+           begin
+           ComPlaceDelayedCharge(i, 0, 0, NearestUnitToUnit(enemy, i));
+           SetTag(i, tMined);
+           end;
+        end;
+
+     if GetClass(i) = class_mechanic then
+        begin
+        if IsInUnit(i) then
+           continue;
+
+        if not IsInArea(i, arabSpawnArea) then
+           ComMoveToArea(i, arabSpawnArea)
+        else
+           begin
+           RemoveUnit(i);
+           arForces := arForces diff i;
+           continue;
+           end;
+        end;
+
+     if GetType(i) = unit_vehicle then
+        begin
+        if not HasTask(i) then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+        end;
+     end;
+until not enemy;
 End;
