@@ -8,6 +8,7 @@ var i, vehiclesAmount, veh, tmp;
 begin
 SetResourceType(GetBase(kirovDepot), mat_cans, 3000);
 SetResourceType(GetBase(kirovDepot), mat_oil, 600);
+SetResourceType(GetBase(kirovDepot), mat_siberit, 5);
 
 SetResourceType(GetBase(beriaDepot), mat_cans, [350, 280, 210, 150][Difficulty]);
 SetResourceType(GetBase(beriaDepot), mat_oil, [60, 40, 20, 0][Difficulty]);
@@ -42,7 +43,7 @@ burlakTeam := CreateCharacterSet(prevMissionPrefix & 'burlakTeam');
 kirovTeam := CreateCharacterSet(prevMissionPrefix & 'kirovTeam');
 
 if kirovTeam < 15 then
-   for i := Count(kirovTeam) to 15 do
+   for i := Count(kirovTeam) to 22 do
        begin
        PrepareHuman(false, i mod 4 + 1, 2);
        kirovTeam := Join(kirovTeam, CreateHuman);
@@ -89,7 +90,10 @@ for i := 1 to vehiclesAmount do
     PlaceUnitXYR(veh, 112, 98, 12, false);
     end;
 
-vehiclesAmount := LoadVariable('02_KirovVehiclesCount', 1);   
+vehiclesAmount := LoadVariable('02_KirovVehiclesCount', 1);
+
+if vehiclesAmount > 4 then
+   vehiclesAmount := 4;
 
 for i := 1 to vehiclesAmount do
     begin
@@ -108,15 +112,21 @@ kirovAttackVehicles := [];
 kirovTechs := GetTechNation(6, nation_russian, state_enabled);
 kirovConstructList := [];
 kirovBuildingsToBuild := [
+   [b_warehouse, 163, 104, 3],
    [b_factory, 159, 113, 0],
    [b_lab_half, 153, 99, 3, b_lab_weapon],
+   [b_lab_full, 153, 99, 3, b_lab_siberium],
+   [b_barracks, 151, 108, 0],
+   [b_barracks, 166, 116, 0],
    [b_bunker, 144, 98, 1],
    [b_oil_power, 155, 94, 0],
    [b_oil_power, 158, 96, 2],
    [b_ext_gun, 162, 116, 5],
    [b_bunker, 169, 101, 3],
    [b_bunker, 171, 119, 5],
-   [b_bunker, 144, 106, 1]
+   [b_bunker, 144, 106, 1],
+   [b_bunker, 173, 105, 3],
+   [b_bunker, 169, 111, 5]
 ];
 End;
 
@@ -158,7 +168,7 @@ until not UnitFilter(grishkoTeam, [f_ok]);
 End;
 
 Export function SendCargoWithOil;
-var i, tmp, un, veh;
+var i, p, tmp, un, veh;
 begin
 ruCargos := [];
 ruGuards := [];
@@ -195,7 +205,7 @@ for i := 1 to 3 do
      wait(0$1);
     until PlaceUnitArea(veh, southRoadSpawnArea, false);
 
-    PrepareSoldier(false, 2);
+    PrepareHuman(false, [1, 4][i mod 2 + 1], 3);
     un := CreateHuman;
     ruGuards := Join(ruGuards, un);
     PlaceHumanInUnit(un, veh);
@@ -204,9 +214,16 @@ for i := 1 to 3 do
     AddComMoveXY(veh, 71, 29);
     end;
 
+p := 0;
+
 repeat
  wait(0$3);
-until UnitFilter(ruCargos, [f_distxy, 71, 29, 6]) >= 2;
+ p := Inc(p);
+
+ for i in ruCargos do
+     if not HasTask(i) then
+        ComMoveXY(i, 71, 29);
+until UnitFilter(ruCargos, [f_distxy, 71, 29, 8]) >= 2 or p > 20;
 
 for i in ruGuards do
     begin
@@ -215,6 +232,12 @@ for i in ruGuards do
     ComAgressiveMove(i, 63, 47);
     end;
 End;
+
+Every 0$1 trigger hasFactory and tick > 15$00 and Count(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]])) > 2 do
+kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun]);
+
+Every 0$1 trigger hasFactory and tick > 15$00 and Count(FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]])) > 6 do
+kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gun]); 
 
 Every 0$1 trigger GetLives(Popov) < 500 and IsInArea(Popov, easternHillArea) and GetDistUnitXY(Popov, 146, 67) > 3 do
 begin
@@ -228,4 +251,98 @@ begin
 enable;
 
 ComMoveXY(Popov, 146, 67);
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 6], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 6], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+// patrol
+Every 0$1 trigger IsInArea(Popov, easternHillArea) do
+var sol;
+begin
+sol := UnitFilter(kirovBaseSquad, [f_class, class_soldier]);
+
+if not sol then
+   exit;
+
+sol := sol[1];
+
+kirovBaseSquad := kirovBaseSquad diff sol;
+
+ComExitBuilding(sol);
+AddComMoveXY(sol, 174, 151);
+AddComMoveXY(sol, 219, 154);
+
+repeat
+ AddComAgressiveMove(sol, 163, 56);
+ AddComAgressiveMove(sol, 173, 85);
+ AddComAgressiveMove(sol, 216, 151);
+
+ wait(3$30);
+until not IsOk(sol) or americanRetreat;
+
+ComMoveXY(sol, 192, 113);
+End;
+
+Every 0$1 trigger allowedToAttackOmicron and kirovAttackVehicles and not retreat do
+var i, filter, tmp, enemy, x, points, point;
+begin
+enable;
+
+filter := UnitFilter(kirovAttackVehicles, [f_type, unit_vehicle]);
+enemy := FilterAllUnits([f_side, 1]);
+points := [ [44,15], [54,39] ];
+
+for i in filter do
+    begin
+    tmp := IsDrivenBy(i);
+
+    if not tmp then
+       continue;
+
+    if GetFuel(i) > 90 and GetTag(i) = 2 then
+       SetTag(i, 0)
+    else if GetTag(i) = 2 and UnitFilter(ruCargos, [f_ok]) then
+       begin
+       x := rand(1, 2);
+       AddComMoveUnit(i, ruCargos[x]);
+       end;
+
+    if GetLives(i) >= 600 and not GetTag(i) then
+       ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+
+    if GetLives(i) < 600 and not GetTag(i) then
+       begin
+       SetTag(i, 1);
+
+       point := GetNearestPoint(i, points);
+
+       ComMoveXY(i, point[1], point[2]);
+       AddComMoveXY(i, 71, 29);
+       end;
+
+    if GetTag(i) = 1 and GetDistUnitXY(i, 71, 29) < 9 and tmp then
+       begin
+       ComExitVehicle(tmp);
+       AddComRepairVehicle(tmp, i);
+
+       repeat
+        wait(0$1);
+       until GetLives(i) = 1000;
+
+       ComEnterUnit(tmp, i);
+
+       if GetFuel(i) <= 90 and UnitFilter(ruCargos, [f_ok]) then
+          SetTag(i, 2)
+        else
+          SetTag(i, 0);
+       end;
+    end;
 End;

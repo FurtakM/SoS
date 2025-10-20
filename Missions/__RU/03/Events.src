@@ -19,6 +19,9 @@ if un = beriaDepot and not arabAttackActive then
 
 if un = kaganDepot and not arabAttackActive then
    YouLost('Kagan');
+
+if un = Sikorski then
+   SetAchievement('ACH_SIKORSKI');
 End;
 
 On VehicleConstructed(vehicle, factory) do
@@ -71,9 +74,28 @@ btype := GetBType(b);
 
 if side = 6 then
    begin
+   if GetBType(b) = b_warehouse then
+      begin
+      ComMoveXY(Kurin, 186, 127);
+      AddComWait(Kurin, 0$8);
+      AddComMoveXY(Kurin, 186, 109);
+      AddComWait(Kurin, 0$8);
+      AddComMoveXY(Kurin, 179, 93);
+      AddComWait(Kurin, 0$4);
+      AddComEnterUnit(Kurin, b);
+      end;
+
    kirovBuildingsToBuild := Delete(kirovBuildingsToBuild, 1);
    end;
 
+if side = 1 then
+   omicronBuildingsToBuild := Delete(omicronBuildingsToBuild, 1);
+
+if side = 3 then
+   begin    
+   if GetBType(b) = b_factory then
+      hasFactory := true;
+   end;
 End;
 
 On ResearchComplete(tech, lab) do
@@ -82,7 +104,18 @@ begin
 side := GetSide(lab);
 
 if side = 6 then
+   begin
+   {if tech = tech_gatling then
+      kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gatling_gun]);
+
+   if tech = tech_gun then
+      kirovConstructList := Join(kirovConstructList, [ru_medium_wheeled, engine_combustion, control_manual, ru_gun]); }
+
    kirovTechs := kirovTechs diff tech;
+   end;
+
+if side = 1 then
+   omicronTechs := omicronTechs diff tech;
 End;
 
 On BuildingComplete(b) do
@@ -153,7 +186,7 @@ var tag;
 begin
 tag := GetTag(un);
 
-if tag = tWannaBeMech then
+if tag in [tWannaBeMech, tWannaBeSol] then
    SetTag(un, 0);
 End;
 
@@ -171,3 +204,4 @@ begin
 if b = usFac and GetSide(un) = 1 then
    SetLives(un, 1000);
 End;
+
