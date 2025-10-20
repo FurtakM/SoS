@@ -1,5 +1,5 @@
 Export function Action;
-var i, c, tmp;
+var i, j, c, tmp;
 begin
 InGameOn;
 
@@ -62,7 +62,7 @@ beriaBaseSquad := CharacterSelection(
                        [7, 6, 6, 5][Difficulty],
                        [9, 8, 8, 7][Difficulty],
                        [sel_change_class, Burlak, sel_changeable, sel_change_class] ^
-                       Belkov ^ Gnyevko ^ Kirilenkova ^ Kovalyuk ^ beriaTeam ^
+                       Belkov ^ Gnyevko ^ Kirilenkova ^ Kovalyuk ^ beriaTeam ^ burlakTeam ^
                        [sel_not_hired, sel_not_changeable, sel_dont_change_class, Kurin, Popov] ^
                        [sel_changeable, sel_change_class] ^ kirovTeam,
                        [[class_engineer, 1], [class_scientistic, 1], [class_mechanic, 0], [class_soldier, 2]]
@@ -104,7 +104,7 @@ if Kirilenkova and not Kirilenkova in beriaBaseSquad then
 if Kovalyuk and not Kovalyuk in beriaBaseSquad then
    popovTeam := Join(popovTeam, Kovalyuk);
 
-for i in beriaTeam do
+for i in beriaTeam union burlakTeam do
     if not i in beriaBaseSquad then
        popovTeam := Join(popovTeam, i);
 
@@ -177,6 +177,18 @@ ComExitBuilding(Popov);
 AddComMoveXY(Popov, 142, 64);
 AddComMoveXY(popovTeam, 142, 64);
 AddComFree(popovTeam);
+
+tmp := UnitFilter(popovTeam, [f_class, class_soldier]);
+
+if tmp then
+   for i in FilterAllUnits([[f_side, 6], [f_inarea, easternHillArea], [f_btype, b_breastwork]]) do
+       begin
+       if not tmp then
+          break;
+
+       ComEnterUnit(tmp[1], i);
+       tmp := Delete(tmp, 1);
+       end;
 
 wait(1$00);
 
@@ -581,7 +593,7 @@ case q of
         SayRadio(Kurin, 'D6b-Kur-1');
 
         timeToAttackOnOmicron := 3$00;
-        sendMechanics := true;
+        // sendMechanics := true;
         end;
      3: begin
         Say(Burlak, 'D6c-Bur-1');
@@ -667,7 +679,17 @@ if sendMechanics then
    kirovBaseSquad := kirovBaseSquad diff tmp;
 
    vehicles := [];
-   vehiclesOwned := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]]);
+   vehiclesOwned := [];
+
+   for i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok], [f_nation, nation_russian]]) do
+       begin
+       if GetChassis(i) in [ru_medium_tracked, ru_medium_wheeled] then
+          vehiclesOwned := Join(vehiclesOwned, i)
+       else
+          vehiclesOwned := Insert(vehiclesOwned, 1, i);
+       end;
+
+   vehiclesOwned := vehiclesOwned diff 0;
 
    for i := 1 to requiredVehiclesAmount do
        begin
@@ -678,22 +700,34 @@ if sendMechanics then
        end;
 
    if not vehicles then
-      exit;                            
+      exit;
 
-   kirovAttackVehicles := kirovVehicles union vehicles;
-   kirovVehicles := [];
+   // if UnitFilter(vehicles, [f_or, [f_chassis, ru_medium_tracked], [f_chassis, ru_medium_wheeled]]) = 0 then
+      // SetAchievement('ACH_GOODFRIEND');
+   end;
+
+kirovAttackVehicles := kirovVehicles;
+
+if vehicles then
+   kirovAttackVehicles := kirovAttackVehicles union vehicles;
+
+kirovVehicles := [];
    
-   for i in kirovAttackVehicles do
-       SetTag(i, 0);
+for i in kirovAttackVehicles do
+    SetTag(i, 0);
 
+if sendMechanics then
+   begin
    repeat
     wait(0$3);
+
     tmp := FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_class, class_mechanic], [f_not, [f_driving]], [f_not, [f_tag, tMech]]]);
     vehicles := UnitFilter(kirovAttackVehicles, [f_empty]);
 
     for i := 1 to Count(vehicles) do
         if i <= tmp then
            ComEnterUnit(tmp[i], vehicles[i]);
+
    until not UnitFilter(kirovAttackVehicles, [f_empty]);
 
    tmp := FilterAllUnits([[f_side, 6], [f_class, class_mechanic], [f_not, [f_tag, tMech]], [f_not, [f_driving]]]);
@@ -781,8 +815,9 @@ enable;
 End;
 
 // attack on american without permission
-Every 0$2 trigger not allowedToAttackOmicron and FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3]) do
-var i;
+Every 0$2 trigger not allowedToAttackOmicron and (FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3])
+                  or FilterUnitsInArea(omicronBaseArea, [f_side, 3])) do
+var i, p;
 begin
 if IsOk(Gnyevko) and omicronRetreatCounter = 0 then
    begin
@@ -799,13 +834,17 @@ else
    end;
 
 omicronRetreatCounter := Inc(omicronRetreatCounter);
+p := 0;
 
 InGameOn;
 
-for i in FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3]) do
-    ComMoveToArea(i, omicronRetreatArea);
+repeat
+ for i in FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]) do
+     ComMoveToArea(i, omicronRetreatArea);
 
-wait(0$2);
+ wait(0$01);
+ p := Inc(p);
+until p > 10 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
 
 InGameOff;
 
@@ -813,7 +852,7 @@ enable;
 End;
 
 // American talk about Arabs
-Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) or GetLives(usDep) < 1000) and allowedToAttackOmicron do
+Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 2 or GetLives(usDep) < 500) and allowedToAttackOmicron do
 var i, tmp, random, sol, nearest;
 begin
 uc_side := 1;
@@ -845,7 +884,7 @@ wait(0$4);
 
 DialogueOn;
 
-CenterNowOnUnits(Kurin);
+CenterNowOnXY(161, 108);
 
 SayRadio(Grishko, 'D9-Gri-1');
 SayRadio(Kurin, 'D9-Kur-1');
@@ -861,7 +900,10 @@ DialogueOff;
 
 arabAttackActive := true;
 
-CenterNowOnUnits(Burlak);
+if IsInUnit(Burlak) then
+   CenterNowOnUnits(IsInUnit(Burlak))
+else
+   CenterNowOnUnits(Burlak);
 
 wait(0$5);
 
@@ -893,9 +935,17 @@ wait(0$2);
 
 InGameOff;
 
-CenterNowOnUnits(Burlak);
+if IsInUnit(Burlak)then
+   CenterNowOnUnits(IsInUnit(Burlak))
+else
+   CenterNowOnUnits(Burlak);
 
 ChangeMissionObjectives('M6a');
+
+for i in popovTeam do
+    ComExitBuilding(i);
+
+wait(0$1);
 
 ComMoveXY(Popov union popovTeam, 121, 43);
 AddComMoveXY(Popov union popovTeam, 90, 60);
@@ -917,7 +967,10 @@ until nearest and GetDistUnits(nearest, Popov) < 8;
 
 retreat := true;
 
-ComMoveXY(FilterAllUnits([f_side, 2]), 185, 126);
+for i in kirovAttackVehicles do
+    ComMoveXY(i, 78, 38);
+
+// ComMoveXY(FilterAllUnits([f_side, 2]), 185, 126);
 
 if nearest = Burlak then
    begin
@@ -948,8 +1001,7 @@ if nearest = Burlak then
    Say(Burlak, 'D10a-Bur-4');
    Say(Popov, 'D10a-Pop-4');
    Say(Burlak, 'D10a-Bur-5');
-   Say(Popov, 'D10a-Pop-5');    
-   
+   Say(Popov, 'D10a-Pop-5');
    end
 else
    begin
@@ -977,9 +1029,19 @@ else
    SayRadio(Popov, 'D10b-Pop-5');
    end;
 
-ComMoveXY(Popov ^ popovTeam ^ FilterAllUnits([[f_side, 3], [f_type, unit_human]]), 67, 127);
+InGameOff;
 
-wait(0$3);
+ChangeMissionObjectives('M6');
+
+SetAreaMapShow(retreatArea, 1);
+
+ComMoveXY(Popov ^ popovTeam ^ UnitFilter(kirovVehicles, [f_ok]), 67, 127);
+
+repeat
+ wait(0$1);
+ ComMoveXY(Popov ^ popovTeam, 67, 127);
+until FilterUnitsExceptArea(retreatArea, [[f_side, 3], [f_type, unit_human]]) = 0 and
+      FilterUnitsExceptArea(retreatArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0;
 
 FinishMission;
 End;
@@ -1022,17 +1084,17 @@ if IsLive(Belkov) then
 if IsLive(Kirilenkova) then
    SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
 
-if IsLive(Scholtze) then
+if IsLive(Scholtze) and hasScholtze then
    SaveCharacters(Scholtze, currentMissionPrefix & 'Scholtze');
 
 SaveCharacters(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova, Scholtze, Popov], currentMissionPrefix & 'burlakTeam');
-SaveCharacters(FilterAllUnits([[f_side, 6], [f_nation, 3], [f_ok], [f_type, unit_human]]) diff [Gnyevko, Kovalyuk, Belkov, Kirilenkova, Popov, Kurin], currentMissionPrefix & 'popovTeam');
+SaveCharacters(FilterUnitsInArea(retreatArea, [[f_side, 6], [f_nation, 3], [f_ok], [f_type, unit_human]]) diff [Gnyevko, Kovalyuk, Belkov, Kirilenkova, Popov, Kurin, Scholtze], currentMissionPrefix & 'popovTeam');
 
 SaveTech(3, currentMissionPrefix & 'Techs');
 
 saveVehicles := [];
 
-for i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_ok]]) do
+for i in FilterUnitsInArea(retreatArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]], [f_ok]]) do
     saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i)]);
 
 if saveVehicles then

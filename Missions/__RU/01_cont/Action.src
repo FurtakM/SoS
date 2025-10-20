@@ -204,7 +204,7 @@ if un = Burlak then
    else
       Say(Burlak, 'D3-Bur-2b');
 
-   if not joinedToBelkov then
+   if not burlakAsCommander then
       Say(Burlak, 'D3-Bur-2c')
    else if not americansDefeated then
       Say(Burlak, 'D3-Bur-2d')
@@ -358,7 +358,11 @@ ComAttackUnit([Pokryshkin, Belkov, Balei, Jaworska, Saseda, Jaunzeme], Brown);
 
 ForceSay(Brown, 'D5-Sol1-2');
 
-KillUnit(Brown);
+if not dialogue_skipped then
+   begin
+   wait(0$1);
+   KillUnit(Brown);
+   end;
 
 ComWalk([Pokryshkin, Belkov, Balei, Jaworska, Saseda, Jaunzeme]);
 
@@ -763,6 +767,8 @@ repeat
  wait(0$1);
 until PlaceUnitArea(Kirilenkova, kirilenkovaSpawn, true);
 
+wait(0$3);
+
 if not See(3, Kirilenkova) then
    begin
    DialogueOn;
@@ -823,9 +829,15 @@ if not See(3, Kirilenkova) then
    DialogueOff;
    InGameOff;
 
-   wait(1$00 - (0$10 * Difficulty));
+   p := 60 - (10 * Difficulty);
 
-   ComMoveXY(Kirilenkova, 75, 95);
+   repeat
+    wait(0$1);
+    p := Dec(p);
+   until p = 0 or See(3, Kirilenkova);
+
+   if not See(3, Kirilenkova) then
+      ComMoveXY(Kirilenkova, 75, 95);
    end
 else
    begin
@@ -872,7 +884,7 @@ repeat
  wait(0$1);
  p := Inc(p);
 
- if p > 120 and IsOk(ape) and not HasTask(ape) then
+ if p > 120 and ape and IsOk(ape) and not HasTask(ape) then
     ComAttackUnit(ape, Kirilenkova);
 
 until See(3, Kirilenkova) and IsOk(Kirilenkova);

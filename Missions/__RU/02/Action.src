@@ -844,50 +844,47 @@ End;
 // bielkov trap
 Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
 begin
-if not initiative then
-   begin
-   case Query('QAttackAm') of
-        1: begin
-           initiative := true;
+case Query('QAttackAm') of
+     1: begin
+        initiative := true;
 
-           DialogueOn;
+        DialogueOn;
 
-           Say(Burlak, 'D17-Bur-1');
-           SayRadio(Platonov, 'D17-Pla-1');
-           Say(Burlak, 'D17-Bur-2');
-           SayRadio(Platonov, 'D17-Pla-2');
+        Say(Burlak, 'D17-Bur-1');
+        SayRadio(Platonov, 'D17-Pla-1');
+        Say(Burlak, 'D17-Bur-2');
+        SayRadio(Platonov, 'D17-Pla-2');
 
-           DialogueOff;
-           end;
+        DialogueOff;
+        end;
 
-        2: begin
-           initiative := true;
+     2: begin
+        initiative := true;
 
-           DialogueOn;
+        DialogueOn;
 
-           Say(Burlak, 'D18-Bur-1');
-           SayRadio(Platonov, 'D18-Pla-1');
-           Say(Burlak, 'D18-Bur-2');
+        Say(Burlak, 'D18-Bur-1');
+        SayRadio(Platonov, 'D18-Pla-1');
+        Say(Burlak, 'D18-Bur-2');
 
-           if not reinforcementsGained then
-              begin
-              SayRadio(Platonov, 'D18-Pla-2');
-              SendReinforcements;
-              end
-           else
-              SayRadio(Platonov, 'D22-Pla-1b');
+        if not reinforcementsGained then
+           begin
+           SayRadio(Platonov, 'D18-Pla-2');
+           SendReinforcements;
+           end
+        else
+           SayRadio(Platonov, 'D22-Pla-1b');
 
-           DialogueOff;
-           end;
+        DialogueOff;
+        end;
 
-        3: begin
-           if IsOk(Gnyevko) then
-              Say(Gnyevko, 'D19A-Gny-1')
-           else if IsOk(Kovalyuk) then
-              Say(Kovalyuk, 'D19A-Kov-1');
+     3: begin
+        if IsOk(Gnyevko) then
+           Say(Gnyevko, 'D19A-Gny-1')
+        else if IsOk(Kovalyuk) then
+           Say(Kovalyuk, 'D19A-Kov-1');
 
-           exit;
-           end;
+        exit;
         end;
    end;
 
@@ -906,44 +903,39 @@ End;
 
 Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
 begin
-if not initiative then
-   begin
-   case Query('QAttackBw') of
-        1: begin
-           initiative := true;
+case Query('QAttackBw') of
+     1: begin
+        initiative := true;
 
-           DialogueOn;
+        DialogueOn;
 
-           Say(Burlak, 'D21-Bur-1');
-           SayRadio(Platonov, 'D21-Pla-1');
+        Say(Burlak, 'D21-Bur-1');
+        SayRadio(Platonov, 'D21-Pla-1');
 
-           DialogueOff;
-           end;
-
-        2: begin
-           initiative := true;
-
-           DialogueOn;
-
-           Say(Burlak, 'D22-Bur-1');
-
-           if not reinforcementsGained and westOutpostDestroyed then
-              begin
-              SayRadio(Platonov, 'D22-Pla-1');
-              SendReinforcements;
-              end
-           else if not westOutpostDestroyed then
-              SayRadio(Platonov, 'D22-Pla-1a')
-           else
-              SayRadio(Platonov, 'D22-Pla-1b');
-
-           DialogueOff;
-           end;
-
-        3: begin
-           end;
+        DialogueOff;
         end;
-    end;
+
+     2: begin
+        initiative := true;
+
+        DialogueOn;
+
+        Say(Burlak, 'D22-Bur-1');
+
+        if not reinforcementsGained and westOutpostDestroyed then
+           begin
+           SayRadio(Platonov, 'D22-Pla-1');
+           SendReinforcements;
+           end
+        else if not westOutpostDestroyed then
+           SayRadio(Platonov, 'D22-Pla-1a')
+        else
+           SayRadio(Platonov, 'D22-Pla-1b');
+
+        DialogueOff;
+        end;
+     3:;
+     end;
 
 ChangeMissionObjectives('M9');
 
@@ -1365,14 +1357,14 @@ SaveVariable(eastOutpostDestroyed, '02_EasternOutpostDestroyed');
 
 tmp := [];
 
-for i in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) do
+for i in FilterAllUnits([[f_side, 3], [f_type, unit_building]]) union FilterUnitsInArea(beriaArea, [[f_side, 6], [f_type, unit_building]]) do
     tmp := Join(tmp, [GetBType(i), GetNation(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
 
 SaveVariable(tmp, '02_Beria');
 
 tmp := [];
 
-for i in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) do
+for i in FilterAllUnits([[f_side, 6], [f_type, unit_building], [f_not, [f_inarea, beriaArea]]]) do
     tmp := Join(tmp, [GetBType(i), GetNation(i), GetBLevel(i), GetX(i), GetY(i), GetDir(i)]);
 
 SaveVariable(tmp, '02_Kirov');
