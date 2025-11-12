@@ -1,110 +1,30 @@
-On BuildingStarted(building, unit) Do
+On UnitDestroyed(un) do
 begin
-    if GetSide(building) = 3 AND GetBType(building) = b_depot AND NOT IsInArea(building, HillArea) then
-        Dial_DepotInWrongPlace(building);
-end;
+SOS_UnitDestroyed(un);
 
-On BuildingComplete(building) Do
-var i, cargo;
+if un = Burlak then
+   YouLost('Burlak');
+
+if un = Gaydar then
+   YouLost('Gaydar');
+
+if un = Popov then
+   YouLost('SelfAttack');
+
+End;  
+
+On Contact(s1, s2) do
 begin
-    if GetSide(building) = 3 AND GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation AND NOT namedBase then
-    begin
-        namedBase = true;
-        SetBName(building, 'chuikov');
-        Dial_FinishDepot;
-    end;
+if s1 = 3 and s2 = 6 then
+   YouLost('SelfAttack');
+End;
 
-    if GetSide(building) = 3 AND GetBType(building) = b_bunker then
-       achievement_ConstructedTurrets = achievement_ConstructedTurrets + 1;
-
-    if GetSide(building) = 6 AND GetBType(building) = b_depot then
-    begin
-        secondBaseDepot = building;
-
-        uc_side = 6;
-        uc_nation = nation_russian;
-        vc_chassis = ru_medium_wheeled;
-        vc_control = control_manual;
-        vc_engine = engine_combustion;
-        vc_weapon = ru_cargo_bay;
-        cargo = CreateVehicle; 
-
-        PlaceUnitArea(cargo, RussianSpawnArea2, false);
-
-        AddCargo(cargo, mat_cans, 100);   
-        ComGive(cargo, building);   
-
-        PrepareMechanic(false, 2);
-
-        PlaceHumanInUnit(CreateHuman, cargo);
-
-        for i := 10 to russianCargoPath1 do
-            AddComMoveXY(cargo, russianCargoPath1[i][1], russianCargoPath1[i][2]);
-    end;
-
-    if GetSide(building) = 6 and GetBType(building) = b_breastwork then
-        ComEnterUnit(UnitFilter(secondBaseTeam, [[f_class, class_soldier], [f_outside]])[1], building);
-end;
-
-On UpgradeComplete(building) Do
+On BuildingComplete(b) do
 begin
-    if GetBType(building) = b_lab_half AND NOT dial_labUpgradedBlock then
-        Dial_LabUpgraded;
-end;
-
-On Contact(side1, side2) Do
-begin
-    if (side1 = 3 AND side2 = 2) OR (side1 = 2 AND side2 = 3) then
-    begin
-        if dial_contactBlock then
-            exit;
-
-        dial_contactBlock = true;
-
-        Dial_Contact;
-    end;
-
-    if (side1 = 3 AND side2 = 6) OR (side1 = 6 AND side2 = 3) then
-        Lose_SelfAttack;
-end;
-
-On UnitDestroyed(unit) Do
-begin
-    if unit = Burlak then
-        Lose_Burlak;
-
-    if unit = Gaydar then
-        Lose_Gaydar;
-
-    if GetSide(unit) = 3 AND GetType(unit) = unit_human then
-        lostUnits = lostUnits + 1;
-
-    if GetSide(unit) = 2 AND GetType(unit) = unit_human AND NOT IsPlaced(Gaydar) then
-        killedArabianUnits = killedArabianUnits + 1;
-
-    if unit in firstAttackGroup then
-        firstAttackGroup = firstAttackGroup diff unit;
-
-end;
-
-On BuildingCaptured(building, side, human) Do
-begin
-    if side = 6 then
-        SetSide(building, 6);
-end;
-
-On Command(com) do
-var i, j, temp, order, x, y, building;
-begin
-
-    for i in FilterAllUnits([[f_side,3],[f_or, [f_weapon, ru_cargo_bay], [f_type,unit_human]]]) do
-        if GetTaskList(i) > 0 then
-            for j = 1 to GetTaskList(i) do
-            begin
-                temp = GetTaskList(i)[j][4];
-
-                if (GetSide(temp) = 6 and GetTaskList(i)[j][1] = '<') then
-                    SetTaskList(i, []);
-            end;
-
-end;
+if GetBType(b) = b_depot then
+   begin
+   hasBase := true;
+   myBase := GetBase(b);
+   SetRestrict(b_depot, 3, state_disabled);
+   end;
+End;

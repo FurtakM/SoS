@@ -181,7 +181,7 @@ End;
 
 // West Base
 Every 0$01 trigger GetDistUnits(JMM, Lynch) < 10 do
-var i, points, sol, buns, tmp;
+var i, points, sol, buns, tmp, p;
 begin
 points := [ [89, 34], [138, 63], [196, 84], [135, 52], [103, 39], [58, 30], [38, 51] ];
 
@@ -207,16 +207,25 @@ Wait(10);
 
 AddComMoveUnit(JMM, Lynch);
 
+p := 0;
+
 repeat
  wait(0$01);
-until GetDistUnits(JMM, Lynch) < 6;
+
+ p := Inc(p);   
+
+ if IsInUnit(JMM) then
+    ComExit(JMM);
+
+ ComMoveUnit(JMM, Lynch);
+until GetDistUnits(JMM, Lynch) < 6 or p > 6;
 
 ComTurnUnit(JMM, Lynch);
 
 for i in [Lynch, Walker, Turner, Jillian] do
     ComTurnUnit(i, JMM);
 
-Wait(0$0.3);
+wait(0$0.3);
 
 Say(JMM, 'D2-JMM-1');
 Say(Lynch, 'D2-Sol1-1');

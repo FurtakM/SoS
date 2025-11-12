@@ -106,10 +106,18 @@ if Kovalyuk and not Kovalyuk in beriaBaseSquad then
 
 for i in beriaTeam union burlakTeam do
     if not i in beriaBaseSquad then
-       popovTeam := Join(popovTeam, i);
+       if Count(popovTeam) < 4 then
+          popovTeam := Join(popovTeam, i)
+       else
+          begin
+          kirovBaseSquad := Join(kirovBaseSquad, i);
 
-if popovTeam < 3 then
-   for i := Count(popovTeam) to 3 do
+          if not IsPlaced(i) then
+             PlaceUnitXYR(i, 161, 107, 3, false)
+          end;
+
+if popovTeam < 4 then
+   for i := Count(popovTeam) to 4 do
        begin
        uc_side := 6;
        uc_nation := nation_russian;
@@ -217,11 +225,18 @@ End;
 // self attack on allies
 Every 0$2 trigger allianceAttacked do
 begin
-DialogueOn;
-Say(Kurin, 'DArestKur');
-dwait(0$1);
-YouLost('SelfAttack');
-DialogueOff;
+if IsOk(Kurin) then
+   begin
+   DialogueOn;
+   Say(Kurin, 'DArestKur');
+
+   dwait(0$1);
+
+   YouLost('SelfAttack');
+   DialogueOff;
+   end
+else
+   YouLost('SelfAttack');
 End;
 
 Every 0$2 trigger youTookCratesFromKirov do
@@ -373,16 +388,19 @@ uc_side := 6;
 PrepareHuman(sex_male, class_soldier, 1);
 fake := CreateHuman;
 
-InGameOn;
-DialogueOn;
+if not See(3, Scholtze) then
+   begin
+   InGameOn;
+   DialogueOn;
 
-SayRadioNoFaceNoName(fake, 'D4-Sch-1');
-Say(Burlak, 'D4-Bur-1');
+   SayRadioNoFaceNoName(fake, 'D4-Sch-1');
+   Say(Burlak, 'D4-Bur-1');
 
-DialogueOff;
-InGameOff;
+   DialogueOff;
+   InGameOff;
 
-ChangeMissionObjectives('M4');
+   ChangeMissionObjectives('M4');
+   end;
 
 canSearchForScholtze := true;
 
@@ -487,9 +505,10 @@ ComMoveXY([Dickens, DickensFriend], 25, 31);
 omicronTroops := omicronTroops union [Dickens, DickensFriend];
 End;
 
-Every 0$2 trigger See(3, Scholtze) and canSearchForScholtze and not hasScholtze do
+Every 0$3 trigger See(3, Scholtze) and canSearchForScholtze and not hasScholtze do
 begin
 hasScholtze := true;
+
 SetSide(Scholtze, 3);
 
 CenterNowOnUnits(Scholtze);
@@ -840,11 +859,16 @@ InGameOn;
 
 repeat
  for i in FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]) do
-     ComMoveToArea(i, omicronRetreatArea);
+     begin
+     if i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]]) then
+        KillUnit(i)
+     else
+        ComMoveToArea(i, omicronRetreatArea);
+     end;
 
  wait(0$01);
  p := Inc(p);
-until p > 10 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
+until p > 5 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
 
 InGameOff;
 
@@ -852,7 +876,7 @@ enable;
 End;
 
 // American talk about Arabs
-Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 2 or GetLives(usDep) < 500) and allowedToAttackOmicron do
+Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 1 or GetLives(usDep) < 500) and allowedToAttackOmicron do
 var i, tmp, random, sol, nearest;
 begin
 uc_side := 1;

@@ -392,17 +392,23 @@ End;
 
 // build outside beria
 Every 0$1 trigger beriaVisited and FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]]) do
-var tmp, amount;
+var p, tmp, amount;
 begin
 enable;
 
 tmp := FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]])[1];
 
+if GetY(tmp) < 71 then
+   exit;
+
 ComMoveUnit(Platonov, tmp);
+
+p := 0;
 
 repeat
  wait(0$1);
-until GetDistUnits(Platonov, tmp) < 6;
+ p := Inc(p);
+until GetDistUnits(Platonov, tmp) < 6 or p > 12;
 
 InGameOn;
 
@@ -902,8 +908,13 @@ if IsOk(Kovalyuk) then
 End;
 
 Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(belkovTrapArea, [f_side, 3]) do
+var decision;
 begin
-case Query('QAttackBw') of
+decision := Query('QAttackBw');
+
+SaveVariable(decision, '02_recklessAttack');
+
+case decision of
      1: begin
         initiative := true;
 

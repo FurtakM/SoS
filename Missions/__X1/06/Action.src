@@ -31,8 +31,18 @@ gameActive := true;
 End;
 
 Export Function SceneKaiaWithOlaf;
+var i, fac;
 begin
-ComConstruct(FilterAllUnits([[f_side, 2], [f_btype, b_factory]]), ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower);
+fac := FilterAllUnits([[f_side, 2], [f_nation, nation_arabian], [f_btype, b_factory]]);
+
+if fac then
+   for i in fac do
+       if CanBeConstructed(i, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower) then
+          begin
+          ComConstruct(i, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower);
+          fac := i;
+          break;
+          end;
 
 wait(0$1);
 
@@ -44,7 +54,8 @@ Say(Olaf, 'DO-Mem-5');
 
 wait(0$2);
 
-SetWorkingProgress(FilterAllUnits([[f_side, 2], [f_btype, b_factory]]), 90);
+if fac then
+   SetWorkingProgress(fac, 90);
 
 Say(Olaf, 'DO-Mem-6');
 Say(Kaia, 'DK-Mem-7');

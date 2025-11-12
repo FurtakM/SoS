@@ -232,6 +232,8 @@ if bun and UnitFilter(team, [f_class, 1]) then
        if not filter then
           break;
 
+       SetDir(filter[1], GetDir(i) - 3);
+
        PlaceHumanInUnit(filter[1], i);
        team := team diff filter[1];
        filter := Delete(filter, 1);
@@ -246,7 +248,7 @@ if bar and UnitFilter(team, [f_class, 1]) then
        begin
        if (i <= 6) then
           PlaceHumanInUnit(filter[i], bar[1])
-         else
+       else
           PlaceUnitArea(filter[i], gammaBaseArea, false);
        end;
 
@@ -319,15 +321,21 @@ PlaceHumanInUnit(RandGuy, veh);
 End;
 
 Function PrepareBase;
-var blist, i, b, base;
+var blist, i, b, base, tmp;
 begin
 SetResourceVisibility(71, 5, 1);
 
-// [ [GetBType(i), GetX(i), GetY(i) ,GetDir(i) ,GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
+// [ [GetBType(i), GetX(i), GetY(i), GetDir(i), GetBLevel(i), GetNation(i), GetLabKind(i,1), GetLabKind(i,2) ] ]
 blist := LoadVariable('GammaBase', []);
 
 if not blist then
    blist := [ [b_depot, 52, 12, 3, 3, 0, 0] ];
+
+// [69, 34], [64, 38], [56, 41], [48, 37]
+blist := blist ^ [[b_bunker, 69, 34, 5, 3, 0, us_gatling_gun]];
+blist := blist ^ [[b_breastwork, 64, 38, 5, 3, 0, 0]];
+blist := blist ^ [[b_bunker, 56, 41, 0, 3, 0, us_machine_gun]];
+blist := blist ^ [[b_bunker, 48, 37, 0, 3, 0, us_machine_gun]];
 
 uc_side := 1;
 uc_nation := 1;
@@ -336,7 +344,11 @@ for i in blist do
     begin
     InitBc;
 
-    bc_type := i[1];
+    if i[1] = b_depot then
+       bc_type := b_warehouse
+    else
+       bc_type := i[1];
+
     bc_level := i[5];
 
     bc_kind1 := b_lab_basic;
@@ -373,4 +385,26 @@ base := GetBase(FilterAllUnits([[f_side, 1], [f_or, [f_btype, b_depot], [f_btype
 
 if base then
    SetResourceType(base, mat_oil, 1000);
+
+// fac extension's
+if FilterAllUnits([[f_side, 1], [f_btype, b_factory]]) then
+   begin
+   b := FilterAllUnits([[f_side, 1], [f_btype, b_factory]])[1];
+   tmp := GetFacExtXYD(GetX(b), GetY(b), GetDir(b));
+   blist := [b_ext_noncombat, b_ext_gun, b_ext_track];
+
+   {if LoadVariable('06_remoteVehs_1', 0) then
+      blist := Insert(blist, 1, b_ext_radio);}
+
+   for i in tmp do
+       if HexInfo(i[1], i[2]) = 0 then
+          begin
+          bc_type := blist[1];
+          CreateAndPlaceBuildingXYD(i[1], i[2], i[3]);
+          blist := Delete(blist, 1);
+
+          if blist = 0 then
+             break;
+          end;
+   end;
 End;

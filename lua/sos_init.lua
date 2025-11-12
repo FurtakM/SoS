@@ -18,6 +18,7 @@ include('sos_campaings');
 include('sos_credits');
 include('sos_stream');
 include('sos_dialogs');
+include('sos_medals');
 include('sos_eco');
 include('sos_upper_panel');
 include('sos_waypoint');

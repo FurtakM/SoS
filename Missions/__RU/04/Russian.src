@@ -1,221 +1,118 @@
-Export Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze; // Heroes with Burlak, last mission with this team, next episode in mission 8
-Export Kuzmov; // Other heroes
-Export other_survivors; // Other survivors from 02
-Export other_kirov_survivors; // Other kirov survivors from 02
-
-Export Popov, Platonov, Gaydar;
-Export burlakTeam, popovTeam, secondBaseTeam, secondBaseDepot;
-Export dialogRus;
-Export firstCargo;
-Export ruCars;
-
-Export randomsToSave;
-
-Export Function PrepareRussians;
+Export Burlak, Gnyevko, Belkov, Kirilenkova,
+       Platonov, Kovalyuk, Popov, Scholtze, Kuzmov, Gaydar;
+Export burlakTeam, popovTeam, ruVehicles, ruConvoyUnits, ruEngs,
+       burlakSquad;
+Export function PrepareRussian;
+var i, b, un, tmp, techs;
 begin
-    randomsToSave = [];
-    secondBaseTeam = [];
-    ruCars = [];
+ruConvoyUnits := [];
+ruEngs := [];
+burlakSquad := [];
 
-    LoadVehiclesFromPreviousMission;
-    PrepareHeroes;
-end;
+techs := LoadVariable(prevMissionPrefix & 'Techs', []);
 
-Function PrepareHeroes;
-var i, current;
-begin
-    uc_side = 3;
-    uc_nation = 3;
+if techs then
+   for i := 1 to Count(techs) do
+       SetTech(i, 3, techs[i]);
 
-    Burlak := PrepareUnitExt('Burlak', true, class_mechanic);
-    Gnyevko := PrepareUnitExt('Gnyevko', true, class_mechanic);
-    Kovalyuk := PrepareUnitExt('Kovalyuk', true, class_mechanic);
-    Kirilenkova := PrepareUnitExt('Kirilenkova', true, class_scientistic);
-    Belkov := PrepareUnitExt('Belkov', true, class_soldier);
-    Belkov2 := PrepareUnitExt('Belkov2', true, class_soldier);
-    Scholtze := PrepareUnitExt('Scholtze', true, class_scientistic);
+techs := [
+   tech_gun, tech_tech1, tech_tech2, tech_tech3, tech_weap1
+];
 
-    Popov := PrepareUnitExt('Popov', false, 0);
-    Platonov := PrepareUnitExt('Platonov', false, 0);
+for i := 1 to Count(techs) do
+    if GetTech(techs[i], 3) <> state_researched then
+       SetTech(techs[i], 3, state_enabled);
 
-    uc_side = 6;
-    
-    Gaydar := PrepareUnitExt('Gaydar', false, 0);
+uc_side := 3;
+uc_nation := nation_russian;
 
-    Kuzmov := PrepareUnitExt('Kuzmov', false, 0);
-    PlaceUnitXYR(Kuzmov, 109, 108, 5, false);
-    ComHold(Kuzmov);
+Burlak := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
 
-    uc_side = 3;
+uc_side := 6;
 
-    PlaceUnitsArea([Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze, Popov], RussianSpawnArea1, false);
- 
-    other_survivors = CreateCharacterSet('03_other_survivors');
-    other_kirov_survivors = CreateCharacterSet('03_other_kirov');
+Kuzmov := NewCharacter('Kuzmov');
+Platonov := NewCharacter('Platonov');
+Gnyevko := PrepareUnit('Gnyevko', (not debug), prevMissionPrefix);
+Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
+Kovalyuk := PrepareUnit('Kovalyuk', (not debug), prevMissionPrefix);
+Belkov := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
+Scholtze := PrepareUnit('Scholtze', (not debug), prevMissionPrefix);
+Popov := PrepareUnit('Popov', (not debug), prevMissionPrefix);
 
-    for i in other_survivors do
+burlakTeam := CreateCharacterSet(prevMissionPrefix & 'burlakTeam');
+
+if burlakTeam < 4 then
+   for i := Count(burlakTeam) to 4 do
+       begin
+       PrepareHuman(false, i mod 4 + 1, 3);
+       burlakTeam := Join(burlakTeam, CreateHuman);
+       end;
+
+popovTeam := CreateCharacterSet(prevMissionPrefix & 'popovTeam');
+
+if popovTeam < 4 then
+   for i := Count(popovTeam) to 4 do
+       begin
+       PrepareHuman(false, i mod 4 + 1, 3);
+       popovTeam := Join(popovTeam, CreateHuman);
+       end;
+
+result := [Burlak, Gnyevko, Kirilenkova, Kovalyuk, Belkov, Scholtze, Popov] ^ burlakTeam ^ popovTeam;
+result := result diff 0;
+
+ruVehicles := LoadVariable(currentMissionPrefix & 'Vehicles', []);
+
+if debug then
+   ruVehicles := [ [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian],
+                   [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian],
+                   [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian],
+                   [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian],
+                   [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian],
+                   [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun, nation_russian] ];
+
+if ruVehicles > [4, 3, 2, 1][Difficulty] then
+   for i := Count(ruVehicles) downto [6, 5, 4, 3][Difficulty] do
+       ruVehicles := Delete(ruVehicles, i);
+
+tmp := AreaToList(ruRoadBunkersArea, 0);
+
+for i := 1 to tmp[1] do
     begin
-        if ruCars then
-        begin
-           PlaceHumanInUnit(i, ruCars[1]);
-           ruCars = ruCars diff ruCars[1];
-        end
-        else
-          PlaceUnitArea(i, RussianSpawnArea1, false);
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    bc_type := b_breastwork;
+    bc_level := 0;
+
+    b := CreateAndPlaceBuildingXYD(tmp[1][i], tmp[2][i], 3);
+    PrepareSoldier(false, 2);
+
+    PlaceHumanInUnit(CreateHuman, b);
+
+    PrepareEngineer(false, 3);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 111, 56, 3, false);
+
+    ruEngs := Join(ruEngs, un);
     end;
 
-    for i in other_kirov_survivors do
-    begin
-        if ruCars then
-        begin
-             PlaceHumanInUnit(i, ruCars[1]);
-             ruCars = ruCars diff ruCars[1];
-        end else
-          PlaceUnitArea(i, RussianSpawnArea1, false);
-    end;
+PlaceUnitXY(Kuzmov, 114, 119, false);
+ComHold(Kuzmov);
+End;
 
-    PrepareSoldier(sex_male, 1);
-
-    dialogRus = CreateHuman;
-
-    if other_survivors + other_kirov_survivors + [Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze] < 8 then
-    begin
-        current = other_survivors + other_kirov_survivors + [Gnyevko, Kirilenkova, Kovalyuk, Belkov, Belkov2, Scholtze];
-
-        current = 8 - current;
-
-        for i := 1 to current do
-        begin
-            uc_nation = 3;
-            uc_side = 3;
-            
-            PrepareHuman(false, rand(1, 4), rand(1, 3));
-
-            if ruCars then
-            begin
-              PlaceHumanInUnit(CreateHuman, ruCars[1]);
-              ruCars = ruCars diff ruCars[1];
-            end
-            else
-              PlaceUnitArea(CreateHuman, RussianSpawnArea1, false);
-
-        end;     
-    end;
-end;
-
-Export Function LoadVehiclesFromPreviousMission;
-var i, car;
+// remove each purple unit
+Every 0$1 trigger FilterUnitsInArea(retreatArea, [f_side, 6]) do
+var i;
 begin
-     uc_side = 3;
-     uc_nation = 3;
+for i in FilterUnitsInArea(retreatArea, [f_side, 6]) do
+    begin
+    if i in ruConvoyUnits then
+       saveCounter := Inc(saveCounter);
 
-     for i:=1 to tanksFromPreviousMission do
-     begin
-         vc_chassis:=tanksFromPreviousMission[i][1];
-         vc_engine = tanksFromPreviousMission[i][2];
-         vc_control = tanksFromPreviousMission[i][3];
-         vc_weapon:=tanksFromPreviousMission[i][4];
-         uc_direction:=3;
-         vc_fuel_battery:=Rand(25,30);
-         car:=CreateVehicle;
-         ruCars:=ruCars ^ car;
-         PlaceUnitArea(car, RussianSpawnArea1, false);
+    RemoveUnit(i);
     end;
-end;
 
-Export Function CreateEvacuateUnit;
-var i, rnd, rnd2, rnd3, unit, vehicle, unitsToEvacuate;
-begin
-    rnd = rand(1, 4); // [1,3] - veh, 2 - troops group AND 1 - road1, 2 - road2
+enable;
+End;
 
-    uc_side = 6;
-    uc_nation = 3;
 
-    if rnd < 4 then
-    begin
-        vc_chassis = ru_medium_wheeled;
-        vc_control = control_manual;
-        vc_engine = engine_combustion;
-
-        rnd3 = rand(1, 100); // 1 - cargoChanceSpawn (config module) - cargo, cargoChanceSpawn + 1 - 100 - rest
-
-        if rnd3 < cargoChanceSpawn + 1 then
-            vc_weapon = ru_cargo_bay
-        else
-            vc_weapon = [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][Rand(1, 3)];
-
-        vehicle = CreateVehicle;
-        SetDir(vehicle, 3);
-
-        PlaceUnitArea(vehicle, RussianSpawnArea2, false);
-
-        PrepareHuman(false, rand(1, 4), rand(2, 3));
-        PlaceHumanInUnit(CreateHuman, vehicle);
-
-        if vc_weapon = ru_cargo_bay then
-            AddCargo(vehicle, mat_cans, 100);
-
-        SetLives(vehicle, rand(500, 1000));
-
-        rnd = rand(1, 2);
-
-        if rnd = 1 then
-            for i := 3 to russianCargoPath1 do
-                AddComMoveXY(vehicle, russianCargoPath1[i][1], russianCargoPath1[i][2])
-        else
-            for i := 3 to russianCargoPath2 do
-                AddComMoveXY(vehicle, russianCargoPath2[i][1], russianCargoPath2[i][2]);
-    end
-    else
-    begin
-
-        for i := 1 to rand(1, 3) do
-        begin
-            PrepareHuman(false, rand(1,4), rand(2, 3));
-
-            unit = CreateHuman;
-            PlaceUnitArea(unit, RussianSpawnArea2, false);
-
-            SetLives(unit, rand(500, 1000));
-
-        end;
-
-        rnd2 = rand(1, 2);
-
-        unitsToEvacuate = FilterAllUnits([[f_side, 6], [f_type, unit_human], [f_outside], [f_not, [f_hastask]]]);
-        unitsToEvacuate = unitsToEvacuate diff popovTeam;
-        unitsToEvacuate = unitsToEvacuate diff secondBaseTeam; 
-
-        if rnd2 = 1 then
-            for i := 3 to russianCargoPath1 do
-                AddComMoveXY(unitsToEvacuate, russianCargoPath1[i][1], russianCargoPath1[i][2])
-        else
-            for i := 3 to russianCargoPath2 do
-                AddComMoveXY(unitsToEvacuate, russianCargoPath2[i][1], russianCargoPath2[i][2]);
-
-    end;
-end;
-
-Export Function PrepareSecondBaseTeam;
-var i, unit;
-begin
-    for i := 1 to 2 do
-    begin
-        PrepareHuman(false, 1, rand(2, 3));
-
-        unit = CreateHuman;
-        PlaceUnitArea(unit, RussianSpawnArea2, false);
-
-        secondBaseTeam = secondBaseTeam ^ unit;
-    end;    
-
-    PrepareHuman(false, 2, rand(2, 3));
-
-    unit = CreateHuman;
-    PlaceUnitArea(unit, RussianSpawnArea2, false);
-
-    secondBaseTeam = secondBaseTeam ^ unit;  
-
-    ComMoveXY(secondBaseTeam, 100, 54);  
-    AddComBuild(UnitFilter(secondBaseTeam, [f_class, class_engineer]), b_depot, 95, 52, 2);
-end;
