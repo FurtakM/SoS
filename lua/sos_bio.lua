@@ -1126,10 +1126,18 @@ function openBioPopup(ID)
 
 	local nat = {'am', 'ar', 'ru'};
 	local info = loc(9200) .. ': ' .. loc(1162 + outputBiographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. outputBiographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. outputBiographics[ID][7];
+	local desc = outputBiographics[ID][2] .. '\n\n' .. info;
+	local height = 500;
+	local lines = math.ceil(strlen(desc) / 39);
+
+	if (lines > 24) then
+		height = 500 + ((lines - 24) * 18); 
+	end;
 
 	setVisible(menu.window_bio.popup, true);
 	setText(menu.window_bio.popup.panel.name, outputBiographics[ID][1]);
-	setText(menu.window_bio.popup.panel.desc, outputBiographics[ID][2] .. '\n\n' .. info);
+	setHeight(menu.window_bio.popup.panel.desc, height);
+	setText(menu.window_bio.popup.panel.desc, desc);
 	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. nat[outputBiographics[ID][4]] .. '.png');
 	setTexture(menu.window_bio.popup.panel.avatar.face, avatarPath .. nat[outputBiographics[ID][4]] .. '/' .. outputBiographics[ID][3] .. '.png');
 	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[outputBiographics[ID][4]] .. '-active' .. '.png');
@@ -1360,7 +1368,7 @@ menu.window_bio.popup.panel.desc = getLabelEX(
 menu.window_bio.popup.panel.scroll = getScrollboxEX(
 	menu.window_bio.popup.panel, 
 	anchorLTBR,
-	XYWH(426, 40, 330, 440), 
+	XYWH(426, 40, 340, 440), 
 	{
 		colour1 = WHITEA()
 	}
@@ -1386,7 +1394,7 @@ menu.window_bio.popup.panel.scroll.scrollV = clScrollBarEX2(
 menu.window_bio.popup.panel.desc = clTextBox(
 	menu.window_bio.popup.panel.scroll, 
 	anchorLT,
-	XYWH(0, 0, 330, 500),  
+	XYWH(0, 0, 340, 500),  
 	'', 
 	{
 		wordwrap = true,

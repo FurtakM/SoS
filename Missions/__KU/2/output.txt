@@ -1,39 +1,310 @@
-// every 0 0$1 do
-   0: GO 2
-   2: DISABLE
-// begin uc_side := 1 ;
-   3: LD_ADDR_OWVAR 20
-   7: PUSH
-   8: LD_INT 1
-  10: ST_TO_ADDR
-// uc_nation := 1 ;
-  11: LD_ADDR_OWVAR 21
-  15: PUSH
-  16: LD_INT 1
-  18: ST_TO_ADDR
-// PrepareSoldier ( false , 0 ) ;
-  19: LD_INT 0
-  21: PPUSH
-  22: LD_INT 0
-  24: PPUSH
-  25: CALL_OW 381
-// display_strings := PlaceHumanInUnit ( CreateHuman , a1 ) ;
-  29: LD_ADDR_OWVAR 47
-  33: PUSH
-  34: CALL_OW 44
-  38: PPUSH
-  39: LD_INT 1
-  41: PPUSH
-  42: CALL_OW 52
-  46: ST_TO_ADDR
-// display_strings := PlaceHumanInUnit ( CreateHuman , a1 ) ;
-  47: LD_ADDR_OWVAR 47
-  51: PUSH
-  52: CALL_OW 44
-  56: PPUSH
-  57: LD_INT 1
-  59: PPUSH
-  60: CALL_OW 52
-  64: ST_TO_ADDR
+// export function MinerRandomizer ( x , y , side , maxRange ) ; var r , j , _x , _y , _d , tmp ; begin
+   0: LD_INT 0
+   2: PPUSH
+   3: PPUSH
+   4: PPUSH
+   5: PPUSH
+   6: PPUSH
+   7: PPUSH
+   8: PPUSH
+// if not ValidHex ( x , y ) or MineAtPos ( x , y ) then
+   9: LD_VAR 0 1
+  13: PPUSH
+  14: LD_VAR 0 2
+  18: PPUSH
+  19: CALL_OW 488
+  23: NOT
+  24: IFTRUE 42
+  26: PUSH
+  27: LD_VAR 0 1
+  31: PPUSH
+  32: LD_VAR 0 2
+  36: PPUSH
+  37: CALL_OW 458
+  41: OR
+  42: IFFALSE 46
+// exit ;
+  44: GO 459
+// Randomize ;
+  46: CALL_OW 10
+// result := [ [ x , y ] ] ;
+  50: LD_ADDR_VAR 0 5
+  54: PUSH
+  55: LD_VAR 0 1
+  59: PUSH
+  60: LD_VAR 0 2
+  64: PUSH
+  65: EMPTY
+  66: LIST
+  67: LIST
+  68: PUSH
+  69: EMPTY
+  70: LIST
+  71: ST_TO_ADDR
+// PlaceMine ( x , y , side , 0 ) ;
+  72: LD_VAR 0 1
+  76: PPUSH
+  77: LD_VAR 0 2
+  81: PPUSH
+  82: LD_VAR 0 3
+  86: PPUSH
+  87: LD_INT 0
+  89: PPUSH
+  90: CALL_OW 454
+// for r := 1 to maxRange - 1 do
+  94: LD_ADDR_VAR 0 6
+  98: PUSH
+  99: DOUBLE
+ 100: LD_INT 1
+ 102: DEC
+ 103: ST_TO_ADDR
+ 104: LD_VAR 0 4
+ 108: PUSH
+ 109: LD_INT 1
+ 111: MINUS
+ 112: PUSH
+ 113: FOR_TO
+ 114: IFFALSE 457
+// begin _d := rand ( 0 , 5 ) ;
+ 116: LD_ADDR_VAR 0 10
+ 120: PUSH
+ 121: LD_INT 0
+ 123: PPUSH
+ 124: LD_INT 5
+ 126: PPUSH
+ 127: CALL_OW 12
+ 131: ST_TO_ADDR
+// _x := ShiftX ( x , _d , r ) ;
+ 132: LD_ADDR_VAR 0 8
+ 136: PUSH
+ 137: LD_VAR 0 1
+ 141: PPUSH
+ 142: LD_VAR 0 10
+ 146: PPUSH
+ 147: LD_VAR 0 6
+ 151: PPUSH
+ 152: CALL_OW 272
+ 156: ST_TO_ADDR
+// _y := ShiftY ( y , _d , r ) ;
+ 157: LD_ADDR_VAR 0 9
+ 161: PUSH
+ 162: LD_VAR 0 2
+ 166: PPUSH
+ 167: LD_VAR 0 10
+ 171: PPUSH
+ 172: LD_VAR 0 6
+ 176: PPUSH
+ 177: CALL_OW 273
+ 181: ST_TO_ADDR
+// if not ValidHex ( _x , _y ) then
+ 182: LD_VAR 0 8
+ 186: PPUSH
+ 187: LD_VAR 0 9
+ 191: PPUSH
+ 192: CALL_OW 488
+ 196: NOT
+ 197: IFFALSE 203
+// exit ;
+ 199: POP
+ 200: POP
+ 201: GO 459
+// if MineAtPos ( _x , _y ) then
+ 203: LD_VAR 0 8
+ 207: PPUSH
+ 208: LD_VAR 0 9
+ 212: PPUSH
+ 213: CALL_OW 458
+ 217: IFFALSE 221
+// continue ;
+ 219: GO 113
+// PlaceMine ( _x , _y , side , 0 ) ;
+ 221: LD_VAR 0 8
+ 225: PPUSH
+ 226: LD_VAR 0 9
+ 230: PPUSH
+ 231: LD_VAR 0 3
+ 235: PPUSH
+ 236: LD_INT 0
+ 238: PPUSH
+ 239: CALL_OW 454
+// result := Replace ( result , result + 1 , [ _x , _y ] ) ;
+ 243: LD_ADDR_VAR 0 5
+ 247: PUSH
+ 248: LD_VAR 0 5
+ 252: PPUSH
+ 253: LD_VAR 0 5
+ 257: PUSH
+ 258: LD_INT 1
+ 260: PLUS
+ 261: PPUSH
+ 262: LD_VAR 0 8
+ 266: PUSH
+ 267: LD_VAR 0 9
+ 271: PUSH
+ 272: EMPTY
+ 273: LIST
+ 274: LIST
+ 275: PPUSH
+ 276: CALL_OW 1
+ 280: ST_TO_ADDR
+// for j := 0 to 5 do
+ 281: LD_ADDR_VAR 0 7
+ 285: PUSH
+ 286: DOUBLE
+ 287: LD_INT 0
+ 289: DEC
+ 290: ST_TO_ADDR
+ 291: LD_INT 5
+ 293: PUSH
+ 294: FOR_TO
+ 295: IFFALSE 453
+// begin if Prob ( 50 ) then
+ 297: LD_INT 50
+ 299: PPUSH
+ 300: CALL_OW 13
+ 304: IFFALSE 308
+// continue ;
+ 306: GO 294
+// _x := ShiftX ( _x , j , 1 ) ;
+ 308: LD_ADDR_VAR 0 8
+ 312: PUSH
+ 313: LD_VAR 0 8
+ 317: PPUSH
+ 318: LD_VAR 0 7
+ 322: PPUSH
+ 323: LD_INT 1
+ 325: PPUSH
+ 326: CALL_OW 272
+ 330: ST_TO_ADDR
+// _y := ShiftY ( _y , j , 1 ) ;
+ 331: LD_ADDR_VAR 0 9
+ 335: PUSH
+ 336: LD_VAR 0 9
+ 340: PPUSH
+ 341: LD_VAR 0 7
+ 345: PPUSH
+ 346: LD_INT 1
+ 348: PPUSH
+ 349: CALL_OW 273
+ 353: ST_TO_ADDR
+// if not ValidHex ( _x , _y ) then
+ 354: LD_VAR 0 8
+ 358: PPUSH
+ 359: LD_VAR 0 9
+ 363: PPUSH
+ 364: CALL_OW 488
+ 368: NOT
+ 369: IFFALSE 373
+// continue ;
+ 371: GO 294
+// if MineAtPos ( _x , _y ) then
+ 373: LD_VAR 0 8
+ 377: PPUSH
+ 378: LD_VAR 0 9
+ 382: PPUSH
+ 383: CALL_OW 458
+ 387: IFFALSE 391
+// continue ;
+ 389: GO 294
+// PlaceMine ( _x , _y , side , 0 ) ;
+ 391: LD_VAR 0 8
+ 395: PPUSH
+ 396: LD_VAR 0 9
+ 400: PPUSH
+ 401: LD_VAR 0 3
+ 405: PPUSH
+ 406: LD_INT 0
+ 408: PPUSH
+ 409: CALL_OW 454
+// result := Replace ( result , result + 1 , [ _x , _y ] ) ;
+ 413: LD_ADDR_VAR 0 5
+ 417: PUSH
+ 418: LD_VAR 0 5
+ 422: PPUSH
+ 423: LD_VAR 0 5
+ 427: PUSH
+ 428: LD_INT 1
+ 430: PLUS
+ 431: PPUSH
+ 432: LD_VAR 0 8
+ 436: PUSH
+ 437: LD_VAR 0 9
+ 441: PUSH
+ 442: EMPTY
+ 443: LIST
+ 444: LIST
+ 445: PPUSH
+ 446: CALL_OW 1
+ 450: ST_TO_ADDR
 // end ;
-  65: END
+ 451: GO 294
+ 453: POP
+ 454: POP
+// end ;
+ 455: GO 113
+ 457: POP
+ 458: POP
+// end ;
+ 459: LD_VAR 0 5
+ 463: RET
+// every 0 0$2 do var i , tmp ;
+ 464: GO 466
+ 466: DISABLE
+ 467: LD_INT 0
+ 469: PPUSH
+ 470: PPUSH
+// begin tmp := FilterAllUnits ( [ [ f_side , 2 ] , [ f_dist , aa2 , 10 ] ] ) ;
+ 471: LD_ADDR_VAR 0 2
+ 475: PUSH
+ 476: LD_INT 22
+ 478: PUSH
+ 479: LD_INT 2
+ 481: PUSH
+ 482: EMPTY
+ 483: LIST
+ 484: LIST
+ 485: PUSH
+ 486: LD_INT 91
+ 488: PUSH
+ 489: LD_INT 12
+ 491: PUSH
+ 492: LD_INT 10
+ 494: PUSH
+ 495: EMPTY
+ 496: LIST
+ 497: LIST
+ 498: LIST
+ 499: PUSH
+ 500: EMPTY
+ 501: LIST
+ 502: LIST
+ 503: PPUSH
+ 504: CALL_OW 69
+ 508: ST_TO_ADDR
+// if tmp then
+ 509: LD_VAR 0 2
+ 513: IFFALSE 546
+// for i in tmp do
+ 515: LD_ADDR_VAR 0 1
+ 519: PUSH
+ 520: LD_VAR 0 2
+ 524: PUSH
+ 525: FOR_IN
+ 526: IFFALSE 544
+// begin ComAttackUnit ( aa2 , i ) ;
+ 528: LD_INT 12
+ 530: PPUSH
+ 531: LD_VAR 0 1
+ 535: PPUSH
+ 536: CALL_OW 115
+// break ;
+ 540: GO 544
+// end ;
+ 542: GO 525
+ 544: POP
+ 545: POP
+// enable ;
+ 546: ENABLE
+// end ;
+ 547: PPOPN 2
+ 549: END

@@ -546,7 +546,7 @@ Say(Burlak, 'D5a-Bur-1');
 
 DialogueOff;
 
-SetTech(tech_Track, 3, state_enabled);
+SetTech(tech_track, 3, state_enabled);
 SetRestrict(b_ext_track, 3, state_enabled);
 End;
 
@@ -659,6 +659,7 @@ if q = 3 then
    SayRadio(Kurin, 'D6c-Kur-2');
    DialogueOff;
 
+   AddMedal('Surplus', 1);
    sendMechanics := true;
    timeToAttackOnOmicron := 2$00;
    end;
@@ -834,7 +835,7 @@ enable;
 End;
 
 // attack on american without permission
-Every 0$2 trigger not allowedToAttackOmicron and (FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3])
+Every 0$1 trigger not allowedToAttackOmicron and (FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3])
                   or FilterUnitsInArea(omicronBaseArea, [f_side, 3])) do
 var i, p;
 begin
@@ -853,7 +854,7 @@ else
    end;
 
 omicronRetreatCounter := Inc(omicronRetreatCounter);
-p := 0;
+p := 1;
 
 InGameOn;
 
@@ -868,16 +869,18 @@ repeat
 
  wait(0$01);
  p := Inc(p);
-until p > 5 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
+until p > 2 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
 
 InGameOff;
+
+wait(0$3);
 
 enable;
 End;
 
 // American talk about Arabs
 Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 1 or GetLives(usDep) < 500) and allowedToAttackOmicron do
-var i, tmp, random, sol, nearest;
+var i, p, tmp, random, sol, nearest;
 begin
 uc_side := 1;
 uc_nation := nation_american;
@@ -929,7 +932,12 @@ if IsInUnit(Burlak) then
 else
    CenterNowOnUnits(Burlak);
 
-wait(0$5);
+p := 0;
+
+repeat
+ wait(0$1);
+ p := Inc(p);
+until FilterAllUnits([[f_side, 1], [f_class, class_soldier]]) < 2 or p > 30;
 
 SpawnArabAttack;
 
@@ -947,7 +955,15 @@ for i in FilterAllUnits([[f_side, 6], [f_or, [f_class, 2], [f_class, 4]]]) diff 
 
     ComExitBuilding(i);
     AddComMoveXY(i, 56, 94);
-    end;  
+    end;
+
+wait(1);
+
+if GetLives(Burlak) < 250 then
+   SetLives(Burlak, 250);
+
+for i in FilterAllUnits([[f_side, 1], [f_ok], [f_type, unit_human]]) do
+    SetLives(i, 200);
 
 SayRadio(Kurin, 'D9a-Kur-1');
 Say(Burlak, 'D9a-Bur-1');

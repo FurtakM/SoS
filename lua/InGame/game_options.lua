@@ -11,24 +11,51 @@ function setting_set(setting,value)
 	end;
 end;
 
-function setting_setvolume(setting,value)
-	if (options_loading == false) then
-		OW_settings_setvolume(setting,value);
-        SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();', SETTING_TIMER_ID);
-	end;
+function setting_setvolume(setting, value, GS_SETTING)
+    if (options_loading == false) then
+        OW_settings_setvolume(setting,value);
+
+        if (GS_SETTING ~= nil) then
+            OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), GS_SETTING, value);
+        end;
+        
+        SETTING_TIMER_ID = AddRepeatableTimer(2, 'OW_settings_save();', SETTING_TIMER_ID);
+    end;
 end;
 
+function addInGameOptionsSlider(X, Y, MIN, MAX, POS, HINT, CAPTION, CALLBACK)
+    getLabelEX(
+        dialog.options,
+        anchorLT,
+        XYWH(X, Y, 150, 16),
+        Tahoma_13,
+        CAPTION,
+        {
+            font_colour = WHITE(),
+            colour1 = BLACKA(0),
+            text_halign = ALIGN_LEFT,
+            wordwrap = true
+        }
+    );
 
-function addInGameOptionsSlider(X,Y,MIN,MAX,POS,HINT,CAPTION,CALLBACK)
-        getLabelEX(dialog.options,anchorLT,XYWH(X,Y,150,16),Tahoma_13,CAPTION,
-                   {font_colour=WHITE(), colour1=BLACKA(0), text_halign=ALIGN_LEFT, wordwrap=true,});
+    local ele = AddSkinnedElement(
+        addAlienSlider(
+            dialog.options,
+            anchorLTR,
+            XYWH(X+150,Y,190,16),
+            MIN,
+            MAX,
+            POS,
+            HINT,
+            CALLBACK
+        ), 
+        SKINTYPE_SLIDER
+    );
 
-        local ele = AddSkinnedElement(addAlienSlider(dialog.options, anchorLTR, XYWH(X+150,Y,190,16), MIN, MAX, POS, HINT, CALLBACK),SKINTYPE_SLIDER);
+    setGradientAll(ele.slider, false, ProgressBar_Gradient_Colour1, ProgressBar_Gradient_Colour2);
+    setBevelAll(ele.slider, false, GRAY(40), GRAY(50));
 
-        setGradientAll(ele.slider,false,ProgressBar_Gradient_Colour1,ProgressBar_Gradient_Colour2);
-        setBevelAll(ele.slider,false,GRAY(40),GRAY(50));
-
-        return ele;
+    return ele;
 end;
 
 dialog.options                = getDialogEX(dialog.back,anchorNone,XYWH(LayoutWidth / 2 - 225,150,400,480),SKINTYPE_DIALOG1,{tile=true});
@@ -40,13 +67,13 @@ dialog.options.solabel        = getLabelEX(dialog.options,anchorLTR,XYWH(15,soun
                                            {font_colour=WHITE(), colour1=BLACKA(0), text_halign=ALIGN_LEFT,text_case=CASE_TITLE, shadowtext=true,});
 
 dialog.options.musicvolume    = addInGameOptionsSlider(20,soundoptionsy+20  ,0,5000,OW_settings_getvolume(VOLUME_MUSIC)  ,'',loc(547),
-                                                       'setting_setvolume(VOLUME_MUSIC,dialog.options.musicvolume.POS);');
+                                                       'setting_setvolume(VOLUME_MUSIC,dialog.options.musicvolume.POS,"GS_VOLUME_MUSIC");');
 dialog.options.soundvolume    = addInGameOptionsSlider(20,soundoptionsy+20*2,0,5000,OW_settings_getvolume(VOLUME_SPEECH) ,'',loc(548),
-                                                       'setting_setvolume(VOLUME_SPEECH,dialog.options.soundvolume.POS);');
+                                                       'setting_setvolume(VOLUME_SPEECH,dialog.options.soundvolume.POS,"GS_VOLUME_SPEECH");');
 dialog.options.effectsvolume  = addInGameOptionsSlider(20,soundoptionsy+20*3,0,5000,OW_settings_getvolume(VOLUME_EFFECTS),'',loc(549),
-                                                       'setting_setvolume(VOLUME_EFFECTS,dialog.options.effectsvolume.POS);');
+                                                       'setting_setvolume(VOLUME_EFFECTS,dialog.options.effectsvolume.POS,"GS_VOLUME_EFFECTS");');
 dialog.options.exclamationsvolume  = addInGameOptionsSlider(20,soundoptionsy+20*4,0,5000,OW_settings_getvolume(VOLUME_EXCLAMATIONS),'',loc(5061),
-                                                       'setting_setvolume(VOLUME_EXCLAMATIONS,dialog.options.exclamationsvolume.POS);');
+                                                       'setting_setvolume(VOLUME_EXCLAMATIONS,dialog.options.exclamationsvolume.POS,"GS_VOLUME_EXCLAMATIONS");');
 
 dialog.options.ublabel        = getLabelEX(dialog.options,anchorLTR,XYWH(15,dialog.options.exclamationsvolume.y+dialog.options.exclamationsvolume.height+20,dialog.options.width,0),Tahoma_13B,loc(569),
                                            {font_colour=WHITE(), colour1=BLACKA(0), text_halign=ALIGN_LEFT, text_case=CASE_TITLE, shadowtext=true,});
@@ -66,19 +93,19 @@ dialog.options.misclabel      = getLabelEX(dialog.options,anchorLT,XYWH(15,other
 
 dialog.options.showobjectives = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,otherSettings,17,17),loc(563),{},'setting_set(SETTING_AUTOMISSION,%value);',{checked=true,});
 dialog.options.subtitles      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.showobjectives.y+22,17,17),loc(550),{},'setting_set(SETTING_SUBTITLES,%value);',{checked=true,});
-dialog.options.altFact      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.subtitles.y+22,17,17),loc(TID_Options_Alternative)..' '..loc(TID_Options_AltFact),{},'dialog.options.setAltFact(%value);',{checked=true,});
-dialog.options.lockCursor      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.altFact.y+22,17,17),loc(TID_Options_LockCursor),{},'dialog.options.setLockCursor(%value);',{checked=true,});
-dialog.options.timer      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.lockCursor.y+22,17,17),loc(1675),{},'dialog.options.setTimer(%value);',{checked=OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),});
+dialog.options.altFact        = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.subtitles.y+22,17,17),loc(TID_Options_Alternative)..' '..loc(TID_Options_AltFact),{},'dialog.options.setAltFact(%value);',{checked=true,});
+dialog.options.lockCursor     = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.altFact.y+22,17,17),loc(TID_Options_LockCursor),{},'dialog.options.setLockCursor(%value);',{checked=true,});
+dialog.options.timer          = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.lockCursor.y+22,17,17),loc(1675),{},'dialog.options.setTimer(%value);',{checked=OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),});
 
 function dialog.options.Show()
 	options_loading = true;
 
-    setChecked(dialog.options.subtitles,     OW_get(SETTING_SUBTITLES));
-    setChecked(dialog.options.showobjectives,OW_get(SETTING_AUTOMISSION));
-    setChecked(dialog.options.rawound,       OW_get(SETTING_RAWOUNDED));
-    setChecked(dialog.options.ranoncombat,   OW_get(SETTING_RANONCOMBAT));
-    setChecked(dialog.options.ravehicles,    OW_get(SETTING_RAVEHICLES));
-	setChecked(dialog.options.altFact, altFact.inUse );
+    setChecked(dialog.options.subtitles,      OW_get(SETTING_SUBTITLES));
+    setChecked(dialog.options.showobjectives, OW_get(SETTING_AUTOMISSION));
+    setChecked(dialog.options.rawound,        OW_get(SETTING_RAWOUNDED));
+    setChecked(dialog.options.ranoncombat,    OW_get(SETTING_RANONCOMBAT));
+    setChecked(dialog.options.ravehicles,     OW_get(SETTING_RAVEHICLES));
+	setChecked(dialog.options.altFact, altFact.inUse);
 	setChecked(dialog.options.lockCursor, OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE));
     setChecked(dialog.options.timer, OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true));
 	

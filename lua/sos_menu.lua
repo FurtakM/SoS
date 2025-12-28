@@ -293,9 +293,7 @@ menu.window3.web = clButton(
     30, 
     'Wiki Online', 
     'OW_SOS_CLICKED("wiki");',
-    {
-        disabled = true
-    }
+    {}
 );
 
 menu.window3.biographies = clButton(

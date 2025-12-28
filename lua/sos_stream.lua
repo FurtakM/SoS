@@ -6,7 +6,7 @@ STREAM_MODE = parseInt(MOD_DATA.Stream_Mode); -- define if stream mode is active
 STREAM_MODE_BLOCK = 1;
 STREAM_ITEMS_INIT_NORMAL = {
 	{
-		NAME = 'sRocket', ITEM_ID = 1, PROB = 15, LABEL = loc(6211),
+		NAME = 'sRocket', ITEM_ID = 1, PROB = 10, LABEL = loc(6211),
 	},
 	{
 		NAME = 'sSpeed', ITEM_ID = 2, PROB = 5, LABEL = loc(6213),
@@ -113,6 +113,33 @@ STREAM_ITEMS_INIT_NORMAL = {
 	{
 		NAME = 'sTools', ITEM_ID = 36, PROB = 9, LABEL = loc(6260),
 	},
+	{
+		NAME = 'sPlus', ITEM_ID = 37, PROB = 9, LABEL = loc(6265),
+	},
+	{
+		NAME = 'sMinus', ITEM_ID = 38, PROB = 9, LABEL = loc(6264),
+	},
+	{
+		NAME = 'sEnemy', ITEM_ID = 39, PROB = 9, LABEL = loc(6266),
+	},
+	{
+		NAME = 'sLoop', ITEM_ID = 40, PROB = 9, LABEL = loc(6268),
+	},
+	{
+		NAME = 'sZero', ITEM_ID = 41, PROB = 9, LABEL = loc(6269),
+	},
+	{
+		NAME = 'sTech', ITEM_ID = 42, PROB = 8, LABEL = loc(6270),
+	},
+	{
+		NAME = 'sVeh', ITEM_ID = 43, PROB = 8, LABEL = loc(6271),
+	},
+	{
+		NAME = 'sCrates', ITEM_ID = 44, PROB = 5, LABEL = loc(6272),
+	},
+	{
+		NAME = 'sWeap', ITEM_ID = 45, PROB = 5, LABEL = loc(6273),
+	}
 };
 STREAM_ITEMS_INIT_HARDCORE = {
 	{
@@ -168,6 +195,9 @@ STREAM_ITEMS_INIT_HARDCORE = {
 	},
 	{
 		NAME = 's60', ITEM_ID = 118, PROB = 6, LABEL = loc(6263),
+	},
+	{
+		NAME = 'sGang', ITEM_ID = 119, PROB = 8, LABEL = loc(6267),
 	}
 };
 STREAM_ITEMS_NORMAL = {};
@@ -449,9 +479,9 @@ for i = 1, #STREAM_ITEMS_INIT_HARDCORE do
 end;
 
 streamPanel.troll = getElementEX(
-    game.ui.minimap, 
-    anchorL, 
-    XYWH(10, 10, 198, 159), 
+    game.ui.minimap.map, 
+    anchorNone, 
+    XYWH(0, 0, 198, 159), 
     false,
     {
         texture = 'SGUI/Stream/troll.png'
@@ -493,6 +523,8 @@ end;
 -- stream bonuses
 function displayTroll()
 	setVisible(streamPanel.troll, true);
+	setX(streamPanel.troll, 0);
+	setY(streamPanel.troll, 10);
 	bringToFront(streamPanel.troll);
 	sound.play('Sound/Stream/TrollLaugh.wav', '', VOLUME_EFFECTS);
 end;
@@ -501,11 +533,11 @@ function hideTroll()
 	setVisible(streamPanel.troll, false);
 end;
 
-function displayPowell()
+function displayPowell(track)
 	setX(streamPanel.powell, getWidth(game) + 160);
 	setVisible(streamPanel.powell, true);
 	bringToFront(streamPanel.powell);
-	sound.play('Sound/Stream/Powell.wav', '', VOLUME_SPEECH);
+	sound.play('Sound/Stream/Powell' .. track .. '.wav', '', VOLUME_SPEECH);
 	AddEventSlideX(streamPanel.powell.ID, - 320, 4, 'hidePowell();');
 end;
 

@@ -724,6 +724,9 @@ AddComExitVehicle(Belkov);
 AddComMoveXY(Belkov, 53, 18);
 AddComMoveXY(Belkov, 31, 9);
 
+for i in Belkov union belkovTeam do
+    SetInvulnrability(i, true);
+
 repeat
  wait(0$1);
 
@@ -732,6 +735,9 @@ repeat
         SetLives(i, 800);
 
 until GetDistUnitXY(Belkov, 31, 9) < 4;
+
+for i in Belkov union belkovTeam do
+    SetInvulnrability(i, false);
 
 for i := 1 to Difficulty do
     if i <= belkovTeam then
@@ -825,7 +831,7 @@ repeat
     end;
 
  for i in sol do
-     if GetLives(i) < 800 then
+     if GetLives(i) < 800 and GetDistUnitXY(i, 60, 8) > 6 then
         begin
         SetTag(i, 1);
         ComMoveXY(i, 60, 8);
@@ -848,11 +854,12 @@ ComMoveUnit(sci, sol[1]);
 End;
 
 // bielkov trap
-Every 0$2 trigger belkovTrapped and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
+Every 0$2 trigger belkovTrapped and not belkovSaved and not belkovDied and FilterUnitsInArea(westWeakPointArea, [f_side, 3]) do
 begin
 case Query('QAttackAm') of
      1: begin
         initiative := true;
+        platonovKnowAboutBunker := true;
 
         DialogueOn;
 
@@ -866,6 +873,7 @@ case Query('QAttackAm') of
 
      2: begin
         initiative := true;
+        platonovKnowAboutBunker := true;
 
         DialogueOn;
 
@@ -1004,7 +1012,7 @@ if vehCaptured then
 
 SayRadio(Platonov, 'D24-Pla-2');
 
-if not westOutpostDestroyed then
+if not westOutpostDestroyed and platonovKnowAboutBunker then
    SayRadio(Platonov, 'D24-Pla-2a');
 
 DialogueOff;
@@ -1215,6 +1223,7 @@ repeat
        begin
        westOutpostReported := true;
        eastOutpostReported := true;
+       platonovKnowAboutBunker := true;
 
        Say(Burlak, 'D25-Bur-1');
 
@@ -1232,6 +1241,7 @@ repeat
     else if not westOutpostReported and westOutpostDiscovered then
        begin
        westOutpostReported := true;
+       platonovKnowAboutBunker := true;
 
        Say(Burlak, 'D25a-Bur-1b');
 
@@ -1249,6 +1259,7 @@ repeat
     else if not eastOutpostReported and eastOutpostDiscovered then
        begin
        eastOutpostReported := true;
+       platonovKnowAboutBunker := true;
 
        Say(Burlak, 'D25a-Bur-1a');
        end
@@ -1271,7 +1282,7 @@ until allMapPointsSpotted and westOutpostDestroyed;
 repeat
  if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, Platonov, 10]]) then
     begin
-    if not belkovDied and not belkovSaved then
+    if not belkovDied and not belkovSaved and not eastOutpostDestroyed then
        begin
        if Query('QContMission') = 1 then
           begin

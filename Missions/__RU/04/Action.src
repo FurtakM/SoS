@@ -153,6 +153,8 @@ repeat
  wait(0$1);
 until hasBase;
 
+ChangeMissionObjectives('MOutBuild');
+
 DialogueOn;
 
 Say(Burlak, 'D2-Bur-1');
@@ -162,7 +164,7 @@ DialogueOff;
 
 SendConvoy(1);
 
-wait(2$00);
+wait(0$10);
 
 SendConvoy(convoyWave);
 
@@ -193,22 +195,24 @@ for i := 1 to 4 do
     wait(0$10);
     end;
 
-wait(0$40);
-
 SendConvoy(convoyWave);
 
-wait(1$40);
+wait(0$20);
 
 for i := 1 to 2 do
     SendConvoy(convoyWave);
 
-wait(3$00);
+wait(0$10);
 
 for i := 1 to 3 do
     begin
     SendConvoy(convoyWave);
     wait(0$10);
     end;
+
+wait(2$00);
+
+arabAttack := true;
 
 repeat
  wait(rand(2$30, 5$00));
@@ -248,7 +252,7 @@ Every 0$2 trigger canAskForResources and UnitFilter(ruConvoyUnits, [[f_inarea, c
 var i;
 begin
 for i in UnitFilter(ruConvoyUnits, [[f_inarea, cargoCheckpointArea], [f_weapon, ru_cargo_bay]]) do
-    if i in askedForResources then
+    if i in askedForResources or i in alreadyAsked then
        continue
     else if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, i, 7]]) then
        begin
@@ -271,11 +275,40 @@ for i in UnitFilter(ruConvoyUnits, [[f_inarea, cargoCheckpointArea], [f_weapon, 
 
           DialogueOff;
 
+          alreadyAsked := Join(alreadyAsked, i);
+
           wait(0$3);
           end;
        end;
 
 enable;
+End;
+
+Every 0$5 trigger platonovAngerLevels do
+var dialogue;
+begin
+dialogue := 1;
+
+repeat
+ wait(0$15);
+
+ if platonovAngerLevels[1] <= Count(askedForResources) then
+    begin
+    case dialogue of
+         1: DialogueTrucks1;
+         2: DialogueTrucks2;
+         3: DialogueTrucks3;
+         4: DialogueTrucks4;
+         5: DialogueTrucks5;
+         end;
+
+    dialogue := Inc(dialogue);
+    platonovAngerLevels := Delete(platonovAngerLevels, 1);
+    end;
+
+until not platonovAngerLevels;
+
+YouLost('Arrest');
 End;
 
 Export function DialogueTrucks1; // Burlak diverts trucks - line 1
@@ -344,6 +377,39 @@ if not recklessAttack and belkovFreed then
    SayRadio(Platonov, 'D3E-Pla-1c');
 
 DialogueOff;
+End;
 
-YouLost('Arrest');
+// arab attack
+Every 0$2 trigger arabAttack do
+begin
+SayRadio(Platonov, 'D4-Pla-1');
+Say(Burlak, 'D4-Bur-1');
+
+if IsOk(Kuzmov) then
+   begin
+   Say(Kuzmov, 'D4-Kuz-1');
+
+   if IsOk(Belkov) then
+      Say(Belkov, 'D4-Bel-1');
+
+   Say(Burlak, 'D4-Bur-2');
+
+   if IsOk(Gnyevko) then
+      begin
+      Say(Gnyevko, 'D4-Gny-2');
+      Say(Burlak, 'D4-Bur-3');
+      end;
+
+   Say(Burlak, 'D4-Bur-3a');
+
+   if IsOk(Belkov) then
+      Say(Belkov, 'D4-Bel-3');
+
+   if IsOk(Kovalyuk) then
+      Say(Kovalyuk, 'D4-Kov-3');
+   end;
+
+// PrepareArabianAttack;
+
+
 End;

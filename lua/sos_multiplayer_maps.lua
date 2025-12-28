@@ -19,6 +19,10 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 		MIN = 2,
 		MAX = 8
 	},
+	pConquest2 = {
+		MIN = 2,
+		MAX = 8
+	},
 	pCrossfireCanyon = {
 		MIN = 2,
 		MAX = 8

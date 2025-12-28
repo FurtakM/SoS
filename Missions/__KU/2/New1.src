@@ -1,9 +1,65 @@
-Every 0$1 do
-begin
-uc_side := 1;
-uc_nation := 1;
-PrepareSoldier(false, 0);
+//Every 0$1 do
+//MinerRandomizer(28, 33, 1, 22);
 
-display_strings := PlaceHumanInUnit(CreateHuman, a1);
-display_strings := PlaceHumanInUnit(CreateHuman, a1);
+Export function MinerRandomizer(x, y, side, maxRange);
+var r, j, _x, _y, _d, tmp;
+begin
+if not ValidHex(x, y) or MineAtPos(x, y) then
+   exit;
+
+Randomize;
+
+result := [[x, y]];
+PlaceMine(x, y, side, 0);
+
+for r := 1 to maxRange - 1 do
+    begin
+    _d := rand(0, 5);
+
+    _x := ShiftX(x, _d, r);
+    _y := ShiftY(y, _d, r);
+
+    if not ValidHex(_x, _y) then
+       exit;
+
+    if MineAtPos(_x, _y) then
+       continue;
+
+    PlaceMine(_x, _y, side, 0);
+    result := Replace(result, result + 1, [_x, _y]);
+
+    for j := 0 to 5 do
+        begin
+        if Prob(50) then
+           continue;
+
+        _x := ShiftX(_x, j, 1);
+        _y := ShiftY(_y, j, 1);
+
+        if not ValidHex(_x, _y) then
+           continue;
+
+        if MineAtPos(_x, _y) then
+           continue;
+
+        PlaceMine(_x, _y, side, 0);
+        result := Replace(result, result + 1, [_x, _y]);
+        end;
+    end;
 End;
+
+Every 0$2 do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, 2], [f_dist, aa2, 10]]);
+
+if tmp then
+   for i in tmp do
+       begin
+       ComAttackUnit(aa2, i);
+       break;
+       end;
+
+enable;
+End;
+
