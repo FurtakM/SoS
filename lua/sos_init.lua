@@ -31,4 +31,5 @@ include('sos_diplomacy');
 include('sos_events');
 include('sos_map_description');
 include('sos_tree');
+include('sos_chat');
 include('sos_console');

@@ -537,7 +537,7 @@ function displayPowell(track)
 	setX(streamPanel.powell, getWidth(game) + 160);
 	setVisible(streamPanel.powell, true);
 	bringToFront(streamPanel.powell);
-	sound.play('Sound/Stream/Powell' .. track .. '.wav', '', VOLUME_SPEECH);
+	sound.play('Sound/Stream/Powell' .. parseInt(track) .. '.wav', '', VOLUME_SPEECH);
 	AddEventSlideX(streamPanel.powell.ID, - 320, 4, 'hidePowell();');
 end;
 

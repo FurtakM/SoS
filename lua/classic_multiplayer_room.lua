@@ -26,6 +26,7 @@ MULTIPLAYER_ROOM_TEAMS_INIT = {};
 MULTIPLAYER_ROOM_TEAMS_SPEC = {};
 MULTIPLAYER_ROOM_MERGED = {};
 MULTIPLAYER_ROOM_PING_DATA = {};
+MULTIPLAYER_ROOM_SORT = 2;
 MULTIPLAYER_MINIMAP_PREVIEW_TEAM = {
 	[0] = RGBA(140, 132, 99, 115),
 	[1] = RGBA(66, 130, 255, 115),
@@ -908,6 +909,8 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = getMultiplayerActiveMapIndex(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_MAP_DATA.MAP);
 	-- MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = MULTIPLAYER_ROOM_DATA.MULTIMAP.GAMETYPE;
 
+	setVisible(menu.window_multiplayer_room.panel.page3.sort, canModifyServerSettings());
+
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
@@ -1224,9 +1227,11 @@ function showMultiplayerGame()
 		setEnabled(menu.window_multiplayer_room.panel.start, true);
 		setText(menu.window_multiplayer_room.panel.start, loc(804));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
+		setVisible(menu.window_multiplayer_room.panel.page3.sort, true);
 	else
 		setText(menu.window_multiplayer_room.panel.start, loc(818));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+		setVisible(menu.window_multiplayer_room.panel.page3.sort, false);
 	end;
 
 	waitUntilMapLoaded();
@@ -2876,7 +2881,6 @@ function changeMultiplayerOption(ELEMENT, ID, INDEX)
 	clComboBoxChangeHint(ELEMENT, MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[parseInt(ID)].ITEMS.HINTS[parseInt(INDEX)]);
 end;
 
-
 -- PAGE #3
 menu.window_multiplayer_room.panel.page3.mapNameLabel = getLabelEX(
 	menu.window_multiplayer_room.panel.page3,
@@ -2908,6 +2912,23 @@ menu.window_multiplayer_room.panel.page3.mapComboBox = getElementEX(
 	true,
 	{
 		colour1 = WHITEA()
+	}
+);
+
+menu.window_multiplayer_room.panel.page3.sort = getElementEX(
+	menu.window_multiplayer_room.panel.page3, 
+	anchorLTRB,
+	XYWH(
+		467,
+		30,
+		27,
+		18
+	),
+	false,
+	{
+		texture = 'classic/edit/sort2.png',
+		callback_mousedown = 'changeSortMultiplayer();',
+		hint = loc(1025)
 	}
 );
 
@@ -2975,6 +2996,52 @@ menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 		scissor = true
 	}
 );
+
+function changeSortMultiplayer()
+	MULTIPLAYER_ROOM_SORT = MULTIPLAYER_ROOM_SORT + 1;
+
+	if MULTIPLAYER_ROOM_SORT > 3 then
+		MULTIPLAYER_ROOM_SORT = 1;
+	end;
+
+	setTexture(menu.window_multiplayer_room.panel.page3.sort, 'classic/edit/sort' .. MULTIPLAYER_ROOM_SORT .. '.png');
+
+	local mapList = {}
+
+	for i = 1, #MULTIPLAYER_ROOM_DATA.MAPS do
+	    local src = MULTIPLAYER_ROOM_DATA.MAPS[i];
+	    local name = src.NAME;
+
+	    mapList[i] = {
+	        NAME = name,
+	        NAMELOC = src.NAMELOC,
+	        amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name]
+	            and MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX
+	            or 0
+	    } 
+	end
+
+	if MULTIPLAYER_ROOM_SORT == 1 then -- rosnąco
+	    table.sort(mapList, function(a, b)
+	        return a.amount < b.amount
+	    end)
+	elseif MULTIPLAYER_ROOM_SORT == 3 then -- malejąco
+	    table.sort(mapList, function(a, b)
+	        return a.amount > b.amount
+	    end)
+	end
+
+	local INDEX = 0;
+
+	for i = 1, #mapList do
+		if (MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME == mapList[i].NAME) then
+			INDEX = i;
+			break;
+		end;
+	end;
+
+	setMapList(mapList, INDEX, canModifyServerSettings());
+end
 
 function setMapList(mapList, selectedMap, isHost)
 	if (mapList == nil) then
