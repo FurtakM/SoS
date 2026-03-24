@@ -52,6 +52,7 @@ OPTION_SOUND_EXCLAMATIONS = 27;
 OPTION_TIMER = 28;
 OPTION_PING_BUTTON = 29;
 OPTION_SOUND_MUSIC_MENU = 30;
+OPTION_CHAT = 31;
 
 function getLanguagesKey()
     local languagesKey = MOD_DATA.Languages_Key;
@@ -338,6 +339,10 @@ function getSetting(setting)
     if setting == OPTION_PING_BUTTON then
         return OW_SETTING_READ_NUMBER('OPTIONS', 'OPTION_PING_BUTTON', 2);
     end;
+
+    if setting == OPTION_CHAT then
+        return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_CHAT', true);
+    end;
 end;
 
 function changeSetting(id, setting)
@@ -416,6 +421,11 @@ function changeSetting(id, setting)
 
     if setting == OPTION_INTERFACE_FACTORY then
         OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_altFact', (not OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_altFact', false)));
+    end;
+
+    if setting == OPTION_CHAT then
+        value = OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_CHAT', true);
+        OW_SETTING_WRITE('OPTIONS', 'OPTION_CHAT', (not value));
     end;
 end;
 
@@ -1766,6 +1776,34 @@ function generateOptions()
             scissor = true
         }
     );
+
+    menu.window_options.panel.game.chat = clCheckbox(
+        menu.window_options.panel.interface,
+        9,
+        194,
+        'changeSetting(%id, ' .. OPTION_CHAT.. ')',
+        {
+            checked = getSetting(OPTION_CHAT),
+            hint = loc(TID_Main_Menu_Options_Chat_Desc)
+        }
+    );
+
+    menu.window_options.panel.game.chat_label = getLabelEX(
+        menu.window_options.panel.interface,
+        anchorLT,
+        XYWH(31, 193, 200, 15),
+        BankGotic_14, 
+        loc(TID_Main_Menu_Options_Chat),
+        {
+            font_colour = RGB(0, 0, 0),
+            shadowtext = false,
+            nomouseevent = true,
+            text_halign = ALIGN_LEFT,
+            text_valign = ALIGN_TOP,
+            wordwrap = false,
+            scissor = true
+        }
+    );    
 end;
 
 function destroyOptions()

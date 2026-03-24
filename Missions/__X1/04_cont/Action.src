@@ -284,6 +284,7 @@ Hint('BunkerHill');
 SetAreaMapShow(bunkerHillArea, 1);
 SetAreaMapShow(dontGoArea, 1);
 
+canBuildOnHill := true;
 allowToPatrol := true;
 
 wait(1$30);
@@ -569,7 +570,7 @@ tmp2 := UnitFilter(omarSquad, [[f_class, 3], [f_not, [f_driving]]]);
 for i := 1 to tmp do
     ComEnterUnit(tmp2[i], tmp[i]);
 
-wait(0$5);
+wait(0$10);
 
 ComAgressiveMove(omarSquad, 199, 141);
 ComAgressiveMove(Omar, 190, 143);
@@ -577,9 +578,9 @@ AddComHold(Omar);
 
 // attack on kirov
 AddComAgressiveMove(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 161, 130);
-AddComAgressiveMove(UnitFilter(omarSquad, [f_class, 1]), 163, 122);
-AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 165, 118, 0);
-AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 159, 116, 0);
+AddComAgressiveMove(UnitFilter(omarSquad, [f_class, 1]), 152, 115);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 150, 111, 0);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 155, 114, 0);
 
 AddComAgressiveMove(UnitFilter(omarSquad, [f_type, unit_vehicle]), 169, 114);
 
@@ -587,14 +588,15 @@ repeat
  wait(0$1);
 
  tmp := UnitFilter(omarSquad, [f_class, 1]);
+ enemy := FilterAllUnits([f_enemy, 5]);
 
  for i in tmp do
      begin
-     if GetLives(i) < 600 and GetDistUnitXY(i, 161, 130) > 6 then
+     if GetLives(i) < 800 and GetDistUnitXY(i, 161, 130) > 6 then
         ComMoveXY(i, 161, 130);
 
      if GetLives(i) = 1000 and not HasTask(i) then
-        ComAgressiveMove(i, 160, 109);
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
      end;
 
  tmp := UnitFilter(omarSquad, [f_type, unit_vehicle]);
@@ -626,7 +628,7 @@ repeat
         AddComEnterUnit(tmp2, i);
         end;
      end;
-until kirovDestroyed;
+until not FilterAllUnits([[f_side, 6], [f_type, unit_human]]);
 
 repeat
  wait(0$1);
@@ -788,7 +790,7 @@ End;
 Every 0$1 trigger FilterUnitsInArea(hillArea, [[f_side, 2], [f_btype, b_breastwork]]) >= 2 do
 SetAchievement('ACH_KING');
 
-Every 0$1 trigger not allowHeikeAttack and FilterUnitsInArea(hillArea, [[f_side, 2], [f_or, [f_btype, b_breastwork], [f_btype, b_armoury]]]) do
+Every 0$1 trigger canBuildOnHill and not allowHeikeAttack and FilterUnitsInArea(hillArea, [[f_side, 2], [f_or, [f_btype, b_breastwork], [f_btype, b_armoury]]]) do
 begin
 hillBase := true;
 ChangeMissionObjectives('HillDone');

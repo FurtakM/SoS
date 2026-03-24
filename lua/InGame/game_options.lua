@@ -58,7 +58,7 @@ function addInGameOptionsSlider(X, Y, MIN, MAX, POS, HINT, CAPTION, CALLBACK)
     return ele;
 end;
 
-dialog.options                = getDialogEX(dialog.back,anchorNone,XYWH(LayoutWidth / 2 - 225,150,400,480),SKINTYPE_DIALOG1,{tile=true});
+dialog.options                = getDialogEX(dialog.back,anchorNone,XYWH(LayoutWidth / 2 - 225,150,400,500),SKINTYPE_DIALOG1,{tile=true});
 
 dialog.options.ok             = getImageButtonEX(dialog.options,anchorB,XYWH(dialog.options.width/2-75,dialog.options.height-30-15,150,24),
                                                  loc(TID_msg_Ok),'','dialog.options.Hide();',SKINTYPE_BUTTON,{font_colour_disabled=GRAY(127),});
@@ -93,9 +93,11 @@ dialog.options.misclabel      = getLabelEX(dialog.options,anchorLT,XYWH(15,other
 
 dialog.options.showobjectives = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,otherSettings,17,17),loc(563),{},'setting_set(SETTING_AUTOMISSION,%value);',{checked=true,});
 dialog.options.subtitles      = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.showobjectives.y+22,17,17),loc(550),{},'setting_set(SETTING_SUBTITLES,%value);',{checked=true,});
-dialog.options.altFact        = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.subtitles.y+22,17,17),loc(TID_Options_Alternative)..' '..loc(TID_Options_AltFact),{},'dialog.options.setAltFact(%value);',{checked=true,});
+dialog.options.altFact        = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.subtitles.y+22,17,17),loc(TID_Options_Alternative)..' '..string.lower(loc(TID_Options_AltFact)),{},'dialog.options.setAltFact(%value);',{checked=true,});
 dialog.options.lockCursor     = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.altFact.y+22,17,17),loc(TID_Options_LockCursor),{},'dialog.options.setLockCursor(%value);',{checked=true,});
 dialog.options.timer          = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.lockCursor.y+22,17,17),loc(1675),{},'dialog.options.setTimer(%value);',{checked=OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true),});
+dialog.options.chat           = getCheckBoxEX_UI(dialog.options,anchorLT,XYWH(28,dialog.options.timer.y+22,17,17),loc(5076),{},'dialog.options.setChat(%value);',{checked=OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_CHAT', true),});
+
 
 function dialog.options.Show()
 	options_loading = true;
@@ -108,6 +110,7 @@ function dialog.options.Show()
 	setChecked(dialog.options.altFact, altFact.inUse);
 	setChecked(dialog.options.lockCursor, OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE));
     setChecked(dialog.options.timer, OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_TIMER', true));
+    setChecked(dialog.options.chat, OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_CHAT', true));
 	
     dialog.options.musicvolume:setPos(OW_settings_getvolume(VOLUME_MUSIC));
     dialog.options.soundvolume:setPos(OW_settings_getvolume(VOLUME_SPEECH));
@@ -132,6 +135,11 @@ end;
 function dialog.options.setTimer(value)
     OW_SETTING_WRITE('OPTIONS', 'OPTION_TIMER', value);
     setVisible(game.ui.timer, value);
+end;
+
+function dialog.options.setChat(value)
+    OW_SETTING_WRITE('OPTIONS', 'OPTION_CHAT', value);
+    setVisible(game.chat, value);
 end;
 
 function dialog.options.Hide()

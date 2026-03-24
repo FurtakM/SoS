@@ -29,6 +29,12 @@ if GetSide(building) = 3 and GetBType(building) = b_bunker then
    AddComPlaceWeapon(building, [42, 43, 44, 46][Rand(1, 4)]);
 End;
 
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if GetControl(killerUnit) = control_remote and GetSide(killerUnit) = 1 then
+   killRadioCounter := Inc(killRadioCounter);
+End;
+
 On UnitDestroyed(unit) do 
 begin
 SOS_UnitDestroyed(unit);
@@ -46,7 +52,7 @@ if unit = JMM then
    YouLost('JMM');
 
 if unit = Joan then
-   JoanStatus := 0;
+   joanStatus := 0;
 
 if GetSide(unit) = 1 and GetType(unit) = unit_human and GetNation(unit) = nation_american then
    unitLost = unitLost + 1;
@@ -87,17 +93,26 @@ if GetSide(vehicle) = 3 and not GetWeapon(vehicle) in [ru_cargo_bay, ru_crane, r
 
 if GetWeapon(vehicle) = ru_bulldozer then
    begin
-   AddComMoveXY(vehicle, 60, 85);
-   AddComMoveXY(vehicle, 43, 69);
-   AddComMoveXY(vehicle, 37, 46);
+   AddComMoveXY(vehicle, 42, 40);
 
-   wait(0$1);
+   repeat
+    wait(0$1);
+
+    if not IsOk(vehicle) then
+       exit;
+   until not GetDistUnitXY(vehicle, 42, 40) < 5;
+
+   CutTreeInArea(vehicle, cutTreeArea);
+
+   wait(0$15);
 
    repeat
     wait(0$1);
    until not HasTask(vehicle);
 
    CutTreeInArea(vehicle, cutTreeArea);
+
+   wait(0$15);
 
    repeat
     wait(0$1);

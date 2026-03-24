@@ -27,7 +27,7 @@ End;
 Export ar_forces, ap_killers;
 // allow arabs attack
 Every 0$1 trigger Delta do
-var i, timer, more_troops, skill, eng, un, veh, force;
+var i, timer, more_troops, skill, eng, un, veh, force, add;
 begin
 more_troops := false;
 skill := [3, 4, 5, 5][Difficulty];
@@ -66,10 +66,15 @@ if more_troops then
 
    force := force ^ un;
    end
-  else
+else
    begin
    force := PrepareArabianTroops([3, 4, 5, 6][Difficulty], skill, arArea2);
    end;
+
+PrepareSoldier(false, skill);
+un := CreateHuman;
+PlaceUnitXY(un, 20, 2, false);
+force := Join(force, un);
 
 if force then
    ar_forces := force;
@@ -117,7 +122,11 @@ ap_killers := PrepareArabianTroops([1, 2, 2, 2][Difficulty], skill, arArea1);
 Wait(timer*2);
 
 // last attack
-ar_forces := PrepareArabianTroops([5, 6, 7, 8][Difficulty], skill, arArea1) ^ PrepareArabianTroops([3, 4, 4, 4][Difficulty], skill, arArea2);
+ar_forces := PrepareArabianTroops([4, 5, 6, 7][Difficulty], skill, arArea1) ^ PrepareArabianTroops([2, 2, 3, 3][Difficulty], skill, arArea2);
+
+add := PrepareArabianTroops(2, skill, arArea2);
+
+ComAgressiveMove(add, 54, 42);
 
 if Difficulty < 4 and not traitor then
    exit;

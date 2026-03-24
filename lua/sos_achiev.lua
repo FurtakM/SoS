@@ -330,7 +330,34 @@ TID_ACH_NODEPOT = 6622;
 TID_ACH_NODEPOT_DESC = 6623;
 TID_ACH_PANZERKNACKER = 6624;
 TID_ACH_PANZERKNACKER_DESC = 6625;
-
+TID_ACH_SOUTH = 6626;
+TID_ACH_SOUTH_DESC = 6627;
+TID_ACH_CLEANUP = 6628;
+TID_ACH_CLEANUP_DESC = 6629;
+TID_ACH_MOBI = 6630;
+TID_ACH_MOBI_DESC = 6631;
+TID_ACH_BHUNT = 6632;
+TID_ACH_BHUNT_DESC = 6633;
+TID_ACH_NOARM = 6634;
+TID_ACH_NOARM_DESC = 6635;
+TID_ACH_URAL = 6636;
+TID_ACH_URAL_DESC = 6637;
+TID_ACH_FORTRESS = 6638;
+TID_ACH_FORTRESS_DESC = 6639;
+TID_ACH_PRADIO = 6640;
+TID_ACH_PRADIO_DESC = 6641;
+TID_ACH_MEDIC = 6642;
+TID_ACH_MEDIC_DESC = 6643;
+TID_ACH_MOENG = 6644;
+TID_ACH_MOENG_DESC = 6645;
+TID_ACH_SIB = 6646;
+TID_ACH_SIB_DESC = 6647;
+TID_ACH_WARH = 6648;
+TID_ACH_WARH_DESC = 6649;
+TID_ACH_ALLY = 6650;
+TID_ACH_ALLY_DESC = 6651;
+TID_ACH_TELEPORT = 6652;
+TID_ACH_TELEPORT_DESC = 6653;
 
 achievements = {
     ['ACH_TROLL'] = {
@@ -343,6 +370,13 @@ achievements = {
     ['ACH_CYRUS'] = {
         loc(TID_ACH_CYRUS), 
         loc(TID_ACH_CYRUS_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_BHUNT'] = {
+        loc(TID_ACH_BHUNT), 
+        loc(TID_ACH_BHUNT_DESC),
         true,
         0,
         0
@@ -396,6 +430,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_NOARM'] = {
+        loc(TID_ACH_NOARM), 
+        loc(TID_ACH_NOARM_DESC),
+        false,
+        0,
+        0
+    },
     ['ACH_AMER'] = {
         loc(TID_ACH_AMER),
         loc(TID_ACH_AMER_DESC),
@@ -407,6 +448,13 @@ achievements = {
         loc(TID_ACH_POKR), 
         loc(TID_ACH_POKR_DESC),
         false,
+        0,
+        0
+    },
+    ['ACH_MOBI'] = {
+        loc(TID_ACH_MOBI), 
+        loc(TID_ACH_MOBI_DESC),
+        true,
         0,
         0
     },
@@ -452,6 +500,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_URAL'] = {
+        loc(TID_ACH_URAL), 
+        loc(TID_ACH_URAL_DESC),
+        true,
+        0,
+        0
+    },
     ['ACH_ASPEED_4'] = {
         loc(TID_ACH_ASPEED_4), 
         loc(TID_ACH_ASPEED_4_DESC),
@@ -477,6 +532,13 @@ achievements = {
         loc(TID_ACH_APEKILLER), 
         loc(TID_ACH_APEKILLER_DESC),
         true,
+        0,
+        0
+    },
+    ['ACH_FORTRESS'] = {
+        loc(TID_ACH_FORTRESS),
+        loc(TID_ACH_FORTRESS_DESC),
+        false,
         0,
         0
     },
@@ -508,6 +570,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_PRADIO'] = {
+        loc(TID_ACH_PRADIO),
+        loc(TID_ACH_PRADIO_DESC),
+        true,
+        0,
+        0
+    },
     ['ACH_ASPEED_6'] = {
         loc(TID_ACH_ASPEED_6), 
         loc(TID_ACH_ASPEED_6_DESC),
@@ -532,6 +601,13 @@ achievements = {
     ['ACH_HITMAN'] = {
         loc(TID_ACH_HITMAN), 
         loc(TID_ACH_HITMAN_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_MEDIC'] = {
+        loc(TID_ACH_MEDIC),
+        loc(TID_ACH_MEDIC_DESC),
         false,
         0,
         0
@@ -602,6 +678,13 @@ achievements = {
     ['ACH_COUNTERSTRIKE'] = {
         loc(TID_ACH_COUNTERSTRIKE), 
         loc(TID_ACH_COUNTERSTRIKE_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_MOENG'] = {
+        loc(TID_ACH_MOENG),
+        loc(TID_ACH_MOENG_DESC),
         true,
         0,
         0
@@ -704,6 +787,13 @@ achievements = {
         0,
         0
     },
+    ['ACH_WARH'] = {
+        loc(TID_ACH_WARH),
+        loc(TID_ACH_WARH_DESC),
+        true,
+        0,
+        0
+    },
     ['ACH_ASPEED_12'] = {
         loc(TID_ACH_ASPEED_12), 
         loc(TID_ACH_ASPEED_12_DESC),
@@ -728,6 +818,13 @@ achievements = {
     ['ACH_DEFMASTER'] = {
         loc(TID_ACH_DEFMASTER), 
         loc(TID_ACH_DEFMASTER_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_SIB'] = {
+        loc(TID_ACH_SIB),
+        loc(TID_ACH_SIB_DESC),
         true,
         0,
         0
@@ -872,6 +969,20 @@ achievements = {
         0,
         0
     },
+    ['ACH_SOUTH'] = {
+        loc(TID_ACH_SOUTH), 
+        loc(TID_ACH_SOUTH_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_CLEANUP'] = {
+        loc(TID_ACH_CLEANUP), 
+        loc(TID_ACH_CLEANUP_DESC),
+        false,
+        0,
+        0
+    },
     ['ACH_ASPEED_17'] = {
         loc(TID_ACH_ASPEED_17), 
         loc(TID_ACH_ASPEED_17_DESC),
@@ -924,6 +1035,20 @@ achievements = {
     ['ACH_ECONOMY'] = {
         loc(TID_ACH_ECONOMY), 
         loc(TID_ACH_ECONOMY_DESC),
+        true,
+        0,
+        0
+    },
+    ['ACH_ALLY'] = {
+        loc(TID_ACH_ALLY),
+        loc(TID_ACH_ALLY_DESC),
+        false,
+        0,
+        0
+    },
+    ['ACH_TELEPORT'] = {
+        loc(TID_ACH_TELEPORT),
+        loc(TID_ACH_TELEPORT_DESC),
         true,
         0,
         0
@@ -1478,25 +1603,25 @@ achievements = {
 
 ACHIV_FILTER_MISSION_LIST = {
     {
-        {'ACH_TROLL','ACH_RADIO', 'ACH_CYRUS', 'ACH_SECRET', 'ACH_ASPEED_1'},
-        {'ACH_CARGO', 'ACH_JERRY', 'ACH_TIGER', 'ACH_ASPEED_2'},
-        {'ACH_FAUST', 'ACH_POKR', 'ACH_NOSCI', 'ACH_ASPEED_3'},
-        {'ACH_GUN', 'ACH_BASE', 'ACH_INFANTRY', 'ACH_ASPEED_4'},
-        {'ACH_TAME', 'ACH_RADAR', 'ACH_APEKILLER', 'ACH_ASPEED_5'},
-        {'ACH_BASEDESTROYER', 'ACH_SURV', 'ACH_FULLCARGO', 'ACH_ASPEED_6'},
-        {'ACH_COMMANDO', 'ACH_TANKACE', 'ACH_HITMAN', 'ACH_ASPEED_7'},
+        {'ACH_TROLL','ACH_RADIO', 'ACH_BHUNT', 'ACH_CYRUS', 'ACH_SECRET', 'ACH_ASPEED_1'},
+        {'ACH_CARGO', 'ACH_JERRY', 'ACH_TIGER', 'ACH_NOARM', 'ACH_ASPEED_2'},
+        {'ACH_FAUST', 'ACH_MOBI', 'ACH_POKR', 'ACH_NOSCI', 'ACH_ASPEED_3'},
+        {'ACH_GUN', 'ACH_BASE', 'ACH_INFANTRY', 'ACH_URAL', 'ACH_ASPEED_4'},
+        {'ACH_TAME', 'ACH_RADAR', 'ACH_APEKILLER', 'ACH_FORTRESS', 'ACH_ASPEED_5'},
+        {'ACH_BASEDESTROYER', 'ACH_SURV', 'ACH_FULLCARGO', 'ACH_PRADIO', 'ACH_ASPEED_6'},
+        {'ACH_COMMANDO', 'ACH_TANKACE', 'ACH_HITMAN', 'ACH_MEDIC', 'ACH_ASPEED_7'},
         {'ACH_HEAVYGUN', 'ACH_BLITZKRIEG', 'ACH_ARMOR', 'ACH_MECH', 'ACH_TOOL', 'ACH_ASPEED_8'},
-        {'ACH_BULLDOZER', 'ACH_COUNTERSTRIKE', 'ACH_SIBMINE', 'ACH_ASPEED_9'},
+        {'ACH_BULLDOZER', 'ACH_COUNTERSTRIKE', 'ACH_SIBMINE', 'ACH_MOENG', 'ACH_ASPEED_9'},
         {'ACH_POWER', 'ACH_SNIPER', 'ACH_ARCH', 'ACH_TACT', 'ACH_ASPEED_10'},
-        {'ACH_ARABTECH', 'ACH_FRIEND', 'ACH_EAST', 'ACH_GENERAL', 'ACH_ASPEED_11'},
+        {'ACH_ARABTECH', 'ACH_FRIEND', 'ACH_EAST', 'ACH_GENERAL', 'ACH_WARH', 'ACH_ASPEED_11'},
         {'ACH_PATH', 'ACH_LASER', 'ACH_ROCKET', 'ACH_ASPEED_12'},
-        {'ACH_MASHA', 'ACH_REMOTE', 'ACH_DEFMASTER', 'ACH_ASPEED_13'},
+        {'ACH_MASHA', 'ACH_REMOTE', 'ACH_DEFMASTER', 'ACH_SIB', 'ACH_ASPEED_13'},
         {'ACH_DOUBLE', 'ACH_APE', 'ACH_FORT', 'ACH_AMASHA', 'ACH_ASPEED_14'},
         {'ACH_POWELL', 'ACH_ALLIANCE', 'ACH_SIBROCKET', 'ACH_OPO', 'ACH_PROD', 'ACH_EXP', 'ACH_ASPEED_15'},
         {'ACH_EYE', 'ACH_ALARM', 'ACH_NOINVIS', 'ACH_TEAM', 'ACH_ASPEED_16'},
-        {'ACH_COMRADE', 'ACH_HACK','ACH_ASPEED_17'},
+        {'ACH_COMRADE', 'ACH_HACK', 'ACH_SOUTH', 'ACH_CLEANUP', 'ACH_ASPEED_17'},
         {'ACH_PACIFIST', 'ACH_DIPLOMACY', 'ACH_ONEMANARMY', 'ACH_ASPEED_18'},
-        {'ACH_ARTIFACT', 'ACH_OMAR', 'ACH_ECONOMY', 'ACH_ASPEED_19'},
+        {'ACH_ARTIFACT', 'ACH_OMAR', 'ACH_ECONOMY', 'ACH_ALLY', 'ACH_TELEPORT', 'ACH_ASPEED_19'},
         {}
     },
     {
@@ -1524,15 +1649,18 @@ ACHIV_FILTER_MISSION_LIST = {
 achievsCategory = {
     [1] = {
         'ACH_AMER',
-        'ACH_TROLL', 
-        'ACH_CYRUS', 
-        'ACH_RADIO', 
+        'ACH_TROLL',
+        'ACH_CYRUS',
+        'ACH_BHUNT',
+        'ACH_RADIO',
         'ACH_SECRET',
         'ACH_ASPEED_1',
         'ACH_TIGER',
         'ACH_JERRY',
         'ACH_CARGO',
+        'ACH_NOARM',
         'ACH_ASPEED_2',
+        'ACH_MOBI',
         'ACH_FAUST',
         'ACH_POKR',
         'ACH_NOSCI',
@@ -1540,18 +1668,22 @@ achievsCategory = {
         'ACH_BASE',
         'ACH_GUN',
         'ACH_INFANTRY',
+        'ACH_URAL',
         'ACH_ASPEED_4',
         'ACH_TAME',
         'ACH_RADAR',
         'ACH_APEKILLER',
+        'ACH_FORTRESS',
         'ACH_ASPEED_5',
         'ACH_BASEDESTROYER',
         'ACH_SURV',
         'ACH_FULLCARGO',
+        'ACH_PRADIO',
         'ACH_ASPEED_6',
         'ACH_COMMANDO',
         'ACH_TANKACE',
         'ACH_HITMAN',
+        'ACH_MEDIC',
         'ACH_ASPEED_7',
         'ACH_HEAVYGUN',
         'ACH_BLITZKRIEG',
@@ -1562,6 +1694,7 @@ achievsCategory = {
         'ACH_BULLDOZER',
         'ACH_COUNTERSTRIKE',
         'ACH_SIBMINE',
+        'ACH_MOENG',
         'ACH_ASPEED_9',
         'ACH_POWER',
         'ACH_SNIPER',
@@ -1572,6 +1705,7 @@ achievsCategory = {
         'ACH_FRIEND',
         'ACH_EAST',
         'ACH_GENERAL',
+        'ACH_WARH',
         'ACH_ASPEED_11',
         'ACH_PATH',
         'ACH_LASER',
@@ -1580,6 +1714,7 @@ achievsCategory = {
         'ACH_MASHA',
         'ACH_REMOTE',
         'ACH_DEFMASTER',
+        'ACH_SIB',
         'ACH_ASPEED_13',
         'ACH_DOUBLE',
         'ACH_APE',
@@ -1600,6 +1735,8 @@ achievsCategory = {
         'ACH_ASPEED_16',
         'ACH_COMRADE',
         'ACH_HACK',
+        'ACH_SOUTH',
+        'ACH_CLEANUP',
         'ACH_ASPEED_17',
         'ACH_PACIFIST',
         'ACH_DIPLOMACY',
@@ -1608,6 +1745,8 @@ achievsCategory = {
         'ACH_ARTIFACT',
         'ACH_OMAR',
         'ACH_ECONOMY',
+        'ACH_ALLY',
+        'ACH_TELEPORT',
         'ACH_ASPEED_19'
     },
     [2] = {

@@ -155,18 +155,25 @@ until hasBase;
 
 ChangeMissionObjectives('MOutBuild');
 
-DialogueOn;
+if not arabAttack then
+   begin
+   DialogueOn;
 
-Say(Burlak, 'D2-Bur-1');
-SayRadio(Platonov, 'D2-Pla-1');
+   Say(Burlak, 'D2-Bur-1');
+   SayRadio(Platonov, 'D2-Pla-1');
 
-DialogueOff;
+   DialogueOff;
+   end;
 
 SendConvoy(1);
 
 wait(0$10);
 
-SendConvoy(convoyWave);
+SendConvoy(convoyWave); // 2
+
+wait(0$05);
+
+SendConvoy(convoyWave); // 3
 
 repeat
  wait(0$1);
@@ -190,38 +197,25 @@ if IsOk(Kuzmov) then
    end;
 
 for i := 1 to 4 do
-    begin
-    SendConvoy(convoyWave);
-    wait(0$10);
-    end;
-
-SendConvoy(convoyWave);
+    SendConvoy(convoyWave); // 7
 
 wait(0$20);
 
-for i := 1 to 2 do
-    SendConvoy(convoyWave);
-
-wait(0$10);
-
 for i := 1 to 3 do
-    begin
-    SendConvoy(convoyWave);
-    wait(0$10);
-    end;
-
-wait(2$00);
+    SendConvoy(convoyWave); // 10
 
 arabAttack := true;
 
 repeat
  wait(rand(2$30, 5$00));
  SendConvoy(convoyWave);
-until convoyWave >= 16;
+until convoyWave >= [13, 14, 15, 15][Difficulty];
+
+canEnd := true;
 End;           
 
 // build outside hill
-Every 0$2 trigger not retreatActive and FilterUnitsExceptArea(hillArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]]) do
+Every 0$2 trigger not retreatActive and not arabAttack and FilterUnitsExceptArea(hillArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]]) do
 var tmp;
 begin
 tmp := FilterUnitsExceptArea(hillArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]])[1];
@@ -241,20 +235,20 @@ enable;
 End;
 
 // first cargo
-Every 0$1 trigger GetDistUnitXY(firstCargo, 113, 117) < 6 do
+Every 0$1 trigger firstCargo and GetDistUnitXY(firstCargo, 113, 117) < 6 do
 begin
 wait(0$2);
 Say(IsDrivenBy(firstCargo), 'D2a-RSol1-1');
 End;   
 
 // steal cargo
-Every 0$2 trigger canAskForResources and UnitFilter(ruConvoyUnits, [[f_inarea, cargoCheckpointArea], [f_weapon, ru_cargo_bay]]) do
+Every 0$1 trigger canAskForResources and UnitFilter(ruConvoyUnits, [[f_inarea, cargoCheckpointArea], [f_weapon, ru_cargo_bay]]) do
 var i;
 begin
 for i in UnitFilter(ruConvoyUnits, [[f_inarea, cargoCheckpointArea], [f_weapon, ru_cargo_bay]]) do
     if i in askedForResources or i in alreadyAsked then
        continue
-    else if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, i, 7]]) then
+    else if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, i, 3]]) then
        begin
        if Query('QQrSteal') = 1 then
           begin
@@ -290,7 +284,7 @@ begin
 dialogue := 1;
 
 repeat
- wait(0$15);
+ wait(0$35);
 
  if platonovAngerLevels[1] <= Count(askedForResources) then
     begin
@@ -379,11 +373,57 @@ if not recklessAttack and belkovFreed then
 DialogueOff;
 End;
 
+Every 0$2 trigger hasLab do
+var sci;
+begin
+if IsOk(Scholtze) and Scholtze in burlakSquad then
+   begin
+   DialogueOn;
+   Say(Scholtze, 'D5-Sch-1');
+   Say(Burlak, 'D5-Bur-1');
+   DialogueOff;
+   end
+else
+   begin
+   sci := UnitFilter(burlakSquad, [[f_sex, sex_male], [f_class, 4]]) diff [Burlak, Gnyevko, Kovalyuk, Kuzmov, Belkov];
+
+   if sci then
+      begin
+      DialogueOn;
+      Say(sci[1], 'D5-RSci1-1');
+      Say(Burlak, 'D5-Bur-1');
+      DialogueOff;
+      end;
+   end;
+End;
+
+// Attack
+Every 0$1 do
+begin
+wait(timeToArabAttack);
+
+if not hasBase then
+   arabAttack := true;
+End;
+
 // arab attack
 Every 0$2 trigger arabAttack do
+var sol;
 begin
+PrepareArabianAttack;
+
+repeat
+ wait(0$2);
+until FilterAllUnits([[f_side, 2], [f_distxy, 118, 45, 12]]);
+
+Video(true);
+
+CenterNowOnXY(118, 45);
+
 SayRadio(Platonov, 'D4-Pla-1');
 Say(Burlak, 'D4-Bur-1');
+
+Video(false);
 
 if IsOk(Kuzmov) then
    begin
@@ -409,7 +449,318 @@ if IsOk(Kuzmov) then
       Say(Kovalyuk, 'D4-Kov-3');
    end;
 
-// PrepareArabianAttack;
+wait(0$5);
 
+repeat
+ wait(0$1);
+until enemyCounterKill >= 6;
 
+wait(0$30);
+
+PrepareArabianAttack;
+
+canSendMoreAttacks := true;
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+until (InBattle(3) or FilterUnitsInArea(baseOuterArea, [f_side, 2])) and arabAttack;
+
+Say(Burlak, 'D7-Bur-1');
+
+if IsOk(Belkov) then
+   Say(Belkov, 'D7-Bel-1');
+
+if IsOk(Kuzmov) then
+   Say(Kuzmov, 'D7-Kuz-1');
+
+if IsOk(Kovalyuk) then
+   Say(Kovalyuk, 'D7-Kov-1');
+
+if IsOk(Scholtze) then
+   Say(Scholtze, 'D7-Sch-1');
+
+sol := UnitFilter(burlakSquad, [[f_ok], [f_sex, sex_male]]) diff [Burlak, Gnyevko, Kovalyuk, Kuzmov, Belkov, Scholtze];
+
+if sol then
+   Say(sol[1], 'D7-RSol1-1');
+
+repeat
+ wait(0$1);
+until FilterUnitsInArea(baseOuterArea, [f_side, 2]) > 2 or FilterUnitsInArea(callArabArea, [f_side, 2] >= 2);
+
+SayRadio(Heike, 'D7a-Hke-1');
+Say(Burlak, 'D7a-Bur-1');
+
+if IsOk(Kuzmov) then
+   begin
+   Say(Kuzmov, 'D8-Kuz-1');
+   Say(Burlak, 'D8-Bur-1');
+   end
+else
+   begin
+   sol := UnitFilter(burlakSquad, [[f_ok], [f_sex, sex_male]]) diff [Burlak, Gnyevko, Kovalyuk, Kuzmov, Belkov, Scholtze];
+
+   if sol then
+      begin
+      Say(sol[1], 'D8-RSol1-1');
+      Say(Burlak, 'D8-Bur-1');
+      end;
+   end;
+
+wait(6$00);
+
+DialogueOn;
+
+SayRadio(Platonov, 'D9-Pla-1');
+Say(Burlak, 'D9-Bur-1');
+SayRadio(Platonov, 'D9-Pla-2');
+Say(Burlak, 'D9-Bur-2');
+
+DialogueOff;
+
+wait(0$45);
+
+PrepareGaydar;
+End;
+
+Function PrepareGaydar;
+var sol;
+begin
+if not FilterAllUnits([[f_side, 3], [f_distxy, 2, 1, 20]]) then
+   begin
+   SetDir(Gaydar, 2);
+
+   repeat
+    wait(0$1);
+   until PlaceUnitXY(Gaydar, 2, 1, false);
+
+   ComMoveXY(Gaydar, 10, 9);
+   end
+else
+   begin
+   SetDir(Gaydar, 2);
+
+   repeat
+    wait(0$1);
+   until PlaceUnitXY(Gaydar, 73, 1, false);
+
+   ComMoveXY(Gaydar, 73, 10);
+   end;
+
+wait(0$1);
+
+CenterNowOnUnits(Gaydar);
+
+DialogueOn;
+
+SayRadio(Gaydar, 'D10-Gay-1');
+Say(Burlak, 'D10-Bur-1');
+SayRadio(Gaydar, 'D10-Gay-2');
+SayRadio(Popov, 'D10-Pop-2');
+SayRadio(Gaydar, 'D10-Gay-3');
+
+DialogueOff;
+
+ChangeMissionObjectives('M2');
+
+RaiseSailEvent(eGaydar);
+
+repeat
+ wait(0$3);
+until FilterAllUnits([[f_side, 3], [f_dist, Gaydar, 9]]) and IsOk(Gaydar);
+
+CenterNowOnUnits(Gaydar);
+
+SetSide(Gaydar, 3);
+
+DialogueOn;
+
+sol := UnitFilter(burlakSquad, [[f_ok], [f_sex, sex_male]]) diff [Burlak, Gnyevko, Kovalyuk, Kuzmov, Belkov, Scholtze];
+
+Say(Gaydar, 'D11-Gay-1');
+
+if sol then
+   Say(sol[1], 'D11-RSol1-1');
+
+Say(Gaydar, 'D11-Gay-2');
+Say(Burlak, 'D11-Bur-2');
+Say(Gaydar, 'D11-Gay-3');
+Say(Burlak, 'D11-Bur-3');
+Say(Gaydar, 'D11-Gay-4');
+Say(Burlak, 'D11-Bur-4');
+
+DialogueOff;
+
+repeat
+ wait(0$1);
+until canEnd;
+
+wait(0$15);
+
+retreatActive := true;
+
+DialogueOn;
+
+SayRadio(Popov, 'D12-Pop-1');
+Say(Burlak, 'D12-Bur-1');
+SayRadio(Platonov, 'D12-Pla-1');
+
+DialogueOff;
+
+ChangeMissionObjectives('MFinal');
+
+SetAreaMapShow(finishArea, 1);
+
+wait(2$00);
+
+PrepareArabianAttack;
+End;
+
+Every 0$1 trigger FilterUnitsInArea(retreatArea, [f_or, [f_side, 2], [f_side, 5]]) do
+begin
+PlaceSeeing(93, 176, 3, -6);
+CenterNowOnXY(93, 176);
+
+DialogueOn;
+
+dwait(0$1);
+
+YouLost('ArabBreakthrough');
+DialogueOff;
+End;
+
+Every 0$1 trigger canEnd and FilterUnitsInArea(finishArea, [f_side, 3]) and (IsInArea(Burlak, finishArea) or IsDriverInArea(Burlak, finishArea)) and (IsInArea(Gaydar, finishArea) or IsDriverInArea(Gaydar, finishArea)) do
+begin
+if FilterUnitsExceptArea(finishArea, [[f_side, 3], [f_type, unit_human]]) and
+   (IsInArea(Burlak, finishArea) or IsDriverInArea(Burlak, finishArea)) and
+   (IsInArea(Gaydar, finishArea) or IsDriverInArea(Gaydar, finishArea)) then
+   begin
+   if Query('QEndMission') = 1 then
+      begin
+      FinishMission;
+      exit;
+      end
+   else
+      end_the_mission_allowed := true;
+   end;
+
+repeat
+ wait(0$1);
+until FilterUnitsExceptArea(finishArea, [[f_side, 3], [f_type, unit_human]]) = 0 and
+      FilterUnitsExceptArea(finishArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0;
+
+end_the_mission_allowed := false;
+
+FinishMission;
+End;
+
+Function FinishMission;
+var i;
+begin
+if FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_not, [f_btype, b_breastwork]], [f_ok]]) then
+   AddMedal('Dismantle', -1)
+else
+   AddMedal('Dismantle', 1);
+
+if enemyCounterKill >= [12, 16, 20, 24][Difficulty] then
+   AddMedal('EnemyLosses', 1)
+else
+   AddMedal('EnemyLosses', -1);
+
+if yourLoses >= [5, 4, 3, 2][Difficulty] then
+   AddMedal('LittleLosses', -1)
+else
+   AddMedal('LittleLosses', 1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Gnyevko) and Gnyevko in burlakSquad then
+   SaveCharacters(Gnyevko, currentMissionPrefix & 'Gnyevko');
+
+if IsLive(Kovalyuk) and Kovalyuk in burlakSquad then
+   SaveCharacters(Kovalyuk, currentMissionPrefix & 'Kovalyuk');
+
+if IsLive(Belkov) and Belkov in burlakSquad then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) and Kirilenkova in burlakSquad then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+if IsLive(Scholtze) and Scholtze in burlakSquad then
+   SaveCharacters(Scholtze, currentMissionPrefix & 'Scholtze');
+
+if IsLive(Kuzmov) then
+   SaveCharacters(Kuzmov, currentMissionPrefix & 'Kuzmov');
+
+SaveCharacters(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]]) diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kuzmov, Kirilenkova, Scholtze, Popov], currentMissionPrefix & 'burlakTeam');
+
+YouWin;
+End;
+
+Export function CustomFinishMission;
+var i, unitsLeft, secondUnits, tmp;
+begin
+end_the_mission_allowed:= false;
+
+if FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_ok]]) then
+   AddMedal('Dismantle', -1)
+else
+   AddMedal('Dismantle', 1);
+
+if enemyCounterKill >= [16, 21, 26, 36][Difficulty] then
+   AddMedal('EnemyLosses', 1)
+else
+   AddMedal('EnemyLosses', -1);
+
+unitsLeft := FilterUnitsExceptArea(finishArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) union
+             FilterUnitsExceptArea(finishArea, [[f_side, 3], [f_type, unit_human]]);
+
+yourLoses := yourLoses + unitsLeft;
+
+if yourLoses >= [5, 4, 3, 2][Difficulty] then
+   AddMedal('LittleLosses', -1)
+else
+   AddMedal('LittleLosses', 1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Gnyevko) and Gnyevko in burlakSquad and (IsInArea(Gnyevko, finishArea) or IsDriverInArea(Gnyevko, finishArea)) then
+   SaveCharacters(Gnyevko, currentMissionPrefix & 'Gnyevko');
+
+if IsLive(Kovalyuk) and Kovalyuk in burlakSquad and (IsInArea(Kovalyuk, finishArea) or IsDriverInArea(Kovalyuk, finishArea)) then
+   SaveCharacters(Kovalyuk, currentMissionPrefix & 'Kovalyuk');
+
+if IsLive(Belkov) and Belkov in burlakSquad and (IsInArea(Belkov, finishArea) or IsDriverInArea(Belkov, finishArea)) then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) and Kirilenkova in burlakSquad and (IsInArea(Kirilenkova, finishArea) or IsDriverInArea(Kirilenkova, finishArea)) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+if IsLive(Scholtze) and Scholtze in burlakSquad and (IsInArea(Scholtze, finishArea) or IsDriverInArea(Scholtze, finishArea)) then
+   SaveCharacters(Scholtze, currentMissionPrefix & 'Scholtze');
+
+if IsLive(Kuzmov) and Kuzmov in burlakSquad and (IsInArea(Kuzmov, finishArea) or IsDriverInArea(Kuzmov, finishArea)) then
+   SaveCharacters(Kuzmov, currentMissionPrefix & 'Kuzmov');
+
+secondUnits := FilterUnitsInArea(finishArea, [[f_side, 3], [f_nation, 3], [f_type, unit_human]]);
+
+tmp := FilterUnitsInArea(finishArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]);
+
+if tmp then
+   for i in tmp do
+       secondUnits := Join(secondUnits, IsDrivenBy(i));
+
+SaveCharacters(secondUnits diff [Burlak, Gnyevko, Kovalyuk, Belkov, Kirilenkova, Kuzmov, Scholtze, Popov], currentMissionPrefix & 'burlakTeam');
+
+YouWin;
 End;

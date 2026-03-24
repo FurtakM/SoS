@@ -77,8 +77,8 @@ dialog.gameSaveLimit.content.ok = getImageButtonEX(
 
 function dialog.save.savelist.loadbutton.onClick()
     if SOS_GAME_DIFFICULTY == 4 then
-        if SOS_GAME_SAVECOUNTER < SOS_GAME_SAVECOUNTER_LIMIT then
-            setText(dialog.save.savelist.loadbutton, loc(TID_msg_Ok) .. ' (' .. (SOS_GAME_SAVECOUNTER_LIMIT - (SOS_GAME_SAVECOUNTER + 1)) .. ')');
+        if SOS_GAME_SAVECOUNTER <= SOS_GAME_SAVECOUNTER_LIMIT then
+            setText(dialog.save.savelist.loadbutton, loc(TID_msg_Ok) .. ' (' .. (SOS_GAME_SAVECOUNTER_LIMIT - (SOS_GAME_SAVECOUNTER)) .. ')');
         end;
 
         if SOS_GAME_SAVECOUNTER >= SOS_GAME_SAVECOUNTER_LIMIT then

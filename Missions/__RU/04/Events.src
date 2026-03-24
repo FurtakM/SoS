@@ -1,4 +1,5 @@
 On UnitDestroyed(un) do
+var mine, i;
 begin
 SOS_UnitDestroyed(un);
 
@@ -11,7 +12,67 @@ if un = Gaydar then
 if un = Popov then
    YouLost('SelfAttack');
 
-End;  
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]) then
+   yourLoses := Inc(yourLoses);
+
+if GetSide(un) = 2 then
+   enemyCounterKill := Inc(enemyCounterKill);
+
+if un in enemyGuards then
+   begin
+   mine := MineOfUnit(un);
+
+   if not mine or not enemyMines then
+      exit;
+
+   RemoveMineOfUnit(un);
+
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = mine[1] and enemyMines[i][2] = mine[2] then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+   end;
+End;
+
+On MinePlaced(unit, x, y, type) do
+begin
+if GetSide(unit) = 2 and unit in enemyGuards then
+   enemyMines := Join(enemyMines, [x, y]);
+End;
+
+On MineDetonated(unit, x, y) do
+var i;
+begin
+if unit in enemyGuards then
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = x and enemyMines[i][2] = y then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if veh in enemyMobile then
+   begin
+   repeat
+   if GetDistUnitXY(driver, 79, 112) < 32 then
+      ComMoveXY(driver, 56, 110)
+   else
+      ComMoveXY(driver, 163, 31);
+
+    wait(0$1);
+
+    if IsDead(driver) then
+       exit;
+   until IsAt(driver, 163, 31) or IsAt(driver, 56, 110);
+
+   RemoveUnit(driver);
+   end;
+End;
 
 On Contact(s1, s2) do
 begin
@@ -22,8 +83,25 @@ End;
 On VehicleConstructed(vehicle, building) do
 var driver;
 begin
-SOS_VehicleConstructed(vehicle, building);
+SOS_VehicleConstructed(vehicle, building); 
+End;
 
+On SailEvent(event) do
+begin
+if event = eGaydar then
+   begin
+   SendAttackOnGaydar;
+   end;
+
+if event = eForest then
+   begin
+   ClearRoadInForest;
+   end;
+
+if event = eRaid then
+   begin
+   SendArabRaid;
+   end;
 End;
 
 On BuildingComplete(b) do
@@ -34,4 +112,12 @@ if GetBType(b) = b_depot then
    myBase := GetBase(b);
    SetRestrict(b_depot, 3, state_disabled);
    end;
+
+if GetBType(b) = b_lab then
+   hasLab := true;
+End;
+
+On EndTheMissionRaised(p) do
+begin
+CustomFinishMission;
 End;

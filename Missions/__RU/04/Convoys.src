@@ -1,6 +1,13 @@
 Export Function SendConvoy(wave);
 var i, v, skill, un, veh, tmp, path, baseCrates;
 begin
+if blockThread then
+   begin
+   repeat
+    wait(0$1);
+   until not blockThread;
+   end;
+
 convoyWave := Inc(wave);
 
 skill := [4, 3, 3, 3][Difficulty];
@@ -11,6 +18,8 @@ baseCrates := GetResourceType(myBase, mat_cans);
 
 if wave = 1 then
    begin
+   blockThread := true;
+
    uc_side := 6;
    uc_nation := nation_russian;
 
@@ -29,6 +38,8 @@ if wave = 1 then
     wait(0$0.3);
    until PlaceUnitArea(veh, northSpawnArea, false);
 
+   blockThread := false;
+
    PlaceHumanInUnit(un, veh);
 
    ruConvoyUnits := Join(ruConvoyUnits, un);
@@ -44,9 +55,11 @@ if wave = 1 then
    end;
 
 // forest north
-if wave mod 7 = 0 then
+if wave mod 7 = 0 or (arabAttack and Prob(60)) then
    begin
    path := [ [16,21], [36,45], [48,58], [59,88], [76,106], [93,150], [92,177] ];
+
+   blockThread := true;
 
    for i := 1 to 4 do
        begin
@@ -66,9 +79,13 @@ if wave mod 7 = 0 then
        ruConvoyUnits := Join(ruConvoyUnits, un);
        tmp := Join(tmp, un);
        end;
+
+   blockThread := false;
    end  // tanks squad
 else if wave mod 3 = 0 then
    begin
+   blockThread := true;
+
    path := [ [133,15], [125,34], [109,55], [99,64], [133,102], [143,136], [127,154], [92,152], [93,177] ];
 
    for i := 1 to 4 do
@@ -105,12 +122,16 @@ else if wave mod 3 = 0 then
 
        ComMoveXY(un, 133, 15);
        end;
+
+   blockThread := false;
    end
 else // mixed
    begin
+   blockThread := true;
+
    path := [ [133,15], [125,34], [109,55], [99,64], [88,70], [74,78], [70,91], [80,113], [89,133], [91,159], [93,177] ];
 
-   for i := 1 to 2 do
+   for i := 1 to rand(2, 5) do
        begin
        uc_side := 6;
        uc_nation := nation_russian;
@@ -118,7 +139,7 @@ else // mixed
        PrepareHuman(false, rand(1,4), skill);
        un := CreateHuman;           
           
-       PrepareVehicle([ru_medium_wheeled, ru_medium_tracked][rand(1,2)], engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_cargo_bay, ru_gun][rand(1,4)], rand(70, 90));
+       PrepareVehicle([ru_medium_wheeled, ru_medium_tracked][rand(1,2)], engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_cargo_bay, ru_cargo_bay, ru_gun][rand(1,5)], rand(70, 90));
 
        if baseCrates < 200 and i = 1 then
           vc_weapon := ru_cargo_bay;
@@ -151,7 +172,7 @@ else // mixed
        ComMoveXY(un, 133, 15);
        end;
 
-   for i := 1 to rand(3,5) do
+   {for i := 1 to rand(3,5) do
        begin
        uc_side := 6;
        uc_nation := nation_russian;
@@ -170,7 +191,9 @@ else // mixed
        tmp := Join(tmp, un);
 
        ComMoveXY(un, 133, 15);
-       end;
+       end;}
+
+   blockThread := false;
    end;
 
 if not tmp then

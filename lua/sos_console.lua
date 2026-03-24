@@ -12,17 +12,23 @@ setColour1(owconsole.edit, RGBA(0, 8, 11, 200));
 command = {};
 
 function command:chat(PARAMETERS)
-	for _, VALUE in ipairs(PARAMETERS) do
-		if (string.lower(VALUE) == 'off') then
-  			OW_CONSOLE_CALL_CALLBACK(0, 'The chat has been hidden.');
-  			return;
-  		end;
-  		
-  		if (string.lower(VALUE) == 'on') then
-  			OW_CONSOLE_CALL_CALLBACK(0, 'The chat has been revealed.');
-  			return;
-  		end;
-  	end;
+	local VALUE = PARAMETERS[1];
+	
+	if (string.lower(VALUE) == 'off') then
+		setVisible(game.chat, false);
+		OW_SETTING_WRITE('OPTIONS', 'OPTION_CHAT', false);
+		setChecked(dialog.options.chat, false);
+		OW_CONSOLE_CALL_CALLBACK(0, 'The chat has been hidden.');
+		return;
+	end;
+		
+	if (string.lower(VALUE) == 'on') then
+		setVisible(game.chat, true);
+		OW_SETTING_WRITE('OPTIONS', 'OPTION_CHAT', true);
+		setChecked(dialog.options.chat, true);
+		OW_CONSOLE_CALL_CALLBACK(0, 'The chat has been revealed.');
+		return;
+	end;
 
   	OW_CONSOLE_CALL_CALLBACK(0, 'Invalid value for command.');
 end;
@@ -72,4 +78,4 @@ function command:music(PARAMETERS)
 end;
 
 OW_CONSOLE_ADD_COMMAND('chat', command.chat, command, 'Turn On/Off chat. Allowed values: `on`, `off`');
-OW_CONSOLE_ADD_COMMAND('music', command.music, command, 'Sets the music volume. For example: `music 100` to set it to full volume. \nUse `music menu <number>` to change the volume of the music in the menu. \nAllowed values: <number>, `mute`, `menu <number>`, `menu mute`.');
+OW_CONSOLE_ADD_COMMAND('music', command.music, command, 'Sets the music volume. For example: `music 100` to set it to full volume. \rUse `music menu <number>` to change the volume of the music in the menu. \rAllowed values: <number>, `mute`, `menu <number>`, `menu mute`.');

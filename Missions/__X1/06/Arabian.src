@@ -285,6 +285,8 @@ if HexInfo(5, 3) then
 
 for i in rolfSquad do
     begin
+    SetInvulnrability(i, true);
+
     uc_direction := 2;
 
     if GetClass(i) = class_mechanic then
@@ -311,6 +313,9 @@ End;
 Export Function PrepareRolfBase;
 var i, tmp;
 begin
+for i in rolfSquad do
+    SetInvulnrability(i, false);
+
 ComEnterUnit(Rolf, HexInfo(94, 63));
 
 tmp := [ [b_armoury, 82, 64, 1], [b_breastwork, 73, 58, 0] ];
@@ -326,7 +331,7 @@ repeat
 until UnitFilter(rolfSquad, [[f_class, 2], [f_not, [f_hastask]]]);
 
 rolfScriptBase := true;
-End;
+End;             
 
 Every 0$1 trigger rolfScriptBase and GetSide(Rolf) = 8 do
 var i, b, p, tmp, sol, eng, sci, mech, enemyInBase, hasVehicle;
@@ -486,16 +491,25 @@ ComMoveXY(Omar, 333, 206);
 
 wait(0$2);
 
-ComHold(omarSquad);
-ComAgressiveMove(omar union UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]) union FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]), 315, 214);
+for i in omarSquad do
+    SetInvulnrability(i, true);
 
-//wait(0$2);
-//ComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[1], 323, 216, 0);
-//AddComMoveXY(UnitFilter(omarSquad, [f_class, 1])[1], 329, 212);
+ComHold(omarSquad);
+ComAgressiveMove(Omar union UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]) union FilterAllUnits([[f_side, 5], [f_type, unit_vehicle]]), 315, 214);
+
+wait(0$2);
+
+ComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[1], 323, 216, 0);
+AddComMoveXY(UnitFilter(omarSquad, [f_class, 1])[1], 329, 212);
 
 wait(0$22);
 
 ComAgressiveMove(omarSquad union Omar, 329, 231);
+
+wait(0$5);
+
+for i in omarSquad do
+    SetInvulnrability(i, false);
 End;
 
 Every 0$1 trigger omarScriptBase do
@@ -602,14 +616,12 @@ End;
 
 Every 0$1 trigger GetLives(Omar) < 1000 do
 begin
-enable;
-SetLives(Omar, 1000);
+SetInvulnrability(Omar, true);
 End;
 
 Every 0$1 trigger GetLives(Rolf) < 1000 and rolfAttack do
 begin
-enable;
-SetLives(Rolf, 1000);
+SetInvulnrability(Rolf, true);
 End;
 
 Every 0$1 trigger rolfAttack do
@@ -677,7 +689,10 @@ repeat
       if tag = 101 and GetDistUnitXY(i, rolfCoords[1], rolfCoords[2]) < 9 and mech then
          begin
          if GetLives(i) < 1000 then
-            AddComRepairVehicleAndReturn(mech)
+            begin
+            if GetClass(mech) = 3 then
+               AddComRepairVehicleAndReturn(mech);
+            end
          else
             SetTag(i, 0);
          end;
@@ -799,7 +814,10 @@ repeat
        if tag = 101 and GetDistUnitXY(i, omarAttackCoords[1], omarAttackCoords[2]) < 9 and mech then
           begin
           if GetLives(i) < 1000 then
-             AddComRepairVehicleAndReturn(mech)
+             begin
+             if GetClass(mech) = 3 then
+                AddComRepairVehicleAndReturn(mech);
+             end
           else
              if GetFuel(i) <= 50 and cargo then
                 SetTag(i, 102)

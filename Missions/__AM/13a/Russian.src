@@ -37,8 +37,6 @@ End;
 Every 5$00+2$00 trigger IsOk(ru_depot) and player_spotted do
 var i, p, base, tmp, _target, attackers, amount;
 begin
-enable;
-
 base := 2;
 tmp := [
          [ru_medium_tracked, engine_combustion, control_computer, ru_rocket_launcher],
@@ -67,7 +65,7 @@ until MC_GetVehicles(base, true) >= amount or p >= 60;
 wait(0$30);
 
 _target := [[71,19], [91,67], [52,44], [68,48]];
-attackers := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay]]]]) diff mc_defender[base];
+attackers := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_not, [f_weapon, ru_crane]], [f_not, [f_weapon, ru_cargo_bay]]]) diff mc_defender[base];
 
 if not attackers then
    exit;
@@ -98,7 +96,9 @@ repeat
  wait(0$1);
  attackers := UnitFilter(attackers, [f_ok]);
  AgressiveMove(attackers, _target);
-until not attackers;  
+until not attackers;
+
+enable;
 End;
 
 Export function PrepareRussianAttack;

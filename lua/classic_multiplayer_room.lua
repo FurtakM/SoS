@@ -991,6 +991,8 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	--local stopwatch2 = STOPWATCH_ADD();
 	--STOPWATCH_START(stopwatch2);
 
+	local isHost = canModifyServerSettings();
+
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
 		for i = 1, DATA.MAPPARAMCOUNT do
 			if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
@@ -998,9 +1000,14 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 			end;
 		end;
 
-		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
+		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, isHost);
 	end;
 
+	if isHost then
+		setEnabled(menu.window_multiplayer_room.panel.page3.mapComboBox.list, true);
+		setEnabled(menu.window_multiplayer_room.panel.page3.gameTypeComboBox.list, true);
+	end;
+	
 	-- get map info data
 	--OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 
@@ -1027,7 +1034,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
 	MultiDef.MapList      = UNRANKED.MAPLIST;
 	MultiDef.MapListCount = UNRANKED.MAPLISTCOUNT;
 
-	MULTIPLAYER_ROOM_DATA.MAPS = UNRANKED.MAPLIST;
+	MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = resortMapsMultiplayer(UNRANKED.MAPLIST);
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -1127,6 +1134,7 @@ function delayMultiplayerStart()
 			IN_LOBBY = false;
 			OW_IRC_DESTROY();
 
+			setVisible(game.chat, getSetting(OPTION_CHAT));
 			setVisible(menu.window_multiplayer_room, false);
 
 			deleteSlots();
@@ -3006,20 +3014,32 @@ function changeSortMultiplayer()
 
 	setTexture(menu.window_multiplayer_room.panel.page3.sort, 'classic/edit/sort' .. MULTIPLAYER_ROOM_SORT .. '.png');
 
+	MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = resortMapsMultiplayer(MultiDef.MapList);
+	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+	selectMap(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX);
+end;
+
+function resortMapsMultiplayer(MAPS) -- MULTIPLAYER_ROOM_DATA.MAPS
+	if MULTIPLAYER_ROOM_SORT == 2 then
+		return MAPS, 1;
+	end;
+
 	local mapList = {}
 
-	for i = 1, #MULTIPLAYER_ROOM_DATA.MAPS do
-	    local src = MULTIPLAYER_ROOM_DATA.MAPS[i];
+	for i = 1, #MAPS do
+	    local src = MAPS[i];
 	    local name = src.NAME;
 
-	    mapList[i] = {
-	        NAME = name,
-	        NAMELOC = src.NAMELOC,
-	        amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name]
-	            and MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX
-	            or 0
-	    } 
-	end
+	    mapList[i] = {};
+
+	    for k, v in pairs(src) do
+        	mapList[i][k] = v;
+    	end;
+
+	    mapList[i].amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name]
+			            and MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX
+			            or 0;
+	end;
 
 	if MULTIPLAYER_ROOM_SORT == 1 then -- rosnąco
 	    table.sort(mapList, function(a, b)
@@ -3031,16 +3051,7 @@ function changeSortMultiplayer()
 	    end)
 	end
 
-	local INDEX = 0;
-
-	for i = 1, #mapList do
-		if (MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME == mapList[i].NAME) then
-			INDEX = i;
-			break;
-		end;
-	end;
-
-	setMapList(mapList, INDEX, canModifyServerSettings());
+	return mapList, 1;
 end
 
 function setMapList(mapList, selectedMap, isHost)

@@ -69,11 +69,13 @@ multi_buildings := [
       [b_workshop, [115, 104, 0]]
    ],                                               
    [
-      [b_depot, GetBuildingFromArea(warehouse3Area, 3), 'kirov'],
+      [b_warehouse, GetBuildingFromArea(warehouse3Area, 3), 'kirov'],
       [b_breastwork, [169, 101, 4]],
       [b_breastwork, [175, 123, 5]],
       [b_armoury, [166, 115, 5]],
-      [b_lab, [152, 98, 3]]
+      [b_lab_weapon, [152, 98, 3]],
+      [b_armoury, [142, 96, 1]],
+      [b_oil_power, [154, 94, 0]]
    ]
 ];
 
@@ -129,7 +131,7 @@ Difficulty := [1, 2, 3][multi_settings[1]];
 // others settings
 multi_pep_amount := [6, 7, 8, 9][multi_settings[2]];
 multi_skill_level := [2, 3, 4, 5][multi_settings[3]];
-multi_crates_spawn := [ [3600, 0$32], [5600, 0$22], [6800, 0$14], [9000, 0$12] ][multi_settings[4]];
+multi_crates_spawn := [ [5600, 0$32], [6800, 0$22], [9000, 0$14], [15000, 0$12] ][multi_settings[4]];
 multi_extra_oil := [0, 1, 2][multi_settings[5]];
 multi_support := [0, 1, 2][multi_settings[6]];
 
@@ -241,6 +243,12 @@ for i := 1 to 8 do
               begin
               bc_kind1 := b_lab_basic;
               bc_kind2 := b_lab_basic;
+              end
+           else if j[1] = b_lab_weapon then
+              begin
+              bc_type := b_lab;
+              bc_kind1 := b_lab_weapon;
+              bc_kind2 := b_lab_basic;
               end;
 
            b := CreateAndPlaceBuildingXYD(j[2][1], j[2][2], j[2][3]);
@@ -251,6 +259,13 @@ for i := 1 to 8 do
 
               SetResourceType(GetBase(b), mat_cans, [320, 240, 150][Difficulty]);
               SetResourceType(GetBase(b), mat_oil, [160, 130, 100][Difficulty]);
+              end
+           else if j[1] = b_warehouse then
+              begin
+              SetBName(b, j[3]);
+
+              SetResourceType(GetBase(b), mat_cans, [500, 450, 350][Difficulty]);
+              SetResourceType(GetBase(b), mat_oil, [350, 280, 210][Difficulty]);
               end;
            end;
        end;
@@ -266,6 +281,14 @@ for i := 1 to 8 do
           veh := CreateVehicle;
 
           SetCargo(veh, mat_oil, 100 - (20 * Difficulty));
+
+          PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
+          PlaceHumanInUnit(un, veh);
+          end
+       else if GetClass(un) = class_soldier then
+          begin
+          PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_gun, 100);
+          veh := CreateVehicle;
 
           PlaceUnitArea(veh, multi_pos_area[multi_sides[i]][2], false);
           PlaceHumanInUnit(un, veh);

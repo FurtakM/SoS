@@ -361,12 +361,11 @@ begin
 enable;
 
 tmp := UnitFilter(ruAttackers, [f_ok]);
-ruAttackers := [];
 SendAttack(tmp);
 End;
 
 Function SendAttack(group);
-var i, tmp;
+var i, tmp, p;
 begin
 for i in group do
     begin
@@ -381,8 +380,21 @@ for i in group do
        ComAgressiveMove(i, 118, 93);
     end;
 
+p := 0;
+
 repeat
  wait(0$1);
+ p := Inc(p);
+
+ if p > 20 and p < 25 then
+    begin
+    tmp := UnitFilter(group, [f_tag, 1]);
+
+    if tmp then
+       for i in tmp do
+           SetTag(i, 0);
+    end;
+
  tmp := UnitFilter(group, [f_tag, 0]);
 
  for i in tmp do

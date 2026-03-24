@@ -146,5 +146,13 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pVerdantDivide = {
 		MIN = 2,
 		MAX = 6
+	},
+	pWildBogs = {
+		MIN = 2,
+		MAX = 8
+	},
+	pOutlands = {
+		MIN = 2,
+		MAX = 8
 	}
 }

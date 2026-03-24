@@ -7,17 +7,19 @@ ResetFog;
 
 // birds, tigers, apemans, enchidnas, horses, mastodonts, fishes
 PrepareNature(5, 3, 3, 5, 1, 0, 2, natureArea, waterArea);
+PrepareArabian;
 
 Init;
+
 Action;
 End;
 
-Export debug, prevMissionPrefix, currentMissionPrefix, currentMissionPopovPrefix, saveCounter, gameStart, retreatActive,
-       hasBase, timeToArabAttack, convoyWave, goToUnload, askedForResources, myBase, canAskForResources, firstCargo,
-       recklessAttack, belkovFreed, platonovAngerLevels, arabAttack, alreadyAsked;
+Export debug, prevMissionPrefix, currentMissionPrefix, currentMissionPopovPrefix, saveCounter, gameStart, retreatActive, forestIsCleared,
+       hasBase, timeToArabAttack, convoyWave, goToUnload, askedForResources, myBase, canAskForResources, firstCargo, canEnd, yourLoses,
+       recklessAttack, belkovFreed, platonovAngerLevels, arabAttack, alreadyAsked, hasLab, enemyCounterKill, canSendMoreAttacks, blockThread;
 Function Init;
 begin
-debug := 1;
+debug := false;
 
 if debug then
    Difficulty := 4;
@@ -29,7 +31,7 @@ saveCounter := 0;
 gameStart := false;
 retreatActive := false;
 hasBase := false;
-timeToArabAttack := [20$0, 18$0, 16$0, 14$0];
+timeToArabAttack := 12$00;
 convoyWave := 0;
 myBase := 0;
 goToUnload := [];
@@ -37,23 +39,39 @@ alreadyAsked := [];
 askedForResources := [];
 canAskForResources := false;
 firstCargo := 0;
-recklessAttack := LoadVariable('02_recklessAttack', 1) < 3; // 1 - asked for permission to save belkov, 2 - asked for reinforcements, 3 - no asking
+recklessAttack := LoadVariable('02_recklessAttack', 1) = 3; // 1 - asked for permission to save belkov, 2 - asked for reinforcements, 3 - no asking
 belkovFreed := LoadVariable('02_belkovSaved', false); // belkov saved: true/false
-platonovAngerLevels := [2, 5, 7, 8, 9];
 arabAttack := false;
+hasLab := false;
+enemyCounterKill := 0;
+yourLoses := 0;
+canSendMoreAttacks := false;
+canEnd := false;
+forestIsCleared := false;
+blockThread := false;
 
-if not recklessAttack and not belkovFreed then
-   platonovAngerLevels := [3, 6, 7, 9, 10]
-else if recklessAttack and belkovFreed then
-   platonovAngerLevels := [2, 4, 6, 7, 8];
+if not recklessAttack and belkovFreed then
+   begin
+   if Difficulty < 3 then
+      platonovAngerLevels := [3, 6, 7, 9, 10]
+   else
+      platonovAngerLevels := [3, 5, 6, 7, 8];
+   end
+else if recklessAttack and not belkovFreed then
+   begin
+   if Difficulty < 3 then
+      platonovAngerLevels := [2, 4, 6, 7, 8]
+   else
+      platonovAngerLevels := [2, 4, 5, 6, 7];
+   end
+else
+   begin
+   if Difficulty < 3 then
+      platonovAngerLevels := [2, 5, 7, 8, 9]
+   else
+      platonovAngerLevels := [2, 5, 6, 7, 8];
+   end;
 
-//if debug then
-   //FogOff(3);
+if debug then
+   FogOff(3);
 End;
-
-
-{TODO:
-- budowa bazy
-- arabowie
-- medale
-}
