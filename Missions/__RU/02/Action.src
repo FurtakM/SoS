@@ -358,48 +358,54 @@ End;
 
 // build wrong building
 Every 0$3 trigger FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]) and not initiative do
-var tmp;
+var i, tmp, p;
 begin
-enable;
+tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]]);
+p := 0;
 
-tmp := FilterUnitsInArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_or, [f_btype, b_armoury], [f_btype, b_breastwork]]])[1];
-
-ComMoveUnit(Platonov, tmp);
+ComMoveUnit(Platonov, tmp[1]);
 
 repeat
  wait(0$1);
-until GetDistUnits(Platonov, tmp) < 6;
+ p := Inc(p);
+until GetDistUnits(Platonov, tmp[1]) < 6 or p >= 6;
 
 InGameOn;
 
-ComTurnUnit(Platonov, tmp);
+ComTurnUnit(Platonov, tmp[1]);
 ComTurnUnit(Burlak, Platonov);
 
 Say(Platonov, 'D6-Pla-1');
 Say(Burlak, 'D6-Bur-1');
 
-RemoveUnit(tmp);
+for i in tmp do
+    begin
+    RemoveUnit(i);
 
-if GetBType(tmp) = b_breastwork then
-   AddResourceType(GetBase(beria), mat_cans, 10)
-else
-   AddResourceType(GetBase(beria), mat_cans, 30);
+    if GetBType(i) = b_breastwork then
+       AddResourceType(GetBase(beria), mat_cans, 10)
+    else
+       AddResourceType(GetBase(beria), mat_cans, 30);
+    end;
 
 InGameOff;
 
 ComFree(Burlak);
+
+enable;
 End;
 
 // build outside beria
 Every 0$1 trigger beriaVisited and FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]]) do
 var p, tmp, amount;
 begin
-enable;
-
 tmp := FilterUnitsExceptArea(beriaArea, [[f_side, 3], [f_nation, 3], [f_type, unit_building]])[1];
 
 if GetY(tmp) < 71 then
+   begin
+   enable;
    exit;
+   end;
 
 ComMoveUnit(Platonov, tmp);
 
@@ -408,7 +414,7 @@ p := 0;
 repeat
  wait(0$1);
  p := Inc(p);
-until GetDistUnits(Platonov, tmp) < 6 or p > 12;
+until GetDistUnits(Platonov, tmp) < 6 or p > 6;
 
 InGameOn;
 
@@ -436,6 +442,8 @@ case GetBType(tmp) of
 
 if amount then
    AddResourceType(GetBase(beria), mat_cans, amount);
+
+enable;
 End;
 
 // swamp
@@ -811,33 +819,36 @@ sol := UnitFilter(usTrapForces, [[f_class, 1], [f_not, [f_inside]]]);
 sci := UnitFilter(usTrapForces, [[f_class, 4], [f_not, [f_inside]]]);
 
 for i in sol do
-    SetTag(i, 0);
+    begin
+    if GetLives(i) = 1000 then
+       SetTag(i, 0)
+    else
+       SetTag(i, 1);
+    end;
 
 ComMoveXY(sci, 60, 8);
 
 if FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]) then
    ComAgressiveMove(FilterAllUnits([[f_side, 1], [f_type, unit_vehicle]]), 53, 24);
 
+ComMoveXY(sci, 62, 8);
+
 repeat
  wait(0$0.5);
 
  sol := UnitFilter(usTrapForces, [[f_class, 1], [f_ok], [f_not, [f_inside]]]);
 
- if FilterByTag(sol, 0) = sol then
-    begin
-    wait(0$3);
-    ComAgressiveMove(sol, 41, 18);
-    ComMoveXY(sci, 60, 8);
-    end;
+ if FilterByTag(sol, 0) = Count(sol) then
+    ComAgressiveMove(FilterByTag(sol, 0), 41, 18);
 
  for i in sol do
-     if GetLives(i) < 800 and GetDistUnitXY(i, 60, 8) > 6 then
+     if GetLives(i) < 850 and GetDistUnitXY(i, 62, 8) > 6 and GetTag(i) <> 1 then
         begin
         SetTag(i, 1);
-        ComMoveXY(i, 60, 8);
+        ComMoveXY(i, 62, 8);
         end
      else
-        if GetLives(i) = 1000 then
+        if GetLives(i) = 1000 and GetTag(i) = 1 then
            SetTag(i, 0);
 
 until belkovDied or not sol;

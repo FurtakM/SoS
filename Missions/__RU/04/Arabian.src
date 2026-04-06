@@ -319,7 +319,7 @@ case enemyWave of
             ComMoveToArea(un, forestGuardHill2Area);
             end;
 
-        for i := 1 to 5 do
+        for i := 1 to [3, 4, 5, 5][Difficulty] do
             begin
             uc_side := enemySide;
             uc_nation := nation_arabian;
@@ -340,7 +340,7 @@ case enemyWave of
 
         wait(0$20);
 
-        PrepareMobileGroup([6, 7, 8, 9][Difficulty], northSpawnArea);
+        PrepareMobileGroup([4, 5, 6, 7][Difficulty], northSpawnArea);
 
         wait(0$03);
 
@@ -350,9 +350,7 @@ case enemyWave of
            RaiseSailEvent(eForest);
         end;
      3..6: begin
-        if not forestIsCleared then
-           RaiseSailEvent(eForest)
-        else
+        if forestIsCleared then
            PrepareInfGroup([2, 3, 3, 3][Difficulty] + 1, southSpawnArea);
 
         wait(0$20);
@@ -463,6 +461,24 @@ for i in enemyMobile do
        continue;
        end;
 
+    if GetTag(i) = 299 then
+       begin
+       if GetDistUnitXY(i, 141, 144) < 8 or GetDistUnitXY(i, 100, 68) < 8 then
+          begin
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if GetDistUnitXY(i, 141, 144) < GetDistUnitXY(i, 90, 81) then
+          begin
+          ComMoveXY(i, 141, 144);
+          end
+       else
+          begin
+          ComMoveXY(i, 100, 68);
+          end;
+       end;
+
     if GetTag(i) = 300 then
        begin
        if GetFuel(i) < 10 then
@@ -523,14 +539,14 @@ for i in enemyMobile do
           end;
        end;
 
-    if GetTag(i) < 300 then
+    if GetTag(i) < 299 then
        begin
        enemy := FilterUnitsInArea(arCampArea, [f_enemy, enemySide]);
 
        if GetLives(i) < [650, 700, 725, 750][Difficulty] then
           begin
           ComStop(i);
-          SetTag(i, 300);
+          SetTag(i, 299);
           continue;
           end;
 
@@ -562,7 +578,7 @@ var i, tmp, un;
 begin
 tmp := [];
 
-wait([6$00, 4$00, 3$00, 2$00][Difficulty]);
+wait([6$00, 4$00, 3$30, 3$00][Difficulty]);
 
 if GetSide(Gaydar) = 3 then
    exit;

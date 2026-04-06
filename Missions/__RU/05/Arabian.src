@@ -1,0 +1,43 @@
+Export arVehicles;
+Export function PrepareArabian;
+var i, un, veh;
+begin
+uc_nation := nation_arabian;
+uc_side := 2;
+
+SetBName(arDepot, 'newkabul');
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_building]]) do
+    SetLives(i, 990);
+
+for i in FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]) do
+    begin
+    PrepareSoldier(false, 4);
+    un := CreateHuman;
+
+    SetDir(un, GetDir(un) - 3);
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareEngineer(false, 3);
+    un := CreateHuman;
+    PlaceUnitXYR(un, 74, 9, 3, false);
+    end;
+
+for i := 1 to 5 do
+    begin
+    PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, [ar_gun, ar_gatling_gun, ar_light_gun, ar_radar, ar_gun][i], 100);
+    veh := CreateVehicle;
+    arVehicles := Join(arVehicles, veh);
+
+    SetDir(veh, 4);
+
+    PlaceUnitArea(veh, arVehSpotArea, false);
+
+    PrepareMechanic(false, 3);
+    PlaceHumanInUnit(CreateHuman, veh);
+    end;
+End;
+

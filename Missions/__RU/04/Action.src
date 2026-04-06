@@ -3,6 +3,9 @@ var i, veh, tmp, random, hexes, popovSquad, vip;
 begin
 tmp := PrepareRussian;
 
+if not UnitFilter(tmp, [f_class, class_engineer]) then
+   SetClass(Burlak, 2);
+
 hexes := AreaToList(roadVisibleArea, 0);
 
 for i := 1 to hexes[1] do
@@ -204,12 +207,15 @@ wait(0$20);
 for i := 1 to 3 do
     SendConvoy(convoyWave); // 10
 
+if Difficulty = 1 then
+   SendConvoy(convoyWave); // 11
+
 arabAttack := true;
 
 repeat
  wait(rand(2$30, 5$00));
  SendConvoy(convoyWave);
-until convoyWave >= [13, 14, 15, 15][Difficulty];
+until convoyWave >= [14, 14, 15, 15][Difficulty];
 
 canEnd := true;
 End;           
@@ -453,9 +459,9 @@ wait(0$5);
 
 repeat
  wait(0$1);
-until enemyCounterKill >= 6;
+until enemyCounterKill >= 6 or enemyMobile < 3;
 
-wait(0$30);
+wait([1$45, 1$20, 1$00, 0$50][Difficulty]);
 
 PrepareArabianAttack;
 
@@ -509,7 +515,7 @@ else
       end;
    end;
 
-wait(6$00);
+wait(7$00);
 
 DialogueOn;
 
@@ -664,7 +670,7 @@ if FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_not, [f_btype, b_bre
 else
    AddMedal('Dismantle', 1);
 
-if enemyCounterKill >= [12, 16, 20, 24][Difficulty] then
+if enemyCounterKill >= [16, 21, 26, 36][Difficulty] then
    AddMedal('EnemyLosses', 1)
 else
    AddMedal('EnemyLosses', -1);

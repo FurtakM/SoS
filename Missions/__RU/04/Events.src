@@ -59,16 +59,18 @@ begin
 if veh in enemyMobile then
    begin
    repeat
-   if GetDistUnitXY(driver, 79, 112) < 32 then
-      ComMoveXY(driver, 56, 110)
-   else
-      ComMoveXY(driver, 163, 31);
+    if GetDistUnitXY(driver, 79, 112) < 32 then
+       ComMoveXY(driver, 56, 110)
+    else if GetDistUnitXY(driver, 127, 138) < 28 then
+       ComMoveXY(driver, 233, 169)
+    else
+       ComMoveXY(driver, 163, 31);
 
     wait(0$1);
 
     if IsDead(driver) then
        exit;
-   until IsAt(driver, 163, 31) or IsAt(driver, 56, 110);
+   until IsAt(driver, 163, 31) or IsAt(driver, 56, 110) or IsAt(driver, 233, 169);
 
    RemoveUnit(driver);
    end;
@@ -120,4 +122,24 @@ End;
 On EndTheMissionRaised(p) do
 begin
 CustomFinishMission;
+End;
+
+On EvacuateBuilding(building, unit) do
+begin
+if GetSide(unit) = 6 then
+   begin
+   AddComMoveXY(unit, 75, 79);
+   AddComMoveXY(unit, 90, 122);
+
+   wait(0$2);
+
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 3], [f_dist, unit, 8]]);
+
+   if IsDead(unit) then
+      exit;
+
+   SetSide(unit, 3);
+   end;
 End;
