@@ -1,0 +1,114 @@
+Export function Action;
+var i, tmp;
+begin
+InGameOn;
+
+tmp := [[150,71], [136,70], [122,68], [111,67],
+        [102,67], [95,66], [87,67], [77,66], [68,66]];
+
+for i in tmp do
+    begin
+    RevealMapOnXY(i[1], i[2], 3, -12);
+    end;
+
+ComMoveXY(Burlak, 50, 66);
+
+tmp := [Petrovova, Titov,
+       Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov];
+
+for i in tmp do
+    begin
+    ComMoveXY(i, GetX(i) - 8, GetY(i));
+    end;
+
+CenterNowOnXY(111, 66);
+
+wait(0$0.3);
+
+CenterOnXY(64, 66);
+
+repeat
+ wait(0$1);
+until HexInfo(50, 66);
+
+wait(0$0.3);
+
+ComExitVehicle(Burlak);
+
+repeat
+ wait(0$0.3);
+until not IsInUnit(Burlak);
+
+AddComMoveXY(Burlak, 48, 66);
+
+repeat
+ wait(0$1);
+until IsAt(Burlak, 48, 66);
+
+ComTurnXY(Burlak, 42, 62);
+
+wait(0$0.3);
+
+Say(Burlak, 'DStart-Bur-1');
+SayRadio(Platonov, 'DStart-Pla-1');
+
+ComMoveXY(Burlak, 46, 63);
+
+Say(Burlak, 'DStart-Bur-2');
+SayRadio(Platonov, 'DStart-Pla-2');
+
+ComExitVehicle(Karamazov);
+
+repeat
+ wait(3);
+until not IsInUnit(Karamazov);
+
+ComMoveXY(Karamazov, 45, 61);
+
+wait(0$3);
+
+Say(Karamazov, 'DDoubts-Kar-1');
+Say(Petrovova, 'DDoubts-Ptr-1');
+Say(Burlak, 'DDoubts-Bur-1');
+Say(Karamazov, 'DDoubts-Kar-2');
+Say(Gleb, 'DDoubts-Glb-2');
+
+ComTurnUnit(Burlak, Gleb);
+
+Say(Burlak, 'DDoubts-Bur-2');
+
+InGameOff;
+
+ChangeMissionObjectives('MWest');
+
+SetAreaMapShow(westBorderArea, 1);
+
+SaveForQuickRestart;
+End;
+
+// see road
+Every 0$2 trigger SeeArea(3, ovsyenkoRoadArea) do
+var i, tmp;
+begin
+tmp := [[76,133], [93,131], [112,131], [126,134], [132,132], [141,131]];
+
+for i in tmp do
+    RevealMapOnXY(i[1], i[2], 3, -12);
+
+DialogueOn;
+
+if IsOk(Titov) then
+   begin
+   Say(Titov, 'DRoad-RSol1-1');
+
+   if IsOk(Lipshchin) then
+      Say(Lipshchin, 'DRoad-RSol1-1a');
+   end;
+
+DialogueOff;
+
+ChangeMissionObjectives('MReach');
+
+SetAreaMapShow(westBorderArea, 0);
+SetAreaMapShow(finalArea, 1);
+End;
