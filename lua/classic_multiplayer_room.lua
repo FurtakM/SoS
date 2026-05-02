@@ -910,6 +910,7 @@ DATA Breakdown
 	-- MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = MULTIPLAYER_ROOM_DATA.MULTIMAP.GAMETYPE;
 
 	setVisible(menu.window_multiplayer_room.panel.page3.sort, canModifyServerSettings());
+	setVisible(menu.window_multiplayer_room.panel.page3.dice, canModifyServerSettings());
 
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
@@ -1236,10 +1237,12 @@ function showMultiplayerGame()
 		setText(menu.window_multiplayer_room.panel.start, loc(804));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
 		setVisible(menu.window_multiplayer_room.panel.page3.sort, true);
+		setVisible(menu.window_multiplayer_room.panel.page3.dice, true);
 	else
 		setText(menu.window_multiplayer_room.panel.start, loc(818));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
 		setVisible(menu.window_multiplayer_room.panel.page3.sort, false);
+		setVisible(menu.window_multiplayer_room.panel.page3.dice, false);
 	end;
 
 	waitUntilMapLoaded();
@@ -1764,6 +1767,31 @@ function getMultiplayerUsedColours(PLAYER)
 	return result;
 end;
 
+function getAllowedNations(POSITION)
+	if (MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil) then
+		return {};
+	end;
+
+	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
+	local allowedNations = {
+		loc(809)
+	};
+			
+	if (nations.US) then
+		allowedNations = addToArray(allowedNations, loc(810));
+	end;
+
+	if (nations.AR) then
+		allowedNations = addToArray(allowedNations, loc(811));
+	end;
+
+	if (nations.RU) then
+		allowedNations = addToArray(allowedNations, loc(812));
+	end;
+
+	return allowedNations;
+end;
+
 function createPlayerSlot(NUMBER)
 	local posY = (NUMBER - 1) * 26;
 
@@ -2033,11 +2061,13 @@ function updatePlayerSlot(NUMBER)
 		end;
 
 		if (not MULTIPLAYER_ROOM_RANDOM_NATIONS) then
+			local allowedNations = getAllowedNations(player.SIDE);
+
 			local slotNation = clComboBox(
 				{ID = s.SLOT},
 				488,
 				3,
-				team.NATIONS,
+				allowedNations, --team.NATIONS,
 				getMultiplayerNation(player.NATION, player.SIDE),
 				'setMultiplayerNation(INDEX, ' .. player.SIDE .. ');',
 				{
@@ -2445,18 +2475,30 @@ function createTeams(MODE)
 		};
 
 		if (#allowedPositions > 0) then
-			local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[i].NATIONS;
-		
-			if (nations.US) then
-				allowedNations = addToArray(allowedNations, loc(810));
+			local sideDef = 0;
+
+			for p = 1, #allowedPositions do
+				if (MULTIPLAYER_ROOM_DATA.SIDEDEF[allowedPositions[p].POS] and
+					MULTIPLAYER_ROOM_DATA.SIDEDEF[allowedPositions[p].POS].ENABLED) then
+					sideDef = allowedPositions[p].POS;
+					break;
+				end;
 			end;
 
-			if (nations.AR) then
-				allowedNations = addToArray(allowedNations, loc(811));
-			end;
+			if (sideDef > 0) then
+				local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[sideDef].NATIONS;
+			
+				if (nations.US) then
+					allowedNations = addToArray(allowedNations, loc(810));
+				end;
 
-			if (nations.RU) then
-				allowedNations = addToArray(allowedNations, loc(812));
+				if (nations.AR) then
+					allowedNations = addToArray(allowedNations, loc(811));
+				end;
+
+				if (nations.RU) then
+					allowedNations = addToArray(allowedNations, loc(812));
+				end;
 			end;
 		end;
 
@@ -2927,8 +2969,8 @@ menu.window_multiplayer_room.panel.page3.sort = getElementEX(
 	menu.window_multiplayer_room.panel.page3, 
 	anchorLTRB,
 	XYWH(
-		467,
-		30,
+		460,
+		34,
 		27,
 		18
 	),
@@ -2937,6 +2979,23 @@ menu.window_multiplayer_room.panel.page3.sort = getElementEX(
 		texture = 'classic/edit/sort2.png',
 		callback_mousedown = 'changeSortMultiplayer();',
 		hint = loc(1025)
+	}
+);
+
+menu.window_multiplayer_room.panel.page3.dice = getElementEX(
+	menu.window_multiplayer_room.panel.page3, 
+	anchorLTRB,
+	XYWH(
+		488,
+		30,
+		22,
+		22
+	),
+	false,
+	{
+		texture = 'classic/edit/dice.png',
+		callback_mousedown = 'randomMapMultiplayer();',
+		hint = loc(1016)
 	}
 );
 
@@ -3019,6 +3078,12 @@ function changeSortMultiplayer()
 	selectMap(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX);
 end;
 
+function randomMapMultiplayer()
+	local count = #MULTIPLAYER_ROOM_DATA.MAPS;
+
+	selectMap(math.random(1, count));
+end;
+
 function resortMapsMultiplayer(MAPS) -- MULTIPLAYER_ROOM_DATA.MAPS
 	if MULTIPLAYER_ROOM_SORT == 2 then
 		return MAPS, 1;
@@ -3062,6 +3127,7 @@ function setMapList(mapList, selectedMap, isHost)
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
 
 	local list = {};
+	local icons = {};
 
 	for i = 1, #mapList do
 		local name = mapList[i].NAME;
@@ -3075,6 +3141,13 @@ function setMapList(mapList, selectedMap, isHost)
 
 		if (MULTIPLAYER_ROOM_MAPS_PLAYERS[name]) then
 			amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX;
+
+			if (MULTIPLAYER_ROOM_MAPS_PLAYERS[name].TOURNAMENT) then
+				icons[i] = {
+					path = 'classic/edit/tour.png',
+					hint = loc(6097)
+				}
+			end;
 		end;
 
 		if (strlen(amount) > 0) then
@@ -3098,7 +3171,8 @@ function setMapList(mapList, selectedMap, isHost)
 			widthList = 447,
 			trimLength = 66,
 			trimFrom = 1,
-			disabled = (not isHost)
+			disabled = (not isHost),
+			icon = icons
 		}
 	);
 end;

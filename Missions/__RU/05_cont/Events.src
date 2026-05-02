@@ -1,1 +1,166 @@
-//
+On UnitDestroyed(unit) do
+var side, btype;
+begin
+side := GetSide(unit);
+
+if side = 2 then
+   begin
+   if unit in arVehicles then
+      begin
+      arVehicles := arVehicles diff unit;
+      arConstructList := arConstructList ^ [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)];
+      end;
+
+   if unit in arPatrolRiver then
+      arPatrolRiver := arPatrolRiver diff unit;
+
+   if unit in arHovercraft then
+      begin
+      arHovercraft := arHovercraft diff unit;
+      arConstructList := arConstructList ^ [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)];
+      end;
+
+   if unit in arVehiclesAttackers then
+      begin
+      arVehiclesAttackers := arVehiclesAttackers diff unit;
+      arConstructList := arConstructList ^ [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)];
+      end;
+
+   if GetType(unit) = unit_building then
+      begin
+      btype := GetBType(unit);
+
+      if btype = b_barracks then
+         btype := b_armoury;
+
+      if btype = b_factory then
+         btype := b_workshop;
+
+      if btype in [b_lab_full, b_lab_half] then
+         btype := b_lab;
+
+      arBuildings := Replace(arBuildings, arBuildings + 1, [btype, GetX(unit), GetY(unit), GetDir(unit)]);
+      end;
+   end;
+End;
+
+On LeaveBuilding(building, unit) do
+begin
+if GetSide(unit) = 2 and GetClass(unit) = class_soldier then
+   begin
+   SetTag(building, tEmpty);
+   end;
+End;
+
+On EnterBuilding(building, unit) do
+begin
+if GetTag(building) and GetSide(building) = 2 then
+   SetTag(building, 0);
+
+if GetSide(unit) = 2 and GetClass(unit) = class_mechanic then
+   SetLives(unit, 1000);
+End;
+
+On EvacuateVehicle(driver, veh, p1, p2) do
+begin
+if GetTag(driver) = tMech then
+   begin
+   if GetSide(driver) = 2 then
+      begin
+      SetTag(driver, 0);
+      ComMoveXY(driver, 133, 72);
+      arForces := Join(arForces, driver);
+      end;
+   end;
+End;
+
+On BuildingComplete(building) do
+var side, btype;
+begin
+side := GetSide(building);
+
+if side = 2 then
+   begin
+   arBuildingsToBuild := Delete(arBuildingsToBuild, 1);
+   arBuildings := Join(arBuildings, building);
+
+   btype := GetBType(building);
+
+   case btype of
+        b_armoury: ComUpgrade(building);
+        b_workshop: ComUpgrade(building);
+        b_lab: begin
+               AddComUpgradeLab(building, b_lab_weapon);
+               AddComUpgradeLab(building, b_lab_opto);
+               end;
+        end;
+   end;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var side, driver, i;
+begin
+SOS_VehicleConstructed(vehicle, factory);
+
+side := GetSide(vehicle);
+
+if side = 2 then
+   begin
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      SetTag(driver, tMech);
+
+   if Count(arVehiclesAttackers) > 3 and not GetWeapon(vehicle) in [ar_cargo_bay, ar_crane] and GetChassis(vehicle) <> ar_hovercraft then
+      arVehicles := Join(arVehicles, vehicle)
+   else if GetChassis(vehicle) = ar_hovercraft then
+      begin
+      if not arPatrolRiver then
+         arPatrolRiver := Join(arPatrolRiver, vehicle)
+      else
+         begin
+         arHovercraft := Join(arHovercraft, vehicle);
+
+         ComMoveXY(vehicle, 151, 73);
+
+         end;
+      end
+   else if GetWeapon(vehicle) <> ar_cargo_bay then
+      arVehiclesAttackers := Join(arVehiclesAttackers, vehicle);
+
+   for i := 1 to Count(arConstructList) do
+       if GetChassis(vehicle) = arConstructList[i][1] and
+          GetEngine(vehicle) = arConstructList[i][2] and
+          GetControl(vehicle) = arConstructList[i][3] and
+          GetWeapon(vehicle) = arConstructList[i][4] then
+          begin
+          arConstructList := Delete(arConstructList, i);
+          break;
+          end;
+   end;
+End;
+
+On MinePlaced(unit, x, y, type) do
+begin
+if GetSide(unit) = 2 and unit in arForces then
+   enemyMines := Join(enemyMines, [x, y]);
+End;
+
+On MineDetonated(unit, x, y) do
+var i;
+begin
+if unit in arForces then
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = x and enemyMines[i][2] = y then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = 2 then
+   if tech in arTechs then
+      arTechs := arTechs diff tech;
+End;

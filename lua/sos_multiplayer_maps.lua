@@ -33,11 +33,13 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pTheAbbys = {
 		MIN = 2,
-		MAX = 6
+		MAX = 6,
+		TOURNAMENT = true
 	},
 	pBloodyValley = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pCrater = {
 		MIN = 2,
@@ -45,7 +47,8 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pDesert = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pLonleyIsland = {
 		MIN = 2,
@@ -57,7 +60,8 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pAlienBase = {
 		MIN = 2,
-		MAX = 6
+		MAX = 6,
+		TOURNAMENT = true
 	},
 	pMountainLabyrinth = {
 		MIN = 2,
@@ -85,15 +89,18 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pExposed = {
 		MIN = 2,
-		MAX = 8
+		MAX = 8,
+		TOURNAMENT = true
 	},
 	pForestLand = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pThievesTrail = {
 		MIN = 2,
-		MAX = 8
+		MAX = 8,
+		TOURNAMENT = true
 	},
 	pTaiga = {
 		MIN = 2,
@@ -105,11 +112,13 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pFireInTheHole = {
 		MIN = 2,
-		MAX = 6
+		MAX = 6,
+		TOURNAMENT = true
 	},
 	pWinterWonderland = {
 		MIN = 2,
-		MAX = 6
+		MAX = 6,
+		TOURNAMENT = true
 	},
 	pWetlandWilderness = {
 		MIN = 2,
@@ -129,15 +138,18 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pHighlands = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pFourToWin = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pParty = {
 		MIN = 2,
-		MAX = 4
+		MAX = 4,
+		TOURNAMENT = true
 	},
 	pAmaranthRiver = {
 		MIN = 2,
@@ -145,7 +157,8 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	},
 	pVerdantDivide = {
 		MIN = 2,
-		MAX = 6
+		MAX = 6,
+		TOURNAMENT = true
 	},
 	pWildBogs = {
 		MIN = 2,
@@ -154,5 +167,32 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pOutlands = {
 		MIN = 2,
 		MAX = 8
+	},
+	pTriRiverClash = {
+		MIN = 2,
+		MAX = 6,
+		TOURNAMENT = true
+	},
+	pGreatCircle = {
+		MIN = 2,
+		MAX = 8
+	},
+	pCompetitions = {
+		MIN = 2,
+		MAX = 8,
+		TOURNAMENT = true
+	},
+	pBabylon = {
+		MIN = 2,
+		MAX = 4,
+		TOURNAMENT = true
+	},
+	pRiverOfLostSouls = {
+		MIN = 2,
+		MAX = 8
+	},
+	pFinalBattle = {
+		MIN = 2,
+		MAX = 2
 	}
 }

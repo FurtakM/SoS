@@ -14,6 +14,8 @@ IT_LR_SibOre = 91;
 IT_LR_OilOre = 92;
 IT_LR_MineDetector = 93;
 IT_LR_Miner = 94;
+IT_LR_AWD = 95;
+IT_LR_AutomaticCannon = 96;
 
 -- buttons.txt
 SOS_TECH = {
@@ -76,7 +78,15 @@ SOS_TECH = {
     {
         TECH = IT_LR_Miner,
         BUTTON = 7
-    }
+    },
+    {
+        TECH = IT_LR_AWD,
+        BUTTON = 177
+    },
+    {
+        TECH = LR_AutomaticCannon,
+        BUTTON = 178
+    } 
 }
 
 SOS_BUD = {

@@ -43,7 +43,7 @@ mpGameSettingsKeys := [
   0, // 16
   1, // 17
   0, // 18
-  0, // 19
+  1, // 19
   1  // 20
 ];
 
@@ -67,7 +67,7 @@ mpGameSettingsValues := [
   [],
   [0, 1, 15$0, 25$0, 30$0, 45$0, 60$0, 90$0, 100$0, 120$0, 180$0], // sib bomb
   [],
-  [],
+  [0, 1, 2, 4], // tree
   [0, 3$0, 5$0, 8$0, 10$0, 12$0, 15$0, 20$0, 30$0] // bt
 ];
 
@@ -92,7 +92,7 @@ mpGameSettings := [
   0,   // - 16
   15$0, // sib bomb 17
   0,   // - 18
-  0,   // - 19
+  0,   // tree 19
   0    // bt 20
 ];
               
@@ -108,7 +108,7 @@ mpTeamGame        := false;
 mpMapSize         := [280, 210];
 End;
 
-Export kingCamArea;
+Export kingCamArea, mpTree;
 Export function GetMultiplayerMapData(gameType);
 var i, all, hasOil, hasSib, baseLevel, startPos;
 begin
@@ -174,6 +174,7 @@ mpSibDetection := mpGameSettings[13];
 mpRespawn := mpGameSettings[14];
 mpApemans := mpGameSettings[15];
 mpSibBomb := mpGameSettings[18];
+mpTree := mpGameSettings[20];
 mpBuildUpTime := mpGameSettings[21];
 
 mpApemansArea := [
@@ -289,6 +290,9 @@ if baseLevel >= 2 then
      ]
    ];
    end;
+
+if mpTree then
+   SetAreaMapShow(treeArea, 1);
 End;
 
 
@@ -359,6 +363,60 @@ repeat
 
  if time > maxTime then
     time := normalTime;
+
+until false;
+End;
+
+// Tree logic
+Export treeVisited;
+Every 0$2 trigger mpTree do
+var i, tmp, skill, power, bonus, lua;
+begin
+treeVisited := [];
+power := 1; // level bonus
+
+repeat
+ wait(0$1);
+
+ if tick mod Round(20$0 div mpTree) = 0 then
+    power := Inc(power);
+
+ if power > 10 then
+    power := 10;
+
+ tmp := FilterAllUnits([[f_inarea, TreeArea], [f_type, unit_human], [f_not, [f_nation, 0]]]) diff treeVisited;
+
+ if tmp then
+    begin
+    for i in tmp do
+        begin
+        treeVisited := Join(treeVisited, i);
+        bonus := GetSkill(i, i mod 4 + 1) + power;
+
+        if bonus > 10 then
+           bonus := 10;
+
+        skill := i mod 4 + 1;
+
+        SetSkill(i, skill, bonus);
+        ToLua('displayTreeBonusDetails(' & i & ',' & skill & ',' & power & ')');
+        end;
+    end;
+
+ lua := 'LFC_UNITS_CUSTOM_ICON = {';
+
+ for i := 1 to Count(treeVisited) do
+     begin
+     lua := lua & '{' & treeVisited[i] & ', 13}';
+
+     if i < Count(treeVisited) then
+        lua := lua & ', ';
+     end;
+
+ lua := lua & '}';
+
+ if treeVisited then
+    ToLua(lua);
 
 until false;
 End;
