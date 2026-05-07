@@ -6,9 +6,13 @@ begin
 ResetFog;
 Init;
 
+// birds, tigers, apemans, enchidnas, horses, mastodonts, fishes
+PrepareNature(3, 2, 0, 4, 0, 0, 3, natureArea, waterArea);
+PrepareNature(0, 0, [6, 6, 5, 4][Difficulty], 0, 0, 0, 0, apemanArea, 0);
+
 PrepareArabian;
 PrepareRussian;
-//Action;
+Action;
 
 PrepareArabianBase;
 
@@ -16,11 +20,48 @@ if debug then
    FogOff(3);
 End;
 
-Export debug, prevMissionPrefix, arabSpotted, arabianDestroyed;
+Export debug, prevMissionPrefix, currentMissionPrefix, arabSpotted, arabianDestroyed, arAllowToAttack, timeToArabAttack,
+       seenApe, hasApe, blockDialogThread, hasBase, stevensKilled, stevensInDepot, stevensFree, omarKilled, omarRun,
+       timeToOvsyenkoFall, apeTested, arabianBaseDestroyed, loseCounter, apeTamed;
 Function Init;
 begin
-debug := 1;
+debug := false;
 prevMissionPrefix := '04_';
+currentMissionPrefix := '05_';
 arabSpotted := false;
 arabianDestroyed := false;
+arAllowToAttack := false;
+timeToArabAttack := 0$00;
+seenApe := false;
+hasApe := false;
+blockDialogThread := false;
+hasBase := false;
+stevensKilled := false;
+stevensInDepot := false;
+stevensFree := false;
+omarKilled := false;
+omarRun := false;
+apeTamed := false;
+timeToOvsyenkoFall := [32$00, 30$00, 28$0, 26$0][Difficulty];
+apeTested := false;
+arabianBaseDestroyed := false;
+loseCounter := [3, 2, 2, 2][Difficulty];
 End;
+
+{
+ Variables:
+ 05_StevensLeft
+   1 - when he was left in depot
+ 05_StevensKilled
+   1 - when he was killed
+ 05_StevensEscaped
+   1 - he just escaped map
+   2 - he was attacked by player but escaped from map
+   3 - he was released by player and left the map
+ 05_StevensInDepot
+   1 - stevens left in depot
+ 05_OmarKilled
+   1 - omar killed
+ 05_OmarEscaped
+   1 - omar has escaped
+}

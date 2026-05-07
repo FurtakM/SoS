@@ -1,3 +1,14 @@
+Export function SaveTech(side, saveId);
+var i;
+begin
+result := [];
+
+for i := 1 to 100 do
+    result := Join(result, GetTech(i, side));
+
+SaveVariable(result, saveId);
+End;
+
 Export function PlaceBuildingInArea(building, direction, area);
 var tmp;
 begin
@@ -151,6 +162,17 @@ if sci then
 
 // eng logic
 eng := UnitFilter(forces, [f_class, 2]);
+
+if fac and (not mech or UnitsInside(fac[1]) = 0) and eng > 1 and not UnitFilter(eng, [f_tag, tWannaBeMech]) then
+   begin
+   SetTag(eng[1], tWannaBeMech);
+
+   if IsInUnit(eng[1]) then
+      ComExit(eng[1]);
+
+   AddComEnterUnit(eng[1], fac[1]);
+   AddComChangeProfession(eng[1], class_mechanic);
+   end;
 
 if eng then
    begin
@@ -444,7 +466,7 @@ if vehicles then
       end;
    end;
 
-sol := UnitFilter(forces, [[f_class, class_soldier], [f_ok]]);
+sol := UnitFilter(forces, [[f_or, [f_class, class_soldier], [f_class, class_mortar]], [f_ok]]);
 
 if sol then
    begin
@@ -495,7 +517,9 @@ if sol then
           if HasTask(i) then
              continue;
 
-          if not IsInUnit(i) and not tag and empty then
+          if not IsInUnit(i) and not tag and empty
+             and ((GetClass(i) = class_soldier and GetBType(empty[1]) in [b_bunker, b_breastwork])
+             or (GetClass(i) = class_mortar and GetBType(empty[1]) in [b_armoury, b_barracks])) then
              begin
              ComEnterUnit(i, empty[1]);
 
@@ -503,7 +527,7 @@ if sol then
              continue;
              end;
 
-          if IsInUnit(i) and not tag and emptyTowers then
+          if IsInUnit(i) and not tag and emptyTowers and GetClass(i) = class_soldier then
              begin
              if GetBType(IsInUnit(i)) in [b_bunker, b_breastwork] then
                 continue;
@@ -532,4 +556,17 @@ if sol then
           end;
       end;
    end;
+End;
+
+Export Function ApemansInLab;
+var labs, i;
+begin
+result := [];
+
+labs := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]);
+
+for i in labs do
+    result := result ^ UnitsInside(i);
+
+result := UnitFilter(result, [[f_nation, nation_nature]]);
 End;

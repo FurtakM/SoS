@@ -1051,6 +1051,425 @@ SOS_SUBTITLES = {
                 max = 9,
                 text = loc(11129)
             }
+        },
+        hs_movie_3_main = {
+            {
+                min = 0.1,
+                max = 3.1,
+                text = loc(11200)
+            },
+            {
+                min = 3.2,
+                max = 6.1,
+                text = loc(11201)
+            },
+            {
+                min = 7,
+                max = 12.2,
+                text = loc(11202)
+            },
+            {
+                min = 15,
+                max = 20.5,
+                text = loc(11203)
+            },
+            {
+                min = 20.6,
+                max = 24.7,
+                text = loc(11204)
+            },
+            {
+                min = 25.1,
+                max = 29,
+                text = loc(11205)
+            },
+            {
+                min = 33.1,
+                max = 35.9,
+                text = loc(11206)
+            },
+            {
+                min = 36.1,
+                max = 39,
+                text = loc(11207)
+            },
+            {
+                min = 44.1,
+                max = 48.9,
+                text = loc(11208)
+            },
+            {
+                min = 49.1,
+                max = 51.9,
+                text = loc(11209)
+            },
+            {
+                min = 52.1,
+                max = 54.9,
+                text = loc(11210)
+            },
+            {
+                min = 58.1,
+                max = 60.3,
+                text = loc(11211)
+            },
+            {
+                min = 61,
+                max = 68.2,
+                text = loc(11212)
+            },
+            {
+                min = 70.1,
+                max = 76,
+                text = loc(11213)
+            },
+            {
+                min = 76.2,
+                max = 84.2,
+                text = loc(11214)
+            },
+            {
+                min = 85.1,
+                max = 91.5,
+                text = loc(11215)
+            },
+            {
+                min = 93.1,
+                max = 99.9,
+                text = loc(11216)
+            },
+            {
+                min = 100.1,
+                max = 103.9,
+                text = loc(11217)
+            },
+            {
+                min = 104,
+                max = 105.2,
+                text = loc(11218)
+            },
+            {
+                min = 105.5,
+                max = 111,
+                text = loc(11219)
+            }
+        },
+        hs_movie_3_kaiadead = {
+            {
+                min = 1,
+                max = 3.1,
+                text = loc(11220)
+            },
+            {
+                min = 3.2,
+                max = 7.3,
+                text = loc(11221)
+            },
+            {
+                min = 8.1,
+                max = 14.2,
+                text = loc(11222)
+            },
+            {
+                min = 15,
+                max = 17.1,
+                text = loc(11223)
+            },
+            {
+                min = 17.5,
+                max = 21.1,
+                text = loc(11224)
+            }
+        },
+        hs_movie_4_part1 = {
+            {
+                min = 0.1,
+                max = 5.3,
+                text = loc(11300)
+            },
+            {
+                min = 5.4,
+                max = 8.2,
+                text = loc(11301)
+            },
+            {
+                min = 8.3,
+                max = 11.8,
+                text = loc(11302)
+            },
+            {
+                min = 12.2,
+                max = 15.5,
+                text = loc(11303)
+            },
+            {
+                min = 16.1,
+                max = 22.9,
+                text = loc(11304)
+            },
+            {
+                min = 23.1,
+                max = 25.6,
+                text = loc(11305)
+            },
+            {
+                min = 26,
+                max = 33.1,
+                text = loc(11306)
+            },
+            {
+                min = 33.3,
+                max = 38.7,
+                text = loc(11307)
+            },
+            {
+                min = 40,
+                max = 45.1,
+                text = loc(11308)
+            },
+            {
+                min = 45.2, 
+                max = 49.1,
+                text = loc(11309)
+            },
+            {
+                min = 49.2,
+                max = 52.1,
+                text = loc(11310)
+            },
+            {
+                min = 52.2,
+                max = 57.2,
+                text = loc(11311)
+            },
+            {
+                min = 58,
+                max = 63.1,
+                text = loc(11312)
+            },
+             {
+                min = 63.2,
+                max = 66.2,
+                text = loc(11314)
+            },
+             {
+                min = 66.2,
+                max = 68.3,
+                text = loc(11315)
+            }
+        },
+        hs_movie_4_part2 = {
+            {
+                min = 0.1,
+                max = 2.8,
+                text = loc(11316)
+            },
+            {
+                min = 3.1,
+                max = 9.6,
+                text = loc(11317)
+            },
+            {
+                min = 10,
+                max = 14.6,
+                text = loc(11318)
+            },
+            {
+                min = 15.1,
+                max = 19.7,
+                text = loc(11319)
+            },
+            {
+                min = 20,
+                max = 22.1,
+                text = loc(11320)
+            },
+            {
+                min = 22.2,
+                max = 27.3,
+                text = loc(11321)
+            },
+            {
+                min = 27.4,
+                max = 30.6,
+                text = loc(11322)
+            },
+            {
+                min = 31,
+                max = 36.6,
+                text = loc(11323)
+            },
+            {
+                min = 37,
+                max = 39.8,
+                text = loc(11324)
+            },
+            {
+                min = 41,
+                max = 46.6,
+                text = loc(11325)
+            },
+            {
+                min = 47.1,
+                max = 54.6,
+                text = loc(11326)
+            },
+            {
+                min = 55.1,
+                max = 59.2,
+                text = loc(11327)
+            },
+            {
+                min = 59.3,
+                max = 61.6,
+                text = loc(11328)
+            },
+            {
+                min = 62,
+                max = 66.6,
+                text = loc(11329)
+            }
+        },
+        hs_movie_4_kurtolaf = {
+            {
+                min = 0.2,
+                max = 2.1,
+                text = loc(11330)
+            },
+            {
+                min = 2.2,
+                max = 5.6,
+                text = loc(11331)
+            },
+            {
+                min = 6.1,
+                max = 8.2,
+                text = loc(11332)
+            },
+            {
+                min = 8.3,
+                max = 11.3,
+                text = loc(11333)
+            }
+        },
+        hs_movie_4_endkaia = {
+            {
+                min = 3.2,
+                max = 6.4,
+                text = loc(11350)
+            },
+            {
+                min = 6.5,
+                max = 8.6,
+                text = loc(11351)
+            },
+            {
+                min = 8.7,
+                max = 13.2,
+                text = loc(11352)
+            },
+            {
+                min = 13.3,
+                max = 17,
+                text = loc(11353)
+            },
+            {
+                min = 17.1,
+                max = 21.6,
+                text = loc(11354)
+            },
+            {
+                min = 22.2,
+                max = 25.1,
+                text = loc(11355)
+            },
+            {
+                min = 25.2,
+                max = 30.3,
+                text = loc(11356)
+            }
+        },
+        hs_movie_4_kaia = {
+            {
+                min = 1.2,
+                max = 7.3,
+                text = loc(11334)
+            },
+            {
+                min = 7.4,
+                max = 10.6,
+                text = loc(11335)
+            },
+            {
+                min = 11,
+                max = 13.1,
+                text = loc(11336)
+            },
+            {
+                min = 13.2,
+                max = 16.1,
+                text = loc(11337)
+            },
+            {
+                min = 16.2,
+                max = 20.6,
+                text = loc(11338)
+            },
+            {
+                min = 21.1,
+                max = 24.6,
+                text = loc(11339)
+            },
+            {
+                min = 25,
+                max = 28.6,
+                text = loc(11340)
+            },
+            {
+                min = 29.2,
+                max = 31.1,
+                text = loc(11341)
+            },
+            {
+                min = 31.2,
+                max = 36.6,
+                text = loc(11342)
+            },
+            {
+                min = 37,
+                max = 38.6,
+                text = loc(11343)
+            },
+            {
+                min = 39,
+                max = 44.5,
+                text = loc(11344)
+            },
+            {
+                min = 45,
+                max = 48.6,
+                text = loc(11345)
+            },
+            {
+                min = 49,
+                max = 51,
+                text = loc(11346)
+            },
+            {
+                min = 51.1,
+                max = 54.5,
+                text = loc(11347)
+            },
+            {
+                min = 55,
+                max = 59.1,
+                text = loc(11348)
+            },
+            {
+                min = 59.2,
+                max = 65.4,
+                text = loc(11349)
+            }
         }
     }
 }

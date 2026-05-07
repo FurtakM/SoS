@@ -55,17 +55,18 @@ SayRadio(Platonov, 'DStart-Pla-1');
 ComMoveXY(Burlak, 46, 63);
 
 Say(Burlak, 'DStart-Bur-2');
-SayRadio(Platonov, 'DStart-Pla-2');
 
 ComExitVehicle(Karamazov);
 
 repeat
  wait(3);
 until not IsInUnit(Karamazov);
-
+                             
 ComMoveXY(Karamazov, 45, 61);
 
-wait(0$3);
+SayRadio(Platonov, 'DStart-Pla-2');
+
+wait(0$1);
 
 Say(Karamazov, 'DDoubts-Kar-1');
 Say(Petrovova, 'DDoubts-Ptr-1');
@@ -111,4 +112,739 @@ ChangeMissionObjectives('MReach');
 
 SetAreaMapShow(westBorderArea, 0);
 SetAreaMapShow(finalArea, 1);
+End;
+
+// spot arab
+Every 0$1 trigger SeeArea(3, arabianBaseArea) do
+begin
+CenterOnXY(113, 66);
+PlaceSeeing(113, 66, 3, -8);
+RemoveSeeing(113, 66, 3);
+
+DialogueOn;
+
+Say(Lipshchin, 'DArabs-RSol1-1');
+Say(Karamazov, 'DArabs-Kar-1');
+SayRadio(Omar, 'DSurrender-Omar-1');
+
+case Query('QSurrender') of
+     1: begin // surrender
+        Say(Burlak, 'DQrSurrender#1-Bur-1');
+        YouLost('Surrender');
+        end;
+     2: begin
+        Say(Burlak, 'DQrSurrender#2-Bur-1');
+
+        dwait(0$0.3);
+
+        Say(Burlak, 'DArabs-Bur-1');
+        SayRadio(Platonov, 'DArabs-Pla-1');
+        timeToArabAttack := 3$00;
+        end;
+     3: begin
+        Say(Burlak, 'DQrSurrender#3-Bur-1');
+        timeToArabAttack := 0$00;
+        end;
+     end;
+
+DialogueOff;
+
+ChangeMissionObjectives('MBegin');
+
+arabSpotted := true;
+
+SetRestrict(b_depot, 3, true);
+
+CreateCratesXY(5, 70, 105, true);
+
+repeat
+ wait(0$1);
+until SeeXY(3, 70, 105) and GetResourceAmountXY(70, 105);
+
+CenterOnXY(70, 105);
+
+Say(Lipshchin, 'DShipments-RSol1-1');
+Say(Burlak, 'DShipments-Bur-1');
+Say(Lipshchin, 'DShipments-RSol1-2');
+End;
+
+// has depot but not lab
+Every 0$1 trigger hasBase and IsOk(Petrosyan) and FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]]) = 0 do
+begin
+Say(Petrosyan, 'DApeLab-Pty-1');
+End;     
+
+// see ape
+Every 0$2 trigger not seenApe do
+var i, un, hasLab;
+begin
+for i in FilterAllUnits([[f_side, 0], [f_class, class_apeman]]) do
+    begin
+    if See(3, i) then
+       begin
+       disable;
+       seenApe := true;
+
+       SetTech(tech_ApeLang, 3, state_enabled);
+       SetTech(tech_ApeAgres, 3, state_enabled);
+       SetTech(tech_ApePsych, 3, state_enabled);
+
+       un := NearestUnitToUnit(FilterAllUnits([[f_side, 3], [f_type, unit_human]]), i);
+       hasLab := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]]) > 0;
+
+       CenterOnUnits(un);
+
+       DialogueOn;
+
+       if un = Burlak then
+          begin
+          Say(Burlak, 'DApeSpot-Bur-1a');
+
+          if hasLab then
+             Say(Petrosyan, 'DApeSpot-Pty-1')
+          else
+             Say(Petrosyan, 'DApeSpot-Pty-1b');
+          end
+       else
+          begin
+          if IsOk(Lipshchin) then
+             Say(Lipshchin, 'DApeSpot-RSol1-1')
+          else if IsOk(Titov) then
+             Say(Titov, 'DApeSpot-RSol1-1')
+          else
+             Say(Karamazov, 'DApeSpot-RSol1-1');
+
+          Say(Burlak, 'DApeSpot-Bur-1');
+
+          if hasLab then
+             Say(Petrosyan, 'DApeSpot-Pty-1a')
+          else
+             Say(Petrosyan, 'DApeSpot-Pty-1b');
+          end;
+
+       DialogueOff;
+
+       exit;
+       end;
+    end;
+
+enable;
+End;
+
+// know ape lang
+Every 0$1 trigger GetTech(tech_ApeLang, 3) = state_researched and IsOk(Burlak) and IsOk(Petrosyan) and not blockDialogThread do
+begin
+blockDialogThread := true;
+
+DialogueOn;
+
+Say(Petrosyan, 'DApeLangCompl-Pty-1');
+Say(Burlak, 'DApeLangCompl-Bur-1');
+Say(Petrosyan, 'DApeLangCompl-Pty-2');
+Say(Burlak, 'DApeLangCompl-Bur-2');
+Say(Petrosyan, 'DApeLangCompl-Pty-3');
+Say(Burlak, 'DApeLangCompl-Bur-3');
+Say(Petrosyan, 'DApeLangCompl-Pty-4');
+
+DialogueOff;
+
+blockDialogThread := false;
+End;
+
+// has ape
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_class, class_apeman]]) do
+var sci;
+begin
+hasApe := true;
+
+sci := UnitFilter([Karamazov, Titov, Lipshchin, Dolgov], [f_class, 4]);
+
+if not sci then
+   exit;
+
+blockDialogThread := true;
+
+Say(sci[1], 'DApeTame-Sci1-1');
+Say(Burlak, 'DApeTame-Bur-1');
+
+blockDialogThread := false;
+End;
+
+// when first Apeman is taken into lab
+Every 0$3 trigger hasApe and ApemansInLab and IsOk(Petrosyan) and not blockDialogThread do
+begin
+blockDialogThread := true;
+
+DialogueOn;
+
+Say(Burlak, 'DApeWorkSol-Bur-1');
+Say(Petrosyan, 'DApeWorkSol-Pty-1');
+Say(Burlak, 'DApeWorkSol-Bur-2');
+
+DialogueOff;
+
+blockDialogThread := false;
+End;
+
+// know ape eng
+Every 0$1 trigger GetTech(tech_ApePsych, 3) = state_researched and IsOk(Burlak) and IsOk(Petrosyan) and not blockDialogThread do
+begin
+blockDialogThread := true;
+
+Say(Petrosyan, 'DApeWorkCompl-Pty-1');
+Say(Burlak, 'DApeWorkCompl-Bur-1');
+
+blockDialogThread := false;
+End;
+ 
+// know ape agres
+Every 0$1 trigger GetTech(tech_ApeAgres, 3) = state_researched and IsOk(Burlak) and IsOk(Petrosyan) and not blockDialogThread do
+begin
+blockDialogThread := true;
+
+Say(Petrosyan, 'DApeSolCompl-Pty-1');
+Say(Burlak, 'DApeSolCompl-Bur-1');
+
+blockDialogThread := false;
+End;
+
+// 
+// spawn Stevens
+Every 0$2 trigger IsOk(Petrosyan) and IsOk(Burlak) and hasBase and SeeXY(3, 32, 12) and FilterUnitsInArea(secondBankArea, [f_side, 3]) and not FilterUnitsInArea(russianBaseArea, [f_side, 2]) do
+var p, base;
+begin
+wait(0$01);
+
+CenterOnXY(36, 17);
+
+PrepareStevens;
+SetDir(Stevens, 2);
+
+PlaceUnitXY(Stevens, 32, 12, true);
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := Inc(p);
+
+ if p > 3 then
+    ComMoveXY(Stevens, 30, 1);
+
+ if HexInfo(30, 1) = Stevens then
+    begin
+    RemoveUnit(Stevens);
+    SaveVariable(1, '05_StevensEscaped');
+    exit;
+    end;
+until GetLives(Stevens) < 1000 and IsOk(Petrosyan);
+
+ComExit(Petrosyan);
+AddComMoveUnit(Petrosyan, Stevens);
+
+ComHold(Stevens);
+
+wait(0$0.3);
+
+CenterNowOnUnits(Stevens);
+
+DialogueOn;
+
+if See(1, Lipshchin) then
+   Say(Lipshchin, 'DStevens-RSol1-1')
+else if See(1, Titov) then
+   Say(Titov, 'DStevens-RSol1-1')
+else if See(1, Karamazov) then
+   Say(Karamazov, 'DStevens-RSol1-1');
+
+Say(Stevens, 'DStevens-Huck-1');
+
+if UnitShoot(Stevens) <> Petrosyan then
+   Say(Petrosyan, 'DStevens-Pty-1');
+
+DialogueOff;
+
+SetSide(Stevens, 6);
+
+ComMoveXY(Stevens, 58, 44);
+AddComMoveUnit(Stevens, Petrosyan);
+
+repeat
+ wait(0$1);
+
+ if not HasTask(Stevens) then
+    AddComMoveUnit(Stevens, Petrosyan);
+
+ if IsDead(Petrosyan) then
+    begin
+    if GetSide(Stevens) = 6 then
+       SetSide(Stevens, 1);
+
+    ComMoveXY(Stevens, 30, 1);
+
+    if HexInfo(30, 1) = Stevens then
+       begin
+       RemoveUnit(Stevens);
+       SaveVariable(1, '05_StevensEscaped');
+       exit;
+       end;
+    end;
+
+ if IsDead(Stevens) then
+    exit;
+until GetDistUnits(Stevens, Petrosyan) < 6;
+
+CenterNowOnUnits(Petrosyan);
+
+wait(0$0.3);
+
+DialogueOn;
+
+Say(Petrosyan, 'DStevens-Pty-1a');
+Say(Stevens, 'DStevens-Huck-2');
+Say(Petrosyan, 'DStevens-Pty-2');
+Say(Stevens, 'DStevens-Huck-3');
+Say(Petrosyan, 'DStevens-Pty-3');
+Say(Stevens, 'DStevens-Huck-4');
+Say(Petrosyan, 'DStevens-Pty-4');
+
+DialogueOff;
+
+ComMoveUnit(Stevens, Petrosyan);
+ComMoveUnit(Petrosyan, Burlak);
+
+repeat
+ wait(0$1);
+until GetDistUnits(Burlak, Petrosyan) < 10 or FilterAllUnits([[f_side, 3], [f_type, unit_building], [f_dist, Petrosyan, 8]]);
+
+DialogueOn;
+
+Say(Petrosyan, 'DStevensBurlak-Pty-1');
+Say(Burlak, 'DStevensBurlak-Bur-1');
+Say(Petrosyan, 'DStevensBurlak-Pty-2');
+
+case Query('QKill') of
+     1: begin
+        Say(Burlak, 'DKill-1-Bur-1');
+        Say(Gleb, 'DKill-1-Glb-1');
+        DialogueOff;
+
+        SetSide(Stevens, 1);
+        ComMoveXY(Stevens, 30, 1);
+
+        repeat
+         wait(0$1);
+
+         if IsDead(Stevens) then
+            exit;
+        until HexInfo(30, 1);
+
+        RemoveUnit(Stevens);
+        SaveVariable(2, '05_StevensEscaped');
+        exit;
+        end;
+     2: begin
+        Say(Burlak, 'DKill-2-Bur-1');
+        Say(Petrosyan, 'DKill-2-Pty-1');
+
+        if hasBase then
+           Say(Burlak, 'DKill-2-Bur-2');
+        end;
+     end;
+
+DialogueOff;
+
+base := FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_btype, b_depot]]);
+
+if not base then
+   begin
+   ComMoveXY(Stevens, 61, 62);
+
+   repeat
+    wait(0$1);
+
+    if GetLives(Stevens) < 1000 then
+       begin
+       if GetSide(Stevens) = 6 then
+          SetSide(Stevens, 1);
+
+       ComMoveXY(Stevens, 30, 1);
+
+       if IsDead(Stevens) then
+          exit;
+
+       if HexInfo(30, 1) = Stevens then
+          begin
+          RemoveUnit(Stevens);
+          SaveVariable(2, '05_StevensEscaped');
+          exit;
+          end;
+       end;
+   until FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_btype, b_depot]]);
+
+   base := FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_btype, b_depot]]);
+   end;
+   
+ComMoveUnit(Stevens, base[1]);
+
+repeat
+ wait(0$1);
+until GetDistUnits(base[1], Stevens) < 5;
+
+SetSide(Stevens, 3);
+
+repeat
+ wait(1);
+ ComEnterUnit(Stevens, base[1]);
+until IsInUnit(Stevens);
+
+stevensInDepot := true;
+
+repeat
+ wait(0$1);
+
+ if not IsInUnit(Stevens) then
+    begin
+    base := FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_btype, b_depot]]);
+    stevensInDepot := false;
+
+    if GetLives(Stevens) < 1000 then
+       begin
+       if GetSide(Stevens) = 3 then
+          SetSide(Stevens, 1);
+
+       repeat
+        ComMoveXY(Stevens, 30, 1);
+        wait(0$1);
+
+        if IsDead(Stevens) then
+           exit;
+       until HexInfo(30, 1) = Stevens;
+
+       RemoveUnit(Stevens);
+       SaveVariable(2, '05_StevensEscaped');
+       exit;
+       end;
+
+    DialogueOn;
+    Say(Burlak, 'DRelease-Bur-1');
+
+    case Query('QKillAgain') of
+         1: begin // kill
+            Say(Burlak, 'DQrKillAgain#1-Bur-1');
+
+            SetSide(Stevens, 1);
+            DialogueOff;
+
+            repeat
+             ComMoveXY(Stevens, 30, 1);
+             wait(0$1);
+
+             if IsDead(Stevens) then
+                exit;
+            until HexInfo(30, 1) = Stevens;
+
+            RemoveUnit(Stevens);
+            SaveVariable(2, '05_StevensEscaped');
+            exit;
+            end;
+         2: begin // free
+            Say(Burlak, 'DQrKillAgain#2-Bur-1');
+            SetAttitude(3, 1, att_friend, true);
+
+            stevensFree := true;
+
+            SetSide(Stevens, 1);
+            DialogueOff;
+
+            repeat
+             wait(0$1);
+             ComMoveXY(Stevens, 30, 1);
+
+             if IsDead(Stevens) then
+                exit;
+            until HexInfo(30, 1) = Stevens;
+
+            RemoveUnit(Stevens);
+            SaveVariable(3, '05_StevensEscaped');
+            exit;
+            end;
+         3: begin // lock
+            Say(Burlak, 'DQrKillAgain#2-Bur-1a');
+            DialogueOff;
+
+            SetSide(Stevens, 3);
+
+            repeat
+             wait(1);
+             ComEnterUnit(Stevens, base[1]);
+            until IsInUnit(Stevens);
+
+            stevensInDepot := true;
+            end;
+         end;
+    end;
+until not IsOk(Stevens);
+End;
+
+// see mastodont
+Every 0$1 trigger See(3, omarMastodont) do
+var nearby;
+begin
+nearby := NearestUnitToUnit(UnitFilter([Titov, Lipshchin, Burlak], [f_ok]), omarMastodont);
+
+if not nearby then
+   exit;
+
+CenterNowOnUnits(omarMastodont);
+
+wait(0$0.3);
+
+DialogueOn;
+
+if nearby = Lipshchin then
+   Say(Lipshchin, 'DMastodon-RSol1-1')
+else if nearby = Titov then
+   Say(Titov, 'DMastodon-RSol1-1')
+else if nearby - Burlak then
+   Say(Burlak, 'DMastodon-Bur-1');
+
+Say(Gleb, 'DMastodon-Glb-1');
+
+DialogueOff;
+End;
+
+// mastodont killed
+Every 0$1 trigger GetLives(omarMastodont) < 250 do
+begin
+omarRun := true;
+
+Say(Karamazov, 'DOmar-Kar-1');
+Say(Petrovova, 'DOmar-Ptr-1');
+End;
+
+Every 0$1 trigger omarRun and IsOk(Omar) do
+begin
+if not IsAt(Omar, 153, 69) then
+   ComMoveXY(Omar, 153, 69)
+else
+   begin
+   RemoveUnit(Omar);
+   SaveVariable(true, '05_OmarEscaped');
+   disable;
+   end;
+
+enable;
+End;
+
+Every 0$1 trigger omarKilled and GetLives(omarMastodont) < 250 do
+begin
+DialogueOn;
+
+if not Say(Lipshchin, 'DOmar-RSol1-1') then
+   Say(Titov, 'DOmar-RSol1-1');
+
+SayRadio(Heike, 'DOmar-Hke-1');
+Say(Burlak, 'DOmar-Bur-1');
+DialogueOff;
+
+ChangeMissionObjectives('MOutSheikh');
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_btype, b_depot]]) = 0 do
+var hasToDestroyLab;
+begin
+DialogueOn;
+
+Say(Petrovova, 'DBreakthrough-Ptr-1');
+Say(Burlak, 'DBreakthrough-Bur-1');
+
+dwait(0$0.3);
+
+SayRadio(Platonov, 'DBreakthrough-Pla-1');
+      
+if timeToOvsyenkoFall < tick then
+   SayRadio(Platonov, 'DBreakthrough-Pla-1b')
+else
+   SayRadio(Platonov, 'DBreakthrough-Pla-1a');
+
+if FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) and
+   apeTested then
+   begin
+   SayRadio(Platonov, 'DBreakthrough-Pla-1c');
+   ChangeMissionObjectives('MAddLab');
+   hasToDestroyLab := true;
+   end;
+
+DialogueOff;      
+
+arabianBaseDestroyed := true;
+
+ChangeMissionObjectives('MOutArab');
+
+riverBlockers := SpawnRiverBlock;
+
+if not hasToDestroyLab then
+   exit;
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) = 0;
+
+ChangeMissionObjectives('MOutLab');
+End;
+
+// see river blockers
+Every 0$1 trigger UnitFilter(riverBlockers, [f_see, 3]) do
+begin
+CenterOnXY(147, 131);
+wait(0$0.3);
+
+DialogueOn;
+
+PlaceSeeing(147, 131, 3, -12);
+
+if not Say(Karamazov, 'DPatrol-Kar-1') then
+   if not Say(Lipshchin, 'DPatrol-RSol1-1') then
+      Say(Titov, 'DPatrol-RSol1-1');
+
+Say(Petrovova, 'DPatrol-Ptr-1');
+Say(Burlak, 'DPatrol-Bur-1');
+
+DialogueOff;
+
+RemoveSeeing(147, 131, 3);
+End;
+
+Every 0$1 trigger loseCounter = 0 do
+YouLost('Survive');
+
+Every 0$2 trigger FilterUnitsInArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) and not FilterUnitsExceptArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) do
+var i, unitsWithoutVeh, vehicles, oil;
+begin
+unitsWithoutVeh := FilterUnitsInArea(finalArea, [[f_not, [f_driving]], [f_type, unit_human], [f_nation, nation_russian]]);
+
+if unitsWithoutVeh then
+   begin
+   Query('QVehicles');
+
+   wait(0$5);
+   enable;
+   exit;
+   end;
+
+vehicles := FilterUnitsInArea(finalArea, [[f_ok], [f_not, [f_empty]], [f_type, unit_vehicle]]);
+
+for i in vehicles do
+    if not GetChassis(i) in [ru_medium_tracked, ru_heavy_tracked, ar_half_tracked, us_medium_tracked, us_heavy_tracked, us_morphling] then
+       begin
+       Query('QChassis');
+
+       wait(0$5);
+       enable;
+       exit;
+       end;
+
+oil := 0;
+
+for i in vehicles do
+    begin
+    if GetWeapon(i) in [ar_cargo_bay, ru_cargo_bay, ru_big_cargo_bay, us_cargo_bay] then
+       oil := oil + GetCargo(i, mat_oil);
+    end;
+
+if oil < 200 then
+   begin
+   Query('QFuel');
+
+   wait(0$5);
+   enable;
+   exit;
+   end;
+
+FinishMission;
+End;
+
+Export function FinishMission;
+var i, d, saveVehicles;
+begin
+DialogueOn;
+
+if stevensInDepot then
+   begin
+   SaveVariable(1, '05_StevensInDepot');
+
+   if IsOk(Petrosyan) then
+      d := Say(Petrosyan, 'DStevensLeftBehind-Pty-1')
+   else if IsOk(Lipshchin) then
+      d := Say(Lipshchin, 'DStevensLeftBehind-RSol1-1')
+   else if IsOk(Titov) then
+      d := Say(Titov, 'DStevensLeftBehind-RSol1-1')
+   else if IsOk(Karamazov) then
+      d := Say(Karamazov, 'DStevensLeftBehind-RSol1-1');
+
+   if d then
+      Say(Burlak, 'DStevensLeftBehind-Bur-1');  
+   end;
+
+// medals and rewards
+if timeToOvsyenkoFall + 2$00 >= tick then
+   AddMedal('Time', 1)
+else
+   AddMedal('Time', -1);
+
+if apeTamed and FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) then
+   AddMedal('Apeman', -3)
+else if apeTamed then
+   AddMedal('Apeman', 1)
+else if GetTech(tech_ApeLang, 3) <> state_researched then
+   AddMedal('Apeman', -2)
+else
+   AddMedal('Apeman', -1);
+
+if omarKilled then
+   AddMedal('Omar', 1)
+else
+   AddMedal('Omar', -1);
+
+GiveMedals('MAIN');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+// Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov;
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Karamazov) then
+   SaveCharacters(Karamazov, currentMissionPrefix & 'Karamazov');
+
+if IsLive(Petrovova) then
+   SaveCharacters(Petrovova, currentMissionPrefix & 'Petrovova');
+
+if IsLive(Titov) then
+   SaveCharacters(Titov, currentMissionPrefix & 'Titov');
+
+if IsLive(Lipshchin) then
+   SaveCharacters(Lipshchin, currentMissionPrefix & 'Lipshchin');
+
+if IsLive(Gleb) then
+   SaveCharacters(Gleb, currentMissionPrefix & 'Gleb');
+
+if IsLive(Dolgov) then
+   SaveCharacters(Dolgov, currentMissionPrefix & 'Dolgov');
+
+if IsLive(Petrosyan) then
+   SaveCharacters(Petrosyan, currentMissionPrefix & 'Petrosyan');
+
+SaveTech(3, currentMissionPrefix & 'Techs');
+
+saveVehicles := [];
+
+for i in FilterUnitsInArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]], [f_ok]]) do
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil)]]);
+
+if saveVehicles then
+   SaveVariable(saveVehicles, currentMissionPrefix & 'Vehicles');
+
+YouWin;
+DialogueOff;
 End;

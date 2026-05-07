@@ -9,9 +9,9 @@ Omar := NewCharacter('Omar');
 End;
 
 Export arForces, omarMastodont, enemyMines, arBuildings, arBuildingsToBuild, arVehicles, arConstructList, arTechs,
-       arHovercraft, arVehiclesAttackers, arDepot, arPatrolRiver, arPatrolRiverFlag;
+       arHovercraft, arVehiclesAttackers, arDepot, arPatrolRiver, arPatrolRiverFlag, riverBlockers;
 Export function PrepareArabianBase;
-var i, j, depot, list, un, tmp;
+var i, j, depot, list, un, tmp, p;
 begin
 arForces := [];
 enemyMines := [];
@@ -121,9 +121,11 @@ tmp := [
     PlaceBuildingInArea(b_barracks, 5, bar2Area)
 ];
 
+p := 0;
+
 for i in tmp do
     begin
-    for j := 1 to [3, 4, 5, 6][Difficulty] do
+    for j := 1 to [2, 3, 4, 5][Difficulty] - p do
         begin
         PrepareSoldier(false, [3, 4, 5, 5][Difficulty]);
         un := CreateHuman;
@@ -135,17 +137,22 @@ for i in tmp do
 
         PlaceHumanInUnit(un, i);
         end;
+
+    p := Inc(p);
     end;
 
 for i := 1 to 3 do
     begin
     PrepareEngineer(false, [3, 4, 4, 5][Difficulty]);
+    hc_attr := [12, 12];
     un := CreateHuman;
 
     Push(arForces, un);
 
     PlaceHumanInUnit(un, depot);
     end;
+
+InitHc_All();
 
 PrepareMastodont();
 uc_side := 2;
@@ -212,10 +219,10 @@ for i in tmp do
 enable;
 End;
 
-Every 0$10 trigger arabSpotted or debug do
+Every 0$10 trigger arabSpotted do
 var chassis, weapon;
 begin
-// wait(5$00 - (1$00 * Difficulty));
+wait(5$00 - (1$00 * Difficulty) + timeToArabAttack);
 
 arConstructList := [
    [ar_hovercraft, engine_combustion, control_manual, ar_double_machine_gun],
@@ -226,6 +233,11 @@ arConstructList := [
    [ar_hovercraft, engine_combustion, control_manual, ar_double_machine_gun]
 ];
 
+repeat
+ wait(0$10);
+until arVehiclesAttackers >= 2;
+
+arAllowToAttack := true;
 End;
 
 Every 0$1 trigger arForces do
@@ -257,11 +269,9 @@ for i in enemyMines do
 End;
 
                                        
-Every 0$1 trigger arVehiclesAttackers do
+Every 0$1 trigger arVehiclesAttackers and arAllowToAttack do
 var i, mech, enemy;
 begin
-exit;
-
 enable;
 
 if not arVehiclesAttackers then
@@ -462,6 +472,164 @@ for i in cargo do
 enable;
 End;
 
+Export function AttackFromRiver(vehicle);
+var i, units, unit, mech, mechs, enemy, nearest, vehicles, veh;
+begin
+if not IsOk(vehicle) then
+   exit;
+
+units := UnitFilter(arForces, [[f_ok], [f_class, class_soldier]]);
+
+if not units then
+   exit;
+
+for i in units do
+    if IsInUnit(i) and GetBType(IsInUnit(i)) in [b_breastwork, b_bunker] then
+       continue
+    else
+       begin
+       unit := i;
+       break;
+       end;
+
+if not unit then
+   exit;
+
+arForces := arForces diff unit;
+
+if IsInUnit(unit) then
+   ComExit(unit);
+
+AddComEnterUnit(unit, vehicle);
+
+repeat
+ wait(0$1);
+until IsInUnit(unit);
+
+ComMoveXY(unit, 83, 104);
+AddComMoveXY(unit, 50, 80);
+AddComMoveXY(unit, 41, 66);
+AddComMoveXY(unit, 50, 68);
+
+repeat
+ wait(0$1);
+until IsInArea(unit, bankArea) or (IsDrivenBy(unit) and IsInArea(IsDrivenBy(unit), bankArea));
+
+ComExitVehicle(unit);
+
+repeat
+ wait(0$1);
+until not IsInUnit(unit);
+
+repeat
+ wait(0$0.3);
+ enemy := FilterAllUnits([f_enemy, 2]);
+
+ nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_type, unit_building]]), unit);
+
+ if not nearest then
+    begin
+    vehicles := FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]]);
+
+    if vehicles then
+       begin
+       veh := NearestUnitToUnit(vehicles, unit);
+
+       ComEnterUnit(unit, veh);
+       AddComMoveXY(unit, 136, 68);
+
+       repeat
+        wait(0$1);
+       until IsInArea(unit, arParkingArea) and not HasTask(unit);
+
+       ComExitVehicle(unit);
+       SetTag(unit, 0);
+
+       Push(arForces, unit);
+
+       for i in FilterAllUnits([f_tag, tMined]) do
+           SetTag(i, 0);
+
+       mechs := UnitFilter(arForces, [f_class, class_mechanic]);
+
+       if not mechs then
+          exit;
+
+       for i in mechs do
+           if IsInUnit(i) and GetBType(IsInUnit(i)) = b_factory then
+              begin
+              mech := i;
+              break;
+              end;
+
+       if not mech then
+          exit;
+
+       wait(0$1);
+
+       veh := FilterUnitsInArea(arabianBaseArea, [[f_side, 2], [f_nation, 3], [f_empty], [f_type, unit_vehicle]]);
+
+       if not veh then
+          exit;
+
+       veh := veh[1];
+
+       if GetWeapon(veh) = ru_cargo_bay then
+          begin
+          SetTag(mech, tMech);
+
+          ComExitBuilding(mech);
+
+          repeat
+           wait(3);
+          until not IsInUnit(mech);
+
+          ComEnterUnit(mech, veh);
+          AddComUnload(mech);
+          AddComRecycle(mech, FilterAllUnits([[f_side, 2], [f_btype, b_factory]])[1]);
+
+          repeat
+           wait(0$1);
+          until IsInUnit(mech);
+          end
+       else
+          begin
+          SetTag(mech, tMech);
+
+          ComExitBuilding(mech);
+
+          repeat
+           wait(3);
+          until not IsInUnit(mech);
+
+          ComEnterUnit(mech, veh);
+
+          repeat
+           wait(0$1);
+          until IsInUnit(mech) = veh;
+
+          Push(arVehiclesAttackers, veh);
+          end;
+
+       exit;
+       end;
+    end
+ else if not HasTask(unit) then
+    begin
+    ComPlaceDelayedCharge(unit, 0, 0, nearest);
+
+    repeat
+     wait(3);
+    until GetLives(nearest) < 1000;
+
+    SetTag(nearest, tMined);
+    end;
+until IsDead(unit);
+
+for i in FilterAllUnits([f_tag, tMined]) do
+    SetTag(i, 0);
+End;
+
 Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_engine, engine_combustion]]) do
 var i;
 begin
@@ -470,4 +638,62 @@ enable;
 for i in FilterAllUnits([[f_side, 2], [f_engine, engine_combustion]]) do
     if GetFuel(i) < 3 then
        SetFuel(i, 3);
+End;
+
+Export function SpawnRiverBlock;
+var i, un, veh;
+begin
+result := [];
+
+for i := 1 to [2, 2, 3, 3][Difficulty] do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(
+        [ar_medium_trike, ar_half_tracked][rand(1,2)],
+        engine_combustion,
+        control_manual,
+        [ar_gun, ar_gatling_gun, ar_gun][rand(1,3)],
+        90
+    );
+
+    veh := CreateVehicle;
+
+    result := Join(result, veh);
+
+    SetDir(veh, 4);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(veh, southSpawnArea, false);
+
+    PrepareMechanic(false, [3, 4, 5, 6][Difficulty]);
+    un := CreateHuman;
+
+    result := Join(result, un);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComAgressiveMove(un, 130, 131);
+    AddComMoveXY(un, [148, 145, 143, 140][i], [136, 133, 130, 130][i]);
+    AddComHold(un);
+    end;
+
+for i := 1 to [2, 2, 3, 3][Difficulty] do
+    begin
+    PrepareSoldier(false, [3, 4, 4, 5][Difficulty]);
+    un := CreateHuman;
+
+    result := Join(result, un);
+
+    SetClass(un, class_mortar);
+    SetDir(un, 4);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(un, southSpawnArea, false);
+
+    ComMoveToArea(un, mortarRiverArea);
+    end;
 End;
