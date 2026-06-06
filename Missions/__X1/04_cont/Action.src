@@ -451,7 +451,7 @@ End;
 
 // omar scene
 Every 0$2 trigger omarCountdown = 0 do
-var i, driver, veh, un, tmp, tmp2, enemy;
+var i, driver, veh, un, tmp, tmp2, tmp3, enemy;
 begin
 ChangeSideFog(5, 2);
 
@@ -572,20 +572,26 @@ for i := 1 to tmp do
 
 wait(0$10);
 
-ComAgressiveMove(omarSquad, 199, 141);
-ComAgressiveMove(Omar, 190, 143);
-AddComHold(Omar);
+ComMoveXY(omarSquad, 199, 144);
+ComMoveXY(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 216, 151);
+AddComMoveXY(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 175, 141);
+ComAgressiveMove(Omar, 195, 149);
+AddComFree(Omar);
+
+wait(1$10);
 
 // attack on kirov
-AddComAgressiveMove(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 161, 130);
+AddComMoveXY(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 4]]), 161, 130);
 AddComAgressiveMove(UnitFilter(omarSquad, [f_class, 1]), 152, 115);
 AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 150, 111, 0);
 AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[4], 155, 114, 0);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[3], 153, 110, 0);
+AddComPlaceDelayedCharge(UnitFilter(omarSquad, [f_class, 1])[2], 146, 108, 0);
 
 AddComAgressiveMove(UnitFilter(omarSquad, [f_type, unit_vehicle]), 169, 114);
 
 repeat
- wait(0$1);
+ wait(0$2);
 
  tmp := UnitFilter(omarSquad, [f_class, 1]);
  enemy := FilterAllUnits([f_enemy, 5]);
@@ -599,6 +605,35 @@ repeat
         ComAttackUnit(i, NearestUnitToUnit(enemy, i));
      end;
 
+ tmp := UnitFilter(omarSquad, [f_class, 4]);
+ tmp2 := UnitFilter(omarSquad, [[f_class, 3], [f_not, [f_driving]], [f_not, [f_lives, 500]]]);
+ tmp3 := UnitFilter(omarSquad, [[f_not, [f_lives, 250]], [f_type, unit_human]]);
+
+ if tmp then
+    for i in tmp do
+        begin
+        if IsInArea(i, kirovBaseArea) then
+           ComMoveXY(i, 164, 132)
+        else if tmp2 then
+           ComHeal(i, tmp2[1])
+        else if tmp3 and GetDistUnits(NearestUnitToUnit(tmp3, i), i) < 15 then
+           ComHeal(i, NearestUnitToUnit(tmp3, i))
+        else if GetDistUnitXY(i, 164, 132) > 10 then
+           ComMoveXY(i, 164, 132);
+        end;
+
+ tmp := UnitFilter(omarSquad, [[f_not, [f_hastask]], [f_class, 3]]);
+ tmp2 := UnitFilter(omarSquad, [[f_type, unit_vehicle], [f_empty], [f_ok]]);
+
+ if tmp then
+    begin
+    if tmp2 then
+       ComEnterUnit(tmp[1], NearestUnitToUnit(tmp2, tmp[1]))
+    else
+       if GetDistUnitXY(tmp[1], 198, 154) > 8 then
+          ComMoveXY(tmp[1], 198, 154);
+    end;
+
  tmp := UnitFilter(omarSquad, [f_type, unit_vehicle]);
 
  for i in tmp do
@@ -608,7 +643,7 @@ repeat
      if not tmp2 then
         continue;
 
-     if GetLives(i) >= 600 and GetTag(i) = 1 then
+     if GetLives(i) = 1000 and GetTag(i) = 1 then
         SetTag(i, 0);
 
      if GetLives(i) >= 600 and not GetTag(i) then
@@ -618,14 +653,12 @@ repeat
         begin
         SetTag(i, 1);
         ComMoveXY(i, 202, 150);
+        continue;
         end;
                                        
-     if GetTag(i) = 1 and GetDistUnitXY(i, 202, 150) < 6 and tmp2 then
+     if GetTag(i) = 1 and GetLives(i) < 1000 and GetDistUnitXY(i, 202, 150) < 6 and tmp2 then
         begin
-        ComExitVehicle(tmp2);
-        AddComRepairVehicle(tmp2, i);
-        AddComWait(tmp2, 0$20);
-        AddComEnterUnit(tmp2, i);
+        ComRepairVehicleAndReturn(tmp2)
         end;
      end;
 until not FilterAllUnits([[f_side, 6], [f_type, unit_human]]);
@@ -729,7 +762,10 @@ DialogueOff;
 
 repeat
  wait(0$1);
-until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2) and IsOk(ruLab) and IsOk(Aviradze) and not InBattle(2) and not FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_distxy, 110, 95, 12]]) and not FilterAllUnits([[f_side, 3], [f_btype, b_barracks], [f_distxy, 110, 95, 12]]);
+until (beriaDestroyed or GetSide(beria) = 2 or GetSide(ruLab) = 2)
+      and IsOk(ruLab) and IsOk(Aviradze) and not InBattle(2)
+      and not FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_distxy, 110, 95, 12]])
+      and not FilterAllUnits([[f_side, 3], [f_btype, b_barracks], [f_not, [f_empty]], [f_distxy, 110, 95, 12]]);
 
 tmp := heikeSecondSquad union [Ibrahim, Kamil, Sophia, Kaia];
 tmp := UnitFilter(tmp, [f_ok]);

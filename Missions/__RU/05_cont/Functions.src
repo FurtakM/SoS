@@ -25,7 +25,7 @@ End;
 Export function BaseScript(side, area, cratesArea, innerArea, outerArea, forces,
                            vehicles, techs, constructList, buildingsToBuild,
                            healPoint, parkingPoint, allowToPatrol);
-var i, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, drivers, hurtUnits, enemy, enemyInBase, enemyOuterBase, empty, fac, emptyTowers, weapon, depot, enemySide;
+var i, tmp, undone, wantToAttack, lab, eng, mech, tag, tw, cr, sci, sol, drivers, hurtUnits, enemy, enemyInBase, enemyOuterBase, empty, fac, emptyTowers, weapon, depot, enemySide;
 begin
 enable;
 
@@ -127,7 +127,7 @@ lab := FilterUnitsInarea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [
 
 if sci then
    begin
-   hurtUnits := UnitFilter(forces, [[f_inarea, area], [f_not, [f_lives, 1000]], [f_tag, tHeal]]);
+   hurtUnits := UnitFilter(forces, [[f_inarea, area], [f_not, [f_lives, 1000]], [f_tag, tHeal]]) union UnitFilter(omarMastodont, [f_not, [f_lives, 1000]]);
 
    if hurtUnits then
       begin
@@ -472,7 +472,7 @@ if sol then
    begin
    if enemyInBase then
       begin
-      for i in sol do
+      for i in UnitFilter(sol, [f_class, class_soldier]) do
           begin
           tw := IsInUnit(i);
 
@@ -494,11 +494,19 @@ if sol then
       emptyTowers := [];
 
       if empty then
-         emptyTowers := UnitFilter(empty, [[f_not, [f_tag, tTower]], [f_ok], [f_or, [f_btype, b_bunker], [f_btype, b_turret]]]);
+         emptyTowers := UnitFilter(empty, [[f_not, [f_tag, tTower]], [f_ok], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]);
 
       for i in sol do
           begin
           tag := GetTag(i);
+
+          wantToAttack := WantsToAttack(i);
+
+          if wantToAttack and not IsInArea(wantToAttack, innerArea) and not IsInArea(i, innerArea) then
+             begin
+             ComMoveToArea(i, innerArea);
+             continue;
+             end;
 
           if GetLives(i) < 1000 and tag <> tHeal then
              begin
@@ -518,12 +526,14 @@ if sol then
              continue;
 
           if not IsInUnit(i) and not tag and empty
-             and ((GetClass(i) = class_soldier and GetBType(empty[1]) in [b_bunker, b_breastwork])
+             and ((GetClass(i) = class_soldier and GetBType(empty[1]) in [b_bunker, b_breastwork, b_armoury, b_barracks])
              or (GetClass(i) = class_mortar and GetBType(empty[1]) in [b_armoury, b_barracks])) then
              begin
              ComEnterUnit(i, empty[1]);
 
-             empty := Delete(empty, 1);
+             if GetBType(empty[1]) in [b_bunker, b_breastwork] then
+                empty := Delete(empty, 1);
+
              continue;
              end;
 

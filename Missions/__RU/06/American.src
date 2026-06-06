@@ -1,182 +1,497 @@
-Export VanHouten;
-Export ovsyenkoBase, terminalBase, headAmBase;
-Export trapTeam, convoyTeam, attackTeam;
-
-Export Function PrepareAmericans;
+Export Sikorski, VanHouten, Grant, usCargoTransport;
+Export ovsyenkoSquad, americanSquad, terminalSquad;
+Export function PrepareAmerican;
 begin
-    PrepareOvsyenko;
-    PrepareTerminal;
-    PrepareMainAmericanBase;
-end;
+ovsyenkoSquad := [];
+americanSquad := [];
+terminalSquad := [];
 
-Function PrepareOvsyenko;
-var soldiersAmount;
-begin
-    uc_side = 1;
-    uc_nation = nation_american;
+SetBName(usBase, 'tau');
+SetBName(ovsyenko, 'ovsyenko');
+SetBName(terminal, 'terminal');
 
-    soldiersAmount = 3;
+uc_side := 1;
+uc_nation := nation_american;
 
-   if fastBreakthrough then
+if LoadVariable('03_SikorskiAlive', true) then
    begin
-    RemoveUnit(ovs_bun2);    
-    RemoveUnit(ovs_bun3);    
+   Sikorski := NewCharacter('Sikorski');
+   PlaceUnitXY(Sikorski, 58, 64, false);
+   ComTurnXY(Sikorski, 57, 64);
    end
-   else soldiersAmount = 4;
+else
+   begin
+   VanHouten := NewCharacter('VanHouten');
+   PlaceUnitXY(VanHouten, 58, 64, false);
+   ComTurnXY(VanHouten, 57, 64);
+   end;
 
-    //PrepareBase(baseDep, area, name, skill, sources, personel);
-    ovsyenkoBase := Nef_PrepareBase(
-        ovsyenko,
-        OvsyenkoBaseArea,
-        'ovsyenko',
-        enemySkillLevel,
-        [
-        ovsyenkoStartCrates,
-        50,
-        0
-        ],
-        1,
-        [soldiersAmount, 1, 0, 1]
-    );  
+ovsyenkoSquad := PrepareOvsyenko;
+americanSquad := PrepareAmericanSquad;
+terminalSquad := PrepareTerminal;
 
-    case Difficulty of
-        1: PlaceWeaponTurret(ovs_bun1, us_double_gun);  
-        2: PlaceWeaponTurret(ovs_bun1, us_light_gun);   
-        3..4: PlaceWeaponTurret(ovs_bun1, us_gatling_gun);
-    end; 
-end;
+PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 100);
+usCargoTransport := CreateVehicle;
+
+PlaceUnitXYD(usCargoTransport, 55, 74, 3, false);
+
+PrepareEngineer(false, 3);
+PlaceHumanInUnit(CreateHuman, usCargoTransport);
+End;
 
 Function PrepareTerminal;
+var i, un, tmp, tmp2, tmp3, veh, skill;
 begin
-    uc_side = 1;
-    uc_nation = nation_american;
+uc_side := 1;
 
+tmp := FilterUnitsInArea(terminalBaseArea, [f_type, unit_building]) diff terminal;
 
-    //PrepareBase(baseDep, area, name, skill, sources, personel);
-    terminalBase := Nef_PrepareBase(
-        terminal,
-        terminalBaseArea,
-        'terminal',
-        enemySkillLevel,
-        [
-        100,
-        50,
-        0
-        ],
-        1,
-        [2, 1, 0, 0]
-    );  
-end;
+for i in tmp do
+    ComLinkToBase(terminal, i);
+End;
 
-Function PrepareMainAmericanBase;
+Function PrepareAmericanSquad;
+var i, un, tmp, tmp2, tmp3, veh, skill;
 begin
-    uc_side = 1;
-    uc_nation = nation_american;
+uc_side := 1;
 
-   if fastBreakthrough then
-        RemoveUnit(ovs_bun2);
+skill := [4, 5, 5, 6][Difficulty];
 
-    //PrepareBase(baseDep, area, name, skill, sources, personel);
-    headAmBase := Nef_PrepareBase(
-        headamdepot,
-        HeadAmericanBaseArea,
-        '',
-        enemySkillLevel,
-        [
-        3000,
-        1000,
-        0
-        ],
-        1,
-        [9, 3, 6, 2]
-    );  
+tmp := FilterUnitsInArea(americanBaseArea, [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]);
+tmp2 := FilterUnitsInArea(americanBaseArea, [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]);
 
-    VanHouten = PrepareUnitExt('VanHouten', false, class_soldier);
-    headAmBase = headAmBase ^ VanHouten;
-
-    PlaceUnitXYR(VanHouten, 35, 57, 3, false);
-
-end;
-
-Export Function PrepareTrap;
-var i, un, nearEnemyUnit;
-begin
-    uc_side = 1;
-    uc_nation = nation_american;
-
-    for i := 1 to trapAmount do
+for i := 1 to [6, 7, 8, 9][Difficulty] do
     begin
-        PrepareSoldier(false, enemySkillLevel);
-        un = CreateHuman;
-        trapTeam = trapTeam ^ un;
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
 
-        PlaceUnitArea(un, TrapSpawnArea, false);   
-        nearEnemyUnit = NearestUnitToUnit(FilterAllUnits([[f_side, 3]]), un); 
-        
-        ComAgressiveMove(un, GetX(nearEnemyUnit), GetY(nearEnemyUnit));
-        AddComAgressiveMove(un, 106, 124);
-    end;    
-end;
+    Push(result, un);
 
-Export Function PrepareSoldiersInBunkers;
-begin
-     PrepareSolBun(enemySkilLLevel, non_bun1);
-     PrepareSolBun(enemySkilLLevel, non_bun2);
-     PrepareSolBun(enemySkilLLevel, non_bun3);
-end;
+    tmp3 := UnitFilter(tmp, [f_empty]);
 
-Export Function PrepareConvoy;
-var i, un, veh;
-begin
-    convoyTeam = [];
+    if tmp3 then
+       begin
+       SetDir(un, GetDir(tmp3[1]) - 3);
+       PlaceHumanInUnit(un, tmp3[1]);
+       continue;
+       end;
 
-    uc_side = 1;
-    uc_nation = nation_american;    
+    tmp3 := UnitFilter(tmp2, [f_not, [f_full]]);
 
-    for i := 1 to 2 do
-    begin
-        PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 80);
-        veh = CreateVehicle;
-        AddCargo(veh, mat_cans, 100);
-        convoyTeam = convoyTeam ^ veh;
+    if tmp3 then
+       begin
+       PlaceHumanInUnit(un, tmp3[1]);
+       continue;
+       end;
 
-        PlaceUnitArea(veh, AmericanSpawnArea1, false);
-
-        PrepareMechanic(false, enemySkillLevel);
-        un = CreateHuman;
-        convoyTeam = convoyTeam ^ un;
-
-        PlaceHumanInUnit(un, veh);   
-    end;   
-end;
-
-Export Function PrepareAttack;
-var i, un, veh;
-begin
-    uc_side = 1;
-    uc_nation = nation_american;    
-
-    for i := 1 to 4 do
-    begin
-        PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, [us_light_gun, us_double_gun, us_gatling_gun][Rand(1, 3)], 80);
-        veh = CreateVehicle;
-        attackTeam = attackTeam ^ veh;
-
-        PlaceUnitArea(veh, AmericanSpawnArea2, false);
-
-        PrepareMechanic(false, enemySkillLevel);
-        un = CreateHuman;
-        attackTeam = attackTeam ^ un;
-
-        PlaceHumanInUnit(un, veh);   
-    end;    
-
-    for i := 1 to 3 do
-    begin
-        PrepareSoldier(false, enemySkillLevel);
-        un = CreateHuman;
-        attackTeam = attackTeam ^ un;
-
-        PlaceUnitArea(un, AmericanSpawnArea2, false);      
+    PlaceUnitXYR(un, 55, 70, 5, false);
     end;
-end;
+
+for i := 1 to 3 do
+    begin
+    PrepareEngineer(false, skill);
+    un := CreateHuman;
+
+    Push(result, un);
+
+    PlaceUnitXYR(un, 55, 70, 5, false);
+    end;
+
+for i := 1 to 4 do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    Push(result, un);
+
+    PlaceHumanInUnit(un, usFac);
+    end;
+
+PrepareMechanic(false, skill + 2);
+un := CreateHuman;
+
+Push(result, un);
+
+PlaceHumanInUnit(un, usCt);
+
+for i := 1 to 3 do
+    begin
+    PrepareScientist(false, skill);
+    un := CreateHuman;
+
+    Push(result, un);
+
+    PlaceHumanInUnit(un, usLab);
+    end;
+End;
+
+Function PrepareOvsyenko;
+var i, tmp, list, blevel, people, cleanTrees, x, y, d, btype, weapon, un, buildings;
+begin
+uc_side := 4;
+
+Grant := NewCharacter('Gary');
+PlaceHumanInUnit(Grant, ovsyenko);
+Push(result, Grant);
+
+blevel := [3, 4, 5, 6][Difficulty];
+cleanTrees := false;
+
+SetResourceVisibility(122, 114, 4);
+
+// normal squad
+if timeToOvsyenkoFall > prevMissionTime then
+   begin
+   // oil and armoury, a few soldiers
+   list := [
+      [b_oil_mine, 122, 114, 0],
+      [b_armoury, 128, 131, 0]
+   ];
+   people := [4, 1];
+   end
+else if (timeToOvsyenkoFall + 10$00) > prevMissionTime then  // stronger squad
+   begin
+   // oil, armoury, oil plant, one tower, a few soldiers, engineers
+   list := [
+      [b_oil_mine, 122, 114, 0],
+      [b_armoury, 128, 131, 0],
+      [b_oil_power, 125, 116, 5],
+      [b_bunker, 135, 133, 5, us_double_gun]
+   ];
+   people := [[4, 4, 5, 5][Difficulty], 2];
+   end
+else if (timeToOvsyenkoFall + 20$00) > prevMissionTime then  // stronger squad x2
+   begin
+   // oil, armoury, oil plant, two towers, a few soldiers, engineers
+   list := [
+      [b_oil_mine, 122, 114, 0],
+      [b_armoury, 128, 131, 0],
+      [b_oil_power, 125, 116, 5],
+      [b_bunker, 135, 133, 5, us_double_gun],
+      [b_bunker, 129, 114, 4, [us_machine_gun, us_machine_gun, us_gatling_gun, us_gatling_gun][Difficulty]],
+   ];
+   people := [[4, 5, 6, 6][Difficulty], 2];
+   end
+else // stronger squad x3
+   begin
+   // oil, barracks, oil plant, four towers, more soldiers, engineers, no trees, lab
+   list := [
+      [b_oil_mine, 122, 114, 0],
+      [b_barracks, 128, 131, 0],
+      [b_oil_power, 125, 116, 5],
+      [b_bunker, 135, 133, 5, us_double_gun],
+      [b_bunker, 129, 114, 4, [us_machine_gun, us_machine_gun, us_gatling_gun, us_gatling_gun][Difficulty]],
+      [b_bunker, 120, 121, 1, us_double_gun],
+      [b_bunker, 123, 127, 1, us_gatling_gun],
+      [b_lab, 134, 126, 5]
+   ];
+   people := [[5, 5, 6, 6][Difficulty], 2];
+   cleanTrees := true;
+   end;
+
+if cleanTrees then
+   begin
+   RemoveEnvironmentArea(ovsyenkoEnvBaseArea);
+   RemoveEnvironmentArea(ovsyenkoEnvBaseArea);
+   end;
+
+for i in list do
+    begin
+    btype := i[1];
+    x := i[2];
+    y := i[3];
+    d := i[4];
+    weapon := 0;
+
+    if Count(i) = 5 then
+       weapon := i[5];
+
+    RemoveUnitFromHex(x, y);
+
+    Push(buildings, PlaceBuilding(btype, [3, 4, 5, 5][Difficulty], x, y, d, weapon));
+    end;
+
+for i := 1 to people[1] do
+    begin
+    PrepareSoldier(false, [4, 5, 5, 6][Difficulty]);
+    un := CreateHuman;
+    Push(result, un);
+
+    tmp := UnitFilter(buildings, [[f_empty], [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]]);
+
+    if tmp then
+       begin
+       PlaceHumanInUnit(un, tmp[1]);
+       continue;
+       end;
+
+    tmp := UnitFilter(buildings, [[f_not, [f_full]], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+    if tmp then
+       begin
+       PlaceHumanInUnit(un, tmp[1]);
+       continue;
+       end;
+
+    PlaceUnitXYR(un, 128, 123, 5, false);
+    end;
+
+for i := 1 to people[2] do
+    begin
+    PrepareEngineer(false, [4, 5, 5, 6][Difficulty] - 1);
+    un := CreateHuman;
+    Push(result, un);
+
+    PlaceHumanInUnit(un, ovsyenko);
+    end;
+
+PrepareScientist(false, 3);
+un := CreateHuman;
+Push(result, un);
+
+PlaceHumanInUnit(un, ovsyenko);
+End;
+
+Export Function PowellTransport;
+var i;
+begin
+uc_side := 4;
+uc_nation := 1;
+
+// prepare mechs
+PrepareHuman(sex_male, 3, 6);
+hc_name := 'Augustin Higgins';
+hc_skills := [2, 1, 7, 4];
+hc_gallery := 'SecondCharsGal';
+hc_face_number := 30;
+
+Push(result, CreateHuman);
+
+hc_name := 'Fred Hashimoto';
+hc_skills := [3, 2, 5, 1];
+hc_face_number := 31;
+
+Push(result, CreateHuman);
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 66);
+    Push(result, CreateVehicle);
+    end;
+End;
+
+Export Function PrepareAdditionalForces;
+var i, un, veh;
+begin
+for i := 1 to 6 do
+    begin
+    uc_side := 1;
+    uc_nation := nation_american;
+
+    PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+    un := CreateHuman;
+
+    SetDir(un, 4);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(un, eastSpawnArea, false);
+
+    Push(result, un);
+
+    ComMoveXY(un, 141, 70);
+    end;
+
+for i := 1 to 2 do
+    begin
+    uc_side := 1;
+    uc_nation := nation_american;
+
+    PrepareVehicle(us_medium_tracked, engine_solar, control_manual, us_gatling_gun, 100);
+    veh := CreateVehicle;
+
+    SetDir(un, 4);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, eastSpawnArea, false);
+
+    Push(result, veh);
+
+    PrepareMechanic(false, [4, 5, 6, 7][Difficulty]);
+    un := CreateHuman;
+
+    SetTag(un, tEscape);
+
+    PlaceHumanInUnit(un, veh);
+    end;
+
+repeat
+ wait(0$1);
+
+ for i in UnitFilter(result, [f_ok]) do
+     begin
+     AgressiveMove(i, [[138, 92], [149,116], [136,116]]);
+     end;
+until not UnitFilter(result, [f_ok]);
+End;
+
+// American Scripts
+// Ovsyenko Script
+Every 0$3 + 0$2 trigger FilterUnitsInArea(ovsyenkoBaseArea, [f_side, 3]) and not IsOk(Grant) do
+begin
+MineExplosion(135, 120, 1);
+MineExplosion(135, 122, 1);
+End;
+
+Every 0$1 + 0$3 trigger ovsyenkoSquad do
+var i, tmp, buildings, class, empty, enemyInBase, damaged, hurts;
+begin
+enable;
+
+tmp := UnitFilter(ovsyenkoSquad, [f_ok]);
+buildings := FilterUnitsInArea(ovsyenkoBaseArea, [f_type, unit_building]);
+enemyInBase := FilterUnitsInArea(ovsyenkoBaseArea, [f_side, 3]);
+damaged := UnitFilter(buildings, [[f_not, [f_btype, b_siberite_mine]],  [f_not, [f_lives, 1000]]]);
+hurts := UnitFilter(ovsyenkoSquad, [[f_not, [f_class, 4]], [f_not, [f_inside]], [f_not, [f_lives, 1000]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    class := GetClass(i);
+
+    if class = class_scientistic then
+       begin
+       if hurts then
+          begin
+          if IsInUnit(i) then
+             ComExitBuilding(i)
+          else
+             ComHeal(i, SortByHealth(hurts, true));
+          end
+       else
+          if not IsInUnit(i) then
+             ComEnterUnit(i, ovsyenko);
+       end;
+
+    if class = class_engineer then
+       begin
+       if GetLives(i) > 600 then
+          begin
+          if damaged then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i)
+             else
+                ComRepairBuilding(i, NearestUnitToUnit(damaged, i));
+             end
+          else
+             begin
+             if not IsInUnit(i) then
+                ComEnterUnit(i, ovsyenko);
+             end;
+          end
+       else
+          if GetDistUnitXY(i, 126, 122) > 3 then
+             ComMoveXY(i, 126, 122)
+          else
+             ComHold(i);
+       end;
+
+    if class = class_soldier then
+       begin
+       if enemyInBase then
+          begin
+          if GetLives(i) > 600 then
+             begin
+             if IsInUnit(i) and not See(3, IsInUnit(i)) then
+                ComExitBuilding(i)
+             else
+                ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
+             end
+          else
+             begin
+             if not IsInUnit(i) then
+                begin
+                empty := UnitFilter(buildings, [[f_not, [f_full]], [f_or, [f_btype, b_bunker],
+                                                                          [f_btype, b_breastwork],
+                                                                          [f_btype, b_armoury],
+                                                                          [f_btype, b_barracks]]]);
+                if empty then
+                   ComEnterUnit(i, NearestUnitToUnit(empty, i));
+                end;
+             end;
+          end
+       else
+          begin
+          if GetLives(i) < 1000 then
+             begin
+             if IsInUnit(i) then
+                ComExitBuilding(i)
+             else
+                if GetDistUnitXY(i, 126, 122) > 3 then
+                   ComMoveXY(i, 126, 122);
+             end
+          else
+             begin
+             if not IsInUnit(i) or (not IsInUnit(i) and not IsInArea(i, ovsyenkoBaseArea)) then
+                begin
+                empty := UnitFilter(buildings, [[f_not, [f_full]], [f_or, [f_btype, b_bunker],
+                                                                          [f_btype, b_breastwork],
+                                                                          [f_btype, b_armoury],
+                                                                          [f_btype, b_barracks]]]);
+                if empty then
+                   ComEnterUnit(i, NearestUnitToUnit(empty, i));
+                end;
+             end;
+          end;
+       end;
+    end;
+End;
+
+// transport siberite from Ovsyenko
+Every 0$20 trigger IsOk(usCargoTransport) and not HasTask(usCargoTransport) and GetSide(ovsyenko) = 4 and GetResourceType(GetBase(ovsyenko), mat_siberit) >= 30 do
+var i, path;
+begin
+path := [
+   [67, 102],
+   [90, 109],
+   [112, 123],
+   [126, 123]
+];
+
+for i in path do
+    AddComMoveXY(usCargoTransport, i[1], i[2]);
+
+AddComTransport(usCargoTransport, ovsyenko, mat_siberit);
+
+path := [
+   [126, 123],
+   [112, 123],
+   [90, 109],
+   [67, 102]
+];
+
+for i in path do
+    AddComMoveXY(usCargoTransport, i[1], i[2]);
+
+if GetSide(terminal) in [1, 4] then
+   begin
+   AddComGive(usCargoTransport, terminal);
+   AddComMoveUnit(usCargoTransport, terminal);
+   AddComRefuel(usCargoTransport, terminal);
+   end
+else
+   begin
+   AddComGive(usCargoTransport, usBase);
+   AddComMoveUnit(usCargoTransport, usBase);
+   AddComRefuel(usCargoTransport, usBase);
+   end;
+
+AddComMoveXY(usCargoTransport, 52, 71);
+
+enable;
+End;
+

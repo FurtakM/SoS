@@ -450,7 +450,7 @@ End;
 Every 0$2 trigger americanRetreat do
 var i, tmp;
 begin
-tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]);
+tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]) diff Sikorski;
 
 if not tmp then
    exit;  
@@ -466,7 +466,7 @@ repeat
         RemoveUnit(i);
      end;
 
- tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]);
+ tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]) diff Sikorski;
 
  wait(0$1);
 until not tmp;
@@ -569,6 +569,27 @@ enable;
 for i in FilterAllUnits([[f_side, 1], [f_engine, engine_combustion]]) do
     if GetFuel(i) < 3 then
        SetFuel(i, 3);
+End;
+
+Every 0$1 trigger GetLives(Sikorski) < 1000 or americanRetreat do
+begin
+omicronTroops := omicronTroops diff Sikorski;
+
+if IsInUnit(Sikorski) then
+   ComExit(Sikorski);
+
+wait(1);
+
+repeat
+ ComMoveToArea(Sikorski, americanRetreatArea);
+ wait(0$1);
+
+ if IsDead(Sikorski) then
+    exit;
+until IsInArea(Sikorski, americanRetreatArea);
+
+RemoveUnit(Sikorski);
+SaveVariable(true, '03_SikorskiAlive');
 End;
 
 Every 0$2 trigger joinToOmicronCounter > 2 do

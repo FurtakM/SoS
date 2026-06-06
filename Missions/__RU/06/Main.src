@@ -1,95 +1,50 @@
-// Russian mission 6
-// Map by Altar, extended by Serpent
-// SAIL by Nefarem
-// Consultation - SoSTeam
+// 08.05.26
+// by Serpent
 
 Starting
 begin
-    InitMission;
-end;
+ResetFog;
+Init;
 
-// Global campaign variables
-Export vehiclesFrom05, resourcesFrom05, fastBreakthrough, stevensStatus, apeTechsStatus;
-Export techMatPredStatus;
-Export vehsFrom06, resourcesFrom06;
+// birds, tigers, apemans, enchidnas, horses, mastodonts, fishes
+PrepareNature(6, 4, 2, 3, 0, 0, 0, natureArea, 0);
+PrepareNature(0, 0, [7, 6, 5, 4][Difficulty], 0, 0, 0, 0, apeArea, 0);
 
-// Current mission variables
-Export dial_SibTechsBlocker, dial_VsevolodContactBlocker, dial_TrapDialogBlocker, dial_ConvoyDialogBlocker, dial_NorthBlocker, dial_EndMissionDialogBlocker;
-Export claimOvsyenkoBase, claimTerminalBase, lostAgainBase;
-Export immortalVsevolodTeam, savedVsevolod, vsevolodWaitGorky;
-Export canGoNorth;
-Export enableVsevolodCounter;
-Export canSpawnReinforces;
-Export canEndMission;
-Export canRemoveUnits;
-Export timeToAttack;
-Export cratesSpawned;
+PrepareRussian;
+PrepareAmerican;
 
-// Achievement variables
+// Action;
 
+if debug then
+   FogOff(3);
+End;
 
-Function InitMission;
+Export debug, prevMissionPrefix, currentMissionPrefix, prevMissionTime, prevMissionTech, penaltyTime, americansDefeated,
+       americanSibToCollect, timeToOvsyenkoFall, hasOvsyenko, sikorskiAlive, canGoToNorth, glebWarn, noCrates, hasMatPred;
+Function Init;
 begin
-    ResetFog;
-    RandomizeAll;
-    InGameOn;
+debug := 1;
 
-    //YouLost('Demo');
+if debug then
+   Difficulty := 4;
 
-    // Init map config
-    InitMapConfig;
+prevMissionPrefix := '05_';
+currentMissionPrefix := '06_';
+prevMissionTime := LoadVariable('05_Time', 47$0);
+prevMissionTech := LoadVariable('05_Tech', []);
+sikorskiAlive := LoadVariable('03_SikorskiAlive', debug);
+americansDefeated := false;
+americanSibToCollect := [500, 750, 1000, 1000][Difficulty];
+timeToOvsyenkoFall := [32$00, 30$00, 28$0, 26$0][Difficulty];
+hasOvsyenko := false;
+penaltyTime := 0$00;
+canGoToNorth := false;
+glebWarn := false;
+noCrates := false;
+hasMatPred := false;
+End;
 
-    // Global campaign variables init values
-    vehiclesFrom05 = LoadVariable('05_Tanks_4',[]);
-    resourcesFrom05 = LoadVariable('05_ResourcesInCargo_3', []);
-    fastBreakthrough = LoadVariable('05_FastBreakthrough_6', false);
-    stevensStatus = LoadVariable('05_StevensStatus_1', 0); // 2- escape as enemy, 1 - escape, 0 - die
-    apeTechsStatus = LoadVariable('05_ApeTechsStatus_7', [0, 0, 0]); // apelang, apepsych, apeagres
-
-    techMatPredStatus = state_enabled;
-
-    vehsFrom06 = []; //  [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName]
-    resourcesFrom06 = []; // GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)
-    
-    // Mission variables init values
-    dial_SibTechsBlocker = false;
-    dial_VsevolodContactBlocker = false;
-    dial_TrapDialogBlocker = false;
-    dial_ConvoyDialogBlocker = false;
-    dial_NorthBlocker = false;
-    dial_EndMissionDialogBlocker = false;
-
-    claimOvsyenkoBase = false;
-    claimTerminalBase = false;
-
-    lostAgainBase = false;
-
-    immortalVsevolodTeam = true;
-    savedVsevolod = false;
-    vsevolodWaitGorky = false;
-    enableVsevolodCounter = false;
-
-    canGoNorth = false;
-    canSpawnReinforces = false;
-    canEndMission = false;
-    canRemoveUnits = false;
-
-    timeToAttack = 0$00;
-
-    cratesSpawned = 0;
-
-    // AI variables
-
-
-    // Achievement variables init values
-
-
-
-    // Init units
-    PrepareRussians;
-    PrepareAmericans;
-    Nef_PrepareNature;
-
-    // Init mission intro
-    MissionIntro;
-end;
+{
+ Variables:
+   06_MatPred - 1
+}

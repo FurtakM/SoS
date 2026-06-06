@@ -110,6 +110,8 @@ DialogueOff;
 
 ChangeMissionObjectives('MReach');
 
+Query('QHeavyChassis');
+
 SetAreaMapShow(westBorderArea, 0);
 SetAreaMapShow(finalArea, 1);
 End;
@@ -719,7 +721,8 @@ End;
 Every 0$1 trigger loseCounter = 0 do
 YouLost('Survive');
 
-Every 0$2 trigger FilterUnitsInArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) and not FilterUnitsExceptArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) do
+Every 0$2 trigger FilterUnitsExceptArea(finalArea, [[f_side, 3], [f_nation, nation_russian], [f_type, unit_human]]) = 0 and
+                  FilterUnitsExceptArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0 do
 var i, unitsWithoutVeh, vehicles, oil;
 begin
 unitsWithoutVeh := FilterUnitsInArea(finalArea, [[f_not, [f_driving]], [f_type, unit_human], [f_nation, nation_russian]]);
@@ -736,6 +739,19 @@ if unitsWithoutVeh then
 vehicles := FilterUnitsInArea(finalArea, [[f_ok], [f_not, [f_empty]], [f_type, unit_vehicle]]);
 
 for i in vehicles do
+    begin
+    if GetEngine(i) <> engine_combustion then
+       begin
+       if GetEngine(i) = engine_solar then
+          Query('QSolar')
+       else
+          Query('QSib');
+
+       wait(0$5);
+       enable;
+       exit;
+       end;
+
     if not GetChassis(i) in [ru_medium_tracked, ru_heavy_tracked, ar_half_tracked, us_medium_tracked, us_heavy_tracked, us_morphling] then
        begin
        Query('QChassis');
@@ -744,6 +760,7 @@ for i in vehicles do
        enable;
        exit;
        end;
+    end;
 
 oil := 0;
 
@@ -787,6 +804,8 @@ if stevensInDepot then
       Say(Burlak, 'DStevensLeftBehind-Bur-1');  
    end;
 
+SaveVariable(tick, '05_Time');
+
 // medals and rewards
 if timeToOvsyenkoFall + 2$00 >= tick then
    AddMedal('Time', 1)
@@ -794,18 +813,18 @@ else
    AddMedal('Time', -1);
 
 if apeTamed and FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]]) then
-   AddMedal('Apeman', -3)
+   AddMedal('Apemen', -3)
 else if apeTamed then
-   AddMedal('Apeman', 1)
+   AddMedal('Apemen', 1)
 else if GetTech(tech_ApeLang, 3) <> state_researched then
-   AddMedal('Apeman', -2)
+   AddMedal('Apemen', -2)
 else
-   AddMedal('Apeman', -1);
+   AddMedal('Apemen', -1);
 
 if omarKilled then
-   AddMedal('Omar', 1)
+   AddMedal('Abdul', 1)
 else
-   AddMedal('Omar', -1);
+   AddMedal('Abdul', -1);
 
 GiveMedals('MAIN');
 
@@ -840,7 +859,7 @@ SaveTech(3, currentMissionPrefix & 'Techs');
 saveVehicles := [];
 
 for i in FilterUnitsInArea(finalArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]], [f_ok]]) do
-    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil)]]);
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil), GetMark(i)]]);
 
 if saveVehicles then
    SaveVariable(saveVehicles, currentMissionPrefix & 'Vehicles');

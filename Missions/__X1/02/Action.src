@@ -384,7 +384,7 @@ End;
 
 // Gladstone run
 Every 0$1 trigger usAlert and (GetLives(Gladstone) < 1000 or GetLives(usLab) < 999) do
-var veh;
+var veh;                
 begin
 veh := FilterAllUnits([[f_side, 1], [f_type, unit_vehicle], [f_empty]]);
 
@@ -403,12 +403,20 @@ AddComMoveXY(Gladstone, 27, 51);
 
 Say(Gladstone, 'D8-Glad-2');
 
+wait(0$1);
+
 repeat
  wait(0$1);
-until IsAt(Gladstone, 27, 51) or IsAt(IsInUnit(Gladstone), 27, 51) or IsDead(Gladstone);
 
-if IsDead(Gladstone) then
+ if IsDead(Gladstone) then
    exit;
+
+ if not HasTask(Gladstone) then
+    ComMoveXY(Gladstone, 27, 51);
+until IsAt(Gladstone, 27, 51)
+   or IsInArea(Gladstone, escapeArea)
+   or IsInArea(IsInUnit(Gladstone), escapeArea)
+   or IsAt(IsInUnit(Gladstone), 27, 51);
 
 RemoveUnit(HexInfo(27, 51));
 gladstoneEscaped := true;

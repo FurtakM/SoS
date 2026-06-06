@@ -11,7 +11,7 @@ End;
 Export arForces, omarMastodont, enemyMines, arBuildings, arBuildingsToBuild, arVehicles, arConstructList, arTechs,
        arHovercraft, arVehiclesAttackers, arDepot, arPatrolRiver, arPatrolRiverFlag, riverBlockers;
 Export function PrepareArabianBase;
-var i, j, depot, list, un, tmp, p;
+var i, j, depot, list, un, tmp;
 begin
 arForces := [];
 enemyMines := [];
@@ -91,7 +91,7 @@ tmp := [
 
 for i in tmp do
     begin
-    PrepareSoldier(false, [3, 4, 5, 5][Difficulty]);
+    PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
     un := CreateHuman;
 
     Push(arForces, un);
@@ -121,13 +121,11 @@ tmp := [
     PlaceBuildingInArea(b_barracks, 5, bar2Area)
 ];
 
-p := 0;
-
 for i in tmp do
     begin
-    for j := 1 to [2, 3, 4, 5][Difficulty] - p do
+    for j := 1 to [2, 3, 4, 5][Difficulty] do
         begin
-        PrepareSoldier(false, [3, 4, 5, 5][Difficulty]);
+        PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
         un := CreateHuman;
 
         if j mod 2 = 0 then
@@ -137,8 +135,6 @@ for i in tmp do
 
         PlaceHumanInUnit(un, i);
         end;
-
-    p := Inc(p);
     end;
 
 for i := 1 to 3 do
@@ -202,6 +198,8 @@ for i in tmp do
        r := rand(1, list[1]);
        AddComPlaceRemoteCharge(i, list[1][r], list[2][r], 0);
 
+       list := [Delete(list[1], r), Delete(list[2], r)];
+
        wait(3);
 
        findEmpty := FilterAllUnits([[f_side, 2], [f_type, unit_building], [f_tag, tEmpty]]);
@@ -251,7 +249,7 @@ BaseScript(2, arabianBaseArea, arabianBaseArea, arabianBaseArea, arabianBaseOute
 enable;
 End;
 
-Every 3 trigger enemyMines and FilterUnitsInArea(minefieldArea, [f_enemy, 2]) do
+Every 1 trigger enemyMines and FilterUnitsInArea(minefieldArea, [f_enemy, 2]) do
 var i, e;
 begin
 enable;
@@ -638,6 +636,12 @@ enable;
 for i in FilterAllUnits([[f_side, 2], [f_engine, engine_combustion]]) do
     if GetFuel(i) < 3 then
        SetFuel(i, 3);
+End;
+
+Every 0$1 trigger not IsInArea(omarMastodont, arabianBaseArea) do
+begin
+enable;
+ComMoveXY(omarMastodont, 139, 68);
 End;
 
 Export function SpawnRiverBlock;
