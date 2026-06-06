@@ -194,5 +194,9 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pFinalBattle = {
 		MIN = 2,
 		MAX = 2
-	}
+	},
+	pBloodyForest = {
+		MIN = 2,
+		MAX = 8
+	},
 }
