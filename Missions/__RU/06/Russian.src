@@ -146,3 +146,168 @@ if remainingOil then
 SetDir(Burlak, 4);
 PlaceUnitXY(Burlak, 177, 216, false);
 End;
+
+Export Petr, Matvej, Danilo, Vsevolod;
+Export vsevolodSquad;
+Export function SpawnVsevolod;
+var i, un, barracks;
+begin
+uc_side := 6;
+uc_nation := nation_russian;
+
+// Petr := NewCharacter('Petr');
+Matvej := NewCharacter('Matvej');
+Danilo := NewCharacter('Danilo');
+Vsevolod := NewCharacter('Vsevolod');
+
+vsevolodSquad := [{Petr,} Matvej, Danilo, Vsevolod];
+
+for i in vsevolodSquad do
+    begin
+    SetDir(i, 3);
+    PlaceUnitArea(i, vsevolodSpawnArea, false);
+    ComAgressiveMove(i, 66, 20);
+    end;
+
+repeat
+ wait(0$1);
+until UnitFilter(vsevolodSquad, [f_distxy, 66, 20, 2]);
+
+for i in vsevolodSquad do
+    begin
+    ComCrawl(i);
+    AddComAgressiveMove(i, 69, 26);
+    AddComHold(i);
+    end;
+
+AddComMoveXY(Vsevolod, 74, 26);
+
+repeat
+ wait(0$1);
+until IsAt(Vsevolod, 74, 26) or UnitFilter(terminalSquad, [f_not, [f_lives, 900]]);
+
+ComMoveXY(UnitFilter(terminalSquad, [f_class, 2]), 77, 34);
+
+ComExitBuilding(UnitsInside(HexInfo(70, 40)));
+
+MineExplosion(80, 28, 1);
+
+wait(0$1);
+
+ComWalk(vsevolodSquad);
+AddComAgressiveMove(vsevolodSquad, 74, 36);
+AddComAgressiveMove(vsevolodSquad, 79, 38);
+
+repeat
+ wait(3);
+
+ if not UnitFilter(terminalSquad, [[f_ok], [f_outside]]) then
+    begin
+    un := UnitFilter(terminalSquad, [f_inside]);
+
+    if un then
+       begin
+       ComExitBuilding(un[1]);
+       AddComAgressiveMove(un[1], 75, 37);
+       end;
+    end;
+
+ for i in UnitFilter(terminalSquad, [f_not, [f_tag, tMined]]) do
+     if GetLives(i) < 750 then
+        begin
+        SetTag(i, tMined);
+        MineExplosion(GetX(i), GetY(i), 1);
+        end;
+
+ for i in vsevolodSquad do
+     if GetLives(i) < 300 then
+        SetLives(i, 400);
+until not UnitFilter(terminalSquad, [f_alive]);
+
+for i in FilterUnitsInArea(terminalBaseArea, [[f_side, 1], [f_type, unit_building]]) do
+    SetSide(i, 6);
+
+AddComEnterUnit(Danilo, terminal);
+AddComChangeProfession(Danilo, class_engineer);
+AddComExitBuilding(Danilo);
+
+ComEnterUnit(Vsevolod, HexInfo(84, 32));
+
+repeat
+ wait(0$1);
+until IsInUnit(Vsevolod) or not HexInfo(84, 32);
+
+DVsevolod;
+
+repeat
+ wait(0$1);
+until not HexInfo(70, 40) or GetLives(HexInfo(70, 40)) > 251;
+
+if not HexInfo(70, 40) then
+   ComBuild(Danilo, b_armoury, 70, 40, 1);
+
+repeat
+ wait(0$1);
+
+ if seeVsevolod then
+    begin
+    VsevolodChangeSide;
+    exit;
+    end;
+
+until HexInfo(70, 40) and GetType(HexInfo(70, 40)) = unit_building and not IsConstructed(HexInfo(70, 40));
+
+SetLives(Vsevolod, 1000);
+
+vsevolodInTerminal := true;
+
+barracks := HexInfo(70, 40);
+
+ComExitBuilding(Vsevolod);
+AddComEnterUnit(Vsevolod, barracks);
+ComEnterUnit(Matvej, barracks);
+
+repeat
+ wait(0$1);
+
+ seeVsevolod := UnitFilter([Vsevolod, Matvej, Danilo], [f_see, 3]) union FilterAllUnits([[f_side, 3], [f_distxy, 77, 42, 6]]);
+
+ if IsOk(Danilo) then
+    begin
+    if IsOk(barracks) and GetLives(barracks) < 1000 then
+       begin
+       if IsInUnit(Danilo) then
+          ComExitBuilding(Danilo)
+       else
+          begin
+          if not IsAt(Danilo, 73, 42) then
+             ComMoveXY(Danilo, 73, 42)
+          else
+             ComRepairBuilding(Danilo, barracks);
+          end;
+       end
+    else if IsOk(barracks) and not IsInUnit(Danilo) then
+       ComEnterUnit(Danilo, terminal);
+    end;
+until seeVsevolod or vsevolodDied;
+
+if vsevolodDied then
+   exit;
+
+if seeVsevolod then
+   VsevolodChangeSide;
+End;
+
+Function VsevolodChangeSide;
+var i;
+begin
+vsevolodCaptured := true;
+
+RevealMapOnXY(76, 38, 3, -16);
+
+for i in FilterUnitsInArea(terminalBaseArea, [f_side, 6]) union vsevolodSquad do
+    SetSide(i, 3);
+
+if IsInUnit(Vsevolod) then
+   ComExit(Vsevolod);
+End;

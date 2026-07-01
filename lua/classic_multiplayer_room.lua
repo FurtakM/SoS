@@ -3108,10 +3108,18 @@ function resortMapsMultiplayer(MAPS) -- MULTIPLAYER_ROOM_DATA.MAPS
 
 	if MULTIPLAYER_ROOM_SORT == 1 then -- rosnąco
 	    table.sort(mapList, function(a, b)
+	    	if (a.amount == b.amount) then
+	    		return a.NAMELOC < b.NAMELOC;
+	    	end;
+
 	        return a.amount < b.amount
 	    end)
 	elseif MULTIPLAYER_ROOM_SORT == 3 then -- malejąco
 	    table.sort(mapList, function(a, b)
+	    	if (a.amount == b.amount) then
+	    		return a.NAMELOC < b.NAMELOC;
+	    	end;
+
 	        return a.amount > b.amount
 	    end)
 	end

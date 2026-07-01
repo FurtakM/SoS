@@ -1,6 +1,7 @@
 Export Sikorski, VanHouten, Grant, usCargoTransport;
 Export ovsyenkoSquad, americanSquad, terminalSquad;
 Export function PrepareAmerican;
+var i, un;
 begin
 ovsyenkoSquad := [];
 americanSquad := [];
@@ -9,6 +10,11 @@ terminalSquad := [];
 SetBName(usBase, 'tau');
 SetBName(ovsyenko, 'ovsyenko');
 SetBName(terminal, 'terminal');
+
+AddResourceType(GetBase(terminal), mat_cans, 600 - (100 * Difficulty) + 30);
+AddResourceType(GetBase(usBase), mat_cans, 1500);
+AddResourceType(GetBase(usBase), mat_oil, 200);
+AddResourceType(GetBase(ovsyenko), mat_cans, 150);
 
 uc_side := 1;
 uc_nation := nation_american;
@@ -26,9 +32,20 @@ else
    ComTurnXY(VanHouten, 57, 64);
    end;
 
+for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do
+    SetBLevel(i, 3 + Difficulty);
+
 ovsyenkoSquad := PrepareOvsyenko;
 americanSquad := PrepareAmericanSquad;
 terminalSquad := PrepareTerminal;
+
+for i in FilterAllUnits([[f_side, 1], [f_btype, b_breastwork], [f_empty]]) do
+    begin
+    PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, GetDir(i) - 3);
+    PlaceHumanInUnit(un, i);
+    end;
 
 PrepareVehicle(us_medium_tracked, engine_combustion, control_manual, us_cargo_bay, 100);
 usCargoTransport := CreateVehicle;
@@ -48,6 +65,45 @@ tmp := FilterUnitsInArea(terminalBaseArea, [f_type, unit_building]) diff termina
 
 for i in tmp do
     ComLinkToBase(terminal, i);
+
+skill := 4;
+
+tmp := FilterUnitsInArea(terminalBaseArea, [f_or, [f_btype, b_breastwork], [f_btype, b_bunker]]);
+tmp2 := FilterUnitsInArea(terminalBaseArea, [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]);
+
+for i := 1 to 5 do
+    begin
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    Push(result, un);
+
+    tmp3 := UnitFilter(tmp, [f_empty]);
+
+    if tmp3 then
+       begin
+       SetDir(un, GetDir(tmp3[1]) - 3);
+       PlaceHumanInUnit(un, tmp3[1]);
+       continue;
+       end;
+
+    tmp3 := UnitFilter(tmp2, [f_not, [f_full]]);
+
+    if tmp3 then
+       begin
+       PlaceHumanInUnit(un, tmp3[1]);
+       continue;
+       end;
+
+    PlaceUnitXYR(un, 80, 39, 5, false);
+    end;
+
+PrepareEngineer(false, skill);
+un := CreateHuman;
+
+Push(result, un);
+
+PlaceUnitXYR(un, 79, 39, 5, false);
 End;
 
 Function PrepareAmericanSquad;
@@ -493,5 +549,29 @@ else
 AddComMoveXY(usCargoTransport, 52, 71);
 
 enable;
+End;
+
+Every 0$02 trigger vsevolodInTerminal do
+var i, un;
+begin
+wait(0$30);
+
+InitHc;
+
+for i := 1 to 3 do
+    begin
+    uc_side := 1;
+    uc_nation := nation_american;
+
+    PrepareSoldier(false, 3);
+    un := CreateHuman;
+
+    SetDir(un, 2);
+
+    PlaceUnitArea(un, vsevolodSpawnArea, false);
+
+    ComAgressiveMove(un, 63, 34);
+    AddComAgressiveMove(un, 80, 40);
+    end;
 End;
 

@@ -283,7 +283,7 @@ for i := 1 to 4 do
     begin
     for j := 1 to [5, 2, 3, 1][i] do
         begin
-        PrepareHuman(false, i, 5);
+        PrepareHuman(false, i, 6);
         rolfSquad := Join(rolfSquad, CreateHuman);
         end;
     end;
@@ -450,7 +450,7 @@ for i := 1 to 4 do
     begin
     for j := 1 to [6, 2, 2 + omarVehiclesCounter, 2][i] do
         begin
-        PrepareHuman(false, i, 5);
+        PrepareHuman(false, i, 6);
         omarSquad := Join(omarSquad, CreateHuman);
 
         if i = 1 and Prob(50) then
@@ -624,11 +624,13 @@ End;
 
 Every 0$1 trigger GetLives(Omar) < 1000 do
 begin
+SetLives(Omar, 1000);
 SetInvulnrability(Omar, true);
 End;
 
 Every 0$1 trigger GetLives(Rolf) < 1000 and rolfAttack do
 begin
+SetLives(Rolf, 1000);
 SetInvulnrability(Rolf, true);
 End;
 
@@ -637,7 +639,7 @@ var i, tmp, mech, path, tag, rolfCoords;
 begin
 path := [ [215,162], [195,163], [174,162], [145,163], [127,163] ];
 rolfCoords := [221, 161];
-tmp := Rolf union rolfSquad;
+tmp := rolfSquad;
 
 if not tmp then
    exit;
@@ -646,6 +648,9 @@ ComMoveXY(tmp, rolfCoords[1], rolfCoords[2]);
 
 repeat
  wait(0$1);
+
+  if IsIdle(Rolf) and (IsInUnit(Rolf) or GetClass(Rolf) in [class_soldier, class_mortar]) then
+     AgressiveMove(Rolf, path);
 
   tmp := UnitFilter(rolfSquad, [[f_not, [f_driving]], [f_or, [f_class, 1], [f_class, 8]]]);
 
@@ -684,10 +689,10 @@ repeat
 
       tag := GetTag(i);
 
-      if GetLives(i) >= 600 and tag < 101 then
+      if GetLives(i) >= 700 and tag < 101 then
          AgressiveMove(i, path);
 
-      if GetLives(i) < 600 and tag < 101 then
+      if GetLives(i) < 700 and tag < 101 then
          begin
          SetTag(i, 101);
 
@@ -707,6 +712,7 @@ repeat
       end;
 until not tmp;
 
+ComMoveXY(Rolf, rolfCoords[1], rolfCoords[2]);
 End;
 
 Every 0$1 trigger omarAttack do
@@ -809,10 +815,10 @@ repeat
             SetCargo(cargo[x], mat_oil, 100);
          end;
 
-       if GetLives(i) >= 600 and tag < 101 then
+       if GetLives(i) >= 700 and tag < 101 then
           AgressiveMove(i, path);
 
-       if GetLives(i) < 600 and tag < 101 then
+       if GetLives(i) < 700 and tag < 101 then
           begin
           SetTag(i, 101);
 
@@ -890,7 +896,7 @@ for i in tmp do
     chance := chance + 20;
     end;
 
-wait(rand(0$45, 2$30));
+wait(rand(0$45, 1$40));
 
 repeat
  wait(0$1);

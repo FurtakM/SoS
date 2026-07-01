@@ -124,7 +124,7 @@ End;
 
 // capture ovsyenko
 Every 0$2 trigger GetSide(ovsyenko) = 3 or not ovsyenkoSquad do
-var i, tmp, d;
+var i, tmp, d, time;
 begin
 hasOvsyenko := true;
 
@@ -152,15 +152,107 @@ SayRadio(Platonov, 'DOvsyenkoTaken-Pla-1');
 
 DialogueOff;
 
-ChangeMissionObjectives('MOutCapture');
+ChangeMissionObjectives('MBuildMine');
 
 repeat
  wait(0$1);
-until FilterUnitsInArea(ovsyenkoBaseArea, [[f_not, [f_constructed]], [f_btype, b_siberite_mine]]);
+until FilterUnitsInArea(ovsyenkoBaseArea, [[f_not, [f_constructed]], [f_nation, nation_russian], [f_btype, b_siberite_mine]]);
 
 DSibMine;
 
 ChangeMissionObjectives('MAddMine');
+
+canSpawnVsevolod := true;
+time := 3$0;
+
+repeat
+ wait(0$1);
+ time := Dec(time);
+
+ if FilterAllUnits([[f_side, 3], [f_dist, terminal, 36]]) then
+    time := 0;
+until time <= 0;
+
+SpawnVsevolod;
+End;
+
+Export function DVsevolod;
+var d, belkovSaved;
+begin
+DialogueOn;
+
+Say(Dolgov, 'DVsevolod-Dol-1');
+SayRadio(Vsevolod, 'DVsevolod-Vse-1');
+Say(Burlak, 'DVsevolod-Bur-1');
+Say(Gleb, 'DVsevolod-Glb-1');
+SayRadio(Vsevolod, 'DVsevolod-Vse-2');
+Say(Burlak, 'DVsevolod-Bur-2');
+SayRadio(Vsevolod, 'DVsevolod-Vse-3');
+Say(Burlak, 'DVsevolod-Bur-3');
+SayRadio(Vsevolod, 'DVsevolod-Vse-4');
+Say(Burlak, 'DVsevolod-Bur-4');
+
+d := Say(Gleb, 'DVsevolod-Glb-4');
+
+if not d then
+   d := Say(Karamazov, 'DVsevolod-RSol1-5');
+
+if d then
+   Say(Burlak, 'DVsevolod-Bur-5');
+
+Say(Burlak, 'DVsevolod-Bur-6');
+Say(Dolgov, 'DVsevolod-Dol-6');
+Say(Burlak, 'DVsevolod-Bur-7');
+SayRadio(Vsevolod, 'DVsevolod-Vse-7');
+
+RevealMapOnXY(78, 37, 3, -14);
+
+DialogueOff;
+
+wait(0$3);
+
+belkovSaved := LoadVariable('02_belkovSaved', false);
+
+DialogueOn;
+
+if not glebWarn then
+   Say(Gleb, 'DHelp1-Glb-1');
+
+if IsOk(Dolgov) and belkovSaved then
+   d := Say(Dolgov, 'DHelp1-Dol-1')
+else
+   d := Say(Karamazov, 'DHelp1-RSol1-1');
+
+if d then
+   Say(Titov, 'DHelp1-Tit-1');
+
+Say(Gleb, 'DHelp1-Glb-2');
+
+if not belkovSaved then
+   if not Say(Titov, 'DHelp2-Tit-1') then
+      Say(Karamazov, 'DHelp2-RSol1-1');
+
+d := Say(Gleb, 'DHelp2-Glb-1');
+
+if not d then
+   d := Say(Karamazov, 'DHelp2-RSol2-1');
+
+if d then
+   Say(Titov, 'DHelp2-Tit-2');
+
+Say(Jan, 'DJan-4');
+Say(Burlak, 'DHelp3-Bur-1');
+
+if not Say(Lipshchin, 'DHelp3-Lip-1') then
+   Say(Karamazov, 'DHelp3-RSol1-1');
+
+Say(Burlak, 'DHelp3-Bur-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('MVsevolod');
+
+canGoToNorth := true;
 End;
 
 // block north area
@@ -288,6 +380,322 @@ Say(Burlak, 'DSibResearch-Bur-1');
 SayRadio(Platonov, 'DSibResearch-Pla-1');
 
 DialogueOff;
+End;
+
+// vsevolod killed by american before capture
+Every 3 trigger vsevolodInTerminal and GetLives(Vsevolod) < 300 and not vsevolodCaptured do
+var i;
+begin
+vsevolodDied := true;
+
+DialogueOn;
+SayRadio(Vsevolod, 'DDieVsev1-Vse-1');
+DialogueOff;
+
+CenterOnUnits(Vsevolod);
+
+wait(0$0.3);
+
+for i in [ [GetX(Vsevolod), GetY(Vsevolod)], [73,41], [81,33], [87,35], [75,49], [77,33]] do
+    begin
+    MineExplosion(i[1], i[2], 1);
+    end;
+
+SetLives(Vsevolod, 0);
+End;
+
+// spot with Vsevolod
+Every 0$1 trigger vsevolodCaptured and not IsInUnit(Vsevolod) do
+var un;
+begin
+wait(0$2);
+
+un := NearestUnitToUnit(
+   UnitFilter([Burlak, Lipshchin, Dolgov, Petrosyan, Karamazov, Jan, Titov], [[f_inarea, terminalBaseArea], [f_ok]]),
+   Vsevolod
+);
+
+if un = Burlak then
+   begin
+   DBurlakScene;
+   exit;
+   end;
+
+DialogueOn;
+
+Say(Vsevolod, 'DOtherMeetVsev-Vse-1');
+
+if un = Jan then
+   Say(Jan, 'DJan-6')
+else
+   Say(un, 'DOtherMeetVsev-RSol1-1');
+
+DialogueOff;
+
+repeat
+ wait(0$1);
+until GetDistUnits(Burlak, Vsevolod) < 8;
+
+DBurlakScene;
+End;
+
+Export Function DBurlakScene;
+var i, p, americanTransport;
+begin
+p := 0;
+vsevolodTalkWithBurlak := true;
+
+InGameOn;
+
+if IsInUnit(Vsevolod) then
+   ComExit(Vsevolod);
+
+AddComMoveUnit(Vsevolod, Burlak);
+ComMoveUnit(Burlak, Vsevolod);
+
+repeat
+ wait(0$1);
+ p := Inc(p);
+until GetDistUnits(Burlak, Vsevolod) < 5 or p > 8;
+
+DialogueOn;
+
+Say(Vsevolod, 'DMeetVsev-Vse-1');
+Say(Burlak, 'DMeetVsev-Bur-1');
+
+if not hasOvsyenko then
+   begin
+   Say(Vsevolod, 'DMeetVsev2-Vse-1');
+   Say(Burlak, 'DMeetVsev2-Bur-1');
+   Say(Vsevolod, 'DMeetVsev2-Vse-2');
+   Say(Burlak, 'DMeetVsev3-Bur-1');
+   end
+else
+   begin
+   Say(Vsevolod, 'DMeetVsev2-Vse-2a');
+   Say(Burlak, 'DMeetVsev2-Bur-2');
+   Say(Vsevolod, 'DMeetVsev2-Vse-3');
+   Say(Burlak, 'DMeetVsev3-Bur-1');
+   end;
+
+Say(Vsevolod, 'DMeetVsev3-Vse-1');
+Say(Burlak, 'DMeetVsev3-Bur-2');
+Say(Vsevolod, 'DMeetVsev3-Vse-2');
+
+if stevensEscaped or stevensLeft or stevensKilled then
+   begin
+   Say(Burlak, 'DMeetVsev3-Bur-3');
+
+   if stevensKilled then
+      Say(Burlak, 'DMeetVsev4-Bur-1')
+   else
+      begin
+      Say(Burlak, 'DMeetVsev5-Bur-1');
+      Say(Vsevolod, 'DMeetVsev5-Vse-1');
+      Say(Burlak, 'DMeetVsev5-Bur-2');
+      end;
+
+   Say(Vsevolod, 'DMeetVsev6-Vse-1');
+   Say(Burlak, 'DMeetVsev6-Bur-1');
+   end;
+
+DialogueOff; 
+InGameOff;
+
+wait(0$20);
+
+americanTransport := PowellTransport;
+
+SetDir(americanTransport[3], 3);
+SetDir(americanTransport[4], 3);
+
+repeat
+ wait(0$1);
+until PlaceUnitXY(americanTransport[3], 50, 3, false);
+
+SetCargo(americanTransport[3], mat_cans, 100);
+
+PlaceHumanInUnit(americanTransport[1], americanTransport[3]);
+
+ComMoveXY(americanTransport[1], 73, 36);
+
+repeat
+ wait(0$1);
+until PlaceUnitXY(americanTransport[4], 50, 3, false);
+
+SetCargo(americanTransport[4], mat_cans, 100);
+
+PlaceHumanInUnit(americanTransport[2], americanTransport[4]);
+
+ComMoveXY(americanTransport[2], 73, 36);
+
+repeat
+ wait(0$1);
+until UnitFilter(americanTransport, [f_see, 3]);
+
+wait(0$5);
+
+DialogueOn;
+
+Say(americanTransport[2], 'DTruck-Sol1-1');
+Say(Burlak, 'DTruck-Bur-1');
+
+DialogueOff;
+
+wait(0$1);
+
+ComUnload(americanTransport);
+
+wait(0$0.3);
+
+AddComMoveXY(americanTransport, 50, 2);
+
+repeat
+ wait(0$1);
+
+ for i in americanTransport do
+     begin
+     if IsDead(i) or GetSide(i) = 3 then
+        begin
+        americanTransport := americanTransport diff i;
+        continue;
+        end;
+
+     ComMoveXY(i, 50, 2);
+
+     if IsInArea(i, vsevolodSpawnArea) and IsOk(i) then
+        begin
+        RemoveUnit(i);
+        americanTransport := americanTransport diff i;
+        end;
+     end;
+until not americanTransport;
+End;
+
+Every 3 trigger vsevolodCaptured and GetLives(Vsevolod) < 10 and GetDistUnits(Vsevolod, Burlak) > 20 do
+begin
+DialogueOn;
+ForceSay(Vsevolod, 'DDieVsev2-Vse-1');
+DialogueOff;
+
+SetLives(Vsevolod, 0);
+End;
+
+// trap
+Every 0$1 trigger vsevolodInTerminal and not isInTrap and not vsevolodCaptured do
+var i, tmp, un, isWest, isEast, skill;
+begin
+repeat
+ wait(0$1);
+ isWest := FilterUnitsInArea(trapWestArea, [f_side, 3]) > 0;
+ isEast := FilterUnitsInArea(trapEastArea, [f_side, 3]) > 0;
+until isWest or isEast or vsevolodCaptured;
+
+if vsevolodCaptured then
+   exit;
+
+isInTrap := true;
+
+skill := [3, 4, 5, 6][Difficulty];
+tmp := [];
+
+if isWest then
+   begin
+   for i := 1 to [3, 3, 4, 5][Difficulty] do
+       begin
+       uc_side := 1;
+       uc_nation := nation_american;
+
+       PrepareSoldier(false, skill);
+
+       un := CreateHuman;
+       Push(tmp, un);
+
+       PlaceUnitArea(un, trapWestSpawnArea, false);
+
+       ComAgressiveMove(un, 110, 66);
+       end;
+   end
+else
+   begin
+   for i := 1 to [3, 3, 4, 5][Difficulty] do
+       begin
+       uc_side := 1;
+       uc_nation := nation_american;
+
+       PrepareSoldier(false, skill);
+
+       un := CreateHuman;
+       Push(tmp, un);
+
+       PlaceUnitArea(un, trapEastSpawnArea, false);
+
+       ComAgressiveMove(un, 139, 88);
+       end;
+   end;
+
+wait(0$2);
+
+DialogueOn;
+
+Say(Karamazov, 'DPartyAttacked-RSol1-1');
+Say(Gleb, 'DPartyAttacked-Glb-1');
+Say(Lipshchin, 'DPartyAttacked-RSol2-1');
+
+DialogueOff;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if IsDead(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     if not HasTask(i) then
+        ComAgressiveMove(i, 130, 123);
+     end;
+until not tmp;
+End;
+
+// american captured ovsyenko again
+Every 0$1 trigger hasOvsyenko and GetSide(ovsyenko) = 1 do
+begin
+CenterOnUnits(ovsyenko);
+
+DialogueOn;
+
+if IsOk(Gleb) then
+   begin
+   Say(Gleb, 'DOvsyenkoCaptured-Glb-1');
+   Say(Burlak, 'DOvsyenkoCaptured-Bur-1');
+   end
+else if IsOk(Karamazov) then
+   Say(Karamazov, 'DOvsyenkoCaptured-RSol1-1')
+else if IsOk(Lipshchin) then
+   Say(Lipshchin, 'DOvsyenkoCaptured-RSol1-1')
+else if IsOk(Titov) then
+   Say(Titov, 'DOvsyenkoCaptured-RSol1-1');
+
+if IsOk(Jan) then
+   Say(Jan, 'DJan-5');
+
+DialogueOff;
+
+ChangeMissionObjectives('MRecapture');
+
+hasOvsyenko := false;
+
+repeat
+ wait(0$1);
+until GetSide(ovsyenko) = 3;
+
+hasOvsyenko := true;
+
+ChangeMissionObjectives('MOutRecapture');
 End;
 
 // lose

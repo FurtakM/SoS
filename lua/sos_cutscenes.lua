@@ -7,19 +7,60 @@ function cutscene.doCutscene(FILENAME, RECIEVER, CALLBACK)
     playMenuMusic(0);
 
     OW_hidemouse(true);
+    
     setFocus(cutscene.video);
     setVisible(cutscene, true);
 
-    setText(cutscene.subtitles, '');
-
+    setText(cutscene.subframe.subtitles, '');
     setVisible(cutscene.video.glare, RECIEVER);
     setVisible(cutscene.video.bord, RECIEVER);
     setVisible(cutscene.video.redled, RECIEVER);
 
-    setVisible(cutscene.subtitles, OW_get(SETTING_SUBTITLES));
+    if OW_get(SETTING_SUBTITLES) then
+        if RECIEVER then
+           local fade = OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_subBG', 127) ;
+           
+           if fade > 1 then
+                fade = fade / 2;
+           end;
+
+           setColour1(cutscene.subframe, BLACKA(fade));
+        else
+           setColour1(cutscene.subframe, BLACKA(OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_subBG', 127)));
+        end;
+    end;
+
+    setVisible(cutscene.subframe, OW_get(SETTING_SUBTITLES));
 
     OW_SEQ_RUN(cutscene.video.ID, 'videos/' .. FILENAME, CALLBACK);
     OW_SET_VSYNC_VIDEOMODE(true);
+end;
+
+function cutscene.doRU(FILENAME,CALLBACK)
+    setTexture(cutscene, 'SGUI/Rus/receiver.png');
+    setColour1(cutscene, WHITE());
+
+    local xd = (ScrWidth / LayoutWidth);
+    local yd = (ScrHeight / LayoutHeight);
+    
+    setXYWH(cutscene.video, XYWH(59*xd,104*yd,830*xd,575*yd));
+    setXYWH(cutscene.video.redled, XYWH(783*xd,12*yd,21*xd,20*yd));
+
+    cutscene.doCutscene('ru/' .. FILENAME, true, CALLBACK);
+end;
+
+function cutscene.doAM(FILENAME,CALLBACK)
+    setColour1(cutscene,BLACK());
+    setXYWH(cutscene.video, XYWH(0, 0, ScrWidth, ScrHeight));
+
+    cutscene.doCutscene('am/' .. FILENAME, false, CALLBACK);
+end;
+
+function cutscene.doAR(FILENAME,CALLBACK)
+    setColour1(cutscene, BLACK());
+    setXYWH(cutscene.video, XYWH(0, 0, ScrWidth, ScrHeight));
+
+    cutscene.doCutscene('ar/' .. FILENAME, false, CALLBACK);
 end;
 
 function cutscene.doX1(FILENAME, CALLBACK)
@@ -51,7 +92,7 @@ function FROMOW_PLAYSEQ(SIDE, FILENAME)
 end;
 
 function FROMOW_VIDEO_SUBTITLE(TEXT)
-    setText(cutscene.subtitles, TEXT);
+    setText(cutscene.subframe.subtitles, TEXT);
 end;
 
 SEQ_VID_ID = -1;
@@ -71,7 +112,7 @@ function FROMOW_SEQ_VIDEO_UPDATE(ID, PLAYING, NAME)
             PlayCustomVideoSubtitles();
         end;
     else
-        setText(cutscene.subtitles, '');
+        setText(cutscene.subframe.subtitles, '');
         SEQ_VID_NAME = '';
         SEQ_VID_EXT = '';
         SEQ_VID_ID = -1;
@@ -117,12 +158,12 @@ function PlayCustomVideoSubtitles();
                         end;
                     end;
                 else
-                    setText(cutscene.subtitles, v.text);
+                    setText(cutscene.subframe.subtitles, v.text);
                     break;
                 end;
             end;
 
-            setText(cutscene.subtitles, '');
+            setText(cutscene.subframe.subtitles, '');
         end;
     end;
 

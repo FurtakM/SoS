@@ -330,15 +330,20 @@ repeat
 until not UnitFilter(ruConvoySquad, [[f_placed], [f_type, unit_human]]);
 End;
 
-Every 0$50 trigger convoyCounter < rand(3, 5) and Difficulty > 1 do
-var i, tmp, un;
+Every 0$2 trigger tick > 45$00 and UnitFilter(ruConvoySquad, [f_ok]) and Difficulty > 1 do
+var i, tmp, un, p;
 begin
+wait(0$10);
+
 for i := 1 to 2 do
     EraseResourceArea(i, westSouthSpawnArea);
+
+p := 0;
 
 if FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, unit_vehicle], [f_type, unit_building]]) then
    repeat
     wait(0$1);
+    p := Inc(p);
 
     if FilterUnitsInArea(westSouthSpawnArea, [[f_empty], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]) then
        for i in FilterUnitsInArea(westSouthSpawnArea, [[f_empty], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]) do
@@ -347,7 +352,7 @@ if FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, u
     if FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, unit_vehicle]]) then
        for i in FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, unit_vehicle]]) do
            ComMoveXY(i, 88, 129);
-   until not FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, unit_vehicle]]);
+   until not FilterUnitsInArea(westSouthSpawnArea, [f_or, [f_type, unit_human], [f_type, unit_vehicle]]) or p > 10;
 
 for i := 1 to [2, 3, 4, 5][Difficulty] do
     begin

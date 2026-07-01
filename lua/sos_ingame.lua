@@ -168,22 +168,62 @@ function FROMOW_SHOW_INGAME_MENU(DATA)
     -- dialog.options.Show()
 end;
 
+LFC_UNITS_GROUPS = {
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+};
+
+function FROMOW_GROUPFORMED(GROUPID, COUNT, ARRAY)
+    LFC_UNITS_GROUPS[GROUPID + 1] = ARRAY;
+end;
+
+-- not used
+--function FROMOW_GROUPCHANGED(GROUPID, COUNT, ARRAY)
+--    clDebug({'b', GROUPID, COUNT, ARRAY});
+--end;
+
 LFC_UNITS_CUSTOM_ICON = {};
 
 function LFC_GET_UNITPANEL_ICONS_CALLBACK(UNIT, LICON, RICON)
-    if (#LFC_UNITS_CUSTOM_ICON == 0) then
+    if (#LFC_UNITS_CUSTOM_ICON == 0 and #LFC_UNITS_GROUPS == 0) then
         return LICON, RICON;
     end;
 
     local ID = parseInt(UNIT.ID);
+    local customIcon = -1;
+    local groupIcon = -1;
 
-    for i = 1, #LFC_UNITS_CUSTOM_ICON do
-        if (ID == LFC_UNITS_CUSTOM_ICON[i][1]) then
-            return LICON, RICON, -1, LFC_UNITS_CUSTOM_ICON[i][2];
+    for i = 1, #LFC_UNITS_GROUPS do
+        if #LFC_UNITS_GROUPS[i] then
+            for j = 1, #LFC_UNITS_GROUPS[i] do
+                if (ID == LFC_UNITS_GROUPS[i][j]) then
+                    if groupIcon > -1 then
+                        groupIcon = 24;
+                        break;
+                    end;
+
+                    groupIcon = i + 13;
+                end;
+            end;
         end;
     end;
 
-    return LICON, RICON;
+    for i = 1, #LFC_UNITS_CUSTOM_ICON do
+        if (ID == LFC_UNITS_CUSTOM_ICON[i][1]) then
+            customIcon = LFC_UNITS_CUSTOM_ICON[i][2];
+            break;
+        end;
+    end;
+
+    return LICON, RICON, customIcon, groupIcon;
 end;
 
 OW_LFC_ADD(LFC_GET_UNITPANEL_ICONS, LFC_GET_UNITPANEL_ICONS_CALLBACK, nil);

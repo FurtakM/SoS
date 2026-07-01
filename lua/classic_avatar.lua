@@ -157,9 +157,11 @@ end
 function clearAvatarCache()
 	clearPreviewAvatarCache();
 
-	if AVATARS_DATA ~= nil then
+	if AVATARS_DATA ~= nil and #AVATARS_DATA > 0 then
 		for i = 1, #AVATARS_DATA do
-			OW_XICHT_PORTRAIT_FREETEXTURE(AVATARS_DATA[i]);
+			if AVATARS_DATA[i] ~= nil then
+				OW_XICHT_PORTRAIT_FREETEXTURE(AVATARS_DATA[i]);
+			end;
 		end;
 
 		AVATARS_DATA = {};
