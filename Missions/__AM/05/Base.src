@@ -103,7 +103,7 @@ dep := FilterAllUnits([f_btype, b_depot])[1];
 bar := FilterAllUnits([f_btype, b_armoury]);
 lab := FilterAllUnits([f_or, [f_btype, b_lab_half], [f_btype, b_lab]]);
 fac := FilterAllUnits([f_btype, b_factory]);
-bun := FilterAllUnits([f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]);
+bun := FilterAllUnits([[f_not, [f_constructed]], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork]]]);
 
 SetBName(dep, 'Gamma');
 
@@ -136,6 +136,7 @@ if bun and UnitFilter(team, [f_class, 1]) then
        if not filter then
           break;
 
+       SetDir(filter[1], GetDir(i) - 3);
        PlaceHumanInUnit(filter[1], i);
        team := team diff filter[1];
        filter := Delete(filter, 1);
@@ -191,8 +192,10 @@ if fac and UnitFilter(team, [f_class, 3]) then
 if team then
    for i in team do
        begin
-       PlaceUnitArea(i, gammaBaseArea, false);
-       ComHold(i);
+       if GetClass(i) = 2 then
+          PlaceUnitXYR(i, 61, 31, 3, false)
+       else
+          PlaceUnitArea(i, gammaBaseArea, false);
        end;
 
 
@@ -217,6 +220,7 @@ PlaceHumanInUnit(Gladstone, veh);
 
 veh := PrepareTank(1, 1, us_medium_wheeled, engine_solar, control_manual, us_cargo_bay, 100);
 SetDir(veh, rand(0,5));
+
 if not PlaceUnitArea(veh, gammaBaseArea, false) then
    PlaceUnitXYR(veh, 71, 24, 5, false);
 End;
@@ -268,4 +272,21 @@ if not FilterAllUnits([f_btype, b_depot]) then
    b := CreateAndPlaceBuildingXYD(52, 12, 3);
    end;
 
+bc_type := b_breastwork;
+bc_level := 6;
+
+b := CreateAndPlaceBuildingXYD(43, 32, 0);
+
+
+bc_type := b_breastwork;
+bc_level := 6;
+
+b := CreateAndPlaceBuildingXYD(64, 38, 5);
+SetBuildingStage(b);
+
+bc_type := b_breastwork;
+bc_level := 6;
+
+b := CreateAndPlaceBuildingXYD(69, 34, 5);
+SetBuildingStage(b); 
 End;

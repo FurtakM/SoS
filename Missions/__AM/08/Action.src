@@ -313,6 +313,9 @@ if FilterUnitsInArea(ruDefendArea, [f_side, 1]) > 1 or not IsOk(ruDep) or GetSid
    Say(Sikorski, 'D7a-Sik-1');
    DialogueOff;
 
+   sikorskiStatus := 1;
+   sikorskiDisabled := true;
+
    ChangeMissionObjectives('M2');
 
    RaiseSailEvent(1);
@@ -361,7 +364,7 @@ End;
 
 
 // Sikorsky dialog about attack with JMM
-Every 0$1 trigger FilterUnitsInArea(ruDefendArea, [f_side, 4]) > 2 do
+Every 0$1 trigger FilterUnitsInArea(ruDefendArea, [f_side, 4]) > 2 and not sikorskiDisabled do
 begin
 Say(Sikorski, 'D7-Sik-1');
 
@@ -406,7 +409,7 @@ DialogueOff;
 End;
 
 // end mission
-Every 0$2 trigger jmmArrival and IsDead(ruDep) and IsDead(ruCommander) and FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_barracks]]) = 0 do
+Every 0$2 trigger jmmArrival and (IsDead(ruDep) or GetSide(ruDep) = 1) and IsDead(ruCommander) and FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_barracks]]) = 0 do
 var i, tmp, prefix;
 begin
 Video(true);

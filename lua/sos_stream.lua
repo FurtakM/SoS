@@ -537,7 +537,7 @@ function displayPowell(track)
 	setX(streamPanel.powell, getWidth(game) + 160);
 	setVisible(streamPanel.powell, true);
 	bringToFront(streamPanel.powell);
-	sound.play('Sound/Stream/Powell' .. parseInt(track) .. '.wav', '', VOLUME_SPEECH);
+	sound.play('Sound/Stream/Powell' .. parseInt(track) .. '.wav', '', VOLUME_EFFECTS);
 	AddEventSlideX(streamPanel.powell.ID, - 320, 4, 'hidePowell();');
 end;
 
@@ -549,7 +549,7 @@ function displayStucuk()
 	setX(streamPanel.stucuk, getWidth(game) + 240);
 	setVisible(streamPanel.stucuk, true);
 	bringToFront(streamPanel.stucuk);
-	sound.play('Sound/Stream/Stucuk.wav', '', VOLUME_SPEECH);
+	sound.play('Sound/Stream/Stucuk.wav', '', VOLUME_EFFECTS);
 	AddEventSlideX(streamPanel.stucuk.ID, - 480, 4, 'hideStucuk();');
 end;
 
