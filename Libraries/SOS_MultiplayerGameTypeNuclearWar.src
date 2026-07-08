@@ -1,0 +1,165 @@
+// GameTypeNuclearWar = 10
+// Init
+Export nwResearchProgress, nwBombsCounter, nwBombProgress, nwPoints, nwEndGame;
+Every 0$1 trigger mpGameActive marked GameTypeNuclearWar do
+var i;
+begin
+nwResearchProgress := [0, 0, 0, 0, 0, 0, 0, 0];
+nwBombsCounter := [0, 0, 0, 0, 0, 0, 0, 0];
+nwBombProgress := [0, 0, 0, 0, 0, 0, 0, 0];
+nwPoints := [0, 0, 0, 0, 0, 0, 0, 0];
+
+mp_with_score := true;
+
+for i := 1 to 8 {max amount} do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    nwPoints := Replace(nwPoints, i, 1500);
+    SetMultiScore(i, 1500);
+    end;
+
+wait(mpGameTime);
+
+nwEndGame := true;
+
+mpDisplayStrings := [];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    // mpDisplayStrings := mpDisplayStrings ^ ['#game-points2', i, nwPoints[i]];
+    SetMultiScore(i, nwPoints[i]);
+    end;
+
+if not HasPower(your_side) and not IAmSpec then
+   enable(mpLose)
+else
+   enable(mpWin);
+End;
+
+Every 0$1 trigger mpGameActive marked GameTypeNuclearWar do
+var i, checkArea, side, pos;
+begin
+checkArea := [blockArea1, blockArea2, blockArea3, blockArea4, blockArea5, blockArea6, blockArea7, blockArea8];
+
+repeat
+ wait(0$1);
+
+ for i := 1 to 8 do
+     begin
+     if not mpSidePositions[i] then 
+        continue;
+
+     pos := mpSidePositions[i];
+     side := i;
+
+     CheckBuildUpArea(checkArea[pos], buildUpEscape, [
+         [f_not, [f_side, side]],
+         [f_or, [f_type, unit_human], [f_type, unit_vehicle]]
+     ]);
+     end;
+until false;
+End;
+
+Every 0$1 trigger mpGameActive and (IAmSpec or your_side = 9) marked GameTypeNuclearWar do
+var i, progress;
+begin
+enable;
+mpDisplayStrings := [];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    if not nwEndGame then
+       begin
+       if nwResearchProgress[i] < 100 then
+          begin
+          progress := GetTechProgress(tech_sibFiss, i);
+
+          if progress then
+             begin
+             progress := GetTechProgress(tech_sibFiss, i) * 100 / 250000;
+             nwResearchProgress := Replace(nwResearchProgress, i, progress);
+             end;
+          end;
+
+       if nwResearchProgress[i] < 100 then
+          mpDisplayStrings := mpDisplayStrings ^ ['#NuclearWar-Progress', i, nwResearchProgress[i]]
+       else
+          mpDisplayStrings := mpDisplayStrings ^ ['#NuclearWar-Mixed', i, nwBombsCounter[i], nwBombProgress[i]];
+       end;
+    end;
+End;
+
+Every 3$00 trigger mpGameActive marked GameTypeNuclearWar do
+var p;
+begin
+ArtContamination(150, 99, 10);
+p := 1;
+
+repeat
+ if tick < 15$00 then
+    wait(3$00)
+ else
+    wait(2$30);
+
+ if p < 10 then
+    p := Inc(p);
+
+ ArtContamination(150, 99, 10 * p);
+until false;
+End;
+
+
+// Conditions: destroy all enemies by killing thier depot
+Every 0$3 trigger mpGameActive and CanWinLoose and Multiplayer marked GameTypeNuclearWar do
+var i, canWin;
+begin
+canWin := false;
+
+if not HasPower(your_side) then
+   begin
+   Multiplayer_Loose_Message;
+   enable(mpLose);
+   end
+else
+   begin
+   canWin := true;
+
+   for i := 1 to 8 do
+       if mpSidePositions[i] and MultiplayerSideAlive(i) and (i <> your_side) then
+          if not mpSideTeams[i] or ((mpSideTeams[i] <> mpSideTeams[your_side]) and GetAttitude(your_side, i) <> att_friend) then
+             if HasPower(i) then
+                begin
+                canWin := false;
+                break;
+                end;
+
+   if canWin then
+      enable(mpWin)
+   else
+      enable;
+   end;
+End;
+
+Function CanWinLoose;
+begin
+result := true;
+
+//if IAmServer and PlayerCount > 0 then
+//   result := false;
+
+if IAmSpec and PlayerCount > 1 then
+   result := false;
+End;
+
+Function HasPower(i);
+begin
+result := FilterAllUnits([[f_side, i], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]);
+End;

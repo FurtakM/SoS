@@ -65,7 +65,7 @@ AddComBuild(eng[1], b_breastwork, 50, 51, 4);
 End;
 
 Every 0$1 trigger ruMobile do
-var i, mech, enemy;
+var i, mech, enemy, enemyInBase;
 begin
 enable;
 
@@ -85,6 +85,8 @@ for i in ruMobile do
        continue;
        end;
 
+    enemyInBase := FilterUnitsInArea(ruParking, [f_enemy, 3]) union FilterUnitsInArea(ruParking2, [f_enemy, 3]);
+
     if not GetTag(i) or GetTag(i) = 0 then
        begin
        if GetFuel(i) < 50 then
@@ -97,7 +99,7 @@ for i in ruMobile do
 
           SetFuel(i, 100);
           end
-       else if not IsInArea(i, ruParking) and not IsInArea(i, ruParking2) then
+       else if not IsInArea(i, ruParking) and not IsInArea(i, ruParking2) and not enemyInBase then
           begin
           if not FilterUnitsInArea(ruHillArea, [f_side, 1]) then
              begin
@@ -113,24 +115,32 @@ for i in ruMobile do
 
     if GetTag(i) = 101 then
        begin
-       if GetLives(i) < 650 then
+       if enemyInBase then
           begin
-          if not IsDrivenBy(i) then
-             continue;
-
-          mech := IsDrivenBy(i);
-
-          ComExitVehicle(mech);
-          AddComRepairVehicle(mech, i);
-
-          repeat
-           wait(0$1);
-          until GetLives(i) = 1000;
-
-          ComEnterUnit(mech, i);
+          if IsDrivenBy(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
           end
-       else if IsDrivenBy(i) then
-          SetTag(i, 102);
+       else
+          begin
+          if GetLives(i) < 650 then
+             begin
+             if FilterAllUnits([[f_enemy, 3], [f_dist, i, 8]]) or not IsDrivenBy(i) then
+                continue;
+
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+
+             repeat
+              wait(0$1);
+             until GetLives(i) = 1000 or FilterAllUnits([[f_enemy, 3], [f_dist, mech, 8]]);
+
+             ComEnterUnit(mech, i);
+             end
+          else if IsDrivenBy(i) then
+             SetTag(i, 102);
+          end;
        end;
 
     if GetTag(i) = 102 then

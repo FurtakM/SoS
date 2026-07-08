@@ -1,0 +1,273 @@
+// Multiplayer map module
+// Each map has his own
+// SOS_Multiplayer required
+Export function InitMultiplayerSettings;
+begin
+{
+  mpBaseLevel,            // (0)  
+  mpAmountOfPeople,       // (1)  
+  mpSkillLevel,           // (2)  
+  mpStartingResources,    // (3)  
+  mpShipments,            // (4)  
+  mpOilSources,           // (5) 
+  mpSibSources,           // (6)
+  mpPoints                // (7)
+  mpVehicles              // (8)
+  mpEmissions             // (9)
+  mpSharedVision,         // (10) 
+  mpFlags,                // (11) 
+  mpSibDetection,         // (12) 
+  mpPeopleRespawn,        // (13) 
+  mpApemans,              // (14) 
+  mpSibBomb,              // (17)
+  mpArtifacts,            // (18)
+  mpGameTime,             // (19)
+  mpBuildUpTime,          // (20) 
+}
+
+mpGameSettingsKeys := [
+  0, // 0
+  0, // 1
+  1, // 2
+  1, // 3
+  1, // 4
+  1, // 5
+  1, // 6
+  0, // 7
+  0, // 8
+  0, // 9
+  0, // 10
+  0, // 11
+  0, // 12
+  0, // 13
+  0, // 14
+  0, // 15
+  0, // 16
+  0, // 17
+  1, // 18
+  1, // 19
+  0  // 20
+];
+
+mpGameSettingsValues := [
+  [0, 1, 2], // base level (only depot, breastworks, breastworks + armoury)
+  [9, 12, 15, 24], // amount of people
+  [1, 3, 5, 7], // people skill
+  [[0,0,0], [500,50,150], [600,100,150], [700,120,200]], // resources
+  [1, 2, 3, 4], // shipments
+  [0, 1, 2], // oil sources
+  [0, 1, 2], // sib sources
+  [], // points
+  [], // vehicles
+  [], // emissions
+  [], // shared vision
+  [], // flag (morale time)
+  [], // sib detection
+  [], // people respawn
+  [], // apemans
+  [],
+  [],
+  [], // sib bomb
+  [0, 1], // artifacts
+  [30$0, 45$0], // gametime
+  [] // bt
+];
+
+// default settings
+mpGameSettings := [
+  0,   // base 0
+  15,  // people 1
+  8,   // skill  2
+  [700,120,200], // resources 3
+  3,   // shipments  4
+  2,   // oil 5
+  2,   // sib 6
+  250, // points 7
+  2,   // vehicles 8
+  0,   // emission 9
+  1,   // vision 10
+  -1,   // morale 11
+  1,   // detection 12
+  0,   // respawn 13
+  0,   // apemans  14
+  0,   // - 15
+  0,   // - 16
+  0,   // sib bomb 17
+  1,   // artifacts - 18
+  30$0,   // gametime 19
+  0  // bt 20
+];
+              
+mpGameType := GameTypeNuclearWar;
+your_side  := 1;
+
+mpSidePositions := [1,2,3,4,5,6,7,8];
+mpSideTeams     := [1,2,2,3,3,4,4,1];
+mpSideNations   := [1,3,1,3,1,3,1,3];
+mpTeams         := [[1],[2],[3],[4],[5],[6],[7],[8]];
+mpTeamGame      := true;
+mpMapSize       := [200, 200];
+End;
+
+Export kingArea, kingCamArea;
+Export function GetMultiplayerMapData(gameType);
+var i, all, hasOil, hasSib, baseLevel, startPos;
+begin
+mpBuildUpAreas := [];
+
+mpMarkedAreas := [
+  centerArea
+] union mpBuildUpAreas;
+
+baseLevel := 0;
+
+mpPeopleAmount := 15;
+mpPeopleSkill := 8;
+mpStartingResources := mpGameSettings[4];
+mpShipments := mpGameSettings[5];
+hasOil := mpGameSettings[6] > 0;
+hasSib := mpGameSettings[7] > 0;
+
+kingCamArea := 0;
+kingArea := 0;
+
+mpKingArea := 0;
+mpPoints := 0;
+mpEmissions := 0;   
+mpSharedVision := 1;
+mpBattleFlag := -1;
+mpSibDetection := true;
+mpRespawn := 0;
+mpApemans := 0;
+mpSibBomb := 1;
+mpBuildUpTime := 0;
+mpArtifacts := mpGameSettings[19];
+
+mpGameTime := mpGameSettings[20];
+
+mpApemansArea := [];
+
+startPos := [
+  GetBuildingFromArea(depotArea1, 1),
+  GetBuildingFromArea(depotArea2, 2),
+  GetBuildingFromArea(depotArea3, 2),
+  GetBuildingFromArea(depotArea4, 3),
+  GetBuildingFromArea(depotArea5, 4),
+  GetBuildingFromArea(depotArea6, 5),
+  GetBuildingFromArea(depotArea7, 5),
+  GetBuildingFromArea(depotArea8, 0)
+];
+
+for i := 1 to Count(startPos) do
+    mpStartPos := Replace(mpStartPos, i, [ShiftX(startPos[i][1], startPos[i][3], 10), ShiftY(startPos[i][2], startPos[i][3], 10)]);
+
+if hasOil then
+   begin
+   mpOilDeposits := [
+        GetSourcesFromArea(oilArea1, all),
+        GetSourcesFromArea(oilArea2, all),
+        GetSourcesFromArea(oilArea3, all),
+        GetSourcesFromArea(oilArea4, all),
+        GetSourcesFromArea(oilArea5, all),
+        GetSourcesFromArea(oilArea6, all),
+        GetSourcesFromArea(oilArea7, all),
+        GetSourcesFromArea(oilArea8, all)
+   ];
+   end;
+
+if hasSib then
+   begin
+   mpSibDeposits := [
+        GetSourcesFromArea(sibArea1, all),
+        GetSourcesFromArea(sibArea2, all),
+        GetSourcesFromArea(sibArea3, all),
+        GetSourcesFromArea(sibArea4, all),
+        GetSourcesFromArea(sibArea5, all),
+        GetSourcesFromArea(sibArea6, all),
+        GetSourcesFromArea(sibArea7, all),
+        GetSourcesFromArea(sibArea8, all)
+   ];
+   end;
+
+if mpArtifacts then
+   InitArtifact;
+End;
+
+
+// Crates drop
+Every 0$2 marked mpActive do
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
+begin
+if not mpShipments then
+   exit;
+
+case mpShipments of
+     1: begin // rare
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 0$50;
+        delayTime := 0$5;
+        end;
+     2: begin // medium
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 0$44;
+        delayTime := 0$4;
+        end;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 0$38;
+        delayTime := 0$3;
+        end;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$32;
+        delayTime := 0$2;
+        end;
+     end;
+
+areas := [centerArea];
+tmp := [baseArea1, baseArea2, baseArea3, baseArea4, baseArea5, baseArea6, baseArea7, baseArea8];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    areas := areas ^ tmp[mpSidePositions[i]];
+    end;
+
+x := 1;
+
+repeat
+ wait(time);
+ x := Inc(x);
+
+ if x > 5 then
+    x := 1;
+
+ if tick < 10$00 then
+    begin
+    for i in areas do
+        begin
+        if GetResourceArea(i, mat_cans) < 30 then
+           begin
+           CreateCratesArea(x, i, true);
+           end;
+        end;
+    end
+ else if GetResourceArea(centerArea, mat_cans) < 50 then
+    begin
+    for i := 1 to 3 do
+        CreateCratesArea(x, centerArea, true);
+    end;
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
+End;

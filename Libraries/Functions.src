@@ -1900,9 +1900,9 @@ begin
 if not unit or not enemy_unit then
    exit;
 
-if GetLives(i) < 250 then
+if GetLives(unit) < 250 then
    begin
-   ComAutodestruct(i);
+   ComAutodestruct(unit);
    exit;
    end;
 
@@ -1919,13 +1919,14 @@ tmp := [ [ShiftX(x, 0, 4), ShiftY(y, 0, 4)],
          [ShiftX(x, 4, 4), ShiftY(y, 4, 4)],
          [ShiftX(x, 5, 4), ShiftY(y, 5, 4)]];
 
-for i = tmp downto 1 do
+for i := tmp downto 1 do
     if not ValidHex(tmp[i][1], tmp[i][2]) or HexInfo(tmp[i][1], tmp[i][2]) <> 0 then
        tmp := Delete(tmp, i);
 
 j := GetClosestHex(unit, tmp);
 
-ComMoveXY(unit, j[1], j[2]);
+if j then
+   ComMoveXY(unit, j[1], j[2]);
 
 result := j;
 End;
@@ -2613,7 +2614,7 @@ for i := 1 to 5 do
     _x := ShiftX(x, d, r + i);
     _y := ShiftY(y, d, r + i);
 
-    if ValidHex(_x, _y) and not GetType(HexInfo(_x, _y)) in [unit_building, unit_vehicle] then
+    if ValidHex(_x, _y) and HexInfo(_x, _y) and not GetType(HexInfo(_x, _y)) in [unit_building, unit_vehicle] then
        begin
        ComMoveXY(unit, _x, _y);
        result := [_x, _y];

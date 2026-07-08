@@ -120,7 +120,7 @@ for i in tmp do
 End;
 
 Every 0$1 trigger ruMobile do
-var i, mech, enemy;
+var i, mech, enemy, enemyInBase;
 begin
 enable;
 
@@ -139,6 +139,8 @@ for i in ruMobile do
        ruMobile := ruMobile diff i;
        continue;
        end;
+
+    enemyInBase := FilterUnitsInArea(ruParkingArea, [f_enemy, 3]);
 
     if GetTag(i) = 300 then
        begin
@@ -160,24 +162,32 @@ for i in ruMobile do
 
     if GetTag(i) = 301 then
        begin
-       if GetLives(i) < 1000 then
+       if enemyInBase then
           begin
-          if not IsDrivenBy(i) then
-             continue;
-
-          mech := IsDrivenBy(i);
-
-          ComExitVehicle(mech);
-          AddComRepairVehicle(mech, i);
-
-          repeat
-           wait(0$1);
-          until GetLives(i) = 1000;
-
-          ComEnterUnit(mech, i);
+          if IsDrivenBy(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
           end
-       else if IsDrivenBy(i) then
-          SetTag(i, 0);
+       else
+          begin
+          if GetLives(i) < 1000 then
+             begin
+             if FilterAllUnits([[f_enemy, 3], [f_dist, i, 8]]) or not IsDrivenBy(i) then
+                continue;
+
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+
+             repeat
+              wait(0$1);
+             until GetLives(i) = 1000 or FilterAllUnits([[f_enemy, 3], [f_dist, mech, 8]]);
+
+             ComEnterUnit(mech, i);
+             end
+          else if IsDrivenBy(i) then
+             SetTag(i, 0);
+          end;
        end;
 
     if GetTag(i) < 300 then

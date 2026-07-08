@@ -947,7 +947,7 @@ End;
 
 // russian mobile warfare
 Every 0$1 trigger ruTanks and ruActiveAttacks do
-var i, mech, enemy;
+var i, mech, enemy, enemyInBase;
 begin
 enable;
 
@@ -966,6 +966,8 @@ for i in ruTanks do
        ruTanks := ruTanks diff i;
        continue;
        end;
+
+    enemyInBase := FilterUnitsInArea(ruParkingArea, [f_enemy, 3]);
 
     if not GetTag(i) or GetTag(i) = 0 then
        begin
@@ -987,24 +989,32 @@ for i in ruTanks do
 
     if GetTag(i) = tParking then
        begin
-       if GetLives(i) < 650 then
+       if enemyInBase then
           begin
-          if not IsDrivenBy(i) then
-             continue;
-
-          mech := IsDrivenBy(i);
-
-          ComExitVehicle(mech);
-          AddComRepairVehicle(mech, i);
-
-          repeat
-           wait(0$1);
-          until GetLives(i) = 1000;
-
-          ComEnterUnit(mech, i);
+          if IsDrivenBy(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
           end
-       else if IsDrivenBy(i) then
-          SetTag(i, tAttack);
+       else
+          begin
+          if GetLives(i) < 650 then
+             begin
+             if FilterAllUnits([[f_enemy, 3], [f_dist, i, 8]]) and not IsDrivenBy(i) then
+                continue;
+
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+
+             repeat
+              wait(0$1);
+             until GetLives(i) = 1000 or FilterAllUnits([[f_enemy, 3], [f_dist, mech, 8]]);
+
+             ComEnterUnit(mech, i);
+             end
+          else if IsDrivenBy(i) then
+             SetTag(i, tAttack);
+          end;
        end;
 
     if GetTag(i) = tAttack then
@@ -1147,6 +1157,9 @@ skill := [4, 5, 6, 7][Difficulty];
 area := arAttackSpawn2Area;
 parking := ruGatPointArea;
 dir := 5;
+
+for i := 1 to 3 do
+    EraseResourceArea(i, area);
 
 if FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) then
    for i in FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) do

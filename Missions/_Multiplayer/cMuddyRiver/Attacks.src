@@ -8,7 +8,7 @@ NorthBase := 2;
 WestBase := 3;
 End;
 
-Every 10$00 do
+Every 13$00 do
 var i;
 begin
 // north
@@ -141,7 +141,7 @@ Function SendToAttack(attackers, path);
 var i;
 begin
 repeat
- wait(0$1);
+ wait(0$2);
 
  for i in attackers do
      begin
@@ -162,7 +162,7 @@ End;
 
 // Extra attack outside map
 Every 0$10 trigger (not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot) and FilterAllUnits([[f_side, side_bot], [f_ok], [f_not, [f_empty]], [f_weapon, ar_control_tower]]) do
-var i, un, tmp, enemy;
+var i, un, tmp, enemy, enemyUnits;
 begin
 for i := 1 to 3 do
     begin
@@ -184,6 +184,8 @@ for i := 1 to 3 do
     tmp := Join(tmp, un);
     end;
 
+enemyUnits := FilterAllUnits([f_enemy, GetSide(tmp[1])]);
+
 repeat
  wait(0$1);
 
@@ -198,7 +200,7 @@ repeat
 
      if GetLives(i) < 750 then
         begin          
-        enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+        enemy := NearestUnitToUnit(UnitFilter(enemyUnits, [f_ok]), i);
 
         if enemy then
            ComMoveUnit(i, enemy);
@@ -208,14 +210,14 @@ repeat
      end;
 until not tmp;
 
-wait(8$00 - (1$00 * Difficulty));
+wait(11$00 - (1$00 * Difficulty));
 
 enable;
 End;
 
 // Extra attack outside map
 Every 18$00 trigger (not IsOk(ar_dep_s) or GetSide(ar_dep_s) <> side_bot) and (IsOk(ar_dep_w) and GetSide(ar_dep_w) = side_bot) do
-var i, un, tmp, enemy;
+var i, un, tmp, enemy, enemyUnits;
 begin
 enable;
 
@@ -236,6 +238,8 @@ for i := 1 to 3 do
     tmp := Join(tmp, un);
     end;
 
+enemyUnits := FilterAllUnits([f_enemy, GetSide(tmp[1])]);
+
 repeat
  wait(0$1);
 
@@ -250,7 +254,7 @@ repeat
 
      if GetLives(i) < 750 then
         begin
-        enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+        enemy := NearestUnitToUnit(UnitFilter(enemyUnits, [f_ok]), i);
 
         if enemy then
            ComMoveUnit(i, enemy);
@@ -263,7 +267,7 @@ End;
 
 // Extra attack outside map
 Every 0$10 trigger not IsOk(ar_dep_e) or GetSide(ar_dep_e) <> side_bot do
-var i, un, tmp, enemy;
+var i, un, tmp, enemy, enemyUnits;
 begin
 
 for i := 1 to [2, 3, 4][Difficulty] do
@@ -281,6 +285,8 @@ for i := 1 to [2, 3, 4][Difficulty] do
     tmp := Join(tmp, un);
     end;
 
+enemyUnits := FilterAllUnits([f_enemy, GetSide(tmp[1])]);
+
 repeat
  wait(0$1);
 
@@ -292,21 +298,21 @@ repeat
         continue;
         end;
 
-     enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+     enemy := NearestUnitToUnit(UnitFilter(enemyUnits, [f_ok]), i);
 
      if enemy then
         ComAttackUnit(i, enemy);
      end;
 until not tmp;
 
-wait(10$00);
+wait(12$00);
 
 enable;
 End;
 
 // Extra attack outside map
 Every 0$10 trigger not IsOk(ar_dep_w) or GetSide(ar_dep_w) <> side_bot do
-var i, un, tmp, enemy;
+var i, un, tmp, enemy, enemyUnits;
 begin
 
 for i := 1 to [2, 3, 3][Difficulty] do
@@ -324,6 +330,8 @@ for i := 1 to [2, 3, 3][Difficulty] do
     tmp := Join(tmp, un);
     end;
 
+enemyUnits := FilterAllUnits([f_enemy, GetSide(tmp[1])]);
+
 repeat
  wait(0$1);
 
@@ -335,14 +343,14 @@ repeat
         continue;
         end;
 
-     enemy := NearestUnitToUnit(FilterAllUnits([f_enemy, GetSide(i)]), i);
+     enemy := NearestUnitToUnit(UnitFilter(enemyUnits, [f_ok]), i);
 
      if enemy then
         ComAttackUnit(i, enemy);
      end;
 until not tmp;
 
-wait(10$00);
+wait(12$00);
 
 enable;
 End;

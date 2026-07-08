@@ -50,7 +50,8 @@ Export
   mpBlockRespThread,
   mpBtBannedTechs,
   //mpXYV,
-  mpSideFog;
+  mpSideFog,
+  mpGameTime;
 
 {
   mpBaseLevel,            // (0)  No Base, Depot Only, Fortified, Extra Fortified
@@ -69,6 +70,8 @@ Export
   mpPeopleRespawn,        // (13) None, Rare, Common
   mpApemans,              // (14) None, Few, Medium, Lots
   mpSibBomb,              // (17) Off, On
+  mpArtifacts,            // (18) Off, On
+  mpGameTime,             // (19)
   mpBuildUpTime,          // (20) BT
   mpTimeToWin,            // (21) Time to Win
 }
@@ -192,6 +195,10 @@ for i := 1 to 8 {max amount} do
 
     side := i;
     nation := mpSideNations[i];
+
+    if mpGameType = GameTypeNuclearWar and nation = nation_arabian then
+       nation := nation_american;
+
     pos := mpSidePositions[i];
 
     // oil
@@ -454,7 +461,10 @@ var i, un, class, commander;
 begin
 result := [];
 
-class := class_soldier;
+if mpGameType = GameTypeNuclearWar then
+   class := class_scientistic
+else
+   class := class_soldier;
 
 uc_side := side;
 uc_nation := nation;
@@ -685,7 +695,7 @@ begin
 result := false;
 
 case gameType of
-     GameTypeNormal, GameTypeFamine, GameTypeArmsRace, GameTypeArmsArtifact, GameTypeForts:
+     GameTypeNormal, GameTypeFamine, GameTypeArmsRace, GameTypeArmsArtifact, GameTypeForts, GameTypeNuclearWar:
                    begin
                    result := Count(FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer], [f_control, control_apeman]]]));
                    end;

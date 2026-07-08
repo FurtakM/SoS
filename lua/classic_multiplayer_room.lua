@@ -1769,6 +1769,15 @@ end;
 
 function getAllowedNations(POSITION)
 	if (MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil) then
+		if (MULTIPLAYER_ROOM_RANDOM_POSITIONS) then
+			return {
+				loc(809),
+				loc(810),
+				loc(811),
+				loc(812)
+			};
+		end;
+
 		return {};
 	end;
 

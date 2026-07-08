@@ -851,7 +851,7 @@ for i = 1 to mc_bases do
               begin
               k := NearestUnitToUnit(tmp, j);
 
-              if GetDistUnits(j, k) > 5 then
+              if k and GetDistUnits(j, k) > 5 then
                  ComMoveToNearbyEntrance(j, k);
               end;
            end;
@@ -902,16 +902,16 @@ for i = 1 to mc_bases do
        begin
        for j in cranes do
            begin
-           if GetLives(j) = 1000 and not HasTask(j) then
+           if {GetLives(j) = 1000 and} not HasTask(j) then
               begin
               to_repair := NearestUnitToUnit(mc_building_need_repair[i], j);
 
               if DangerAtRange(to_repair, 16)[4] < 10 then
                  ComRepairBuilding(j, to_repair);
-              end
-           else
+              end;
+           {else
               if GetLives(j) < 500 and not IsInArea(j, mc_parking[i]) then
-                 ComMoveToArea(j, mc_parking[i]);
+                 ComMoveToArea(j, mc_parking[i]);}
            end;
        end;
 
@@ -1750,6 +1750,8 @@ for i = 1 to mc_bases do
 
     for j in fac do
         vehs := vehs union FilterAllUnits([[f_side, side], [f_dist, j, 15], [f_type, unit_vehicle], [f_not, [f_hastask]], [f_not, [f_lives, 1000]]]);
+
+    vehs := UnitFilter(vehs, [f_or, [f_not, [f_weapon, ar_crane]], [f_not, [f_weapon, us_crane]], [f_not, [f_weapon, ru_crane]]]);
 
     if not vehs then
        begin

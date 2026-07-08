@@ -199,4 +199,8 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 		MIN = 2,
 		MAX = 8
 	},
+	pNuclearWinter = {
+		MIN = 2,
+		MAX = 8
+	}
 }

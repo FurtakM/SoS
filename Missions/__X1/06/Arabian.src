@@ -635,10 +635,10 @@ SetInvulnrability(Rolf, true);
 End;
 
 Every 0$1 trigger rolfAttack do
-var i, tmp, mech, path, tag, rolfCoords;
+var i, tmp, enemy, mech, path, tag, rolfCoords;
 begin
-path := [ [215,162], [195,163], [174,162], [145,163], [127,163] ];
-rolfCoords := [221, 161];
+path := [ [172,162], [145,163], [127,163] ];
+rolfCoords := [172, 162];
 tmp := rolfSquad;
 
 if not tmp then
@@ -648,9 +648,57 @@ ComMoveXY(tmp, rolfCoords[1], rolfCoords[2]);
 
 repeat
  wait(0$1);
+until UnitFilter(tmp, [f_distxy, rolfCoords[1], rolfCoords[2], 6]);
+
+enemy := FilterUnitsInArea(ruOutpostNorth, [f_side, 3]);
+
+if enemy then
+   begin
+   repeat
+    wait(0$1); 
+    enemy := FilterUnitsInArea(ruOutpostNorth, [f_side, 3]);
+
+    for i in tmp union Rolf do
+        begin
+        if not IsOk(i) then
+           begin
+           tmp := tmp diff i;
+           continue;
+           end;
+
+        if GetLives(i) < 600 and GetDistUnitXY(i, rolfCoords[1], rolfCoords[2]) > 8 then
+           begin
+           ComMoveXY(i, rolfCoords[1], rolfCoords[2]);
+           continue;
+           end;
+
+        if GetLives(i) < 600 and GetType(i) = unit_vehicle and GetDistUnitXY(i, rolfCoords[1], rolfCoords[2]) < 6 then
+           begin
+           mech := IsDrivenBy(i);
+
+           if mech then
+              AddComRepairVehicleAndReturn(mech);
+           end;
+
+        if not HasTask(i) and GetLives(i) > 600 and (
+           GetClass(i) in [class_soldier, class_mortar]
+           or (GetType(i) = unit_vehicle and IsDrivenBy(i))
+        ) then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+        end;
+   until not enemy;
+   end;
+
+rolfCoords := [195, 163];
+
+repeat
+ wait(0$1);
 
   if IsIdle(Rolf) and (IsInUnit(Rolf) or GetClass(Rolf) in [class_soldier, class_mortar]) then
      AgressiveMove(Rolf, path);
+
+  if GetClass(Rolf) in [class_mechanic, class_scientistic, class_engineer] and not IsInUnit(Rolf) and GetDistUnitXY(Rolf, rolfCoords[1], rolfCoords[2]) > 6 then
+     ComMoveXY(Rolf, rolfCoords[1], rolfCoords[2]);
 
   tmp := UnitFilter(rolfSquad, [[f_not, [f_driving]], [f_or, [f_class, 1], [f_class, 8]]]);
 
@@ -716,7 +764,7 @@ ComMoveXY(Rolf, rolfCoords[1], rolfCoords[2]);
 End;
 
 Every 0$1 trigger omarAttack do
-var i, cargo, tmp, tag, mech, x, path, omarAttackCoords;
+var i, un, cargo, tmp, tag, emptyVehs, mech, x, path, omarAttackCoords;
 begin
 path := [ [209,221], [190,220], [177,220], [168,223], [150,206] ];
 omarAttackCoords := [219, 225, 0];
@@ -729,7 +777,10 @@ for i := 1 to 2 do
     PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_cargo_bay, 80);
     cargo := Join(cargo, CreateVehicle);
     SetDir(cargo[i], 4);
-    PlaceUnitArea(cargo[i], omarVehiclesArea, false);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(cargo[i], southSpawn, false);
 
     PrepareMechanic(false, 4);
     PlaceHumanInUnit(CreateHuman, cargo[i]);
@@ -737,12 +788,71 @@ for i := 1 to 2 do
     ComMoveXY(cargo[i], 337, 232);
     end;
 
+for i := 1 to 4 do
+    begin
+    uc_side := 5;
+    uc_nation := 2;
+
+    PrepareSoldier(false, 7);
+    un := CreateHuman;
+
+    SetClass(un, class_mortar);
+    SetDir(un, 4);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(un, southSpawn, false);
+
+    omarSquad := Join(omarSquad, un);
+
+    ComMoveXY(un, 312, 217);
+    end;
+
+uc_side := 5;
+uc_nation := 2;
+
+PrepareScientist(false, 4);
+un := CreateHuman;
+
+SetClass(un, class_scientistic);
+SetDir(un, 4);
+
+repeat
+ wait(0$1);
+until PlaceUnitArea(un, southSpawn, false);
+
+omarSquad := Join(omarSquad, un);
+
+ComMoveXY(un, 312, 217);
+
 wait(0$25);
 
 for i := 1 to 2 do
     SetCargo(cargo[i], mat_oil, 100);
 
-ComExitBuilding(UnitFilter(omarSquad, [f_or, [f_class, 1], [f_class, 8]]));
+tmp := UnitFilter(omarSquad, [[f_inside], [f_or, [f_class, 1], [f_class, 8]]]);
+
+ComExitBuilding(tmp);
+
+wait(0$3);
+
+emptyVehs := FilterUnitsInArea(ruOmarBase, [[f_type, unit_vehicle], [f_empty]]);
+
+if emptyVehs and tmp then
+   for i in emptyVehs do
+       begin
+       ComEnterUnit(tmp[1], i);
+
+       if tmp > 1 then
+          tmp := Delete(tmp, 1)
+       else
+          break;
+       end;
+
+tmp := UnitFilter(omarSquad, [[f_inside], [f_or, [f_class, 1], [f_class, 4], [f_class, 8]]]) union Omar;
+
+for i in tmp do
+    ComExitBuilding(i);
 
 wait(0$3);
 
@@ -758,7 +868,7 @@ repeat
  wait(0$1);
 
  if omarAttackCoords[3] = 0 then
-    if FilterAllUnits([[f_side, 3], [f_distxy, 168, 229, 12]]) = 0 then
+    if FilterAllUnits([[f_side, 3], [f_distxy, 168, 229, 14]]) = 0 then
        begin
        omarAttackCoords := [167, 222, 1];
        AddComMoveXY(Omar ^ cargo ^ UnitFilter(omarSquad, [f_class, 4]), 167, 222);
