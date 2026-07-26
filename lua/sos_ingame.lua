@@ -18,19 +18,23 @@ function gamewindow.overlay.onTick(FRAMETIME)
             local unitSide = parseInt(SELECTED_UNIT.SIDE);
             local side = getvalue(OWV_MYSIDE);
 
-        	if selectedUnitID > 0 and unitKindID == 3 and FACTORY_WAYPOINTS[selectedUnitID] ~= nil and (side == 9 or side == unitSide) and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
+        	if selectedUnitID > 0 and 
+                unitKindID == 3 and 
+                FACTORY_WAYPOINTS[selectedUnitID] ~= nil and 
+                (side == 9 or side == unitSide) and 
+                (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
         		local point = FACTORY_WAYPOINTS[selectedUnitID];
         		displayFactoryWaypointXY(point[1], point[2], point[3], point[4]);
         	elseif FACTORY_ACTIVE_WAYPOINT ~= nil then
         		clearFactoryWaypoint();
         	end;
 
-            if selectedUnitID > 0 and (unitKindID == 0 or unitKindID == 1) and WAREHOUSE_GATEHRING_POINTS[selectedUnitID] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == selectedUnitID) then
+            --[[if selectedUnitID > 0 and (unitKindID == 0 or unitKindID == 1) and WAREHOUSE_GATEHRING_POINTS[selectedUnitID] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == selectedUnitID) then
                 local point = WAREHOUSE_GATEHRING_POINTS[selectedUnitID];
                 displayWarehouseGatheringPointXY(point[1], point[2], point[3], point[4]);
             elseif WAREHOUSE_ACTIVE_POINT ~= nil then
                 clearWarehouseGatheringPoint();
-            end;
+            end;--]]
 
             if side == 9 then
                 if unitSide ~= nil and (unitKindID == 0 or unitKindID == 1) then
