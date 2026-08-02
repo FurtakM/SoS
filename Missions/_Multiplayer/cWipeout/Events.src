@@ -1,5 +1,7 @@
 On UnitDestroyed_Extra(un, killerSide, killerUnit) do
 begin
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+
 if not GetSide(un) in botSides then
    exit;
 
@@ -7,6 +9,32 @@ if not un in [Sikorski] then
    MultiplayerEvent_UnitKilled(un, killerSide, false)
 else
    MultiplayerEvent_UnitKilled(un, killerSide, Multiplayer_GetCondition(5));
+End;
+
+Export function Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+var side, killedSide;
+begin
+side := GetSide(killerUnit);
+killedSide := GetSide(un);
+
+if side in botSides then
+   exit;
+
+if GetType(un) = unit_human then
+   begin
+   AddPlayerStats(side, 1);
+   ReducePlayerStrength(killedSide, 2);
+   end
+else if GetType(un) = unit_building then
+   begin
+   AddPlayerStats(side, 3);
+   ReducePlayerStrength(killedSide, 6);
+   end
+else
+   begin
+   AddPlayerStats(side, 2);
+   ReducePlayerStrength(killedSide, 10);
+   end;
 End;
 
 On UnitDestroyed(un) do
@@ -177,6 +205,9 @@ side := GetSide(building);
 if multi_sides[side] then
    MultiplayerEvent_BuildingCompleted(side, GetBType(building));
 
+if not side in botSides then
+   AddPlayerStrength(side, 6);
+
 if side = botSides[1] then
    begin
    amBuildings := Delete(amBuildings, 1);
@@ -243,7 +274,10 @@ SOS_VehicleConstructed(vehicle, factory);
 side := GetSide(vehicle);
 
 if multi_sides[side] then
-   MultiplayerEvent_Produced(side);  
+   MultiplayerEvent_Produced(side);
+
+if not side in botSides then
+   AddPlayerStrength(side, 10);
 
 if side = botSides[1] then
    begin
@@ -300,15 +334,32 @@ if GetTag(driver) = 999 then
    end;
 End;
 
-On ResearchComplete(tech, lab) do
+On BuildingCaptured(building, oldSide, unit) do
+var side;
 begin
-if GetSide(lab) = botSides[1] then
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+
+if side = botSides[1] then
    if tech in amTech then
       amTech := amTech diff tech;
 
-if GetSide(lab) = botSides[2] then
+if side = botSides[2] then
    if tech in arTech then
       arTech := arTech diff tech;
+
+if side in botSides then
+   exit;
+
+AddPlayerResearch(tech, side);
+AddPlayerStrength(side, 3);
 End;
 
 
@@ -330,6 +381,14 @@ if weapon = ar_miner and FilterAllUnits([[f_side, side], [f_weapon, ar_miner]]) 
    end;
 
 //Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
+End;
+
+On VehicleCaptured(newId, oldId, oldSide, unit) do
+var side;
+begin
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 10);
+AddPlayerStrength(side, 10);
 End;
 
 On SailEvent(event) do

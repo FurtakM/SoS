@@ -1,0 +1,120 @@
+// SpecBar logic for lua
+// by Rahol
+
+//Badania
+Export playerResearch;
+
+Export Function InitPlayersResearch();
+var side;
+begin
+playerResearch := [[],[],[],[],[],[],[],[]];
+End;
+
+Export Function PushPlayerResearch(side);
+var list;
+begin
+list := PrepareArray(playerResearch[side]);
+ToLua('setPlayerResearchSide(' & side & '); setPlayerResearch([=[' & list & ']=])');
+End;
+
+Export Function AddPlayerResearch(tech, side);
+var tmp;
+begin
+tmp := Replace(playerResearch[side], playerResearch[side] + 1, tech);
+playerResearch := Replace(playerResearch, side, tmp);
+PushPlayerResearch(side);
+End;
+
+// Si³a graczy
+Export playerStrength;
+Export Function InitPlayerStrength();
+var list;
+begin
+playerStrength := [0, 0, 0, 0, 0, 0, 0, 0];
+PushPlayerStrength;
+End;
+
+Export Function PushPlayerStrength();
+begin
+ToLua(
+  'setPlayerStrength('
+  & playerStrength[1] & ','
+  & playerStrength[2] & ','
+  & playerStrength[3] & ','
+  & playerStrength[4] & ','
+  & playerStrength[5] & ','
+  & playerStrength[6] & ','
+  & playerStrength[7] & ','
+  & playerStrength[8] & ')'
+);
+End;
+
+Export Function AddPlayerStrength(side, amount);
+begin
+if side >= 1 and side <= 8 then
+   playerStrength := Replace(playerStrength, side, playerStrength[side] + amount);
+
+PushPlayerStrength;
+End;
+
+Export Function ReducePlayerStrength(side, amount);
+begin
+if side >= 1 and side <= 8 then
+   playerStrength := Replace(playerStrength, side, playerStrength[side] - amount);
+
+PushPlayerStrength;
+End;
+
+//Zabójstwa
+Export playerStats;
+
+Export Function InitPlayerStats();
+var side;
+begin
+playerStats := [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+
+for side := 1 to 8 do
+    PushPlayerStats();
+End;
+
+Export Function PushPlayerStats();
+var row, side;
+begin
+for side := 1 to 8 do
+    begin
+    row := playerStats[side];
+    ToLua(
+      'setPlayerKillsSide(' & side & '); setPlayerKills([=[{people='
+      & row[1]
+      & ',vehicles='
+      & row[2]
+      & ',buildings='
+      & row[3]
+      & '}]=])'
+    );
+    end;
+End;
+
+Export Function AddPlayerStats(side, unitType);
+var row, idx, newValue;
+begin
+idx := unitType;
+row := playerStats[side];
+newValue := row[idx] + 1;
+row := Replace(row, idx, newValue);
+playerStats := Replace(playerStats, side, row);
+PushPlayerStats();
+End;
+
+
+Export Function InitSpecBar();
+begin
+InitPlayerStrength;
+InitPlayerStats;
+InitPlayersResearch;
+End;
+
+
+
+    
+

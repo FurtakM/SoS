@@ -1,9 +1,36 @@
 OLD_FROMOW_INFOPANEL_UPDATE = FROMOW_INFOPANEL_UPDATE;
 SELECTED_UNIT = nil;
 
+local function syncSpecBarFromSelectedUnit(DATA)
+    if DATA == nil then
+        return;
+    end;
+
+    if getvalue(OWV_MYSIDE) ~= 9 then
+        return;
+    end;
+
+    local unitSide = parseInt(DATA.SIDE);
+    if unitSide == nil then
+        return;
+    end;
+
+    if type(setPlayerResearchSide) == 'function' then
+        setPlayerResearchSide(unitSide);
+    end;
+
+    if type(setSpecBarSelectedNation) == 'function' then
+        local unitNation = parseInt(DATA.NATION);
+        if unitNation ~= nil and unitNation >= 1 and unitNation <= 3 then
+            setSpecBarSelectedNation(unitNation);
+        end;
+    end;
+end;
+
 function FROMOW_INFOPANEL_UPDATE(DATA)
   OLD_FROMOW_INFOPANEL_UPDATE(DATA);
   SELECTED_UNIT = DATA;
+  syncSpecBarFromSelectedUnit(DATA);
 end;
 
 OLD_GAMEWINDOW_ONTICK = gamewindow.overlay.onTick;
@@ -18,23 +45,23 @@ function gamewindow.overlay.onTick(FRAMETIME)
             local unitSide = parseInt(SELECTED_UNIT.SIDE);
             local side = getvalue(OWV_MYSIDE);
 
-        	if selectedUnitID > 0 and 
-                unitKindID == 3 and 
-                FACTORY_WAYPOINTS[selectedUnitID] ~= nil and 
-                (side == 9 or side == unitSide) and 
-                (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
+            if side == 9 and unitSide ~= nil and unitSide >= 1 and unitSide <= 8 then
+                -- Spectator bar sync is handled in FROMOW_INFOPANEL_UPDATE to avoid per-frame flicker.
+            end;
+
+        	if selectedUnitID > 0 and unitKindID == 3 and FACTORY_WAYPOINTS[selectedUnitID] ~= nil and (side == 9 or side == unitSide) and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
         		local point = FACTORY_WAYPOINTS[selectedUnitID];
         		displayFactoryWaypointXY(point[1], point[2], point[3], point[4]);
         	elseif FACTORY_ACTIVE_WAYPOINT ~= nil then
         		clearFactoryWaypoint();
         	end;
 
-            --[[if selectedUnitID > 0 and (unitKindID == 0 or unitKindID == 1) and WAREHOUSE_GATEHRING_POINTS[selectedUnitID] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == selectedUnitID) then
+            if selectedUnitID > 0 and (unitKindID == 0 or unitKindID == 1) and WAREHOUSE_GATEHRING_POINTS[selectedUnitID] ~= nil and (WAREHOUSE_ACTIVE_POINT.UNIT_ID == 0 or WAREHOUSE_ACTIVE_POINT.UNIT_ID == selectedUnitID) then
                 local point = WAREHOUSE_GATEHRING_POINTS[selectedUnitID];
                 displayWarehouseGatheringPointXY(point[1], point[2], point[3], point[4]);
             elseif WAREHOUSE_ACTIVE_POINT ~= nil then
                 clearWarehouseGatheringPoint();
-            end;--]]
+            end;
 
             if side == 9 then
                 if unitSide ~= nil and (unitKindID == 0 or unitKindID == 1) then

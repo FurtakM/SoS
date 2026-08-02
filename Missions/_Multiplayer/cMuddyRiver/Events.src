@@ -14,10 +14,38 @@ begin
 if GetSide(un) <> side_bot then
    exit;
 
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+
 if not un in [Saliba, Gensher, Shariff] then
    MultiplayerEvent_UnitKilled(un, killerSide, false)
 else
    MultiplayerEvent_UnitKilled(un, killerSide, Multiplayer_GetCondition(5));
+End;
+
+Export function Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+var side, killedSide;
+begin
+side := GetSide(killerUnit);
+killedSide := GetSide(un);
+
+if side = side_bot then
+   exit;
+
+if GetType(un) = unit_human then
+   begin
+   AddPlayerStats(side, 1);
+   ReducePlayerStrength(killedSide, 2);
+   end
+else if GetType(un) = unit_building then
+   begin
+   AddPlayerStats(side, 3);
+   ReducePlayerStrength(killedSide, 6);
+   end
+else
+   begin
+   AddPlayerStats(side, 2);
+   ReducePlayerStrength(killedSide, 10);
+   end;
 End;
 
 On UnitDestroyed(un) do
@@ -104,6 +132,9 @@ var i, j, side, base, btype;
 begin
 side := GetSide(building);
 
+if side <> side_bot then
+   AddPlayerStrength(side, 6);
+
 if multi_sides[side] then
    MultiplayerEvent_BuildingCompleted(side, GetBType(building));
 
@@ -147,6 +178,13 @@ if side = side_bot then
    end;
 End;
 
+On BuildingCaptured(building, oldSide, unit) do
+var side;
+begin
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+End;
 
 On VehicleConstructed(vehicle, factory) do
 var i, side, tmp, base, amount;
@@ -154,6 +192,9 @@ begin
 SOS_VehicleConstructed(vehicle, factory);
 
 side := GetSide(vehicle);
+
+if side <> side_bot then
+   AddPlayerStrength(side, 10);
 
 if multi_sides[side] then
    MultiplayerEvent_Produced(side);
@@ -210,3 +251,6 @@ if weapon = ar_miner and FilterAllUnits([[f_side, side], [f_weapon, ar_miner]]) 
 
 //Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
 End;
+
+
+

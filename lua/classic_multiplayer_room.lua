@@ -1769,15 +1769,6 @@ end;
 
 function getAllowedNations(POSITION)
 	if (MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil) then
-		if (MULTIPLAYER_ROOM_RANDOM_POSITIONS) then
-			return {
-				loc(809),
-				loc(810),
-				loc(811),
-				loc(812)
-			};
-		end;
-
 		return {};
 	end;
 
@@ -3437,13 +3428,14 @@ end;
 -- override functions
 function init_specBars()
 	local sides = {};
-	local yOffSet = 0;
+	local yOffSet = -410;
 	local icons = {
 		[1] = 'rand', 
 		[2] = 'am', 
 		[3] = 'ar', 
 		[4] = 'ru'
 	};
+	local myInfo;
 
 	for i = 1, 9 do
 		sides[i] = {};
@@ -3463,6 +3455,15 @@ function init_specBars()
 		end;
 	end;
 
+	if SpecBar and SpecBar.activeSides then
+		SpecBar.activeSides = {};
+		SpecBar.sideNatTex = {};
+	end;
+
+	if SpecBar and SpecBar.layout and SpecBar.layout.tabH then
+		yOffSet = SpecBar.layout.tabH;
+	end;
+
 	for i = 1, 8 do
 		if sides[i].nat then
 			SpecBar.bars[i].isInGame = true;
@@ -3477,13 +3478,25 @@ function init_specBars()
 
 			setY(SpecBar.bars[i], yOffSet);
 			yOffSet = yOffSet + interface.current.game.ui.specbar.h;
-			
+
+			if SpecBar and SpecBar.activeSides then
+				SpecBar.activeSides[#SpecBar.activeSides + 1] = i;
+				if SpecBar.sideNatTex then
+					SpecBar.sideNatTex[i] = sides[i].nat;
+				end;
+			end;
 		else
 			SpecBar.bars[i].isInGame = false;
 		end;
 	end;
 
-	if MULTI_PLAYERINFO_CURRENT_PLID[MyID].ISSPEC == true then
+	if type(SpecBarRefreshPages) == 'function' then
+		SpecBarRefreshPages();
+	end;
+
+	myInfo = MULTI_PLAYERINFO_CURRENT_PLID[MyID];
+
+	if myInfo and myInfo.ISSPEC == true then
 		showSpecBar(true);
 	else
 		showSpecBar(false);

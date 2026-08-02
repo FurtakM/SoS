@@ -4,6 +4,33 @@ if not GetSide(un) in botSides then
    exit;
 
 MultiplayerEvent_UnitKilled(un, killerSide, false);
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+End;
+
+Export function Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+var side, killedSide;
+begin
+side := GetSide(killerUnit);
+killedSide := GetSide(un);
+
+if side = botSides[1] then
+   exit;
+
+if GetType(un) = unit_human then
+   begin
+   AddPlayerStats(side, 1);
+   ReducePlayerStrength(killedSide, 2);
+   end
+else if GetType(un) = unit_building then
+   begin
+   AddPlayerStats(side, 3);
+   ReducePlayerStrength(killedSide, 6);
+   end
+else
+   begin
+   AddPlayerStats(side, 2);
+   ReducePlayerStrength(killedSide, 10);
+   end;
 End;
 
 On UnitDestroyed(un) do
@@ -89,6 +116,9 @@ var i, j, side, btype;
 begin
 side := GetSide(building);
 
+if side <> botSides[1] then
+   AddPlayerStrength(side, 6);
+
 if multi_sides[side] then
    MultiplayerEvent_BuildingCompleted(side, GetBType(building));
 
@@ -136,6 +166,9 @@ begin
 SOS_VehicleConstructed(vehicle, factory);
 
 side := GetSide(vehicle);
+
+if side <> botSides[1] then
+   AddPlayerStrength(side, 10);
 
 if multi_sides[side] then
    MultiplayerEvent_Produced(side);
@@ -186,10 +219,19 @@ if GetTag(driver) = 999 then
 End;
 
 On ResearchComplete(tech, lab) do
+var side;
 begin
 if GetSide(lab) = botSides[1] then
    if tech in arTech then
       arTech := arTech diff tech;
+
+side := GetSide(lab);
+
+if side = botSides[1] then
+   exit;
+
+AddPlayerResearch(tech, side);
+AddPlayerStrength(side, 3);
 End;
 
 On UnitKamikazed(un) do
@@ -210,4 +252,21 @@ if weapon = ar_miner and FilterAllUnits([[f_side, side], [f_weapon, ar_miner]]) 
 
 //Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
 End;
+
+On BuildingCaptured(building, oldSide, unit) do
+var side;
+begin
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+End;
+
+On VehicleCaptured(newId, oldId, oldSide, unit) do
+var side;
+begin
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 10);
+AddPlayerStrength(side, 10);
+End;
+
 

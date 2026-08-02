@@ -134,11 +134,12 @@ mpBtBannedTechs := [tech_RadMat];
 for i := 1 to 32 do
     mpGameSettings := Replace(mpGameSettings, i, 0);
 
+InitSpecBar;
 // load arrays from the map code
 End;
 
 Export function StartMultiplayer;
-var i, j, b, x, y, side, pos, nation, ape, team, setting, resources, gameTypes, hasVehicles;
+var i, j, c, b, x, y, side, pos, nation, ape, team, setting, resources, gameTypes, hasVehicles;
 begin
 gameTypes := [
     GameTypeNormal,
@@ -411,11 +412,31 @@ else
               ChangeSideFog(i[j], i[1]);
               mpSideFog := Replace(mpSideFog, i[j], i[1]);
 
-              x := mpStartPos[mpSidePositions[i[j]]][1];
-              y := mpStartPos[mpSidePositions[i[j]]][2];
+              pos := mpSidePositions[i[j]];
+
+              x := mpStartPos[pos][1];
+              y := mpStartPos[pos][2];
 
               PlaceSeeing(x, y, i[1], -32);
               RemoveSeeing(x, y, i[1]);
+
+              // oil
+              if Count(mpOilDeposits) then
+                 begin
+                 for c in mpOilDeposits[pos] do
+                     begin
+                     SetResourceVisibility(c[1], c[2], i[1]);
+                     end;
+                 end;
+
+              // sib
+              if Count(mpSibDeposits) then
+                 begin
+                 for c in mpSibDeposits[pos] do
+                     begin
+                     SetResourceVisibility(c[1], c[2], i[1]);
+                     end;
+                 end;
               end;
           end;
       end;

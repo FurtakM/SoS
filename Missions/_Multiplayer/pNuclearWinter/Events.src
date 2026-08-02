@@ -17,15 +17,13 @@ begin
 SOS_UnitKamikazed(un);
 End;
 
-On BuildingComplete(b) do
-Multiplayer_BuildingComplete(b);
-
 On VehicleConstructed(vehicle, factory) do
 var side;
 begin
+side := GetSide(vehicle);
+
 if GetWeapon(vehicle) in [us_siberium_rocket, ru_siberium_rocket] then
    begin
-   side := GetSide(vehicle);       
    nwPoints := Replace(nwPoints, side, nwPoints[side] + 250);
    SetMultiScore(side, nwPoints[side]);
 
@@ -33,6 +31,7 @@ if GetWeapon(vehicle) in [us_siberium_rocket, ru_siberium_rocket] then
    end;
 
 SOS_VehicleConstructed(vehicle, factory);
+AddPlayerStrength(side, 10);
 End;
 
 On WeaponPlaced(building, factory) do
@@ -62,9 +61,6 @@ End;
 On VehicleConstruction_ApeConsumed(factory, un) do
 Multiplayer_VehicleConstruction_ApeConsumed(factory, un);
 
-On BuildingCaptured(building, oldSide, unit) do
-Multiplayer_BuildingCaptured(building, oldSide, unit);
-
 On VehicleConstructionStarted(factory, chassis, engine, control, weapon) do
 var side, progress;
 begin
@@ -91,5 +87,41 @@ if weapon in [us_siberium_rocket, ru_siberium_rocket] then
    end;
 End;
 
+On BuildingComplete(b) do
+var side;
+begin
+Multiplayer_BuildingComplete(b);
+side := GetSide(b);
+AddPlayerStrength(side, 6);
+End;
+
+On BuildingCaptured(building, oldSide, unit) do
+var side;
+begin
+Multiplayer_BuildingCaptured(building, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+end;
+
 On VehicleCaptured(newId, oldId, oldSide, unit) do
+var side;
+begin
 Multiplayer_VehicleCaptured(newId, oldId, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 10);
+AddPlayerStrength(side, 10);
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+AddPlayerResearch(tech, side);
+AddPlayerStrength(side, 3);
+End;
