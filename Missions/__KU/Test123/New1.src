@@ -1,7 +1,61 @@
 Every 0$1 do
 begin
-enable;
+ResetFog;
+GetRadiusArea(25, 25, 10);
+End;
 
-if GetLives(1) < 1000 then
-   SetLives(1, 1000);
+Export function GetRadiusArea(x, y, r);
+var un, i, j, startPointX, startPointY, endPointX, endPointY;
+begin
+uc_side := 1;
+uc_nation := 1;
+
+// x-r, y-r
+// x+r, y+r
+startPointX := x - r;
+startPointY := y - r;
+endPointX := x + r;
+endPointY := y + r;
+
+for i := startPointX to x do
+    for j := startPointY to y do
+        begin
+        un := CreateHuman;
+        PlaceUnitXY(un, i, j, false);
+        ComHold(un);
+        end;
+
+for i := startPointX to x do
+    begin
+    for j := y to endPointY do
+        begin
+        if i < j - 10 then
+           continue;
+
+        un := CreateHuman;
+        PlaceUnitXY(un, i, j, false);
+        ComHold(un);
+        end;
+    end;
+
+for i := x to endPointX do
+    for j := startPointY to y do
+        begin
+        if i > j + 10 then
+           continue;
+
+        un := CreateHuman;
+        PlaceUnitXY(un, i, j, false);
+        ComHold(un);
+        end;
+
+for i := x to endPointX do
+    begin
+    for j := y to endPointY do
+        begin
+        un := CreateHuman;
+        PlaceUnitXY(un, i, j, false);
+        ComHold(un);
+        end;
+    end;
 End;

@@ -1,0 +1,127 @@
+On UnitDestroyed(un) do
+var side;
+begin
+SOS_UnitDestroyed(un);
+Multiplayer_UnitDestroyed(un);
+
+if GetType(un) = unit_human then
+   begin
+   side := GetSide(un);
+   nwPoints := Replace(nwPoints, side, nwPoints[side] - 100);
+   SetMultiScore(side, nwPoints[side]);
+   end;
+End;
+
+On UnitKamikazed(un) do
+begin
+SOS_UnitKamikazed(un);
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var side;
+begin
+side := GetSide(vehicle);
+
+if GetWeapon(vehicle) in [us_siberium_rocket, ru_siberium_rocket] then
+   begin
+   nwPoints := Replace(nwPoints, side, nwPoints[side] + 250);
+   SetMultiScore(side, nwPoints[side]);
+
+   nwBombsCounter := Replace(nwBombsCounter, side, nwBombsCounter[side] + 1);
+   end;
+
+SOS_VehicleConstructed(vehicle, factory);
+AddPlayerStrength(side, 10);
+End;
+
+On WeaponPlaced(building, factory) do
+var side;
+begin
+if GetBWeapon(building) in [us_siberium_rocket, ru_siberium_rocket] then
+   begin
+   side := GetSide(building);
+   nwPoints := Replace(nwPoints, side, nwPoints[side] + 250);
+   SetMultiScore(side, nwPoints[side]);
+
+   nwBombsCounter := Replace(nwBombsCounter, side, nwBombsCounter[side] + 1);
+   end;
+End;
+
+On BuildingStarted(building, builder) do
+var i;
+begin
+for i in [blockArea1, blockArea2, blockArea3, blockArea4, blockArea5, blockArea6, blockArea7, blockArea8] do
+    if IsInArea(building, i) then
+       begin
+       KillUnit(building);
+       exit;
+       end;
+End;
+
+On VehicleConstruction_ApeConsumed(factory, un) do
+Multiplayer_VehicleConstruction_ApeConsumed(factory, un);
+
+On VehicleConstructionStarted(factory, chassis, engine, control, weapon) do
+var side, progress;
+begin
+Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
+
+if weapon in [us_siberium_rocket, ru_siberium_rocket] then
+   begin    
+   side := GetSide(factory);
+
+   repeat
+    wait(0$1);
+
+    if BuildingStatus(factory) = bs_idle then
+       begin
+       nwBombProgress := Replace(nwBombProgress, side, 0);
+       exit;
+       end;
+
+    progress := GetWorkingProgress(factory);
+
+    if progress >= nwBombProgress[side] then
+       nwBombProgress := Replace(nwBombProgress, side, progress);
+   until progress >= 100 or BuildingStatus(factory) = bs_idle;
+   end;
+End;
+
+On BuildingComplete(b) do
+var side;
+begin
+Multiplayer_BuildingComplete(b);
+side := GetSide(b);
+AddPlayerStrength(side, 6);
+End;
+
+On BuildingCaptured(building, oldSide, unit) do
+var side;
+begin
+Multiplayer_BuildingCaptured(building, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+end;
+
+On VehicleCaptured(newId, oldId, oldSide, unit) do
+var side;
+begin
+Multiplayer_VehicleCaptured(newId, oldId, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 10);
+AddPlayerStrength(side, 10);
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+AddPlayerResearch(tech, side);
+AddPlayerStrength(side, 3);
+End;

@@ -719,10 +719,14 @@ function showCampaign(mode)
 		setFontName(menu.window_campaign_tree.panel.sidebar.run, ADMUI3L);
 		setFontName(menu.window_campaign_tree.panel.sidebar.delete, ADMUI3L);
 		setFontName(menu.window_campaign_tree.panel.sidebar.back, ADMUI3L);
+
+		CAMPAIGN_MODE = true;
 	else
 		showMenuButton(2);
 		setVisible(menu.window_campaign, false);
 		setVisible(menu.window_campaign_tree, false);
+		
+		CAMPAIGN_MODE = false;
 	end;
 end;
 

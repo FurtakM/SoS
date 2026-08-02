@@ -11,7 +11,7 @@ Export mc_bases, mc_building_need_repair, mc_building_repairs,
        mc_scan_area, mc_sides, mc_tech, mc_can_tame, mc_ape, mc_ape_in_lab, mc_taming,
        mc_build_upgrade, mc_lab, mc_lab_upgrade, mc_teleport_exit, mc_teleport_exit_set, mc_deposits_xy,
        mc_deposits_finder, mc_allowed_tower_weapons, mc_remote_driver, mc_class,
-       mc_class_case_use, mc_is_defending;
+       mc_class_case_use, mc_is_defending, mc_turret_list_waiting;
 Export mc_block_vehicle_constructed_thread;
 
 Export Function InitMacro;
@@ -51,6 +51,7 @@ mc_class := [];
 mc_class_case_use := [];
 mc_is_defending := [];
 mc_lab_upgrade := [];
+mc_turret_list_waiting := [];
 
 mc_block_vehicle_constructed_thread := false;
 End;
@@ -627,7 +628,7 @@ if mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_or, [f_btype, b_lab
          result := Replace(result, 3, p);
       end;
 
-    if tmp > 6 and eng < 6 then
+    {if tmp > 6 and eng < 6 then
        begin
        sort := SortBySkill(tmp diff (sci union mech union eng), 2);
        p := [];
@@ -647,7 +648,7 @@ if mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_or, [f_btype, b_lab
 
        if p then
           result := Replace(result, 2, p);
-       end;
+       end;}
 
    exit;
    end;
@@ -699,7 +700,7 @@ if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factor
 
    tmp := tmp diff eng;
 
-   if tmp and eng < 6 then
+   {if tmp and eng < 6 then
       begin
       sort := SortBySkill(tmp diff (sci union mech union eng), 2);
       p := [];
@@ -719,7 +720,7 @@ if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factor
 
       if p then
          result := Replace(result, 2, p);
-      end;
+      end;}
 
    exit;
    end;
@@ -771,7 +772,7 @@ if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factor
 
    tmp := tmp diff eng;
 
-   if tmp and eng < 4 then
+   {if tmp and eng < 4 then
       begin
       sort := SortBySkill(tmp diff (mech union eng), 2);
       p := [];
@@ -794,7 +795,7 @@ if not mc_tech[mc_sides[base]] and UnitFilter(mc_bases[base], [f_btype, b_factor
       end
    else
       for i = eng downto 5 do
-          tmp := tmp union eng[i];
+          tmp := tmp union eng[i];}
 
    result := Replace(result, 1, tmp diff sol);
    exit;
@@ -850,7 +851,7 @@ for i = 1 to mc_bases do
               begin
               k := NearestUnitToUnit(tmp, j);
 
-              if GetDistUnits(j, k) > 5 then
+              if k and GetDistUnits(j, k) > 5 then
                  ComMoveToNearbyEntrance(j, k);
               end;
            end;
@@ -864,7 +865,7 @@ End;
 
 // Action's
 Export Function MC_RepairBuildings();
-var i, j, un, tmp, cranes, to_repair_tmp, to_repair;
+var i, j, un, tmp, cranes, to_repair_tmp, to_repair, danger;
 begin
 if not mc_bases then
    exit;
@@ -901,16 +902,16 @@ for i = 1 to mc_bases do
        begin
        for j in cranes do
            begin
-           if GetLives(j) = 1000 and not HasTask(j) then
+           if {GetLives(j) = 1000 and} not HasTask(j) then
               begin
               to_repair := NearestUnitToUnit(mc_building_need_repair[i], j);
 
               if DangerAtRange(to_repair, 16)[4] < 10 then
                  ComRepairBuilding(j, to_repair);
-              end
-           else
+              end;
+           {else
               if GetLives(j) < 500 and not IsInArea(j, mc_parking[i]) then
-                 ComMoveToArea(j, mc_parking[i]);
+                 ComMoveToArea(j, mc_parking[i]);}
            end;
        end;
 
@@ -943,8 +944,9 @@ for i = 1 to mc_bases do
            continue;
 
         to_repair := NearestUnitToUnit(to_repair_tmp, j);
+        danger := DangerAtRange(to_repair, 16);
 
-        if DangerAtRange(to_repair, 16)[4] < 14 then
+        if danger and danger[4] < 14 then
            ComRepairBuilding(j, to_repair);
         end;
     end;
@@ -1154,9 +1156,8 @@ begin
 if not mc_bases then
    exit;
 
-for i = 1 to mc_bases do
+for i := 1 to mc_bases do
     begin
-
     if not mc_turret_list[i] or not UnitFilter(mc_bases[i], [f_btype, b_factory]) then
        continue;
 
@@ -1182,8 +1183,8 @@ for i = 1 to mc_bases do
     if tw then
        begin
        tw := tw[1];
-       weapon := GetTurretWeapon(tw, mc_scan_area[i]);
-       
+       weapon := GetTurretWeaponWithList(tw, mc_scan_area[i], mc_allowed_tower_weapons[i]);
+
        if mc_allowed_tower_weapons[i] then
           if not weapon in mc_allowed_tower_weapons[i] then
              continue;
@@ -1202,7 +1203,11 @@ for i = 1 to mc_bases do
     if not weapon then
        continue;
 
-    ComPlaceWeapon(tw, weapon);
+    if not tw in mc_turret_list_waiting then
+       begin
+       ComPlaceWeapon(tw, weapon);
+       mc_turret_list_waiting := Join(mc_turret_list_waiting, tw);
+       end;
     end;
 End;
 
@@ -1554,7 +1559,7 @@ for i = 1 to mc_bases do
           continue;
 
        for j in tmp do
-           if GetBType(IsInUnit(j)) = b_barracks and GetClass(j) = 1 and not MineOfUnit(j) and class then
+           if IsInUnit(j) and GetBType(IsInUnit(j)) = b_barracks and GetClass(j) = 1 and not MineOfUnit(j) and class then
               ComChangeProfession(j, class);
        end;
 
@@ -1745,6 +1750,8 @@ for i = 1 to mc_bases do
 
     for j in fac do
         vehs := vehs union FilterAllUnits([[f_side, side], [f_dist, j, 15], [f_type, unit_vehicle], [f_not, [f_hastask]], [f_not, [f_lives, 1000]]]);
+
+    vehs := UnitFilter(vehs, [f_or, [f_not, [f_weapon, ar_crane]], [f_not, [f_weapon, us_crane]], [f_not, [f_weapon, ru_crane]]]);
 
     if not vehs then
        begin

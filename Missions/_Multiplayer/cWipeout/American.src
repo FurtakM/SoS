@@ -38,7 +38,7 @@ PlaceHumanInUnit(Sikorski, HexInfo(35, 45));
 
 InitHC_All();
 
-amForce := PrepareBase(amDep, amBaseArea, '', skill, [800, 120, 0], [[10, 11, 12][Difficulty], 6, 6, 3]);
+amForce := PrepareBase(amDep, amBaseArea, '', skill, [1500, 220, 0], [[10, 11, 12][Difficulty], 6, 6, 3]);
 amForceTmp := [];
 
 
@@ -75,6 +75,13 @@ for i := 1 to 3 do
     amForceTmp := Join(amForceTmp, un);
     end;
 
+if Difficulty = 3 then
+   begin
+   AddComMoveXY(amForceTmp[amForceTmp], 85, 43);
+   AddComMoveXY(amForceTmp[amForceTmp], 78, 70);
+   AddComHold(amForceTmp[amForceTmp]);
+   end;
+
 for i in FilterAllUnits([[f_side, side], [f_type, unit_building]]) do
     SetBLevel(i, [3, 5, 7][Difficulty]);
 
@@ -84,7 +91,7 @@ End;
 
 // AI
 Function BaseScript(side, base, area, innerArea, outerArea, forces, healPoint, parkingPoint);
-var i, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
+var i, tmp, undone, lab, eng, mech, tag, tw, cr, arm, sci, sol, hurtUnits, enemy, enemyInBase, enemyOuterBase, drivers, cranes, vehicles, vehicles2, empty, fac, emptyTowers, weapon, depot, buildingsToBuild, enemySide;
 begin
 enable;
 
@@ -160,7 +167,18 @@ cr := GetListOfCratesInArea(area);
 mech := UnitFilter(forces, [[f_class, class_mechanic], [f_ok]]);
 
 if UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]) and IsOk(fac[1]) then
-   ComEnterUnit(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), fac[1]);
+   if UnitsInside(fac[1]) < 6 then
+      ComEnterUnit(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), fac[1])
+   else
+      begin
+      arm := FilterUnitsInArea(area, [[f_not, [f_full]], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+      if arm then
+         begin
+         ComEnterUnit(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), arm[1]);
+         AddComChangeProfession(UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_inside]]]), class_soldier);
+         end;
+      end;
 
 // sci logic
 sci := UnitFilter(forces, [[f_class, class_scientistic], [f_ok]]);
@@ -434,7 +452,7 @@ if sol then
              if IsInArea(i, area) then
                 ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i))
              else
-                ComMoveToarea(i, area);
+                ComMoveToArea(i, area);
           end;
       end
    else
@@ -461,6 +479,9 @@ if sol then
              SetTag(i, 0);
              continue;
              end;
+
+          if not IsInArea(i, area) and not IsInUnit(i) then
+             ComMoveToArea(i, area);
 
           if HasTask(i) then
              continue;

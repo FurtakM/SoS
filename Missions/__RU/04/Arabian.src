@@ -1,135 +1,707 @@
+Export enemyMobile, enemySide, enemyUnits, enemyWave, enemyMines, enemyGuards;
 Export Heike;
-Export firstAttackGroup;
-
-Export Function PrepareHeike;
+Export function PrepareArabian;
+var i, un, skill, veh, cams;
 begin
-    uc_side = 2;
+enemySide := 2;
+enemyUnits := [];
+enemyMobile := [];
+enemyMines := [];
+enemyGuards := [];
+enemyWave := 0;
 
-    Heike = PrepareUnitExt('Heike', false, 0);
+cams := AreaToList(camArea, 0);
 
-    if Difficulty >= 2 then
-       SetTech(tech_weap1, 2, state_researched);
-end;
+for i := 1 to cams[1] do
+    HiddenCamera(cams[1][i], cams[2][i], 2);
 
-Export currentEnemyGroup;
-Export Function PrepareArabianVehicles;
-var i, veh;
+uc_side := 2;
+uc_nation := nation_arabian;
+
+Heike := NewCharacter('Heike');
+End;
+
+Every 0$2 trigger FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) and FilterAllUnits([[f_side, 2], [f_weapon, ar_cargo_bay]]) do
+var i;
 begin
+enable;
 
-    currentEnemyGroup = [];
+for i in FilterAllUnits([[f_side, enemySide], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
 
-    for i := 1 to enemyGroupVehicles do
+Export function PrepareInfGroup(n, area);
+var i, un, skill;
+begin
+skill := [2, 3, 4, 5][Difficulty];
+
+for i := 1 to n do
     begin
-        uc_side = 2;
-        uc_nation = nation_arabian;
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
 
-        vc_weapon = [ar_light_gun, ar_double_machine_gun, ar_gatling_gun, ar_flame_thrower, ar_gun][rand(1, 5)];
+    PrepareSoldier(false, skill);
+    hc_attr := [12, 12];
 
-        if vc_weapon IN [ar_gatling_gun, ar_flame_thrower, ar_gun] then
-            vc_chassis = [ar_medium_trike, ar_half_tracked][rand(1,2)]
+    un := CreateHuman;
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(un, area, false);
+
+    enemyUnits := Join(enemyUnits, un);
+    end;
+End;
+
+Export function PrepareMobileGroup(n, area);
+var i, veh, un, skill;
+begin
+skill := [2, 3, 4, 5][Difficulty];
+
+for i := 1 to n do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(
+        [ar_half_tracked, ar_medium_trike, ar_medium_trike][rand(1,3)],
+        engine_combustion,
+        control_manual,
+        [ar_gun, ar_gun, ar_gun, ar_gatling_gun, ar_flame_thrower, ar_light_gun, ar_double_machine_gun][rand(1,7)],
+        100
+    );
+
+    veh := CreateVehicle;
+    enemyMobile := Join(enemyMobile, veh);
+    SetDir(veh, 3);
+
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, area, false);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 133, 20);
+    end;
+End;
+
+Export function SendSabotageGroup;
+var i, veh, tmp, un, skill;
+begin
+tmp := [];
+skill := [2, 3, 4, 5][Difficulty];
+
+for i := 1 to 3 do
+    begin
+    uc_side := 5;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(
+        ar_light_trike,
+        engine_combustion,
+        control_manual,
+        [ar_radar, ar_light_gun, ar_double_machine_gun][i mod 3 + 1],
+        100
+    );
+
+    veh := CreateVehicle;
+    tmp := Join(tmp, veh);
+    SetDir(veh, 3);
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, northSpawnArea, false);
+
+    PlaceHumanInUnit(un, veh);
+
+    ComMoveXY(veh, 133, 20);
+    AddComMoveXY(veh, 77, 75);
+    AddComMoveXY(veh, 93, 177);
+    end;
+End;
+
+Export function ClearRoadInForest;
+var i, un, veh, tmp, skill;
+begin
+if blockThread then
+   begin
+   repeat
+    wait(0$1);
+   until not blockThread;
+   end;
+
+blockThread := true;
+
+skill := [3, 4, 5, 6][Difficulty];
+
+tmp := AreaToList(forestRoadArea, 0);
+
+uc_side := enemySide;
+uc_nation := nation_arabian;
+
+PrepareMechanic(false, skill);
+un := CreateHuman;
+
+PrepareVehicle(ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower, 100);
+veh := CreateVehicle;
+SetDir(veh, 4);
+
+repeat
+ wait(0$1);
+until PlaceUnitArea(veh, northSpawnArea, false);
+
+PlaceHumanInUnit(un, veh);
+
+blockThread := false;
+
+for i := 1 to tmp[1] do
+    BurnTreeXYR(veh, tmp[1][i], tmp[2][i], 4);
+
+AddComMoveXY(veh, 171, 151);
+
+repeat
+ wait(0$1);
+
+ if IsDead(veh) then
+    exit;
+
+ if not HasTask(veh) then
+    begin
+    enemyMobile := Join(enemyMobile, veh);
+    exit;
+    end;
+
+until FilterUnitsInArea(endOfTheForestArea, [f_side, enemySide]);
+
+forestIsCleared := true;
+
+enemyMobile := Join(enemyMobile, veh);
+End;
+
+Export function SendArabRaid;
+var i, un, veh, tmp, nearest;
+begin
+if blockThread then
+   begin
+   repeat
+    wait(0$1);
+   until not blockThread;
+   end;
+
+blockThread := true;
+
+for i := 1 to [2, 2, 3, 3][Difficulty] do
+    begin
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
+
+    PrepareSoldier(false, [2, 3, 4, 4][Difficulty]);
+    PrepareVehicle(ar_light_trike, engine_combustion, control_manual, ar_double_machine_gun, 100);
+
+    veh := CreateVehicle;
+    SetDir(veh, 3);
+
+    repeat
+     wait(0$1);
+    until PlaceUnitArea(veh, northSpawnArea, false);
+
+    un := CreateHuman;
+    PlaceHumanInUnit(un, veh);
+
+    tmp := Join(tmp, un);
+
+    ComMoveXY(un, 131, 26);
+    end;
+
+blockThread := false;
+
+repeat
+ wait(0$1);
+
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ for i in tmp do
+     begin
+     veh := IsInUnit(i);
+     nearest := NearestUnitToUnit(FilterAllUnits([[f_enemy, enemySide], [f_ok], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+     if veh then
+        begin
+        if not IsInArea(veh, hillArea) then
+           begin
+           if not HasTask(i) then
+              begin
+              ComMoveXY(i, 75, 105);
+              AddComMoveXY(i, 110, 144);
+              AddComMoveXY(i, 127, 143);
+              AddComMoveXY(i, 114, 121);
+              end;
+           end
         else
-            vc_chassis = [ar_light_trike, ar_medium_trike, ar_half_tracked][rand(1,3)];
-        
-        vc_control = control_manual;
-        vc_engine = engine_combustion;
-        vc_fuel_battery = 100;
-        
-        veh = CreateVehicle;  
-        currentEnemyGroup = currentEnemyGroup ^ veh;   
-
-        PlaceUnitArea(veh, ArabianSpawnArea1, false);
-
-        if vc_weapon = ar_flame_thrower then
-            PrepareMechanic(false, enemySkillLevelFlame)
+           begin
+           AddComExitVehicle(i);
+           AddComPlaceDelayedCharge(i, 0, 0, nearest);
+           AddComWait(i, 0$1);
+           end;
+        end
+     else if not HasTask(i) then
+        begin
+        if nearest then
+           begin
+           ComPlaceDelayedCharge(i, 0, 0, nearest);
+           AddComWait(i, 0$1);
+           end
         else
-            PrepareMechanic(false, enemySkillLevel);
+           ComAgressiveMove(i, 92, 99);
+        end;
+     end;
+until not tmp;
+End;
 
-        PlaceHumanInUnit(CreateHuman, veh);
-    end;
-end;
-
-Export Function PrepareArabianHumans(spawnArea);
-var i, unit;
+Export function PrepareArabianAttack;
+var i, un, tmp, veh;
 begin
+if blockThread then
+   begin
+   repeat
+    wait(0$1);
+   until not blockThread;
+   end;
 
-    currentEnemyGroup = [];
+blockThread := true;
 
-    for i := 1 to rand(arabianTroopsMin, arabianTroopsMax) do
+enemyWave := Inc(enemyWave);
+
+case enemyWave of
+     1: begin
+        PrepareMobileGroup([4, 5, 6, 6][Difficulty], northSpawnArea);
+
+        for i := 1 to 2 do
+            begin
+            uc_side := enemySide;
+            uc_nation := nation_arabian;
+
+            PrepareScientist(false, 3);
+            PrepareVehicle(ar_half_tracked, engine_solar, control_manual, ar_cargo_bay, 100);
+
+            veh := CreateVehicle;
+            SetDir(veh, 3);
+
+            repeat
+             wait(0$1);
+            until PlaceUnitArea(veh, northSpawnArea, false);
+
+            un := CreateHuman;
+            PlaceHumanInUnit(un, veh);
+
+            SetCargo(veh, mat_oil, 100);
+
+            ComMoveXY(un, 160, 27);
+            AddComExitVehicle(un);
+            end;
+
+        for i := 1 to 3 do
+            begin
+            uc_side := enemySide;
+            uc_nation := nation_arabian;
+
+            PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+            un := CreateHuman;
+            PlaceUnitXYR(un, 148, 3, 3, false);
+
+            ComMoveToArea(un, forestGuardHill2Area);
+            end;
+
+        for i := 1 to [3, 4, 5, 5][Difficulty] do
+            begin
+            uc_side := enemySide;
+            uc_nation := nation_arabian;
+
+            PrepareSoldier(false, [4, 5, 6, 6][Difficulty]);
+            un := CreateHuman;
+            PlaceUnitXYR(un, 148, 3, 3, false);
+
+            enemyGuards := Join(enemyGuards, un);
+
+            ComMoveToArea(un, forestGuard3Area);
+            end;
+
+        RaiseSailEvent(eForest);
+        end;
+     2: begin
+        PrepareInfGroup([2, 3, 3, 3][Difficulty], eastSpawnArea);
+
+        wait(0$20);
+
+        PrepareMobileGroup([4, 5, 6, 7][Difficulty], northSpawnArea);
+
+        wait(0$03);
+
+        RaiseSailEvent(eRaid);
+
+        if not forestIsCleared then
+           RaiseSailEvent(eForest);
+        end;
+     3..6: begin
+        if forestIsCleared then
+           PrepareInfGroup([2, 3, 3, 3][Difficulty] + 1, southSpawnArea);
+
+        wait(0$20);
+
+        if enemyWave = 4 and Difficulty > 2 then
+           begin
+           SendSabotageGroup;
+           end;             
+
+        PrepareMobileGroup([6, 7, 9, 9][Difficulty], northSpawnArea);
+        end;
+     7..30: begin
+        if enemyWave mod 4 = 0 then
+           PrepareInfGroup([2, 3, 3, 3][Difficulty] + 1, westSpawnArea)
+        else
+           PrepareInfGroup([2, 3, 3, 3][Difficulty] + 1, eastSpawnArea);
+
+        wait(0$30);
+
+        if enemyWave mod 5 = 0 and Difficulty > 1 then
+           begin
+           SendSabotageGroup;
+           end;
+
+        PrepareMobileGroup([8, 8, 9, 9][Difficulty], northSpawnArea);
+
+        if i mod 7 = 0 then
+           RaiseSailEvent(eRaid);
+        end;
+     end;
+
+blockThread := false;
+End;
+
+Every 0$2 trigger enemyUnits do
+var i, tmp, nearest, enemy, path;
+begin
+enable;
+
+tmp := UnitFilter(enemyUnits, [f_ok]);
+
+enemyUnits := [];
+
+for i in FilterAllUnits([f_tag, tMined]) do
+    SetTag(i, 0);
+
+for i in UnitFilter(tmp, [f_class, class_soldier]) do
     begin
-        uc_side = 2;
-        uc_nation = nation_arabian;
-        
-        PrepareSoldier(false, enemySkillLevel -1);
-        unit = CreateHuman;
+    if Prob(50) then
+       SetTag(i, tMine)
+    else
+       continue;
 
-        currentEnemyGroup = currentEnemyGroup ^ unit;
+    nearest := NearestUnitToUnit(FilterAllUnits([[f_enemy, enemySide], [f_ok], [f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
 
-        PlaceUnitArea(unit, spawnArea, false);
+    if not nearest then
+       break;
+
+    SetTag(nearest, tMined);
+    AddComPlaceDelayedCharge(i, 0, 0, nearest);
     end;
 
-    for i := 1 to rand(1, 3) do
+tmp := UnitFilter(tmp, [f_ok]);
+
+repeat
+ wait(0$2);
+ tmp := UnitFilter(tmp, [f_ok]);
+ enemy := FilterAllUnits([f_enemy, enemySide]);
+
+ for i in tmp do
+     if GetClass(i) <> 1 and GetTag(i) <> tMine then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+     else
+        begin
+        nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_type, unit_building]]), i);
+
+        if not nearest then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else if not HasTask(i) then
+           begin
+           SetTag(nearest, tMined);
+           ComPlaceDelayedCharge(i, 0, 0, nearest);
+           end;
+        end;
+until not tmp;
+End;
+
+
+// SI vehicles
+Every 0$1 trigger enemyMobile and arabAttack do
+var i, mech, enemy;
+begin
+enable;
+
+if not enemyMobile then
+   exit;
+
+// tags:
+// 0 - idle,
+// 1 - go to parking, repair if needed
+// 2 - attack
+
+for i in enemyMobile do
     begin
-        uc_side = 2;
-        uc_nation = nation_arabian;
-        
-        PrepareScientist(false, enemySkillLevel);
-        unit = CreateHuman;
+    if GetSide(i) <> enemySide then
+       begin
+       enemyMobile := enemyMobile diff i;
+       continue;
+       end;
 
-        currentEnemyGroup = currentEnemyGroup ^ unit;
+    if GetTag(i) = 299 then
+       begin
+       if GetDistUnitXY(i, 141, 144) < 8 or GetDistUnitXY(i, 100, 68) < 8 then
+          begin
+          SetTag(i, 300);
+          continue;
+          end;
 
-        PlaceUnitArea(unit, spawnArea, false);      
+       if GetDistUnitXY(i, 141, 144) < GetDistUnitXY(i, 90, 81) then
+          begin
+          ComMoveXY(i, 141, 144);
+          end
+       else
+          begin
+          ComMoveXY(i, 100, 68);
+          end;
+       end;
+
+    if GetTag(i) = 300 then
+       begin
+       if GetFuel(i) < 10 then
+          begin
+          SetTag(i, 302);
+          end;
+
+       if GetFuel(i) < 50 and FilterAllUnits([[f_side, 2], [f_weapon, ar_cargo_bay]]) then
+          begin
+          ComMoveXY(i, 157, 32);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 157, 32) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, arabGatherArea) then
+          ComMoveToArea(i, arabGatherArea)
+       else if not IsInArea(i, arParkingArea) then
+          ComMoveToArea(i, arParkingArea)
+       else
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          SetLives(mech, 1000);
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) = 302 then
+       begin
+       if not IsAt(i, 134, 3) then
+          ComMoveXY(i, 134, 3)
+       else
+          begin
+          RemoveUnit(i);
+          enemyMobile := enemyMobile diff i;
+          continue;
+          end;
+       end;
+
+    if GetTag(i) < 299 then
+       begin
+       enemy := FilterUnitsInArea(arCampArea, [f_enemy, enemySide]);
+
+       if GetLives(i) < [650, 700, 725, 750][Difficulty] then
+          begin
+          ComStop(i);
+          SetTag(i, 299);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if Count(UnitFilter(enemyMobile, [f_lives, 1000])) >= 3 or not IsInArea(i, arabGatherArea) then
+          begin
+          enemy := FilterAllUnits([f_enemy, enemySide]);
+
+          if enemy then
+             if forestIsCleared and GetChassis(i) = ar_half_tracked then
+                AgressiveMove(i, [ [157,47], [202,150], [172,155], [152,158], [127,146] ])
+             else if i mod 3 = 1 then
+                AgressiveMove(i, [ [130, 28], [101,66], [113,81], [77,76], [70,95], [81,115] ])
+             else
+                AgressiveMove(i, [ [130, 28], [101,66], [113,81] ]);
+          end
+       else if IsInArea(i, arParkingArea) and GetDistUnitXY(i, 131, 23) > 10 then
+            ComMoveXY(i, 131, 23);
+       end;
     end;
-end;
+End;
 
-Export Function PrepareArabianKiller;
-var un;
+Export function SendAttackOnGaydar;
+var i, tmp, un;
 begin
-    uc_side = 5;
-    uc_nation = nation_arabian;
+tmp := [];
 
-    hc_class = class_soldier;
-    hc_skills = [0, 0, 0, 0];
+wait([6$00, 4$00, 3$30, 3$00][Difficulty]);
 
-    un = CreateHuman;
+if GetSide(Gaydar) = 3 then
+   exit;
 
-    PlaceUnitArea(un, ArabianSpawnArea3, false);
+blockThread := true;
 
-    ComAttackUnit(un, Gaydar);
-
-    arabianKillers = arabianKillers + 1;
-end;
-
-Export Function PrepareFirstAttack;
-var i, unit, veh;
-begin
-    firstAttackGroup = [];
-    
-    uc_side = 2;
-    uc_nation = nation_arabian;
-    
-    for i := 1 to 3 do
+for i := 1 to 2 do
     begin
-        PrepareSoldier(false, enemySkillLevel - 2);
-        unit = CreateHuman;
+    uc_side := enemySide;
+    uc_nation := nation_arabian;
 
-        firstAttackGroup = firstAttackGroup ^ unit;
+    PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, 2);
 
-        PlaceUnitArea(unit, ArabianSpawnArea1, false);
-    end;   
+    repeat
+     wait(0$1);
+    until PlaceUnitXY(un, 26, 1, false);
 
-    vc_weapon = ar_light_gun;
-    vc_chassis = ar_medium_trike;
-    vc_control = control_manual;
-    vc_engine = engine_combustion;
-    vc_fuel_battery = 100;
-    
-    veh = CreateVehicle;  
-    firstAttackGroup = firstAttackGroup ^ veh;   
+    ComMoveXY(un, 29, 4);
 
-    PlaceUnitArea(veh, ArabianSpawnArea1, false);
+    tmp := Join(tmp, un);
+    end;
 
-    PrepareMechanic(false, enemySkillLevel - 1);
+blockThread := false;
 
-    PlaceHumanInUnit(CreateHuman, veh);
-    
-end;
+for i in tmp do
+    ComAttackUnit(i, Gaydar);
+
+wait(1$00);
+
+if not UnitFilter(tmp, [f_ok]) then
+   exit;
+
+for i in tmp do
+    enemyUnits := Join(enemyUnits, i);
+End;         
+
+Every 0$1 trigger arabAttack and enemyGuards do
+var i, tmp, r, list;
+begin
+enable;
+
+tmp := UnitFilter(enemyGuards, [f_ok]);
+
+if not tmp then
+   begin
+   disable;
+   exit;
+   end;
+
+list := AreaToList(minefieldArea, 0);
+
+for i in tmp do
+    begin
+    if IsInArea(i, guardBorderArea) then
+       begin
+       if Crawls(i) then
+          begin
+          ComWalk(i);
+          wait(3);
+          end;
+
+       ComMoveToArea(i, forestGuard3Area);
+       AddComTurnXY(i, 118, 16);
+       end
+    else if GetLives(i) < 500 and GetDistUnitXY(i, 157, 29) > 5 then
+       begin
+       if Crawls(i) then
+          ComWalk(i);
+
+       AddComMoveXY(i, 157, 29);
+       end
+    else if GetLives(i) = 1000 then
+       begin
+       if IsInArea(i, forestGuard3Area) then
+          begin
+          if not MineOfUnit(i) and not FilterUnitsInArea(minefieldScanArea, [f_enemy, 2]) then
+             begin
+             if Crawls(i) then
+                ComWalk(i);
+
+             r := rand(1, list[1]);
+
+             AddComPlaceRemoteCharge(i, list[1][r], list[2][r], 0);
+             AddComMoveToArea(i, forestGuard3Area);
+             AddComTurnXY(i, 118, 16);
+             end
+          else if not Crawls(i) then
+             ComCrawl(i);
+          end
+       else if not IsInArea(i, forestGuard3Area) then
+          begin
+          AddComMoveToArea(i, forestGuard3Area);
+          AddComTurnXY(i, 118, 16);
+          end;
+       end;
+    end;
+End;
+
+Every 3 trigger enemyMines and FilterUnitsInArea(minefieldArea, [f_enemy, 2]) do
+var i, e;
+begin
+enable;
+
+for i in enemyMines do
+    begin
+    e := HexInfo(i[1], i[2]);
+
+    if not e then
+       continue;
+
+    if GetSide(e) in [3, 6] then
+       LaunchMineAtPos(i[1], i[2], 2);
+    end;
+End;
+
+
+Every 1$00 trigger arabAttack and canSendMoreAttacks and FilterAllUnits([[f_side, 2], [f_not, [f_empty]], [f_type, unit_vehicle]]) < 4 do
+begin
+wait([4$00, 3$30, 3$00, 2$00][Difficulty]);
+
+PrepareArabianAttack;
+enable;
+End;
+

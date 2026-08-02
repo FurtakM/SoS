@@ -9,6 +9,8 @@ side := GetSide(un);
 if mpGameType in [GameTypeSurvival, GameTypeSurvivalHardcore] then
    if GetBType(un) in [b_depot, b_warehouse] then
       begin
+      // RemoveSeeing(mpXYV[side][1], mpXYV[side][2], mpSideFog[side]);
+
       for i in FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer]]]) do
           KillUnit(i);
       end;
@@ -16,6 +18,8 @@ if mpGameType in [GameTypeSurvival, GameTypeSurvivalHardcore] then
 if mpGameType = GameTypeSurvivalHardcore then
    if un in mpCommanders then
       begin
+      // RemoveSeeing(mpXYV[side][1], mpXYV[side][2], mpSideFog[side]);
+
       for i in FilterAllUnits([[f_side, side], [f_or, [f_type, unit_human], [f_control, control_computer]]]) do
           KillUnit(i);
       end;
@@ -39,7 +43,7 @@ if GetClass(un) in [class_apeman, class_apeman_kamikaze, class_apeman_soldier, c
    if not area then
       exit;
 
-   wait(7$00 + (((un mod 5) + 1) * 0$20));
+   wait(7$00 + (((un mod 5) + 1) * 0$40));
 
    repeat
     wait(10);
@@ -255,5 +259,29 @@ if GetWeapon(newId) = ar_miner and GetControl(newId) = control_manual then
    minerMinesList := Replace(minerMinesList, minerMinesList + 1, []);
    end;
 End;
+
+Export function Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+var side, killedSide;
+begin
+side := GetSide(killerUnit);
+killedSide := GetSide(un);
+
+if GetType(un) = unit_human then
+   begin
+   AddPlayerStats(side, 1);
+   ReducePlayerStrength(killedSide, 2);
+   end
+else if GetType(un) = unit_building then
+   begin
+   AddPlayerStats(side, 3);
+   ReducePlayerStrength(killedSide, 6);
+   end
+else
+   begin
+   AddPlayerStats(side, 2);
+   ReducePlayerStrength(killedSide, 10);
+   end;
+End;
+
 
 

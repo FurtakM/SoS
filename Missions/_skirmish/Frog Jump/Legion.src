@@ -57,6 +57,8 @@ for i in FilterAllUnits([[f_side, 8], [f_btype, b_bunker]]) do
     PlaceHumanInUnit(CreateHuman, i);
     end;
 
+uc_nation := 2;
+
 PrepareHuman(false, class_sniper, 10);
 un := CreateHuman;
 PlaceUnitXY(un, 175, 128, false);
@@ -120,6 +122,9 @@ until legion_force >= n1;
 
 l_allow_attack := true;
 
+if not n2 then
+   exit;
+
 for i = 1 to n2 do
     begin
     AddKamikaze();
@@ -138,11 +143,18 @@ End;
 
 
 // legion attacks
-Every 5$00 trigger legion_attacks_active do
+Every 10$00 + 3$00 trigger legion_attacks_active do
+var apes;
 begin
 enable;
-Wait([2$30, 1$00, 0$30][Difficulty]);
-PrepareAttack((legion_attack_strenght - 2 + Difficulty), 2);
+wait([2$30, 1$00, 0$30][Difficulty]);
+
+if tick < 45$00 then
+   apes := 2
+else
+   apes := 0;
+
+PrepareAttack((legion_attack_strenght - 2 + Difficulty), apes);
 End;
 
 Every 0$1 trigger l_allow_attack and UnitFilter(legion_force, [[f_not, [f_hastask]], [f_linked], [f_ok]]) do

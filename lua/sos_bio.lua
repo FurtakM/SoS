@@ -105,6 +105,7 @@ bioDefaultSort = {
 	BIO_NICH, BIO_MARIA, BIO_JOACH, BIO_KARL, BIO_MARK, 
 	BIO_ANDRE, BIO_ERWIN, BIO_KOL, BIO_RICK
 };
+outputBiographics = {};
 biographics = {
 	{
 		loc(8001),        -- NAME
@@ -322,7 +323,7 @@ biographics = {
 		2,
 		2,
 		'27.05.1974',
-		loc(TID_RPA),
+		loc(TID_Norway),
 	},
 	{
 		loc(8049),
@@ -876,10 +877,10 @@ function initBio()
 		bioSave = OW_CUSTOMSAVE_LOAD('sos_biographic');
 	end;
 
-	local biographicsStatus = {};
+	local biographicsStatus = {};;
 
 	for i = 1, #biographics do
-		biographics[i][8] = (OW_CUSTOMSAVE_READ(bioSave, i) ~= nil);
+		biographics[i][8] = (OW_CUSTOMSAVE_READ(bioSave, i) == true);
 	end;
 	
 	OW_CUSTOMSAVE_CLOSE(bioSave);
@@ -898,11 +899,11 @@ function initBio()
 		tmp[nation] = addToArray(tmp[nation], bio);
 	end;
 
-	biographics = {};
+	outputBiographics = {};
 
 	for i = 1, 3 do
 		for j = 1, #tmp[i] do
-			biographics = addToArray(biographics, tmp[i][j]);
+			outputBiographics = addToArray(outputBiographics, tmp[i][j]);
 		end;
 	end;
 end;
@@ -917,6 +918,20 @@ function enableBioCharacter(ID)
 	end;
 
 	OW_CUSTOMSAVE_WRITE(bioSave, parseInt(ID), true);
+	OW_CUSTOMSAVE_SAVE(bioSave, 'sos_biographic');
+	OW_CUSTOMSAVE_CLOSE(bioSave);
+end;
+
+function disableBioCharacter(ID)
+	local bioSave;
+
+	if (not saveExists('sos_biographic')) then
+		bioSave = OW_CUSTOMSAVE_NEW();
+	else
+		bioSave = OW_CUSTOMSAVE_LOAD('sos_biographic');
+	end;
+
+	OW_CUSTOMSAVE_WRITE(bioSave, parseInt(ID), false);
 	OW_CUSTOMSAVE_SAVE(bioSave, 'sos_biographic');
 	OW_CUSTOMSAVE_CLOSE(bioSave);
 end;
@@ -948,7 +963,7 @@ function clAvatar(PLACEHOLDER, INDEX, BIO)
 		XYWH(0, 0, 80, 100),
 		true,
 		{
-			texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. biographics[INDEX][3] .. '.png',
+			texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. outputBiographics[INDEX][3] .. '.png',
 			hint = BIO[INDEX][1],
 			callback_mouseleave = 'unHoverOnBiographic(' .. PLACEHOLDER .. ')',
 			callback_mouseover = 'hoverOnBiographic(' .. PLACEHOLDER .. ')',
@@ -977,7 +992,7 @@ function clAvatarDisabled(PLACEHOLDER, INDEX, BIO)
 		XYWH(0, 0, 80, 100),
 		true,
 		{
-			texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. biographics[INDEX][3] .. '.png',
+			texture = avatarPath .. nat[BIO[INDEX][4]] .. '/' .. outputBiographics[INDEX][3] .. '.png',
 			hint = BIO[INDEX][1],
 			callback_mousedown = 'isBioDisabledInfo();'
 		}
@@ -993,7 +1008,7 @@ function loadBiographic()
 	local rowIndex = 0;
 	local isActive = true;
 
-	for i = 1, #biographics do
+	for i = 1, #outputBiographics do
 		local placeholder = getElementEX(
 			menu.window_bio.panel.scroll,
 			anchorLTRB,
@@ -1004,13 +1019,13 @@ function loadBiographic()
 			}
 		);
 
-		isActive = biographics[i][8];
-		biographics[i][9] = true;
+		isActive = outputBiographics[i][8];
+		outputBiographics[i][9] = true;
 
 		if isActive then
-			clAvatar(placeholder.ID, i, biographics);
+			clAvatar(placeholder.ID, i, outputBiographics);
 		else
-			clAvatarDisabled(placeholder.ID, i, biographics);
+			clAvatarDisabled(placeholder.ID, i, outputBiographics);
 		end;
 
 		if (i % 8 == 0) then
@@ -1050,10 +1065,10 @@ function bioFilter(VALUE)
 	local rowIndex = 0;
 	local isActive = true;
 
-	for i = 1, #biographics do
-		local isVisible = inArray({biographics[i][4], 0}, VALUE);
+	for i = 1, #outputBiographics do
+		local isVisible = inArray({outputBiographics[i][4], 0}, VALUE);
 
-		biographics[i][9] = isVisible;
+		outputBiographics[i][9] = isVisible;
 
 		if isVisible then
 			j = j + 1;
@@ -1068,12 +1083,12 @@ function bioFilter(VALUE)
 				}
 			);
 
-			isActive = biographics[i][8];
+			isActive = outputBiographics[i][8];
 
 			if isActive then
-				clAvatar(placeholder.ID, i, biographics);
+				clAvatar(placeholder.ID, i, outputBiographics);
 			else
-				clAvatarDisabled(placeholder.ID, i, biographics);
+				clAvatarDisabled(placeholder.ID, i, outputBiographics);
 			end;
 
 			if (j % 8 == 0) then
@@ -1089,6 +1104,7 @@ end;
 
 function showBiographic(mode)
 	if (mode == 1) then
+		initBio();
 		loadBiographic();
 		showMenuButton(0);
 		setVisible(menu.window_bio, true);
@@ -1109,24 +1125,32 @@ function openBioPopup(ID)
 	ACTIVE_BIO = ID;
 
 	local nat = {'am', 'ar', 'ru'};
-	local info = loc(9200) .. ': ' .. loc(1162 + biographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. biographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. biographics[ID][7];
+	local info = loc(9200) .. ': ' .. loc(1162 + outputBiographics[ID][5]) .. '\n' .. loc(9201) .. ': ' .. outputBiographics[ID][6] .. '\n' .. loc(9202) .. ': ' .. outputBiographics[ID][7];
+	local desc = outputBiographics[ID][2] .. '\n\n' .. info;
+	local height = 500;
+	local lines = math.ceil(strlen(desc) / 39);
+
+	if (lines > 24) then
+		height = 500 + ((lines - 24) * 18); 
+	end;
 
 	setVisible(menu.window_bio.popup, true);
-	setText(menu.window_bio.popup.panel.name, biographics[ID][1]);
-	setText(menu.window_bio.popup.panel.desc, biographics[ID][2] .. '\n\n' .. info);
-	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. nat[biographics[ID][4]] .. '.png');
-	setTexture(menu.window_bio.popup.panel.avatar.face, avatarPath .. nat[biographics[ID][4]] .. '/' .. biographics[ID][3] .. '.png');
-	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[biographics[ID][4]] .. '-active' .. '.png');
+	setText(menu.window_bio.popup.panel.name, outputBiographics[ID][1]);
+	setHeight(menu.window_bio.popup.panel.desc, height);
+	setText(menu.window_bio.popup.panel.desc, desc);
+	setTexture(menu.window_bio.popup.panel.avatar, avatarPath .. nat[outputBiographics[ID][4]] .. '.png');
+	setTexture(menu.window_bio.popup.panel.avatar.face, avatarPath .. nat[outputBiographics[ID][4]] .. '/' .. outputBiographics[ID][3] .. '.png');
+	setTexture(menu.window_bio.popup.panel.avatar.nation, 'SGUI/Bio/' .. nat[outputBiographics[ID][4]] .. '-active' .. '.png');
 
 	setEnabled(menu.window_bio.popup.panel.button_prev, ID > 1);
-	setEnabled(menu.window_bio.popup.panel.button_next, ID < #biographics);
+	setEnabled(menu.window_bio.popup.panel.button_next, ID < #outputBiographics);
 end;
 
 function showPrevBio()
 	local ID = nil;
 
 	for i = ACTIVE_BIO - 1, 1, -1 do
-		if biographics[i][8] then
+		if outputBiographics[i][8] then
 			ID = i;
 			break;
 		end;
@@ -1140,8 +1164,8 @@ end
 function showNextBio()
 	local ID = nil;
 
-	for i = ACTIVE_BIO + 1, #biographics do
-		if biographics[i][8] then
+	for i = ACTIVE_BIO + 1, #outputBiographics do
+		if outputBiographics[i][8] then
 			ID = i;
 			break;
 		end;
@@ -1344,7 +1368,7 @@ menu.window_bio.popup.panel.desc = getLabelEX(
 menu.window_bio.popup.panel.scroll = getScrollboxEX(
 	menu.window_bio.popup.panel, 
 	anchorLTBR,
-	XYWH(426, 40, 330, 440), 
+	XYWH(426, 40, 340, 440), 
 	{
 		colour1 = WHITEA()
 	}
@@ -1370,7 +1394,7 @@ menu.window_bio.popup.panel.scroll.scrollV = clScrollBarEX2(
 menu.window_bio.popup.panel.desc = clTextBox(
 	menu.window_bio.popup.panel.scroll, 
 	anchorLT,
-	XYWH(0, 0, 330, 500),  
+	XYWH(0, 0, 340, 500),  
 	'', 
 	{
 		wordwrap = true,
@@ -1428,5 +1452,3 @@ menu.window_bio.popup.panel.button_next = clButton(
 	'showNextBio();', 
 	{}
 );
-
-initBio();

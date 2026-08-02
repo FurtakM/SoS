@@ -71,6 +71,8 @@ TID_Main_Menu_Options_PingButton_Button0 = 5072;
 TID_Main_Menu_Options_PingButton_Button1 = 5073;
 TID_Main_Menu_Options_PingButton_Button2 = 5074;
 TID_Main_Menu_Options_PingButton_Test = 5075;
+TID_Main_Menu_Options_Chat = 5076;
+TID_Main_Menu_Options_Chat_Desc = 5077;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;

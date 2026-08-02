@@ -9,17 +9,8 @@ begin
 SOS_UnitKamikazed(un);
 End;
 
-On BuildingComplete(b) do
-Multiplayer_BuildingComplete(b);
-
-On VehicleConstructed(vehicle, factory) do
-SOS_VehicleConstructed(vehicle, factory);
-
 On VehicleConstruction_ApeConsumed(factory, un) do
 Multiplayer_VehicleConstruction_ApeConsumed(factory, un);
-
-On BuildingCaptured(building, oldSide, unit) do
-Multiplayer_BuildingCaptured(building, oldSide, unit);
 
 On OilExtracted(building, side, base, amount) do
 Multiplayer_OilExtracted(building, side, base, amount);
@@ -30,6 +21,50 @@ Multiplayer_SibExtracted(building, side, base, amount);
 On VehicleConstructionStarted(factory, chassis, engine, control, weapon) do
 Multiplayer_VehicleConstructionStarted(factory, chassis, engine, control, weapon);
 
+On BuildingComplete(b) do
+var side;
+begin
+Multiplayer_BuildingComplete(b);
+side := GetSide(b);
+AddPlayerStrength(side, 6);
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var side;
+begin
+SOS_VehicleConstructed(vehicle, factory);
+side:= GetSide(vehicle);
+AddPlayerStrength(side, 10);
+End;
+
+On BuildingCaptured(building, oldSide, unit) do
+var side;
+begin
+Multiplayer_BuildingCaptured(building, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 6);
+AddPlayerStrength(side, 6);
+end;
+
 On VehicleCaptured(newId, oldId, oldSide, unit) do
+var side;
+begin
 Multiplayer_VehicleCaptured(newId, oldId, oldSide, unit);
+side := GetSide(unit);
+ReducePlayerStrength(oldSide, 10);
+AddPlayerStrength(side, 10);
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+AddPlayerResearch(tech, side);
+AddPlayerStrength(side, 3);
+End;
 

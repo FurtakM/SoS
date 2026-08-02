@@ -31,8 +31,18 @@ gameActive := true;
 End;
 
 Export Function SceneKaiaWithOlaf;
+var i, fac;
 begin
-ComConstruct(FilterAllUnits([[f_side, 2], [f_btype, b_factory]]), ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower);
+fac := FilterAllUnits([[f_side, 2], [f_nation, nation_arabian], [f_btype, b_factory]]);
+
+if fac then
+   for i in fac do
+       if CanBeConstructed(i, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower) then
+          begin
+          ComConstruct(i, ar_half_tracked, engine_combustion, control_manual, ar_flame_thrower);
+          fac := i;
+          break;
+          end;
 
 wait(0$1);
 
@@ -44,7 +54,11 @@ Say(Olaf, 'DO-Mem-5');
 
 wait(0$2);
 
-SetWorkingProgress(FilterAllUnits([[f_side, 2], [f_btype, b_factory]]), 90);
+if dialogue_skipped then
+   exit;
+
+if fac then
+   SetWorkingProgress(fac, 90);
 
 Say(Olaf, 'DO-Mem-6');
 Say(Kaia, 'DK-Mem-7');
@@ -89,6 +103,9 @@ if Kamil then
    AddComTurnUnit(Kamil, Heike);
    end;
 
+if dialogue_skipped then
+   exit;
+
 wait(0$2);
 
 Say(Heike, 'DH-Mem-20');
@@ -104,6 +121,9 @@ End;
 Export function SceneWithGiviAndKamil;
 var p;
 begin
+if dialogue_skipped then
+   exit;
+
 if Markov then
    begin
    p := 0;
@@ -117,6 +137,10 @@ if Markov then
 
    repeat
     wait(0$1);
+
+    if dialogue_skipped then
+       exit;
+
     p := Inc(p);
    until GetDistUnits(Markov, Heike) < 6 or p > 12;
 
@@ -233,7 +257,7 @@ Say(Givi, 'DG-Otpst-1-5');
 End;
 
 // Kaia die
-Every 0$1 trigger GetLives(Kaia) < 10 do
+Every 0$1 trigger GetLives(Kaia) < 10 and IsPlaced(Kaia) do
 begin
 DialogueOn;
 
@@ -256,7 +280,7 @@ KillUnit(Kaia);
 End;
 
 // Spawn Rolf
-Every 0$1 trigger tick >= 15$00 or ruLoseCounter > 5 or FilterAllUnits([[f_side, 2], [f_distxy, 103, 81, 20]]) do
+Every 0$1 trigger debug or tick >= 15$00 or ruLoseCounter > 10 or FilterAllUnits([[f_side, 2], [f_distxy, 103, 81, 20]]) do
 var i, tmp, dep;
 begin
 PrepareRolfSquad;
@@ -468,17 +492,21 @@ End;
 // lenin spotted
 Every 0$1 trigger gameActive and SeeArea(2, ruMainBase) do
 begin
+DialogueOn;
+
 Say(Givi, 'DG-Len-1');
 Say(Kurt, 'DKs-Len-2');
 Say(Kurt, 'DKs-Len-3');
 Say(Heike, 'DH-Len-4');
 Say(Kaia, 'DK-Len-5');
 
+DialogueOff;
+
 leninSpotted := true;
 End;
 
 // spawn Omar
-Every 0$1 trigger debug or (bergkampfArrived and tick > [32$00, 30$00, 28$00, 26$00][Difficulty]) do
+Every 0$1 trigger debug or (bergkampfArrived and tick > [36$00, 32$00, 28$00, 26$00][Difficulty]) do
 var i, tmp, inOmarBase, heikeNearbyOmar;
 begin
 if not FilterUnitsInArea(ruOmarBase, [[f_side, 3], [f_or, [f_type, unit_human], [f_occupied]]]) then
@@ -829,14 +857,19 @@ DialogueOff;
 End;
 
 // see bazooka
-Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]]) and IsOk(Heike) do
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]]) or FilterAllUnits([[f_side, 3], [f_not, [f_empty]], [f_btype, b_breastwork], [f_see, 2]]) and IsOk(Heike) do
 begin
 wait(0$3);
 
 DialogueOn;
-CenterOnUnits(FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]])[1]);
+
+if not FilterAllUnits([[f_side, 3], [f_not, [f_empty]], [f_btype, b_breastwork], [f_see, 2]]) then
+   CenterOnUnits(FilterAllUnits([[f_side, 3], [f_class, class_bazooker], [f_see, 2]])[1])
+else
+   CenterNowOnUnits(FilterAllUnits([[f_side, 3], [f_not, [f_empty]], [f_btype, b_breastwork], [f_see, 2]])[1]);
+
 Say(Heike, 'DH-Rubazooka-1');
-DialogueOff;
+DialogueOff; 
 End;
 
 // see attack

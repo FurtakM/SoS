@@ -24,6 +24,7 @@ if streamModeActive then
    DefineStreamItems(true);
 
 ToLua('LFC_UNITS_CUSTOM_ICON = {};');
+ToLua('LFC_UNITS_GROUPS = {{},{},{},{},{},{},{},{},{},{}};');
 
 UpdateLuaVariables();
 UpdateFactoryWaypoints();
@@ -164,6 +165,33 @@ if p2 = stream_mode then
    if p3 = 36 then
       sTools := true;
 
+   if p3 = 37 then
+      sPlus := true;
+
+   if p3 = 38 then
+      sMinus := true;
+
+   if p3 = 39 then
+      sEnemy := true;
+
+   if p3 = 40 then
+      sLoop := true;
+
+   if p3 = 41 then
+      sZero := true;
+
+   if p3 = 42 then
+      sTech := true;
+
+   if p3 = 43 then
+      sVeh := true;
+
+   if p3 = 44 then
+      sCrates := true;
+
+   if p3 = 45 then
+      sWeap := true;
+
    if p3 = 101 then
       sSold := true;
 
@@ -217,6 +245,9 @@ if p2 = stream_mode then
 
    if p3 = 118 then
       s60 := true;
+
+   if p3 = 119 then
+      sGang := true;
    end;
 
 if p2 = hack_mode then
@@ -252,13 +283,14 @@ Export StreamModeActive, normalCounter, hardcoreCounter,
        sWound, sTank, sRemote, sPowell, sBetray, sContamin,
        sTeleport, sOil, sOilTower, sShovel, sSheik, sStu, sEarthquake,
        sAI, sBazooka, sMortar, sCargo, sDLaser, sExchange, sFac, sPower, sRandom,
-       sShield, sTime, sTools, sRanger, sComputer, s30, s60;
+       sShield, sTime, sTools, sRanger, sComputer, s30, s60, sGang, sWeap, sVeh,
+       sCrates, sTech, sZero, sLoop, sEnemy, sPlus, sMinus;
 
 Function InitStreamMode;
 begin
 streamModeActive := false;
-normalCounter := 36;
-hardcoreCounter := 18;
+normalCounter := 45;
+hardcoreCounter := 19;
 
 sRocket := false; // 1
 sSpeed := false; // 2
@@ -296,6 +328,15 @@ sRandom := false; // 33
 sShield := false; // 34
 sTime := false; // 35
 sTools := false; // 36
+sPlus := false; // 37
+sMinus := false; // 38
+sEnemy := false; // 39
+sLoop := false; // 40
+sZero := false; // 41
+sTech := false; // 42
+sVeh := false; // 43
+sCrates := false; // 44
+sWeap := false; // 45
 
 sSold := false; // 101
 sDiff := false; // 102
@@ -315,6 +356,7 @@ sRanger := false; // 115
 sComputer := false; // 116
 s30 := false; // 117
 s60 := false; // 118
+sGang := false; // 119
 End;
 
 Function DefineStreamItems(isGameLoad);
@@ -325,29 +367,44 @@ result := [];
 if campaign_id = 1 then // us_camp
    begin
         case mission_number of
-             1: result := [ [2, 4, 11, 12, 15, 16, 22, 23, 26], [101, 102, 106, 116, 117, 118] ];
-             2: result := [ [2, 4, 11, 12, 15, 16, 22, 23, 26], [101, 102, 105, 106, 108, 116, 117, 118] ];
-             3: result := [ [2, 4, 5, 11, 12, 15, 16, 22, 26, 36], [101, 102, 105, 106, 108, 116, 117, 118] ];
-             4: result := [ [2, 4, 5, 8, 11, 12, 15, 16, 22, 23, 26, 36], [101, 102, 105, 106, 108, 116, 117, 118] ];
-             5: result := [ [2, 4, 5, 6, 8, 11, 12, 15, 16, 22, 23, 25, 26, 36], [101, 102, 105, 106, 108, 109, 112, 116, 117, 118] ];
-             6: result := [ [2, 4, 5, 6, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 36], [101, 102, 105, 106, 108, 109, 112, 116, 117, 118] ];
-             7: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26], [101, 102, 103, 105, 106, 108, 112, 116, 117, 118] ];
-             8: result := [ [2, 4, 5, 6, 7, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 36], [101, 102, 103, 105, 106, 108, 109, 112, 116, 117, 118] ];
-             9: result := [ [2, 4, 5, 6, 7, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 28, 30, 31, 32, 36], [101, 102, 103, 105, 106, 108, 109, 112, 114, 116, 117, 118] ];
-             10: result := [ [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 114, 116, 117, 118] ];
-             11: result := [ [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 114, 116, 117, 118] ];
-             12: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
-             13: result := [ [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
-             14: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
-             15: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             1: result := [ [2, 5, 11, 12, 15, 16, 22, 26, 37, 38, 39, 40, 41], [101, 102, 106, 116, 117, 118] ];
+             2: result := [ [2, 5, 11, 12, 15, 16, 22, 26, 37, 38, 39, 40, 41], [101, 102, 105, 106, 108, 116, 117, 118] ];
+             3: result := [ [2, 5, 11, 12, 15, 16, 22, 26, 36, 37, 38, 39, 40, 41], [101, 102, 105, 106, 108, 116, 117, 118] ];
+             4: result := [ [2, 5, 8, 11, 12, 15, 16, 21, 22, 23, 26, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 105, 106, 108, 112, 116, 117, 118] ];
+             5: result := [ [2, 5, 6, 8, 11, 12, 15, 16, 21, 22, 23, 25, 26, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 104, 105, 106, 108, 109, 112, 113, 116, 117, 118] ];
+             6: result := [ [2, 5, 6, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 104, 105, 106, 108, 109, 112, 113, 116, 117, 118] ];
+             7: result := [ [2, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 37, 38, 39, 40, 41, 42, 43], [101, 102, 103, 105, 106, 108, 112, 113, 116, 117, 118] ];
+             8: result := [ [2, 5, 6, 7, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 105, 106, 108, 109, 112, 113, 116, 117, 118] ];
+             9: result := [ [2, 5, 6, 7, 8, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 28, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 105, 106, 108, 109, 112, 113, 114, 116, 117, 118] ];
+             10: result := [ [2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             11: result := [ [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 31, 32, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             12: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             13: result := [ [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             14: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             15: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
              16: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 33, 34], [101, 102, 103, 106, 108, 112, 113, 114, 116, 117, 118] ];
-             17: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
-             18: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 33, 34, 35, 36], [101, 102, 103, 106, 108, 112, 113, 114, 115, 116, 117, 118] ];
-             19: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118] ];
-        end;
+             17: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 116, 117, 118] ];
+             18: result := [ [2, 4, 5, 7, 11, 12, 15, 16, 20, 21, 22, 23, 25, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 106, 108, 112, 113, 114, 115, 116, 117, 118] ];
+             19: result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118] ];
+             end;
+   end
+else if campaign_id = 5 then // ares camp
+   begin
+        case mission_number of
+             1: result := [ [2, 5, 11, 12, 15, 16, 21, 22, 25, 26, 37, 38, 39, 40, 41], [101, 102, 106, 107, 112, 115, 116, 117, 118, 119] ];
+             2: result := [ [2, 5, 11, 12, 15, 16, 21, 22, 25, 26, 37, 38, 39, 40, 41], [101, 102, 106, 107, 112, 115, 116, 117, 118, 119] ];
+             3: result := [ [2, 5, 8, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 32, 37, 38, 39, 40, 41], [101, 102, 105, 106, 107, 108, 111, 112, 116, 117, 118, 119] ];
+             4: result := [ [2, 5, 8, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 31, 32, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 105, 106, 107, 111, 112, 115, 116, 117, 118, 119] ];
+             5: result := [ [2, 5, 7, 8, 10, 11, 12, 13, 15, 17, 18, 19, 16, 20, 21, 22, 23, 24, 25, 26, 31, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 106, 107, 111, 112, 115, 116, 117, 118, 119] ];
+             6: result := [ [2, 4, 5, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 105, 106, 107, 111, 112, 114, 115, 116, 117, 118, 119] ];
+             7: result := [ [2, 4, 5, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 105, 102, 106, 107, 114, 115, 116, 117, 118, 119] ];
+             8: result := [ [2, 4, 5, 11, 12, 15, 16, 21, 22, 25, 26, 33, 36, 37, 38, 39, 40, 41], [101, 102, 106, 107, 116, 117, 118, 119] ];
+             9: result := [ [2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 105, 106, 107, 111, 112, 115, 116, 117, 118, 119] ];
+             10: result := [ [2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 105, 106, 107, 111, 112, 115, 116, 117, 118, 119] ];
+             end;
    end
 else
-   result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118] ];
+   result := [ [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119] ];
 
 if result then
    begin
@@ -422,6 +479,15 @@ if result then
         sShield,
         sTime,
         sTools,
+        sPlus,
+        sMinus,
+        sEnemy,
+        sLoop,
+        sZero,
+        sTech,
+        sVeh,
+        sCrates,
+        sWeap,
         sSold, // hardcore
         sDiff,
         sFog,
@@ -439,7 +505,8 @@ if result then
         sRanger,
         sComputer,
         s30,
-        s60
+        s60,
+        sGang
       ];
 
       tmp := '';
@@ -651,27 +718,50 @@ if Crawls(un) then
 SetClass(un, class_sniper);
 End;
 
-Every 0$1 trigger StreamModeActive and sDiff and Difficulty < 4 do
+Every 0$1 trigger StreamModeActive and sDiff do
 begin
-Difficulty := Difficulty + 1;
+if Difficulty < 4 then
+   Difficulty := Difficulty + 1
+else
+   StreamSibBomb;
 End;
 
 Every 0$1 trigger StreamModeActive and sTiger do
-var i;
+var i, tmp, un;
 begin
-for i := 1 to 5 do
+tmp := [];
+
+for i := 1 to 30 do
     begin
     uc_nation := nation_nature;
     uc_side := 0;
 
     hc_attr := [12, 12];
-    hc_agressivity := 20;
+    hc_agressivity := 30;
     hc_class := class_tiger;
     hc_gallery := '';
     hc_name := '';
 
-    PlaceUnitAnyWhere(CreateHuman, false);
+    un := CreateHuman;
+    PlaceUnitAnyWhere(un, false);
+    tmp := Replace(tmp, tmp + 1, un);
     end;
+
+repeat
+ wait(0$1);
+
+ for un in tmp do
+     begin
+     if IsDead(un) then
+        begin
+        tmp := tmp diff un;
+        continue;
+        end;
+
+     ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), un));
+     end;
+
+until not tmp;
 End;
           
 Every 0$1 trigger StreamModeActive and sBomb do
@@ -681,6 +771,8 @@ Export Function StreamSibBomb;
 var i, x, y;
 begin
 result := false;
+
+Randomize;
 
 for i := 1 to 16 do
     begin
@@ -710,7 +802,17 @@ Every 0$1 trigger StreamModeActive and sFog do
 FogOff(your_side);
 
 Every 0$1 trigger StreamModeActive and sSun do
+var i;
 begin
+for i in FilterAllUnits([[f_side, your_side], [f_engine, engine_combustion]]) do
+    SetFuel(i, 0);
+
+for i in FilterAllUnits([[f_side, your_side], [f_btype, b_oil_mine]]) do
+    KillUnit(i);
+
+for i in FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]) do
+    SetResourceType(GetBase(i), mat_oil, 0);
+
 solar_recharge_percent := 0;
 wait(5$00);
 solar_recharge_percent := 100;
@@ -721,10 +823,10 @@ var i, un, tmp;
 begin
 tmp := [];
 
-for i := 1 to 6 do
+for i := 1 to 12 do
     begin
     uc_nation := nation_nature;
-    uc_side := 0;
+    uc_side := 9;
 
     hc_attr := [12, 12];
     hc_agressivity := 20;
@@ -749,7 +851,7 @@ repeat
         continue;
         end;
 
-     ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 0]]), un));
+     ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 9]]), un));
      end;
 
 until not tmp;
@@ -833,31 +935,96 @@ for i in tmp do
 End;
 
 Every 0$1 trigger StreamModeActive and sPowell do
-var i, un;
+var r, i, un, tmp;
 begin
-ToLua('displayPowell();');
+Randomize;
 
-uc_side := 0;
-uc_nation := 2;
+r := rand(1, 6);
 
-vc_chassis := ar_half_tracked;
-vc_engine := engine_siberite;
-vc_control := control_apeman;
-vc_weapon := ar_selfpropelled_bomb;
+ToLua('displayPowell(' & r & ');');
 
-un := CreateVehicle;
-PlaceUnitAnywhere(un, true);
+if r = 1 then
+   begin
+   for i in FilterAllUnits([[f_side, your_side], [f_btype, b_factory], [f_ok]]) do
+       KillUnit(i);
+   end;
 
-repeat
- wait(0$1); 
- ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), un));
-until IsDead(un);
+if r = 2 then
+   begin
+   for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_ok]]) do
+       SetClass(i, class_soldier);
+   end;
+
+if r = 3 then
+   begin
+   for i in FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_armoury], [f_btype, b_barracks], [f_btype, b_breastwork], [f_btype, b_bunker], [f_btype, b_turret]], [f_ok]]) do
+       SetLives(i, 10);
+   end;
+
+if r = 4 then
+   begin
+   for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_ok]]) do
+       SetLives(i, 251);
+   end;
+
+if r = 5 then
+   begin
+   for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_ok]]) do
+       if Prob(50) then
+          SetLives(i, 100);
+   end;
+
+if r = 6 then
+   begin
+   tmp := [];
+
+   for i := 1 to 3 do
+       begin
+       uc_side := 9;
+       uc_nation := 2;
+
+       vc_chassis := ar_half_tracked;
+       vc_engine := engine_siberite;
+       vc_control := control_apeman;
+       vc_weapon := ar_selfpropelled_bomb;
+
+       un := CreateVehicle;
+       tmp := Join(tmp, un);
+       PlaceUnitAnywhere(un, true);
+       end;
+
+   ChangeSideFog(9, your_side);
+   CenterNowOnUnits(un);
+
+   wait(0$2);
+
+   ChangeSideFog(9, 9);
+
+   repeat
+    wait(0$3);
+
+    for i in un do
+        begin
+        if not IsOk(i) then
+           tmp := tmp diff i
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, your_side]), i));
+        end;
+   until not tmp;
+   end;
 End;
 
 Every 0$1 trigger StreamModeActive and sStu do
+var i;
 begin
 ToLua('displayStucuk();');
 ResetFog;
+
+for i in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
+    begin
+    CenterOnUnits(i);
+    wait(0$0.3);
+    end;
 End;
 
 Every 0$1 trigger StreamModeActive and sBetray do
@@ -880,14 +1047,15 @@ SetSide(un, your_side);
 End;
 
 Every 0$1 trigger StreamModeActive and sContamin do
-var depot;
+var i, depot;
 begin
 depot := FilterAllUnits([[f_side, your_side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
 
 if not depot then
    exit;
 
-ArtContamination(GetX(depot[1]), GetY(depot[1]), 70);
+for i in depot do
+    ArtContamination(GetX(i), GetY(i), 70);
 End;
 
 Every 0$1 trigger StreamModeActive and sTeleport do
@@ -905,7 +1073,7 @@ for i in tmp do
     y := ShiftY(GetY(i), d, rand(3, 12));
 
     if ValidHex(x, y) then
-       TeleportUnit(i, x, y, rand(3, 6), true);
+       TeleportUnit(i, x, y, rand(5, 16), true);
     end;
 End;
 
@@ -952,7 +1120,11 @@ until IsDead(un);
 End;
 
 Every 0$1 trigger StreamModeActive and sEarthquake do
+var i;
+begin
 ToLua('earthquake(getX(game), 0, 32)');
+wait(0$45);
+end;
 
 Every 0$1 trigger StreamModeActive and sAI do
 var tmp;
@@ -1085,8 +1257,9 @@ for i in tmp do
 End;
 
 Every 0$1 trigger StreamModeActive and sRandom do
-var i, tmp, un;
+var i, j, tmp, un;
 begin
+Randomize;
 i := rand(1, 7);
 
 case i of
@@ -1094,6 +1267,12 @@ case i of
      2: begin
         ToLua('displayStucuk();');
         ResetFog;
+
+        for j in FilterAllUnits([[f_side, your_side], [f_type, unit_human]]) do
+            begin
+            CenterOnUnits(i);
+            wait(0$0.3);
+            end;
         end;
      3: begin
         tmp := FilterAllUnits([[f_side, your_side], [f_class, 1]]);
@@ -1118,28 +1297,25 @@ case i of
         DestroyUnit(tmp[1]);
         end;
      5..7: StreamSibBomb;
-end;
+     end;
 
 End;
 
 Every 0$1 trigger StreamModeActive and sShield do
-var i, tmp, p;
+var i, tmp;
 begin
 tmp := FilterAllUnits([[f_enemy, your_side], [f_or, [f_type, unit_human], [f_type, unit_vehicle]]]);
 
 if not tmp then
    exit;
+           
+for i in tmp do
+    SetInvulnrability(i, true);
 
-p := 0;
+wait(0$20);
 
-repeat
- wait(0$1);
- p := p + 1;
-
- for i in tmp do
-     if GetLives(i) < 1000 then
-        SetLives(i, 1000);
-until p > 20;
+for i in tmp do
+    SetInvulnrability(i, false);
 End;
 
 Every 0$1 trigger StreamModeActive and sTime do
@@ -1174,15 +1350,14 @@ ChangeSideFog(9, your_side);
 uc_side := 9;
 uc_nation := 2;
 
-hc_name := 'Dark Warrior';
+hc_name := 'Dark Warior';
 hc_gallery := '';
+hc_class := 1;
+hc_attr := [20, 20];
 
-hc_noskilllimit := true;
-hc_skills := [30, 30, 30, 30];
+hc_skills := [10, 10, 10, 10];
 
 un := CreateHuman;
-
-hc_noskilllimit := false;
 
 PlaceUnitAnywhere(un, true);
 
@@ -1190,21 +1365,22 @@ ToLua('playRanger()');
 
 p := 0;
 
+SetInvulnrability(un, true);
+
 repeat
- wait(0$1);
+ wait(0$2);
  p := p + 1;
 
- if GetLives(un) < 1000 then
-    SetLives(un, 1000);
-
  ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([[f_enemy, your_side], [f_dist, un, 30]]), un));
-until p > 80 or IsDead(un);
+until p > 40 or IsDead(un);
 
 if un then
    RemoveUnit(un);
+
+SetAttitude(your_side, 9, att_neutral, true);
 End;
 
-Every 0$1 trigger sComputer do
+Every 0$1 trigger StreamModeActive and sComputer do
 var i, tmp, j;
 begin
 tmp := FilterAllUnits([[f_enemy, your_side], [f_type, unit_human]]);
@@ -1219,7 +1395,7 @@ for i in tmp do
         SetSkill(i, j, 10);  
 End;
 
-Every 0$1 trigger s30 do
+Every 0$1 trigger StreamModeActive and s30 do
 var i, tmp;
 begin
 tmp := FilterAllUnits([f_side, your_side]);
@@ -1231,7 +1407,7 @@ for i in tmp do
     SetLives(i, 300);
 End;
 
-Every 0$1 trigger s60 do
+Every 0$1 trigger StreamModeActive and s60 do
 var i, tmp;
 begin
 tmp := FilterAllUnits([f_side, your_side]);
@@ -1242,6 +1418,201 @@ if not tmp then
 for i in tmp do
     SetLives(i, 600);
 End;
+
+Every 0$1 trigger StreamModeActive and sPlus do
+var un, r, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+for un in tmp do
+    begin
+    r := rand(1, 4);
+
+    if GetSkill(un, r) < 10 then
+       SetSkill(un, r, GetSkill(un, r) + 1);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sMinus do
+var un, r, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+for un in tmp do
+    begin
+    r := rand(1, 4);
+
+    if GetSkill(un, r) > 0 then
+       SetSkill(un, r, GetSkill(un, r) - 1);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sEnemy do
+var i, un, nation, side, tmp;
+begin
+tmp := FilterAllUnits([f_enemy, your_side]);
+
+if not tmp then
+   exit;
+
+nation := GetNation(tmp[1]);
+side := GetSide(tmp[1]);
+
+for i := 1 to 9 do
+    begin
+    uc_nation := nation;
+    uc_side := side;
+
+    PrepareSoldier(false, rand(3, 6));
+    un := CreateHuman;
+    PlaceUnitAnywhere(un, true);
+    end;
+End;
+
+Every 0$1 trigger StreamModeActive and sLoop do
+var i, class, p, r, un, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+un := tmp[rand(1, tmp)];
+p := 0;
+
+repeat
+ if IsOk(un) then
+    begin
+    if Crawls(un) then
+       ComWalk(un);
+
+    class := GetClass(un);
+
+    r := [1, 2, 3, 4, 5, 8, 9][rand(1, 7)];
+
+    if r = class then
+       begin
+       if GetSex(un) = sex_male or GetNation(un) = nation_arabian then
+          SetClass(un, class_desert_warior)
+       else if r <> 4 then
+          SetClass(un, class_scientistic)
+       else
+          SetClass(un, class_mechanic);
+       end
+    else
+       SetClass(un, r);
+
+    wait(3$00);
+
+    p := Inc(p);
+    end;
+until p > 120;   
+End;
+
+Every 0$1 trigger StreamModeActive and sZero do
+var i, class, un, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_human], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+un := tmp[rand(1, tmp)];
+
+for i := 1 to 4 do
+    SetSkill(un, i, 0);
+End;
+
+Every 0$1 trigger StreamModeActive and sTech do
+var i;
+begin
+for i := 1 to 100 do
+    if GetTech(i, your_side) = state_researched then
+       SetTech(i, your_side, state_enabled);
+End;
+
+Every 0$1 trigger StreamModeActive and sVeh do
+var i, tmp;
+begin
+tmp := FilterAllUnits([[f_side, your_side], [f_type, unit_vehicle], [f_not, [f_nation, 0]]]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    KillUnit(i);
+End;
+
+Every 0$1 trigger StreamModeActive and sCrates do
+var i, tmp;
+begin
+for i := 1 to 25 do
+    CreateCratesAnywhere(rand(1,5), true);
+End;
+
+Every 0$1 trigger StreamModeActive and sWeap do
+var i, tmp, nation, techs;
+begin
+tmp := FilterAllUnits([f_side, your_side]);
+
+if not tmp then
+   exit;
+
+nation := GetNation(tmp[1]);
+
+case nation of
+     1: techs := [tech_gun, tech_advmet, tech_gatling, tech_laser, tech_radar, tech_rocket];
+     2: techs := [tech_gun, tech_flame, tech_rocket, tech_gatling, tech_mortar, tech_radar];
+     3: techs := [tech_gun, tech_advmet, tech_gatling, tech_advrocket, tech_radar, tech_radar];
+     end;
+
+for i := 1 to techs do
+    if GetTech(techs[i], your_side) = state_researched then
+       if Prob(30) then
+          begin
+          SetTech(techs[i], your_side, state_disabled);
+          exit;
+          end;
+End;
+
+Every 0$1 trigger StreamModeActive and sGang do
+var i, un, tmp;
+begin
+tmp := [];
+
+for i := 1 to 6 do
+    begin
+    uc_side := 9;
+    uc_nation := nation_arabian;
+
+    hc_gallery := '';
+    hc_name := '';
+
+    PrepareHuman(sex_male, class_desert_warior, 10);
+    un := CreateHuman;
+    tmp := Join(tmp, un);
+    PlaceUnitAnywhere(un, true);
+    end;
+
+repeat
+ wait(0$3);
+
+ for un in tmp do
+     begin
+     if not IsOk(un) then
+        tmp := tmp diff un
+     else
+        ComAttackUnit(un, NearestUnitToUnit(FilterAllUnits([f_not, [f_side, 9]]), un));
+     end;
+until not tmp;
+End;
+
 
 //
 //

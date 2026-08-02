@@ -1,21 +1,286 @@
 // every 0 0$1 do
    0: GO 2
    2: DISABLE
-// begin enable ;
-   3: ENABLE
-// if GetLives ( 1 ) < 1000 then
-   4: LD_INT 1
-   6: PPUSH
-   7: CALL_OW 256
-  11: PUSH
-  12: LD_INT 1000
-  14: LESS
-  15: IFFALSE 27
-// SetLives ( 1 , 1000 ) ;
-  17: LD_INT 1
-  19: PPUSH
-  20: LD_INT 1000
-  22: PPUSH
-  23: CALL_OW 234
+// begin ResetFog ;
+   3: CALL_OW 335
+// GetRadiusArea ( 25 , 25 , 10 ) ;
+   7: LD_INT 25
+   9: PPUSH
+  10: LD_INT 25
+  12: PPUSH
+  13: LD_INT 10
+  15: PPUSH
+  16: CALL 21 0 3
 // end ;
-  27: END
+  20: END
+// export function GetRadiusArea ( x , y , r ) ; var un , i , j , startPointX , startPointY , endPointX , endPointY ; begin
+  21: LD_INT 0
+  23: PPUSH
+  24: PPUSH
+  25: PPUSH
+  26: PPUSH
+  27: PPUSH
+  28: PPUSH
+  29: PPUSH
+  30: PPUSH
+// uc_side := 1 ;
+  31: LD_ADDR_OWVAR 20
+  35: PUSH
+  36: LD_INT 1
+  38: ST_TO_ADDR
+// uc_nation := 1 ;
+  39: LD_ADDR_OWVAR 21
+  43: PUSH
+  44: LD_INT 1
+  46: ST_TO_ADDR
+// startPointX := x - r ;
+  47: LD_ADDR_VAR 0 8
+  51: PUSH
+  52: LD_VAR 0 1
+  56: PUSH
+  57: LD_VAR 0 3
+  61: MINUS
+  62: ST_TO_ADDR
+// startPointY := y - r ;
+  63: LD_ADDR_VAR 0 9
+  67: PUSH
+  68: LD_VAR 0 2
+  72: PUSH
+  73: LD_VAR 0 3
+  77: MINUS
+  78: ST_TO_ADDR
+// endPointX := x + r ;
+  79: LD_ADDR_VAR 0 10
+  83: PUSH
+  84: LD_VAR 0 1
+  88: PUSH
+  89: LD_VAR 0 3
+  93: PLUS
+  94: ST_TO_ADDR
+// endPointY := y + r ;
+  95: LD_ADDR_VAR 0 11
+  99: PUSH
+ 100: LD_VAR 0 2
+ 104: PUSH
+ 105: LD_VAR 0 3
+ 109: PLUS
+ 110: ST_TO_ADDR
+// for i := startPointX to x do
+ 111: LD_ADDR_VAR 0 6
+ 115: PUSH
+ 116: DOUBLE
+ 117: LD_VAR 0 8
+ 121: DEC
+ 122: ST_TO_ADDR
+ 123: LD_VAR 0 1
+ 127: PUSH
+ 128: FOR_TO
+ 129: IFFALSE 198
+// for j := startPointY to y do
+ 131: LD_ADDR_VAR 0 7
+ 135: PUSH
+ 136: DOUBLE
+ 137: LD_VAR 0 9
+ 141: DEC
+ 142: ST_TO_ADDR
+ 143: LD_VAR 0 2
+ 147: PUSH
+ 148: FOR_TO
+ 149: IFFALSE 194
+// begin un := CreateHuman ;
+ 151: LD_ADDR_VAR 0 5
+ 155: PUSH
+ 156: CALL_OW 44
+ 160: ST_TO_ADDR
+// PlaceUnitXY ( un , i , j , false ) ;
+ 161: LD_VAR 0 5
+ 165: PPUSH
+ 166: LD_VAR 0 6
+ 170: PPUSH
+ 171: LD_VAR 0 7
+ 175: PPUSH
+ 176: LD_INT 0
+ 178: PPUSH
+ 179: CALL_OW 48
+// ComHold ( un ) ;
+ 183: LD_VAR 0 5
+ 187: PPUSH
+ 188: CALL_OW 140
+// end ;
+ 192: GO 148
+ 194: POP
+ 195: POP
+ 196: GO 128
+ 198: POP
+ 199: POP
+// for i := startPointX to x do
+ 200: LD_ADDR_VAR 0 6
+ 204: PUSH
+ 205: DOUBLE
+ 206: LD_VAR 0 8
+ 210: DEC
+ 211: ST_TO_ADDR
+ 212: LD_VAR 0 1
+ 216: PUSH
+ 217: FOR_TO
+ 218: IFFALSE 305
+// begin for j := y to endPointY do
+ 220: LD_ADDR_VAR 0 7
+ 224: PUSH
+ 225: DOUBLE
+ 226: LD_VAR 0 2
+ 230: DEC
+ 231: ST_TO_ADDR
+ 232: LD_VAR 0 11
+ 236: PUSH
+ 237: FOR_TO
+ 238: IFFALSE 301
+// begin if i < j - 10 then
+ 240: LD_VAR 0 6
+ 244: PUSH
+ 245: LD_VAR 0 7
+ 249: PUSH
+ 250: LD_INT 10
+ 252: MINUS
+ 253: LESS
+ 254: IFFALSE 258
+// continue ;
+ 256: GO 237
+// un := CreateHuman ;
+ 258: LD_ADDR_VAR 0 5
+ 262: PUSH
+ 263: CALL_OW 44
+ 267: ST_TO_ADDR
+// PlaceUnitXY ( un , i , j , false ) ;
+ 268: LD_VAR 0 5
+ 272: PPUSH
+ 273: LD_VAR 0 6
+ 277: PPUSH
+ 278: LD_VAR 0 7
+ 282: PPUSH
+ 283: LD_INT 0
+ 285: PPUSH
+ 286: CALL_OW 48
+// ComHold ( un ) ;
+ 290: LD_VAR 0 5
+ 294: PPUSH
+ 295: CALL_OW 140
+// end ;
+ 299: GO 237
+ 301: POP
+ 302: POP
+// end ;
+ 303: GO 217
+ 305: POP
+ 306: POP
+// for i := x to endPointX do
+ 307: LD_ADDR_VAR 0 6
+ 311: PUSH
+ 312: DOUBLE
+ 313: LD_VAR 0 1
+ 317: DEC
+ 318: ST_TO_ADDR
+ 319: LD_VAR 0 10
+ 323: PUSH
+ 324: FOR_TO
+ 325: IFFALSE 412
+// for j := startPointY to y do
+ 327: LD_ADDR_VAR 0 7
+ 331: PUSH
+ 332: DOUBLE
+ 333: LD_VAR 0 9
+ 337: DEC
+ 338: ST_TO_ADDR
+ 339: LD_VAR 0 2
+ 343: PUSH
+ 344: FOR_TO
+ 345: IFFALSE 408
+// begin if i > j + 10 then
+ 347: LD_VAR 0 6
+ 351: PUSH
+ 352: LD_VAR 0 7
+ 356: PUSH
+ 357: LD_INT 10
+ 359: PLUS
+ 360: GREATER
+ 361: IFFALSE 365
+// continue ;
+ 363: GO 344
+// un := CreateHuman ;
+ 365: LD_ADDR_VAR 0 5
+ 369: PUSH
+ 370: CALL_OW 44
+ 374: ST_TO_ADDR
+// PlaceUnitXY ( un , i , j , false ) ;
+ 375: LD_VAR 0 5
+ 379: PPUSH
+ 380: LD_VAR 0 6
+ 384: PPUSH
+ 385: LD_VAR 0 7
+ 389: PPUSH
+ 390: LD_INT 0
+ 392: PPUSH
+ 393: CALL_OW 48
+// ComHold ( un ) ;
+ 397: LD_VAR 0 5
+ 401: PPUSH
+ 402: CALL_OW 140
+// end ;
+ 406: GO 344
+ 408: POP
+ 409: POP
+ 410: GO 324
+ 412: POP
+ 413: POP
+// for i := x to endPointX do
+ 414: LD_ADDR_VAR 0 6
+ 418: PUSH
+ 419: DOUBLE
+ 420: LD_VAR 0 1
+ 424: DEC
+ 425: ST_TO_ADDR
+ 426: LD_VAR 0 10
+ 430: PUSH
+ 431: FOR_TO
+ 432: IFFALSE 501
+// begin for j := y to endPointY do
+ 434: LD_ADDR_VAR 0 7
+ 438: PUSH
+ 439: DOUBLE
+ 440: LD_VAR 0 2
+ 444: DEC
+ 445: ST_TO_ADDR
+ 446: LD_VAR 0 11
+ 450: PUSH
+ 451: FOR_TO
+ 452: IFFALSE 497
+// begin un := CreateHuman ;
+ 454: LD_ADDR_VAR 0 5
+ 458: PUSH
+ 459: CALL_OW 44
+ 463: ST_TO_ADDR
+// PlaceUnitXY ( un , i , j , false ) ;
+ 464: LD_VAR 0 5
+ 468: PPUSH
+ 469: LD_VAR 0 6
+ 473: PPUSH
+ 474: LD_VAR 0 7
+ 478: PPUSH
+ 479: LD_INT 0
+ 481: PPUSH
+ 482: CALL_OW 48
+// ComHold ( un ) ;
+ 486: LD_VAR 0 5
+ 490: PPUSH
+ 491: CALL_OW 140
+// end ;
+ 495: GO 451
+ 497: POP
+ 498: POP
+// end ;
+ 499: GO 431
+ 501: POP
+ 502: POP
+// end ;
+ 503: LD_VAR 0 4
+ 507: RET

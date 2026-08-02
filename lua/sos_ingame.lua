@@ -1,9 +1,36 @@
 OLD_FROMOW_INFOPANEL_UPDATE = FROMOW_INFOPANEL_UPDATE;
 SELECTED_UNIT = nil;
 
+local function syncSpecBarFromSelectedUnit(DATA)
+    if DATA == nil then
+        return;
+    end;
+
+    if getvalue(OWV_MYSIDE) ~= 9 then
+        return;
+    end;
+
+    local unitSide = parseInt(DATA.SIDE);
+    if unitSide == nil then
+        return;
+    end;
+
+    if type(setPlayerResearchSide) == 'function' then
+        setPlayerResearchSide(unitSide);
+    end;
+
+    if type(setSpecBarSelectedNation) == 'function' then
+        local unitNation = parseInt(DATA.NATION);
+        if unitNation ~= nil and unitNation >= 1 and unitNation <= 3 then
+            setSpecBarSelectedNation(unitNation);
+        end;
+    end;
+end;
+
 function FROMOW_INFOPANEL_UPDATE(DATA)
   OLD_FROMOW_INFOPANEL_UPDATE(DATA);
   SELECTED_UNIT = DATA;
+  syncSpecBarFromSelectedUnit(DATA);
 end;
 
 OLD_GAMEWINDOW_ONTICK = gamewindow.overlay.onTick;
@@ -17,6 +44,10 @@ function gamewindow.overlay.onTick(FRAMETIME)
             local unitKindID = parseInt(SELECTED_UNIT.KIND);
             local unitSide = parseInt(SELECTED_UNIT.SIDE);
             local side = getvalue(OWV_MYSIDE);
+
+            if side == 9 and unitSide ~= nil and unitSide >= 1 and unitSide <= 8 then
+                -- Spectator bar sync is handled in FROMOW_INFOPANEL_UPDATE to avoid per-frame flicker.
+            end;
 
         	if selectedUnitID > 0 and unitKindID == 3 and FACTORY_WAYPOINTS[selectedUnitID] ~= nil and (side == 9 or side == unitSide) and (FACTORY_ACTIVE_WAYPOINT.UNIT_ID == 0 or FACTORY_ACTIVE_WAYPOINT.UNIT_ID == selectedUnitID) then
         		local point = FACTORY_WAYPOINTS[selectedUnitID];
@@ -168,22 +199,62 @@ function FROMOW_SHOW_INGAME_MENU(DATA)
     -- dialog.options.Show()
 end;
 
+LFC_UNITS_GROUPS = {
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+};
+
+function FROMOW_GROUPFORMED(GROUPID, COUNT, ARRAY)
+    LFC_UNITS_GROUPS[GROUPID + 1] = ARRAY;
+end;
+
+-- not used
+--function FROMOW_GROUPCHANGED(GROUPID, COUNT, ARRAY)
+--    clDebug({'b', GROUPID, COUNT, ARRAY});
+--end;
+
 LFC_UNITS_CUSTOM_ICON = {};
 
 function LFC_GET_UNITPANEL_ICONS_CALLBACK(UNIT, LICON, RICON)
-    if (#LFC_UNITS_CUSTOM_ICON == 0) then
+    if (#LFC_UNITS_CUSTOM_ICON == 0 and #LFC_UNITS_GROUPS == 0) then
         return LICON, RICON;
     end;
 
     local ID = parseInt(UNIT.ID);
+    local customIcon = -1;
+    local groupIcon = -1;
 
-    for i = 1, #LFC_UNITS_CUSTOM_ICON do
-        if (ID == LFC_UNITS_CUSTOM_ICON[i][1]) then
-            return LICON, RICON, -1, LFC_UNITS_CUSTOM_ICON[i][2];
+    for i = 1, #LFC_UNITS_GROUPS do
+        if #LFC_UNITS_GROUPS[i] then
+            for j = 1, #LFC_UNITS_GROUPS[i] do
+                if (ID == LFC_UNITS_GROUPS[i][j]) then
+                    if groupIcon > -1 then
+                        groupIcon = 24;
+                        break;
+                    end;
+
+                    groupIcon = i + 13;
+                end;
+            end;
         end;
     end;
 
-    return LICON, RICON;
+    for i = 1, #LFC_UNITS_CUSTOM_ICON do
+        if (ID == LFC_UNITS_CUSTOM_ICON[i][1]) then
+            customIcon = LFC_UNITS_CUSTOM_ICON[i][2];
+            break;
+        end;
+    end;
+
+    return LICON, RICON, customIcon, groupIcon;
 end;
 
 OW_LFC_ADD(LFC_GET_UNITPANEL_ICONS, LFC_GET_UNITPANEL_ICONS_CALLBACK, nil);

@@ -111,14 +111,25 @@ for i in guards do
     end;
 End;
 
-Every 0$1 trigger vehGuard and not planCaptured do
+Every 0$1 trigger vehGuard do
 var i;
 begin
-enable;
+if not planCaptured then
+   begin
+   for i in vehGuard do
+       if IsOk(i) and IsControledBy(i) then
+          ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 7]), i));
+   end
+else
+   begin
+   for i in vehGuard do
+       ComStop(i);
 
-for i in vehGuard do
-    if IsOk(i) and IsControledBy(i) then
-       ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_side, 7]), i));
+   disable;
+   exit;
+   end;
+
+enable;
 End;
 
 Every 1$00 + 3$00 trigger bombExploded and IsOk(us_fac) and not planCaptured and Difficulty > 1 do

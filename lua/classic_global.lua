@@ -8,6 +8,7 @@ CUSTOM_LISTBOX_LIST = {};
 SKIRMISH_ALLOWED_MAPS = {}; -- check mod.ini
 MOD_DATA = {};
 CAMPAIGN_ID = 0;
+CAMPAIGN_MODE = false;
 IN_LOBBY = false;
 
 function FROMOW_MODS_GETINI(DATA)

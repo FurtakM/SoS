@@ -39,8 +39,8 @@ InGameOff;
 ChangeMissionObjectives('M1');
 SaveForQuickRestart;
 
-if debug then
-   FogOff(3);
+//if debug then
+//   FogOff(3);
 
 wait(0$10 - (0$2 * Difficulty));
 
@@ -102,8 +102,14 @@ var un, tmp, tmp2;
 begin
 tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, apeRadioKilled, 12]]);
 
-if not tmp or FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 then
+if not tmp then
    exit;
+
+if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 and IsOk(Burlak) then
+   begin
+   Say(Burlak, 'D2a-Bur-1');
+   exit;
+   end;
 
 tmp2 := [Kirilenkova, Belkov, Saseda, Jaworska];
 
@@ -111,7 +117,7 @@ Randomize;
 
 un := tmp2[rand(1, Count(tmp2))];
 
-if not un in tmp then
+if not un in tmp or GetSide(un) <> 3 then
    un := Burlak;
 
 DialogueOn;
@@ -261,8 +267,11 @@ Every 0$2 trigger UnitFilter([Saseda, Jaworska, Balei, Belkov, Jaunzeme], [f_see
 begin
 if hasGnyevko then
    begin
-   if GetDistUnits(Burlak, Gnyevko) > 4 and See(6, Gnyevko) and not See(6, Burlak) then
-      begin
+   if Crawls(Gnyevko) then
+      ComWalk(Gnyevko);
+
+   if GetDistUnits(Burlak, Gnyevko) > 8 and (See(6, Gnyevko) or GetDistUnits(Gnyevko, Pokryshkin) < 10) and GetDistUnits(Pokryshkin, Burlak) > 10 then
+      begin        
       GnyevkoPokryshkinScene;
 
       repeat
@@ -304,7 +313,7 @@ ComTurnUnit(Burlak, Pokryshkin);
 Say(Burlak, 'D4-Bur-3');
 Say(Pokryshkin, 'D4-Pok-4');
 
-PlaceUnitXY(Brown, 31, 51, true);
+PlaceUnitXYR(Brown, 31, 51, 4, true);
 
 wait(0$2);
 
@@ -343,6 +352,8 @@ InGameOn;
 CenterOnUnits(Pokryshkin);
 
 ComMoveXY(Burlak, 69, 65);
+AddComTurnUnit(Burlak, Brown);
+
 ComMoveXY(Brown, 58, 57);
 
 repeat

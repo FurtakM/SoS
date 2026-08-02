@@ -293,9 +293,7 @@ menu.window3.web = clButton(
     30, 
     'Wiki Online', 
     'OW_SOS_CLICKED("wiki");',
-    {
-        disabled = true
-    }
+    {}
 );
 
 menu.window3.biographies = clButton(
@@ -683,6 +681,8 @@ function backToMenu_lite()
     -- loadMenuThings();
     OW_menumusic(false);  
 
+    CAMPAIGN_MODE = false;
+
     killGameMusic();
 
     if getVisible(Multi_Debrief) then
@@ -696,6 +696,8 @@ end;
 function backToMenu()
     killGameMusic();
     playMenuMusic(1);
+    
+    CAMPAIGN_MODE = false;
 
     setVisible(game, false);
     setVisible(menu, true);

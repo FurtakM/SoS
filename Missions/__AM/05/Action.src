@@ -1,6 +1,6 @@
 // Action module
 Export Function Action;
-var points, i, sol, team, all, commander, filter;
+var points, i, p, sol, team, all, commander, filter;
 begin
 PlaceSeeing(0, 0, 1, -32976);
 
@@ -8,19 +8,34 @@ InGameOn;
 
 CenterNowOnXY(33, 11);
            
-points := [ [29,21], [41,28], [52,26], [49,16] ];
+points := [ [28,21], [36,28], [42,26], [52,26], [49,16] ];
 
 for i in points do
-    AddComMoveXY([JMM, Gladstone], i[1], i[2]);
+    begin
+    AddComMoveXY(JMM, i[1], i[2]);
+    end;
 
-AddComExitVehicle([JMM, Gladstone]);
+AddComExitVehicle(JMM);
+
+wait(0$0.5);
+
+for i in points do
+    begin
+    AddComMoveXY(Gladstone, i[1], i[2]);
+    end;
+
+AddComExitVehicle(Gladstone);
+
+p := 0;
 
 repeat
  wait(0$01);
-until not IsInUnit(JMM) and not IsInUnit(Gladstone);
+ p := p + 1;
+until (not IsInUnit(JMM) and not IsInUnit(Gladstone)) or p > 30;
 
 ComTurnUnit(JMM, Gladstone);
-ComTurnUnit(Gladstone, JMM);
+ComMoveXY(Gladstone, 52, 18);
+AddComTurnUnit(Gladstone, JMM);
 
 sol := FilterAllUnits([f_sex, sex_male]) diff [JMM, Gladstone, Bobby, Cyrus, Frank, Brown];
 

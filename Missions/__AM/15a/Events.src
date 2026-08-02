@@ -37,13 +37,19 @@ if GetSide(un) = 2 and not arabianAttacked then
 if un = Powell then
    americanDestroyed := true;
 
-if un = Platonov then
-   russianDestroyed := true;
+if un = Platonov then  
+   russianDestroyed := true;  
 
 if un in FilterAllUnits([[f_side, 7], [f_type, unit_vehicle]]) then
    vehicleLostCounter := vehicleLostCounter + 1;
 
 MCE_UnitDestroyed(un);
+End;
+
+On UnitDestroyed_Extra(un, killerSide, killerUnit) do
+begin
+if un = Platonov and killerSide = 7 and killerUnit in teleportedUnits and teleportedIntoMotherLode then
+   SetAchievement('ACH_TELEPORT');
 End;
 
 On BuildingStarted(building, builder) do
@@ -80,6 +86,19 @@ End;
 
 On VehicleConstructed(vehicle, factory) do
 begin
+if GetSide(vehicle) = 7 then
+   begin
+   if GetNation(vehicle) = 1 then
+      vehiclesCounter := Replace(vehiclesCounter, 1, vehiclesCounter[1] + 1)
+   else
+      vehiclesCounter := Replace(vehiclesCounter, 2, vehiclesCounter[2] + 1);
+
+   if vehiclesCounter[1] >= 10 and vehiclesCounter[2] >= 10 then
+      begin
+      SetAchievement('ACH_ALLY');
+      end;
+   end;
+
 SOS_VehicleConstructed(vehicle, factory);
 MCE_VehicleConstructed(vehicle, factory);
 End;
@@ -119,6 +138,12 @@ On ApemanTamed(ape, sci) do
 begin
 MCE_ApemanTamed(ape, sci);
 End;
+
+On WeaponPlaced(building, factory) do
+begin
+MCE_WeaponPlaced(building, factory);
+End;
+
 
 On Command(cmd) do
 begin

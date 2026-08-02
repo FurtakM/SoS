@@ -1008,6 +1008,19 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         }
     );
 
+    if PROPERTIES.icon ~= nil and PROPERTIES.icon[INDEX] ~= nil then
+        local icon = getElementEX(
+            PARENT,
+            anchorLTRB,
+            XYWH(PROPERTIES.widthList - 42, 15 * (INDEX - 1), 11, 11),
+            true,
+            {
+                texture = PROPERTIES.icon[INDEX].path, --'classic/edit/tour.png',
+                hint = PROPERTIES.icon[INDEX].hint
+            }
+        );
+    end;
+
     if (not isBlocked) then
         set_Callback(item.ID, CALLBACK_MOUSELEAVE, 'clHoverItem(' .. item.ID .. ', 0, ' .. BoolToInt(SELECTED) .. ');');
         set_Callback(item.ID, CALLBACK_MOUSEOVER, 'clHoverItem(' .. item.ID .. ', 1, ' .. BoolToInt(SELECTED) .. ');');

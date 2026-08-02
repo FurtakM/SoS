@@ -307,6 +307,8 @@ if IsOk(Kamil) then
    if IsOk(Ibrahim) then
       begin
       if ibrahimJoinedIn04 then
+         Say(Ibrahim, 'DI-Cross-d-5')
+      else
          Say(Ibrahim, 'DI-Cross-b-5');
 
       Say(Ibrahim, 'DI-Cross-b-6');
@@ -324,6 +326,8 @@ else if IsOk(Sophia) then
    if IsOk(Ibrahim) then
       begin
       if ibrahimJoinedIn04 then
+         Say(Ibrahim, 'DI-Cross-d-5')
+      else
          Say(Ibrahim, 'DI-Cross-b-5');
 
       Say(Ibrahim, 'DI-Cross-b-6');
@@ -419,6 +423,7 @@ DialogueOff;
 ChangeMissionObjectives('RemoteControl');
 
 SetTech(tech_remCont, 2, state_enabled);
+SetTech(tech_RemCharge, 2, state_enabled);
 SetRestrict(b_ext_radio, 2, true);
 End;
 
@@ -532,6 +537,9 @@ Say(Heike, 'DH-Stim-4');
 drugsResearched := true;
 End;
 
+Every 0$1 trigger drugsTested do
+ChangeMissionObjectives('StimOut');
+
 Every 0$1 trigger drugsResearched do
 var i, tmp, tag;
 begin
@@ -639,7 +647,7 @@ Say(Heike, 'DH-Obj-1');
 Every 0$1 trigger SeeGroup(2, ruSouthGroup) do
 Say(Heike, 'DH-Obj-a-1');
 
-Every 0$1 trigger eastBaseCaptured or tick >= [11$00, 10$30, 10$00, 9$30][Difficulty] do
+Every 0$1 trigger tick >= [11$00, 10$30, 10$00, 9$30][Difficulty] do
 begin
 if eastBaseCaptured then
    wait(2$00);
@@ -751,11 +759,15 @@ if m1 and m2 and m3 and Difficulty >= 3 then
 
 GiveMedals('MAIN');
 
+SaveEnvironment(allMapEnvArea, '05_Forest');
+
 RewardPeople(FilterAllUnits([[f_side, 2], [f_nation, 2], [f_type, unit_human]]));
 
 SaveVariable(convoySavedCounter, '05_ConvoySavedCounter');
 SaveVariable(radarConstructed, '05_Radar');
 SaveVariable(drugsTested, '05_DrugsTested');
+SaveVariable(GetTech(tech_crane, 2) = state_researched, '05_Crane');
+SaveVariable(GetTech(tech_remCont, 2) = state_researched, '05_RemCont');
 SaveVariable(FilterAllUnits([[f_side, 2], [f_control, control_remote]]) >= 3 and FilterAllUnits([[f_side, 2], [f_weapon, ar_control_tower]]) >= 2, '05_RemoteControl');
 
 tmp := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle]]);

@@ -203,7 +203,7 @@ if IsInArea(veh, finalArea) and IsOk(veh) then
 End;
 
 Export Function SendAttack;
-var un, veh, i;
+var un, veh, i, spawned;
 begin
 if blockAttack then
    begin
@@ -259,17 +259,35 @@ usAttackers := usAttackers union un;
 
 ComMoveXY(un, 40, 65);
 
+EraseResourceArea(mat_cans, westSpawnArea);
+EraseResourceArea(mat_oil, westSpawnArea);
+
+for i in FilterUnitsInArea(westSpawnArea, [f_empty]) do
+    begin
+    RemoveUnit(i);
+    end;
+
 for i := 1 to Difficulty + attackWave div 4 do
     begin
     veh := PrepareTank(1, 1, [us_medium_wheeled, us_medium_wheeled, us_medium_tracked][rand(1,3)], engine_combustion, control_manual, [us_gatling_gun, us_light_gun, us_machine_gun][rand(1,3)], 90);
-    PlaceUnitXY(veh, 35, 65, false);
+    spawned := PlaceUnitXY(veh, 35, 65, false);
+
+    if not spawned then
+       begin
+       SetDir(veh, 4);
+       PlaceUnitXY(veh, 102, 9, false);
+       end;
 
     PrepareHuman(false, 3, Difficulty + 1);
     un := CreateHuman;
     PlaceHumanInUnit(un, veh);
     usAttackers := usAttackers union un;
 
-    ComMoveXY(veh, 39, 60);
+    if spawned then
+       ComMoveXY(veh, 39, 60)
+    else
+       ComMoveXY(veh, 92, 25);
+
     wait(0$3);
     usAttackers := usAttackers union veh;
     end;
@@ -286,9 +304,9 @@ begin
 // 0 - attack heike base from south
 // 1 - attack heike base from east
 // 2 - attack farmer base
-if retreatAllowed then
-   strategy := 2
-else
+//if retreatAllowed then
+//   strategy := 2
+//else
    strategy := rand(0, 2);
 
 // aggressive inf point (x, y) | heal point (x, y) | repair point (x, y) | aggressive tank point (x, y) 
@@ -349,6 +367,7 @@ repeat
               ComMoveXY(i, attackFormula[2][1], attackFormula[2][2]);
               end
            else
+              begin
               if tag <= attackFormula[1] then
                  begin
                  if GetDistUnitXY(i, attackFormula[1][tag][1], attackFormula[1][tag][2]) > 6 then
@@ -358,6 +377,7 @@ repeat
                  end
               else
                  ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+              end;
            end;
         end;
     end;
@@ -422,15 +442,19 @@ repeat
               ComMoveXY(veh, attackFormula[3][1], attackFormula[3][2]);
               end
            else if veh then
+              begin
               if tag <= attackFormula[4] then
                  begin
                  if GetDistUnitXY(veh, attackFormula[4][tag][1], attackFormula[4][tag][2]) > 6 then
                     ComAgressiveMove(veh, attackFormula[4][tag][1], attackFormula[4][tag][2])
                  else if not FilterAllUnits([[f_enemy, 1], [f_dist, veh, 10]]) then
-                    SetTag(i, tag + 1);
+                    SetTag(i, tag + 1)
+                 else
+                    ComAttackUnit(veh, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), veh));
                  end
               else
-                 ComAttackUnit(veh, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), i));
+                 ComAttackUnit(veh, NearestUnitToUnit(FilterAllUnits([f_enemy, 1]), veh));
+              end;
            end;
         end;
     end;

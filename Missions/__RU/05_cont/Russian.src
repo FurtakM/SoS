@@ -1,69 +1,80 @@
-Export Burlak, Karamazov, Petrovova, Gleb, Petrosyan, Titov, Dolgov, Lipshchin; // Heroes - new team, Team S
-Export Platonov;
-Export ruCars;
-
-Export Function PrepareRussians;
+Export Burlak, Platonov, Petrovova, Titov,
+       Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov;
+Export ruVehicles;
+Export function PrepareRussian;
+var i, veh;
 begin
-    PrepareHeroes;
-end;
+uc_nation := nation_russian;
+uc_side := 6;
 
-Function PrepareHeroes;
-var i, car;
-begin
-     ruCars = [];
+Platonov  := NewCharacter('Platonov');
 
-     uc_side = 3;
-     uc_nation = 3;
+uc_side := 3;
 
-    Burlak:=PrepareUnitExt('Burlak', true, class_mechanic);
+Burlak    := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
+Karamazov := NewCharacter('Karamazov');
+Lipshchin := NewCharacter('Lipshchin');
+Petrosyan := NewCharacter('Petrosyan');
+Titov     := NewCharacter('Titov');
+Petrovova := NewCharacter('Petrovova');
+Gleb      := NewCharacter('Gleb');
+Dolgov    := NewCharacter('Dolgov');
 
-    Titov := PrepareUnitExt('Titov', false, class_soldier);
-    Dolgov:= PrepareUnitExt('Dolgov', false, class_scientistic);
-    Lipshchin:= PrepareUnitExt('Lipshchin', false, class_soldier);
-    Karamazov:= PrepareUnitExt('Karamazov', false, class_engineer);
-    Petrovova:= PrepareUnitExt('Petrovova', false, class_soldier);
-    Gleb:= PrepareUnitExt('Gleb', false, class_soldier);
-    Petrosyan:= PrepareUnitExt('Petrosyan', false, class_scientistic);
+ruVehicles := [];
 
-    Platonov = PrepareUnitExt('Platonov', false, 0);
+PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_gun, 36);
+veh := CreateVehicle;
+SetDir(veh, 4);
+SetMark(veh, -3);
 
-     for i:=1 to TanksFromIntro do
-     begin
-         vc_chassis:=TanksFromIntro[i][1];
-         vc_engine = TanksFromIntro[i][2];
-         vc_control = TanksFromIntro[i][3];
-         vc_weapon:=TanksFromIntro[i][4];
-         uc_direction:=Rand(3,4);
-         vc_fuel_battery:=Rand(25,40);
-         car:=CreateVehicle;
-         ruCars:=ruCars ^ car;
+ruVehicles := Join(ruVehicles, veh);
+PlaceUnitArea(veh, startArea0, false);
 
-         case TanksFromIntro[i][5] of
-              'Bur': PlaceHumanInUnit(Burlak, car);
-              'Kar': PlaceHumanInUnit(Karamazov, car);
-              'Ptr': PlaceHumanInUnit(Petrovova, car);
-              'Glb': PlaceHumanInUnit(Gleb, car);
-              'Pet': PlaceHumanInUnit(Petrosyan, car);
-              'Dol': PlaceHumanInUnit(Dolgov, car);
-              'Lip': PlaceHumanInUnit(Lipshchin, car);
-              'Tit': PlaceHumanInUnit(Titov, car);
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_gatling_gun, ru_heavy_machine_gun][i], 30);
+    veh := CreateVehicle;
+    SetDir(veh, 4);
+    SetTag(veh, i);
+
+    ruVehicles := Join(ruVehicles, veh);
+    PlaceUnitArea(veh, startArea1, false);
+    end;
+
+for i := 1 to 2 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, 30);
+    veh := CreateVehicle;
+    SetDir(veh, 4);
+    SetCargo(veh, mat_oil, [40, 30, 20, 10][Difficulty]);
+    SetTag(veh, 2 + i);
+
+    ruVehicles := Join(ruVehicles, veh);
+    PlaceUnitArea(veh, startArea2, false);
+    end;
+
+for i := 1 to 3 do
+    begin
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, ru_heavy_machine_gun, 30);
+    veh := CreateVehicle;
+    SetDir(veh, 4);
+    SetTag(veh, 4 + i);
+
+    ruVehicles := Join(ruVehicles, veh);
+    PlaceUnitArea(veh, startArea3, false);
+    end;
+
+for i in ruVehicles do
+    begin
+    case GetTag(i) of
+         0: PlaceHumanInUnit(Burlak, i);
+         1: PlaceHumanInUnit(Titov, i);
+         2: PlaceHumanInUnit(Gleb, i);
+         3: PlaceHumanInUnit(Dolgov, i);
+         4: PlaceHumanInUnit(Karamazov, i);
+         5: PlaceHumanInUnit(Petrovova, i);
+         6: PlaceHumanInUnit(Petrosyan, i);          
+         7: PlaceHumanInUnit(Lipshchin, i);
          end;
-
-         SetLives(car, Rand(251,800));
-     end;
-
-   for i in ruCars do
-         PlaceUnitArea(i, ru_place2, false);
-
-     RevealFogArea(3, co_vidi);
-
-     ComMoveToArea(ruCars, ru_dojezd);
-     wait(0$0.1);
-     CenterNowOnUnits(IsInUnit(Burlak));
-
-     while FilterUnitsInArea(ru_dojezd, [[f_side,3],[f_type,unit_vehicle]])<5 do
-     begin
-        wait(0$1);
-        CenterOnUnits(IsInUnit(Burlak));
-     end;    
-end;
+    end;
+End;

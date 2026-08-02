@@ -59,7 +59,7 @@ function FROMOW_SETLOADIMAGE(filename)
 	setVisible(loading, true);
 	setVisible(menu, false);
 
-	if getvalue(OWV_MULTIPLAYER) then
+	if getvalue(OWV_MULTIPLAYER) and not CAMPAIGN_MODE then
 		setTexture(loading.img, 'LoadImgs/multiplayer.png');
 		setText(loading.textName, MultiDef.MapName.MAPLOC);
 		setText(loading.textGameType, MultiDef.MapName.GAMETYPELOC);
@@ -68,7 +68,7 @@ function FROMOW_SETLOADIMAGE(filename)
 
 		init_specBars();
 		initalizeDiplomacy();
-	elseif (getvalue(OWV_SKIRMISH)) then
+	elseif getvalue(OWV_SKIRMISH) and not CAMPAIGN_MODE then
 		setTexture(loading.img, 'LoadImgs/skirmish.png');
 		showSpecBar(false);
 

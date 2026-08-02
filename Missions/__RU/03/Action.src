@@ -106,10 +106,18 @@ if Kovalyuk and not Kovalyuk in beriaBaseSquad then
 
 for i in beriaTeam union burlakTeam do
     if not i in beriaBaseSquad then
-       popovTeam := Join(popovTeam, i);
+       if Count(popovTeam) < 4 then
+          popovTeam := Join(popovTeam, i)
+       else
+          begin
+          kirovBaseSquad := Join(kirovBaseSquad, i);
 
-if popovTeam < 3 then
-   for i := Count(popovTeam) to 3 do
+          if not IsPlaced(i) then
+             PlaceUnitXYR(i, 161, 107, 3, false)
+          end;
+
+if popovTeam < 4 then
+   for i := Count(popovTeam) to 4 do
        begin
        uc_side := 6;
        uc_nation := nation_russian;
@@ -217,11 +225,18 @@ End;
 // self attack on allies
 Every 0$2 trigger allianceAttacked do
 begin
-DialogueOn;
-Say(Kurin, 'DArestKur');
-dwait(0$1);
-YouLost('SelfAttack');
-DialogueOff;
+if IsOk(Kurin) then
+   begin
+   DialogueOn;
+   Say(Kurin, 'DArestKur');
+
+   dwait(0$1);
+
+   YouLost('SelfAttack');
+   DialogueOff;
+   end
+else
+   YouLost('SelfAttack');
 End;
 
 Every 0$2 trigger youTookCratesFromKirov do
@@ -373,16 +388,19 @@ uc_side := 6;
 PrepareHuman(sex_male, class_soldier, 1);
 fake := CreateHuman;
 
-InGameOn;
-DialogueOn;
+if not See(3, Scholtze) then
+   begin
+   InGameOn;
+   DialogueOn;
 
-SayRadioNoFaceNoName(fake, 'D4-Sch-1');
-Say(Burlak, 'D4-Bur-1');
+   SayRadioNoFaceNoName(fake, 'D4-Sch-1');
+   Say(Burlak, 'D4-Bur-1');
 
-DialogueOff;
-InGameOff;
+   DialogueOff;
+   InGameOff;
 
-ChangeMissionObjectives('M4');
+   ChangeMissionObjectives('M4');
+   end;
 
 canSearchForScholtze := true;
 
@@ -487,9 +505,10 @@ ComMoveXY([Dickens, DickensFriend], 25, 31);
 omicronTroops := omicronTroops union [Dickens, DickensFriend];
 End;
 
-Every 0$2 trigger See(3, Scholtze) and canSearchForScholtze and not hasScholtze do
+Every 0$3 trigger See(3, Scholtze) and canSearchForScholtze and not hasScholtze do
 begin
 hasScholtze := true;
+
 SetSide(Scholtze, 3);
 
 CenterNowOnUnits(Scholtze);
@@ -527,7 +546,7 @@ Say(Burlak, 'D5a-Bur-1');
 
 DialogueOff;
 
-SetTech(tech_Track, 3, state_enabled);
+SetTech(tech_track, 3, state_enabled);
 SetRestrict(b_ext_track, 3, state_enabled);
 End;
 
@@ -640,6 +659,7 @@ if q = 3 then
    SayRadio(Kurin, 'D6c-Kur-2');
    DialogueOff;
 
+   AddMedal('Surplus', 1);
    sendMechanics := true;
    timeToAttackOnOmicron := 2$00;
    end;
@@ -815,7 +835,7 @@ enable;
 End;
 
 // attack on american without permission
-Every 0$2 trigger not allowedToAttackOmicron and (FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3])
+Every 0$1 trigger not allowedToAttackOmicron and (FilterUnitsInArea(omicronBaseOuterArea, [f_side, 3])
                   or FilterUnitsInArea(omicronBaseArea, [f_side, 3])) do
 var i, p;
 begin
@@ -834,32 +854,42 @@ else
    end;
 
 omicronRetreatCounter := Inc(omicronRetreatCounter);
-p := 0;
+p := 1;
 
 InGameOn;
 
 repeat
  for i in FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]) do
-     ComMoveToArea(i, omicronRetreatArea);
+     begin
+     if i in FilterAllUnits([[f_side, 3], [f_type, unit_vehicle], [f_empty]]) then
+        KillUnit(i)
+     else
+        ComMoveToArea(i, omicronRetreatArea);
+     end;
 
  wait(0$01);
  p := Inc(p);
-until p > 10 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
+until p > 2 or not FilterAllUnits([[f_or, [f_inarea, omicronBaseOuterArea], [f_inarea, omicronBaseArea]], [f_side, 3]]);
 
 InGameOff;
+
+wait(0$3);
 
 enable;
 End;
 
 // American talk about Arabs
-Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 2 or GetLives(usDep) < 500) and allowedToAttackOmicron do
-var i, tmp, random, sol, nearest;
+Every 0$2 trigger (FilterUnitsInArea(omicronBaseInnerArea, [f_enemy, 1]) > 1 or GetLives(usDep) < 500) and allowedToAttackOmicron do
+var i, p, tmp, random, sol, nearest;
 begin
 uc_side := 1;
 uc_nation := nation_american;
 
 PrepareSoldier(sex_male, 1);
+hc_name := 'Mike Damme';
 random := CreateHuman;
+
+InitHc;
 
 SayRadioNoFaceNoName(random, 'D8-Sol1-1');
 
@@ -905,7 +935,12 @@ if IsInUnit(Burlak) then
 else
    CenterNowOnUnits(Burlak);
 
-wait(0$5);
+p := 0;
+
+repeat
+ wait(0$1);
+ p := Inc(p);
+until FilterAllUnits([[f_side, 1], [f_class, class_soldier]]) < 2 or p > 30;
 
 SpawnArabAttack;
 
@@ -923,7 +958,15 @@ for i in FilterAllUnits([[f_side, 6], [f_or, [f_class, 2], [f_class, 4]]]) diff 
 
     ComExitBuilding(i);
     AddComMoveXY(i, 56, 94);
-    end;  
+    end;
+
+wait(1);
+
+if GetLives(Burlak) < 250 then
+   SetLives(Burlak, 250);
+
+for i in FilterAllUnits([[f_side, 1], [f_ok], [f_type, unit_human]]) do
+    SetLives(i, 200);
 
 SayRadio(Kurin, 'D9a-Kur-1');
 Say(Burlak, 'D9a-Bur-1');
@@ -960,8 +1003,7 @@ repeat
     nearest := NearestUnitToUnit(nearest, Popov)
  else if tmp then
     begin
-    for i in tmp do            
-        ComExitVehicle(IsDrivenBy(i));
+    nearest := IsDrivenBy(tmp[1]);
     end;
 until nearest and GetDistUnits(nearest, Popov) < 8;
 

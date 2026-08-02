@@ -27,6 +27,8 @@ limit := [10, 12, 13, 14][Difficulty];
 Sikorski := NewCharacter('Sikorski');
 PlaceHumanInUnit(Sikorski, usDep);
 
+omicronTroops := Join(omicronTroops, Sikorski);
+
 for i := 1 to limit - 5 do
     begin
     PrepareSoldier(false, [2, 2, 3, 4][Difficulty]);
@@ -102,7 +104,7 @@ tmp := [];
 }
 
 parts := [3, 3, 4, 5, 15, 15, 20, 25];
-skill := [2, 2, 3, 4][Difficulty];
+skill := [2, 3, 4, 5][Difficulty];
 
 repeat
  points := parts[rand(1, Count(parts))];
@@ -414,7 +416,7 @@ repeat
                if InArea(cr[j][1], cr[j][2], ignoreCratesArea) then
                   cr := Delete(cr, j);
 
-        nearbyUnits := FilterAllUnits([[f_side, 3], [f_dist, i, 9], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]);
+        nearbyUnits := FilterAllUnits([[f_side, 3], [f_dist, i, 10], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]);
 
         if cr then
            ComAttackPlace(i, cr[1][1], cr[1][2])
@@ -448,7 +450,7 @@ End;
 Every 0$2 trigger americanRetreat do
 var i, tmp;
 begin
-tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]);
+tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]) diff Sikorski;
 
 if not tmp then
    exit;  
@@ -464,7 +466,7 @@ repeat
         RemoveUnit(i);
      end;
 
- tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]);
+ tmp := FilterAllUnits([[f_or, [f_side, 1], [f_side, 4]], [f_type, unit_human], [f_ok]]) diff Sikorski;
 
  wait(0$1);
 until not tmp;
@@ -569,8 +571,32 @@ for i in FilterAllUnits([[f_side, 1], [f_engine, engine_combustion]]) do
        SetFuel(i, 3);
 End;
 
+Every 0$1 trigger GetLives(Sikorski) < 1000 or americanRetreat do
+begin
+omicronTroops := omicronTroops diff Sikorski;
+
+if IsInUnit(Sikorski) then
+   ComExit(Sikorski);
+
+wait(1);
+
+repeat
+ ComMoveToArea(Sikorski, americanRetreatArea);
+ wait(0$1);
+
+ if IsDead(Sikorski) then
+    exit;
+until IsInArea(Sikorski, americanRetreatArea);
+
+RemoveUnit(Sikorski);
+SaveVariable(true, '03_SikorskiAlive');
+End;
+
 Every 0$2 trigger joinToOmicronCounter > 2 do
 omicronBuildingsToBuild := omicronBuildingsToBuild ^ [[b_breastwork, 23, 5, 4]];
+
+Every 0$2 trigger joinToOmicronCounter > 8 and Difficulty > 1 do
+omicronBuildingsToBuild := omicronBuildingsToBuild ^ [[b_bunker, 30, 53, 5], [b_bunker, 31, 33, 4], [b_bunker, 23, 38, 5], [b_bunker, 43, 48, 4]];
 
 Every 0$2 trigger joinToOmicronCounter > 6 and FilterAllUnits([[f_side, 1], [f_class, class_soldier]]) > 12 do
 omicronBuildingsToBuild := omicronBuildingsToBuild ^ [[b_armoury, 22, 14, 3]];

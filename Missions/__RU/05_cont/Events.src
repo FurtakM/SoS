@@ -1,86 +1,282 @@
-On BuildingComplete(building) Do
+On UnitDestroyed(unit) do
+var side, btype;
 begin
-     if GetSide(building) = 3 AND GetBType(building) = b_depot then
-        SetBname(building, 'bukharin');
+side := GetSide(unit);
 
-    if GetSide(building) = 3 and GetBTYpe(building) in [b_lab, b_lab_basic, b_lab_full, b_lab_half] AND NOT buildedLab then
-       buildedLab = true;
+if side = 2 then
+   begin
+   if unit in arVehicles then
+      begin
+      arVehicles := arVehicles diff unit;
+      // arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)]);
+      end;
 
-    if GetSide(building) = 2 then
-    begin
-        if GetBType(building) = b_lab then
-            ComUpgradeLab(building, b_lab_weapon);
+   if unit in arPatrolRiver then
+      arPatrolRiver := arPatrolRiver diff unit;
 
-        if GetBType(building) = b_workshop then
-            ComUpgrade(building);
+   if unit in arHovercraft then
+      begin
+      arHovercraft := arHovercraft diff unit;
+      // arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)]);
+      end;
 
-        if GetBType(building) = b_ext_gun then
-            InitAIManager(2, nation_arabian, arabianUnitsInBase, ArabianBaseArea, ArabianHealArea, ArabianParkingArea, ArabianDefenceArea, [2, 2, 3, 3][Difficulty], 1, [1, 1, 2, 2][Difficulty], true);
-    end;
-end;
+   if unit in arVehiclesAttackers then
+      begin
+      arVehiclesAttackers := arVehiclesAttackers diff unit;
+      // arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)]);
+      end;
 
-On ApemanTamed(apeman, human) Do
+   if GetType(unit) = unit_vehicle then
+      arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(unit), GetEngine(unit), GetControl(unit), GetWeapon(unit)]);
+
+   if GetType(unit) = unit_building then
+      begin
+      btype := GetBType(unit);
+
+      if btype = b_barracks then
+         btype := b_armoury;
+
+      if btype = b_factory then
+         btype := b_workshop;
+
+      if btype in [b_lab_full, b_lab_half] then
+         btype := b_lab;
+
+      arBuildingsToBuild := Replace(arBuildingsToBuild, arBuildingsToBuild + 1, [btype, GetX(unit), GetY(unit), GetDir(unit)]);
+      end;
+   end;
+
+if side = 3 then
+   begin
+   if GetType(unit) = unit_human and GetNation(unit) = nation_russian then
+      loseCounter := Dec(loseCounter);
+
+   if GetBType(unit) = b_depot then
+      hasBase := false;
+   end;
+
+if unit = Burlak then
+   begin
+   YouLost('Burlak');
+   exit;
+   end;
+
+if unit = Gleb then
+   begin
+   YouLost('Gleb');
+   exit;
+   end;
+
+if unit = Stevens then
+   begin
+   SaveVariable(true, '05_StevensKilled');
+   stevensKilled := true;
+   exit;
+   end;
+
+if unit = Omar then
+   begin
+   SaveVariable(true, '05_OmarKilled');
+   omarKilled := true;
+   exit;
+   end;
+End;
+
+On LeaveBuilding(building, unit) do
 begin
-    if GetSide(human) = 3 AND GetNation(human) = 3 AND NOT dial_tameApeBlocker then
-        Dial_TameApe(human);
-end;
+if GetSide(unit) = 2 and GetClass(unit) = class_soldier then
+   begin
+   SetTag(building, tEmpty);
+   end;
+End;
 
-On ResearchComplete(research, building) Do
+On EnterBuilding(building, unit) do
 begin
-    if research = tech_apelang AND GetSide(building) = 3 then
-        Dial_ResearchApeLang;
+if GetTag(building) and GetSide(building) = 2 then
+   SetTag(building, 0);
 
-    if research = tech_apepsych AND GetSide(building) = 3 then
-        Dial_ResearchApePsych;
+if GetSide(unit) = 2 and GetClass(unit) = class_mechanic then
+   SetLives(unit, 1000);
 
-    if research = tech_apeagres AND GetSide(building) = 3 then
-        Dial_ResearchApeAgress;
-end;
+if unit = Stevens and GetLives(Stevens) < 1000 then
+   SetLives(Stevens, 1000);
+End;
 
-On EnterBuilding(building, human) Do
+On EvacuateVehicle(driver, veh, p1, p2) do
 begin
-    if GetSide(human) = 3 AND GetClass(human) = class_apeman AND (GetBtype(building) = b_lab OR GetBType(building) = b_lab_half) AND NOT dial_apeEnterLabBlocker then
-        Dial_ApeEnterLab;
-end;
+if GetTag(driver) = tMech then
+   begin
+   if GetSide(driver) = 2 then
+      begin
+      SetTag(driver, 0);
+      ComMoveXY(driver, 133, 72);
+      arForces := Join(arForces, driver);
+      end;
+   end;
 
-On UnitGoesToRed(unit) Do
+if driver in riverBlockers then
+   begin
+   wait(0$1);
+   ComMoveXY(driver, 138, 138);
+
+   repeat
+    wait(0$1);
+
+    if IsDead(driver) then
+       exit;
+   until IsAt(driver, 138, 138);
+
+   RemoveUnit(driver);
+   end;
+End;
+
+On VehicleCaptured(newId, oldId, oldSide, unit) do
 begin
-    if unit in arabianPatrolVehicles then
-        arabianPatrolVehicles = arabianPatrolVehicles diff unit;
+if oldId in arHovercraft then
+   begin
+   Del(arHovercraft, oldId);
+   arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(oldId), GetEngine(oldId), GetControl(oldId), GetWeapon(oldId)]);
+   end;
 
-    if unit in arabianHovercrafts then
-        arabianHovercrafts = arabianHovercrafts diff unit;
+if oldId in arVehiclesAttackers then
+   begin
+   Del(arVehiclesAttackers, oldId);
+   arConstructList := Replace(arConstructList, arConstructList + 1, [GetChassis(oldId), GetEngine(oldId), GetControl(oldId), GetWeapon(oldId)]);
+   end;
+End;
 
-   if unit in arabianPatrolTroops then
-      arabianPatrolTroops = arabianPatrolTroops diff unit;
-end;
-
-On UnitDestroyed(unit) Do
+On BuildingComplete(building) do
+var side, btype;
 begin
-    if unit in arabianUnitsInBase then
-        arabianUnitsInBase = arabianUnitsInBase diff unit;
+side := GetSide(building);
 
-    if unit = Burlak then
-        Lose_Burlak;
+if side = 2 then
+   begin
+   arBuildingsToBuild := Delete(arBuildingsToBuild, 1);
+   arBuildings := Join(arBuildings, building);
 
-    if FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, 3]]) < 6 then
-        Lose_Survive;
+   btype := GetBType(building);
 
-    if GetType(unit) = unit_vehicle AND GetSide(unit) = 2 AND GetChassis(unit) = ar_hovercraft then
-       achievement_DestroyedHovercrafts = achievement_DestroyedHovercrafts + 1;
-end;
+   case btype of
+        b_armoury: ComUpgrade(building);
+        b_workshop: ComUpgrade(building);
+        b_lab: begin
+               AddComUpgradeLab(building, b_lab_weapon);
+               AddComUpgradeLab(building, b_lab_opto);
+               end;
+        end;
+   end;
 
-On Contact(side1, side2) Do
+if side = 3 then
+   begin
+   btype := GetBType(building);
+
+   if btype = b_depot then
+      hasBase := true;
+   end;
+End;
+
+On VehicleConstructed(vehicle, factory) do
+var side, driver, i;
 begin
-    if (side1 = 3 AND side2 = 6 OR side1 = 6 AND side2 = 3) AND GetSide(Stevens) = 6 then
-    begin
-        stevensFollow = false;
-        stevensCanExitMap = true;
-        stevensWasInDepot = false;
-        stevensDepot = false;   
+SOS_VehicleConstructed(vehicle, factory);
 
-        SetSide(Stevens, 1);
+side := GetSide(vehicle);
 
-        ComMoveToArea(Stevens, StevensExitMapArea);
-    end;
-end;
+if side = 2 then
+   begin
+   for i := Count(arConstructList) downto 1 do
+       if GetChassis(vehicle) = arConstructList[i][1] and
+          GetEngine(vehicle) = arConstructList[i][2] and
+          GetControl(vehicle) = arConstructList[i][3] and
+          GetWeapon(vehicle) = arConstructList[i][4] then
+          begin
+          arConstructList := Delete(arConstructList, i);
+          break;
+          end;
+
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      SetTag(driver, tMech);
+
+   if Count(arVehiclesAttackers) > 3 and not GetWeapon(vehicle) in [ar_cargo_bay, ar_crane] and GetChassis(vehicle) <> ar_hovercraft then
+      begin
+      arVehicles := Join(arVehicles, vehicle);
+      end
+   else if GetChassis(vehicle) = ar_hovercraft then
+      begin
+      if not arPatrolRiver then
+         arPatrolRiver := Join(arPatrolRiver, vehicle)
+      else
+         begin
+         arHovercraft := Join(arHovercraft, vehicle);
+
+         ComMoveXY(vehicle, 151, 73);
+
+         repeat
+          wait(0$1);
+         until IsAt(vehicle, 151, 73);
+
+         ComExitVehicle(driver);
+
+         wait(0$1);
+
+         ComEnterUnit(driver, factory);
+
+         AttackFromRiver(vehicle);
+         end;
+      end
+   else if GetWeapon(vehicle) <> ar_cargo_bay then
+      begin
+      arVehiclesAttackers := Join(arVehiclesAttackers, vehicle);
+      end;
+   end;
+End;
+
+On MinePlaced(unit, x, y, type) do
+begin
+if GetSide(unit) = 2 and unit in arForces then
+   enemyMines := Join(enemyMines, [x, y]);
+End;
+
+On MineDetonated(unit, x, y) do
+var i;
+begin
+if unit in arForces then
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = x and enemyMines[i][2] = y then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+End;
+
+On ResearchComplete(tech, lab) do
+begin
+if GetSide(lab) = 2 then
+   if tech in arTechs then
+      arTechs := arTechs diff tech;
+End;
+
+On ApemanTamed(ape, unit) do
+begin
+apeTamed := true;
+End;
+
+On ClassChanged(un, oldClass, newClass) do
+begin
+if un = Stevens then
+   begin
+   wait(3);
+   SetClass(un, 4);
+   end;
+
+if GetSide(un) = 2 then
+   if GetTag(un) = tWannaBeMech then
+      SetTag(un, tMech);
+
+if GetSide(un) = 3 then
+   if oldClass = class_apeman then
+      apeTested := true;
+End;

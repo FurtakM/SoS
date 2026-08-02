@@ -325,6 +325,9 @@ repeat
                  continue;
                  end;
               end;
+
+          if not HasTask(group[i]) then
+             ComAttackUnit(group[i], NearestUnitToUnit(tmp, group[i]));
           end;
 
        // mortar or rockets
@@ -374,7 +377,7 @@ repeat
 
              if GetHexInfo(GetX(group[i]), GetY(group[i]))[2] = GetHexInfo(GetX(tmp[1]), GetY(tmp[1]))[2] then
                 AttackHovercraft(group[i], tmp[1])
-               else
+             else
                 ComAttackUnit(group[i], tmp[1]);
              end;
           end;
@@ -631,7 +634,7 @@ repeat
           unit_vehicle:
           begin
 
-          if GetLives(i) = 1000 and (GetDistUnits(i, e) < 40 or IsInArea(e, mc_scan_area[base])) then
+          if GetLives(i) = 1000 and e and (GetDistUnits(i, e) < 40 or IsInArea(e, mc_scan_area[base])) then
              begin
              if GetEngine(i) = engine_combustion and GetFuel(i) < 30 and depot then
                 begin
@@ -643,8 +646,9 @@ repeat
              else
                 ComAttackUnit(i, e);
              end
-          else if ((not IsInArea(e, mc_scan_area[base]) and GetDistUnits(i, e) >= 40) or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
-             ComMoveToArea(i, mc_parking[base]);
+          else if (not e or (e and (not IsInArea(e, mc_scan_area[base]) and GetDistUnits(i, e) >= 40)) or GetLives(i) <= 650) and not IsInArea(i, mc_parking[base]) then
+             if (not HasTask(i) and GetLives(i) > 650) or GetLives(i) <= 650 then
+                ComMoveToArea(i, mc_parking[base]);
 
           if GetLives(i) < 1000 and GetControl(i) = control_manual and IsDrivenBy(i) and IsInArea(i, mc_parking[base]) then
              begin
@@ -662,7 +666,7 @@ repeat
           b := IsInUnit(i);
           can_defend := (not b or GetBType(b) in [b_bunker, b_breastwork]);
 
-          if GetBType(b) = b_barracks and GetClass(i) in [1, 2, 3, 4] then
+          if b and GetBType(b) = b_barracks and GetClass(i) in [1, 2, 3, 4] then
              begin
              class := AllowSpecClass(i);
 
@@ -684,7 +688,7 @@ repeat
           if sold_defenders then
              if i in sold_defenders then
                 begin
-                if not HasTask(i) and GetDistUnits(i, e) < 30 then
+                if not HasTask(i) and e and GetDistUnits(i, e) < 30 then
                    ComAttackUnit(i, e);
                 end;
 

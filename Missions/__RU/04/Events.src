@@ -1,110 +1,145 @@
-On BuildingStarted(building, unit) Do
+On UnitDestroyed(un) do
+var mine, i;
 begin
-    if GetSide(building) = 3 AND GetBType(building) = b_depot AND NOT IsInArea(building, HillArea) then
-        Dial_DepotInWrongPlace(building);
-end;
+SOS_UnitDestroyed(un);
 
-On BuildingComplete(building) Do
-var i, cargo;
+if un = Burlak then
+   YouLost('Burlak');
+
+if un = Gaydar then
+   YouLost('Gaydar');
+
+if un = Popov then
+   YouLost('SelfAttack');
+
+if un in FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]) then
+   yourLoses := Inc(yourLoses);
+
+if GetSide(un) = 2 then
+   enemyCounterKill := Inc(enemyCounterKill);
+
+if un in enemyGuards then
+   begin
+   mine := MineOfUnit(un);
+
+   if not mine or not enemyMines then
+      exit;
+
+   RemoveMineOfUnit(un);
+
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = mine[1] and enemyMines[i][2] = mine[2] then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+   end;
+End;
+
+On MinePlaced(unit, x, y, type) do
 begin
-    if GetSide(building) = 3 AND GetBType(building) = b_depot AND IsInArea(building, HillArea) AND NOT startEvacuation AND NOT namedBase then
-    begin
-        namedBase = true;
-        SetBName(building, 'chuikov');
-        Dial_FinishDepot;
-    end;
+if GetSide(unit) = 2 and unit in enemyGuards then
+   enemyMines := Join(enemyMines, [x, y]);
+End;
 
-    if GetSide(building) = 3 AND GetBType(building) = b_bunker then
-       achievement_ConstructedTurrets = achievement_ConstructedTurrets + 1;
-
-    if GetSide(building) = 6 AND GetBType(building) = b_depot then
-    begin
-        secondBaseDepot = building;
-
-        uc_side = 6;
-        uc_nation = nation_russian;
-        vc_chassis = ru_medium_wheeled;
-        vc_control = control_manual;
-        vc_engine = engine_combustion;
-        vc_weapon = ru_cargo_bay;
-        cargo = CreateVehicle; 
-
-        PlaceUnitArea(cargo, RussianSpawnArea2, false);
-
-        AddCargo(cargo, mat_cans, 100);   
-        ComGive(cargo, building);   
-
-        PrepareMechanic(false, 2);
-
-        PlaceHumanInUnit(CreateHuman, cargo);
-
-        for i := 10 to russianCargoPath1 do
-            AddComMoveXY(cargo, russianCargoPath1[i][1], russianCargoPath1[i][2]);
-    end;
-
-    if GetSide(building) = 6 and GetBType(building) = b_breastwork then
-        ComEnterUnit(UnitFilter(secondBaseTeam, [[f_class, class_soldier], [f_outside]])[1], building);
-end;
-
-On UpgradeComplete(building) Do
+On MineDetonated(unit, x, y) do
+var i;
 begin
-    if GetBType(building) = b_lab_half AND NOT dial_labUpgradedBlock then
-        Dial_LabUpgraded;
-end;
+if unit in enemyGuards then
+   for i := 1 to enemyMines do
+       if enemyMines[i][1] = x and enemyMines[i][2] = y then
+          begin
+          enemyMines := Delete(enemyMines, i);
+          break;
+          end;
+End;
 
-On Contact(side1, side2) Do
+On EvacuateVehicle(driver, veh, p1, p2) do
 begin
-    if (side1 = 3 AND side2 = 2) OR (side1 = 2 AND side2 = 3) then
-    begin
-        if dial_contactBlock then
-            exit;
+if veh in enemyMobile then
+   begin
+   repeat
+    if GetDistUnitXY(driver, 79, 112) < 32 then
+       ComMoveXY(driver, 56, 110)
+    else if GetDistUnitXY(driver, 127, 138) < 28 then
+       ComMoveXY(driver, 233, 169)
+    else
+       ComMoveXY(driver, 163, 31);
 
-        dial_contactBlock = true;
+    wait(0$1);
 
-        Dial_Contact;
-    end;
+    if IsDead(driver) then
+       exit;
+   until IsAt(driver, 163, 31) or IsAt(driver, 56, 110) or IsAt(driver, 233, 169);
 
-    if (side1 = 3 AND side2 = 6) OR (side1 = 6 AND side2 = 3) then
-        Lose_SelfAttack;
-end;
+   RemoveUnit(driver);
+   end;
+End;
 
-On UnitDestroyed(unit) Do
+On Contact(s1, s2) do
 begin
-    if unit = Burlak then
-        Lose_Burlak;
+if s1 = 3 and s2 = 6 then
+   YouLost('SelfAttack');
+End;
 
-    if unit = Gaydar then
-        Lose_Gaydar;
-
-    if GetSide(unit) = 3 AND GetType(unit) = unit_human then
-        lostUnits = lostUnits + 1;
-
-    if GetSide(unit) = 2 AND GetType(unit) = unit_human AND NOT IsPlaced(Gaydar) then
-        killedArabianUnits = killedArabianUnits + 1;
-
-    if unit in firstAttackGroup then
-        firstAttackGroup = firstAttackGroup diff unit;
-
-end;
-
-On BuildingCaptured(building, side, human) Do
+On VehicleConstructed(vehicle, building) do
+var driver;
 begin
-    if side = 6 then
-        SetSide(building, 6);
-end;
+SOS_VehicleConstructed(vehicle, building); 
+End;
 
-On Command(com) do
-var i, j, temp, order, x, y, building;
+On SailEvent(event) do
 begin
+if event = eGaydar then
+   begin
+   SendAttackOnGaydar;
+   end;
 
-    for i in FilterAllUnits([[f_side,3],[f_or, [f_weapon, ru_cargo_bay], [f_type,unit_human]]]) do
-        if GetTaskList(i) > 0 then
-            for j = 1 to GetTaskList(i) do
-            begin
-                temp = GetTaskList(i)[j][4];
+if event = eForest then
+   begin
+   ClearRoadInForest;
+   end;
 
-                if (GetSide(temp) = 6 and GetTaskList(i)[j][1] = '<') then
-                    SetTaskList(i, []);
-            end;
+if event = eRaid then
+   begin
+   SendArabRaid;
+   end;
+End;
 
-end;
+On BuildingComplete(b) do
+begin
+if GetBType(b) = b_depot then
+   begin
+   hasBase := true;
+   myBase := GetBase(b);
+   SetRestrict(b_depot, 3, state_disabled);
+   end;
+
+if GetBType(b) = b_lab then
+   hasLab := true;
+End;
+
+On EndTheMissionRaised(p) do
+begin
+CustomFinishMission;
+End;
+
+On EvacuateBuilding(building, unit) do
+begin
+if GetSide(unit) = 6 then
+   begin
+   AddComMoveXY(unit, 75, 79);
+   AddComMoveXY(unit, 90, 122);
+
+   wait(0$2);
+
+   repeat
+    wait(0$1);
+   until FilterAllUnits([[f_side, 3], [f_dist, unit, 8]]);
+
+   if IsDead(unit) then
+      exit;
+
+   SetSide(unit, 3);
+   end;
+End;

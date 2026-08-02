@@ -1,94 +1,70 @@
-// Russian mission 5
-// Map by Altar
-// SAIL by Nefarem
-// Consultation - SoSTeam
+// 08.04.26
+// by Serpent
 
 Starting
 begin
-InitMission;
+ResetFog;
+Init;
+
+// birds, tigers, apemans, enchidnas, horses, mastodonts, fishes
+PrepareNature(3, 2, 0, 4, 0, 0, 3, natureArea, waterArea);
+PrepareNature(0, 0, [6, 6, 5, 4][Difficulty], 0, 0, 0, 0, apemanArea, 0);
+
+PrepareArabian;
+PrepareRussian;
+Action;
+
+PrepareArabianBase;
+
+//if debug then
+   //FogOff(3);
 End;
 
-// Global campaign variables
-Export omarStatus, stevensStatus, labDestroyed;
-Export tanksFromIntro, tanksFrom05, resourcesInCargo;
-
-// Current mission variables
-Export actionTime;
-Export sawArabianBase, sawApeman;
-Export dial_tameApeBlocker, dial_apeEnterLabBlocker, dial_southRoadBlocker, dial_seeCratesBlocker;
-Export stevensPlaced, stevensFollow, stevensWantTalkPetrosyan, stevensDepot, stevensWasInDepot, stevensCanExitMap;
-Export omarCanExitMap, arabianCanExitMap;
-Export cratesSpawned;
-Export fastBreakthrough;
-Export finishMissionBool;
-Export buildedLab;
-
-// Achievement variables
-Export achievement_DestroyedHovercrafts;
-Export achievement_CollectedCrates;
-
-Function InitMission;
+Export debug, prevMissionPrefix, currentMissionPrefix, arabSpotted, arabianDestroyed, arAllowToAttack, timeToArabAttack,
+       seenApe, hasApe, blockDialogThread, hasBase, stevensKilled, stevensInDepot, stevensFree, omarKilled, omarRun,
+       timeToOvsyenkoFall, apeTested, arabianBaseDestroyed, loseCounter, apeTamed;
+Function Init;
 begin
-    ResetFog;
-    RandomizeAll;
-    InGameOn;
+debug := false;
+prevMissionPrefix := '04_';
+currentMissionPrefix := '05_';
+arabSpotted := false;
+arabianDestroyed := false;
+arAllowToAttack := false;
+timeToArabAttack := 0$00;
+seenApe := false;
+hasApe := false;
+blockDialogThread := false;
+hasBase := false;
+stevensKilled := false;
+stevensInDepot := false;
+stevensFree := false;
+omarKilled := false;
+omarRun := false;
+apeTamed := false;
+timeToOvsyenkoFall := [32$00, 30$00, 28$0, 26$0][Difficulty];
+apeTested := false;
+arabianBaseDestroyed := false;
+loseCounter := [3, 2, 2, 2][Difficulty];
+End;
 
-    // Init map config
-    InitMapConfig;
-
-    // Global campaign variables init values
-    omarStatus = 0; // 1 - escape, 0 - die
-    stevensStatus = 0; // 2- escape as enemy, 1 - escape, 0 - die
-    labDestroyed = 0; // 1 - yes, 0 - no
-
-    //[ [GetNation(i), GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
-    tanksFrom05 = [];
-
-    // [GetCargo(cargo_bay, mat_cans), GetCargo(cargo_bay, mat_oil),GetCargo(cargo_bay, mat_siberit)];
-    resourcesInCargo = [];
-
-    //[ [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), driverShortName] ];
-    tanksFromIntro = LoadVariable('05_TanksIntro_1',[]);
-
-    // Mission variables init values
-    actionTime = 0$00;
-
-    dial_tameApeBlocker = false;
-    dial_apeEnterLabBlocker = false;
- 
-    sawArabianBase = false;
-    sawApeman = false;
-
-    stevensPlaced = false;
-    stevensFollow = false;
-    stevensWantTalkPetrosyan = false;
-    stevensDepot = false;
-    stevensWasInDepot = false;
-    stevensCanExitMap = false;
-
-    cratesSpawned = 0;
-
-    fastBreakthrough = false;
-
-    finishMissionBool = false;
-
-    buildedLab = false;
-
-    // AI variables
-
-    omarCanExitMap = false;
-    arabianCanExitMap = false;
-
-    // Achievement variables init values
-    achievement_DestroyedHovercrafts = 0;
-    achievement_CollectedCrates = false;
-
-
-    // Init units
-    PrepareRussians;
-    PrepareArabians;
-    Nef_PrepareNature;
-
-    // Init mission intro
-    MissionIntro;
-end;
+{
+ Variables:
+ 05_StevensLeft
+   1 - when he was left in depot
+ 05_StevensKilled
+   1 - when he was killed
+ 05_StevensEscaped
+   1 - he just escaped map
+   2 - he was attacked by player but escaped from map
+   3 - he was released by player and left the map
+ 05_StevensInDepot
+   1 - stevens left in depot
+ 05_OmarKilled
+   1 - omar killed
+ 05_OmarEscaped
+   1 - omar has escaped
+ 05_Time
+ 05_Techs
+ 05_Vehicles
+}

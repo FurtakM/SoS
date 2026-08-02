@@ -190,7 +190,7 @@ function displayAchivs(category, filter, filterMission)
            		menu.window_achivs.panel.scroll.row.desc = getLabelEX(
                     menu.window_achivs.panel.scroll.row,
                     anchorLT,
-                    XYWH(130, 48, 605, 30),
+                    XYWH(130, 48, 564, 56),
                     BankGotic_14, 
                     desc,
     				{
@@ -199,7 +199,8 @@ function displayAchivs(category, filter, filterMission)
                         shadowtext = false,
                         text_halign = ALIGN_LEFT,
                         text_valign = ALIGN_TOP,
-                        wordwrap = true
+                        wordwrap = true,
+                        scissor = true
                     }
                 );
 

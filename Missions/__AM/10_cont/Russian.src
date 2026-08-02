@@ -100,7 +100,7 @@ for i := 1 to 4 do
         end;
 End;
 
-Every 3$00 trigger FilterUnitsInArea(ruBaseArea, [[f_btype, b_factory], [f_ok]]) and Count(ruBuildings) < 3 do
+Every 5$00 trigger FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_btype, b_factory], [f_ok]]) do
 var i;
 begin
 enable;
@@ -115,7 +115,7 @@ for i := Difficulty downto 1 do
     ruConstructList := Join(ruConstructList, [[ru_medium_tracked, ru_medium_tracked, ru_heavy_tracked, ru_heavy_tracked][Difficulty], engine_combustion, control_computer, [ru_gun, ru_rocket_launcher, ru_rocket_launcher, ru_gatling_gun][rand(1,4)]]);
 End;
 
-Every 3$00 trigger FilterUnitsInArea(ruBaseArea2, [[f_btype, b_factory], [f_ok]]) and Count(ruBuildings2) < 3 do
+Every 6$00 trigger FilterUnitsInArea(ruBaseArea2, [[f_side, 3], [f_btype, b_factory], [f_ok]]) do
 begin
 enable;
 
@@ -389,6 +389,8 @@ var i, tmp, undone, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, emp
 begin
 enable;
 
+enemyInBase := FilterUnitsInArea(ruBaseArea, [f_enemy, 3]);
+
 // research
 if ruTech then
    begin
@@ -451,7 +453,7 @@ if fac then
    end;
 
 // damaged buildings
-tmp := FilterUnitsInArea(ruBaseArea, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+tmp := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
 
 // crates nearby base
 cr := GetListOfCratesInArea(ruCratesArea);
@@ -501,7 +503,7 @@ if eng then
 
        if not tag then
           begin
-          undone := FilterUnitsInArea(ruBaseArea, [f_constructed]);
+          undone := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_constructed]]);
 
           if undone then
              begin
@@ -547,7 +549,7 @@ if eng then
              ComMoveToArea(i, ruBaseArea);
           end;
 
-       if tag = tBuild then
+       if tag = tBuild and not enemyInBase then
           begin
           if IsInUnit(i) then
              begin
@@ -566,7 +568,7 @@ if eng then
              continue;
              end;
 
-          undone := FilterUnitsInArea(ruBaseArea, [f_constructed]);
+          undone := FilterUnitsInArea(ruBaseArea, [[f_side, 3], [f_constructed]]);
 
           if undone then
              begin
@@ -599,7 +601,6 @@ if eng then
 
 // defense logic
 sol := UnitFilter(ruForces, [[f_or, [f_class, class_soldier], [f_class, class_bazooker]], [f_ok]]) union ruCommander;
-enemyInBase := FilterUnitsInArea(ruBaseArea, [f_enemy, 3]);
 
 if sol then
    begin
@@ -669,6 +670,8 @@ var i, tmp, undone, lab, eng, tag, tw, cr, sci, sol, hurtUnits, enemyInBase, emp
 begin
 enable;
 
+enemyInBase := FilterUnitsInArea(ruBaseArea2, [f_enemy, 3]);
+
 // research
 if ruTech then
    begin
@@ -731,7 +734,7 @@ if fac then
    end;
 
 // damaged buildings
-tmp := FilterUnitsInArea(ruBaseArea2, [[f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
+tmp := FilterUnitsInArea(ruBaseArea2, [[f_side, 3], [f_type, unit_building], [f_not, [f_constructed]], [f_not, [f_lives, 1000]]]);
 
 // crates nearby base
 cr := GetListOfCratesInArea(ruCratesArea2);
@@ -827,7 +830,7 @@ if eng then
              ComMoveToArea(i, ruBaseArea2);
           end;
 
-       if tag = tBuild then
+       if tag = tBuild and not enemyInBase then
           begin
           if IsInUnit(i) then
              begin
@@ -879,7 +882,6 @@ if eng then
 
 // defense logic
 sol := UnitFilter(ruForces2, [[f_or, [f_class, class_soldier], [f_class, class_bazooker]], [f_ok]]) union ruCommander2;
-enemyInBase := FilterUnitsInArea(ruBaseArea2, [f_enemy, 3]);
 
 if sol then
    begin
@@ -945,7 +947,7 @@ End;
 
 // russian mobile warfare
 Every 0$1 trigger ruTanks and ruActiveAttacks do
-var i, mech, enemy;
+var i, mech, enemy, enemyInBase;
 begin
 enable;
 
@@ -964,6 +966,8 @@ for i in ruTanks do
        ruTanks := ruTanks diff i;
        continue;
        end;
+
+    enemyInBase := FilterUnitsInArea(ruParkingArea, [f_enemy, 3]);
 
     if not GetTag(i) or GetTag(i) = 0 then
        begin
@@ -985,24 +989,32 @@ for i in ruTanks do
 
     if GetTag(i) = tParking then
        begin
-       if GetLives(i) < 650 then
+       if enemyInBase then
           begin
-          if not IsDrivenBy(i) then
-             continue;
-
-          mech := IsDrivenBy(i);
-
-          ComExitVehicle(mech);
-          AddComRepairVehicle(mech, i);
-
-          repeat
-           wait(0$1);
-          until GetLives(i) = 1000;
-
-          ComEnterUnit(mech, i);
+          if IsDrivenBy(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
           end
-       else if IsDrivenBy(i) then
-          SetTag(i, tAttack);
+       else
+          begin
+          if GetLives(i) < 650 then
+             begin
+             if FilterAllUnits([[f_enemy, 3], [f_dist, i, 8]]) and not IsDrivenBy(i) then
+                continue;
+
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+
+             repeat
+              wait(0$1);
+             until GetLives(i) = 1000 or FilterAllUnits([[f_enemy, 3], [f_dist, mech, 8]]);
+
+             ComEnterUnit(mech, i);
+             end
+          else if IsDrivenBy(i) then
+             SetTag(i, tAttack);
+          end;
        end;
 
     if GetTag(i) = tAttack then
@@ -1110,9 +1122,10 @@ for i in ruTanks2 do
     end;
 End;
 
-Every 5$00 trigger Count(ruExtraTanks) do
+Every 7$00 trigger Count(ruExtraTanks) and ruCounter < [2, 3, 4, 4][Difficulty] do
 begin
-enable;  
+enable;
+ruCounter := Inc(ruCounter);
 RaiseSailEvent(EExtraAttack);
 End;
 
@@ -1144,6 +1157,9 @@ skill := [4, 5, 6, 7][Difficulty];
 area := arAttackSpawn2Area;
 parking := ruGatPointArea;
 dir := 5;
+
+for i := 1 to 3 do
+    EraseResourceArea(i, area);
 
 if FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) then
    for i in FilterUnitsInArea(area, [f_or, [f_side, 0], [f_side, 6]]) do
@@ -1183,7 +1199,9 @@ for i := 1 to [3, 4, 4, 5][Difficulty] + strength do
     veh := CreateVehicle;
     SetDir(veh, dir);
 
-    PlaceUnitArea(veh, area, false);
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(veh, area, false);
 
     if control = control_manual then
        begin
@@ -1204,7 +1222,7 @@ for i := 1 to [3, 4, 4, 5][Difficulty] + strength do
     end;
 
 // infantry
-for i := 1 to [2, 2, 3, 4][Difficulty] do
+for i := 1 to [2, 3, 4, 4][Difficulty] do
     begin
     uc_side := 6;
     uc_nation := nation_russian;
@@ -1318,7 +1336,7 @@ for i := 1 to 3 do
     end;
 End;
 
-Every 5$00 trigger IsOk(ruBase) and not ruTransportDestroyed do
+Every 5$00 trigger IsOk(ruBase) and GetSide(ruBase) = 3 and not ruTransportDestroyed do
 var cargo;
 begin
 enable;

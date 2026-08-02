@@ -63,7 +63,7 @@ ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
 End;
 
 // remote mine
-Every 0$02 trigger FilterAllUnits([f_side, 3]) > 0 and russian_prepared do
+Every 0$02 trigger IsOk(HexInfo(143, 4)) and russian_prepared do
 var ru_depot, ru_factory, ru_teleport, ru_bunkers, ru_buildings, ru_vehicles, ru_humans, ru_barracks,
     ru_engs, ru_mech, ru_sci, i, tmp, filter, cr, sib_bomb;
 begin
@@ -85,67 +85,59 @@ ru_mech := UnitFilter(ru_humans, [f_class, 3]);
 ru_sci  := UnitFilter(ru_humans, [f_class, 4]);
 
 // cargo
-   if FilterAllUnits([[f_side, 3], [f_weapon, ru_cargo_bay]]) > 0 and ru_cargo = false then
-      ru_cargo := FilterAllUnits([[f_side, 3], [f_weapon, ru_cargo_bay]])[1];
-
-   if ru_cargo then
+if ru_cargo then
+   begin   
+   if FilterUnitsInArea(ru_base, [f_weapon, ru_cargo_bay]) then
       begin
-
-      if IsInArea(ru_cargo, ru_base) then
+      if GetCargo(ru_cargo, mat_cans) = 0 then
+         ComEnterUnit(ru_cargo, ru_teleport)
+      else if not HasTask(ru_cargo) then
+         ComMoveXY(ru_cargo, GetX(ru_depot), GetY(ru_depot));
+      end
+   else
+      begin
+      if not HasTask(ru_cargo) and GetCargo(ru_cargo, mat_cans) < 100 and not IsInArea(ru_cargo, cargoa) then
          begin
+         cr := GetListOfCratesInArea(ru_crates);
 
-         if GetCargo(ru_cargo, mat_cans) = 0 then
-            ComEnterUnit(ru_cargo, ru_teleport)
-             else
-              if not HasTask(ru_cargo) then
-                 ComMoveXY(ru_cargo, GetX(ru_depot), GetY(ru_depot));
-         end
-          else
-           begin
+         if cr then
+            ComCollect(ru_cargo, cr[1], cr[2])
+         else if not IsInArea(ru_cargo, ru_crates) then
+            ComMoveToArea(ru_cargo, ru_crates);
+         end;
 
-           if not HasTask(ru_cargo) and GetCargo(ru_cargo, mat_cans) < 100 and not IsInArea(ru_cargo, cargoa) then
-              begin
-              cr := GetListOfCratesInArea(ru_crates);
+      if not HasTask(ru_cargo) and not IsInArea(ru_cargo, cargoa) and (GetCargo(ru_cargo, mat_cans) = 100 or (See(your_side, ru_cargo) and not debug)) then
+         ComMoveToArea(ru_cargo, cargoa);
 
-              if cr then
-                 ComCollect(ru_cargo, cr[1], cr[2])
-              else if not IsInArea(ru_cargo, ru_crates) then
-                 ComMoveToArea(ru_cargo, ru_crates);
-              end;
-
-           if not HasTask(ru_cargo) and not IsInArea(ru_cargo, cargoa) and (GetCargo(ru_cargo, mat_cans) = 100 or See(your_side, ru_cargo)) then
-              ComMoveToArea(ru_cargo, cargoa);
-
-           if IsInArea(ru_cargo, cargoa) and ru_barracks then
-              ComSpaceShift(UnitFilter(ru_humans, [f_class, class_bazooker])[1], 139, 24);
-           end;
-
+      if IsInArea(ru_cargo, cargoa) and ru_barracks then
+         ComSpaceShift(UnitFilter(ru_humans, [f_class, class_bazooker])[1], 139, 24);
       end;
 
-      if ru_cargo = 0 and ru_factory and BuildingStatus(ru_factory) = bs_idle then
-         ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
+   end;
 
+if ru_cargo = 0 and ru_factory and BuildingStatus(ru_factory) = bs_idle then
+   ComConstruct(ru_factory, ru_medium_wheeled, 3, control_computer, ru_cargo_bay);
 
 // factory
-   if ru_factory and ru_vlist > 0 then
+if ru_factory and ru_vlist > 0 then
+   begin
+   if BuildingStatus(ru_factory) = bs_idle then
       begin
-      if BuildingStatus(ru_factory) = bs_idle then
-         begin
-         ComConstruct(ru_factory, ru_vlist[1], ru_vlist[2], ru_vlist[3], ru_vlist[4]);
+      ComConstruct(ru_factory, ru_vlist[1], ru_vlist[2], ru_vlist[3], ru_vlist[4]);
 
-         for i = 1 to 4 do
-             ru_vlist := Delete(ru_vlist, 1);
-         end;
+      for i := 1 to 4 do
+          ru_vlist := Delete(ru_vlist, 1);
       end;
+   end;
 
 // sib_bomb
-   if BuildingStatus(ru_lab) = bs_idle and ru_sib_bomb then
-      if GetTech(tech_sibfiss, 3) = state_enabled then
-         ComResearch(ru_lab, tech_sibfiss);
+if BuildingStatus(ru_lab) = bs_idle and ru_sib_bomb then
+   if GetTech(tech_sibfiss, 3) = state_enabled then
+      ComResearch(ru_lab, tech_sibfiss);
 
-   if GetTech(tech_sibfiss, 3) = state_researched and tick mod 5$00 = 0 then
-      if BuildingStatus(ru_factory) = bs_idle then
-         ComConstruct(ru_factory, ru_heavy_wheeled, 3, control_computer, ru_siberium_rocket);
+if GetTech(tech_sibfiss, 3) = state_researched and tick mod 5$00 = 0 then
+   if BuildingStatus(ru_factory) = bs_idle then
+      ComConstruct(ru_factory, ru_heavy_wheeled, 3, control_computer, ru_siberium_rocket);
 
    if FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]) > 0 then
       begin
@@ -272,10 +264,10 @@ enable;
 i := Rand(0,100);
 
 Case your_side of
-1: tmp := 10;
-2: tmp :=  0;
-7: tmp := 15;
-end;
+     1: tmp := 10;
+     2: tmp :=  0;
+     7: tmp := 15;
+     end;
 
 if i < chance_to_bomb+tmp then
    ru_sib_bomb := true;
@@ -318,7 +310,10 @@ for i := 1 to 8 do
 
     un := CreateVehicle;
     SetDir(un, 2);
-    PlaceUnitArea(un, start_north, false);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitArea(un, start_north, false);
 
     tmp := Join(tmp, un);
     end;
@@ -335,7 +330,11 @@ case p of
 
 repeat
  wait(0$1);
-until not AgressiveMove(tmp, path);
+ tmp := UnitFilter(tmp, [f_ok]);
+
+ if tmp then
+    AgressiveMove(tmp, path)
+until not tmp;
 End;
 
 Every 20$00 trigger FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) do
@@ -384,5 +383,9 @@ if FilterAllUnits([f_side, 7]) and p > 1 then
 
 repeat
  wait(0$1);
-until not AgressiveMove(units, path);
+ units := UnitFilter(units, [f_ok]);
+
+ if units then
+    AgressiveMove(units, path)
+until not units;
 End;

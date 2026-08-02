@@ -39,8 +39,8 @@ for i = 1 to 3 do
 
 ar_force_north := PrepareBase(ar_dep_n, base_north, 'dammam', skill, [10000, 1000, 300], [12, [2, 3, 4, 4][Difficulty], -1, 4]);
 ar_force_north := ar_force_north union PrepareBase(ar_dep_n2, base_north_2, '', skill, [500, 60, 0], [8, [2, 3, 4, 5][Difficulty], 2, 0]);
-ar_force_west := PrepareBase(ar_dep_w, base_west, 'jeddah', skill, [900, 300, 10], [9, 4, 3, 2]);
-ar_force_south := PrepareBase(ar_dep_s, base_south, 'riyadh', skill, [500, 60, 0], [4, 2, 3, 1]);
+ar_force_west := PrepareBase(ar_dep_w, base_west, 'jeddah', skill, [1200, 300, 10], [9, 4, 3, 2]);
+ar_force_south := PrepareBase(ar_dep_s, base_south, 'riyadh', skill, [1000, 60, 0], [4, 2, 3, 1]);
 ar_force_east := PrepareBase(ar_dep_e, base_east, '', skill, [500, 50, 0], [9, 2, 3, 1]);
 
 mc_bases := [ar_force_north, ar_force_west, ar_force_east];
@@ -333,7 +333,10 @@ for i = 1 to [2, 3, 4, 5][Difficulty] do
     un := CreateVehicle;
     tmp := ReplaceIn(tmp, [4, tmp[4]+1], un);
     SetDir(un, 5);
-    PlaceUnitArea(un, east_attack_spawn, false);
+
+    repeat
+     wait(3);
+    until PlaceUnitArea(un, east_attack_spawn, false);
 
     if GetControl(un) = control_manual then
        begin
@@ -347,7 +350,10 @@ for i = 1 to [2, 3, 4, 5][Difficulty] do
 
 vc_chassis := 15;
 tmp := ReplaceIn(tmp, [4, tmp[4]+1], CreateVehicle);
-PlaceUnitArea(tmp[4][tmp[4]], east_attack_spawn, false);
+
+repeat
+ wait(3);
+until PlaceUnitArea(tmp[4][tmp[4]], east_attack_spawn, false);
 
 PrepareHuman(false, class_desert_warior, skill);
 tmp := ReplaceIn(tmp, [4, tmp[4]+1], CreateHuman);
@@ -369,7 +375,11 @@ if gensher_active then
        un := CreateVehicle;
        tmp := ReplaceIn(tmp, [5, tmp[5]+1], un);
        SetDir(un, 0);
-       PlaceUnitArea(un, gensher_attack, false);
+
+       repeat
+        wait(3);
+       until PlaceUnitArea(un, gensher_attack, false);
+
        ComMoveXY(un, 85, 152);
        wait(0$2);
        end;
@@ -383,7 +393,11 @@ if gensher_active then
        un := CreateVehicle;
        tmp := ReplaceIn(tmp, [5, tmp[5]+1], un);
        SetDir(un, 0);
-       PlaceUnitArea(un, gensher_attack, false);
+
+       repeat
+        wait(3);
+       until PlaceUnitArea(un, gensher_attack, false);
+
        ComMoveXY(un, 85, 152);
        wait(0$2);
        end;
@@ -394,7 +408,7 @@ if gensher_active then
    end;
 End;
 
-Every 4$0 + 15$0 do
+Every 11$0 + 10$0 do
 var i, tmp, enemy, tmp2, coords, w, list, p;
 begin
 tmp := [];
@@ -458,7 +472,7 @@ if not tmp then
 if Count(tmp2) or Prob(50) then
    coords := [ [48,33], [71,88] ]
 else
-   coords := [ [128,94], [180,135] ];
+   coords := [ [158,37], [165,42], [178,56], [178,71], [170,80], [128,94], [180,135] ];
 
 if w = 3 then
    coords := [ [91,58], [117,107] ];
@@ -514,7 +528,11 @@ for i := 1 to 3 do
     PrepareVehicle([ar_medium_trike, ar_half_tracked][rand(1,2)], engine_siberite, control_apeman, [ar_gun, ar_rocket_launcher][rand(1,2)], 100);
     un := CreateVehicle;
     SetDir(un, 4);
-    PlaceUnitArea(un, east_attack_spawn, false);
+
+    repeat
+     wait(3);
+    until PlaceUnitArea(un, east_attack_spawn, false);
+
     tmp := Replace(tmp, tmp+1, un);
     end;
 
@@ -611,4 +629,57 @@ until not tmp;
 wait(10$00);
 
 enable;
+End;
+
+Every 0$1 trigger IsDead(ar_dep_e) or GetSide(ar_dep_e) <> 2 do
+var i, units, vehicles, defenders;
+begin
+units := UnitFilter(mc_bases[3], [f_type, unit_human]);
+vehicles := UnitFilter(mc_vehicles[3], [f_ok]);
+defenders := UnitFilter(mc_defender[3], [f_ok]);
+
+if defenders then
+   begin
+   mc_defender := Replace(mc_defender, 3, mc_defender[3] diff defenders);
+
+   for i in defenders do
+       ComMoveXY(i, 163, 42);
+
+   mc_defender := Replace(mc_defender, 1, mc_defender[1] union defenders);
+   end;
+
+if vehicles then
+   begin
+   mc_vehicles := Replace(mc_vehicles, 3, mc_vehicles[3] diff vehicles);
+
+   for i in vehicles do
+       ComMoveXY(i, 163, 42);
+
+   mc_vehicles := Replace(mc_vehicles, 1, mc_vehicles[1] union vehicles);
+   end;
+
+if units then
+   begin
+   mc_bases := Replace(mc_bases, 3, mc_bases[3] diff units);
+
+   for i in units do
+       begin
+       if IsInUnit(i) then
+          begin
+          ComExit(i);
+          AddComMoveXY(i, 143, 47);
+          end
+       else
+          ComMoveXY(i, 156, 39);
+       end;
+
+   mc_bases := Replace(mc_bases, 1, mc_bases[1] union units);
+   end;
+
+MC_Kill(3);
+
+wait(0$5);
+
+for i in units union vehicles union defenders do
+    ComMoveXY(i, 156, 39);
 End;

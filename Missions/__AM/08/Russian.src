@@ -120,7 +120,7 @@ for i in tmp do
 End;
 
 Every 0$1 trigger ruMobile do
-var i, mech, enemy;
+var i, mech, enemy, enemyInBase;
 begin
 enable;
 
@@ -140,6 +140,8 @@ for i in ruMobile do
        continue;
        end;
 
+    enemyInBase := FilterUnitsInArea(ruParkingArea, [f_enemy, 3]);
+
     if GetTag(i) = 300 then
        begin
        if GetFuel(i) < 50 then
@@ -148,7 +150,7 @@ for i in ruMobile do
 
           repeat
            wait(0$1);
-          until GetDistUnitXY(i, 93, 100) < 4;
+          until GetDistUnitXY(i, 93, 100) < 6;
 
           SetFuel(i, 100);
           end
@@ -160,24 +162,32 @@ for i in ruMobile do
 
     if GetTag(i) = 301 then
        begin
-       if GetLives(i) < 1000 then
+       if enemyInBase then
           begin
-          if not IsDrivenBy(i) then
-             continue;
-
-          mech := IsDrivenBy(i);
-
-          ComExitVehicle(mech);
-          AddComRepairVehicle(mech, i);
-
-          repeat
-           wait(0$1);
-          until GetLives(i) = 1000;
-
-          ComEnterUnit(mech, i);
+          if IsDrivenBy(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemyInBase, i));
           end
-       else if IsDrivenBy(i) then
-          SetTag(i, 0);
+       else
+          begin
+          if GetLives(i) < 1000 then
+             begin
+             if FilterAllUnits([[f_enemy, 3], [f_dist, i, 8]]) or not IsDrivenBy(i) then
+                continue;
+
+             mech := IsDrivenBy(i);
+
+             ComExitVehicle(mech);
+             AddComRepairVehicle(mech, i);
+
+             repeat
+              wait(0$1);
+             until GetLives(i) = 1000 or FilterAllUnits([[f_enemy, 3], [f_dist, mech, 8]]);
+
+             ComEnterUnit(mech, i);
+             end
+          else if IsDrivenBy(i) then
+             SetTag(i, 0);
+          end;
        end;
 
     if GetTag(i) < 300 then
@@ -217,7 +227,7 @@ for i in FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]) d
        SetFuel(i, 3);
 End;
 
-Every 0$30 trigger IsOk(ruFac) and BuildingStatus(ruFac) = bs_idle do
+Every 0$30 trigger IsOk(ruFac) and BuildingStatus(ruFac) = bs_idle and GetSide(ruFac) = 3 do
 var chassis, weapon;
 begin
 enable;
@@ -234,7 +244,7 @@ if tick < [15$00, 12$00, 10$00, 9$00][Difficulty] then
 AddComConstruct(ruFac, chassis, engine_combustion, control_manual, weapon);
 End;
 
-Every 0$1 trigger IsOk(ruDep) do
+Every 0$1 trigger IsOk(ruDep) and GetSide(ruDep) = 3 do
 var i, j, tmp, b, eng, crane, tag, sci, lab, emptyTowers, sol, barracks, e;
 begin
 enable;

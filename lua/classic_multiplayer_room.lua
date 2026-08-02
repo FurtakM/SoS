@@ -26,6 +26,7 @@ MULTIPLAYER_ROOM_TEAMS_INIT = {};
 MULTIPLAYER_ROOM_TEAMS_SPEC = {};
 MULTIPLAYER_ROOM_MERGED = {};
 MULTIPLAYER_ROOM_PING_DATA = {};
+MULTIPLAYER_ROOM_SORT = 2;
 MULTIPLAYER_MINIMAP_PREVIEW_TEAM = {
 	[0] = RGBA(140, 132, 99, 115),
 	[1] = RGBA(66, 130, 255, 115),
@@ -908,6 +909,9 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = getMultiplayerActiveMapIndex(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_MAP_DATA.MAP);
 	-- MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = MULTIPLAYER_ROOM_DATA.MULTIMAP.GAMETYPE;
 
+	setVisible(menu.window_multiplayer_room.panel.page3.sort, canModifyServerSettings());
+	setVisible(menu.window_multiplayer_room.panel.page3.dice, canModifyServerSettings());
+
 	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
@@ -988,6 +992,8 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	--local stopwatch2 = STOPWATCH_ADD();
 	--STOPWATCH_START(stopwatch2);
 
+	local isHost = canModifyServerSettings();
+
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
 		for i = 1, DATA.MAPPARAMCOUNT do
 			if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
@@ -995,9 +1001,14 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 			end;
 		end;
 
-		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
+		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, isHost);
 	end;
 
+	if isHost then
+		setEnabled(menu.window_multiplayer_room.panel.page3.mapComboBox.list, true);
+		setEnabled(menu.window_multiplayer_room.panel.page3.gameTypeComboBox.list, true);
+	end;
+	
 	-- get map info data
 	--OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 
@@ -1024,7 +1035,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
 	MultiDef.MapList      = UNRANKED.MAPLIST;
 	MultiDef.MapListCount = UNRANKED.MAPLISTCOUNT;
 
-	MULTIPLAYER_ROOM_DATA.MAPS = UNRANKED.MAPLIST;
+	MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = resortMapsMultiplayer(UNRANKED.MAPLIST);
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -1124,6 +1135,7 @@ function delayMultiplayerStart()
 			IN_LOBBY = false;
 			OW_IRC_DESTROY();
 
+			setVisible(game.chat, getSetting(OPTION_CHAT));
 			setVisible(menu.window_multiplayer_room, false);
 
 			deleteSlots();
@@ -1224,9 +1236,13 @@ function showMultiplayerGame()
 		setEnabled(menu.window_multiplayer_room.panel.start, true);
 		setText(menu.window_multiplayer_room.panel.start, loc(804));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
+		setVisible(menu.window_multiplayer_room.panel.page3.sort, true);
+		setVisible(menu.window_multiplayer_room.panel.page3.dice, true);
 	else
 		setText(menu.window_multiplayer_room.panel.start, loc(818));
 		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+		setVisible(menu.window_multiplayer_room.panel.page3.sort, false);
+		setVisible(menu.window_multiplayer_room.panel.page3.dice, false);
 	end;
 
 	waitUntilMapLoaded();
@@ -1751,6 +1767,31 @@ function getMultiplayerUsedColours(PLAYER)
 	return result;
 end;
 
+function getAllowedNations(POSITION)
+	if (MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION] == nil) then
+		return {};
+	end;
+
+	local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[POSITION].NATIONS;
+	local allowedNations = {
+		loc(809)
+	};
+			
+	if (nations.US) then
+		allowedNations = addToArray(allowedNations, loc(810));
+	end;
+
+	if (nations.AR) then
+		allowedNations = addToArray(allowedNations, loc(811));
+	end;
+
+	if (nations.RU) then
+		allowedNations = addToArray(allowedNations, loc(812));
+	end;
+
+	return allowedNations;
+end;
+
 function createPlayerSlot(NUMBER)
 	local posY = (NUMBER - 1) * 26;
 
@@ -2020,11 +2061,13 @@ function updatePlayerSlot(NUMBER)
 		end;
 
 		if (not MULTIPLAYER_ROOM_RANDOM_NATIONS) then
+			local allowedNations = getAllowedNations(player.SIDE);
+
 			local slotNation = clComboBox(
 				{ID = s.SLOT},
 				488,
 				3,
-				team.NATIONS,
+				allowedNations, --team.NATIONS,
 				getMultiplayerNation(player.NATION, player.SIDE),
 				'setMultiplayerNation(INDEX, ' .. player.SIDE .. ');',
 				{
@@ -2432,18 +2475,30 @@ function createTeams(MODE)
 		};
 
 		if (#allowedPositions > 0) then
-			local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[i].NATIONS;
-		
-			if (nations.US) then
-				allowedNations = addToArray(allowedNations, loc(810));
+			local sideDef = 0;
+
+			for p = 1, #allowedPositions do
+				if (MULTIPLAYER_ROOM_DATA.SIDEDEF[allowedPositions[p].POS] and
+					MULTIPLAYER_ROOM_DATA.SIDEDEF[allowedPositions[p].POS].ENABLED) then
+					sideDef = allowedPositions[p].POS;
+					break;
+				end;
 			end;
 
-			if (nations.AR) then
-				allowedNations = addToArray(allowedNations, loc(811));
-			end;
+			if (sideDef > 0) then
+				local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[sideDef].NATIONS;
+			
+				if (nations.US) then
+					allowedNations = addToArray(allowedNations, loc(810));
+				end;
 
-			if (nations.RU) then
-				allowedNations = addToArray(allowedNations, loc(812));
+				if (nations.AR) then
+					allowedNations = addToArray(allowedNations, loc(811));
+				end;
+
+				if (nations.RU) then
+					allowedNations = addToArray(allowedNations, loc(812));
+				end;
 			end;
 		end;
 
@@ -2876,7 +2931,6 @@ function changeMultiplayerOption(ELEMENT, ID, INDEX)
 	clComboBoxChangeHint(ELEMENT, MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[parseInt(ID)].ITEMS.HINTS[parseInt(INDEX)]);
 end;
 
-
 -- PAGE #3
 menu.window_multiplayer_room.panel.page3.mapNameLabel = getLabelEX(
 	menu.window_multiplayer_room.panel.page3,
@@ -2908,6 +2962,40 @@ menu.window_multiplayer_room.panel.page3.mapComboBox = getElementEX(
 	true,
 	{
 		colour1 = WHITEA()
+	}
+);
+
+menu.window_multiplayer_room.panel.page3.sort = getElementEX(
+	menu.window_multiplayer_room.panel.page3, 
+	anchorLTRB,
+	XYWH(
+		460,
+		34,
+		27,
+		18
+	),
+	false,
+	{
+		texture = 'classic/edit/sort2.png',
+		callback_mousedown = 'changeSortMultiplayer();',
+		hint = loc(1025)
+	}
+);
+
+menu.window_multiplayer_room.panel.page3.dice = getElementEX(
+	menu.window_multiplayer_room.panel.page3, 
+	anchorLTRB,
+	XYWH(
+		488,
+		30,
+		22,
+		22
+	),
+	false,
+	{
+		texture = 'classic/edit/dice.png',
+		callback_mousedown = 'randomMapMultiplayer();',
+		hint = loc(1016)
 	}
 );
 
@@ -2976,6 +3064,69 @@ menu.window_multiplayer_room.panel.page3.description = getLabelEX(
 	}
 );
 
+function changeSortMultiplayer()
+	MULTIPLAYER_ROOM_SORT = MULTIPLAYER_ROOM_SORT + 1;
+
+	if MULTIPLAYER_ROOM_SORT > 3 then
+		MULTIPLAYER_ROOM_SORT = 1;
+	end;
+
+	setTexture(menu.window_multiplayer_room.panel.page3.sort, 'classic/edit/sort' .. MULTIPLAYER_ROOM_SORT .. '.png');
+
+	MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = resortMapsMultiplayer(MultiDef.MapList);
+	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+	selectMap(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX);
+end;
+
+function randomMapMultiplayer()
+	local count = #MULTIPLAYER_ROOM_DATA.MAPS;
+
+	selectMap(math.random(1, count));
+end;
+
+function resortMapsMultiplayer(MAPS) -- MULTIPLAYER_ROOM_DATA.MAPS
+	if MULTIPLAYER_ROOM_SORT == 2 then
+		return MAPS, 1;
+	end;
+
+	local mapList = {}
+
+	for i = 1, #MAPS do
+	    local src = MAPS[i];
+	    local name = src.NAME;
+
+	    mapList[i] = {};
+
+	    for k, v in pairs(src) do
+        	mapList[i][k] = v;
+    	end;
+
+	    mapList[i].amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name]
+			            and MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX
+			            or 0;
+	end;
+
+	if MULTIPLAYER_ROOM_SORT == 1 then -- rosnąco
+	    table.sort(mapList, function(a, b)
+	    	if (a.amount == b.amount) then
+	    		return a.NAMELOC < b.NAMELOC;
+	    	end;
+
+	        return a.amount < b.amount
+	    end)
+	elseif MULTIPLAYER_ROOM_SORT == 3 then -- malejąco
+	    table.sort(mapList, function(a, b)
+	    	if (a.amount == b.amount) then
+	    		return a.NAMELOC < b.NAMELOC;
+	    	end;
+
+	        return a.amount > b.amount
+	    end)
+	end
+
+	return mapList, 1;
+end
+
 function setMapList(mapList, selectedMap, isHost)
 	if (mapList == nil) then
 		return;
@@ -2984,6 +3135,7 @@ function setMapList(mapList, selectedMap, isHost)
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
 
 	local list = {};
+	local icons = {};
 
 	for i = 1, #mapList do
 		local name = mapList[i].NAME;
@@ -2997,6 +3149,13 @@ function setMapList(mapList, selectedMap, isHost)
 
 		if (MULTIPLAYER_ROOM_MAPS_PLAYERS[name]) then
 			amount = MULTIPLAYER_ROOM_MAPS_PLAYERS[name].MAX;
+
+			if (MULTIPLAYER_ROOM_MAPS_PLAYERS[name].TOURNAMENT) then
+				icons[i] = {
+					path = 'classic/edit/tour.png',
+					hint = loc(6097)
+				}
+			end;
 		end;
 
 		if (strlen(amount) > 0) then
@@ -3020,7 +3179,8 @@ function setMapList(mapList, selectedMap, isHost)
 			widthList = 447,
 			trimLength = 66,
 			trimFrom = 1,
-			disabled = (not isHost)
+			disabled = (not isHost),
+			icon = icons
 		}
 	);
 end;
@@ -3268,13 +3428,14 @@ end;
 -- override functions
 function init_specBars()
 	local sides = {};
-	local yOffSet = 0;
+	local yOffSet = -410;
 	local icons = {
 		[1] = 'rand', 
 		[2] = 'am', 
 		[3] = 'ar', 
 		[4] = 'ru'
 	};
+	local myInfo;
 
 	for i = 1, 9 do
 		sides[i] = {};
@@ -3294,6 +3455,15 @@ function init_specBars()
 		end;
 	end;
 
+	if SpecBar and SpecBar.activeSides then
+		SpecBar.activeSides = {};
+		SpecBar.sideNatTex = {};
+	end;
+
+	if SpecBar and SpecBar.layout and SpecBar.layout.tabH then
+		yOffSet = SpecBar.layout.tabH;
+	end;
+
 	for i = 1, 8 do
 		if sides[i].nat then
 			SpecBar.bars[i].isInGame = true;
@@ -3308,13 +3478,25 @@ function init_specBars()
 
 			setY(SpecBar.bars[i], yOffSet);
 			yOffSet = yOffSet + interface.current.game.ui.specbar.h;
-			
+
+			if SpecBar and SpecBar.activeSides then
+				SpecBar.activeSides[#SpecBar.activeSides + 1] = i;
+				if SpecBar.sideNatTex then
+					SpecBar.sideNatTex[i] = sides[i].nat;
+				end;
+			end;
 		else
 			SpecBar.bars[i].isInGame = false;
 		end;
 	end;
 
-	if MULTI_PLAYERINFO_CURRENT_PLID[MyID].ISSPEC == true then
+	if type(SpecBarRefreshPages) == 'function' then
+		SpecBarRefreshPages();
+	end;
+
+	myInfo = MULTI_PLAYERINFO_CURRENT_PLID[MyID];
+
+	if myInfo and myInfo.ISSPEC == true then
 		showSpecBar(true);
 	else
 		showSpecBar(false);

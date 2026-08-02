@@ -141,18 +141,33 @@ if cmd = 258 then
 End;
 
 Export Function ComRadiation(un);
-var eff;
+var eff, time;
 begin
 if GetWeapon(un) <> ar_bio_bomb then
    exit;
 
+{
 // upgrade for 3 bio
 if GetTech(tech_bio3, GetSide(un)) = state_researched then
-   eff := 50
+   eff := 40
 else
    eff := 25;
 
-ArtContamination(GetX(un), GetY(un), eff);
+ArtContamination(GetX(un), GetY(un), eff); }
+
+// upgrade for 3 bio
+if GetTech(tech_bio3, GetSide(un)) = state_researched then
+   begin
+   time := 700; {20s}
+   eff := 3000;
+   end
+else
+   begin
+   time := 350; {10s}
+   eff := 2700;
+   end;
+
+MakeContamination(GetX(un), GetY(un), time, eff, 1, 1);
 End;
 
 Export Function CutTreeXYR(bulldozer, x, y, r);

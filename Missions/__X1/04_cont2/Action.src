@@ -58,6 +58,21 @@ wait(0$10);
 tmp := [Heike, Givi, Mike, Ibrahim, Kamil, Kaia, Sophia, Markov, Kurt, Aviradze] union heikeSecondSquad;
 tmp := tmp diff 0;
 
+if ibrahimOnRuSide then
+   tmp := tmp diff Ibrahim;
+
+if heikeVehicles then
+   begin
+   for i := Count(heikeVehicles) downto 1 do
+       begin
+       if heikeVehicles[i][4] in [ru_cargo_bay, ar_cargo_bay, us_cargo_bay, ru_big_cargo_bay] then
+          begin
+          heikeVehicles := Replace(heikeVehicles, heikeVehicles + 1, heikeVehicles[i]);
+          heikeVehicles := Delete(heikeVehicles, i);
+          end;
+       end;
+   end;
+
 // [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), GetLives(i), cargo]
 // cargo := [GetCargo(i, mat_cans), GetCargo(i, mat_oil)];
 for i in heikeVehicles do
@@ -146,7 +161,7 @@ IbrahimBetrayal;
 
 repeat
  wait(0$1);
-until IsDead(Ibrahim) or (FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 6]]) and IsOk(Ibrahim));
+until IsDead(Ibrahim) or (FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 8]]) and IsOk(Ibrahim));
 
 if IsDead(Ibrahim) then
    exit;
@@ -161,7 +176,7 @@ RemoveUnit(Ibrahim);
 uc_side := 2;
 uc_nation := 2;
 
-Ibrahim := PrepareUnit('Ibrahim', false, '');
+Ibrahim := PrepareUnitForce('Ibrahim', false, '');
 SetDir(Ibrahim, d);
 PlaceUnitXY(Ibrahim, x, y, false);
 SetLives(Ibrahim, lives);
@@ -205,7 +220,7 @@ else
 
 repeat
  wait(0$1);
-until IsDead(Ibrahim) or (GetDistUnits(Heike, Ibrahim) < 6 and IsOk(Ibrahim));
+until IsDead(Ibrahim) or (FilterAllUnits([[f_side, 2], [f_dist, Ibrahim, 8]]) and IsOk(Ibrahim));
 
 if IsDead(Ibrahim) then
    begin
@@ -377,7 +392,7 @@ if Kamil and not FilterAllUnits([[f_side, 2], [f_weapon, ar_flame_thrower]]) the
 DialogueOff;
 End;
 
-Every 0$1 trigger IsOk(ruSecBase) and IsOk(ruMainBase) and FilterUnitsInArea(showDefenceArea, [f_type, unit_building]) > 2 and FilterUnitsInArea(forestArea, [f_side, 2]) > 3 do
+Every 0$1 trigger IsOk(ruSecBase) and IsOk(ruMainBase) and FilterUnitsInArea(showDefenceArea, [f_type, unit_building]) > 2 and FilterUnitsInArea(forestArea, [f_side, 2]) > 2 do
 hannibalPath := true;
 
 Every 0$3 trigger hannibalPath and FilterUnitsInArea(zone3, [f_side, 2]) do
