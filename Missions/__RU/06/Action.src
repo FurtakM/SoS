@@ -707,6 +707,9 @@ if GetClass(Petrosyan) = 4 and IsOk(Petrosyan) then
    DialogueOn;
 
    Say(Petrosyan, 'DStasis-Pty-1');
+   Say(Burlak, 'DStasis-Bur-1');
+   Say(Petrosyan, 'DStasis-Pty-2');
+   Say(Burlak, 'DStasis-Bur-2');
 
    DialogueOff;
    end
@@ -715,6 +718,9 @@ else if GetClass(Dolgov) = 4 and IsOk(Dolgov) then
    DialogueOn;
 
    Say(Dolgov, 'DStasis-Dol-1');
+   Say(Burlak, 'DStasis-Bur-1');
+   Say(Dolgov, 'DStasis-Dol-2');
+   Say(Burlak, 'DStasis-Bur-2');
 
 
    DialogueOff;
@@ -729,6 +735,9 @@ else
    DialogueOn;
 
    Say(sci[1], 'DStasis-RSol1-1');
+   Say(Burlak, 'DStasis-Bur-1');
+   Say(Dolgov, 'DStasis-RSol1-2');
+   Say(Burlak, 'DStasis-Bur-2');
 
    DialogueOff;
    end;
@@ -738,4 +747,245 @@ End;
 Every 0$1 trigger GetSideSib(1) + GetSideSib(4) >= americanSibToCollect do
 begin
 YouLost('SibL');
+End;
+
+// can end
+Every 0$1 trigger GetSideSib(3) >= 200 and hasAllTechs do
+var i, j, hasVsevolod, tmp, min, max, buildings, depot, arm, lab, fac;
+begin
+canEnd := true;
+hasVsevolod := GetSide(Vsevolod) = 3 and not vsevolodDied;
+
+ChangeMissionObjectives('MOutMine');
+
+DialogueOn;
+
+SayRadio(Platonov, 'DNextMiss1-Pla-1');
+SayRadio(Platonov, 'DNextMiss2-Pla-1');
+
+if hasVsevolod then
+   begin
+   SayRadio(Platonov, 'DNextMiss3-Pla-1');
+   SayRadio(Platonov, 'DNextMiss3-Pla-1a');
+   end;
+
+Say(Burlak, 'DNextMiss4-Bur-1');
+
+DialogueOff;
+
+ChangeMissionObjectives('MCars');
+SetAreaMapShow(eastEndArea, 1);
+
+if hasVsevolod then
+   begin
+   tmp := FilterAllUnits([[f_side, 3], [f_type,unit_human], [f_nation, nation_russian]]) diff [Vsevolod, Burlak];
+
+   max := tmp div 2 + tmp mod 2;
+   min := 0;
+
+   if max > 1 then
+      begin
+      stay := [Burlak] union
+          CharacterSelection(
+                  '1',
+                  min,
+                  max,
+                  [Burlak, sel_changeable, sel_change_class]
+                  ^ (tmp diff vsevolodSquad)
+                  ^ [sel_not_hired]
+                  ^ vsevolodSquad
+                  ^ [sel_not_changeable, Vsevolod],
+                  [class_soldier, class_engineer, class_mechanic, class_scientistic]
+          );
+      goOut := [Vsevolod] union (tmp diff stay);
+      end
+   else
+      begin
+      stay := [Burlak];
+      goOut := [Vsevolod] union tmp;
+      end;
+
+   if goOut then
+      begin
+      repeat
+       wait(0$1);
+
+       for i in goOut do
+           begin
+           if IsAt(i, 147, 66) then
+              begin
+              RemoveUnit(i);
+              continue;
+              end;
+
+           if IsInUnit(i) then
+              ComExit(i)
+           else
+              ComAgressiveMove(i, 147, 66);
+           end;
+      until not UnitFilter(goOut, [f_ok]);
+      end;
+   end;
+
+PrepareYakotich;
+
+CenterOnXY(187, 216);
+
+SayRadio(Yakotich, 'DYakot-1');
+
+buildings := FilterUnitsInArea(southBaseExtArea, [[f_side, 3], [f_type, unit_building]]);
+
+for i in buildings do
+    begin
+    SetSide(i, 6);
+
+    tmp := UnitsInside(i);
+
+    if tmp then
+       for j in tmp do
+           ComExitBuilding(j);
+    end;
+
+depot := UnitFilter(buildings, [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]);
+arm := UnitFilter(buildings, [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]);
+fac := UnitFilter(buildings, [f_or, [f_btype, b_workshop], [f_btype, b_factory]]);
+lab := UnitFilter(buildings, [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]);
+
+for i in Yakotich ^ yakotichSquad do
+    begin
+    ComExitVehicle(i);
+
+    AddComMoveXY(i, 171, 217);
+
+    if (GetClass(i) = 2 or i = Yakotich) and depot then
+       AddComEnterUnit(Yakotich, depot[1]);
+
+    if GetClass(i) = 3 and fac then
+       AddComEnterUnit(i, fac[1]);
+
+    if GetClass(i) = 1 and i <> Yakotich then
+       AddComEnterUnit(i, arm[1]);
+
+    if GetClass(i) = 4 then
+       AddComEnterUnit(i, lab[1]);
+    end;
+End;
+
+Every 0$1 trigger Researched(3, tech_TauField) and Researched(3, tech_ST1) and Researched(3, tech_Sib1) and Researched(3, tech_SibEng) do
+begin
+ChangeMissionObjectives('MOutTech');
+hasAllTechs := true;
+End;
+
+// Finish
+Every 0$1 trigger canEnd and FilterUnitsInArea(eastEndArea, [f_side, 3]) and (IsInArea(Burlak, eastEndArea) or IsDriverInArea(Burlak, eastEndArea)) do
+begin
+if FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_human]]) and
+   (IsInArea(Burlak, eastEndArea) or IsDriverInArea(Burlak, eastEndArea)) then
+   begin
+   if Query('QEndGame') = 1 then
+      begin
+      FinishMission;
+      exit;
+      end;
+   end;
+
+repeat
+ wait(0$1);
+until FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_human]]) = 0 and
+      FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0;
+
+FinishMission;
+End;
+
+Function FinishMission;
+var i, saveVehicles;
+begin
+if vsevolodCaptured and not vsevolodDied then
+   AddMedal('Vsevolod', 1)
+else
+   AddMedal('Vsevolod', -1);
+
+if hasOvsyenko then
+   AddMedal('Ovsyenko', 1)
+else
+   AddMedal('Ovsyenko', -1);
+
+if hasMatPred then
+   AddMedal('Prediction', -1)
+else
+   AddMedal('Prediction', 1);
+
+GiveMedals('Exit');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+// Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan;
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Karamazov) and Karamazov in stay then
+   SaveCharacters(Karamazov, currentMissionPrefix & 'Karamazov')
+else if Karamazov in goOut then
+   SaveCharacters(Karamazov, currentMissionPrefix & 'Vse_Karamazov');
+
+if IsLive(Petrovova) and Petrovova in stay then
+   SaveCharacters(Petrovova, currentMissionPrefix & 'Petrovova')
+else if Petrovova in goOut then
+   SaveCharacters(Petrovova, currentMissionPrefix & 'Vse_Petrovova');
+
+if IsLive(Titov) and Titov in stay then
+   SaveCharacters(Titov, currentMissionPrefix & 'Titov')
+else if Titov in goOut then
+   SaveCharacters(Titov, currentMissionPrefix & 'Vse_Titov');
+
+if IsLive(Lipshchin) and Lipshchin in stay then
+   SaveCharacters(Lipshchin, currentMissionPrefix & 'Lipshchin')
+else if Lipshchin in goOut then
+   SaveCharacters(Lipshchin, currentMissionPrefix & 'Vse_Lipshchin');
+
+if IsLive(Gleb) and Gleb in stay then
+   SaveCharacters(Gleb, currentMissionPrefix & 'Gleb')
+ else if Gleb in goOut then
+   SaveCharacters(Gleb, currentMissionPrefix & 'Vse_Gleb');
+
+if IsLive(Dolgov) and Dolgov in stay then
+   SaveCharacters(Dolgov, currentMissionPrefix & 'Dolgov')
+else if Dolgov in goOut then
+   SaveCharacters(Dolgov, currentMissionPrefix & 'Vse_Dolgov');
+
+if IsLive(Petrosyan) and Petrosyan then
+   SaveCharacters(Petrosyan, currentMissionPrefix & 'Petrosyan')
+else if Petrosyan in goOut then
+   SaveCharacters(Petrosyan, currentMissionPrefix & 'Vse_Petrosyan');
+
+if IsLive(Jan) and Jan in stay then
+   SaveCharacters(Jan, currentMissionPrefix & 'Jan')
+else if Jan in goOut then
+   SaveCharacters(Jan, currentMissionPrefix & 'Vse_Jan');
+
+SaveTech(3, currentMissionPrefix & 'Techs');
+
+SaveCharacters(UnitFilter(stay, [f_ok]) diff [Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan], currentMissionPrefix & 'burlakTeam');
+
+if not vsevolodDied then
+   begin
+   SaveCharacters(Vsevolod, currentMissionPrefix & 'Vsevolod');
+   SaveVariable(true, '06_VsevolodSaved');
+
+   if goOut then
+      SaveCharacters(goOut diff [Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan], currentMissionPrefix & 'vsevolodTeam');
+   end;
+
+if IsOk(Yakotich) then
+   SaveCharacters(Yakotich, currentMissionPrefix & 'Yakotich');
+
+saveVehicles := [];
+
+for i in FilterUnitsInArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]], [f_ok]]) do
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil), GetMark(i)]]);
+
+if saveVehicles then
+   SaveVariable(saveVehicles, currentMissionPrefix & 'Vehicles');
+
+YouWin;
 End;
