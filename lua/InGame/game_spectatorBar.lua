@@ -203,7 +203,7 @@ local function SpecBarMakeTab(ID)
 		visible = false
 	});
 
-	setColour1(tab, RGBA(25, 25, 25, 200));
+	setColour1(tab, RGBA(25, 25, 25, 255));
 	setFontColour(tab, RGB(220, 220, 220));
 
 	return tab;
@@ -898,10 +898,10 @@ end;
 
 local function SpecBarSetTabStyle(tab, active)
 	if active then
-		setColour1(tab, RGBA(66, 120, 84, 220));
+		setColour1(tab, RGBA(66, 120, 84, 255));
 		setFontColour(tab, RGB(255, 255, 255));
 	else
-		setColour1(tab, RGBA(25, 25, 25, 200));
+		setColour1(tab, RGBA(25, 25, 25, 255));
 		setFontColour(tab, RGB(220, 220, 220));
 	end;
 end;

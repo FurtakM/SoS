@@ -294,7 +294,7 @@ End;
 
 // Crates drop
 Every 0$2 marked mpActive do
-var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime, extra;
 begin
 if not mpShipments then
    exit;
@@ -329,6 +329,7 @@ case mpShipments of
 areas := [Between18, Between23, Between45, Between67, Center];
 tmp := [buildUpTime1, buildUpTime2, buildUpTime3, buildUpTime4,
         buildUpTime5, buildUpTime6, buildUpTime7, buildUpTime8];
+extra := [];
 
 for i := 1 to 8 do
     begin
@@ -336,7 +337,10 @@ for i := 1 to 8 do
        continue;
 
     areas := areas ^ tmp[mpSidePositions[i]];
+    extra := extra ^ tmp[mpSidePositions[i]];
     end;
+
+extra := extra diff 0;
 
 x := 1;
 
@@ -354,6 +358,18 @@ repeat
         CreateCratesArea(x, i, true);
         end;
      end;
+
+ if tick > 25$00 then
+    begin
+    for i in extra do
+        begin
+        if GetResourceArea(i, mat_cans) < 20 then
+           begin
+           CreateCratesArea(x, i, true);
+           CreateCratesArea(x, i, true);
+           end;
+        end;
+    end;
 
  time := time + delayTime;
 

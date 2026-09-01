@@ -1,20 +1,37 @@
-SOS_TREE_BONUS_LAST_TICK = 0;
+SOS_TREE_ARRAY = {};
+SOS_BONUS_TREE_TIMER = timer:single(1, 'displayTreeBonus();', -1);
+
+function displayTreeBonus()
+    if (SOS_TREE_ARRAY == nil or #SOS_TREE_ARRAY == 0) then
+        AddSingleUseTimer(2, 'displayTreeBonus()', SOS_TREE_TIMER_ID);
+        return;
+    end;
+
+    local element = SOS_TREE_ARRAY[1];
+
+    createTreeBonusElement(
+        element.ID,
+        element.SKILL,
+        element.VALUE
+    );
+
+    table.remove(SOS_TREE_ARRAY, 1);
+
+    AddSingleUseTimer(2, 'displayTreeBonus()', SOS_TREE_TIMER_ID);
+end;
 
 function displayTreeBonusDetails(ID, SKILL, VALUE)
+    SOS_TREE_ARRAY = addToArray(SOS_TREE_ARRAY, {ID = ID, SKILL = SKILL, VALUE = VALUE});
+end;
+
+function createTreeBonusElement(ID, SKILL, VALUE)
     local mySide = getvalue(OWV_MYSIDE);
 
     --[[if mySide < 9 then
         return;
     end;--]]
 
-    local tick = OW_GET_TICK();
-
-    if (SOS_TREE_BONUS_LAST_TICK + 35 > tick) then
-        AddSingleUseTimer(1, 'displayTreeBonusDetails(' .. ID .. ',' .. SKILL .. ',' .. VALUE .. ')');
-        return;
-    end;
-
-    SOS_TREE_BONUS_LAST_TICK = tick;
+    --local tick = OW_GET_TICK();
 
     local info = OW_GET_UNIT_INFO(parseInt(ID));
 
