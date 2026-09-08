@@ -154,11 +154,23 @@ DialogueOff;
 
 ChangeMissionObjectives('MBuildMine');
 
+SetTech(tech_sibDet, 3, state_enabled);
+SetRestrict(b_siberite_mine, 3, state_enabled);
+
 repeat
  wait(0$1);
 until FilterUnitsInArea(ovsyenkoBaseArea, [[f_not, [f_constructed]], [f_nation, nation_russian], [f_btype, b_siberite_mine]]);
 
-DSibMine;
+DSibMine;                
+
+SetRestrict(b_lab_spacetime, 3, state_enabled);
+SetRestrict(b_lab_siberium, 3, state_enabled);
+
+SetTech(tech_sibPow, 3, state_enabled);
+SetTech(tech_sibEng, 3, state_enabled);
+SetTech(tech_tauField, 3, state_enabled);
+SetTech(tech_ST1, 3, state_enabled);
+SetTech(tech_sib1, 3, state_enabled);
 
 ChangeMissionObjectives('MAddMine');
 
@@ -270,9 +282,11 @@ Every 0$1 trigger not canGoToNorth and FilterUnitsInArea(blockNorthArea2, [f_sid
 PrepareAdditionalForces;
 
 // talk about lab
-Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_or, [f_btype, b_lab_full], [f_btype, b_lab]]]) and hasOvsyenko do
+Every 0$1 trigger FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_or, [f_btype, b_lab_full], [f_btype, b_lab_half], [f_btype, b_lab]]]) do
 var sci;
 begin
+wait(1$00);
+
 if not IsOk(Petrosyan) or GetClass(Petrosyan) <> class_scientistic then
    sci := Dolgov
 else
@@ -285,6 +299,7 @@ if not IsOk(sci) then
    end;
 
 SetRestrict(b_lab_computer, 3, state_enabled);
+SetTech(tech_MatPred, 3, state_enabled);
 
 DialogueOn;
 
@@ -318,7 +333,7 @@ ChangeMissionObjectives('MOutPred');
 SaveVariable(1, '06_MatPred');
 
 hasMatPred := true;
-noCrates := tick + [6$00, 8$00, 10$00, 12$00][Difficulty];
+noCrates := tick;
 
 if not IsOk(Petrosyan) or GetClass(Petrosyan) <> class_scientistic then
    sci := Dolgov
@@ -409,6 +424,8 @@ Every 0$1 trigger vsevolodCaptured and not IsInUnit(Vsevolod) do
 var un;
 begin
 wait(0$2);
+
+americanAttackOvsyenko := true;
 
 un := NearestUnitToUnit(
    UnitFilter([Burlak, Lipshchin, Dolgov, Petrosyan, Karamazov, Jan, Titov], [[f_inarea, terminalBaseArea], [f_ok]]),

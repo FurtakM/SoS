@@ -9,11 +9,12 @@ Omar := NewCharacter('Omar');
 End;
 
 Export arForces, omarMastodont, enemyMines, arBuildings, arBuildingsToBuild, arVehicles, arConstructList, arTechs,
-       arHovercraft, arVehiclesAttackers, arDepot, arPatrolRiver, arPatrolRiverFlag, riverBlockers;
+       arHovercraft, arVehiclesAttackers, arDepot, arPatrolRiver, arPatrolRiverFlag, riverBlockers, arMiners;
 Export function PrepareArabianBase;
 var i, j, depot, list, un, tmp;
 begin
 arForces := [];
+arMiners := [];
 enemyMines := [];
 arBuildingsToBuild := [
     [b_solar_power, 134, 45, 0],
@@ -125,11 +126,13 @@ for i in tmp do
     begin
     for j := 1 to [2, 3, 4, 5][Difficulty] do
         begin
-        PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
+        PrepareSoldier(false, [3, 3, 4, 5][Difficulty]);
         un := CreateHuman;
 
         if j mod 2 = 0 then
-           SetClass(un, class_mortar);
+           SetClass(un, class_mortar)
+        else if Count(arMiners) < [1, 2, 3, 3][Difficulty] then
+           Push(arMiners, un);
 
         Push(arForces, un);
 
@@ -175,10 +178,10 @@ AddComEnterUnit(un, depot);
 End;
 
 // mines logic
-Every 0$1 trigger arForces do
+Every 0$1 trigger arMiners do
 var i, tmp, r, list, findEmpty;
 begin
-tmp := UnitFilter(arForces, [[f_class, 1], [f_ok]]);
+tmp := UnitFilter(arMiners, [[f_class, 1], [f_ok]]);
 
 if not tmp then
    begin
@@ -684,7 +687,7 @@ for i := 1 to [2, 2, 3, 3][Difficulty] do
     AddComHold(un);
     end;
 
-for i := 1 to [2, 2, 3, 3][Difficulty] do
+for i := 1 to [1, 2, 2, 3][Difficulty] do
     begin
     PrepareSoldier(false, [3, 4, 4, 5][Difficulty]);
     un := CreateHuman;

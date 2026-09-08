@@ -441,7 +441,7 @@ End;
 
 // SI vehicles
 Every 0$1 trigger enemyMobile and arabAttack do
-var i, mech, enemy;
+var i, mech, enemy, except;
 begin
 enable;
 
@@ -560,12 +560,16 @@ for i in enemyMobile do
           enemy := FilterAllUnits([f_enemy, enemySide]);
 
           if enemy then
+             begin
+             except := UnitFilter(enemy, [f_inarea, exceptArea]);
+
              if forestIsCleared and GetChassis(i) = ar_half_tracked then
-                AgressiveMove(i, [ [157,47], [202,150], [172,155], [152,158], [127,146] ])
+                AgressiveMoveExcept(i, [ [157,47], [202,150], [172,155], [152,158], [127,146] ], except)
              else if i mod 3 = 1 then
-                AgressiveMove(i, [ [130, 28], [101,66], [113,81], [77,76], [70,95], [81,115] ])
+                AgressiveMoveExcept(i, [ [130, 28], [101,66], [113,81], [77,76], [70,95], [81,115] ], except)
              else
-                AgressiveMove(i, [ [130, 28], [101,66], [113,81] ]);
+                AgressiveMoveExcept(i, [ [130, 28], [101,66], [113,81] ], except);
+             end;
           end
        else if IsInArea(i, arParkingArea) and GetDistUnitXY(i, 131, 23) > 10 then
             ComMoveXY(i, 131, 23);

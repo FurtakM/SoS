@@ -15,6 +15,7 @@ americanTechs := GetTechNation(1, nation_american, state_enabled);
 americanBuildingsToBuild := [];
 americanConstructList := [
    [us_heavy_tracked, engine_combustion, control_remote, us_bulldozer],
+   [us_medium_tracked, engine_combustion, control_remote, us_crane],
    [us_medium_tracked, engine_combustion, control_remote, us_crane]
 ];
 
@@ -23,31 +24,51 @@ SetBName(ovsyenko, 'ovsyenko');
 SetBName(terminal, 'terminal');
 
 AddResourceType(GetBase(terminal), mat_cans, 600 - (100 * Difficulty) + 30);
-AddResourceType(GetBase(usBase), mat_cans, 1500);
+AddResourceType(GetBase(usBase), mat_cans, 2500);
 AddResourceType(GetBase(usBase), mat_oil, 200);
 AddResourceType(GetBase(ovsyenko), mat_cans, 150);
 
+SetResourceVisibility(136, 123, 4);
+SetResourceVisibility(136, 123, 1);
+SetResourceVisibility(92, 86, 1);
+
 uc_side := 1;
 uc_nation := nation_american;
+
+if Difficulty >= 3 then
+   begin
+   RemoveEnvironmentArea(clearForestArea);
+   PlaceBuilding(b_breastwork, [3, 4, 5, 5][Difficulty], 47, 39, 4, 0);
+   end;
+
+americanSquad := PrepareAmericanSquad;
 
 if LoadVariable('03_SikorskiAlive', true) then
    begin
    Sikorski := NewCharacter('Sikorski');
    PlaceUnitXY(Sikorski, 58, 64, false);
-   ComTurnXY(Sikorski, 57, 64);
+
+   Push(americanSquad, Sikorski);
    end
 else
    begin
    VanHouten := NewCharacter('VanHouten');
    PlaceUnitXY(VanHouten, 58, 64, false);
-   ComTurnXY(VanHouten, 57, 64);
+
+   Push(americanSquad, VanHouten);
    end;
 
 for i in FilterAllUnits([[f_side, 1], [f_type, unit_building]]) do
-    SetBLevel(i, 3 + Difficulty);
+    SetBLevel(i, 4 + Difficulty);
 
-ovsyenkoSquad := PrepareOvsyenko;
-americanSquad := PrepareAmericanSquad;
+if not debugCapture then
+   ovsyenkoSquad := PrepareOvsyenko
+else
+   begin
+   for i in FilterAllUnits([[f_side, 4], [f_type, unit_building]]) do
+       SetSide(i, 3);
+   end;
+
 terminalSquad := PrepareTerminal;
 
 for i in FilterAllUnits([[f_side, 1], [f_btype, b_breastwork], [f_empty]]) do
@@ -207,7 +228,7 @@ cleanTrees := false;
 SetResourceVisibility(122, 114, 4);
 
 // normal squad
-if timeToOvsyenkoFall > prevMissionTime then
+if timeToOvsyenkoFall > (prevMissionTime + penaltyTime) then
    begin
    // oil and armoury, a few soldiers
    list := [
@@ -216,7 +237,7 @@ if timeToOvsyenkoFall > prevMissionTime then
    ];
    people := [4, 1];
    end
-else if (timeToOvsyenkoFall + 10$00) > prevMissionTime then  // stronger squad
+else if (timeToOvsyenkoFall + 10$00) > (prevMissionTime + penaltyTime) then  // stronger squad
    begin
    // oil, armoury, oil plant, one tower, a few soldiers, engineers
    list := [
@@ -227,7 +248,7 @@ else if (timeToOvsyenkoFall + 10$00) > prevMissionTime then  // stronger squad
    ];
    people := [[4, 4, 5, 5][Difficulty], 2];
    end
-else if (timeToOvsyenkoFall + 20$00) > prevMissionTime then  // stronger squad x2
+else if (timeToOvsyenkoFall + 20$00) > (prevMissionTime + penaltyTime) then  // stronger squad x2
    begin
    // oil, armoury, oil plant, two towers, a few soldiers, engineers
    list := [
@@ -278,6 +299,8 @@ for i in list do
     Push(buildings, PlaceBuilding(btype, [3, 4, 5, 5][Difficulty], x, y, d, weapon));
     end;
 
+buildings := buildings union FilterUnitsInArea(ovsyenkoBaseArea, [[f_side, 4], [f_type, unit_building]]);
+
 for i := 1 to people[1] do
     begin
     PrepareSoldier(false, [4, 5, 5, 6][Difficulty]);
@@ -288,6 +311,7 @@ for i := 1 to people[1] do
 
     if tmp then
        begin
+       SetDir(un, GetDir(tmp[1]) - 3);
        PlaceHumanInUnit(un, tmp[1]);
        continue;
        end;
@@ -407,6 +431,9 @@ End;
 // Ovsyenko Script
 Every 0$3 + 0$2 trigger FilterUnitsInArea(ovsyenkoBaseArea, [f_side, 3]) and not IsOk(Grant) do
 begin
+if not HexInfo(136, 123) then
+   exit;
+
 MineExplosion(135, 120, 1);
 MineExplosion(135, 122, 1);
 End;
@@ -457,7 +484,10 @@ for i in tmp do
           else
              begin
              if not IsInUnit(i) then
-                ComEnterUnit(i, ovsyenko);
+                if not HexInfo(136, 123) then
+                   ComBuild(i, b_siberite_mine, 136, 123, 0)
+                else if not HasTask(i) then
+                   ComEnterUnit(i, ovsyenko);
              end;
           end
        else
@@ -817,3 +847,282 @@ End;
 Every 0$1 trigger FilterUnitsInArea(checkPointForestArea, [f_weapon, us_bulldozer]) do
 hasClearPath := true;
 
+
+// build nearby mine
+Export mineSquad, mineBuildings;
+Every 0$1 trigger not ListEnvironmentArea(cutTree1Area) do
+var i, un, cranes, tmp, tmp2, hasToBuild;
+begin      
+cranes := UnitFilter(americanVehicles, [[f_ok], [f_weapon, us_crane]]);
+
+if not cranes then
+   exit;
+
+mineSquad := [];
+mineBuildings := [];
+
+for i in cranes do
+    begin      
+    SetTag(i, tOutside);
+
+    ComMoveXY(i, 85, 89);
+    end;
+
+// spawn units
+for i := 1 to [3, 4, 5, 6][Difficulty] do
+    begin
+    uc_side := 1;
+    uc_nation := nation_american;
+
+    PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, 1);
+
+    repeat
+     wait(3);
+    until PlaceUnitXY(un, 57, 111, false);
+
+    Push(mineSquad, un);
+
+    ComMoveXY(un, 79, 88);
+    end;
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+
+ mineBuildings := FilterUnitsInArea(cutTree1Area, [[f_side, 1], [f_type, unit_building]]);
+
+ cranes := UnitFilter(americanVehicles, [[f_ok], [f_weapon, us_crane]]);
+ tmp := UnitFilter(mineBuildings, [f_not, [f_lives, 1000]]);
+
+ hasToBuild := CheckBuildingsNearbyMine();
+
+ for i in cranes do
+     begin
+     if GetTag(i) <> tOutside then
+        begin
+        SetTag(i, tOutside);
+
+        ComMoveXY(i, 85, 89);
+        end
+     else if tmp then
+        ComRepairBuilding(i, tmp[1])
+     else if hasToBuild then
+        ComCraneBuild(i, hasToBuild[1][1], hasToBuild[1][2], hasToBuild[1][3], hasToBuild[1][4])
+     else if GetDistUnitXY(i, 77, 86) > 4 then
+        ComMoveXY(i, 77, 86);
+     end;
+
+ if mineBuildings then
+    begin
+    if mineSquad then
+       begin
+       tmp := UnitFilter(mineBuildings, [[f_ok], [f_empty]]);
+
+       if tmp then
+          begin           
+          tmp2 := UnitFilter(mineSquad, [f_inside]);
+
+          if tmp2 then
+             begin
+             for i in tmp2 do
+                 if GetBType(IsInUnit(i)) = b_barracks then
+                    begin
+                    ComExitBuilding(i);
+                    break;
+                    end;
+             end;
+          end;
+
+       for i in UnitFilter(mineSquad, [f_outside]) do
+           begin
+           if not IsOk(i) then
+              begin
+              mineSquad := mineSquad diff i;
+              continue;
+              end;
+
+           tmp := UnitFilter(mineBuildings, [[f_ok], [f_empty]]);
+
+           if not tmp then
+              tmp := UnitFilter(mineBuildings, [[f_ok], [f_btype, b_barracks]]);
+
+           if tmp then
+              ComEnterUnit(i, tmp[1]);
+           end;
+        end;
+    end;
+until americanRetreat;
+End;
+
+Function CheckBuildingsNearbyMine();
+var i, tmp, output, list;
+begin
+result := [];
+
+list := [
+     [[b_armoury, b_barracks], 86, 88],
+     [[b_bunker], 86, 92],
+     [[b_bunker], 81, 79],
+     [[b_siberite_mine], 92, 86]
+];
+
+output := [
+     [b_armoury, 86, 88, 4],
+     [b_bunker, 86, 92, 5],
+     [b_bunker, 81, 79, 4],
+     [b_siberite_mine, 92, 86, 0]
+];
+
+for i := 1 to list do
+    begin
+    tmp := HexInfo(list[i][2], list[i][3]);
+
+    if not tmp or not GetBType(tmp) in list[i][1] then
+       Push(result, output[i]);
+    end;
+End;
+
+
+// attack on ovsyenko
+Every 0$2 trigger debugCapture or (americanAttackOvsyenko and not americanRetreat and hasOvsyenko) do
+var i, un, id, eng, buildings, tmp, additionalForces, chassis, weapon, control;
+begin
+tmp := [];
+
+if IsOk(Sikorski) then
+   begin
+   Del(americanSquad, Sikorski);
+   Push(tmp, Sikorski);
+   SetTag(Sikorski, 0);
+
+   ComExitBuilding(Sikorski);
+   end
+else if IsOk(VanHouten) then
+   begin
+   Del(americanSquad, VanHouten);
+   Push(tmp, VanHouten);
+   SetTag(VanHouten, 0);
+
+   ComExitBuilding(VanHouten);
+   end;
+
+if hasClearPath then
+   begin
+   for i := 1 to [3, 3, 4, 4][Difficulty] do
+       begin
+       chassis := [us_medium_tracked, us_heavy_tracked][rand(1,2)];
+
+       if Difficulty > 2 then
+          weapon := [us_heavy_gun, us_gatling_gun, us_machine_gun, us_double_gun][rand(1,4)]
+       else
+          weapon := [us_double_gun, us_gatling_gun, us_machine_gun][rand(1,3)];
+
+       control := control_remote;
+
+       if not FilterAllUnits([[f_side, 1], [f_btype, b_ext_radio]]) then
+          control := control_manual;
+
+       if weapon = us_heavy_gun and chassis <> us_heavy_tracked then
+          weapon := us_double_gun;
+
+       americanConstructList := Join(americanConstructList,
+          [chassis, engine_combustion, control, weapon]
+       );
+       end;
+
+   wait(2$00);
+   end;
+
+// spawn units
+for i := 1 to [3, 4, 5, 6][Difficulty] do
+    begin
+    uc_side := 1;
+    uc_nation := nation_american;
+
+    PrepareSoldier(false, [3, 4, 5, 6][Difficulty]);
+    un := CreateHuman;
+    SetDir(un, 1);
+
+    repeat
+     wait(3);
+    until PlaceUnitXY(un, 57, 111, false);
+
+    Push(tmp, un);
+
+    ComMoveXY(un, 79, 88);
+    end;
+
+uc_side := 1;
+uc_nation := nation_american;
+
+PrepareEngineer(false, [3, 4, 5, 6][Difficulty]);
+un := CreateHuman;
+SetDir(un, 1);
+
+repeat
+ wait(3);
+until PlaceUnitXY(un, 57, 111, false);
+
+Push(tmp, un);
+eng := un;
+
+ComMoveXY(un, 79, 88);
+
+for i in tmp do
+    begin
+    ComAgressiveMove(i, 80, 87);
+    AddComAgressiveMove(i, 109, 82);
+    end;
+
+wait(0$45);
+
+for i in tmp do
+    begin
+    ComAgressiveMove(i, 124, 113);
+    AddComAgressiveMove(i, 129, 124);
+    end;
+
+ComMoveXY(eng, 124, 112);
+
+repeat
+ wait(0$1);
+until UnitsInside(ovsyenko) = 0;
+
+ComEnterUnit(eng, ovsyenko);
+
+repeat
+ wait(0$1);
+ buildings := FilterUnitsInArea(ovsyenkoBaseArea, [[f_type, unit_building], [f_side, 3]]);
+
+ if not IsOk(eng) then
+    exit;
+
+ if not HasTask(eng) then
+    for i in buildings do
+        if UnitsInside(i) = 0 then
+           begin
+           ComCapture(eng, i);
+           break;
+           end;
+until not buildings;
+
+buildings := FilterUnitsInArea(ovsyenkoBaseArea, [[f_type, unit_building], [f_side, 1], [f_ok], [f_or, [f_btype, b_bunker], [f_btype, b_breastwork], [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+for i in tmp do
+    begin
+    if not buildings then
+       exit;
+
+    id := rand(1, Count(buildings));
+    ComEnterUnit(i, buildings[id]);
+
+    if GetBType(buildings[id]) in [b_bunker, b_breastwork] then
+       buildings := Delete(buildings, id);
+    end;
+
+if not HexInfo(136, 123) then
+   ComBuild(eng, b_siberite_mine, 136, 123, 1);
+End;

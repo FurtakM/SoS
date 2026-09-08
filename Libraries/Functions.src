@@ -134,7 +134,7 @@ case i of
      1: ComAttackUnit(unit, enemy);
      2: ComSpaceShift(unit, _x, _y);
      3: ComTimeShift(unit, _x, _y);
-end;
+     end;
 
 End;
 
@@ -176,10 +176,10 @@ side := GetSide(unit);
 nat := GetNation(unit);
 
 case nat of
-1: tech := tech_lassight;
-2: tech := tech_mortar;
-3: tech := tech_bazooka;
-end;
+     1: tech := tech_lassight;
+     2: tech := tech_mortar;
+     3: tech := tech_bazooka;
+     end;
 
 if Researched(side, tech) then
    result := [class_sniper, class_mortar, class_bazooker][nat];
@@ -883,6 +883,17 @@ if checkLink then
    end;
 
 result := tmp;
+End;
+
+Export Function ComCapture(units, b);
+var i;
+begin
+if not units then
+   exit;
+
+for i in units do
+    if GetClass(i) = class_engineer then
+       SetTaskList(i, [['e', 0, 0, b, 0, 0, 0]]);
 End;
 
 Export Function ComComplete(units, b);
@@ -2857,6 +2868,55 @@ for i in result do
     else if path > tag then
        begin
        nearEnemy := UnitFilter(enemy, [f_dist, i, 8]);
+
+       if nearEnemy then
+          begin
+          if GetWeapon(i) = ru_time_lapser then
+             ComMoveUnit(i, NearestUnitToUnit(nearEnemy, i))
+          else
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(nearEnemy, i));
+          end
+       else if GetDistUnitXY(i, path[tag][1], path[tag][2]) > 6 then
+          ComAgressiveMove(i, path[tag][1], path[tag][2])
+       else
+          SetTag(i, tag);
+       end
+    else
+       if enemy then
+          begin
+          if GetWeapon(i) = ru_time_lapser then
+             ComMoveUnit(i, NearestUnitToUnit(enemy, i))
+          else
+             ComAgressiveMoveToUnit(i, NearestUnitToUnit(enemy, i));
+          end;
+    end;
+End;
+
+Export Function AgressiveMoveExcept(units, path, except);
+var i, enemy, nearEnemy, cr, side, tag, ignoreCratesWeapon;
+begin
+if not units then
+   exit;
+
+result := UnitFilter(units, [f_ok]);
+side := GetSide(units[1]);
+ignoreCratesWeapon := [ar_selfpropelled_bomb, ar_bio_bomb, ru_time_lapser];
+
+if not result then
+   exit;
+
+enemy := FilterAllUnits([f_enemy, side]);
+
+for i in result do
+    begin
+    tag := GetTag(i) + 1;
+    cr := GetCratesNearbyXY(GetX(i), GetY(i), 4);
+
+    if GetType(i) = unit_vehicle and cr > 2 and not GetWeapon(i) in ignoreCratesWeapon then
+       ComAttackPlace(i, cr[1][1], cr[1][2])
+    else if path > tag then
+       begin
+       nearEnemy := UnitFilter(enemy, [f_dist, i, 8]) diff except;
 
        if nearEnemy then
           begin
