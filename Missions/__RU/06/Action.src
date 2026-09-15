@@ -769,7 +769,7 @@ End;
 
 // can end
 Every 0$1 trigger GetSideSib(3) >= 200 and hasAllTechs do
-var i, j, hasVsevolod, tmp, min, max, buildings, depot, arm, lab, fac;
+var i, j, hasVsevolod, tmp, min, max, buildings, depot, arm, lab, fac, kirBel;
 begin
 canEnd := true;
 hasVsevolod := GetSide(Vsevolod) = 3 and not vsevolodDied;
@@ -793,6 +793,7 @@ DialogueOff;
 
 ChangeMissionObjectives('MCars');
 SetAreaMapShow(eastEndArea, 1);
+ChangeSideFog(6, 3);
 
 if hasVsevolod then
    begin
@@ -825,6 +826,12 @@ if hasVsevolod then
 
    if goOut then
       begin
+      for i in goOut do
+          begin
+          SetSide(i, 6);
+          SetInvulnrability(i, 6);
+          end;
+
       repeat
        wait(0$1);
 
@@ -847,9 +854,25 @@ if hasVsevolod then
 
 PrepareYakotich;
 
+if Kirilenkova or Belkov then
+   begin
+   kirBel := UnitFilter([Kirilenkova, Belkov], [f_ok]);
+   yakotichSquad := yakotichSquad diff kirBel;
+   end;
+
+wait(0$10);
+
+ComExitVehicle(Yakotich);
+
+repeat
+ wait(3);
+until not IsInUnit(Yakotich);
+
 CenterOnXY(187, 216);
 
+DialogueOn;
 SayRadio(Yakotich, 'DYakot-1');
+DialogueOff;
 
 buildings := FilterUnitsInArea(southBaseExtArea, [[f_side, 3], [f_type, unit_building]]);
 
@@ -869,9 +892,11 @@ arm := UnitFilter(buildings, [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]
 fac := UnitFilter(buildings, [f_or, [f_btype, b_workshop], [f_btype, b_factory]]);
 lab := UnitFilter(buildings, [f_or, [f_btype, b_lab], [f_btype, b_lab_full], [f_btype, b_lab_half]]);
 
-for i in Yakotich ^ yakotichSquad do
+for i in Yakotich union yakotichSquad do
     begin
     ComExitVehicle(i);
+
+    wait(3);
 
     AddComMoveXY(i, 171, 217);
 
@@ -881,13 +906,90 @@ for i in Yakotich ^ yakotichSquad do
     if GetClass(i) = 3 and fac then
        AddComEnterUnit(i, fac[1]);
 
-    if GetClass(i) = 1 and i <> Yakotich then
+    if GetClass(i) = 1 and arm and i <> Yakotich then
        AddComEnterUnit(i, arm[1]);
 
-    if GetClass(i) = 4 then
+    if GetClass(i) = 4 and lab then
        AddComEnterUnit(i, lab[1]);
 
     wait(0$1);
+    end;
+
+if kirBel then
+   begin
+   for i in kirBel do
+       begin
+       ComExitVehicle(i);
+
+       wait(3);
+
+       if GetDistUnits(i, Burlak) < GetDistUnits(i, ovsyenko) then
+          AddComMoveUnit(i, Burlak)
+       else
+          begin
+          AddComMoveXY(i, 149, 157);
+          AddComMoveXY(i, 129, 125);
+          AddComMoveXY(i, 126, 122);
+          end;
+       end;
+
+   repeat
+    wait(0$1);
+
+    if UnitFilter(kirBel, [f_alive]) = 0 then
+       exit;
+
+    for i in UnitFilter(kirBel, [f_not, [f_hastask]]) do
+        begin
+        ComMoveXY(i, 149, 157);
+        AddComMoveXY(i, 129, 125);
+        AddComMoveXY(i, 126, 122);
+        end;
+
+   until GetDistUnits(kirBel[1], Burlak) < 8 or GetDistUnits(kirBel[1], ovsyenko) < 10;
+
+   for i in kirBel do
+       begin
+       ComStop(i);
+       SetSide(i, 3);
+       end;
+
+   if Kirilenkova then
+      begin
+      DialogueOn;
+      CenterNowOnUnits(Kirilenkova);
+
+      if Belkov then
+         Say(Belkov, 'D10-Bel-1');
+
+      Say(Kirilenkova, 'D10-Kir-1');
+
+      DialogueOff;
+      end
+   else
+      begin
+      DialogueOn;
+      CenterNowOnUnits(Belkov);
+      Say(Belkov, 'D10-Bel-1'); 
+      DialogueOff;
+      end;
+   end;
+
+for i in UnitFilter(yakotichSquad, [f_outside]) do
+    begin
+    ComMoveXY(i, 171, 217);
+
+    if (GetClass(i) = 2 or i = Yakotich) and depot then
+       AddComEnterUnit(Yakotich, depot[1]);
+
+    if GetClass(i) = 3 and fac then
+       AddComEnterUnit(i, fac[1]);
+
+    if GetClass(i) = 1 and i <> Yakotich and arm then
+       AddComEnterUnit(i, arm[1]);
+
+    if GetClass(i) = 4 and lab then
+       AddComEnterUnit(i, lab[1]);
     end;
 End;
 
@@ -983,6 +1085,12 @@ if IsLive(Jan) and Jan in stay then
 else if Jan in goOut then
    SaveCharacters(Jan, currentMissionPrefix & 'Vse_Jan');
 
+if IsLive(Belkov) then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
 SaveTech(3, currentMissionPrefix & 'Techs');
 
 SaveCharacters(UnitFilter(stay, [f_ok]) diff [Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan], currentMissionPrefix & 'burlakTeam');
@@ -1002,7 +1110,7 @@ if IsOk(Yakotich) then
 saveVehicles := [];
 
 for i in FilterUnitsInArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]], [f_ok]]) do
-    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil), GetMark(i)]]);
+    saveVehicles := Join(saveVehicles, [GetChassis(i), GetEngine(i), GetControl(i), GetWeapon(i), GetNation(i), [GetCargo(i, mat_cans), GetCargo(i, mat_oil), GetCargo(i, mat_siberit), GetMark(i)]]);
 
 if saveVehicles then
    SaveVariable(saveVehicles, currentMissionPrefix & 'Vehicles');

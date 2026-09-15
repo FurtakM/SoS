@@ -315,7 +315,7 @@ if IsInUnit(Vsevolod) then
    ComExit(Vsevolod);
 End;
 
-Export Yakotich;
+Export Yakotich, Kirilenkova, Belkov;
 Export yakotichSquad;
 Export function PrepareYakotich;
 var i, un, tmp, veh;
@@ -325,10 +325,29 @@ uc_nation := 3;
 
 Yakotich := NewCharacter('Yakotich');
 
+if TestCharacters('04_Kirilenkova') or debug then
+   Kirilenkova := PrepareUnit('Kirilenkova', (not debug), '04_')
+else if TestCharacters('04p_Kirilenkova') then
+   Kirilenkova := PrepareUnit('Kirilenkova', (not debug), '04p_');
+          
+if TestCharacters('04_Belkov') or debug then
+   Belkov := PrepareUnit('Belkov', (not debug), '04_')
+else if TestCharacters('04p_Belkov') then
+   Belkov := PrepareUnit('Belkov', (not debug), '04p_');
+
 tmp := [];
 
-for i := 1 to 8 do
+if Belkov then
+   tmp := Join(tmp, Belkov);
+
+if Kirilenkova then
+   tmp := Join(tmp, Kirilenkova);
+
+for i := 1 to 6 do
     begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
     PrepareHuman(false, i mod 4 + 1, 4);
     un := CreateHuman;
     tmp := Join(tmp, un);
@@ -340,6 +359,9 @@ wait(2$00);
 
 for i in tmp union Yakotich do
     begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
     PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][rand(1,3)], 33);
     veh := CreateVehicle;
     SetDir(veh, 0);
