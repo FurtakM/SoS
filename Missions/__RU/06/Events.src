@@ -3,6 +3,12 @@ var side, btype;
 begin
 side := GetSide(unit);
 
+if unit = usBase then
+   begin
+   americanRetreat := true;
+   exit;
+   end;
+
 if unit = Vsevolod then
    begin
    vsevolodDied := true;
@@ -23,6 +29,19 @@ if unit = Burlak then
 
 if unit in ovsyenkoSquad then
    ovsyenkoSquad := ovsyenkoSquad diff unit;
+
+if unit in goOut then
+   goOut := goOut diff unit;
+
+if unit in stay then
+   stay := stay diff unit;
+
+if side = 1 and GetWeapon(unit) = us_crane then
+   begin
+   americanConstructList := Join(americanConstructList,
+      [us_medium_tracked, engine_combustion, control_remote, us_crane]
+   );
+   end;
 End;
 
 On UnitDestroyed_Extra(unit, killerSide, killerUnit) do
@@ -39,6 +58,7 @@ if unit = Gleb and killerSide = 3 then
 End;
 
 On EvacuateVehicle(driver, abandoned_vehicle, unknown1, unknown2) do
+var fac;
 begin
 if GetTag(driver) = tEscape and GetSide(driver) = 1 then
    begin
@@ -52,8 +72,58 @@ if GetTag(driver) = tEscape and GetSide(driver) = 1 then
     ComMoveXY(driver, 150, 71);
     wait(0$1);
    until not IsOk(driver);
+
+   exit;
+   end;
+
+if GetTag(driver) = tMech then
+   SetTag(driver, 0);
+
+if GetSide(driver) = 1 then
+   begin
+   fac := FilterAllUnits([[f_side, 1], [f_btype, b_factory], [f_ok]]);
+
+   if fac then
+      ComEnterUnit(driver, fac[1]);
    end;
 End;
+
+On BuildingComplete(b) do
+var side, btype;
+begin
+side := GetSide(b);
+btype := GetBType(b);
+
+if side = 1 then
+   if IsInArea(b, americanBaseArea) then
+      americanBuildingsToBuild := Delete(americanBuildingsToBuild, 1)
+   else if IsInArea(b, cutTree1Area) then
+      if GetBType(b) = b_bunker then
+         AddComPlaceWeapon(b, [us_double_gun, us_gatling_gun, us_heavy_gun][rand(1,3)])
+      else if GetBType(b) = b_armoury then
+         ComUpgrade(b);
+End;
+
+
+On UpgradeComplete(b) do
+var side, btype;
+begin
+side := GetSide(b);
+btype := GetBType(b);
+
+if side = 1 and IsInArea(b, americanBaseArea) then
+   americanBuildingsToBuild := Delete(americanBuildingsToBuild, 1);
+End;
+
+On ResearchComplete(tech, lab) do
+var side;
+begin
+side := GetSide(lab);
+
+if side = 1 then
+   americanTechs := americanTechs diff tech;
+End;
+
 
 On VehicleConstructed(vehicle, factory) do
 var side, driver, i;
@@ -62,4 +132,77 @@ SOS_VehicleConstructed(vehicle, factory);
 
 side := GetSide(vehicle);
 
+if side = 1 then
+   begin
+   driver := IsDrivenBy(vehicle);
+
+   if driver then
+      SetTag(driver, tMech);
+
+   for i := 1 to americanConstructList do
+       if GetWeapon(vehicle) = americanConstructList[i][4] then
+          begin
+          americanConstructList := Delete(americanConstructList, i);
+          break;
+          end;
+
+   if GetControl(vehicle) = control_manual then
+      begin
+      if Count(americanVehicles) < 3 or GetWeapon(vehicle) in [us_cargo_bay, us_crane] then
+         americanVehicles := Join(americanVehicles, vehicle)
+      else
+         americanAttackVehiclesTmp := Join(americanAttackVehiclesTmp, vehicle);
+      end
+   else
+     begin
+     if GetWeapon(vehicle) in [us_cargo_bay, us_crane] then
+        americanVehicles := Join(americanVehicles, vehicle)
+     else if GetWeapon(vehicle) = us_bulldozer then
+        americanAttackVehicles := Join(americanAttackVehicles, vehicle)
+     else
+        americanAttackVehiclesTmp := Join(americanAttackVehiclesTmp, vehicle);
+     end;
+
+   if americanAttackVehiclesTmp >= [4, 5, 6, 6][Difficulty] then
+      begin
+      americanAttackVehicles := americanAttackVehicles union americanAttackVehiclesTmp;
+      americanAttackVehiclesTmp := [];
+      end;
+   end;
+End;
+
+On Contact(s1, s2) do
+begin
+if s1 = 3 and s2 = 6 and IsOk(Yakotich) then
+   begin
+   DialogueOn;
+
+   Say(Yakotich, 'DYakot-2');
+   dwait(0$0.3);
+
+   DialogueOff;
+
+   YouLost('AllyAttacked');
+   end;
+End;
+
+On BuildingCaptured(building, side, unit) do
+begin
+if building = usBase then
+   americanRetreat := true;
+End;
+
+On ClassChanged(un, oldClass, newClass) do
+var tag;
+begin
+tag := GetTag(un);
+
+if tag in [tWannaBeMech, tWannaBeSol] then
+   SetTag(un, 0);
+End;
+
+On EnterBuilding(b, un) do
+begin
+if GetBType(b) = b_factory and GetSide(un) = 1 then
+   SetLives(un, 1000);
 End;

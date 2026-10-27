@@ -144,7 +144,6 @@ for i := 1 to Difficulty do
 for i in tmp do
     begin
     ComAgressiveMove(i, 54, 51);
-    AddComWait(i, 0$20);
     AddComAgressiveMove(i, 35, 6);
     end;
 
@@ -157,9 +156,14 @@ repeat
 
  for i in tmp do
      begin
-     ComAgressiveMove(i, 54, 51);
-     AddComWait(i, 0$20);
-     AddComAgressiveMove(i, 35, 6);
+     ComAgressiveMove(i, 54, 51);       
+     end;
+
+ wait(1$20);
+
+ for i in tmp do
+     begin
+     ComAgressiveMove(i, 35, 6);
      end;
 until not tmp;
 End;
@@ -324,20 +328,47 @@ enable;
 ComCraneBuild(FilterAllUnits([[f_side, 1], [f_not, [f_hastask]], [f_ok], [f_weapon, us_crane]]), usToBuild[1][1], usToBuild[1][2], usToBuild[1][3], usToBuild[1][4]);
 End;
 
-Every 0$10 trigger not usSurrender and FilterAllUnits([[f_side, 1], [f_ok], [f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_apeman_engineer]]]) do
-var i, tmp, btmp, barracks, inside;
+Every 0$1 trigger not usSurrender and FilterAllUnits([[f_side, 1], [f_ok], [f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_apeman_engineer]]]) do
+var i, tmp, enemy, btmp, barracks, inside;
 begin
 enable;
 
 tmp := FilterAllUnits([[f_side, 1], [f_ok], [f_or, [f_class, class_soldier], [f_class, class_sniper], [f_class, class_apeman_engineer]]]) diff usCratesCollector;
 btmp := FilterAllUnits([[f_side, 1], [f_ok], [f_type, unit_building], [f_btype, b_bunker], [f_empty]]);
 barracks := FilterAllUnits([[f_side, 1], [f_ok], [f_btype, b_barracks]]);
+enemy := FilterUnitsInArea(americanInnerBaseArea, [f_side, 2]);
 
 if not tmp then
    exit;
 
+if enemy then
+   begin
+   for i in tmp do
+       begin
+       if GetClass(i) in [class_soldier, class_sniper] then
+          begin
+          if IsInUnit(i) then
+             begin
+             SetTag(i, 11);
+             ComExitBuilding(i);
+             end;
+
+          AddComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end;
+       end;
+
+   exit;
+   end;
+
 for i in tmp do
     begin
+    if GetTag(i) = 11 then
+       begin
+       ComMoveXY(i, 81, 129);
+       SetTag(i, 0);
+       continue;
+       end;
+       
     inside := IsInUnit(i);
 
     if inside and GetBType(inside) = b_bunker then
@@ -356,7 +387,7 @@ for i in tmp do
           else if GetDistUnitXY(i, 81, 145) > 10 then
              ComMoveXY(i, 81, 145);
        end
-    else
+    else if GetClass(i) = class_soldier then
        begin
        SetTag(btmp[1], 1);
 

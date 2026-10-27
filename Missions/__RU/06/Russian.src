@@ -1,6 +1,6 @@
 Export Burlak, Platonov, Petrovova, Titov,
        Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan;
-Export ruVehicles;
+Export ruVehicles, goOut, stay;
 Export function PrepareRussian;
 var i, veh, t, tmp, remainingOil, heavyChassis, oilPerVehicle, emptyCargo, oilToAdd, space, techs;
 begin
@@ -44,6 +44,9 @@ if debug then
             [ru_heavy_tracked, engine_combustion, control_manual, ru_big_cargo_bay, nation_russian, [0, 200], 0 ] ];
 
 ruVehicles := [];
+stay := [];
+goOut := [];
+
 remainingOil := -200;
 
 for i in tmp do
@@ -54,7 +57,7 @@ for i in tmp do
     veh := CreateVehicle;
 
     if i[1] in [ru_heavy_tracked, us_heavy_tracked] then
-       penaltyTime := penaltyTime + 3$00;
+       penaltyTime := 3$00;
 
     if i[4] in [ru_cargo_bay, ru_big_cargo_bay, ar_cargo_bay, us_cargo_bay] then
        begin
@@ -310,4 +313,68 @@ for i in FilterUnitsInArea(terminalBaseArea, [f_side, 6]) union vsevolodSquad do
 
 if IsInUnit(Vsevolod) then
    ComExit(Vsevolod);
+End;
+
+Export Yakotich, Kirilenkova, Belkov;
+Export yakotichSquad;
+Export function PrepareYakotich;
+var i, un, tmp, veh;
+begin
+uc_side := 6;
+uc_nation := 3;
+
+Yakotich := NewCharacter('Yakotich');
+
+if TestCharacters('04_Kirilenkova') or debug then
+   Kirilenkova := PrepareUnit('Kirilenkova', (not debug), '04_')
+else if TestCharacters('04p_Kirilenkova') then
+   Kirilenkova := PrepareUnit('Kirilenkova', (not debug), '04p_');
+          
+if TestCharacters('04_Belkov') or debug then
+   Belkov := PrepareUnit('Belkov', (not debug), '04_')
+else if TestCharacters('04p_Belkov') then
+   Belkov := PrepareUnit('Belkov', (not debug), '04p_');
+
+tmp := [];
+
+if Belkov then
+   tmp := Join(tmp, Belkov);
+
+if Kirilenkova then
+   tmp := Join(tmp, Kirilenkova);
+
+for i := 1 to 6 do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    PrepareHuman(false, i mod 4 + 1, 4);
+    un := CreateHuman;
+    tmp := Join(tmp, un);
+    end;
+
+yakotichSquad := tmp;
+
+wait(2$00);
+
+for i in tmp union Yakotich do
+    begin
+    uc_side := 6;
+    uc_nation := nation_russian;
+
+    PrepareVehicle(ru_medium_tracked, engine_combustion, control_manual, [ru_heavy_machine_gun, ru_gatling_gun, ru_gun][rand(1,3)], 33);
+    veh := CreateVehicle;
+    SetDir(veh, 0);
+
+    repeat
+     wait(0$0.3);
+    until PlaceUnitXY(veh, 199, 236, false);
+
+    PlaceHumanInUnit(i, veh);
+
+    AddComMoveXY(i, 194, 217);
+    AddComMoveXY(i, 186, 213);
+    end;
+
+AddComMoveXY(Yakotich, 180, 209);
 End;

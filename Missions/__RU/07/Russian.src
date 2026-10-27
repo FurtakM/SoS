@@ -1,10 +1,16 @@
-Export Burlak, Petrovova, Titov, Platonov, Popov, Yashin,
-       Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Vsevolod;
-Export burlakTeam, vsevolodTeam;
-// export here
+Export Burlak, Petrovova, Titov, Platonov, Popov, Yashin, Jan, Belkov,
+       Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Vsevolod, Kirilenkova;
+Export burlakTeam, vsevolodTeam, ruVehicles;
+
 Export function PrepareRussian;
-var i, veh;
+var i, veh, list, tmp, un, techs, remainingOil, heavyChassis, oilPerVehicle, space, emptyCargo, oilToAdd;
 begin
+techs := LoadVariable(prevMissionPrefix & 'Techs', []);
+
+if techs then
+   for i := 1 to Count(techs) do
+       SetTech(i, 3, techs[i]);
+
 uc_nation := nation_russian;
 uc_side := 6;
 
@@ -14,22 +20,199 @@ Yashin := NewCharacter('Yashin');
 
 uc_side := 3;
 
-Burlak    := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
-Karamazov := PrepareUnit('Karamazov', (not debug), prevMissionPrefix);
-Lipshchin := PrepareUnit('Lipshchin', (not debug), prevMissionPrefix);
-Petrosyan := PrepareUnit('Petrosyan', (not debug), prevMissionPrefix);
-Titov     := PrepareUnit('Titov', (not debug), prevMissionPrefix);
-Petrovova := PrepareUnit('Petrovova', (not debug), prevMissionPrefix);
-Gleb      := PrepareUnit('Gleb', (not debug), prevMissionPrefix);
-Dolgov    := PrepareUnit('Dolgov', (not debug), prevMissionPrefix);
+Burlak      := PrepareUnit('Burlak', (not debug), prevMissionPrefix);
+Karamazov   := PrepareUnit('Karamazov', (not debug), prevMissionPrefix);
+Lipshchin   := PrepareUnit('Lipshchin', true, prevMissionPrefix);
+Petrosyan   := PrepareUnit('Petrosyan', (not debug), prevMissionPrefix);
+Titov       := PrepareUnit('Titov', true, prevMissionPrefix);
+Petrovova   := PrepareUnit('Petrovova', (not debug), prevMissionPrefix);
+Gleb        := PrepareUnit('Gleb', (not debug), prevMissionPrefix);
+Dolgov      := PrepareUnit('Dolgov', true, prevMissionPrefix);
+Jan         := PrepareUnit('Jan', (not debug), prevMissionPrefix);
+Kirilenkova := PrepareUnit('Kirilenkova', (not debug), prevMissionPrefix);
+Belkov      := PrepareUnit('Belkov', (not debug), prevMissionPrefix);
 
-// randomy z którymi gracz ukoñczy³ poprzedni¹ misje
 burlakTeam := CreateCharacterSet(prevMissionPrefix & 'burlakTeam');
 
-uc_side := 6;
+result := [Petrovova, Titov, Jan, Lipshchin, Belkov,
+           Gleb, Dolgov, Petrosyan, Karamazov, Kirilenkova] diff 0;
 
-Vsevolod  := PrepareUnit('Vsevolod', (not debug), prevMissionPrefix);
+if burlakTeam then
+   result := result union burlakTeam;
 
-// randomy sewiego z którymi poszed³ pod Kabul
-vsevolodTeam := CreateCharacterSet(prevMissionPrefix & 'vsevolodTeam');
+for i in result do
+    if GetSide(i) <> 3 then
+       result := result diff i;
+
+if debug then
+   tmp := [ [ru_medium_tracked, engine_siberite, control_manual, ru_gun, nation_russian, [0, 0, 0], 0],
+            [ru_medium_tracked, engine_combustion, control_manual, ru_gun, nation_russian, [0, 0, 0], 0],
+            [ru_medium_tracked, engine_combustion, control_manual, ru_gun, nation_russian, [0, 0, 0], -3],
+            [ru_medium_tracked, engine_siberite, control_manual, ru_gun, nation_russian, [0, 0, 0], 0],
+            [ru_medium_tracked, engine_combustion, control_manual, ru_gun, nation_russian, [0, 0, 0], 0],
+            [ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, nation_russian, [0, 0, 100], 0],
+            [ru_medium_tracked, engine_combustion, control_manual, ru_cargo_bay, nation_russian, [50, 50, 0], 0 ],
+            [ru_heavy_tracked, engine_combustion, control_manual, ru_big_cargo_bay, nation_russian, [0, 200, 0], 0 ] ];
+
+ruVehicles := [];
+
+remainingOil := -200;
+
+for i in tmp do
+    begin
+    uc_nation := i[5];
+
+    PrepareVehicle(i[1], i[2], i[3], i[4], 10);
+    veh := CreateVehicle;
+
+    if i[4] in [us_cargo_bay, ru_cargo_bay, ru_big_cargo_bay, ar_cargo_bay, us_cargo_bay] then
+       begin
+       if i[6][1] then
+          AddCargo(veh, mat_cans, i[6][1]);
+
+       if i[6][2] then
+          remainingOil := remainingOil + i[6][2];
+
+       if i[6][3] then
+          AddCargo(veh, mat_siberit, i[6][3]);
+       end;
+
+    if i[7] <> 0 then
+       SetMark(veh, i[7]);
+
+    ruVehicles := Join(ruVehicles, veh);
+    PlaceUnitArea(veh, russianSpawnArea1, false);
+
+    if result then
+       begin
+       if i[7] <> 0 then
+          continue;
+
+       PlaceHumanInUnit(result[1], veh);
+       result := Delete(result, 1);
+       end;
+    end;
+
+if remainingOil then
+   begin
+   heavyChassis := UnitFilter(ruVehicles, [f_or, [f_chassis, ru_heavy_tracked], [f_chassis, us_heavy_tracked]]);
+
+   if heavyChassis then
+      remainingOil := remainingOil - (Count(heavyChassis) * 30);
+
+   if remainingOil then
+      begin
+      oilPerVehicle := remainingOil div Count(UnitFilter(ruVehicles, [f_engine, engine_combustion]));
+
+      if oilPerVehicle > 80 then
+         oilPerVehicle := 80;
+
+      if oilPerVehicle < 0 then
+         oilPerVehicle := 0;
+
+      for i in ruVehicles do
+          begin
+          remainingOil := remainingOil - oilPerVehicle;
+          SetFuel(i, 20 + oilPerVehicle);
+          end;
+
+      if remainingOil < 10 then
+         begin
+         remainingOil := 0;
+         SetFuel(ruVehicles[1], GetFuel(ruVehicles[1]) + remainingOil);
+         end;
+
+      if remainingOil then
+         begin
+         for i in UnitFilter(ruVehicles, [f_or, [f_weapon, ru_cargo_bay], [f_weapon, us_cargo_bay], [f_weapon, ar_cargo_bay], [f_weapon, ru_big_cargo_bay]]) do
+             begin
+             if remainingOil <= 0 then
+                break;
+
+             if GetWeapon(i) = ru_big_cargo_bay then
+                space := 200
+             else
+                space := 100;
+
+             emptyCargo := space - GetCargo(i, mat_cans);
+             emptyCargo := space - GetCargo(i, mat_siberit);
+
+             if emptyCargo <= 0 then
+                continue;
+
+             oilToAdd := remainingOil - emptyCargo;
+
+             if oilToAdd < 0 then
+                oilToAdd := Abs(oilToAdd);
+
+             if oilToAdd > space then
+                oilToAdd := space;
+
+             if remainingOil - oilToAdd < 0 then
+                oilToAdd := remainingOil;
+
+             remainingOil := remainingOil - oilToAdd;
+
+             AddCargo(i, mat_oil, oilToAdd);
+             end;
+         end;
+      end;
+   end;
+
+SetDir(Burlak, 0);
+PlaceUnitXY(Burlak, 97, 163, false);
+
+if hasVsevolod then
+   begin
+   uc_side := 6;
+
+   Vsevolod  := PrepareUnit('Vsevolod', (not debug), prevMissionPrefix);
+   Karamazov := PrepareUnit('Karamazov', true, prevMissionPrefixVse);
+   Lipshchin := PrepareUnit('Lipshchin', (not debug), prevMissionPrefixVse);
+   Petrosyan := PrepareUnit('Petrosyan', true, prevMissionPrefixVse);
+   Titov     := PrepareUnit('Titov', (not debug), prevMissionPrefixVse);
+   Petrovova := PrepareUnit('Petrovova', true, prevMissionPrefixVse);
+   Gleb      := PrepareUnit('Gleb', true, prevMissionPrefixVse);
+   Dolgov    := PrepareUnit('Dolgov', (not debug), prevMissionPrefixVse);
+   Jan       := PrepareUnit('Jan', true, prevMissionPrefixVse);
+
+   vsevolodTeam := CreateCharacterSet(prevMissionPrefix & 'vsevolodTeam');
+
+   result := [Petrovova, Titov, Jan, Lipshchin,
+              Gleb, Dolgov, Petrosyan, Karamazov] diff 0;
+
+   if vsevolodTeam then
+      result := result union vsevolodTeam;
+
+   PlaceUnitArea(Vsevolod, seviSpawnArea, false);
+
+   ComTurnXY(Vsevolod, 98, 162);
+
+   for i in result do
+       begin
+       if GetSide(i) <> 6 then
+          begin
+          result := result diff i;
+          continue;
+          end;
+
+       SetClass(i, class_soldier);
+       PlaceUnitXYR(i, 103, 153, 6, false);
+       ComTurnUnit(i, Vsevolod);
+       end;
+       
+
+   SetResourceVisibility(67, 115, 6);
+
+   list := [
+     [b_depot, 51, 94, 1, 0, 0, 0],
+     [b_lab_full, 51, 85, 3, 0, b_lab_weapon, b_lab_spacetime],
+     [b_armoury, 61, 92, 4, 0, 0, 0],
+     [b_oil_mine, 67, 115, 1, 0, 0, 0],
+     [b_oil_power, 55, 104, 1, 0, 0, 0]
+   ];
+
+   for i in list do
+       PlaceBuilding(i[1], 5, i[2], i[3], i[4], i[5], i[6], i[7]);
+   end;
 End;

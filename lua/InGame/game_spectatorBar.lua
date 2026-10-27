@@ -203,7 +203,7 @@ local function SpecBarMakeTab(ID)
 		visible = false
 	});
 
-	setColour1(tab, RGBA(25, 25, 25, 200));
+	setColour1(tab, RGBA(25, 25, 25, 255));
 	setFontColour(tab, RGB(220, 220, 220));
 
 	return tab;
@@ -408,6 +408,7 @@ local function SpecBarNormalizeSide(side)
 		SpecBar.sideIndexBase = 0;
 		return 1;
 	end;
+
 	if s == 8 then
 		SpecBar.sideIndexBase = 1;
 		return 8;
@@ -417,6 +418,7 @@ local function SpecBarNormalizeSide(side)
 		if s >= 0 and s <= 7 then
 			return s + 1;
 		end;
+
 		return nil;
 	end;
 
@@ -424,6 +426,7 @@ local function SpecBarNormalizeSide(side)
 		if s >= 1 and s <= 8 then
 			return s;
 		end;
+
 		return nil;
 	end;
 
@@ -572,6 +575,7 @@ local function SpecBarSelectSide(side)
 	if SpecBar.currentPage == 2 and type(getvalue) == 'function' and getvalue(OWV_MYSIDE) == 9 then
 		if SELECTED_UNIT ~= nil and SELECTED_UNIT.SIDE ~= nil then
 			local forced = SpecBarNormalizeSide(SELECTED_UNIT.SIDE);
+
 			if forced ~= nil then
 				normalized = forced;
 			end;
@@ -894,10 +898,10 @@ end;
 
 local function SpecBarSetTabStyle(tab, active)
 	if active then
-		setColour1(tab, RGBA(66, 120, 84, 220));
+		setColour1(tab, RGBA(66, 120, 84, 255));
 		setFontColour(tab, RGB(255, 255, 255));
 	else
-		setColour1(tab, RGBA(25, 25, 25, 200));
+		setColour1(tab, RGBA(25, 25, 25, 255));
 		setFontColour(tab, RGB(220, 220, 220));
 	end;
 end;
@@ -1419,6 +1423,7 @@ local function SpecBarParseStrengthPayload(payload)
 
 	payload = string.gsub(payload, '^%s+', '');
 	payload = string.gsub(payload, '%s+$', '');
+	
 	if payload == '' then
 		return {};
 	end;
@@ -1437,11 +1442,13 @@ local function SpecBarParseStrengthPayload(payload)
 	end;
 
 	local chunk = loader('return ' .. normalized);
+	
 	if chunk == nil then
 		return nil;
 	end;
 
 	local ok, data = pcall(chunk);
+	
 	if not ok or type(data) ~= 'table' then
 		return nil;
 	end;
@@ -1512,6 +1519,23 @@ function setPlayerStrength(s1, s2, s3, s4, s5, s6, s7, s8)
 	end;
 end;
 
+function resetSpecBarResearch()
+	if not SpecBar or SpecBar == nil then
+		return;
+	end;
+	
+	for i = 1, 8 do
+		SpecBar.researchBySide[i] = nil;
+	end;
+
+	SpecBar.selectedSide = 0;
+	SpecBar.researchRenderKey = '';
+
+	if SpecBar.currentPage == 2 and SpecBarRefreshResearchPage ~= nil then
+		SpecBarRefreshResearchPage();
+	end;
+end
+
 function setPlayerResearch(r1, r2, r3, r4, r5, r6, r7, r8)
 	local list;
 
@@ -1526,9 +1550,11 @@ function setPlayerResearch(r1, r2, r3, r4, r5, r6, r7, r8)
 	end;
 
 	local payloadSide = SpecBar.researchPayloadSide;
+	
 	SpecBar.researchPayloadSide = nil;
 
 	list = SpecBarNormalizeResearchBySide(list, payloadSide);
+	
 	if type(list) ~= 'table' then
 		return;
 	end;
@@ -1547,6 +1573,7 @@ end;
 
 function setPlayerResearchSide(side)
 	local targetSide = SpecBarNormalizeSide(side);
+	
 	if targetSide == nil then
 		return;
 	end;

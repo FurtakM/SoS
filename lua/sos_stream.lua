@@ -666,10 +666,9 @@ function getStreamItemsFromMission(normal, hardcore, active)
 				STREAM_ITEMS_ACTIVE = addToArray(STREAM_ITEMS_ACTIVE, item);
 			end;
 		end;
-
-		saveStreamToFile();
 	end;
 
+	saveStreamToFile();
 	STREAM_MODE_BLOCK = 0;
 end;
 

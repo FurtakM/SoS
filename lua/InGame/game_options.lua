@@ -4,10 +4,23 @@ otherSettings = 305;
 
 soundoptionsy = soundoptionsy - 20;
 
-function setting_set(setting,value)
+function setting_set(setting, value)
 	if (options_loading == false) then
-		OW_set(setting,value);
-		SETTING_TIMER_ID = AddRepeatableTimer(2,'OW_settings_save();', SETTING_TIMER_ID);
+		OW_set(setting, value);
+
+        if (setting == SETTING_RAWOUNDED) then
+            OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RAWOUNDED', value);
+        end;
+
+        if (setting == SETTING_RANONCOMBAT) then
+            OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RANONCOMBAT', value);
+        end;
+
+        if (setting == SETTING_RAVEHICLES) then
+            OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RAVEHICLES', value);
+        end;
+
+		SETTING_TIMER_ID = AddRepeatableTimer(2, 'OW_settings_save();', SETTING_TIMER_ID);
 	end;
 end;
 

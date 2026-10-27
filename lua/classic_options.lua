@@ -370,18 +370,21 @@ function changeSetting(id, setting)
 
     if setting == OPTION_GAME_WOUNDED then
         value = getSetting(OPTION_GAME_WOUNDED);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RAWOUNDED', (not value));
         OW_set(SETTING_RAWOUNDED, (not value));
         OW_settings_save();
     end;
 
     if setting == OPTION_GAME_NONCOMBAT then
         value = getSetting(OPTION_GAME_NONCOMBAT);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RANONCOMBAT', (not value));
         OW_set(SETTING_RANONCOMBAT, (not value));
         OW_settings_save();
     end;
 
     if setting == OPTION_GAME_VEHICLES then
         value = getSetting(OPTION_GAME_VEHICLES);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_RAVEHICLES', (not value));
         OW_set(SETTING_RAVEHICLES, (not value));
         OW_settings_save();
     end;

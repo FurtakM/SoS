@@ -100,10 +100,12 @@ End;
 Every 0$1 trigger apeRadioKilled do
 var un, tmp, tmp2;
 begin
-tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, apeRadioKilled, 12]]);
+tmp := FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_dist, apeRadioKilled, 15]]);
 
 if not tmp then
    exit;
+
+talkAboutRadio := true;
 
 if FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 1 and IsOk(Burlak) then
    begin
@@ -926,7 +928,31 @@ End;
 Every 0$1 trigger joinedToBelkov and not UnitFilter([Saseda, Jaworska, Balei, Belkov, Jaunzeme], [f_alive]) do
 begin
 YouLost('Comrades');
-End;   
+End;
+
+Every 0$2 trigger joinedToBelkov do
+var i, j;
+begin
+for i in UnitFilter([Saseda, Jaworska, Balei, Belkov, Jaunzeme, Gnyevko, Kirilenkova], [f_side, 3]) do
+    begin
+    if IsOk(i) then
+       if SideShoot(i) = 3 then
+          begin    
+          for j in UnitFilter([Saseda, Jaworska, Balei, Belkov, Jaunzeme, Gnyevko, Kirilenkova], [f_side, 3]) do
+              begin
+              SetSide(j, 6);
+              ComAttackUnit(j, Burlak);
+              end;
+
+          SetAttitude(3, 6, att_enemy, true);
+
+          disable;
+          exit;
+          end;
+    end;
+
+enable;
+End;
 
 // End
 Every 0$1 trigger canEnd and IsInArea(Burlak, exitArea) do
@@ -945,7 +971,7 @@ else if IsOk(Saseda) then
 else if IsOk(Balei) then
    Say(Balei, 'D12-RSol1-1');
 
-if apeRadioKilled and not hasGnyevko then
+if apeRadioKilled and talkAboutRadio and not hasGnyevko then
    begin
    DialogueOn;
 
@@ -967,6 +993,12 @@ if apeRadioKilled and not hasGnyevko then
        if Query('QExit2') = 1 then
           break;
    until false;
+   end;
+
+if Count(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_ok]])) < 2 then
+   begin
+   YouLost('People');
+   exit;
    end;
 
 FinishMission;

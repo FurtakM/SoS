@@ -1165,6 +1165,7 @@ function startMultiplayerGame()
 		setEnabled(menu.window_multiplayer_room.panel.start, false);
 	end;
 
+	clearAmountOfResourcesDepot();
 	refreshPlayerView();
 	delayMultiplayerStart();
 end;
