@@ -1,8 +1,378 @@
-
+Export arForces, arVehicles, arAttackVehicles, arAttackVehiclesTmp, arTechs, arConstructList, arBuildingsToBuild, arMines;
 Export function PrepareArabian;
+var i, un, veh, tmp, bunkers, armoury, labs, skill;
 begin
 uc_nation := nation_arabian;
 uc_side := 2;
 
-SetBName(ar_dep, 'newkabul');
+arForces := [];
+arVehicles := [];
+arAttackVehicles := [];
+arAttackVehiclesTmp := [];
+arTechs := GetTechNation(2, nation_arabian, state_enabled);
+arConstructList := [];
+arBuildingsToBuild := [];
+
+for i in [minefieldNorthArea, minefieldSouthArea, minefieldMainRoadArea, minefieldOilDepositsArea, minefieldExtraArea] do
+    begin
+    arMines := arMines union PlaceMines(i, [6, 8, 10, 12][Difficulty], 2);
+    end;
+
+skill := [4, 5, 6, 7][Difficulty];
+
+SetBName(ar_dep, 'newkabul');  
+
+AddResourceType(GetBase(ar_dep), mat_cans, 2500);
+AddResourceType(GetBase(ar_dep), mat_oil, 600);
+
+for i in FilterAllUnits([[f_side, 2], [f_type, unit_building]]) do
+    SetBLevel(i, skill + 1);
+
+bunkers := FilterAllUnits([[f_side, 2], [f_btype, b_bunker]]);
+armoury := FilterAllUnits([[f_side, 2], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+labs := FilterAllUnits([[f_side, 2], [f_btype, b_lab_full]]);
+
+for i in UnitFilter(bunkers, [f_not, [f_bweapon, ar_radar]]) do
+    PlaceWeaponTurret(i, [ar_gun, ar_gatling_gun, ar_rocket_launcher][i mod 3 + 1]);
+
+for i in FilterAllUnits([[f_side, 2], [f_btype, b_breastwork]]) do
+    begin
+    uc_side := 2;
+
+    PrepareApemanSoldier();
+    un := CreateHuman;
+    Push(arForces, un);
+
+    SetDir(un, GetDir(i) - 3);
+    PlaceHumanInUnit(un, i);
+    end;
+
+for i := 1 to [6, 7, 8, 9][Difficulty] do
+    begin
+    uc_side := 2;
+
+    PrepareApemanSoldier();
+    un := CreateHuman;
+    Push(arForces, un);
+    PlaceHumanInUnit(un, bunkers[1]);
+
+    Pop(bunkers);
+    end;
+
+for i := 1 to [6, 7, 8, 9][Difficulty] do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareSoldier(false, skill);
+    un := CreateHuman;
+    Push(arForces, un);
+
+    if bunkers then
+       begin
+       PlaceHumanInUnit(un, bunkers[1]);
+       Pop(bunkers);
+       end
+    else
+       begin
+       PlaceHumanInUnit(un, armoury[i mod 2 + 1]);
+       SetClass(un, class_mortar);
+       end;
+    end;
+
+for i := 1 to 4 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareScientist(false, skill);
+    un := CreateHuman;
+    Push(arForces, un);
+
+    PlaceHumanInUnit(un, labs[i mod 2 + 1]);
+    end;
+
+for i := 1 to 3 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareEngineer(false, skill);
+    un := CreateHuman;
+    Push(arForces, un);
+
+    PlaceHumanInUnit(un, ar_dep);
+    end;
+
+for i := 1 to 2 do
+    begin
+    uc_side := 2;
+    uc_nation := nation_arabian;
+
+    PrepareMechanic(false, skill + 1);
+    un := CreateHuman;
+    Push(arForces, un);
+    SetTag(un, tMech);
+
+    PrepareVehicle(ar_medium_trike, engine_solar, control_manual, ar_control_tower, 100);
+    veh := CreateVehicle;
+    Push(arVehicles, veh);
+
+    SetDir(veh, rand(0, 5));
+
+    PlaceUnitXYR(veh, 104, 33, 6, false);
+    PlaceHumanInUnit(un, veh);
+    end;
+
+for i := 1 to 4 do
+    begin
+    PrepareVehicle(ar_medium_trike, engine_combustion, control_manual, [ar_gun, ar_gun, ar_gatling_gun][i mod 3 + 1], 100);
+    veh := CreateVehicle;
+    Push(arVehicles, veh);
+
+    SetDir(veh, rand(0, 5));
+
+    PlaceUnitArea(veh, arVehKabulArea, false);
+    Push(arVehicles, veh);
+    end;
+
+for i := 1 to 6 do
+    begin
+    PrepareMechanic(false, skill);
+    un := CreateHuman;
+    Push(arForces, un);
+
+    PlaceHumanInUnit(un, ar_fac);
+    end;
+End;
+
+// MAIN AI
+Every 0$1 trigger not arabDefeat do
+begin
+BaseScript(2, kabulBaseArea, cratesArabArea, kabulBaseArea, kabulDefenceArea,
+           arForces, arVehicles, arTechs, arConstructList, arBuildingsToBuild,
+           [108,41], [107,47], []);
+enable;
+End;
+
+
+Every 0$1 trigger arAttackVehicles do
+var i, j, mech, enemy, area;
+begin
+enable;
+
+if not arAttackVehicles then
+   exit;
+
+// tags:
+// 100 - idle,
+// 101 - go to parking, repair if needed
+// 102 - attack
+
+for i in arAttackVehicles do
+    begin
+    if not IsOk(i) or GetSide(i) <> 2 then
+       begin
+       arAttackVehicles := arAttackVehicles diff i;
+       continue;
+       end;
+
+    if GetControl(i) = control_remote then
+       begin
+       if IsOk(i) and not IsControledBy(i) then
+          Connect(i);
+       //else if not IsOk(i) and IsControledBy(i) then
+          //ComUnlink(i);
+       end;
+
+    if GetTag(i) = 300 and GetControl(i) = control_manual then
+       begin
+       if GetFuel(i) < 50 then
+          begin
+          ComMoveXY(i, 24, 36);
+
+          repeat
+           wait(0$1);
+          until GetDistUnitXY(i, 24, 36) < 4;
+
+          SetFuel(i, 100);
+          end
+       else if not IsInArea(i, kabulRepairArea) then
+          ComMoveToArea(i, kabulRepairArea)
+       else
+          SetTag(i, 301);
+       end;
+
+    if GetTag(i) = 301 then
+       begin
+       if GetLives(i) < 1000 then
+          begin
+          if not IsDrivenBy(i) then
+             continue;
+
+          mech := IsDrivenBy(i);
+
+          ComExitVehicle(mech);
+          AddComRepairVehicle(mech, i);
+
+          repeat
+           wait(0$1);
+          until GetLives(i) = 1000;
+
+          SetLives(mech, 1000);
+          ComEnterUnit(mech, i);
+          end
+       else if IsDrivenBy(i) then
+          SetTag(i, 0);
+       end;
+
+    if GetTag(i) < 300 then
+       begin
+       enemy := FilterUnitsInArea(kabulBaseArea, [f_enemy, 2]);
+
+       if GetLives(i) < 650 and GetControl(i) = control_manual then
+          begin
+          ComStop(i);
+          SetTag(i, 300);
+          continue;
+          end;
+
+       if enemy then
+          begin
+          if not HasTask(i) then
+             ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+          end
+       else if arAttackVehicles then
+          begin
+          if i mod 3 = 0 then
+             AgressiveMove(i, [ [86,53], [76,55], [58,56] ])
+          else if hasClearPath then
+             AgressiveMove(i, [ [143,72], [148,85], [140,93], [107,88], [99,93] ])
+          end;
+       end;
+    end;
+End;
+
+Every 0$3 trigger FilterAllUnits([[f_side, 2], [f_engine, engine_combustion]]) do
+var i;
+begin
+enable;
+
+for i in FilterAllUnits([[f_side, 2], [f_engine, engine_combustion]]) do
+    if GetFuel(i) < 3 then
+       SetFuel(i, 3);
+End;
+
+Every 0$1 trigger arabDefeat do
+var i, tmp;
+begin
+tmp := UnitFilter(arForces, [f_ok]);
+
+if not tmp then
+   begin
+   disable;
+   exit;
+   end;
+
+for i in tmp do
+    begin
+    if IsInUnit(i) then
+       ComExit(i)
+    else
+       ComMoveToArea(i, heikeEscapeArea);
+
+    if IsInArea(i, heikeEscapeArea) then
+       RemoveUnit(i);
+    end;
+
+enable;
+End;
+
+Every 7$00 trigger not arabDefeat and arAllowToAttack and not arConstructList and arAttackVehicles < 6 do
+var i, chassis, weapon, control, fac;
+begin
+fac := FilterAllUnits([[f_side, 2], [f_btype, b_factory], [f_ok]]);
+
+if not fac then
+   exit;
+
+for i := 1 to [4, 5, 6, 6][Difficulty] do
+    begin
+    chassis := [ar_medium_trike, ar_half_tracked][rand(1,2)];
+
+    if tick > 24$0 then
+       begin
+       if Difficulty > 2 then
+          weapon := [ar_gatling_gun, ar_flame_thrower, ar_mortar, ar_gun, ar_rocket_launcher][rand(1,5)]
+       else
+          weapon := [ar_gatling_gun, ar_flame_thrower, ar_gun, ar_rocket_launcher][rand(1,4)];
+       end
+    else
+       weapon := [ar_gatling_gun, ar_gun, ar_gun, ar_rocket_launcher][rand(1,4)];
+
+    control := control_remote;
+
+    if not FilterAllUnits([[f_side, 2], [f_btype, b_ext_radio]]) then
+       control := control_manual;
+
+    arConstructList := Join(arConstructList,
+       [chassis, engine_combustion, control, weapon]
+    );
+    end;
+
+enable;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 2], [f_control, control_remote], [f_ok], [f_not, [f_linked]]]) do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_side, 2], [f_control, control_remote], [f_ok], [f_not, [f_linked]]]);
+
+for i in tmp do
+    Connect(i);
+End;
+
+// mines
+Every 0$1 trigger Count(arMines) do
+var i, un;
+begin
+enable;
+
+for i := Count(arMines) downto 1 do
+    begin
+    un := HexInfo(arMines[i][1], arMines[i][2]);
+
+    if un > 0 and GetSide(un) = 3 then
+       begin
+       LaunchMineAtPos(arMines[i][1], arMines[i][2], 2);
+       arMines := Delete(arMines, i);
+       end;
+    end;
+End;
+
+Export function ClearRoadInForest(veh);
+var i, un, tmp;
+begin
+wait(0$3);
+
+tmp := AreaToList(forestRoadArea, 0);
+
+for i := 1 to tmp[1] do
+    BurnTreeXYR(veh, tmp[1][i], tmp[2][i], 4);
+
+AddComMoveXY(veh, 151, 84);
+
+repeat
+ wait(0$1);
+
+ if IsDead(veh) then
+    exit;
+
+until IsAt(veh, 151, 84) or not HasTask(veh);
+
+hasClearPath := true;
+
+arAttackVehicles := Join(arAttackVehicles, veh);
 End;

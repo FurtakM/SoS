@@ -1,0 +1,659 @@
+// Multiplayer map module
+// Each map has his own
+// SOS_Multiplayer required
+Export function InitMultiplayerSettings;
+begin
+{
+  mpBaseLevel,            // (0)  
+  mpAmountOfPeople,       // (1)  
+  mpSkillLevel,           // (2)  
+  mpStartingResources,    // (3)  
+  mpShipments,            // (4)  
+  mpOilSources,           // (5) 
+  mpSibSources,           // (6)
+  mpPoints                // (7)
+  mpVehicles              // (8)
+  mpEmissions             // (9)
+  mpSharedVision,         // (10) 
+  mpFlags,                // (11) 
+  mpSibDetection,         // (12) 
+  mpPeopleRespawn,        // (13) 
+  mpApemans,              // (14) 
+  mpSibBomb,              // (17) 
+  mpBuildUpTime,          // (20) 
+}
+
+mpGameSettingsKeys := [
+  1, // 0
+  1, // 1
+  1, // 2
+  1, // 3
+  1, // 4
+  1, // 5
+  1, // 6
+  1, // 7
+  1, // 8
+  1, // 9
+  1, // 10
+  1, // 11
+  1, // 12
+  1, // 13
+  1, // 14
+  0, // 15
+  0, // 16
+  1, // 17
+  0, // 18
+  0, // 19
+  1  // 20
+];
+
+mpGameSettingsValues := [
+  [0, 1, 2], // base level (only depot, breastworks, breastworks + armoury)
+  [9, 12, 15, 24], // amount of people
+  [1, 3, 5, 7], // people skill
+  [[0,0,0], [100,30,0], [200,75,10], [500,150,30]], // resources
+  [1, 2, 3, 4], // shipments
+  [0, 1, 2], // oil sources
+  [0, 1, 2], // sib sources
+  [250, 350, 500, 1000, 2000], // points
+  [0, 2], // vehicles
+  [0, 5$00, 10$00, 15$00, 20$00, 30$00], // emissions
+  [0, 1], // shared vision
+  [-1, 0$10, 0$20, 0$40, 0$0], // flag (morale time)
+  [0, 1], // sib detection
+  [0, 6$30, 3$30], // people respawn
+  [0, 2, 4, 6], // apemans
+  [],
+  [],
+  [0, 1, 15$0, 25$0, 30$0, 45$0, 60$0, 90$0, 100$0, 120$0, 180$0], // sib bomb
+  [],
+  [],
+  [0, 3$0, 5$0, 8$0, 10$0, 12$0, 15$0, 20$0, 30$0] // bt
+];
+
+// default settings
+mpGameSettings := [
+  2,   // base 0
+  15,  // people 1
+  4,   // skill  2
+  [100,30,0], // resources 3
+  3,   // shipments  4
+  2,   // oil 5
+  2,   // sib 6
+  250, // points 7
+  2,   // vehicles 8
+  5$00,   // emission 9
+  1,   // vision 10
+  0$20, // morale 11
+  1,   // detection 12
+  0$20,   // respawn 13
+  3,   // apemans  14
+  0,   // - 15
+  0,   // - 16
+  15$0, // sib bomb 17
+  0,   // - 18
+  0,   // - 19
+  3$0  // bt 20
+];
+              
+mpGameType := GameTypeSurvivalHardcore;
+your_side  := 1;
+
+mpSidePositions := [1,2,3,4,5,6,7,8];
+mpSideTeams     := [1,2,2,3,3,4,4,1];
+mpSideNations   := [1,2,3,1,2,3,1,2];
+mpTeams         := [[1,8],[2,3],[4,5],[6,7]];
+mpTeamGame      := true;
+mpMapSize       := [210, 220];
+End;
+                                                   
+Export kingArea, kingCamArea;
+Export function GetMultiplayerMapData(gameType);
+var i, all, hasOil, hasSib, baseLevel, startPos, un, tmp, dir;
+begin
+mpBuildUpAreas := [
+  buildUpTime1,
+  buildUpTime2,
+  buildUpTime3,
+  buildUpTime4,
+  buildUpTime5,
+  buildUpTime6,
+  buildUpTime7,
+  buildUpTime8
+];
+
+mpMarkedAreas := [
+  Between1,
+  Between2,
+  Between3,
+  Between4
+] union mpBuildUpAreas;
+
+if gameType in [GameTypeSurvival, GameTypeSurvivalHardcore] then
+   baseLevel := 1
+else
+   baseLevel := mpGameSettings[1];
+
+mpPeopleAmount := mpGameSettings[2];
+mpPeopleSkill := mpGameSettings[3];
+mpStartingResources := mpGameSettings[4];
+mpShipments := mpGameSettings[5];
+hasOil := mpGameSettings[6] > 0;
+hasSib := mpGameSettings[7] > 0;
+
+kingCamArea := 0;
+kingArea := 0;
+
+if gameType = GameTypeKing then
+   begin
+   mpKingArea := 0;
+   mpPoints := mpGameSettings[8];
+   mpEmissions := mpGameSettings[10];
+   end
+else
+   begin
+   mpKingArea := 0;
+   mpPoints := 0;
+   mpEmissions := 0;
+   end;
+
+if mpGameSettings[9] then
+   begin         
+   mpVehicles := [
+     [
+        [us_light_wheeled, engine_combustion, control_manual, us_machine_gun],
+        [us_light_wheeled, engine_combustion, control_manual, us_light_gun]
+     ], // american
+     [
+        [ar_light_trike, engine_combustion, control_manual, ar_double_machine_gun],
+        [ar_light_trike, engine_combustion, control_manual, ar_light_gun]
+     ], // arabian
+     [
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun],
+        [ru_medium_wheeled, engine_combustion, control_manual, ru_heavy_machine_gun]
+     ]  // russian
+   ];
+   end;
+
+mpSharedVision := mpGameSettings[11];
+mpBattleFlag := mpGameSettings[12];
+mpSibDetection := mpGameSettings[13];
+mpRespawn := mpGameSettings[14];
+mpApemans := mpGameSettings[15];
+mpSibBomb := mpGameSettings[18];
+mpBuildUpTime := mpGameSettings[21];
+
+mpApemansArea := [
+  Base1ApeArea,
+  Base2ApeArea,
+  Base3ApeArea,
+  Base4ApeArea,
+  Base5ApeArea,
+  Base6ApeArea,
+  Base7ApeArea,
+  Base8ApeArea
+];
+
+startPos := [
+  GetBuildingFromArea(depotArea1, 0),
+  GetBuildingFromArea(depotArea2, 2),
+  GetBuildingFromArea(depotArea3, 1),
+  GetBuildingFromArea(depotArea4, 3),
+  GetBuildingFromArea(depotArea5, 3),
+  GetBuildingFromArea(depotArea6, 5),
+  GetBuildingFromArea(depotArea7, 4),
+  GetBuildingFromArea(depotArea8, 0)
+];
+
+for i := 1 to Count(startPos) do
+    mpStartPos := Replace(mpStartPos, i, [ShiftX(startPos[i][1], startPos[i][3], 10), ShiftY(startPos[i][2], startPos[i][3], 10)]);
+
+if hasOil then
+   begin
+   all := (mpGameSettings[6] = 2);
+
+   mpOilDeposits := [
+     GetSourcesFromArea(oilArea1, all),
+     GetSourcesFromArea(oilArea2, all),
+     GetSourcesFromArea(oilArea3, all),
+     GetSourcesFromArea(oilArea4, all),
+     GetSourcesFromArea(oilArea5, all),
+     GetSourcesFromArea(oilArea6, all),
+     GetSourcesFromArea(oilArea7, all),
+     GetSourcesFromArea(oilArea8, all)
+   ];
+   end;
+
+if hasSib then
+   begin
+   all := (mpGameSettings[7] = 2);
+
+   mpSibDeposits := [
+     GetSourcesFromArea(sibArea1, all),
+     GetSourcesFromArea(sibArea2, all),
+     GetSourcesFromArea(sibArea3, all),
+     GetSourcesFromArea(sibArea4, all),
+     GetSourcesFromArea(sibArea5, all),
+     GetSourcesFromArea(sibArea6, all),
+     GetSourcesFromArea(sibArea7, all),
+     GetSourcesFromArea(sibArea8, all)
+   ];
+   end;
+
+if baseLevel >= 1 then
+   mpDepots := startPos;
+
+if baseLevel >= 2 then
+   begin
+   mpBuildings := [
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea1a, 3),
+        b_breastwork ^ GetBuildingFromArea(bunArea1b, 5),
+        b_armoury ^ GetBuildingFromArea(armArea1, 4)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea2a, 4),
+        b_breastwork ^ GetBuildingFromArea(bunArea2b, 0),
+        b_armoury ^ GetBuildingFromArea(armArea2, 3)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea3a, 4),
+        b_breastwork ^ GetBuildingFromArea(bunArea3b, 3),
+        b_armoury ^ GetBuildingFromArea(armArea3, 3)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea4a, 3),
+        b_breastwork ^ GetBuildingFromArea(bunArea4b, 2),
+        b_armoury ^ GetBuildingFromArea(armArea4, 4)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea5a, 0),
+        b_breastwork ^ GetBuildingFromArea(bunArea5b, 2),
+        b_armoury ^ GetBuildingFromArea(armArea5, 1)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea6a, 1),
+        b_breastwork ^ GetBuildingFromArea(bunArea6b, 3),
+        b_armoury ^ GetBuildingFromArea(armArea6, 1)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea7a, 5),
+        b_breastwork ^ GetBuildingFromArea(bunArea7b, 1),
+        b_armoury ^ GetBuildingFromArea(armArea7, 0)
+     ],
+     [
+        b_breastwork ^ GetBuildingFromArea(bunArea8a, 0),
+        b_breastwork ^ GetBuildingFromArea(bunArea8b, 5),
+        b_armoury ^ GetBuildingFromArea(armArea8, 1)
+     ]
+   ];
+   end;
+
+// prepare special units
+for i in FilterAllUnits([[f_side, 0], [f_type, unit_building]]) do
+    SetLives(i, 355 + ((i mod 10) * 16));
+
+{if mpGameType = GameTypeSurvivalHardcore then
+   for i in FilterAllUnits([[f_side, 0], [f_type, unit_building], [f_btype, b_warehouse]]) do
+       KillUnit(i);}
+
+uc_side := 0;
+uc_nation := nation_russian;
+
+un := CreateBehemoth(0, 83, 43, 0);
+SetLives(un, 750);
+
+un := CreateBehemoth(0, 237, 173, 4);
+SetLives(un, 750);
+
+uc_side := 0;
+uc_nation := nation_arabian;
+
+tmp := AreaToList(ArBaseBunker, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    bc_type := b_breastwork;
+    bc_level := 10;
+
+    un := CreateAndPlaceBuildingXYD(tmp[1][i], tmp[2][i], 0);
+    SetLives(un, 333);
+    end;
+
+tmp := AreaToList(SKarLightGun, 0);
+
+for i := 1 to tmp[1] do
+    begin        
+    PrepareVehicle(ar_hovercraft, engine_solar, control_manual, [ar_light_gun, ar_double_machine_gun][i mod 2 + 1], 0);
+    un := CreateVehicle;
+    SetDir(un, i mod 5);
+    SetLives(un, 450);
+    PlaceUnitXY(un, tmp[1][i], tmp[2][i], false);
+    end;
+
+{tmp := AreaToList(CGAMACKomp, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    uc_side := 9;
+    uc_nation := nation_american;
+
+    PrepareVehicle(us_morphling, engine_siberite, control_computer, us_autoloader, 100);
+    un := CreateVehicle;
+
+    dir := i mod 5 - 1;
+
+    if dir < 0 then
+       dir := 5;
+
+    SetDir(un, dir);
+    SetLives(un, 850);
+    PlaceUnitXY(un, tmp[1][i], tmp[2][i], false);
+    end;
+
+tmp := AreaToList(CGRUHGKomp, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    uc_side := 9;
+    uc_nation := nation_russian;
+
+    PrepareVehicle(ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun, 100);
+    un := CreateVehicle;
+
+    dir := i mod 5 - 1;
+
+    if dir < 0 then
+       dir := 5;
+
+    SetDir(un, dir);
+    SetLives(un, 1000);
+    PlaceUnitXY(un, tmp[1][i], tmp[2][i], false);
+    end; }
+End;
+
+Every 0$2 do
+var i, tmp, enemy;
+begin
+tmp := GetBehemoths(0);
+
+if not tmp then
+   exit;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if not IsOk(i) then
+        begin
+        tmp := tmp diff i;
+        continue;
+        end;
+
+     enemy := FilterAllUnits([[f_not, [f_side, 0]], [f_dist, i, 16]]);
+
+     if not IsInArea(i, deathZoneB) then
+        ComMoveToArea(i, deathZoneB)
+     else if enemy then
+        ComAttackUnit(i, NearestUnitToUnit(enemy, i));
+     end;
+until not tmp;
+End;
+
+
+Export deathZoneList;
+Every 0$2 do
+var i, tmp, randomArea, it, cnt, eff;
+begin      
+deathZoneList := [];
+eff := 300;
+randomArea := AreaToList(RandomCont, 0);
+cnt := Count(randomArea[1]);
+it := 0;
+
+repeat
+ wait(0$1);
+ it := Inc(it);
+
+ tmp := FilterUnitsInArea(deathZone, [f_type, unit_human]);
+
+ if tick > 10$00 then
+    eff := 500;
+
+ if tick > 20$00 then
+    eff := 750;
+
+ if tick > 30$00 then
+    eff := 1000;
+
+ if tick > 45$00 then
+    eff := 1500;
+
+ if tick > 60$00 then
+    eff := 2500;
+
+ if tick > 90$00 then
+    eff := 5000;
+
+ for i in tmp do
+     begin
+     if not i in deathZoneList then
+        begin
+        deathZoneList := Join(deathZoneList, i);
+        MakeContamination(GetX(i), GetY(i), 105, eff, 1, 1);
+        end;
+     end;
+
+ wait(0$5);
+
+ MakeContamination(randomArea[1][it mod cnt + 1], randomArea[2][it mod cnt + 1], 175, eff, 1, 1);
+
+ if tick mod 7000 = 0 then
+    begin
+    MakeContamination(202, 11, 350, eff, 1, 1);
+    MakeContamination(113, 207, 350, eff, 1, 1);
+    end;
+
+ if Count(deathZoneList) then
+    for i in deathZoneList do
+        if not IsInArea(i, deathZone) then
+           deathZoneList := Del(deathZoneList, i);
+until false;
+End;
+
+Every 0$1 do
+var i, j, id, unit, wasThere, area, side, depot, base, exitArea,
+    prices, sibRock, crates, levels, death, tpOut, hex, timeToNextBomb;
+begin
+sibRock := 1;
+crates := 2;
+levels := 3;
+death := 4;
+tpOut := 5;
+base := 1;
+
+timeToNextBomb := 15$00;
+
+prices := [
+  // sibRock,
+  crates,
+  crates,
+  crates,
+  levels,
+  death,
+  tpOut,
+  tpOut,
+  tpOut
+];
+
+exitArea := AreaToList(RandomCont, 0);
+wasThere := [];
+
+repeat
+ wait(0$2);
+ base := Inc(base);
+
+ if timeToNextBomb > 0 then
+    timeToNextBomb := timeToNextBomb - 0$2
+ else if not sibRock in prices then
+    prices := prices union sibRock;
+
+ if base > 8 then
+    base := 1;
+
+ unit := FilterUnitsInArea(priceArea, [[f_nation, 0], [f_type, unit_human]]);
+
+ if unit then
+    for i in unit do
+        TeleportUnit(i, exitArea[1][i mod Count(exitArea[1]) + 1], exitArea[2][i mod Count(exitArea[1]) + 1], 12, true);
+
+ unit := FilterUnitsInArea(priceArea, [[f_not, [f_nation, 0]], [f_type, unit_human]]);
+
+ if not unit then
+    continue;
+
+ if unit[1] in wasThere then
+    begin
+    KillUnit(unit[1]);
+    continue;
+    end;
+
+ wasThere := Join(wasThere, unit[1]);
+
+ id := unit[1] mod Count(prices) + 1;
+
+ // debug_strings := prices[id];
+
+ if prices[id] = sibRock then
+    begin
+    area := [depotArea1, depotArea2, depotArea3, depotArea4, depotArea5, depotArea6, depotArea7, depotArea8][base];
+    hex := AreaToList(area, 0);
+
+    SendSiberiteRocket(hex[1][1], hex[2][1]);
+
+    CenterNowOnXY(hex[1][1], hex[2][1]);
+
+    prices := prices diff sibRock;
+    TeleportUnit(unit[1], exitArea[1][unit[1] mod Count(exitArea[1]) + 1], exitArea[2][unit[1] mod Count(exitArea[1]) + 1], 12, true);
+
+    timeToNextBomb := 15$00;
+    end;
+
+ if prices[id] = death then
+    begin
+    KillUnit(unit[1]);
+    end;
+
+ if prices[id] = tpOut then
+    begin
+    TeleportUnit(unit[1], exitArea[1][unit[1] mod Count(exitArea[1]) + 1], exitArea[2][unit[1] mod Count(exitArea[1]) + 1], 12, true);
+    end;
+
+ if prices[id] = levels then
+    begin
+    side := GetSide(unit[1]);
+
+    for i in FilterAllUnits([[f_side, side], [f_type, unit_human], [f_not, [f_nation, 0]]]) do
+        begin
+        for j := 1 to 4 do
+            AddExperience(i, j, 5000);
+        end;
+
+    TeleportUnit(unit[1], exitArea[1][unit[1] mod Count(exitArea[1]) + 1], exitArea[2][unit[1] mod Count(exitArea[1]) + 1], 12, true);
+    end;
+
+ if prices[id] = crates then
+    begin
+    side := GetSide(unit[1]);
+    depot := FilterAllUnits([[f_side, side], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+    if not depot then
+       KillUnit(unit[1])
+    else
+       begin
+       TeleportUnit(unit[1], exitArea[1][unit[1] mod Count(exitArea[1]) + 1], exitArea[2][unit[1] mod Count(exitArea[1]) + 1], 12, true);
+
+       for i in depot do
+           begin
+           for j := 1 to 12 do
+               begin
+               CreateCratesXYR(5, GetX(i), GetY(i), 16, true);
+               end;
+           end;
+       end;
+    end;
+until false;
+End;
+
+
+// Crates drop
+Every 0$2 marked mpActive do
+var i, x, tmp, areas, time, normalTime, delayTime, maxTime;
+begin
+if not mpShipments then
+   exit;
+
+case mpShipments of
+     1: begin // rare
+        time := 0$30;
+        normalTime := 0$30;
+        maxTime := 1$20;
+        delayTime := 0$5;
+        end;
+     2: begin // medium
+        time := 0$25;
+        normalTime := 0$25;
+        maxTime := 1$10;
+        delayTime := 0$4;
+        end;
+     3: begin  // high
+        time := 0$20;
+        normalTime := 0$20;
+        maxTime := 1$00;
+        delayTime := 0$3;
+        end;
+     4: begin  // very high
+        time := 0$15;
+        normalTime := 0$15;
+        maxTime := 0$55;
+        delayTime := 0$2;
+        end;
+     end;
+
+areas := [Between1, Between2, Between3, Between4, Middle1, Middle2, Middle3, Middle4];
+tmp := [buildUpTime1, buildUpTime2, buildUpTime3, buildUpTime4,
+        buildUpTime5, buildUpTime6, buildUpTime7, buildUpTime8];
+
+for i := 1 to 8 do
+    begin
+    if not mpSidePositions[i] then
+       continue;
+
+    areas := areas ^ tmp[mpSidePositions[i]];
+    end;
+
+x := 1;
+
+repeat
+ wait(time);
+ x := Inc(x);
+
+ if x > 5 then
+    x := 1;
+
+ for i in areas do
+     begin
+     if GetResourceArea(i, mat_cans) < 30 then
+        begin
+        CreateCratesArea(x, i, true);
+        end;
+     end;
+
+ time := time + delayTime;
+
+ if time > maxTime then
+    time := normalTime;
+
+until false;
+End;

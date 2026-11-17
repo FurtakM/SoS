@@ -1,0 +1,193 @@
+// xavier on patrol module
+Export function XavierPatrol;
+var i, p, dec, xavierPoints, chanceToObtainMines, timeSpentInBase;
+begin
+// move to tree
+ComMoveXY(Xavier, 120, 92);
+
+repeat
+ wait(0$1);
+
+ if IsDead(Xavier) then
+    exit;
+
+ if not HasTask(Xavier) then
+    ComMoveXY(Xavier, 120, 92);
+until IsAt(Xavier, 120, 92);
+
+DialogueOn;
+
+CenterOnUnits(Xavier);
+
+SetAreaMapShow(xavierContactArea, 1);
+
+SayRadio(Xavier, 'DPointXavier-Xav-1');
+Say(Kirilenkova, 'DPointXavier-Kir-1');
+SayRadio(Xavier, 'DPointXavier-Xav-2');
+
+DialogueOff;
+
+xavierOnPatrol := true;
+
+chanceToObtainMines := [1$30, 3$0, 5$0, 7$30][Difficulty];
+xavierPoints := [[99,47], [108,41], [109,31], [109,57], [125,53], [93,47], [86,34]];
+p := 1;
+
+repeat
+ wait(0$1);
+ timeSpentInBase := timeSpentInBase + 0$1;
+
+ if timeSpentInBase > 1$0 and not arAllowToAttack then
+    arAllowToAttack := true;
+
+ if FilterUnitsInArea(kabulDefenceArea, [f_side, 3]) then
+    SetAttitude(2, 5, att_enemy, false);
+
+ if IsDead(Xavier) then
+    begin
+    SetAreaMapShow(xavierContactArea, 0);
+    exit;
+    end;
+
+ if IsAt(Xavier, xavierPoints[p][1], xavierPoints[p][2]) then
+    begin
+    p := Inc(p);
+
+    if p > Count(xavierPoints) then
+       p := 1;
+    end;
+
+ if IsIdle(Xavier) then
+    begin
+    ComMoveXY(Xavier, xavierPoints[p][1], xavierPoints[p][2]);
+    AddComWait(Xavier, 0$7);
+    end;
+
+ if FilterUnitsInArea(xavierContactArea, [[f_side, 3], [f_nation, nation_russian], [f_type, unit_human]]) then
+    begin
+    dec := Query('QActivateXavier');
+
+    if dec = 3 then
+       begin          
+       wait(0$15);
+       end;
+
+    if dec = 2 then
+       begin
+       SayRadio(Burlak, 'DQrActivateXavier#2-Bur-1');
+
+       SetAreaMapShow(xavierContactArea, 0);
+
+       xavierOnPatrol := false;
+       XavierStealCar;
+       end;
+
+    if dec = 1 then
+       begin
+       SayRadio(Burlak, 'DQrActivateXavier#1-Bur-1');
+
+       SetAreaMapShow(xavierContactArea, 0);
+
+       xavierOnPatrol := false;
+       XavierJoinToUs;
+       end;
+    end;
+until not xavierOnPatrol;
+
+if timeSpentInBase >= chanceToObtainMines and IsOk(Xavier) then
+   begin
+   Query('QXavierPlan');
+   RevealArabianMines;
+   end;
+End;
+
+Function RevealArabianMines;
+var i;
+begin
+if not Count(arMines) then
+   exit;
+
+for i in arMines do
+    ViewMineAtPos(i[1], i[2], 3);
+End;
+
+Function XavierStealCar;
+var vehicle, unit, veh;
+begin
+repeat
+ wait(0$1);
+ vehicle := FilterAllUnits([[f_side, 2], [f_type, unit_vehicle], [f_ok], [f_control, control_manual], [f_empty]]);
+until vehicle;
+
+if vehicle in arAttackVehicles then
+   Del(arAttackVehicles, vehicle[1]);
+
+if vehicle in arVehicles then
+   Del(arVehicles, vehicle[1]);
+
+ComEnterUnit(Xavier, vehicle[1]);
+
+repeat
+ wait(0$1);
+until IsInUnit(Xavier);
+
+ComMoveXY(Xavier, 51, 57);
+AddComMoveXY(Xavier, 69, 91);
+
+repeat
+ wait(0$1);
+
+ unit := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+ if IsIdle(Xavier) then
+    if unit then
+       ComMoveUnit(Xavier, First(unit))
+    else
+       ComMoveUnit(Xavier, Burlak);
+
+ if IsDead(Xavier) then
+    exit;
+until FilterAllUnits([[f_side, 3], [f_or, [f_dist, Xavier, 12], [f_dist, IsInUnit(Xavier), 12]]]);
+
+SetSide(IsInUnit(Xavier), 3);
+veh := IsInUnit(Xavier);
+
+RemoveUnit(Xavier);
+Xavier := NewCharacter('Xavier2');
+PlaceHumanInUnit(Xavier, veh);
+
+SetSide(Xavier, 3);
+End;
+
+Function XavierJoinToUs;
+var unit, x, y, d;
+begin
+ComMoveXY(Xavier, 117, 89);
+
+repeat
+ wait(0$1);
+until IsAt(Xavier, 117, 89);
+
+unit := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+if unit then
+   unit := First(unit);
+
+if not unit then
+   unit := Burlak;
+
+repeat
+ wait(0$1);
+ ComMoveUnit(Xavier, unit);
+until FilterAllUnits([[f_side, 3], [f_dist, Xavier, 12]]);
+
+x := GetX(Xavier);
+y := GetY(Xavier);
+d := GetDir(Xavier);
+
+RemoveUnit(Xavier);
+Xavier := NewCharacter('Xavier2');
+PlaceUnitXYD(Xavier, x, y, d, false);
+
+SetSide(Xavier, 3);
+End;

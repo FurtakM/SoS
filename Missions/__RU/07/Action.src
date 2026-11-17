@@ -11,14 +11,28 @@ var i;
 begin
 InGameOn;
 
+RevealMapOnXY(55, 91, 3, -16);
+
 CenterNowOnUnits(Burlak);
 
-ComMoveUnit(Burlak, Vsevolod);
-ComMoveUnit(Vsevolod, Burlak);
+ComHold(Burlak);
+
+ComMoveXY(Vsevolod, 98, 164);
+AddComMoveUnit(Vsevolod, Burlak);
+
+for i in FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Vsevolod do
+    ComMoveXY(i, 103, 154);
+
+SayRadio(Platonov, 'DStart-Pla-1');
+SayRadio(Platonov, 'DStartVS-Pla-1');
+SayRadio(Platonov, 'DStart2-Pla-1');
+Say(Burlak, 'DStart2-Bur-1');
+
+// ComMoveUnit(Burlak, Vsevolod);
 
 repeat
  wait(0$1);
-until GetDistUnits(Burlak, Vsevolod) < 6;
+until GetDistUnits(Burlak, Vsevolod) < 6 or dialogue_skipped;
 
 ComTurnUnit(Burlak, Vsevolod);
 ComTurnUnit(Vsevolod, Burlak);
@@ -27,12 +41,16 @@ Say(Burlak, 'DMeetVsevolodVS-Bur-1');
           
 CenterOnXY(59, 54);
 
-PlaceSeeing(59, 54, 3, -12);
-RemoveSeeing(59, 54, 3);
+RevealMapOnXY(59, 54, 3, -12);
+RevealMapOnXY(67, 115, 3, -6);
 
 Say(Vsevolod, 'DMeetVsevolodVS-Vse-1');
 
-wait(0$2);
+wait(0$1);
+
+CenterOnXY(55, 91);
+
+wait(0$1);
 
 CenterOnUnits(Burlak);
 
@@ -41,22 +59,194 @@ Say(Vsevolod, 'DMeetVsevolodVS-Vse-2');
 
 CenterOnUnits(Burlak);
 
+ComMoveXY(Vsevolod, 84, 116);
+AddComMoveXY(Vsevolod, 74, 98);
+
+for i := 1 to Difficulty do
+    AddComMoveXY(Vsevolod, seviPoint[i][1], seviPoint[i][2]);
+
+wait(0$3);
+
+for i in FilterAllUnits([[f_side, 6], [f_type, unit_building]]) do
+    SetSide(i, 3);
+
 InGameOff;
 
 ChangeMissionObjectives('MStart');
-ChangeMissionObjectives('MVsevolod');
 
 SaveForQuickRestart;
 
-ComMoveXY(Vsevolod, 84, 116);
+repeat
+ wait(0$1);
 
-wait(0$2);
+ for i in FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Vsevolod do
+     begin
+     if GetDistUnits(i, Vsevolod) > 6 then
+        ComMoveUnit(i, Vsevolod)
+     else
+        ComStop(i);
+     end;
+until IsAt(Vsevolod, seviPoint[Difficulty][1], seviPoint[Difficulty][2]);
 
-for i in FilterAllUnits([[f_side, 6], [f_type, unit_human]]) diff Vsevolod do
-    ComMoveXY(i, 89, 125);
+MineExplosion(GetX(Vsevolod) - 2, GetY(Vsevolod) - 1, 0);
+SetLives(Vsevolod, 230 - (20 * Difficulty));
+
+wait(0$02);
+
+CenterNowOnUnits(Vsevolod);
+
+DialogueOn;
+
+Say(Kirilenkova, 'DStasisVS-Kir-1');
+Say(Titov, 'DStasisVS-Tit-1');
+Say(Burlak, 'DStasisVS-Bur-1');
+
+if GetSide(Titov) = 6 then
+   Say(Titov, 'DStasisVS-Tit-2')
+else
+   Say(Kirilenkova, 'DStasisVS-Kir-2');
+
+SayRadio(Popov, 'DStasisVS-Pop-2');
+Say(Gleb, 'DStasisVS-Glb-2');
+Say(Burlak, 'DStasisVS-Bur-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('MVsevolod');
+
+for i in FilterAllUnits([f_side, 6]) do
+    SetSide(i, 3);
+
+repeat
+ wait(0$1);
+until IsOk(Vsevolod);
+
+DialogueOn;
+
+Say(Burlak, 'DSeviSaved-Bur-1');
+Say(Vsevolod, 'DSeviSaved-Vse-1');
+Say(Burlak, 'DSeviSaved-Bur-2');
+Say(Vsevolod, 'DSeviSaved-Vse-2');
+
+DialogueOff;
+
+wait(2$00);
+
+if not IsOk(Kirilenkova) then
+   exit;
+
+SpawnXavier;
+
+wait(4$30 - (1$0 * Difficulty));
+
+arAllowToAttack := true;
 End;
 
 Function NormalScene;
 begin
 
+End;     
+
+Function SpawnXavier;
+var i, depot, tmp, decision, x, y, d;
+begin
+repeat
+ wait(0$1);
+ tmp := FilterAllUnits([[f_side, 3], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+ if IsDead(Kirilenkova) then
+    exit;
+
+ if tmp then
+    begin
+    depot := NearestUnitToUnit(tmp, Kirilenkova);
+
+    if GetDistUnits(depot, Kirilenkova) < 12 and not IsInUnit(Kirilenkova) then
+       break;
+    end;
+until false;
+
+uc_side := 5;
+uc_nation := nation_arabian;
+
+Xavier := NewCharacter('Xavier');
+PlaceUnitXYR(Xavier, GetX(Kirilenkova), GetY(Kirilenkova), 6, true);
+
+InGameOn;
+
+CenterNowOnUnits(Xavier);
+                       
+ComTurnUnit(Kirilenkova, Xavier);
+
+wait(0$02);
+
+ComTurnUnit(Xavier, Kirilenkova);
+
+Say(Xavier, 'DMeetXavier-Xav-1');
+Say(Kirilenkova, 'DMeetXavier-Kir-1');
+Say(Xavier, 'DMeetXavier-Xav-2');
+
+decision := Query('QXavier');
+
+if decision = 1 then
+   begin
+   Say(Kirilenkova, 'DQrXavier#1-Kir-1');
+   Say(Xavier, 'DQrXavier#1-Xav-1');
+   Say(Kirilenkova, 'DQrXavier#1-Kir-2');
+   Say(Xavier, 'DQrXavier#1-Xav-2');
+   Say(Kirilenkova, 'DQrXavier#1-Kir-3');
+   Say(Xavier, 'DQrXavier#1-Xav-3');
+   Say(Kirilenkova, 'DQrXavier#1-Kir-4');
+   Say(Gleb, 'DQrXavier#1-Glb-4');
+
+   x := GetX(Xavier);
+   y := GetY(Xavier);
+   d := GetDir(Xavier);
+
+   RemoveUnit(Xavier);
+   Xavier := NewCharacter('Xavier2');
+   PlaceUnitXYD(Xavier, x, y, d, false);
+   SetSide(Xavier, 3);
+
+   InGameOff;
+   exit;
+   end
+else
+   begin
+   Say(Burlak,'DQrXavier#2-Bur-1');
+   Say(Kirilenkova,'DQrXavier#2-Kir-1');
+   Say(Xavier,'DQrXavier#2-Xav-1');
+   Say(Kirilenkova,'DQrXavier#2-Kir-2');
+   Say(Xavier, 'DQrXavier#2-Xav-2');
+   Say(Kirilenkova, 'DQrXavier#2-Kir-3');
+   Say(Xavier, 'DQrXavier#2-Xav-3');
+   Say(Kirilenkova, 'DQrXavier#2-Kir-4');
+   Say(Xavier, 'DQrXavier#2-Xav-4');
+   Say(Kirilenkova, 'DQrXavier#2-Kir-5');
+   Say(Gleb, 'DQrXavier#2-Glb-5');
+
+   InGameOff;
+
+   ComMoveXY(Xavier, 121, 93);
+
+   repeat
+    wait(0$1);
+
+    if not HasTask(Xavier) then
+       ComMoveToArea(Xavier, xavierContactArea);
+
+    if IsDead(Xavier) then
+       exit;
+   until IsInArea(Xavier, xavierContactArea);
+
+   if IsDead(Kirilenkova) then
+      begin
+      SetSide(Xavier, 2);
+      ComMoveXY(Xavier, 112, 55);
+      AddComEnterUnit(Xavier, HexInfo(107, 54));
+      exit;
+      end;
+
+   XavierPatrol;
+   end;
 End;

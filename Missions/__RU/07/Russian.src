@@ -1,9 +1,9 @@
-Export Burlak, Petrovova, Titov, Platonov, Popov, Yashin, Jan, Belkov,
+Export Burlak, Petrovova, Titov, Platonov, Popov, Yashin, Jan, Belkov, Xavier,
        Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Vsevolod, Kirilenkova;
 Export burlakTeam, vsevolodTeam, ruVehicles;
 
 Export function PrepareRussian;
-var i, veh, list, tmp, un, techs, remainingOil, heavyChassis, oilPerVehicle, space, emptyCargo, oilToAdd;
+var i, veh, list, base, tmp, un, techs, remainingOil, heavyChassis, oilPerVehicle, space, emptyCargo, oilToAdd;
 begin
 techs := LoadVariable(prevMissionPrefix & 'Techs', []);
 
@@ -160,21 +160,37 @@ if remainingOil then
    end;
 
 SetDir(Burlak, 0);
-PlaceUnitXY(Burlak, 97, 163, false);
+PlaceUnitXY(Burlak, 93, 163, false);
 
 if hasVsevolod then
    begin
    uc_side := 6;
 
    Vsevolod  := PrepareUnit('Vsevolod', (not debug), prevMissionPrefix);
-   Karamazov := PrepareUnit('Karamazov', true, prevMissionPrefixVse);
-   Lipshchin := PrepareUnit('Lipshchin', (not debug), prevMissionPrefixVse);
-   Petrosyan := PrepareUnit('Petrosyan', true, prevMissionPrefixVse);
-   Titov     := PrepareUnit('Titov', (not debug), prevMissionPrefixVse);
-   Petrovova := PrepareUnit('Petrovova', true, prevMissionPrefixVse);
-   Gleb      := PrepareUnit('Gleb', true, prevMissionPrefixVse);
-   Dolgov    := PrepareUnit('Dolgov', (not debug), prevMissionPrefixVse);
-   Jan       := PrepareUnit('Jan', true, prevMissionPrefixVse);
+
+   if not Karamazov then
+      Karamazov := PrepareUnit('Karamazov', true, prevMissionPrefixVse);
+
+   if not Lipshchin then
+      Lipshchin := PrepareUnit('Lipshchin', (not debug), prevMissionPrefixVse);
+
+   if Petrosyan then
+      Petrosyan := PrepareUnit('Petrosyan', true, prevMissionPrefixVse);
+
+   if not Titov then
+      Titov     := PrepareUnit('Titov', (not debug), prevMissionPrefixVse);
+
+   if not Petrovova then
+      Petrovova := PrepareUnit('Petrovova', true, prevMissionPrefixVse);
+
+   if not Gleb then
+      Gleb      := PrepareUnit('Gleb', true, prevMissionPrefixVse);
+
+   if not Dolgov then
+      Dolgov    := PrepareUnit('Dolgov', (not debug), prevMissionPrefixVse);
+
+   if not Jan then
+      Jan       := PrepareUnit('Jan', true, prevMissionPrefixVse);
 
    vsevolodTeam := CreateCharacterSet(prevMissionPrefix & 'vsevolodTeam');
 
@@ -197,7 +213,7 @@ if hasVsevolod then
           end;
 
        SetClass(i, class_soldier);
-       PlaceUnitXYR(i, 103, 153, 6, false);
+       PlaceUnitXYR(i, 82, 110, 6, false);
        ComTurnUnit(i, Vsevolod);
        end;
        
@@ -206,7 +222,7 @@ if hasVsevolod then
 
    list := [
      [b_depot, 51, 94, 1, 0, 0, 0],
-     [b_lab_full, 51, 85, 3, 0, b_lab_weapon, b_lab_spacetime],
+     [b_lab_half, 51, 85, 3, 0, b_lab_spacetime, 0],
      [b_armoury, 61, 92, 4, 0, 0, 0],
      [b_oil_mine, 67, 115, 1, 0, 0, 0],
      [b_oil_power, 55, 104, 1, 0, 0, 0]
@@ -214,5 +230,10 @@ if hasVsevolod then
 
    for i in list do
        PlaceBuilding(i[1], 5, i[2], i[3], i[4], i[5], i[6], i[7]);
+
+   base := GetBase(HexInfo(51, 94));
+
+   SetResourceType(base, mat_cans, 120);
+   SetResourceType(base, mat_oil, [60, 50, 40, 40][Difficulty]);
    end;
 End;

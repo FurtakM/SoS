@@ -26,7 +26,9 @@ else if btype in [b_lab_half, b_lab_full] then
    bc_kind1 := lab1;
 
    if lab2 then
-      bc_kind2 := lab2;
+      bc_kind2 := lab2
+   else
+      bc_kind2 := b_lab_basic;
    end;
 
 bc_level := level;
@@ -61,7 +63,7 @@ End;
 Export function BaseScript(side, area, cratesArea, innerArea, outerArea, forces,
                            vehicles, techs, constructList, buildingsToBuild,
                            healPoint, parkingPoint, allowToPatrol);
-var i, tmp, undone, lab, eng, mech, tag, tw, cr, sci, sol, cranes, drivers, hurtUnits, enemy, enemyInBase, enemyOuterBase, empty, fac, emptyTowers, weapon, depot, enemySide;
+var i, tmp, undone, lab, eng, mech, tag, l, tw, cr, sci, sol, cranes, drivers, hurtUnits, b, j, enemy, enemyInBase, enemyOuterBase, empty, fac, emptyTowers, weapon, depot, enemySide;
 begin
 enable;
 
@@ -87,14 +89,15 @@ if Count(techs) then
 
    if lab then
       begin
-      if BuildingStatus(lab[1]) = bs_idle then
-         begin
-         for i in techs do
-             if CanBeResearched(lab[1], i) then
-                begin
-                AddComResearch(lab[1], i);
-                end;
-         end;
+      for l in lab do
+          if BuildingStatus(l) = bs_idle then
+             begin
+             for i in techs do
+                 if CanBeResearched(l, i) then
+                    begin
+                    AddComResearch(l, i);
+                    end;
+             end;
       end;
    end
 else if UnitFilter(fac, [f_not, [f_full]]) and Count(UnitFilter(forces, [[f_not, [f_hastask]], [f_not, [f_tag, tWannaBeMech]], [f_class, 4]])) > 2 then
@@ -159,7 +162,7 @@ if fac then
 
 // sci logic
 sci := UnitFilter(forces, [[f_class, class_scientistic], [f_not, [f_tag, tWannaBeMech]], [f_ok]]);
-lab := FilterUnitsInarea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
+lab := FilterUnitsInArea(area, [f_or, [f_btype, b_lab], [f_btype, b_lab_half], [f_btype, b_lab_full]]);
 
 if sci then
    begin
@@ -178,20 +181,39 @@ if sci then
       for i in sci do
           begin
           tag := GetTag(i);
-          empty := FilterUnitsInArea(area, [[f_not, [f_full]], [f_not, [f_constructed]], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
 
-          if tag = tWannaBeSol and empty then
+          if Count(techs) then
              begin
-             if IsInUnit(i) then
-                ComExitBuilding(i);
+             if Count(lab) > 1 then
+                begin
+                b := IsInUnit(i);
 
-             AddComEnterUnit(i, empty[1]);
-             AddComChangeProfession(i, class_soldier);
-             continue;
+                if b and GetBType(b) in [b_lab, b_lab_half, b_lab_full] and BuildingStatus(b) = bs_idle then
+                   for j in lab diff b do
+                       if BuildingStatus(j) in [bs_working, bs_need_people] then
+                          begin
+                          ComExitBuilding(i);
+                          AddComEnterUnit(i, j);
+                          end;
+                end;
+             end
+          else
+             begin
+             empty := FilterUnitsInArea(area, [[f_not, [f_full]], [f_not, [f_constructed]], [f_ok], [f_or, [f_btype, b_armoury], [f_btype, b_barracks]]]);
+
+             if tag = tWannaBeSol and empty then
+                begin
+                if IsInUnit(i) then
+                   ComExitBuilding(i);
+
+                AddComEnterUnit(i, empty[1]);
+                AddComChangeProfession(i, class_soldier);
+                continue;
+                end;
+
+             if not IsInUnit(i) and tag <> tWannaBeSol then
+                ComEnterUnit(i, lab[1]);
              end;
-
-          if not IsInUnit(i) and tag <> tWannaBeSol then
-             ComEnterUnit(i, lab[1]);
           end;
       end;
    end;
@@ -294,7 +316,7 @@ if eng then
              continue;
              end;
 
-          undone := FilterUnitsInarea(area, [f_constructed]);
+          undone := FilterUnitsInArea(area, [f_constructed]);
 
           if undone then
              begin
@@ -364,7 +386,7 @@ if eng then
 // defense logic
 if vehicles then
    begin
-   cranes := UnitFilter(vehicles, [[f_weapon, us_crane], [f_ok], [f_not, [f_tag, tOutside]]]);
+   cranes := UnitFilter(vehicles, [[f_weapon, ar_crane], [f_ok], [f_not, [f_tag, tOutside]]]);
 
    if cranes then
       begin
@@ -380,7 +402,7 @@ if vehicles then
                 ComMoveXY(i, parkingPoint[1], parkingPoint[2]);
       end;
 
-   vehicles := UnitFilter(vehicles, [[f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, us_crane], [f_weapon, us_cargo_bay]]], [f_ok]]);
+   vehicles := UnitFilter(vehicles, [[f_not, [f_or, [f_weapon, ru_crane], [f_weapon, ru_cargo_bay], [f_weapon, ar_crane], [f_weapon, ar_control_tower], [f_weapon, ar_cargo_bay]]], [f_ok]]);
 
    if vehicles then
       begin
@@ -392,11 +414,11 @@ if vehicles then
              begin
              if GetControl(i) = control_manual then
                 begin
-                drivers := UnitFilter(mech, [f_tag, tMech]);
+                drivers := UnitFilter(mech, [[f_tag, tMech], [f_not, [f_driving]]]);
 
                 if not drivers then
                    begin
-                   drivers := UnitFilter(mech, [f_not, [f_tag, tMech]]);
+                   drivers := UnitFilter(mech, [[f_not, [f_tag, tMech]], [f_not, [f_driving]]]);
 
                    if drivers then
                       begin
@@ -408,9 +430,9 @@ if vehicles then
                    SetTag(i, tBusy);
 
                 continue;
-                end;
-
-             SetTag(i, tBusy);
+                end
+             else
+                SetTag(i, tBusy);
              end
           else if tag = tBusy then
              begin
@@ -418,7 +440,7 @@ if vehicles then
                 begin
                 if GetControl(i) = control_manual and not IsDrivenBy(i) then
                    begin
-                   drivers := UnitFilter(mech, [f_tag, tMech]);
+                   drivers := UnitFilter(mech, [[f_tag, tMech], [f_not, [f_driving]]]);
 
                    if not drivers then
                       begin
@@ -649,4 +671,31 @@ for i = 1 to list do
     end;
 
 result := [_x, _y, _i, dist];
+End;
+
+Export Function PlaceMines(area, n, side);
+var i, tmp, r;
+begin
+result := [];
+tmp := AreaToList(area, 0);
+
+if not tmp then
+   exit;
+
+for i := 1 to n do
+    begin
+    if not tmp[1] then
+       exit;
+
+    r := rand(1, tmp[1]);
+
+    PlaceMine(tmp[1][r], tmp[2][r], side, 0);
+
+    result := Join(result, [tmp[1][r], tmp[2][r]]);
+
+    tmp := Replace(tmp, 1, Delete(tmp[1], r));
+    tmp := Replace(tmp, 2, Delete(tmp[2], r));
+    end;
+
+result := result diff 0;
 End;
