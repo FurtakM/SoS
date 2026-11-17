@@ -198,6 +198,9 @@ STREAM_ITEMS_INIT_HARDCORE = {
 	},
 	{
 		NAME = 'sGang', ITEM_ID = 119, PROB = 8, LABEL = loc(6267),
+	},
+	{
+		NAME = 'sArt', ITEM_ID = 120, PROB = 8, LABEL = loc(6274)
 	}
 };
 STREAM_ITEMS_NORMAL = {};

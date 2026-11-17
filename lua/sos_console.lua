@@ -11,6 +11,10 @@ setColour1(owconsole.edit, RGBA(0, 8, 11, 200));
 
 command = {};
 
+function command:ccom(PARAMETERS)
+	OW_CUSTOM_COMMAND(unpack(PARAMETERS));
+end;
+
 function command:chat(PARAMETERS)
 	local VALUE = PARAMETERS[1];
 	
@@ -78,4 +82,5 @@ function command:music(PARAMETERS)
 end;
 
 OW_CONSOLE_ADD_COMMAND('chat', command.chat, command, 'Turn On/Off chat. Allowed values: `on`, `off`');
+OW_CONSOLE_ADD_COMMAND('ccom', command.ccom, command, 'Trigger custom command LUA.');
 OW_CONSOLE_ADD_COMMAND('music', command.music, command, 'Sets the music volume. For example: `music 100` to set it to full volume. \rUse `music menu <number>` to change the volume of the music in the menu. \rAllowed values: <number>, `mute`, `menu <number>`, `menu mute`.');

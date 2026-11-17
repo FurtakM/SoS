@@ -107,12 +107,54 @@ playerStats := Replace(playerStats, side, row);
 PushPlayerStats();
 End;
 
+//Straty
+Export playerLosses;
+
+Export Function InitPlayerLosses();
+var side;
+begin
+playerLosses := [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+
+for side := 1 to 8 do
+    PushPlayerLosses();
+End;
+
+Export Function PushPlayerLosses();
+var row, side;
+begin
+for side := 1 to 8 do
+    begin
+    row := playerLosses[side];
+    ToLua(
+      'setPlayerLossesSide(' & side & '); setPlayerLosses([=[{people='
+      & row[1]
+      & ',vehicles='
+      & row[2]
+      & ',buildings='
+      & row[3]
+      & '}]=])'
+    );
+    end;
+End;
+
+Export Function AddPlayerLosses(side, unitType);
+var row, idx, newValue;
+begin
+idx := unitType;
+row := playerLosses[side];
+newValue := row[idx] + 1;
+row := Replace(row, idx, newValue);
+playerLosses := Replace(playerLosses, side, row);
+PushPlayerLosses();
+End;
+
 
 Export Function InitSpecBar();
 begin
 InitPlayerStrength;
 InitPlayerStats;
 InitPlayersResearch;
+InitPlayerLosses;
 End;
 
 

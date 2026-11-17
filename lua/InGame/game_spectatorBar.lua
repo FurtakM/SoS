@@ -24,6 +24,9 @@ SpecBar.researchBySide = {};
 SpecBar.researchPayloadSide = nil;
 SpecBar.killStats = {};
 SpecBar.killPayloadSide = nil;
+SpecBar.lossesRows = {};
+SpecBar.lossesStats = {};
+SpecBar.lossPayloadSide = nil;
 SpecBar.sideIndexBase = nil;
 SpecBar.selectedSide = 1;
 SpecBar.selectedNation = nil;
@@ -36,7 +39,8 @@ SpecBar.tabNames = {
 	[2] = loc(5079),
 	[3] = loc(5080),
 	[4] = loc(5081),
-	[5] = loc(5082)
+	[5] = loc(5082),
+	[6] = loc(5087)
 };
 
 SpecBar.layout = {
@@ -96,7 +100,7 @@ end;
 
 local function SpecBarGetTabWidth()
 	local specbarui = interface.current.game.ui.specbar;
-	return math.floor((specbarui.width - (SpecBar.layout.tabGap * 4)) / 5);
+	return math.floor((specbarui.width - (SpecBar.layout.tabGap * 5)) / 6);
 end;
 
 function makeSpecBar(ID)
@@ -125,6 +129,7 @@ function makeSpecBar(ID)
 	element.l[3] = makeSpecBarLabel(element,ID,specbarui.x2+specbarui.w2,specbarui.y1,specbarui.w1,specbarui.h1);
 	element.l[4] = makeSpecBarLabel(element,ID,specbarui.x2+specbarui.w2*2,specbarui.y1,specbarui.w1,specbarui.h1);
 	element.l[5] = makeSpecBarLabel(element,ID,specbarui.x2+specbarui.w2*3,specbarui.y1,specbarui.w1,specbarui.h1);
+	element.l[6] = makeSpecBarLabel(element,ID,specbarui.x2+specbarui.w2*4,specbarui.y1,specbarui.w1,specbarui.h1);
 
 	element.logo = {};
 
@@ -160,7 +165,7 @@ function makeSpecBar(ID)
 		}
 	);
 
-	for i=1,4 do
+	for i=1,5 do
 		element.logo[i+1] = getElementEX(
 			element,
 			anchorRT,
@@ -203,7 +208,7 @@ local function SpecBarMakeTab(ID)
 		visible = false
 	});
 
-	setColour1(tab, RGBA(25, 25, 25, 255));
+	setColour1(tab, RGBA(25, 25, 25, 200));
 	setFontColour(tab, RGB(220, 220, 220));
 
 	return tab;
@@ -352,6 +357,155 @@ local function SpecBarGetSideKillValues(side)
 	end;
 
 	return kills;
+end;
+
+local function SpecBarParseLossesString(payload)
+    if type(payload) ~= 'string' then
+        return nil;
+    end;
+
+    payload = string.gsub(payload, '^%s+', '');
+    payload = string.gsub(payload, '%s+$', '');
+
+    if payload == '' then
+        return {};
+    end;
+
+    local normalized = string.gsub(payload, '%[', '{');
+    normalized = string.gsub(normalized, '%]', '}');
+    normalized = string.gsub(normalized, '}%s*{', '},{');
+
+    -- Handle array format like [{1,2,3},{3,2,4},...] and [{1,2,3}{3,2,4}...]
+    if normalized:match('^%s*{') and (normalized:match('}%s*,') or normalized:match('}%s*{')) then
+        normalized = '{' .. normalized .. '}';
+    end;
+
+    local loader = loadstring or load;
+
+    if type(loader) ~= 'function' then
+        return nil;
+    end;
+
+    local chunk = loader('return ' .. normalized);
+    if chunk == nil then
+        return nil;
+    end;
+
+    local ok, data = pcall(chunk);
+    if not ok or type(data) ~= 'table' then
+        return nil;
+    end;
+
+    return data;
+end;
+
+local function SpecBarParseLossesRowPayload(payload)
+    if payload == nil then
+        return nil;
+    end;
+
+    if type(payload) == 'table' then
+        return payload;
+    end;
+
+    if type(payload) == 'number' then
+        return {payload};
+    end;
+
+    if type(payload) ~= 'string' then
+        return {payload};
+    end;
+
+    payload = string.gsub(payload, '^%s+', '');
+    payload = string.gsub(payload, '%s+$', '');
+
+    if payload == '' then
+        return {};
+    end;
+
+    local commaValues = {};
+
+    for token in string.gmatch(payload, '([^,]+)') do
+        local trimmed = string.gsub(token, '^%s+', '');
+        trimmed = string.gsub(trimmed, '%s+$', '');
+
+        if tonumber(trimmed) == nil then
+            commaValues = nil;
+            break;
+        end;
+
+        commaValues[#commaValues + 1] = tonumber(trimmed);
+    end;
+
+    if commaValues ~= nil and #commaValues > 0 then
+        return commaValues;
+    end;
+
+    local parsed = SpecBarParseLossesString(payload);
+
+    if type(parsed) == 'table' then
+        return parsed;
+    end;
+
+    if tonumber(payload) ~= nil then
+        return {tonumber(payload)};
+    end;
+
+    return nil;
+end;
+
+local function SpecBarDecodeLossesRow(row)
+	local lost = {
+		buildings = 0,
+		people = 0,
+		vehicles = 0
+	};
+
+	if type(row) ~= 'table' then
+		return lost;
+	end;
+
+	-- Prefer explicit field names when available.
+	lost.people = SpecBarReadKillValue(row, 'people', 'humans', nil);
+	lost.vehicles = SpecBarReadKillValue(row, 'vehicles', 'vehicle', nil);
+	lost.buildings = SpecBarReadKillValue(row, 'buildings', 'building', nil);
+
+	if lost.people ~= 0 or lost.vehicles ~= 0 or lost.buildings ~= 0 then
+		return lost;
+	end;
+
+	local isZeroBased = (row[0] ~= nil) and (row[3] == nil);
+
+	if isZeroBased then
+		lost.people = SpecBarReadKillValue(row, nil, nil, 0);
+		lost.vehicles = SpecBarReadKillValue(row, nil, nil, 1);
+		lost.buildings = SpecBarReadKillValue(row, nil, nil, 2);
+		return lost;
+	end;
+
+	-- Fallback to numeric slots: [1]=people, [2]=vehicles, [3]=buildings.
+	if row[1] ~= nil or row[2] ~= nil or row[3] ~= nil then
+		lost.people = SpecBarReadKillValue(row, nil, nil, 1);
+		lost.vehicles = SpecBarReadKillValue(row, nil, nil, 2);
+		lost.buildings = SpecBarReadKillValue(row, nil, nil, 3);
+		return lost;
+	end;
+
+	return lost;
+end;
+
+local function SpecBarGetSideLossesValues(side)
+	local lost = {
+		buildings = 0,
+		people = 0,
+		vehicles = 0
+	};
+
+	if SpecBar.lossesStats and type(SpecBar.lossesStats[side]) == 'table' then
+		lost = SpecBarDecodeLossesRow(SpecBar.lossesStats[side]);
+	end;
+
+	return lost;
 end;
 
 local function SpecBarGetSideList()
@@ -898,10 +1052,10 @@ end;
 
 local function SpecBarSetTabStyle(tab, active)
 	if active then
-		setColour1(tab, RGBA(66, 120, 84, 255));
+		setColour1(tab, RGBA(66, 120, 84, 220));
 		setFontColour(tab, RGB(255, 255, 255));
 	else
-		setColour1(tab, RGBA(25, 25, 25, 255));
+		setColour1(tab, RGBA(25, 25, 25, 200));
 		setFontColour(tab, RGB(220, 220, 220));
 	end;
 end;
@@ -1040,6 +1194,39 @@ local function SpecBarKillsHeader(parent, specbarui)
 	end;
 end;
 
+
+local LOSSES_COL = { people = 128, vehicles = 242, buildings = 356 };
+local LOSSES_COL_W = 100;
+
+local function SpecBarLossesHeader(parent, specbarui)
+	local iconTex = 'SGUI/Rus/Building ParamsIcons.png';
+	-- All three icons from sprite sheet (people, vehicles, buildings)
+	local spriteW = 19;
+	local cols = {
+		{ x = LOSSES_COL.people,    srcX = 14 },
+		{ x = LOSSES_COL.vehicles,  srcX = 63 },
+		{ x = LOSSES_COL.buildings, srcX = 111 },
+	};
+
+	for _, col in ipairs(cols) do
+		local ico = AddElement({
+			type = TYPE_ELEMENT,
+			parent = parent,
+			anchor = anchorLT,
+			x = col.x + math.floor((LOSSES_COL_W - spriteW) / 2),
+			y = 0,
+			width = spriteW,
+			height = 20,
+			subtexture = true,
+			subcoords = SUBCOORD(col.srcX, 0, spriteW, 20),
+			callback_mouseclick = 'showFadeSpaceBar();',
+			visible = true,
+		});
+		setTexture(ico, iconTex);
+		setColour1(ico, WHITEA(255));
+	end;
+end;
+
 local function SpecBarCreateKillsRows(parent)
 	local specbarui = interface.current.game.ui.specbar;
 	local headerH = 22;
@@ -1132,8 +1319,100 @@ local function SpecBarCreateKillsRows(parent)
 	end;
 end;
 
+local function SpecBarCreateLossesRows(parent)
+	local specbarui = interface.current.game.ui.specbar;
+	local headerH = 22;
+
+	-- Column header icons (once, above all rows)
+	local headerEl = AddElement({
+		type = TYPE_ELEMENT,
+		parent = parent,
+		anchor = anchorLT,
+		x = 0,
+		y = 0,
+		width = specbarui.width,
+		height = headerH,
+		callback_mouseclick = 'showFadeSpaceBar();',
+	});
+
+	setColour1(headerEl, RGBA(10, 20, 45, 180));
+	SpecBarLossesHeader(headerEl, specbarui);
+
+	for i = 1, 8 do
+		local rowY = headerH + (i - 1) * specbarui.h;
+		local row = {};
+
+		row.container = AddElement({
+			type = TYPE_ELEMENT,
+			parent = parent,
+			anchor = anchorLT,
+			x = 0,
+			y = rowY,
+			width = specbarui.width,
+			height = specbarui.h,
+			callback_mouseclick = 'showFadeSpaceBar();',
+			visible = false,
+		});
+		setColour1(row.container, RGBA(10, 20, 45, 220));
+
+		row.name = AddElement({
+			type = TYPE_LABEL,
+			parent = row.container,
+			anchor = anchorLT,
+			x = 8,
+			y = specbarui.y1,
+			width = 116,
+			height = specbarui.h1,
+			font_name = Tahoma_10B,
+			text = '',
+			scissor = true,
+		});
+
+		row.valuePeople = AddElement({
+			type = TYPE_LABEL,
+			parent = row.container,
+			anchor = anchorLT,
+			x = LOSSES_COL.people,
+			y = specbarui.y1,
+			width = LOSSES_COL_W,
+			height = specbarui.h1,
+			font_name = Tahoma_10B,
+			text_halign = ALIGN_MIDDLE,
+			text = '0',
+		});
+
+		row.valueVehicles = AddElement({
+			type = TYPE_LABEL,
+			parent = row.container,
+			anchor = anchorLT,
+			x = LOSSES_COL.vehicles,
+			y = specbarui.y1,
+			width = LOSSES_COL_W,
+			height = specbarui.h1,
+			font_name = Tahoma_10B,
+			text_halign = ALIGN_MIDDLE,
+			text = '0',
+		});
+
+		row.valueBuildings = AddElement({
+			type = TYPE_LABEL,
+			parent = row.container,
+			anchor = anchorLT,
+			x = LOSSES_COL.buildings,
+			y = specbarui.y1,
+			width = LOSSES_COL_W,
+			height = specbarui.h1,
+			font_name = Tahoma_10B,
+			text_halign = ALIGN_MIDDLE,
+			text = '0',
+		});
+
+		SpecBar.lossesRows[i] = row;
+	end;
+end;
+
 local function SpecBarBuildTabsAndPages()
-	for i = 1, 5 do
+	for i = 1, 6 do
 		SpecBar.tabs[i] = SpecBarMakeTab(i);
 		SpecBar.pages[i] = SpecBarMakePage();
 	end;
@@ -1201,7 +1480,8 @@ local function SpecBarBuildTabsAndPages()
 	SpecBarCreateMetricRows(SpecBar.pages[3], SpecBar.metricRows);
 	SpecBarCreateMetricRows(SpecBar.pages[4], SpecBar.damageRows);
 	SpecBarCreateKillsRows(SpecBar.pages[5]);
-	-- page 5 rows start after header, account for that in height
+	SpecBarCreateLossesRows(SpecBar.pages[6]);
+	-- page 5 and 6 rows start after header, account for that in height
 end;
 
 local function SpecBarUpdateMetricPage(rows, values)
@@ -1280,6 +1560,7 @@ local function SpecBarRefreshDamagePage()
 	SpecBarUpdateMetricPage(SpecBar.damageRows, values);
 end;
 
+
 local function SpecBarRefreshKillsPage()
 	local sides = SpecBarGetSideList();
 
@@ -1301,6 +1582,38 @@ local function SpecBarRefreshKillsPage()
 			setFontColour(row.name, SIDE_COLOURS[side + 1] or RGB(220, 220, 220));
 
 			local data = SpecBarGetSideKillValues(side);
+
+			setText(row.valueBuildings, tostring(math.floor(data.buildings)));
+			setText(row.valuePeople, tostring(math.floor(data.people)));
+			setText(row.valueVehicles, tostring(math.floor(data.vehicles)));
+			setVisible(row.container, true);
+		else
+			setVisible(row.container, false);
+		end;
+	end;
+end;
+
+local function SpecBarRefreshLossesPage()
+	local sides = SpecBarGetSideList();
+
+	for i = 1, 8 do
+		local row = SpecBar.lossesRows[i];
+
+		if row == nil then
+			break;
+		end;
+
+		local side = sides[i];
+
+		if side ~= nil then
+			local name = '';
+			if SpecBar.bars[side] and SpecBar.bars[side].l and SpecBar.bars[side].l[1] then
+				name = getText(SpecBar.bars[side].l[1]);
+			end;
+			setText(row.name, name);
+			setFontColour(row.name, SIDE_COLOURS[side + 1] or RGB(220, 220, 220));
+
+			local data = SpecBarGetSideLossesValues(side);
 
 			setText(row.valueBuildings, tostring(math.floor(data.buildings)));
 			setText(row.valuePeople, tostring(math.floor(data.people)));
@@ -1491,6 +1804,7 @@ function SpecBarRefreshPages()
 	SpecBarRefreshPowerPage();
 	SpecBarRefreshDamagePage();
 	SpecBarRefreshKillsPage();
+	SpecBarRefreshLossesPage();
 end;
 
 SpecBar.strengthValues = {};
@@ -1766,6 +2080,95 @@ local function SpecBarNormalizeKillStats(list, preferredSide)
 	return normalized;
 end;
 
+
+local function SpecBarNormalizeLossesRow(row, existingRow)
+    local normalized = {0, 0, 0};
+
+    if type(existingRow) == 'table' then
+        normalized[1] = SpecBarSafeNumber(existingRow[1]);
+        normalized[2] = SpecBarSafeNumber(existingRow[2]);
+        normalized[3] = SpecBarSafeNumber(existingRow[3]);
+    end;
+
+    if type(row) ~= 'table' then
+        return normalized;
+    end;
+
+    if row.people ~= nil or row.humans ~= nil or row.vehicles ~= nil or row.vehicle ~= nil or row.buildings ~= nil or row.building ~= nil then
+        normalized[1] = SpecBarReadKillValue(row, 'people', 'humans', nil);
+        normalized[2] = SpecBarReadKillValue(row, 'vehicles', 'vehicle', nil);
+        normalized[3] = SpecBarReadKillValue(row, 'buildings', 'building', nil);
+        return normalized;
+    end;
+
+    local isZeroBased = (row[0] ~= nil) and (row[3] == nil);
+
+    if isZeroBased then
+        if row[0] ~= nil then normalized[1] = SpecBarSafeNumber(row[0]); end;
+        if row[1] ~= nil then normalized[2] = SpecBarSafeNumber(row[1]); end;
+        if row[2] ~= nil then normalized[3] = SpecBarSafeNumber(row[2]); end;
+
+        return normalized;
+    end;
+
+    if row[1] ~= nil then normalized[1] = SpecBarSafeNumber(row[1]); end;
+    if row[2] ~= nil then normalized[2] = SpecBarSafeNumber(row[2]); end;
+    if row[3] ~= nil then normalized[3] = SpecBarSafeNumber(row[3]); end;
+
+    return normalized;
+end;
+
+local function SpecBarNormalizeLossStats(list, preferredSide)
+    if type(list) ~= 'table' then
+        return nil;
+    end;
+
+    local normalized = {};
+
+    for i = 1, 8 do
+        normalized[i] = {};
+
+        if type(SpecBar.lossesStats) == 'table' and type(SpecBar.lossesStats[i]) == 'table' then
+            normalized[i] = SpecBarNormalizeLossesRow(SpecBar.lossesStats[i]);
+        end;
+    end;
+
+    local hasNestedTables = false;
+
+    for i = 0, 8 do
+        if type(list[i]) == 'table' then
+            hasNestedTables = true;
+            break;
+        end;
+    end;
+
+    if not hasNestedTables then
+        local targetSide = SpecBarNormalizeSide(preferredSide);
+
+        if targetSide ~= nil then
+            normalized[targetSide] = SpecBarNormalizeLossesRow(list, normalized[targetSide]);
+        end;
+    else
+        local hasZeroBasedSideKeys = (list[0] ~= nil);
+
+        for i = 1, 8 do
+            local sourceIndex = i;
+
+            if hasZeroBasedSideKeys then
+                sourceIndex = i - 1;
+            end;
+
+            local sideLosses = list[sourceIndex];
+
+            if type(sideLosses) == 'table' and next(sideLosses) ~= nil then
+                normalized[i] = SpecBarNormalizeLossesRow(sideLosses, normalized[i]);
+            end;
+        end;
+    end;
+
+    return normalized;
+end;
+
 function setPlayerKills(k1, k2, k3, k4, k5, k6, k7, k8)
 	-- Handle different call formats
 	local list;
@@ -1822,6 +2225,63 @@ function setPlayerKillsSide(side)
 	SpecBar.killPayloadSide = targetSide;
 end;
 
+function setPlayerLosses(k1, k2, k3, k4, k5, k6, k7, k8)
+	-- Handle different call formats
+	local list;
+	local payloadSide = SpecBar.lossPayloadSide;
+	SpecBar.lossPayloadSide = nil;
+
+	if k1 == nil and k2 == nil and k3 == nil and k4 == nil and k5 == nil and k6 == nil and k7 == nil and k8 == nil then
+		list = {};
+	elseif payloadSide == nil and not (type(k1) == 'string' and k2 == nil) and not (type(k1) == 'table' and k2 == nil) then
+		list = {};
+		local args = {k1, k2, k3, k4, k5, k6, k7, k8};
+
+		for i = 1, 8 do
+			local parsedRow = SpecBarParseLossesRowPayload(args[i]);
+			if parsedRow ~= nil then
+				list[i] = parsedRow;
+			end;
+		end;
+	elseif type(k1) == 'string' and k2 == nil then
+		if payloadSide ~= nil then
+			list = SpecBarParseLossesRowPayload(k1);
+		else
+			list = SpecBarParseLossesString(k1);
+			if list == nil then
+				list = SpecBarParseLossesRowPayload(k1);
+			end;
+		end;
+	elseif type(k1) == 'table' and k2 == nil then
+		list = k1;
+	else
+		list = {k1, k2, k3, k4, k5, k6, k7, k8};
+	end;
+
+	list = SpecBarNormalizeLossStats(list, payloadSide);
+
+	if type(list) ~= 'table' then
+		return;
+	end;
+
+	SpecBar.lossesStats = list;
+
+	if SpecBar.currentPage == 6 then
+		SpecBarRefreshLossesPage();
+	end;
+end;
+
+function setPlayerLossesSide(side)
+	local targetSide = SpecBarNormalizeSide(side);
+
+	if targetSide == nil then
+		return;
+	end;
+
+	SpecBar.lossPayloadSide = targetSide;
+end;
+
+
 function setSpecBarSelectedNation(nation)
 	local normalized = SpecBarNormalizeNation(nation);
 
@@ -1847,13 +2307,13 @@ function SpecBarSetPage(page)
 		return;
 	end;
 
-	if p < 1 or p > 5 then
+	if p < 1 or p > 6 then
 		return;
 	end;
 
 	SpecBar.currentPage = p;
 
-	for i = 1, 5 do
+	for i = 1, 6 do
 		SpecBarSetTabStyle(SpecBar.tabs[i], i == p);
 	end;
 
@@ -1863,7 +2323,7 @@ function SpecBarSetPage(page)
 		end;
 	end;
 
-	for i = 2, 5 do
+	for i = 2, 6 do
 		if SpecBar.pages[i] then
 			setVisible(SpecBar.pages[i], i == p and specBarVisible == 1);
 		end;
@@ -1941,7 +2401,7 @@ function setSpecLogoNumber(ID, ICONNUMBER)
 end;
 
 function setSpecText(SIDE, ID, TEXT)
-	if (ID > 1 and ID < 6) and (SIDE > 0 and SIDE < 9) then
+	if (ID > 1 and ID < 7) and (SIDE > 0 and SIDE < 9) then
 		setText(SpecBar.bars[SIDE].l[ID], TEXT);
 	end;
 end;
@@ -1950,7 +2410,7 @@ function DoInterfaceChange_Game_SpecBar()
 	local specbarui = interface.current.game.ui.specbar;
 	local tabW = SpecBarGetTabWidth();
 
-	for i = 1, 5 do
+	for i = 1, 6 do
 		setXYWH(SpecBar.tabs[i], XYWH(SpecBarGetX() + (i - 1) * (tabW + SpecBar.layout.tabGap), 0, tabW, SpecBar.layout.tabH));
 		setXYWH(SpecBar.pages[i], XYWH(SpecBarGetX(), SpecBar.layout.tabH, specbarui.width, specbarui.h * SpecBar.layout.rowsMax));
 	end;
@@ -1984,7 +2444,7 @@ function showSpecBar(bool)
 		specBarVisible = 0;
 	end;
 
-	for i = 1, 5 do
+	for i = 1, 6 do
 		if SpecBar.tabs[i] then
 			setVisible(SpecBar.tabs[i], specBarVisible == 1);
 		end;
@@ -1996,7 +2456,7 @@ function showSpecBar(bool)
 		end;
 	end;
 
-	for i = 2, 5 do
+	for i = 2, 6 do
 		if SpecBar.pages[i] then
 			setVisible(SpecBar.pages[i], false);
 		end;
@@ -2023,7 +2483,7 @@ function showFadeSpaceBar()
 		AddEventSlideX(SpecBar.bars[i].ID, result, 0.80, nil);
 	end;
 
-	for i = 1, 5 do
+	for i = 1, 6 do
 		local tabW = SpecBarGetTabWidth();
 		local tabX = result + (i - 1) * (tabW + SpecBar.layout.tabGap);
 		AddEventSlideX(SpecBar.tabs[i].ID, tabX, 0.80, nil);
@@ -2046,7 +2506,7 @@ function SpecBarApplySides(sides)
 			SpecBar.sideNation[i] = SpecBarNormalizeNation(sides[i].nation);
 			SpecBar.activeSides[#SpecBar.activeSides + 1] = i;
 
-			for k = 2, 5 do
+			for k = 2, 6 do
 				setTexture(SpecBar.bars[i].logo[k], 'empty.png');
 				SpecBar.bars[i].logo[k].iconName = "";
 				setText(SpecBar.bars[i].l[k], '');

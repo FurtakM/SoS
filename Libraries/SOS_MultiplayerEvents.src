@@ -263,22 +263,35 @@ End;
 Export function Multiplayer_UnitExtraDestroyed(un, killerSide, killerUnit);
 var side, killedSide;
 begin
-side := GetSide(killerUnit);
+if killerUnit > 0 then
+   side := GetSide(killerUnit)
+else
+   side := 0;
+
 killedSide := GetSide(un);
 
 if GetType(un) = unit_human then
    begin
-   AddPlayerStats(side, 1);
+   if side then
+      AddPlayerStats(side, 1);
+
+   AddPlayerLosses(killedSide, 1);
    ReducePlayerStrength(killedSide, 2);
    end
 else if GetType(un) = unit_building then
    begin
-   AddPlayerStats(side, 3);
+   if side then
+      AddPlayerStats(side, 3);
+
+   AddPlayerLosses(killedSide, 3);
    ReducePlayerStrength(killedSide, 6);
    end
 else
    begin
-   AddPlayerStats(side, 2);
+   if side then
+      AddPlayerStats(side, 2);
+
+   AddPlayerLosses(killedSide, 2);
    ReducePlayerStrength(killedSide, 10);
    end;
 End;

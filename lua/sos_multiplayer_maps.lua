@@ -202,5 +202,21 @@ MULTIPLAYER_ROOM_MAPS_PLAYERS = {
 	pNuclearWinter = {
 		MIN = 2,
 		MAX = 8
+	},
+	pArchipelago = {
+		MIN = 2,
+		MAX = 6
+	},
+	pBorderlands = {
+		MIN = 2,
+		MAX = 6
+	},
+	pCrimsonWastes = {
+		MIN = 2,
+		MAX = 6
+	},
+	pZona = {
+		MIN = 2,
+		MAX = 8
 	}
 }
