@@ -18,12 +18,30 @@ if unit = Yashin then
    YouLost('Yashin');
    exit;
    end;
+
+if GetSide(unit) = 2 then
+   destroyCounter := Inc(destroyCounter);
+
+if not arabDefeat and unit = ar_dep then
+   arabDefeat := true;
+End;
+
+On BuildingCaptured(captured_building, buildings_former_side, capturing_unit) do
+begin
+if captured_building = ar_dep then
+   arabDefeat := true;
 End;
 
 On Contact(s1, s2) do
 begin
 if s1 = 3 and s2 = 6 then
    begin
+   DialogueOn;
+
+   Say(Burlak, 'DYashinAttack-Bur-1');
+
+   DialogueOff;
+
    YouLost('AllyAttacked');
    exit;
    end;
@@ -61,18 +79,28 @@ if GetSide(driver) = 2 then
 End;
 
 On BuildingComplete(b) do
-var side, btype;
+var side, btype, i;
 begin
 side := GetSide(b);
 btype := GetBType(b);
+
+if side = 3 then
+   if btype = b_depot and not hasVsevolod then
+      begin
+      for i := 1 to 3 do
+          begin            
+          CreateCratesXYR(5, GetX(b), GetY(b), 12, true);
+          wait(0$12);
+          end;
+      end;
 
 if side = 2 then
    if IsInArea(b, kabulBaseArea) then
       arBuildingsToBuild := Delete(arBuildingsToBuild, 1)
    else if GetBType(b) = b_bunker then
-         AddComPlaceWeapon(b, [ar_gun, ar_gatling_gun][rand(1,2)])
-      else if GetBType(b) = b_armoury then
-         ComUpgrade(b);
+      AddComPlaceWeapon(b, [ar_gun, ar_gatling_gun][rand(1,2)])
+   else if GetBType(b) = b_armoury then
+      ComUpgrade(b);
 End;
 
 
@@ -154,6 +182,12 @@ On EnterBuilding(b, un) do
 begin
 if GetBType(b) = b_factory and GetSide(un) = 2 then
    SetLives(un, 1000);
+End;
+
+On UnitGoesToRed(un) do
+begin
+if un = Heike then
+   canSaveHeike := true;
 End;
 
 

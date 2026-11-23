@@ -188,14 +188,25 @@ if sci then
                 begin
                 b := IsInUnit(i);
 
-                if b and GetBType(b) in [b_lab, b_lab_half, b_lab_full] and BuildingStatus(b) = bs_idle then
+                if not b then
+                   begin
+                   for j in lab do
+                       if BuildingStatus(j) in [bs_working, bs_need_people, bs_idle] then
+                          begin
+                          ComEnterUnit(i, j);
+                          break;
+                          end;
+                   end
+                else if b and GetBType(b) in [b_lab, b_lab_half, b_lab_full] and BuildingStatus(b) = bs_idle then
                    for j in lab diff b do
                        if BuildingStatus(j) in [bs_working, bs_need_people] then
                           begin
                           ComExitBuilding(i);
                           AddComEnterUnit(i, j);
                           end;
-                end;
+                end
+             else if not IsInUnit(i) then
+                ComEnterUnit(i, lab[1]);
              end
           else
              begin

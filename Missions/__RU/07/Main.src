@@ -5,6 +5,10 @@ begin
 ResetFog;
 Init;
 
+// birds, tigers, apemans, enchidnas, horses, mastodonts, fishes
+PrepareNature(6, 6, 2, 3, 1, 0, 0, natureArea, 0);
+PrepareNature(0, 0, [12, 11, 10, 9][Difficulty], 0, 0, 0, 0, apeArea, 0);
+
 PrepareArabian;
 PrepareRussian;
 
@@ -14,8 +18,8 @@ if debug then
 Action;
 End;
 
-Export debug, prevMissionPrefix, prevMissionPrefixVse, hasVsevolod, seviPoint, xavierOnPatrol, arabDefeat,
-       hasClearPath, arAllowToAttack;
+Export debug, prevMissionPrefix, prevMissionPrefixVse, currentMissionPrefix, hasVsevolod, seviPoint, xavierOnPatrol, arabDefeat, canSaveHeike,
+       hasClearPath, arAllowToAttack, destroyCounter, yashinSuccessfullEvacuated, launchedMine, hasMinefieldPlan, hasHeike;
 Function Init;
 begin
 debug := 1;
@@ -25,9 +29,14 @@ if debug then
 
 prevMissionPrefix := '06_';
 prevMissionPrefixVse := '06_Vse_';
-hasVsevolod := LoadVariable('06_VsevolodSaved', debug);
+hasVsevolod := LoadVariable('06_VsevolodSaved', false); //debug);
+currentMissionPrefix := '07_';
 xavierOnPatrol := false;
 arAllowToAttack := false;
+launchedMine := false;
+canSaveHeike := false;
+destroyCounter := 0;
+hasHeike := false;
 seviPoint := [
   [99, 94],
   [135, 95],
@@ -36,15 +45,13 @@ seviPoint := [
 ];
 arabDefeat := false;
 hasClearPath := false;
+yashinSuccessfullEvacuated := false;
+hasMinefieldPlan := false;
 End;
 
-Every 0$1 trigger debug do
-var i;
-begin
-enable;
-
-debug_strings := [];
-
-for i in FilterAllUnits([[f_side, 2], [f_hastask], [f_type, unit_human]]) do
-    debug_strings := debug_strings ^ i;
-End;
+{
+07_YashinQuery
+   1: Bazooka
+   2: Platonov
+   3: None
+}

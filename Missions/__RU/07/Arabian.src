@@ -244,7 +244,7 @@ for i in arAttackVehicles do
           end
        else if arAttackVehicles then
           begin
-          if i mod 3 = 0 then
+          if i mod 3 = 0 or not hasClearPath then
              AgressiveMove(i, [ [86,53], [76,55], [58,56] ])
           else if hasClearPath then
              AgressiveMove(i, [ [143,72], [148,85], [140,93], [107,88], [99,93] ])
@@ -288,15 +288,26 @@ for i in tmp do
 enable;
 End;
 
-Every 7$00 trigger not arabDefeat and arAllowToAttack and not arConstructList and arAttackVehicles < 6 do
-var i, chassis, weapon, control, fac;
+Every 6$00 trigger not arabDefeat and arAllowToAttack and not arConstructList and arAttackVehicles < 6 do
+var i, chassis, weapon, control, fac, up;
 begin
 fac := FilterAllUnits([[f_side, 2], [f_btype, b_factory], [f_ok]]);
 
 if not fac then
    exit;
 
-for i := 1 to [4, 5, 6, 6][Difficulty] do
+up := 0;
+
+if tick > 20$0 then
+   up := 1;
+
+if tick > 30$0 then
+   up := 2;
+
+if tick > 40$0 then
+   up := 3;
+
+for i := 1 to [4, 5, 6, 6][Difficulty] + up do
     begin
     chassis := [ar_medium_trike, ar_half_tracked][rand(1,2)];
 
@@ -347,6 +358,12 @@ for i := Count(arMines) downto 1 do
     if un > 0 and GetSide(un) = 3 then
        begin
        LaunchMineAtPos(arMines[i][1], arMines[i][2], 2);
+
+       if not launchedMine then
+          if InArea(arMines[i][1], arMines[i][2], minefieldExtraArea) or
+             InArea(arMines[i][1], arMines[i][2], minefieldMainRoadArea) then
+             launchedMine := true;
+
        arMines := Delete(arMines, i);
        end;
     end;

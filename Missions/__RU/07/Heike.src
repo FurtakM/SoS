@@ -1,0 +1,71 @@
+Export Heike, Givi, Kamil, Sophia, Markov, Aviradze,
+       heikeSecondSquad;
+Export Function PrepareHeike;
+var i, tmp, un, veh;
+begin
+uc_side := 2;
+uc_nation := 2;
+
+InitHC_All();
+
+Heike := NewCharacter('Heike');
+Givi := NewCharacter('Givi');
+Kamil := NewCharacter('Kamil');
+Sophia := NewCharacter('Sophia');
+Markov := NewCharacter('Markov');
+Aviradze := NewCharacter('Aviradze');
+
+heikeSecondSquad := [];
+
+for i := 1 to [2, 3, 4, 5][Difficulty] do
+    begin
+    PrepareSoldier(false, [6, 7, 8, 8][Difficulty]);
+    Push(heikeSecondSquad, CreateHuman);
+    end;
+
+veh := [
+    [ar_half_tracked, engine_combustion, control_manual, ar_gatling_gun],
+    [ar_half_tracked, engine_combustion, control_manual, ar_gun],
+    [ar_half_tracked, engine_combustion, control_manual, ar_gun],
+    [ar_half_tracked, engine_combustion, control_manual, ar_gun],
+    [ar_half_tracked, engine_combustion, control_manual, ar_gatling_gun],
+    [ar_half_tracked, engine_combustion, control_manual, ar_rocket_launcher]
+];
+
+
+tmp := [ Heike, Givi, Kamil, Sophia, Markov, Aviradze ] union heikeSecondSquad;
+
+tmp := tmp diff 0;
+
+result := tmp;
+
+for i in veh do
+    begin
+    vc_chassis := i[1];
+    vc_engine := i[2];
+    vc_control := i[3];
+    vc_weapon := i[4];
+    vc_fuel_battery := 80;
+
+    un := CreateVehicle;
+    SetDir(un, 0);
+
+    repeat
+     wait(3);
+    until PlaceUnitArea(un, heikeSpawnArea, false);
+
+    PlaceHumanInUnit(tmp[1], un);
+    Pop(tmp);
+
+    ComAgressiveMove(un, 108, 162);
+    end;
+
+for i in tmp do
+    begin
+    repeat
+     wait(3);
+    until PlaceUnitArea(i, heikeSpawnArea, false);
+
+    ComAgressiveMove(i, 108, 162);
+    end;
+End;

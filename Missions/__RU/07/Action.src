@@ -144,7 +144,32 @@ End;
 
 Function NormalScene;
 begin
+InGameOn;
 
+CenterNowOnUnits(Burlak);
+
+SayRadio(Platonov, 'DStart-Pla-1');
+SayRadio(Platonov, 'DStartNV-Pla-1');
+SayRadio(Platonov, 'DStart2-Pla-1');
+Say(Burlak, 'DStart2-Bur-1');
+
+InGameOff;
+
+ChangeMissionObjectives('MStart');
+
+SaveForQuickRestart;
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 3], [f_not, [f_constructed]], [f_or, [f_btype, b_depot], [f_btype, b_warehouse]]]);
+
+wait(2$00);         
+
+SpawnXavier;
+
+wait(4$30 - (1$0 * Difficulty));
+
+arAllowToAttack := true;
 End;     
 
 Function SpawnXavier;
@@ -250,3 +275,315 @@ else
    XavierPatrol;
    end;
 End;
+
+Every 0$25 trigger destroyCounter > 5 and not InBattle(3) do
+var yashinQuery, options, unit, p;
+begin
+repeat
+ wait(0$1);
+until PlaceUnitXY(Yashin, 103, 178, false);
+
+ComMoveXY(Yashin, 97, 167);
+
+wait(0$8);
+
+DialogueOn;
+
+CenterNowOnUnits(Yashin);
+
+SayRadio(Yashin, 'DYashinArrives-Yas-1');
+
+if IsOk(Vsevolod) then
+   Say(Vsevolod, 'DYashinArrives-Vse-1');
+
+Say(Burlak, 'DYashinArrives-Bur-1');
+SayRadio(Yashin, 'DYashinArrives-Yas-2');
+
+if IsOk(Vsevolod) then
+   begin
+   Say(Vsevolod, 'DYashinArrives-Vse-2');
+   SayRadio(Yashin, 'DYashinArrives-Yas-3');
+   Say(Vsevolod, 'DYashinArrives-Vse-3'); 
+   end
+else
+   begin
+   Say(Burlak, 'DYashinArrives-Bur-3');
+   SayRadio(Yashin, 'DYashinArrives-Yas-4');
+   Say(Burlak, 'DYashinArrives-Bur-4');
+   SayRadio(Yashin, 'DYashinArrives-Yas-5');
+   end;
+
+Say(Burlak, 'DYashinArrives-Bur-5');
+SayRadio(Yashin, 'DYashinArrives-Yas-6');
+Say(Burlak, 'DYashinArrives-Bur-6');
+SayRadio(Yashin, 'DYashinArrives-Yas-7');
+
+options := [1, 2, 3];
+
+if not UnitFilter([ar_bun2, ar_bun3], [[f_side, 2], [f_ok]]) then
+   options := [2, 3];
+
+yashinQuery := SelectiveQuery('QYashinHelp', options);
+
+debug_strings := yashinQuery;
+
+SaveVariable(yashinQuery, '07_YashinQuery');
+
+case yashinQuery of
+     1: begin
+        Say(Burlak, 'DQrYashinHelp#1-Bur-1');
+        SayRadio(Yashin, 'DQrYashinHelp#1-Yas-1');
+        Say(Burlak, 'DQrYashinHelp#1-Bur-2');
+        SayRadio(Yashin, 'DQrYashinHelp#1-Yas-2');
+
+        SetTech(tech_bazooka, 3, state_enabled);
+        end;
+     2: begin
+        Say(Burlak, 'DQrYashinHelp#2-Bur-1');
+        SayRadio(Yashin, 'DQrYashinHelp#2-Yas-1');
+        end;
+     3: begin
+        Say(Burlak, 'DQrYashinHelp#3-Bur-1');
+        SayRadio(Yashin, 'DQrYashinHelp#3-Yas-1');
+        end;
+     end;   
+
+DialogueOff;
+
+repeat
+ wait(0$1);
+
+ unit := FilterAllUnits([[f_side, 3], [f_type, unit_building]]);
+
+ if IsIdle(Yashin) then
+    if unit then
+       ComMoveUnit(Yashin, First(unit))
+    else
+       ComMoveUnit(Yashin, Burlak);
+
+ if IsDead(Yashin) then
+    exit;
+until FilterAllUnits([[f_side, 3], [f_dist, Yashin, 12]]);
+
+ComStop(Yashin);
+
+DialogueOn;
+
+Say(Yashin, 'DYashinLeave-Yas-1');
+Say(Burlak, 'DYashinLeave-Bur-1');
+
+DialogueOff;
+
+Query('QYashinCar');
+
+p := 0;
+
+repeat
+ wait(0$1);
+ p := Inc(p);
+
+ if p > 20 then
+    begin
+    Say(Yashin, 'DYashinLeave-Yas-1');
+    p := 0;
+    end;
+until FilterAllUnits([
+        [f_side, 3], [f_empty], [f_control, control_manual], [f_dist, Yashin, 8], [f_type, unit_vehicle],
+        [f_nation, 3],
+        [f_engine, engine_siberite], [f_or, [f_chassis, ru_medium_wheeled], [f_chassis, ru_medium_tracked]],
+        [f_or, [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_weapon, ru_crane]], [f_not, [f_weapon, ru_bulldozer]], [f_not, [f_weapon, ru_big_cargo_bay]]]
+      ]);
+
+unit := FilterAllUnits([
+        [f_side, 3], [f_empty], [f_control, control_manual], [f_dist, Yashin, 8], [f_type, unit_vehicle],
+        [f_nation, 3],
+        [f_engine, engine_siberite], [f_or, [f_chassis, ru_medium_wheeled], [f_chassis, ru_medium_tracked]],
+        [f_or, [f_not, [f_weapon, ru_cargo_bay]], [f_not, [f_weapon, ru_crane]], [f_not, [f_weapon, ru_bulldozer]], [f_not, [f_weapon, ru_big_cargo_bay]]]
+      ])[1];
+
+SetSide(unit, 6);
+
+repeat
+ wait(0$1);
+ ComEnterUnit(Yashin, unit);
+
+ if GetSide(unit) <> 6 then
+    begin
+    SetSide(unit, 6);
+    ComExitVehicle(IsDrivenBy(unit));
+    end;
+until IsInUnit(Yashin);
+
+repeat
+ wait(0$1);
+ ComMoveXY(Yashin, 116, 177);
+
+ if not IsInUnit(Yashin) then
+    begin
+    YouLost('YashinEscort');
+    exit;
+    end;
+
+until IsAt(unit, 116, 177);
+
+RemoveUnit(unit);
+RemoveUnit(Yashin);
+
+yashinSuccessfullEvacuated := true;
+End;
+
+Every 0$2 trigger (launchedMine or hasMinefieldPlan) and IsOk(Jan) do
+begin
+RevealMapOnXY(64, 62, 3, -16);
+CenterOnXY(64, 62);
+
+Say(Jan, 'DJan-2');
+End;
+
+Every 0$2 trigger GetTech(tech_bazooka, 3) = state_researched and IsOk(Jan) do
+Say(Jan, 'DJan-1');
+
+
+Every 0$1 trigger arabDefeat or FilterAllUnits([[f_side, 2], [f_ok], [f_type, unit_human]]) = 0 do
+var i, units;
+begin
+DialogueOn;
+
+SayRadio(Popov, 'DHeikeObj-Pop-1');
+Say(Burlak, 'DHeikeObj-Bur-1');
+SayRadio(Popov, 'DHeikeObj-Pop-2');
+Say(Burlak, 'DHeikeObj-Bur-2');
+
+DialogueOff;
+
+ChangeMissionObjectives('MHeike');
+
+Query('QHeike');
+
+wait(2$00);
+
+units := PrepareHeike;
+
+for i in FilterAllUnits([f_side, 3]) do
+    DoNotAttack(7, i);
+
+repeat
+ wait(0$1);
+
+ if GetLives(Heike) < 250 then
+    begin         
+    Del(units, Heike);
+    RemoveTasks(Heike);
+    SetSide(Heike, 7);
+    end;
+
+ if canSaveHeike and GetLives(Heike) >= 250 then
+    begin
+    ComStop(Heike);
+    // SetSide(Heike, 7);
+
+    for i in units do
+        begin
+        if IsInUnit(i) then
+           SetSide(IsInUnit(i), 7);
+
+        SetSide(i, 7);
+        ComStop(i);
+        end;
+
+    break;
+    end;
+
+ for i in units do
+     AgressiveMove(i, [ [81,109], [56,70], [77,55], [101,50] ]);
+until UnitFilter(units, [f_ok]) = 0;
+
+if canSaveHeike and IsOk(Heike) then
+   begin
+   DialogueOn;
+
+   Say(Heike, 'DHeikeCapt-Hke-1');
+   Say(Burlak, 'DHeikeCapt-Bur-1');
+   Say(Heike, 'DHeikeCapt-Hke-2');
+
+   DialogueOff;
+
+   hasHeike := true;
+   end;
+
+FinishMission;
+End;
+
+Function FinishMission;
+var i, saveVehicles;
+begin
+if IsLive(Xavier) then
+   AddMedal('Xavier', 1)
+else
+   AddMedal('Xavier', -1);
+
+if tick < [85$0, 70$0, 60$0, 45$0][Difficulty] then
+   AddMedal('TimeVS', 1)
+else
+   AddMedal('TimeVS', -1);
+
+if hasHeike then
+   AddMedal('Heike', 1)
+else
+   AddMedal('Heike', -1);
+
+if hasHeike then
+   GiveMedals('Main2')
+else
+   GiveMedals('Main1');
+
+RewardPeople(FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_nation, nation_russian]]));
+
+// Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Jan, Vsevolod, Xavier;
+SaveCharacters(Burlak, currentMissionPrefix & 'Burlak');
+
+if IsLive(Karamazov) then
+   SaveCharacters(Karamazov, currentMissionPrefix & 'Karamazov');  
+
+if IsLive(Petrovova) then
+   SaveCharacters(Petrovova, currentMissionPrefix & 'Petrovova'); 
+
+if IsLive(Titov) then
+   SaveCharacters(Titov, currentMissionPrefix & 'Titov');
+
+if IsLive(Lipshchin) then
+   SaveCharacters(Lipshchin, currentMissionPrefix & 'Lipshchin');
+
+if IsLive(Gleb) then
+   SaveCharacters(Gleb, currentMissionPrefix & 'Gleb');
+
+if IsLive(Dolgov) then
+   SaveCharacters(Dolgov, currentMissionPrefix & 'Dolgov');
+
+if IsLive(Petrosyan) then
+   SaveCharacters(Petrosyan, currentMissionPrefix & 'Petrosyan');
+
+if IsLive(Jan) then
+   SaveCharacters(Jan, currentMissionPrefix & 'Jan');
+
+if IsLive(Belkov) then
+   SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
+
+if IsLive(Kirilenkova) then
+   SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
+
+if IsLive(Xavier) then
+   SaveCharacters(Xavier, currentMissionPrefix & 'Xavier');
+
+if IsLive(Vsevolod) then
+   begin
+   SaveCharacters(Vsevolod, 'Vsevolod');
+   SaveCharacters(Vsevolod, currentMissionPrefix & 'Vsevolod');
+   end;
+
+SaveCharacters(UnitFilter(burlakTeam, [f_ok]) diff [Burlak, Petrovova, Titov, Lipshchin, Gleb, Dolgov, Petrosyan, Karamazov, Xavier, Jan, Vsevolod, Yashin], currentMissionPrefix & 'burlakTeam');
+
+YouWin;
+End;
+
+
