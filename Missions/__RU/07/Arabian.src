@@ -393,3 +393,50 @@ hasClearPath := true;
 
 arAttackVehicles := Join(arAttackVehicles, veh);
 End;
+
+Export function CheckIfExtraArabAttack;
+var i, tmp, nearest, enemy;
+begin
+if Difficulty = 1 then
+   exit;
+
+if attackCounter in [2, 6, 10] then
+   begin
+   tmp := [];
+
+   for i := 1 to 2 do
+       begin
+       uc_side := 2;
+       uc_nation := nation_arabian;
+
+       PrepareSoldier(false, [5, 6, 7][Difficulty - 1]);
+       Push(tmp, CreateHuman);
+
+       repeat
+        wait(0$1);
+       until PlaceUnitXY(tmp[i], 173, 90, false);
+       end;
+
+   repeat
+    wait(0$2);
+    tmp := UnitFilter(tmp, [f_ok]);
+    enemy := FilterAllUnits([f_enemy, 2]);
+
+    for i in tmp do
+        if GetClass(i) <> 1 then
+           ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+        else if not HasTask(i) then
+           begin
+           nearest := NearestUnitToUnit(UnitFilter(enemy, [[f_not, [f_tag, tMined]], [f_or, [f_type, unit_vehicle], [f_type, unit_building]]]), i);
+
+           if not nearest then
+              ComAttackUnit(i, NearestUnitToUnit(enemy, i))
+           else
+              begin
+              SetTag(nearest, tMined);
+              ComPlaceDelayedCharge(i, 0, 0, nearest);
+              end;
+           end;
+   until not tmp;
+   end;
+End;

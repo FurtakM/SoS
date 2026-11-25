@@ -279,7 +279,7 @@ glebWarn := true;
 End;
 
 // block north area#2
-Every 0$1 trigger not canGoToNorth and FilterUnitsInArea(blockNorthArea2, [f_side, 3]) do
+Every 0$1 trigger not debugEnd and not canGoToNorth and FilterUnitsInArea(blockNorthArea2, [f_side, 3]) do
 PrepareAdditionalForces;
 
 // talk about lab
@@ -768,7 +768,7 @@ YouLost('SibL');
 End;
 
 // can end
-Every 0$1 trigger GetSideSib(3) >= 200 and hasAllTechs do
+Every 0$1 trigger debugEnd or (GetSideSib(3) >= 200 and hasAllTechs) do
 var i, j, hasVsevolod, tmp, min, max, buildings, depot, arm, lab, fac, kirBel;
 begin
 canEnd := true;
@@ -800,7 +800,10 @@ if hasVsevolod then
    tmp := FilterAllUnits([[f_side, 3], [f_type,unit_human], [f_nation, nation_russian]]) diff [Vsevolod, Burlak];
 
    max := tmp div 2 + tmp mod 2;
-   min := 0;
+   min := max - 2;
+
+   if min < 0 then
+      min := 0;
 
    if max > 1 then
       begin
@@ -1003,6 +1006,8 @@ End;
 Every 0$1 trigger canEnd and FilterUnitsInArea(eastEndArea, [f_side, 3]) and (IsInArea(Burlak, eastEndArea) or IsDriverInArea(Burlak, eastEndArea)) do
 begin
 if FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_human]]) and
+   FilterUnitsInArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle]]) > 0 and
+   FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0 and
    (IsInArea(Burlak, eastEndArea) or IsDriverInArea(Burlak, eastEndArea)) then
    begin
    if Query('QEndGame') = 1 then
@@ -1015,6 +1020,7 @@ if FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_human]]) and
 repeat
  wait(0$1);
 until FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_human]]) = 0 and
+      Count(FilterUnitsInArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle]])) = Count(FilterAllUnits([[f_side, 3], [f_nation, 3], [f_type, unit_human]])) and
       FilterUnitsExceptArea(eastEndArea, [[f_side, 3], [f_type, unit_vehicle], [f_not, [f_empty]]]) = 0;
 
 FinishMission;
@@ -1085,10 +1091,10 @@ if IsLive(Jan) and Jan in stay then
 else if Jan in goOut then
    SaveCharacters(Jan, currentMissionPrefix & 'Vse_Jan');
 
-if IsLive(Belkov) then
+if IsLive(Belkov) and GetSide(Belkov) = 3 then
    SaveCharacters(Belkov, currentMissionPrefix & 'Belkov');
 
-if IsLive(Kirilenkova) then
+if IsLive(Kirilenkova) and GetSide(Kirilenkova) = 3 then
    SaveCharacters(Kirilenkova, currentMissionPrefix & 'Kirilenkova');
 
 SaveTech(3, currentMissionPrefix & 'Techs');

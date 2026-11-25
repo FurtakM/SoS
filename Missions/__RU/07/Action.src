@@ -7,9 +7,16 @@ else
 End;
 
 Function SeviScene;
-var i;
+var i, tmp;
 begin
 InGameOn;
+
+tmp := AreaToList(roadViewArea, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    RevealMapOnXY(tmp[1][i], tmp[2][i], 3, -16);
+    end;
 
 RevealMapOnXY(55, 91, 3, -16);
 
@@ -143,8 +150,16 @@ arAllowToAttack := true;
 End;
 
 Function NormalScene;
+var i, tmp;
 begin
 InGameOn;
+
+tmp := AreaToList(roadViewArea, 0);
+
+for i := 1 to tmp[1] do
+    begin
+    RevealMapOnXY(tmp[1][i], tmp[2][i], 3, -16);
+    end;
 
 CenterNowOnUnits(Burlak);
 
@@ -277,7 +292,7 @@ else
 End;
 
 Every 0$25 trigger destroyCounter > 5 and not InBattle(3) do
-var yashinQuery, options, unit, p;
+var yashinQuery, options, unit, fac, p;
 begin
 repeat
  wait(0$1);
@@ -324,8 +339,6 @@ if not UnitFilter([ar_bun2, ar_bun3], [[f_side, 2], [f_ok]]) then
    options := [2, 3];
 
 yashinQuery := SelectiveQuery('QYashinHelp', options);
-
-debug_strings := yashinQuery;
 
 SaveVariable(yashinQuery, '07_YashinQuery');
 
@@ -382,10 +395,16 @@ repeat
  wait(0$1);
  p := Inc(p);
 
- if p > 20 then
+ if p > 60 then
     begin
     Say(Yashin, 'DYashinLeave-Yas-1');
     p := 0;
+
+    fac := FilterAllUnits([[f_side, 3], [f_ok], [f_btype, b_factory]]);
+
+    if fac then
+       if GetDistUnits(Yashin, NearestUnitToUnit(fac, Yashin)) > 9 then
+          ComMoveUnit(Yashin, NearestUnitToUnit(fac, Yashin));
     end;
 until FilterAllUnits([
         [f_side, 3], [f_empty], [f_control, control_manual], [f_dist, Yashin, 8], [f_type, unit_vehicle],
@@ -418,7 +437,7 @@ repeat
  wait(0$1);
  ComMoveXY(Yashin, 116, 177);
 
- if not IsInUnit(Yashin) then
+ if GetLives(unit) < 250 or not IsInUnit(Yashin) then
     begin
     YouLost('YashinEscort');
     exit;
@@ -522,7 +541,7 @@ if IsLive(Xavier) then
 else
    AddMedal('Xavier', -1);
 
-if tick < [85$0, 70$0, 60$0, 45$0][Difficulty] then
+if tick < gameTimeMedal then
    AddMedal('TimeVS', 1)
 else
    AddMedal('TimeVS', -1);
